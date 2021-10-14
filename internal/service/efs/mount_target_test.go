@@ -22,76 +22,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_efs_mount_target", &resource.Sweeper{
-		Name: "aws_efs_mount_target",
-		F:    sweepMountTargets,
-	})
-}
 
-func sweepMountTargets(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).EFSConn
 
-	var errors error
-	input := &efs.DescribeFileSystemsInput{}
-	err = conn.DescribeFileSystemsPages(input, func(page *efs.DescribeFileSystemsOutput, lastPage bool) bool {
-		for _, filesystem := range page.FileSystems {
-			id := aws.StringValue(filesystem.FileSystemId)
-			log.Printf("[INFO] Deleting Mount Targets for EFS File System: %s", id)
 
-			var errors error
-			input := &efs.DescribeMountTargetsInput{
-				FileSystemId: filesystem.FileSystemId,
-			}
-			for {
-				out, err := conn.DescribeMountTargets(input)
-				if err != nil {
-					errors = multierror.Append(errors, fmt.Errorf("error retrieving EFS Mount Targets on File System %q: %w", id, err))
-					break
-				}
-
-				if out == nil || len(out.MountTargets) == 0 {
-					log.Printf("[INFO] No EFS Mount Targets to sweep on File System %q", id)
-					break
-				}
-
-				for _, mounttarget := range out.MountTargets {
-					id := aws.StringValue(mounttarget.MountTargetId)
-
-					log.Printf("[INFO] Deleting EFS Mount Target: %s", id)
-					_, err := conn.DeleteMountTarget(&efs.DeleteMountTargetInput{
-						MountTargetId: mounttarget.MountTargetId,
-					})
-					if err != nil {
-						errors = multierror.Append(errors, fmt.Errorf("error deleting EFS Mount Target %q: %w", id, err))
-						continue
-					}
-
-					err = tfefs.WaitForDeleteMountTarget(conn, id, 10*time.Minute)
-					if err != nil {
-						errors = multierror.Append(errors, fmt.Errorf("error waiting for EFS Mount Target %q to delete: %w", id, err))
-						continue
-					}
-				}
-
-				if out.NextMarker == nil {
-					break
-				}
-				input.Marker = out.NextMarker
-			}
-		}
-		return true
-	})
-	if err != nil {
-		errors = multierror.Append(errors, fmt.Errorf("error retrieving EFS File Systems: %w", err))
-	}
-
-	return errors
-}
 
 func TestAccEFSMountTarget_basic(t *testing.T) {
 	var mount efs.MountTargetDescription

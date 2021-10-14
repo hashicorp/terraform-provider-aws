@@ -19,51 +19,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_efs_file_system", &resource.Sweeper{
-		Name: "aws_efs_file_system",
-		F:    sweepFileSystems,
-		Dependencies: []string{
-			"aws_efs_mount_target",
-			"aws_efs_access_point",
-		},
-	})
-}
 
-func sweepFileSystems(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).EFSConn
-	var sweeperErrs *multierror.Error
 
-	input := &efs.DescribeFileSystemsInput{}
-	err = conn.DescribeFileSystemsPages(input, func(page *efs.DescribeFileSystemsOutput, lastPage bool) bool {
-		for _, filesystem := range page.FileSystems {
-			id := aws.StringValue(filesystem.FileSystemId)
 
-			log.Printf("[INFO] Deleting EFS File System: %s", id)
-
-			r := tfefs.ResourceFileSystem()
-			d := r.Data(nil)
-			d.SetId(id)
-			err := r.Delete(d, client)
-
-			if err != nil {
-				log.Printf("[ERROR] %s", err)
-				sweeperErrs = multierror.Append(sweeperErrs, err)
-				continue
-			}
-		}
-		return true
-	})
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving EFS File Systems: %w", err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func TestAccEFSFileSystem_basic(t *testing.T) {
 	var desc efs.FileSystemDescription
