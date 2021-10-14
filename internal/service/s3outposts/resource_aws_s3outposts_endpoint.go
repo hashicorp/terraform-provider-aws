@@ -1,4 +1,4 @@
-package aws
+package s3outposts
 
 import (
 	"fmt"
@@ -11,19 +11,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3outposts"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/s3outposts/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/s3outposts/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfs3outposts "github.com/hashicorp/terraform-provider-aws/internal/service/s3outposts"
-	tfs3outposts "github.com/hashicorp/terraform-provider-aws/internal/service/s3outposts"
-	tfs3outposts "github.com/hashicorp/terraform-provider-aws/internal/service/s3outposts"
-	tfs3outposts "github.com/hashicorp/terraform-provider-aws/internal/service/s3outposts"
-	tfs3outposts "github.com/hashicorp/terraform-provider-aws/internal/service/s3outposts"
-	tfs3outposts "github.com/hashicorp/terraform-provider-aws/internal/service/s3outposts"
-	tfs3outposts "github.com/hashicorp/terraform-provider-aws/internal/service/s3outposts"
-	tfs3outposts "github.com/hashicorp/terraform-provider-aws/internal/service/s3outposts"
 )
 
 func ResourceEndpoint() *schema.Resource {
@@ -104,7 +94,7 @@ func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(aws.StringValue(output.EndpointArn))
 
-	if _, err := tfs3outposts.waitEndpointStatusCreated(conn, d.Id()); err != nil {
+	if _, err := waitEndpointStatusCreated(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for S3 Outposts Endpoint (%s) to become available: %w", d.Id(), err)
 	}
 
@@ -114,7 +104,7 @@ func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceEndpointRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3OutpostsConn
 
-	endpoint, err := tfs3outposts.FindEndpoint(conn, d.Id())
+	endpoint, err := FindEndpoint(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error reading S3 Outposts Endpoint (%s): %w", d.Id(), err)
