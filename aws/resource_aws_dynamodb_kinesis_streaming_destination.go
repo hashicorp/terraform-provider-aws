@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/dynamodb/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/dynamodb/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceKinesisStreamingDestination() *schema.Resource {

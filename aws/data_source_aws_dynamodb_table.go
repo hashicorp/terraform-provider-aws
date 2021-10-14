@@ -9,8 +9,9 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceTable() *schema.Resource {
@@ -143,7 +144,7 @@ func DataSourceTable() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 			"ttl": {
 				Type:     schema.TypeSet,
 				Computed: true,
@@ -319,7 +320,7 @@ func dataSourceTableRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting ttl: %w", err)
 	}
 
-	tags, err := keyvaluetags.DynamodbListTags(conn, d.Get("arn").(string))
+	tags, err := tftags.DynamodbListTags(conn, d.Get("arn").(string))
 
 	if err != nil && !tfawserr.ErrMessageContains(err, "UnknownOperationException", "Tagging is not currently supported in DynamoDB Local.") {
 		return fmt.Errorf("error listing tags for DynamoDB Table (%s): %w", d.Get("arn").(string), err)
