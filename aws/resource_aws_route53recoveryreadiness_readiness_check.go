@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsRoute53RecoveryReadinessReadinessCheck() *schema.Resource {
+func ResourceReadinessCheck() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRoute53RecoveryReadinessReadinessCheckCreate,
-		Read:   resourceAwsRoute53RecoveryReadinessReadinessCheckRead,
-		Update: resourceAwsRoute53RecoveryReadinessReadinessCheckUpdate,
-		Delete: resourceAwsRoute53RecoveryReadinessReadinessCheckDelete,
+		Create: resourceReadinessCheckCreate,
+		Read:   resourceReadinessCheckRead,
+		Update: resourceReadinessCheckUpdate,
+		Delete: resourceReadinessCheckDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -50,7 +50,7 @@ func resourceAwsRoute53RecoveryReadinessReadinessCheck() *schema.Resource {
 	}
 }
 
-func resourceAwsRoute53RecoveryReadinessReadinessCheckCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceReadinessCheckCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -74,10 +74,10 @@ func resourceAwsRoute53RecoveryReadinessReadinessCheckCreate(d *schema.ResourceD
 		}
 	}
 
-	return resourceAwsRoute53RecoveryReadinessReadinessCheckRead(d, meta)
+	return resourceReadinessCheckRead(d, meta)
 }
 
-func resourceAwsRoute53RecoveryReadinessReadinessCheckRead(d *schema.ResourceData, meta interface{}) error {
+func resourceReadinessCheckRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -122,7 +122,7 @@ func resourceAwsRoute53RecoveryReadinessReadinessCheckRead(d *schema.ResourceDat
 	return nil
 }
 
-func resourceAwsRoute53RecoveryReadinessReadinessCheckUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceReadinessCheckUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn
 
 	input := &route53recoveryreadiness.UpdateReadinessCheckInput{
@@ -143,10 +143,10 @@ func resourceAwsRoute53RecoveryReadinessReadinessCheckUpdate(d *schema.ResourceD
 		}
 	}
 
-	return resourceAwsRoute53RecoveryReadinessReadinessCheckRead(d, meta)
+	return resourceReadinessCheckRead(d, meta)
 }
 
-func resourceAwsRoute53RecoveryReadinessReadinessCheckDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceReadinessCheckDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn
 
 	input := &route53recoveryreadiness.DeleteReadinessCheckInput{
