@@ -207,7 +207,7 @@ func resourceAwsLogFlowCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error creating Flow Log (%s): %w", resourceId, err)
+		return fmt.Errorf("error creating Flow Log (%s): %w", resourceID, err)
 	}
 
 	d.SetId(aws.StringValue(output.FlowLogIds[0]))
