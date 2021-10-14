@@ -23,11 +23,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_kinesisanalyticsv2_application", &resource.Sweeper{
 		Name: "aws_kinesisanalyticsv2_application",
-		F:    testSweepKinesisAnalyticsV2Application,
+		F:    sweepApplication,
 	})
 }
 
-func testSweepKinesisAnalyticsV2Application(region string) error {
+func sweepApplication(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -90,7 +90,7 @@ func TestAccAWSKinesisAnalyticsV2Application_basicFlinkApplication(t *testing.T)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
@@ -237,7 +237,7 @@ func TestAccAWSKinesisAnalyticsV2Application_basicSQLApplication(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
@@ -277,7 +277,7 @@ func TestAccAWSKinesisAnalyticsV2Application_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
@@ -300,7 +300,7 @@ func TestAccAWSKinesisAnalyticsV2Application_Tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
@@ -349,7 +349,7 @@ func TestAccAWSKinesisAnalyticsV2Application_ApplicationCodeConfiguration_Update
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
@@ -433,7 +433,7 @@ func TestAccAWSKinesisAnalyticsV2Application_CloudWatchLoggingOptions_Add(t *tes
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
@@ -496,7 +496,7 @@ func TestAccAWSKinesisAnalyticsV2Application_CloudWatchLoggingOptions_Delete(t *
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
@@ -560,7 +560,7 @@ func TestAccAWSKinesisAnalyticsV2Application_CloudWatchLoggingOptions_Update(t *
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
@@ -625,7 +625,7 @@ func TestAccAWSKinesisAnalyticsV2Application_EnvironmentProperties_Update(t *tes
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
@@ -822,7 +822,7 @@ func TestAccAWSKinesisAnalyticsV2Application_FlinkApplicationConfiguration_Updat
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
@@ -943,7 +943,7 @@ func TestAccAWSKinesisAnalyticsV2Application_FlinkApplicationConfiguration_Envir
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
@@ -1095,7 +1095,7 @@ func TestAccAWSKinesisAnalyticsV2Application_FlinkApplicationConfiguration_Resto
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
@@ -1365,7 +1365,7 @@ func TestAccAWSKinesisAnalyticsV2Application_FlinkApplicationConfiguration_Start
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
@@ -1441,7 +1441,7 @@ func TestAccAWSKinesisAnalyticsV2Application_FlinkApplicationConfiguration_Start
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
@@ -1614,7 +1614,7 @@ func TestAccAWSKinesisAnalyticsV2Application_FlinkApplicationConfiguration_Updat
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
@@ -1741,7 +1741,7 @@ func TestAccAWSKinesisAnalyticsV2Application_ServiceExecutionRole_Update(t *test
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
@@ -1803,7 +1803,7 @@ func TestAccAWSKinesisAnalyticsV2Application_SQLApplicationConfiguration_Input_A
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
@@ -1914,7 +1914,7 @@ func TestAccAWSKinesisAnalyticsV2Application_SQLApplicationConfiguration_Input_U
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
@@ -2054,7 +2054,7 @@ func TestAccAWSKinesisAnalyticsV2Application_SQLApplicationConfiguration_InputPr
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
@@ -2193,7 +2193,7 @@ func TestAccAWSKinesisAnalyticsV2Application_SQLApplicationConfiguration_InputPr
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
@@ -2333,7 +2333,7 @@ func TestAccAWSKinesisAnalyticsV2Application_SQLApplicationConfiguration_InputPr
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
@@ -2478,7 +2478,7 @@ func TestAccAWSKinesisAnalyticsV2Application_SQLApplicationConfiguration_Multipl
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
@@ -2669,7 +2669,7 @@ func TestAccAWSKinesisAnalyticsV2Application_SQLApplicationConfiguration_Output_
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
@@ -2817,7 +2817,7 @@ func TestAccAWSKinesisAnalyticsV2Application_SQLApplicationConfiguration_Referen
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
@@ -2921,7 +2921,7 @@ func TestAccAWSKinesisAnalyticsV2Application_SQLApplicationConfiguration_Referen
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
@@ -3025,7 +3025,7 @@ func TestAccAWSKinesisAnalyticsV2Application_SQLApplicationConfiguration_Referen
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
@@ -3152,7 +3152,7 @@ func TestAccAWSKinesisAnalyticsV2Application_SQLApplicationConfiguration_StartAp
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
@@ -3232,7 +3232,7 @@ func TestAccAWSKinesisAnalyticsV2Application_SQLApplicationConfiguration_StartAp
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
@@ -3431,7 +3431,7 @@ func TestAccAWSKinesisAnalyticsV2Application_SQLApplicationConfiguration_UpdateR
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
@@ -3623,7 +3623,7 @@ func TestAccAWSKinesisAnalyticsV2Application_SQLApplicationConfiguration_VPCConf
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
@@ -3747,7 +3747,7 @@ func TestAccAWSKinesisAnalyticsV2Application_SQLApplicationConfiguration_VPCConf
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
@@ -3871,7 +3871,7 @@ func TestAccAWSKinesisAnalyticsV2Application_SQLApplicationConfiguration_VPCConf
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
@@ -4037,7 +4037,7 @@ func testAccCheckKinesisAnalyticsV2ApplicationExists(n string, v *kinesisanalyti
 	}
 }
 
-func testAccPreCheckAWSKinesisAnalyticsV2(t *testing.T) {
+func testAccPreCheck(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisAnalyticsV2Conn
 
 	input := &kinesisanalyticsv2.ListApplicationsInput{}
