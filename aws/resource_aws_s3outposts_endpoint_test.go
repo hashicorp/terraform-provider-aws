@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/s3outposts/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSS3OutpostsEndpoint_basic(t *testing.T) {
@@ -69,7 +70,7 @@ func TestAccAWSS3OutpostsEndpoint_disappears(t *testing.T) {
 }
 
 func testAccCheckAWSS3OutpostsEndpointDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).s3outpostsconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).S3OutpostsConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_s3outposts_endpoint" {
@@ -101,7 +102,7 @@ func testAccCheckAWSS3OutpostsEndpointExists(resourceName string) resource.TestC
 			return fmt.Errorf("no resource ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).s3outpostsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3OutpostsConn
 
 		endpoint, err := finder.Endpoint(conn, rs.Primary.ID)
 
