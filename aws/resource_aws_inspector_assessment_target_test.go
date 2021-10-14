@@ -14,13 +14,13 @@ import (
 
 func TestAccAWSInspectorTarget_basic(t *testing.T) {
 	var assessmentTarget1 inspector.AssessmentTarget
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_inspector_assessment_target.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, inspector.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSInspectorTargetAssessmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -43,13 +43,13 @@ func TestAccAWSInspectorTarget_basic(t *testing.T) {
 
 func TestAccAWSInspectorTarget_disappears(t *testing.T) {
 	var assessmentTarget1 inspector.AssessmentTarget
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_inspector_assessment_target.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, inspector.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSInspectorTargetAssessmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -66,14 +66,14 @@ func TestAccAWSInspectorTarget_disappears(t *testing.T) {
 
 func TestAccAWSInspectorTarget_Name(t *testing.T) {
 	var assessmentTarget1, assessmentTarget2 inspector.AssessmentTarget
-	rName1 := sdkacctest.RandomWithPrefix("tf-acc-test")
-	rName2 := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_inspector_assessment_target.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, inspector.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSInspectorTargetAssessmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -101,7 +101,7 @@ func TestAccAWSInspectorTarget_Name(t *testing.T) {
 
 func TestAccAWSInspectorTarget_ResourceGroupArn(t *testing.T) {
 	var assessmentTarget1, assessmentTarget2, assessmentTarget3, assessmentTarget4 inspector.AssessmentTarget
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	inspectorResourceGroupResourceName1 := "aws_inspector_resource_group.test1"
 	inspectorResourceGroupResourceName2 := "aws_inspector_resource_group.test2"
 	resourceName := "aws_inspector_assessment_target.test"
@@ -109,7 +109,7 @@ func TestAccAWSInspectorTarget_ResourceGroupArn(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, inspector.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSInspectorTargetAssessmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -150,7 +150,7 @@ func TestAccAWSInspectorTarget_ResourceGroupArn(t *testing.T) {
 }
 
 func testAccCheckAWSInspectorTargetAssessmentDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).inspectorconn
+	conn := acctest.Provider.Meta().(*AWSClient).inspectorconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_inspector_assessment_target" {
@@ -178,7 +178,7 @@ func testAccCheckAWSInspectorTargetExists(name string, target *inspector.Assessm
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).inspectorconn
+		conn := acctest.Provider.Meta().(*AWSClient).inspectorconn
 
 		assessmentTarget, err := describeInspectorAssessmentTarget(conn, rs.Primary.ID)
 
@@ -198,7 +198,7 @@ func testAccCheckAWSInspectorTargetExists(name string, target *inspector.Assessm
 
 func testAccCheckAWSInspectorTargetDisappears(assessmentTarget *inspector.AssessmentTarget) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).inspectorconn
+		conn := acctest.Provider.Meta().(*AWSClient).inspectorconn
 
 		input := &inspector.DeleteAssessmentTargetInput{
 			AssessmentTargetArn: assessmentTarget.Arn,
