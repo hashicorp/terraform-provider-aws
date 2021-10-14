@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/mwaa/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/mwaa/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsMwaaEnvironment() *schema.Resource {
@@ -234,8 +235,8 @@ func resourceAwsMwaaEnvironment() *schema.Resource {
 }
 
 func resourceAwsMwaaEnvironmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).mwaaconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).MWAAConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := mwaa.CreateEnvironmentInput{
@@ -318,9 +319,9 @@ func resourceAwsMwaaEnvironmentCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsMwaaEnvironmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).mwaaconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).MWAAConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	log.Printf("[INFO] Reading MWAA Environment: %s", d.Id())
 
@@ -386,7 +387,7 @@ func resourceAwsMwaaEnvironmentRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsMwaaEnvironmentUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).mwaaconn
+	conn := meta.(*conns.AWSClient).MWAAConn
 
 	input := mwaa.UpdateEnvironmentInput{
 		Name: aws.String(d.Get("name").(string)),
@@ -486,7 +487,7 @@ func resourceAwsMwaaEnvironmentUpdate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsMwaaEnvironmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).mwaaconn
+	conn := meta.(*conns.AWSClient).MWAAConn
 
 	log.Printf("[INFO] Deleting MWAA Environment: %s", d.Id())
 	_, err := conn.DeleteEnvironment(&mwaa.DeleteEnvironmentInput{

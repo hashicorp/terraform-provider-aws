@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -25,7 +26,7 @@ func testSweepMwaaEnvironment(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).mwaaconn
+	conn := client.(*conns.AWSClient).MWAAConn
 
 	listOutput, err := conn.ListEnvironments(&mwaa.ListEnvironmentsInput{})
 	if err != nil {
@@ -392,7 +393,7 @@ func testAccCheckAWSMwaaEnvironmentExists(resourceName string, environment *mwaa
 			return fmt.Errorf("No MWAA Environment ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).mwaaconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MWAAConn
 		resp, err := conn.GetEnvironment(&mwaa.GetEnvironmentInput{
 			Name: aws.String(rs.Primary.ID),
 		})
@@ -408,7 +409,7 @@ func testAccCheckAWSMwaaEnvironmentExists(resourceName string, environment *mwaa
 }
 
 func testAccCheckAWSMwaaEnvironmentDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).mwaaconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).MWAAConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_mwaa_environment" {
