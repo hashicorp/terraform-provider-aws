@@ -128,7 +128,7 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	log.Printf("[DEBUG] Reading CloudWatch Log Group: %q", d.Get("name").(string))
-	lg, err := lookupCloudWatchLogGroup(conn, d.Id())
+	lg, err := LookupGroup(conn, d.Id())
 	if err != nil {
 		return err
 	}
@@ -164,7 +164,7 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func lookupCloudWatchLogGroup(conn *cloudwatchlogs.CloudWatchLogs, name string) (*cloudwatchlogs.LogGroup, error) {
+func LookupGroup(conn *cloudwatchlogs.CloudWatchLogs, name string) (*cloudwatchlogs.LogGroup, error) {
 	input := &cloudwatchlogs.DescribeLogGroupsInput{
 		LogGroupNamePrefix: aws.String(name),
 	}

@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfcloudwatchlogs "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchlogs"
 )
 
 func TestAccAWSCloudWatchLogMetricFilter_basic(t *testing.T) {
@@ -121,7 +122,7 @@ func TestAccAWSCloudWatchLogMetricFilter_disappears(t *testing.T) {
 				Config: testAccAWSCloudWatchLogMetricFilterConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchLogMetricFilterExists(resourceName, &mf),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceMetricFilter(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcloudwatchlogs.ResourceMetricFilter(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -144,7 +145,7 @@ func TestAccAWSCloudWatchLogMetricFilter_disappears_logGroup(t *testing.T) {
 				Config: testAccAWSCloudWatchLogMetricFilterConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchLogMetricFilterExists(resourceName, &mf),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceGroup(), "aws_cloudwatch_log_group.test"),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcloudwatchlogs.ResourceGroup(), "aws_cloudwatch_log_group.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -236,7 +237,7 @@ func testAccCheckCloudWatchLogMetricFilterExists(n string, mf *cloudwatchlogs.Me
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchLogsConn
-		metricFilter, err := lookupCloudWatchLogMetricFilter(conn, rs.Primary.Attributes["name"], rs.Primary.Attributes["log_group_name"], nil)
+		metricFilter, err := tfcloudwatchlogs.LookupMetricFilter(conn, rs.Primary.Attributes["name"], rs.Primary.Attributes["log_group_name"], nil)
 		if err != nil {
 			return err
 		}
@@ -255,7 +256,7 @@ func testAccCheckAWSCloudWatchLogMetricFilterDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := lookupCloudWatchLogMetricFilter(conn, rs.Primary.Attributes["name"], rs.Primary.Attributes["log_group_name"], nil)
+		_, err := tfcloudwatchlogs.LookupMetricFilter(conn, rs.Primary.Attributes["name"], rs.Primary.Attributes["log_group_name"], nil)
 		if err == nil {
 			return fmt.Errorf("MetricFilter Still Exists: %s", rs.Primary.ID)
 		}

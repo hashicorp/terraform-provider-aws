@@ -35,7 +35,7 @@ func ResourceStream() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateCloudWatchLogStreamName,
+				ValidateFunc: ValidStreamName,
 			},
 
 			"log_group_name": {
@@ -74,7 +74,7 @@ func resourceStreamRead(d *schema.ResourceData, meta interface{}) error {
 
 	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
 		var err error
-		ls, exists, err = lookupCloudWatchLogStream(conn, d.Id(), group, nil)
+		ls, exists, err = LookupStream(conn, d.Id(), group, nil)
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
@@ -84,7 +84,7 @@ func resourceStreamRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		ls, exists, err = lookupCloudWatchLogStream(conn, d.Id(), group, nil)
+		ls, exists, err = LookupStream(conn, d.Id(), group, nil)
 	}
 
 	if err != nil {
@@ -145,7 +145,7 @@ func resourceAwsCloudWatchLogStreamImport(d *schema.ResourceData, meta interface
 	return []*schema.ResourceData{d}, nil
 }
 
-func lookupCloudWatchLogStream(conn *cloudwatchlogs.CloudWatchLogs,
+func LookupStream(conn *cloudwatchlogs.CloudWatchLogs,
 	name string, logStreamName string, nextToken *string) (*cloudwatchlogs.LogStream, bool, error) {
 	input := &cloudwatchlogs.DescribeLogStreamsInput{
 		LogStreamNamePrefix: aws.String(name),
@@ -164,13 +164,13 @@ func lookupCloudWatchLogStream(conn *cloudwatchlogs.CloudWatchLogs,
 	}
 
 	if resp.NextToken != nil {
-		return lookupCloudWatchLogStream(conn, name, logStreamName, resp.NextToken)
+		return LookupStream(conn, name, logStreamName, resp.NextToken)
 	}
 
 	return nil, false, nil
 }
 
-func validateCloudWatchLogStreamName(v interface{}, k string) (ws []string, errors []error) {
+func ValidStreamName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if regexp.MustCompile(`:`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(

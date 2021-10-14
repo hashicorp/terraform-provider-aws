@@ -53,7 +53,7 @@ func testSweepCloudwatchlogQueryDefinitions(region string) error {
 		}
 
 		for _, queryDefinition := range output.QueryDefinitions {
-			r := ResourceQueryDefinition()
+			r := tfcloudwatchlogs.ResourceQueryDefinition()
 			d := r.Data(nil)
 
 			d.SetId(aws.StringValue(queryDefinition.QueryDefinitionId))
@@ -145,7 +145,7 @@ func TestAccAWSCloudWatchQueryDefinition_disappears(t *testing.T) {
 				Config: testAccAWSCloudWatchQueryDefinitionConfig_Basic(queryName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCloudWatchQueryDefinitionExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceQueryDefinition(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcloudwatchlogs.ResourceQueryDefinition(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

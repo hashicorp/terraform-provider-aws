@@ -100,7 +100,7 @@ func resourceAwsCloudWatchLogDestinationPut(d *schema.ResourceData, meta interfa
 func resourceDestinationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
 
-	destination, exists, err := lookupCloudWatchLogDestination(conn, d.Id(), nil)
+	destination, exists, err := LookupDestination(conn, d.Id(), nil)
 	if err != nil {
 		return err
 	}
@@ -131,7 +131,7 @@ func resourceDestinationDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func lookupCloudWatchLogDestination(conn *cloudwatchlogs.CloudWatchLogs,
+func LookupDestination(conn *cloudwatchlogs.CloudWatchLogs,
 	name string, nextToken *string) (*cloudwatchlogs.Destination, bool, error) {
 	input := &cloudwatchlogs.DescribeDestinationsInput{
 		DestinationNamePrefix: aws.String(name),
@@ -149,7 +149,7 @@ func lookupCloudWatchLogDestination(conn *cloudwatchlogs.CloudWatchLogs,
 	}
 
 	if resp.NextToken != nil {
-		return lookupCloudWatchLogDestination(conn, name, resp.NextToken)
+		return LookupDestination(conn, name, resp.NextToken)
 	}
 
 	return nil, false, nil

@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfcloudwatchlogs "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchlogs"
 )
 
 func TestAccAWSCloudwatchLogDestination_basic(t *testing.T) {
@@ -60,7 +61,7 @@ func TestAccAWSCloudwatchLogDestination_disappears(t *testing.T) {
 				Config: testAccAWSCloudwatchLogDestinationConfig(rstring),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCloudwatchLogDestinationExists(resourceName, &destination),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceDestination(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcloudwatchlogs.ResourceDestination(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -75,7 +76,7 @@ func testAccCheckAWSCloudwatchLogDestinationDestroy(s *terraform.State) error {
 		if rs.Type != "aws_cloudwatch_log_destination" {
 			continue
 		}
-		_, exists, err := lookupCloudWatchLogDestination(conn, rs.Primary.ID, nil)
+		_, exists, err := tfcloudwatchlogs.LookupDestination(conn, rs.Primary.ID, nil)
 
 		if err != nil {
 			return fmt.Errorf("error reading CloudWatch Log Destination (%s): %w", rs.Primary.ID, err)
@@ -98,7 +99,7 @@ func testAccCheckAWSCloudwatchLogDestinationExists(n string, d *cloudwatchlogs.D
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchLogsConn
-		destination, exists, err := lookupCloudWatchLogDestination(conn, rs.Primary.ID, nil)
+		destination, exists, err := tfcloudwatchlogs.LookupDestination(conn, rs.Primary.ID, nil)
 		if err != nil {
 			return err
 		}

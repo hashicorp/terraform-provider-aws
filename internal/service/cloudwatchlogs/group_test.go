@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfcloudwatchlogs "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchlogs"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -424,7 +425,7 @@ func testAccCheckCloudWatchLogGroupExists(n string, lg *cloudwatchlogs.LogGroup)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchLogsConn
-		logGroup, err := lookupCloudWatchLogGroup(conn, rs.Primary.ID)
+		logGroup, err := tfcloudwatchlogs.LookupGroup(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -445,7 +446,7 @@ func testAccCheckAWSCloudWatchLogGroupDestroy(s *terraform.State) error {
 		if rs.Type != "aws_cloudwatch_log_group" {
 			continue
 		}
-		logGroup, err := lookupCloudWatchLogGroup(conn, rs.Primary.ID)
+		logGroup, err := tfcloudwatchlogs.LookupGroup(conn, rs.Primary.ID)
 
 		if err != nil {
 			return fmt.Errorf("error reading CloudWatch Log Group (%s): %w", rs.Primary.ID, err)

@@ -63,7 +63,7 @@ func resourceAwsCloudWatchLogDestinationPolicyPut(d *schema.ResourceData, meta i
 func resourceDestinationPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
 	destination_name := d.Get("destination_name").(string)
-	destination, exists, err := lookupCloudWatchLogDestination(conn, destination_name, nil)
+	destination, exists, err := LookupDestination(conn, destination_name, nil)
 	if err != nil {
 		return err
 	}

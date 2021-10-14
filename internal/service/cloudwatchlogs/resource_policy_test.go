@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfcloudwatchlogs "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchlogs"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -113,7 +114,7 @@ func testAccCheckCloudWatchLogResourcePolicy(pr string, resourcePolicy *cloudwat
 			return fmt.Errorf("No ID is set")
 		}
 
-		policy, exists, err := lookupCloudWatchLogResourcePolicy(conn, rs.Primary.ID, nil)
+		policy, exists, err := tfcloudwatchlogs.LookupResourcePolicy(conn, rs.Primary.ID, nil)
 		if err != nil {
 			return err
 		}
@@ -135,7 +136,7 @@ func testAccCheckCloudWatchLogResourcePolicyDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, exists, err := lookupCloudWatchLogResourcePolicy(conn, rs.Primary.ID, nil)
+		_, exists, err := tfcloudwatchlogs.LookupResourcePolicy(conn, rs.Primary.ID, nil)
 
 		if err != nil {
 			return fmt.Errorf("error reading CloudWatch Log Resource Policy (%s): %w", rs.Primary.ID, err)

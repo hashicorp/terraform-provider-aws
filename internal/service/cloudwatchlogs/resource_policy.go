@@ -65,7 +65,7 @@ func resourceAwsCloudWatchLogResourcePolicyPut(d *schema.ResourceData, meta inte
 func resourceResourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
 	policyName := d.Get("policy_name").(string)
-	resourcePolicy, exists, err := lookupCloudWatchLogResourcePolicy(conn, policyName, nil)
+	resourcePolicy, exists, err := LookupResourcePolicy(conn, policyName, nil)
 	if err != nil {
 		return err
 	}
@@ -94,7 +94,7 @@ func resourceResourcePolicyDelete(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func lookupCloudWatchLogResourcePolicy(conn *cloudwatchlogs.CloudWatchLogs,
+func LookupResourcePolicy(conn *cloudwatchlogs.CloudWatchLogs,
 	name string, nextToken *string) (*cloudwatchlogs.ResourcePolicy, bool, error) {
 	input := &cloudwatchlogs.DescribeResourcePoliciesInput{
 		NextToken: nextToken,
@@ -112,7 +112,7 @@ func lookupCloudWatchLogResourcePolicy(conn *cloudwatchlogs.CloudWatchLogs,
 	}
 
 	if resp.NextToken != nil {
-		return lookupCloudWatchLogResourcePolicy(conn, name, resp.NextToken)
+		return LookupResourcePolicy(conn, name, resp.NextToken)
 	}
 
 	return nil, false, nil
