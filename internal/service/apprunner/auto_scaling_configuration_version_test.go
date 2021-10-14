@@ -20,73 +20,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_apprunner_auto_scaling_configuration_version", &resource.Sweeper{
-		Name:         "aws_apprunner_auto_scaling_configuration_version",
-		F:            sweepAutoScalingConfigurationVersions,
-		Dependencies: []string{"aws_apprunner_service"},
-	})
-}
 
-func sweepAutoScalingConfigurationVersions(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
 
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
 
-	conn := client.(*conns.AWSClient).AppRunnerConn
-	sweepResources := make([]*sweep.SweepResource, 0)
-	ctx := context.Background()
-	var errs *multierror.Error
-
-	input := &apprunner.ListAutoScalingConfigurationsInput{}
-
-	err = conn.ListAutoScalingConfigurationsPagesWithContext(ctx, input, func(page *apprunner.ListAutoScalingConfigurationsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, summaryConfig := range page.AutoScalingConfigurationSummaryList {
-			if summaryConfig == nil {
-				continue
-			}
-
-			// Skip DefaultConfigurations as deletion not supported by the AppRunner service
-			// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/19840
-			if aws.StringValue(summaryConfig.AutoScalingConfigurationName) == "DefaultConfiguration" {
-				log.Printf("[INFO] Skipping App Runner AutoScaling Configuration: DefaultConfiguration")
-				continue
-			}
-
-			arn := aws.StringValue(summaryConfig.AutoScalingConfigurationArn)
-
-			log.Printf("[INFO] Deleting App Runner AutoScaling Configuration Version (%s)", arn)
-			r := tfapprunner.ResourceAutoScalingConfigurationVersion()
-			d := r.Data(nil)
-			d.SetId(arn)
-
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error listing App Runner AutoScaling Configuration Versions: %w", err))
-	}
-
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping App Runner AutoScaling Configuration Version for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping App Runner AutoScaling Configuration Versions sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
-}
 
 func TestAccAppRunnerAutoScalingConfigurationVersion_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

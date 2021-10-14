@@ -20,66 +20,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_apprunner_service", &resource.Sweeper{
-		Name: "aws_apprunner_service",
-		F:    sweepServices,
-	})
-}
 
-func sweepServices(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
 
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
 
-	conn := client.(*conns.AWSClient).AppRunnerConn
-	sweepResources := make([]*sweep.SweepResource, 0)
-	ctx := context.Background()
-	var errs *multierror.Error
-
-	input := &apprunner.ListServicesInput{}
-
-	err = conn.ListServicesPagesWithContext(ctx, input, func(page *apprunner.ListServicesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, service := range page.ServiceSummaryList {
-			if service == nil {
-				continue
-			}
-
-			arn := aws.StringValue(service.ServiceArn)
-
-			log.Printf("[INFO] Deleting App Runner Service: %s", arn)
-
-			r := tfapprunner.ResourceService()
-			d := r.Data(nil)
-			d.SetId(arn)
-
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error listing App Runner Services: %w", err))
-	}
-
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping App Runner Services for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping App Runner Services sweep for %s: %s", region, err)
-		return nil // In case we have completed some pages, but had errors
-	}
-
-	return errs.ErrorOrNil()
-}
 
 func TestAccAppRunnerService_ImageRepository_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
