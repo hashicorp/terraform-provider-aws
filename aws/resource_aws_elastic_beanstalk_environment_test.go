@@ -561,7 +561,7 @@ func testAccCheckBeanstalkEnvDestroy(s *terraform.State) error {
 			}
 		}
 
-		if !isAWSErr(err, "InvalidBeanstalkEnvID.NotFound", "") {
+		if !tfawserr.ErrMessageContains(err, "InvalidBeanstalkEnvID.NotFound", "") {
 			return err
 		}
 	}
