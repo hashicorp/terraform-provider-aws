@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSEFSBackupPolicy_basic(t *testing.T) {
@@ -59,7 +60,7 @@ func TestAccAWSEFSBackupPolicy_disappears_fs(t *testing.T) {
 				Config: testAccAWSEFSBackupPolicyConfig(rName, "ENABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEFSBackupPolicyExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsEfsFileSystem(), fsResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceFileSystem(), fsResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

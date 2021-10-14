@@ -15,12 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsBackupVaultPolicy() *schema.Resource {
+func ResourceVaultPolicy() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsBackupVaultPolicyPut,
 		Update: resourceAwsBackupVaultPolicyPut,
-		Read:   resourceAwsBackupVaultPolicyRead,
-		Delete: resourceAwsBackupVaultPolicyDelete,
+		Read:   resourceVaultPolicyRead,
+		Delete: resourceVaultPolicyDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -62,10 +62,10 @@ func resourceAwsBackupVaultPolicyPut(d *schema.ResourceData, meta interface{}) e
 
 	d.SetId(name)
 
-	return resourceAwsBackupVaultPolicyRead(d, meta)
+	return resourceVaultPolicyRead(d, meta)
 }
 
-func resourceAwsBackupVaultPolicyRead(d *schema.ResourceData, meta interface{}) error {
+func resourceVaultPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BackupConn
 
 	output, err := finder.BackupVaultAccessPolicyByName(conn, d.Id())
@@ -87,7 +87,7 @@ func resourceAwsBackupVaultPolicyRead(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func resourceAwsBackupVaultPolicyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceVaultPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BackupConn
 
 	log.Printf("[DEBUG] Deleting Backup Vault Policy (%s)", d.Id())

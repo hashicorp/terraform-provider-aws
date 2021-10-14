@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsBackupVault() *schema.Resource {
+func DataSourceVault() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsBackupVaultRead,
+		Read: dataSourceVaultRead,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -36,7 +36,7 @@ func dataSourceAwsBackupVault() *schema.Resource {
 	}
 }
 
-func dataSourceAwsBackupVaultRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceVaultRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BackupConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

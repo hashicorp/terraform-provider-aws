@@ -12,11 +12,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsBackupVaultNotifications() *schema.Resource {
+func ResourceVaultNotifications() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsBackupVaultNotificationsCreate,
-		Read:   resourceAwsBackupVaultNotificationsRead,
-		Delete: resourceAwsBackupVaultNotificationsDelete,
+		Create: resourceVaultNotificationsCreate,
+		Read:   resourceVaultNotificationsRead,
+		Delete: resourceVaultNotificationsDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -51,7 +51,7 @@ func resourceAwsBackupVaultNotifications() *schema.Resource {
 	}
 }
 
-func resourceAwsBackupVaultNotificationsCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceVaultNotificationsCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BackupConn
 
 	input := &backup.PutBackupVaultNotificationsInput{
@@ -67,10 +67,10 @@ func resourceAwsBackupVaultNotificationsCreate(d *schema.ResourceData, meta inte
 
 	d.SetId(d.Get("backup_vault_name").(string))
 
-	return resourceAwsBackupVaultNotificationsRead(d, meta)
+	return resourceVaultNotificationsRead(d, meta)
 }
 
-func resourceAwsBackupVaultNotificationsRead(d *schema.ResourceData, meta interface{}) error {
+func resourceVaultNotificationsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BackupConn
 
 	input := &backup.GetBackupVaultNotificationsInput{
@@ -97,7 +97,7 @@ func resourceAwsBackupVaultNotificationsRead(d *schema.ResourceData, meta interf
 	return nil
 }
 
-func resourceAwsBackupVaultNotificationsDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceVaultNotificationsDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BackupConn
 
 	input := &backup.DeleteBackupVaultNotificationsInput{

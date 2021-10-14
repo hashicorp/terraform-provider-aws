@@ -9,9 +9,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsBackupSelection() *schema.Resource {
+func DataSourceSelection() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsBackupSelectionRead,
+		Read: dataSourceSelectionRead,
 
 		Schema: map[string]*schema.Schema{
 			"plan_id": {
@@ -39,7 +39,7 @@ func dataSourceAwsBackupSelection() *schema.Resource {
 	}
 }
 
-func dataSourceAwsBackupSelectionRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceSelectionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BackupConn
 
 	input := &backup.GetBackupSelectionInput{

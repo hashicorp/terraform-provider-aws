@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAwsBackupSelection_basic(t *testing.T) {
@@ -55,7 +56,7 @@ func TestAccAwsBackupSelection_disappears(t *testing.T) {
 				Config: testAccBackupSelectionConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBackupSelectionExists(resourceName, &selection1),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsBackupSelection(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceSelection(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -79,8 +80,8 @@ func TestAccAwsBackupSelection_disappears_BackupPlan(t *testing.T) {
 				Config: testAccBackupSelectionConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBackupSelectionExists(resourceName, &selection1),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsBackupSelection(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsBackupPlan(), backupPlanResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceSelection(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourcePlan(), backupPlanResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
