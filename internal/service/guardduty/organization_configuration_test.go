@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func testAccAwsGuardDutyOrganizationConfiguration_basic(t *testing.T) {
+func testAccOrganizationConfiguration_basic(t *testing.T) {
 	detectorResourceName := "aws_guardduty_detector.test"
 	resourceName := "aws_guardduty_organization_configuration.test"
 
@@ -22,7 +22,7 @@ func testAccAwsGuardDutyOrganizationConfiguration_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		// GuardDuty Organization Configuration cannot be deleted separately.
 		// Ensure parent resource is destroyed instead.
-		CheckDestroy: testAccCheckAwsGuardDutyDetectorDestroy,
+		CheckDestroy: testAccCheckDetectorDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGuardDutyOrganizationConfigurationConfigAutoEnable(true),
@@ -47,7 +47,7 @@ func testAccAwsGuardDutyOrganizationConfiguration_basic(t *testing.T) {
 	})
 }
 
-func testAccAwsGuardDutyOrganizationConfiguration_s3logs(t *testing.T) {
+func testAccOrganizationConfiguration_s3logs(t *testing.T) {
 	detectorResourceName := "aws_guardduty_detector.test"
 	resourceName := "aws_guardduty_organization_configuration.test"
 
@@ -58,7 +58,7 @@ func testAccAwsGuardDutyOrganizationConfiguration_s3logs(t *testing.T) {
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsGuardDutyDetectorDestroy,
+		CheckDestroy: testAccCheckDetectorDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGuardDutyOrganizationConfigurationConfigS3Logs(true),

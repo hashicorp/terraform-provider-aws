@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func testAccAwsGuardDutyInviteAccepter_basic(t *testing.T) {
+func testAccInviteAccepter_basic(t *testing.T) {
 	var providers []*schema.Provider
 	masterDetectorResourceName := "aws_guardduty_detector.master"
 	memberDetectorResourceName := "aws_guardduty_detector.member"
 	resourceName := "aws_guardduty_invite_accepter.test"
-	_, email := testAccAWSGuardDutyMemberFromEnv(t)
+	_, email := testAccMemberFromEnv(t)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -28,18 +28,18 @@ func testAccAwsGuardDutyInviteAccepter_basic(t *testing.T) {
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, guardduty.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckAwsGuardDutyInviteAccepterDestroy,
+		CheckDestroy:      testAccCheckInviteAccepterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsGuardDutyInviteAccepterConfig_basic(email),
+				Config: testAccInviteAccepterConfig_basic(email),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsGuardDutyInviteAccepterExists(resourceName),
+					testAccCheckInviteAccepterExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "detector_id", memberDetectorResourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "master_account_id", masterDetectorResourceName, "account_id"),
 				),
 			},
 			{
-				Config:            testAccAwsGuardDutyInviteAccepterConfig_basic(email),
+				Config:            testAccInviteAccepterConfig_basic(email),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -48,7 +48,7 @@ func testAccAwsGuardDutyInviteAccepter_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsGuardDutyInviteAccepterDestroy(s *terraform.State) error {
+func testAccCheckInviteAccepterDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -80,7 +80,7 @@ func testAccCheckAwsGuardDutyInviteAccepterDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAwsGuardDutyInviteAccepterExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckInviteAccepterExists(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -111,7 +111,7 @@ func testAccCheckAwsGuardDutyInviteAccepterExists(resourceName string) resource.
 	}
 }
 
-func testAccAwsGuardDutyInviteAccepterConfig_basic(email string) string {
+func testAccInviteAccepterConfig_basic(email string) string {
 	return acctest.ConfigAlternateAccountProvider() + fmt.Sprintf(`
 resource "aws_guardduty_detector" "master" {
   provider = "awsalternate"

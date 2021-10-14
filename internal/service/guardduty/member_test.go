@@ -14,7 +14,7 @@ import (
 	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
 )
 
-func testAccAwsGuardDutyMember_basic(t *testing.T) {
+func testAccMember_basic(t *testing.T) {
 	resourceName := "aws_guardduty_member.test"
 	accountID := "111111111111"
 
@@ -22,12 +22,12 @@ func testAccAwsGuardDutyMember_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsGuardDutyMemberDestroy,
+		CheckDestroy: testAccCheckMemberDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGuardDutyMemberConfig_basic(accountID, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsGuardDutyMemberExists(resourceName),
+					testAccCheckMemberExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "account_id", accountID),
 					resource.TestCheckResourceAttrSet(resourceName, "detector_id"),
 					resource.TestCheckResourceAttr(resourceName, "email", acctest.DefaultEmailAddress),
@@ -43,20 +43,20 @@ func testAccAwsGuardDutyMember_basic(t *testing.T) {
 	})
 }
 
-func testAccAwsGuardDutyMember_invite_disassociate(t *testing.T) {
+func testAccMember_invite_disassociate(t *testing.T) {
 	resourceName := "aws_guardduty_member.test"
-	accountID, email := testAccAWSGuardDutyMemberFromEnv(t)
+	accountID, email := testAccMemberFromEnv(t)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsGuardDutyMemberDestroy,
+		CheckDestroy: testAccCheckMemberDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGuardDutyMemberConfig_invite(accountID, email, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsGuardDutyMemberExists(resourceName),
+					testAccCheckMemberExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "invite", "true"),
 					resource.TestCheckResourceAttr(resourceName, "relationship_status", "Invited"),
 				),
@@ -65,7 +65,7 @@ func testAccAwsGuardDutyMember_invite_disassociate(t *testing.T) {
 			{
 				Config: testAccGuardDutyMemberConfig_invite(accountID, email, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsGuardDutyMemberExists(resourceName),
+					testAccCheckMemberExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "invite", "false"),
 					resource.TestCheckResourceAttr(resourceName, "relationship_status", "Removed"),
 				),
@@ -82,20 +82,20 @@ func testAccAwsGuardDutyMember_invite_disassociate(t *testing.T) {
 	})
 }
 
-func testAccAwsGuardDutyMember_invite_onUpdate(t *testing.T) {
+func testAccMember_invite_onUpdate(t *testing.T) {
 	resourceName := "aws_guardduty_member.test"
-	accountID, email := testAccAWSGuardDutyMemberFromEnv(t)
+	accountID, email := testAccMemberFromEnv(t)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsGuardDutyMemberDestroy,
+		CheckDestroy: testAccCheckMemberDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGuardDutyMemberConfig_invite(accountID, email, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsGuardDutyMemberExists(resourceName),
+					testAccCheckMemberExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "invite", "false"),
 					resource.TestCheckResourceAttr(resourceName, "relationship_status", "Created"),
 				),
@@ -104,7 +104,7 @@ func testAccAwsGuardDutyMember_invite_onUpdate(t *testing.T) {
 			{
 				Config: testAccGuardDutyMemberConfig_invite(accountID, email, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsGuardDutyMemberExists(resourceName),
+					testAccCheckMemberExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "invite", "true"),
 					resource.TestCheckResourceAttr(resourceName, "relationship_status", "Invited"),
 				),
@@ -121,21 +121,21 @@ func testAccAwsGuardDutyMember_invite_onUpdate(t *testing.T) {
 	})
 }
 
-func testAccAwsGuardDutyMember_invitationMessage(t *testing.T) {
+func testAccMember_invitationMessage(t *testing.T) {
 	resourceName := "aws_guardduty_member.test"
-	accountID, email := testAccAWSGuardDutyMemberFromEnv(t)
+	accountID, email := testAccMemberFromEnv(t)
 	invitationMessage := "inviting"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsGuardDutyMemberDestroy,
+		CheckDestroy: testAccCheckMemberDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGuardDutyMemberConfig_invitationMessage(accountID, email, invitationMessage),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsGuardDutyMemberExists(resourceName),
+					testAccCheckMemberExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "account_id", accountID),
 					resource.TestCheckResourceAttrSet(resourceName, "detector_id"),
 					resource.TestCheckResourceAttr(resourceName, "disable_email_notification", "true"),
@@ -158,7 +158,7 @@ func testAccAwsGuardDutyMember_invitationMessage(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsGuardDutyMemberDestroy(s *terraform.State) error {
+func testAccCheckMemberDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -194,7 +194,7 @@ func testAccCheckAwsGuardDutyMemberDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAwsGuardDutyMemberExists(name string) resource.TestCheckFunc {
+func testAccCheckMemberExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {

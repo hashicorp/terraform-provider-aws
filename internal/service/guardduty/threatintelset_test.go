@@ -16,7 +16,7 @@ import (
 	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
 )
 
-func testAccAwsGuardDutyThreatintelset_basic(t *testing.T) {
+func testAccThreatintelset_basic(t *testing.T) {
 	bucketName := fmt.Sprintf("tf-test-%s", sdkacctest.RandString(5))
 	keyName1 := fmt.Sprintf("tf-%s", sdkacctest.RandString(5))
 	keyName2 := fmt.Sprintf("tf-%s", sdkacctest.RandString(5))
@@ -28,12 +28,12 @@ func testAccAwsGuardDutyThreatintelset_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsGuardDutyThreatintelsetDestroy,
+		CheckDestroy: testAccCheckThreatintelsetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGuardDutyThreatintelsetConfig_basic(bucketName, keyName1, threatintelsetName1, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsGuardDutyThreatintelsetExists(resourceName),
+					testAccCheckThreatintelsetExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "guardduty", regexp.MustCompile("detector/.+/threatintelset/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "name", threatintelsetName1),
 					resource.TestCheckResourceAttr(resourceName, "activate", "true"),
@@ -49,7 +49,7 @@ func testAccAwsGuardDutyThreatintelset_basic(t *testing.T) {
 			{
 				Config: testAccGuardDutyThreatintelsetConfig_basic(bucketName, keyName2, threatintelsetName2, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsGuardDutyThreatintelsetExists(resourceName),
+					testAccCheckThreatintelsetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", threatintelsetName2),
 					resource.TestCheckResourceAttr(resourceName, "activate", "false"),
 					resource.TestMatchResourceAttr(resourceName, "location", regexp.MustCompile(fmt.Sprintf("%s/%s$", bucketName, keyName2))),
@@ -59,7 +59,7 @@ func testAccAwsGuardDutyThreatintelset_basic(t *testing.T) {
 	})
 }
 
-func testAccAwsGuardDutyThreatintelset_tags(t *testing.T) {
+func testAccThreatintelset_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_guardduty_threatintelset.test"
 
@@ -67,12 +67,12 @@ func testAccAwsGuardDutyThreatintelset_tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsGuardDutyThreatintelsetDestroy,
+		CheckDestroy: testAccCheckThreatintelsetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGuardDutyThreatintelsetConfigTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsGuardDutyThreatintelsetExists(resourceName),
+					testAccCheckThreatintelsetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -85,7 +85,7 @@ func testAccAwsGuardDutyThreatintelset_tags(t *testing.T) {
 			{
 				Config: testAccGuardDutyThreatintelsetConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsGuardDutyThreatintelsetExists(resourceName),
+					testAccCheckThreatintelsetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -94,7 +94,7 @@ func testAccAwsGuardDutyThreatintelset_tags(t *testing.T) {
 			{
 				Config: testAccGuardDutyThreatintelsetConfigTags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsGuardDutyThreatintelsetExists(resourceName),
+					testAccCheckThreatintelsetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -103,7 +103,7 @@ func testAccAwsGuardDutyThreatintelset_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsGuardDutyThreatintelsetDestroy(s *terraform.State) error {
+func testAccCheckThreatintelsetDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -138,7 +138,7 @@ func testAccCheckAwsGuardDutyThreatintelsetDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAwsGuardDutyThreatintelsetExists(name string) resource.TestCheckFunc {
+func testAccCheckThreatintelsetExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {

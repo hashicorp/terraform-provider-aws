@@ -16,7 +16,7 @@ import (
 	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
 )
 
-func testAccAwsGuardDutyFilter_basic(t *testing.T) {
+func testAccFilter_basic(t *testing.T) {
 	var v1, v2 guardduty.GetFilterOutput
 	resourceName := "aws_guardduty_filter.test"
 	detectorResourceName := "aws_guardduty_detector.test"
@@ -28,12 +28,12 @@ func testAccAwsGuardDutyFilter_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsGuardDutyFilterDestroy,
+		CheckDestroy: testAccCheckFilterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGuardDutyFilterConfig_full(startDate, endDate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsGuardDutyFilterExists(resourceName, &v1),
+					testAccCheckFilterExists(resourceName, &v1),
 					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "name", "test-filter"),
 					resource.TestCheckResourceAttr(resourceName, "action", "ARCHIVE"),
@@ -69,7 +69,7 @@ func testAccAwsGuardDutyFilter_basic(t *testing.T) {
 			{
 				Config: testAccGuardDutyFilterConfigNoop_full(startDate, endDate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsGuardDutyFilterExists(resourceName, &v2),
+					testAccCheckFilterExists(resourceName, &v2),
 					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "name", "test-filter"),
 					resource.TestCheckResourceAttr(resourceName, "action", "NOOP"),
@@ -83,7 +83,7 @@ func testAccAwsGuardDutyFilter_basic(t *testing.T) {
 	})
 }
 
-func testAccAwsGuardDutyFilter_update(t *testing.T) {
+func testAccFilter_update(t *testing.T) {
 	var v1, v2 guardduty.GetFilterOutput
 	resourceName := "aws_guardduty_filter.test"
 
@@ -94,12 +94,12 @@ func testAccAwsGuardDutyFilter_update(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsGuardDutyFilterDestroy,
+		CheckDestroy: testAccCheckFilterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGuardDutyFilterConfig_full(startDate, endDate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsGuardDutyFilterExists(resourceName, &v1),
+					testAccCheckFilterExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "finding_criteria.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.#", "3"),
 				),
@@ -107,7 +107,7 @@ func testAccAwsGuardDutyFilter_update(t *testing.T) {
 			{
 				Config: testAccGuardDutyFilterConfig_update(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsGuardDutyFilterExists(resourceName, &v2),
+					testAccCheckFilterExists(resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "finding_criteria.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
@@ -127,7 +127,7 @@ func testAccAwsGuardDutyFilter_update(t *testing.T) {
 	})
 }
 
-func testAccAwsGuardDutyFilter_tags(t *testing.T) {
+func testAccFilter_tags(t *testing.T) {
 	var v1, v2, v3 guardduty.GetFilterOutput
 	resourceName := "aws_guardduty_filter.test"
 
@@ -138,12 +138,12 @@ func testAccAwsGuardDutyFilter_tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsGuardDutyFilterDestroy,
+		CheckDestroy: testAccCheckFilterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGuardDutyFilterConfig_multipleTags(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsGuardDutyFilterExists(resourceName, &v1),
+					testAccCheckFilterExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "test-filter"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key", "Value"),
@@ -152,7 +152,7 @@ func testAccAwsGuardDutyFilter_tags(t *testing.T) {
 			{
 				Config: testAccGuardDutyFilterConfig_updateTags(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsGuardDutyFilterExists(resourceName, &v2),
+					testAccCheckFilterExists(resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key", "Updated"),
 				),
@@ -160,7 +160,7 @@ func testAccAwsGuardDutyFilter_tags(t *testing.T) {
 			{
 				Config: testAccGuardDutyFilterConfig_full(startDate, endDate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsGuardDutyFilterExists(resourceName, &v3),
+					testAccCheckFilterExists(resourceName, &v3),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -168,7 +168,7 @@ func testAccAwsGuardDutyFilter_tags(t *testing.T) {
 	})
 }
 
-func testAccAwsGuardDutyFilter_disappears(t *testing.T) {
+func testAccFilter_disappears(t *testing.T) {
 	var v guardduty.GetFilterOutput
 	resourceName := "aws_guardduty_filter.test"
 
@@ -179,12 +179,12 @@ func testAccAwsGuardDutyFilter_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsAcmpcaCertificateAuthorityDestroy,
+		CheckDestroy: testAccCheckACMPCACertificateAuthorityDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGuardDutyFilterConfig_full(startDate, endDate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsGuardDutyFilterExists(resourceName, &v),
+					testAccCheckFilterExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfguardduty.ResourceFilter(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -193,7 +193,7 @@ func testAccAwsGuardDutyFilter_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsGuardDutyFilterDestroy(s *terraform.State) error {
+func testAccCheckFilterDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -225,7 +225,7 @@ func testAccCheckAwsGuardDutyFilterDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAwsGuardDutyFilterExists(name string, filter *guardduty.GetFilterOutput) resource.TestCheckFunc {
+func testAccCheckFilterExists(name string, filter *guardduty.GetFilterOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -412,7 +412,7 @@ resource "aws_guardduty_detector" "test" {
 `
 }
 
-func testAccCheckAwsAcmpcaCertificateAuthorityDestroy(s *terraform.State) error {
+func testAccCheckACMPCACertificateAuthorityDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAConn
 
 	for _, rs := range s.RootModule().Resources {

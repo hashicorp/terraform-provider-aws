@@ -13,7 +13,7 @@ import (
 	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
 )
 
-func testAccAwsGuardDutyOrganizationAdminAccount_basic(t *testing.T) {
+func testAccOrganizationAdminAccount_basic(t *testing.T) {
 	resourceName := "aws_guardduty_organization_admin_account.test"
 
 	resource.Test(t, resource.TestCase{
@@ -23,12 +23,12 @@ func testAccAwsGuardDutyOrganizationAdminAccount_basic(t *testing.T) {
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsGuardDutyOrganizationAdminAccountDestroy,
+		CheckDestroy: testAccCheckOrganizationAdminAccountDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGuardDutyOrganizationAdminAccountConfigSelf(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsGuardDutyOrganizationAdminAccountExists(resourceName),
+					testAccCheckOrganizationAdminAccountExists(resourceName),
 					acctest.CheckResourceAttrAccountID(resourceName, "admin_account_id"),
 				),
 			},
@@ -41,7 +41,7 @@ func testAccAwsGuardDutyOrganizationAdminAccount_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsGuardDutyOrganizationAdminAccountDestroy(s *terraform.State) error {
+func testAccCheckOrganizationAdminAccountDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -69,7 +69,7 @@ func testAccCheckAwsGuardDutyOrganizationAdminAccountDestroy(s *terraform.State)
 	return nil
 }
 
-func testAccCheckAwsGuardDutyOrganizationAdminAccountExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckOrganizationAdminAccountExists(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {

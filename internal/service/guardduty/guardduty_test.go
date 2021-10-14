@@ -8,45 +8,45 @@ import (
 func TestAccAWSGuardDuty_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Detector": {
-			"basic":              testAccAwsGuardDutyDetector_basic,
-			"datasources_s3logs": testAccAwsGuardDutyDetector_datasources_s3logs,
-			"tags":               testAccAwsGuardDutyDetector_tags,
-			"datasource_basic":   testAccAWSGuarddutyDetectorDataSource_basic,
-			"datasource_id":      testAccAWSGuarddutyDetectorDataSource_Id,
+			"basic":              testAccDetector_basic,
+			"datasources_s3logs": testAccDetector_datasources_s3logs,
+			"tags":               testAccDetector_tags,
+			"datasource_basic":   testAccDetectorDataSource_basic,
+			"datasource_id":      testAccDetectorDataSource_ID,
 		},
 		"Filter": {
-			"basic":      testAccAwsGuardDutyFilter_basic,
-			"update":     testAccAwsGuardDutyFilter_update,
-			"tags":       testAccAwsGuardDutyFilter_tags,
-			"disappears": testAccAwsGuardDutyFilter_disappears,
+			"basic":      testAccFilter_basic,
+			"update":     testAccFilter_update,
+			"tags":       testAccFilter_tags,
+			"disappears": testAccFilter_disappears,
 		},
 		"InviteAccepter": {
-			"basic": testAccAwsGuardDutyInviteAccepter_basic,
+			"basic": testAccInviteAccepter_basic,
 		},
 		"IPSet": {
-			"basic": testAccAwsGuardDutyIpset_basic,
-			"tags":  testAccAwsGuardDutyIpset_tags,
+			"basic": testAccIPSet_basic,
+			"tags":  testAccIPSet_tags,
 		},
 		"OrganizationAdminAccount": {
-			"basic": testAccAwsGuardDutyOrganizationAdminAccount_basic,
+			"basic": testAccOrganizationAdminAccount_basic,
 		},
 		"OrganizationConfiguration": {
-			"basic":  testAccAwsGuardDutyOrganizationConfiguration_basic,
-			"s3Logs": testAccAwsGuardDutyOrganizationConfiguration_s3logs,
+			"basic":  testAccOrganizationConfiguration_basic,
+			"s3Logs": testAccOrganizationConfiguration_s3logs,
 		},
 		"ThreatIntelSet": {
-			"basic": testAccAwsGuardDutyThreatintelset_basic,
-			"tags":  testAccAwsGuardDutyThreatintelset_tags,
+			"basic": testAccThreatintelset_basic,
+			"tags":  testAccThreatintelset_tags,
 		},
 		"Member": {
-			"basic":              testAccAwsGuardDutyMember_basic,
-			"inviteOnUpdate":     testAccAwsGuardDutyMember_invite_onUpdate,
-			"inviteDisassociate": testAccAwsGuardDutyMember_invite_disassociate,
-			"invitationMessage":  testAccAwsGuardDutyMember_invitationMessage,
+			"basic":              testAccMember_basic,
+			"inviteOnUpdate":     testAccMember_invite_onUpdate,
+			"inviteDisassociate": testAccMember_invite_disassociate,
+			"invitationMessage":  testAccMember_invitationMessage,
 		},
 		"PublishingDestination": {
-			"basic":      testAccAwsGuardDutyPublishingDestination_basic,
-			"disappears": testAccAwsGuardDutyPublishingDestination_disappears,
+			"basic":      testAccPublishingDestination_basic,
+			"disappears": testAccPublishingDestination_disappears,
 		},
 	}
 
@@ -63,7 +63,7 @@ func TestAccAWSGuardDuty_serial(t *testing.T) {
 	}
 }
 
-func testAccAWSGuardDutyMemberFromEnv(t *testing.T) (string, string) {
+func testAccMemberFromEnv(t *testing.T) (string, string) {
 	accountID := os.Getenv("AWS_GUARDDUTY_MEMBER_ACCOUNT_ID")
 	if accountID == "" {
 		t.Skip(

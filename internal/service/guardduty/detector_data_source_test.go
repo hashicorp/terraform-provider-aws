@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func testAccAWSGuarddutyDetectorDataSource_basic(t *testing.T) {
+func testAccDetectorDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(t) },
 		ErrorCheck:                acctest.ErrorCheck(t, guardduty.EndpointsID),
@@ -16,11 +16,11 @@ func testAccAWSGuarddutyDetectorDataSource_basic(t *testing.T) {
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsGuarddutyDetectorBasicResourceConfig(),
+				Config: testAccDetectorBasicResourceConfig(),
 				Check:  resource.ComposeTestCheckFunc(),
 			},
 			{
-				Config: testAccAwsGuarddutyDetectorBasicResourceDataConfig(),
+				Config: testAccDetectorBasicResourceDataConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair("data.aws_guardduty_detector.test", "id", "aws_guardduty_detector.test", "id"),
 					resource.TestCheckResourceAttr("data.aws_guardduty_detector.test", "status", "ENABLED"),
@@ -32,14 +32,14 @@ func testAccAWSGuarddutyDetectorDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccAWSGuarddutyDetectorDataSource_Id(t *testing.T) {
+func testAccDetectorDataSource_ID(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, guardduty.EndpointsID),
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsGuarddutyDetectorExplicitConfig(),
+				Config: testAccDetectorExplicitConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair("data.aws_guardduty_detector.test", "id", "aws_guardduty_detector.test", "id"),
 					resource.TestCheckResourceAttr("data.aws_guardduty_detector.test", "status", "ENABLED"),
@@ -51,13 +51,13 @@ func testAccAWSGuarddutyDetectorDataSource_Id(t *testing.T) {
 	})
 }
 
-func testAccAwsGuarddutyDetectorBasicResourceConfig() string {
+func testAccDetectorBasicResourceConfig() string {
 	return `
 resource "aws_guardduty_detector" "test" {}
 `
 }
 
-func testAccAwsGuarddutyDetectorBasicResourceDataConfig() string {
+func testAccDetectorBasicResourceDataConfig() string {
 	return `
 resource "aws_guardduty_detector" "test" {}
 
@@ -65,7 +65,7 @@ data "aws_guardduty_detector" "test" {}
 `
 }
 
-func testAccAwsGuarddutyDetectorExplicitConfig() string {
+func testAccDetectorExplicitConfig() string {
 	return `
 resource "aws_guardduty_detector" "test" {}
 
