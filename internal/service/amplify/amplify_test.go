@@ -6,7 +6,7 @@ import (
 )
 
 // Serialize to limit API rate-limit exceeded errors.
-func TestAccAWSAmplify_serial(t *testing.T) {
+func TestAccAmplify_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"App": {
 			"basic":                    testAccApp_basic,
