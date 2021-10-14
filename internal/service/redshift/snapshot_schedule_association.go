@@ -162,7 +162,7 @@ func SnapshotScheduleAssociationParseID(id string) (clusterIdentifier, scheduleI
 	return
 }
 
-func resourceAwsRedshiftSnapshotScheduleAssociationStateRefreshFunc(clusterIdentifier, scheduleIdentifier string, conn *redshift.Redshift) resource.StateRefreshFunc {
+func resourceSnapshotScheduleAssociationStateRefreshFunc(clusterIdentifier, scheduleIdentifier string, conn *redshift.Redshift) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		log.Printf("[INFO] Reading Redshift Cluster (%s) Snapshot Schedule (%s) Association Information", clusterIdentifier, scheduleIdentifier)
 		resp, err := conn.DescribeSnapshotSchedules(&redshift.DescribeSnapshotSchedulesInput{
@@ -208,7 +208,7 @@ func WaitForSnapshotScheduleAssociationActive(conn *redshift.Redshift, timeout t
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{redshift.ScheduleStateModifying},
 		Target:     []string{redshift.ScheduleStateActive},
-		Refresh:    resourceAwsRedshiftSnapshotScheduleAssociationStateRefreshFunc(clusterIdentifier, scheduleIdentifier, conn),
+		Refresh:    resourceSnapshotScheduleAssociationStateRefreshFunc(clusterIdentifier, scheduleIdentifier, conn),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -226,7 +226,7 @@ func waitForRedshiftSnapshotScheduleAssociationDestroy(conn *redshift.Redshift, 
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{redshift.ScheduleStateModifying, redshift.ScheduleStateActive},
 		Target:     []string{"destroyed"},
-		Refresh:    resourceAwsRedshiftSnapshotScheduleAssociationStateRefreshFunc(clusterIdentifier, scheduleIdentifier, conn),
+		Refresh:    resourceSnapshotScheduleAssociationStateRefreshFunc(clusterIdentifier, scheduleIdentifier, conn),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 	}

@@ -70,7 +70,7 @@ func ResourceSecurityGroup() *schema.Resource {
 						},
 					},
 				},
-				Set: resourceAwsRedshiftSecurityGroupIngressHash,
+				Set: resourceSecurityGroupIngressHash,
 			},
 		},
 	}
@@ -97,14 +97,14 @@ func resourceSecurityGroupCreate(d *schema.ResourceData, meta interface{}) error
 	d.SetId(d.Get("name").(string))
 
 	log.Printf("[INFO] Redshift Security Group ID: %s", d.Id())
-	sg, err := resourceAwsRedshiftSecurityGroupRetrieve(d, meta)
+	sg, err := resourceSecurityGroupRetrieve(d, meta)
 	if err != nil {
 		return err
 	}
 
 	ingresses := d.Get("ingress").(*schema.Set)
 	for _, ing := range ingresses.List() {
-		err := resourceAwsRedshiftSecurityGroupAuthorizeRule(ing, *sg.ClusterSecurityGroupName, conn)
+		err := resourceSecurityGroupAuthorizeRule(ing, *sg.ClusterSecurityGroupName, conn)
 		if err != nil {
 			errs = append(errs, err)
 		}
@@ -118,7 +118,7 @@ func resourceSecurityGroupCreate(d *schema.ResourceData, meta interface{}) error
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"authorizing"},
 		Target:  []string{"authorized"},
-		Refresh: resourceAwsRedshiftSecurityGroupStateRefreshFunc(d, meta),
+		Refresh: resourceSecurityGroupStateRefreshFunc(d, meta),
 		Timeout: 10 * time.Minute,
 	}
 
@@ -131,13 +131,13 @@ func resourceSecurityGroupCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceSecurityGroupRead(d *schema.ResourceData, meta interface{}) error {
-	sg, err := resourceAwsRedshiftSecurityGroupRetrieve(d, meta)
+	sg, err := resourceSecurityGroupRetrieve(d, meta)
 	if err != nil {
 		return err
 	}
 
 	rules := &schema.Set{
-		F: resourceAwsRedshiftSecurityGroupIngressHash,
+		F: resourceSecurityGroupIngressHash,
 	}
 
 	for _, v := range sg.IPRanges {
@@ -225,7 +225,7 @@ func resourceSecurityGroupDelete(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func resourceAwsRedshiftSecurityGroupRetrieve(d *schema.ResourceData, meta interface{}) (*redshift.ClusterSecurityGroup, error) {
+func resourceSecurityGroupRetrieve(d *schema.ResourceData, meta interface{}) (*redshift.ClusterSecurityGroup, error) {
 	conn := meta.(*conns.AWSClient).RedshiftConn
 
 	opts := redshift.DescribeClusterSecurityGroupsInput{
@@ -248,7 +248,7 @@ func resourceAwsRedshiftSecurityGroupRetrieve(d *schema.ResourceData, meta inter
 	return resp.ClusterSecurityGroups[0], nil
 }
 
-func resourceAwsRedshiftSecurityGroupIngressHash(v interface{}) int {
+func resourceSecurityGroupIngressHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 
@@ -267,7 +267,7 @@ func resourceAwsRedshiftSecurityGroupIngressHash(v interface{}) int {
 	return create.StringHashcode(buf.String())
 }
 
-func resourceAwsRedshiftSecurityGroupAuthorizeRule(ingress interface{}, redshiftSecurityGroupName string, conn *redshift.Redshift) error {
+func resourceSecurityGroupAuthorizeRule(ingress interface{}, redshiftSecurityGroupName string, conn *redshift.Redshift) error {
 	ing := ingress.(map[string]interface{})
 
 	opts := redshift.AuthorizeClusterSecurityGroupIngressInput{
@@ -296,10 +296,10 @@ func resourceAwsRedshiftSecurityGroupAuthorizeRule(ingress interface{}, redshift
 	return nil
 }
 
-func resourceAwsRedshiftSecurityGroupStateRefreshFunc(
+func resourceSecurityGroupStateRefreshFunc(
 	d *schema.ResourceData, meta interface{}) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		v, err := resourceAwsRedshiftSecurityGroupRetrieve(d, meta)
+		v, err := resourceSecurityGroupRetrieve(d, meta)
 
 		if err != nil {
 			log.Printf("Error on retrieving Redshift Security Group when waiting: %s", err)

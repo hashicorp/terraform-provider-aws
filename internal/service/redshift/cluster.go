@@ -28,7 +28,7 @@ func ResourceCluster() *schema.Resource {
 		Update: resourceClusterUpdate,
 		Delete: resourceClusterDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsRedshiftClusterImport,
+			State: resourceClusterImport,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -317,7 +317,7 @@ func ResourceCluster() *schema.Resource {
 	}
 }
 
-func resourceAwsRedshiftClusterImport(
+func resourceClusterImport(
 	d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	// Neither skip_final_snapshot nor final_snapshot_identifier can be fetched
 	// from any API call, so we need to default skip_final_snapshot to true so
@@ -488,7 +488,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"creating", "backing-up", "modifying", "restoring", "available, prep-for-resize"},
 		Target:     []string{"available"},
-		Refresh:    resourceAwsRedshiftClusterStateRefreshFunc(d.Id(), conn),
+		Refresh:    resourceClusterStateRefreshFunc(d.Id(), conn),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
 		MinTimeout: 10 * time.Second,
 	}
@@ -765,7 +765,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		stateConf := &resource.StateChangeConf{
 			Pending:    []string{"creating", "deleting", "rebooting", "resizing", "renaming", "modifying", "available, prep-for-resize"},
 			Target:     []string{"available"},
-			Refresh:    resourceAwsRedshiftClusterStateRefreshFunc(d.Id(), conn),
+			Refresh:    resourceClusterStateRefreshFunc(d.Id(), conn),
 			Timeout:    d.Timeout(schema.TimeoutUpdate),
 			MinTimeout: 10 * time.Second,
 		}
@@ -900,7 +900,7 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsRedshiftClusterStateRefreshFunc(id string, conn *redshift.Redshift) resource.StateRefreshFunc {
+func resourceClusterStateRefreshFunc(id string, conn *redshift.Redshift) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		log.Printf("[INFO] Reading Redshift Cluster Information: %s", id)
 		resp, err := conn.DescribeClusters(&redshift.DescribeClustersInput{

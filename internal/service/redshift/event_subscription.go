@@ -130,7 +130,7 @@ func resourceEventSubscriptionRead(d *schema.ResourceData, meta interface{}) err
 
 	d.Set("arn", arn)
 
-	sub, err := resourceAwsRedshiftEventSubscriptionRetrieve(d.Id(), conn)
+	sub, err := resourceEventSubscriptionRetrieve(d.Id(), conn)
 	if err != nil {
 		return fmt.Errorf("Error retrieving Redshift Event Subscription %s: %s", d.Id(), err)
 	}
@@ -181,7 +181,7 @@ func resourceEventSubscriptionRead(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func resourceAwsRedshiftEventSubscriptionRetrieve(name string, conn *redshift.Redshift) (*redshift.EventSubscription, error) {
+func resourceEventSubscriptionRetrieve(name string, conn *redshift.Redshift) (*redshift.EventSubscription, error) {
 
 	request := &redshift.DescribeEventSubscriptionsInput{
 		SubscriptionName: aws.String(name),

@@ -77,7 +77,7 @@ func ResourceParameterGroup() *schema.Resource {
 						},
 					},
 				},
-				Set: resourceAwsRedshiftParameterHash,
+				Set: resourceParameterHash,
 			},
 
 			"tags":     tftags.TagsSchema(),
@@ -237,7 +237,7 @@ func resourceParameterGroupDelete(d *schema.ResourceData, meta interface{}) erro
 	return err
 }
 
-func resourceAwsRedshiftParameterHash(v interface{}) int {
+func resourceParameterHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 	buf.WriteString(fmt.Sprintf("%s-", m["name"].(string)))

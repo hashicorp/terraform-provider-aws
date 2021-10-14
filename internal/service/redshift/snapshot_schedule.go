@@ -189,7 +189,7 @@ func resourceSnapshotScheduleDelete(d *schema.ResourceData, meta interface{}) er
 	conn := meta.(*conns.AWSClient).RedshiftConn
 
 	if d.Get("force_destroy").(bool) {
-		if err := resourceAwsRedshiftSnapshotScheduleDeleteAllAssociatedClusters(conn, d.Id()); err != nil {
+		if err := resourceSnapshotScheduleDeleteAllAssociatedClusters(conn, d.Id()); err != nil {
 			return err
 		}
 	}
@@ -207,7 +207,7 @@ func resourceSnapshotScheduleDelete(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func resourceAwsRedshiftSnapshotScheduleDeleteAllAssociatedClusters(conn *redshift.Redshift, scheduleIdentifier string) error {
+func resourceSnapshotScheduleDeleteAllAssociatedClusters(conn *redshift.Redshift, scheduleIdentifier string) error {
 
 	resp, err := conn.DescribeSnapshotSchedules(&redshift.DescribeSnapshotSchedulesInput{
 		ScheduleIdentifier: aws.String(scheduleIdentifier),
