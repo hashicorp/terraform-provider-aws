@@ -58,7 +58,7 @@ func testSweepNetworkFirewallRuleGroups(region string) error {
 			arn := aws.StringValue(r.Arn)
 			log.Printf("[INFO] Deleting NetworkFirewall Rule Group: %s", arn)
 
-			r := ResourceRuleGroup()
+			r := tfnetworkfirewall.ResourceRuleGroup()
 			d := r.Data(nil)
 			d.SetId(arn)
 			diags := r.DeleteContext(ctx, d, client)
@@ -810,7 +810,7 @@ func TestAccAwsNetworkFirewallRuleGroup_disappears(t *testing.T) {
 				Config: testAccNetworkFirewallRuleGroup_basic_rulesSourceList(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsNetworkFirewallRuleGroupExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceRuleGroup(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfnetworkfirewall.ResourceRuleGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
