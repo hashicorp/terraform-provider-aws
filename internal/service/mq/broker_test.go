@@ -255,7 +255,7 @@ func TestDiffUsers(t *testing.T) {
 	}
 }
 
-func TestAccAWSMqBroker_basic(t *testing.T) {
+func TestAccMQBroker_basic(t *testing.T) {
 	var broker mq.DescribeBrokerResponse
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_broker.test"
@@ -328,7 +328,7 @@ func TestAccAWSMqBroker_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSMqBroker_throughputOptimized(t *testing.T) {
+func TestAccMQBroker_throughputOptimized(t *testing.T) {
 	var broker mq.DescribeBrokerResponse
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_broker.test"
@@ -394,7 +394,7 @@ func TestAccAWSMqBroker_throughputOptimized(t *testing.T) {
 	})
 }
 
-func TestAccAWSMqBroker_allFieldsDefaultVpc(t *testing.T) {
+func TestAccMQBroker_allFieldsDefaultVPC(t *testing.T) {
 	var broker mq.DescribeBrokerResponse
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rNameUpdated := sdkacctest.RandomWithPrefix("tf-acc-test-updated")
@@ -518,7 +518,7 @@ func TestAccAWSMqBroker_allFieldsDefaultVpc(t *testing.T) {
 	})
 }
 
-func TestAccAWSMqBroker_allFieldsCustomVpc(t *testing.T) {
+func TestAccMQBroker_allFieldsCustomVPC(t *testing.T) {
 	var broker mq.DescribeBrokerResponse
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rNameUpdated := sdkacctest.RandomWithPrefix("tf-acc-test-updated")
@@ -642,7 +642,7 @@ func TestAccAWSMqBroker_allFieldsCustomVpc(t *testing.T) {
 	})
 }
 
-func TestAccAWSMqBroker_EncryptionOptions_KmsKeyId(t *testing.T) {
+func TestAccMQBroker_EncryptionOptions_kmsKeyID(t *testing.T) {
 	var broker mq.DescribeBrokerResponse
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	kmsKeyResourceName := "aws_kms_key.test"
@@ -677,7 +677,7 @@ func TestAccAWSMqBroker_EncryptionOptions_KmsKeyId(t *testing.T) {
 	})
 }
 
-func TestAccAWSMqBroker_EncryptionOptions_UseAwsOwnedKey_Disabled(t *testing.T) {
+func TestAccMQBroker_EncryptionOptionsUseAwsOwnedKey_disabled(t *testing.T) {
 	var broker mq.DescribeBrokerResponse
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_broker.test"
@@ -710,7 +710,7 @@ func TestAccAWSMqBroker_EncryptionOptions_UseAwsOwnedKey_Disabled(t *testing.T) 
 	})
 }
 
-func TestAccAWSMqBroker_EncryptionOptions_UseAwsOwnedKey_Enabled(t *testing.T) {
+func TestAccMQBroker_EncryptionOptionsUseAwsOwnedKey_enabled(t *testing.T) {
 	var broker mq.DescribeBrokerResponse
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_broker.test"
@@ -743,7 +743,7 @@ func TestAccAWSMqBroker_EncryptionOptions_UseAwsOwnedKey_Enabled(t *testing.T) {
 	})
 }
 
-func TestAccAWSMqBroker_updateUsers(t *testing.T) {
+func TestAccMQBroker_updateUsers(t *testing.T) {
 	var broker mq.DescribeBrokerResponse
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_broker.test"
@@ -816,7 +816,7 @@ func TestAccAWSMqBroker_updateUsers(t *testing.T) {
 	})
 }
 
-func TestAccAWSMqBroker_tags(t *testing.T) {
+func TestAccMQBroker_tags(t *testing.T) {
 	var broker mq.DescribeBrokerResponse
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_broker.test"
@@ -866,7 +866,7 @@ func TestAccAWSMqBroker_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSMqBroker_updateSecurityGroup(t *testing.T) {
+func TestAccMQBroker_updateSecurityGroup(t *testing.T) {
 	var broker mq.DescribeBrokerResponse
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_broker.test"
@@ -919,7 +919,7 @@ func TestAccAWSMqBroker_updateSecurityGroup(t *testing.T) {
 	})
 }
 
-func TestAccAWSMqBroker_updateEngineVersion(t *testing.T) {
+func TestAccMQBroker_updateEngineVersion(t *testing.T) {
 	var broker mq.DescribeBrokerResponse
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_broker.test"
@@ -958,7 +958,7 @@ func TestAccAWSMqBroker_updateEngineVersion(t *testing.T) {
 	})
 }
 
-func TestAccAWSMqBroker_disappears(t *testing.T) {
+func TestAccMQBroker_disappears(t *testing.T) {
 	var broker mq.DescribeBrokerResponse
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_broker.test"
@@ -985,7 +985,7 @@ func TestAccAWSMqBroker_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSMqBroker_rabbitmq(t *testing.T) {
+func TestAccMQBroker_rabbitMQ(t *testing.T) {
 	var broker mq.DescribeBrokerResponse
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_broker.test"
@@ -1026,7 +1026,7 @@ func TestAccAWSMqBroker_rabbitmq(t *testing.T) {
 	})
 }
 
-func TestAccAWSMqBroker_rabbitmq_Logs(t *testing.T) {
+func TestAccMQBroker_RabbitMQ_logs(t *testing.T) {
 	var broker mq.DescribeBrokerResponse
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_broker.test"
@@ -1067,7 +1067,7 @@ func TestAccAWSMqBroker_rabbitmq_Logs(t *testing.T) {
 	})
 }
 
-func TestAccAWSMqBroker_rabbitmq_Validation_AuditLog(t *testing.T) {
+func TestAccMQBroker_RabbitMQValidation_auditLog(t *testing.T) {
 	var broker mq.DescribeBrokerResponse
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_broker.test"
@@ -1101,7 +1101,7 @@ func TestAccAWSMqBroker_rabbitmq_Validation_AuditLog(t *testing.T) {
 	})
 }
 
-func TestAccAWSMqBroker_clusterRabbitMQ(t *testing.T) {
+func TestAccMQBroker_clusterRabbitMQ(t *testing.T) {
 	var broker mq.DescribeBrokerResponse
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_broker.test"
@@ -1163,7 +1163,7 @@ func TestAccAWSMqBroker_clusterRabbitMQ(t *testing.T) {
 	})
 }
 
-func TestAccAWSMqBroker_ldap(t *testing.T) {
+func TestAccMQBroker_ldap(t *testing.T) {
 	var broker mq.DescribeBrokerResponse
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_broker.test"
