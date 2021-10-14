@@ -20,7 +20,7 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_appmesh_mesh", &resource.Sweeper{
 		Name: "aws_appmesh_mesh",
-		F:    testSweepAppmeshMeshes,
+		F:    sweepMeshes,
 		Dependencies: []string{
 			"aws_appmesh_virtual_service",
 			"aws_appmesh_virtual_router",
@@ -30,7 +30,7 @@ func init() {
 	})
 }
 
-func testSweepAppmeshMeshes(region string) error {
+func sweepMeshes(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -70,7 +70,7 @@ func testSweepAppmeshMeshes(region string) error {
 	return nil
 }
 
-func testAccAwsAppmeshMesh_basic(t *testing.T) {
+func testAccMesh_basic(t *testing.T) {
 	var mesh appmesh.MeshData
 	resourceName := "aws_appmesh_mesh.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -102,7 +102,7 @@ func testAccAwsAppmeshMesh_basic(t *testing.T) {
 	})
 }
 
-func testAccAwsAppmeshMesh_egressFilter(t *testing.T) {
+func testAccMesh_egressFilter(t *testing.T) {
 	var mesh appmesh.MeshData
 	resourceName := "aws_appmesh_mesh.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -142,7 +142,7 @@ func testAccAwsAppmeshMesh_egressFilter(t *testing.T) {
 	})
 }
 
-func testAccAwsAppmeshMesh_tags(t *testing.T) {
+func testAccMesh_tags(t *testing.T) {
 	var mesh appmesh.MeshData
 	resourceName := "aws_appmesh_mesh.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

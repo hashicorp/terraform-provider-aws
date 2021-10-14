@@ -22,11 +22,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_appmesh_virtual_node", &resource.Sweeper{
 		Name: "aws_appmesh_virtual_node",
-		F:    testSweepAppmeshVirtualNodes,
+		F:    sweepVirtualNodes,
 	})
 }
 
-func testSweepAppmeshVirtualNodes(region string) error {
+func sweepVirtualNodes(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -90,7 +90,7 @@ func testSweepAppmeshVirtualNodes(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func testAccAwsAppmeshVirtualNode_basic(t *testing.T) {
+func testAccVirtualNode_basic(t *testing.T) {
 	var vn appmesh.VirtualNodeData
 	resourceName := "aws_appmesh_virtual_node.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -131,7 +131,7 @@ func testAccAwsAppmeshVirtualNode_basic(t *testing.T) {
 	})
 }
 
-func testAccAwsAppmeshVirtualNode_disappears(t *testing.T) {
+func testAccVirtualNode_disappears(t *testing.T) {
 	var vn appmesh.VirtualNodeData
 	resourceName := "aws_appmesh_virtual_node.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -155,7 +155,7 @@ func testAccAwsAppmeshVirtualNode_disappears(t *testing.T) {
 	})
 }
 
-func testAccAwsAppmeshVirtualNode_backendClientPolicyAcm(t *testing.T) {
+func testAccVirtualNode_backendClientPolicyACM(t *testing.T) {
 	var vn appmesh.VirtualNodeData
 	var ca acmpca.CertificateAuthority
 	resourceName := "aws_appmesh_virtual_node.test"
@@ -242,7 +242,7 @@ func testAccAwsAppmeshVirtualNode_backendClientPolicyAcm(t *testing.T) {
 	})
 }
 
-func testAccAwsAppmeshVirtualNode_backendClientPolicyFile(t *testing.T) {
+func testAccVirtualNode_backendClientPolicyFile(t *testing.T) {
 	var vn appmesh.VirtualNodeData
 	resourceName := "aws_appmesh_virtual_node.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -356,7 +356,7 @@ func testAccAwsAppmeshVirtualNode_backendClientPolicyFile(t *testing.T) {
 	})
 }
 
-func testAccAwsAppmeshVirtualNode_backendDefaults(t *testing.T) {
+func testAccVirtualNode_backendDefaults(t *testing.T) {
 	var vn appmesh.VirtualNodeData
 	resourceName := "aws_appmesh_virtual_node.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -443,7 +443,7 @@ func testAccAwsAppmeshVirtualNode_backendDefaults(t *testing.T) {
 	})
 }
 
-func testAccAwsAppmeshVirtualNode_backendDefaultsCertificate(t *testing.T) {
+func testAccVirtualNode_backendDefaultsCertificate(t *testing.T) {
 	var vn appmesh.VirtualNodeData
 	resourceName := "aws_appmesh_virtual_node.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -504,7 +504,7 @@ func testAccAwsAppmeshVirtualNode_backendDefaultsCertificate(t *testing.T) {
 	})
 }
 
-func testAccAwsAppmeshVirtualNode_cloudMapServiceDiscovery(t *testing.T) {
+func testAccVirtualNode_cloudMapServiceDiscovery(t *testing.T) {
 	var vn appmesh.VirtualNodeData
 	resourceName := "aws_appmesh_virtual_node.test"
 	nsResourceName := "aws_service_discovery_http_namespace.test"
@@ -559,7 +559,7 @@ func testAccAwsAppmeshVirtualNode_cloudMapServiceDiscovery(t *testing.T) {
 	})
 }
 
-func testAccAwsAppmeshVirtualNode_listenerConnectionPool(t *testing.T) {
+func testAccVirtualNode_listenerConnectionPool(t *testing.T) {
 	var vn appmesh.VirtualNodeData
 	resourceName := "aws_appmesh_virtual_node.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -648,7 +648,7 @@ func testAccAwsAppmeshVirtualNode_listenerConnectionPool(t *testing.T) {
 	})
 }
 
-func testAccAwsAppmeshVirtualNode_listenerHealthChecks(t *testing.T) {
+func testAccVirtualNode_listenerHealthChecks(t *testing.T) {
 	var vn appmesh.VirtualNodeData
 	resourceName := "aws_appmesh_virtual_node.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -756,7 +756,7 @@ func testAccAwsAppmeshVirtualNode_listenerHealthChecks(t *testing.T) {
 	})
 }
 
-func testAccAwsAppmeshVirtualNode_listenerOutlierDetection(t *testing.T) {
+func testAccVirtualNode_listenerOutlierDetection(t *testing.T) {
 	var vn appmesh.VirtualNodeData
 	resourceName := "aws_appmesh_virtual_node.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -850,7 +850,7 @@ func testAccAwsAppmeshVirtualNode_listenerOutlierDetection(t *testing.T) {
 	})
 }
 
-func testAccAwsAppmeshVirtualNode_listenerTimeout(t *testing.T) {
+func testAccVirtualNode_listenerTimeout(t *testing.T) {
 	var vn appmesh.VirtualNodeData
 	resourceName := "aws_appmesh_virtual_node.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -945,7 +945,7 @@ func testAccAwsAppmeshVirtualNode_listenerTimeout(t *testing.T) {
 	})
 }
 
-func testAccAwsAppmeshVirtualNode_listenerTls(t *testing.T) {
+func testAccVirtualNode_listenerTLS(t *testing.T) {
 	var vn appmesh.VirtualNodeData
 	var ca acmpca.CertificateAuthority
 	resourceName := "aws_appmesh_virtual_node.test"
@@ -1075,7 +1075,7 @@ func testAccAwsAppmeshVirtualNode_listenerTls(t *testing.T) {
 	})
 }
 
-func testAccAwsAppmeshVirtualNode_listenerValidation(t *testing.T) {
+func testAccVirtualNode_listenerValidation(t *testing.T) {
 	var vn appmesh.VirtualNodeData
 	resourceName := "aws_appmesh_virtual_node.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1193,7 +1193,7 @@ func testAccAwsAppmeshVirtualNode_listenerValidation(t *testing.T) {
 	})
 }
 
-func testAccAwsAppmeshVirtualNode_logging(t *testing.T) {
+func testAccVirtualNode_logging(t *testing.T) {
 	var vn appmesh.VirtualNodeData
 	resourceName := "aws_appmesh_virtual_node.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1242,7 +1242,7 @@ func testAccAwsAppmeshVirtualNode_logging(t *testing.T) {
 	})
 }
 
-func testAccAwsAppmeshVirtualNode_tags(t *testing.T) {
+func testAccVirtualNode_tags(t *testing.T) {
 	var vn appmesh.VirtualNodeData
 	resourceName := "aws_appmesh_virtual_node.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

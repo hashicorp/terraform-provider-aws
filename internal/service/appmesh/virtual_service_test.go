@@ -19,11 +19,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_appmesh_virtual_service", &resource.Sweeper{
 		Name: "aws_appmesh_virtual_service",
-		F:    testSweepAppmeshVirtualServices,
+		F:    sweepVirtualServices,
 	})
 }
 
-func testSweepAppmeshVirtualServices(region string) error {
+func sweepVirtualServices(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -82,7 +82,7 @@ func testSweepAppmeshVirtualServices(region string) error {
 	return nil
 }
 
-func testAccAwsAppmeshVirtualService_virtualNode(t *testing.T) {
+func testAccVirtualService_virtualNode(t *testing.T) {
 	var vs appmesh.VirtualServiceData
 	resourceName := "aws_appmesh_virtual_service.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -136,7 +136,7 @@ func testAccAwsAppmeshVirtualService_virtualNode(t *testing.T) {
 	})
 }
 
-func testAccAwsAppmeshVirtualService_virtualRouter(t *testing.T) {
+func testAccVirtualService_virtualRouter(t *testing.T) {
 	var vs appmesh.VirtualServiceData
 	resourceName := "aws_appmesh_virtual_service.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -183,7 +183,7 @@ func testAccAwsAppmeshVirtualService_virtualRouter(t *testing.T) {
 	})
 }
 
-func testAccAwsAppmeshVirtualService_tags(t *testing.T) {
+func testAccVirtualService_tags(t *testing.T) {
 	var vs appmesh.VirtualServiceData
 	resourceName := "aws_appmesh_virtual_service.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

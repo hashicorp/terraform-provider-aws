@@ -19,11 +19,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_appmesh_route", &resource.Sweeper{
 		Name: "aws_appmesh_route",
-		F:    testSweepAppmeshRoutes,
+		F:    sweepRoutes,
 	})
 }
 
-func testSweepAppmeshRoutes(region string) error {
+func sweepRoutes(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -103,7 +103,7 @@ func testSweepAppmeshRoutes(region string) error {
 	return nil
 }
 
-func testAccAwsAppmeshRoute_grpcRoute(t *testing.T) {
+func testAccRoute_grpcRoute(t *testing.T) {
 	var r appmesh.RouteData
 	resourceName := "aws_appmesh_route.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -119,7 +119,7 @@ func testAccAwsAppmeshRoute_grpcRoute(t *testing.T) {
 		CheckDestroy: testAccCheckAppmeshRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsAppmeshRouteConfig_grpcRoute(meshName, vrName, vn1Name, vn2Name, rName),
+				Config: testAccRouteConfig_grpcRoute(meshName, vrName, vn1Name, vn2Name, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppmeshRouteExists(resourceName, &r),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -162,7 +162,7 @@ func testAccAwsAppmeshRoute_grpcRoute(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsAppmeshRouteConfig_grpcRouteUpdated(meshName, vrName, vn1Name, vn2Name, rName),
+				Config: testAccRouteConfig_grpcRouteUpdated(meshName, vrName, vn1Name, vn2Name, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppmeshRouteExists(resourceName, &r),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -214,7 +214,7 @@ func testAccAwsAppmeshRoute_grpcRoute(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsAppmeshRouteConfig_grpcRouteUpdatedWithZeroWeight(meshName, vrName, vn1Name, vn2Name, rName),
+				Config: testAccRouteConfig_grpcRouteUpdatedWithZeroWeight(meshName, vrName, vn1Name, vn2Name, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppmeshRouteExists(resourceName, &r),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -267,7 +267,7 @@ func testAccAwsAppmeshRoute_grpcRoute(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccAwsAppmeshRouteImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccRouteImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -275,7 +275,7 @@ func testAccAwsAppmeshRoute_grpcRoute(t *testing.T) {
 	})
 }
 
-func testAccAwsAppmeshRoute_grpcRouteTimeout(t *testing.T) {
+func testAccRoute_grpcRouteTimeout(t *testing.T) {
 	var r appmesh.RouteData
 	resourceName := "aws_appmesh_route.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -291,7 +291,7 @@ func testAccAwsAppmeshRoute_grpcRouteTimeout(t *testing.T) {
 		CheckDestroy: testAccCheckAppmeshRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsAppmeshRouteConfig_grpcRouteWithTimeout(meshName, vrName, vn1Name, vn2Name, rName),
+				Config: testAccRouteConfig_grpcRouteWithTimeout(meshName, vrName, vn1Name, vn2Name, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppmeshRouteExists(resourceName, &r),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -327,7 +327,7 @@ func testAccAwsAppmeshRoute_grpcRouteTimeout(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsAppmeshRouteConfig_grpcRouteWithTimeoutUpdated(meshName, vrName, vn1Name, vn2Name, rName),
+				Config: testAccRouteConfig_grpcRouteWithTimeoutUpdated(meshName, vrName, vn1Name, vn2Name, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppmeshRouteExists(resourceName, &r),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -366,7 +366,7 @@ func testAccAwsAppmeshRoute_grpcRouteTimeout(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccAwsAppmeshRouteImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccRouteImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -374,7 +374,7 @@ func testAccAwsAppmeshRoute_grpcRouteTimeout(t *testing.T) {
 	})
 }
 
-func testAccAwsAppmeshRoute_grpcRouteEmptyMatch(t *testing.T) {
+func testAccRoute_grpcRouteEmptyMatch(t *testing.T) {
 	var r appmesh.RouteData
 	resourceName := "aws_appmesh_route.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -390,7 +390,7 @@ func testAccAwsAppmeshRoute_grpcRouteEmptyMatch(t *testing.T) {
 		CheckDestroy: testAccCheckAppmeshRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsAppmeshRouteConfig_grpcRouteWithEmptyMatch(meshName, vrName, vn1Name, vn2Name, rName),
+				Config: testAccRouteConfig_grpcRouteWithEmptyMatch(meshName, vrName, vn1Name, vn2Name, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppmeshRouteExists(resourceName, &r),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -419,7 +419,7 @@ func testAccAwsAppmeshRoute_grpcRouteEmptyMatch(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccAwsAppmeshRouteImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccRouteImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -427,7 +427,7 @@ func testAccAwsAppmeshRoute_grpcRouteEmptyMatch(t *testing.T) {
 	})
 }
 
-func testAccAwsAppmeshRoute_http2Route(t *testing.T) {
+func testAccRoute_http2Route(t *testing.T) {
 	var r appmesh.RouteData
 	resourceName := "aws_appmesh_route.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -443,7 +443,7 @@ func testAccAwsAppmeshRoute_http2Route(t *testing.T) {
 		CheckDestroy: testAccCheckAppmeshRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsAppmeshRouteConfig_http2Route(meshName, vrName, vn1Name, vn2Name, rName),
+				Config: testAccRouteConfig_http2Route(meshName, vrName, vn1Name, vn2Name, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppmeshRouteExists(resourceName, &r),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -484,7 +484,7 @@ func testAccAwsAppmeshRoute_http2Route(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsAppmeshRouteConfig_http2RouteUpdated(meshName, vrName, vn1Name, vn2Name, rName),
+				Config: testAccRouteConfig_http2RouteUpdated(meshName, vrName, vn1Name, vn2Name, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppmeshRouteExists(resourceName, &r),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -536,7 +536,7 @@ func testAccAwsAppmeshRoute_http2Route(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccAwsAppmeshRouteImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccRouteImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -544,7 +544,7 @@ func testAccAwsAppmeshRoute_http2Route(t *testing.T) {
 	})
 }
 
-func testAccAwsAppmeshRoute_http2RouteTimeout(t *testing.T) {
+func testAccRoute_http2RouteTimeout(t *testing.T) {
 	var r appmesh.RouteData
 	resourceName := "aws_appmesh_route.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -560,7 +560,7 @@ func testAccAwsAppmeshRoute_http2RouteTimeout(t *testing.T) {
 		CheckDestroy: testAccCheckAppmeshRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsAppmeshRouteConfig_http2RouteWithTimeout(meshName, vrName, vn1Name, vn2Name, rName),
+				Config: testAccRouteConfig_http2RouteWithTimeout(meshName, vrName, vn1Name, vn2Name, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppmeshRouteExists(resourceName, &r),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -598,7 +598,7 @@ func testAccAwsAppmeshRoute_http2RouteTimeout(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsAppmeshRouteConfig_http2RouteWithTimeoutUpdated(meshName, vrName, vn1Name, vn2Name, rName),
+				Config: testAccRouteConfig_http2RouteWithTimeoutUpdated(meshName, vrName, vn1Name, vn2Name, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppmeshRouteExists(resourceName, &r),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -639,7 +639,7 @@ func testAccAwsAppmeshRoute_http2RouteTimeout(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccAwsAppmeshRouteImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccRouteImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -647,7 +647,7 @@ func testAccAwsAppmeshRoute_http2RouteTimeout(t *testing.T) {
 	})
 }
 
-func testAccAwsAppmeshRoute_httpRoute(t *testing.T) {
+func testAccRoute_httpRoute(t *testing.T) {
 	var r appmesh.RouteData
 	resourceName := "aws_appmesh_route.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -750,7 +750,7 @@ func testAccAwsAppmeshRoute_httpRoute(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccAwsAppmeshRouteImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccRouteImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -758,7 +758,7 @@ func testAccAwsAppmeshRoute_httpRoute(t *testing.T) {
 	})
 }
 
-func testAccAwsAppmeshRoute_httpRouteTimeout(t *testing.T) {
+func testAccRoute_httpRouteTimeout(t *testing.T) {
 	var r appmesh.RouteData
 	resourceName := "aws_appmesh_route.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -845,7 +845,7 @@ func testAccAwsAppmeshRoute_httpRouteTimeout(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccAwsAppmeshRouteImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccRouteImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -853,7 +853,7 @@ func testAccAwsAppmeshRoute_httpRouteTimeout(t *testing.T) {
 	})
 }
 
-func testAccAwsAppmeshRoute_tcpRoute(t *testing.T) {
+func testAccRoute_tcpRoute(t *testing.T) {
 	var r appmesh.RouteData
 	resourceName := "aws_appmesh_route.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -939,7 +939,7 @@ func testAccAwsAppmeshRoute_tcpRoute(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccAwsAppmeshRouteImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccRouteImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -947,7 +947,7 @@ func testAccAwsAppmeshRoute_tcpRoute(t *testing.T) {
 	})
 }
 
-func testAccAwsAppmeshRoute_tcpRouteTimeout(t *testing.T) {
+func testAccRoute_tcpRouteTimeout(t *testing.T) {
 	var r appmesh.RouteData
 	resourceName := "aws_appmesh_route.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1018,7 +1018,7 @@ func testAccAwsAppmeshRoute_tcpRouteTimeout(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccAwsAppmeshRouteImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccRouteImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -1026,7 +1026,7 @@ func testAccAwsAppmeshRoute_tcpRouteTimeout(t *testing.T) {
 	})
 }
 
-func testAccAwsAppmeshRoute_tags(t *testing.T) {
+func testAccRoute_tags(t *testing.T) {
 	var r appmesh.RouteData
 	resourceName := "aws_appmesh_route.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1068,7 +1068,7 @@ func testAccAwsAppmeshRoute_tags(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccAwsAppmeshRouteImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccRouteImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -1076,7 +1076,7 @@ func testAccAwsAppmeshRoute_tags(t *testing.T) {
 	})
 }
 
-func testAccAwsAppmeshRoute_httpHeader(t *testing.T) {
+func testAccRoute_httpHeader(t *testing.T) {
 	var r appmesh.RouteData
 	resourceName := "aws_appmesh_route.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1092,7 +1092,7 @@ func testAccAwsAppmeshRoute_httpHeader(t *testing.T) {
 		CheckDestroy: testAccCheckAppmeshRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsAppmeshRouteConfig_httpHeader(meshName, vrName, vn1Name, vn2Name, rName),
+				Config: testAccRouteConfig_httpHeader(meshName, vrName, vn1Name, vn2Name, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppmeshRouteExists(resourceName, &r),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -1125,7 +1125,7 @@ func testAccAwsAppmeshRoute_httpHeader(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsAppmeshRouteConfig_httpHeaderUpdated(meshName, vrName, vn1Name, vn2Name, rName),
+				Config: testAccRouteConfig_httpHeaderUpdated(meshName, vrName, vn1Name, vn2Name, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppmeshRouteExists(resourceName, &r),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -1167,7 +1167,7 @@ func testAccAwsAppmeshRoute_httpHeader(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccAwsAppmeshRouteImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccRouteImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -1175,7 +1175,7 @@ func testAccAwsAppmeshRoute_httpHeader(t *testing.T) {
 	})
 }
 
-func testAccAwsAppmeshRoute_routePriority(t *testing.T) {
+func testAccRoute_routePriority(t *testing.T) {
 	var r appmesh.RouteData
 	resourceName := "aws_appmesh_route.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1191,7 +1191,7 @@ func testAccAwsAppmeshRoute_routePriority(t *testing.T) {
 		CheckDestroy: testAccCheckAppmeshRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsAppmeshRouteConfig_routePriority(meshName, vrName, vn1Name, vn2Name, rName, 42),
+				Config: testAccRouteConfig_routePriority(meshName, vrName, vn1Name, vn2Name, rName, 42),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppmeshRouteExists(resourceName, &r),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -1220,7 +1220,7 @@ func testAccAwsAppmeshRoute_routePriority(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsAppmeshRouteConfig_routePriority(meshName, vrName, vn1Name, vn2Name, rName, 1000),
+				Config: testAccRouteConfig_routePriority(meshName, vrName, vn1Name, vn2Name, rName, 1000),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppmeshRouteExists(resourceName, &r),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -1250,7 +1250,7 @@ func testAccAwsAppmeshRoute_routePriority(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccAwsAppmeshRouteImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccRouteImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -1258,7 +1258,7 @@ func testAccAwsAppmeshRoute_routePriority(t *testing.T) {
 	})
 }
 
-func testAccAwsAppmeshRoute_httpRetryPolicy(t *testing.T) {
+func testAccRoute_httpRetryPolicy(t *testing.T) {
 	var r appmesh.RouteData
 	resourceName := "aws_appmesh_route.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1274,7 +1274,7 @@ func testAccAwsAppmeshRoute_httpRetryPolicy(t *testing.T) {
 		CheckDestroy: testAccCheckAppmeshRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsAppmeshRouteConfig_httpRetryPolicy(meshName, vrName, vn1Name, vn2Name, rName),
+				Config: testAccRouteConfig_httpRetryPolicy(meshName, vrName, vn1Name, vn2Name, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppmeshRouteExists(resourceName, &r),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -1309,7 +1309,7 @@ func testAccAwsAppmeshRoute_httpRetryPolicy(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsAppmeshRouteConfig_httpRetryPolicyUpdated(meshName, vrName, vn1Name, vn2Name, rName),
+				Config: testAccRouteConfig_httpRetryPolicyUpdated(meshName, vrName, vn1Name, vn2Name, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppmeshRouteExists(resourceName, &r),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -1347,7 +1347,7 @@ func testAccAwsAppmeshRoute_httpRetryPolicy(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccAwsAppmeshRouteImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccRouteImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -1355,7 +1355,7 @@ func testAccAwsAppmeshRoute_httpRetryPolicy(t *testing.T) {
 	})
 }
 
-func testAccAwsAppmeshRouteImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccRouteImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -1454,7 +1454,7 @@ resource "aws_appmesh_virtual_node" "bar" {
 `, meshName, vrName, vrProtocol, vn1Name, vn2Name)
 }
 
-func testAccAwsAppmeshRouteConfig_grpcRoute(meshName, vrName, vn1Name, vn2Name, rName string) string {
+func testAccRouteConfig_grpcRoute(meshName, vrName, vn1Name, vn2Name, rName string) string {
 	return acctest.ConfigCompose(testAccAppmeshRouteConfigBase(meshName, vrName, "grpc", vn1Name, vn2Name), fmt.Sprintf(`
 resource "aws_appmesh_route" "test" {
   name                = %[1]q
@@ -1499,7 +1499,7 @@ resource "aws_appmesh_route" "test" {
 `, rName))
 }
 
-func testAccAwsAppmeshRouteConfig_grpcRouteUpdated(meshName, vrName, vn1Name, vn2Name, rName string) string {
+func testAccRouteConfig_grpcRouteUpdated(meshName, vrName, vn1Name, vn2Name, rName string) string {
 	return acctest.ConfigCompose(testAccAppmeshRouteConfigBase(meshName, vrName, "grpc", vn1Name, vn2Name), fmt.Sprintf(`
 resource "aws_appmesh_route" "test" {
   name                = %[1]q
@@ -1569,7 +1569,7 @@ resource "aws_appmesh_route" "test" {
 `, rName))
 }
 
-func testAccAwsAppmeshRouteConfig_grpcRouteUpdatedWithZeroWeight(meshName, vrName, vn1Name, vn2Name, rName string) string {
+func testAccRouteConfig_grpcRouteUpdatedWithZeroWeight(meshName, vrName, vn1Name, vn2Name, rName string) string {
 	return acctest.ConfigCompose(testAccAppmeshRouteConfigBase(meshName, vrName, "grpc", vn1Name, vn2Name), fmt.Sprintf(`
 resource "aws_appmesh_route" "test" {
   name                = %[1]q
@@ -1639,7 +1639,7 @@ resource "aws_appmesh_route" "test" {
 `, rName))
 }
 
-func testAccAwsAppmeshRouteConfig_grpcRouteWithTimeout(meshName, vrName, vn1Name, vn2Name, rName string) string {
+func testAccRouteConfig_grpcRouteWithTimeout(meshName, vrName, vn1Name, vn2Name, rName string) string {
 	return acctest.ConfigCompose(testAccAppmeshRouteConfigBase(meshName, vrName, "grpc", vn1Name, vn2Name), fmt.Sprintf(`
 resource "aws_appmesh_route" "test" {
   name                = %[1]q
@@ -1673,7 +1673,7 @@ resource "aws_appmesh_route" "test" {
 `, rName))
 }
 
-func testAccAwsAppmeshRouteConfig_grpcRouteWithTimeoutUpdated(meshName, vrName, vn1Name, vn2Name, rName string) string {
+func testAccRouteConfig_grpcRouteWithTimeoutUpdated(meshName, vrName, vn1Name, vn2Name, rName string) string {
 	return acctest.ConfigCompose(testAccAppmeshRouteConfigBase(meshName, vrName, "grpc", vn1Name, vn2Name), fmt.Sprintf(`
 resource "aws_appmesh_route" "test" {
   name                = %[1]q
@@ -1712,7 +1712,7 @@ resource "aws_appmesh_route" "test" {
 `, rName))
 }
 
-func testAccAwsAppmeshRouteConfig_grpcRouteWithEmptyMatch(meshName, vrName, vn1Name, vn2Name, rName string) string {
+func testAccRouteConfig_grpcRouteWithEmptyMatch(meshName, vrName, vn1Name, vn2Name, rName string) string {
 	return acctest.ConfigCompose(testAccAppmeshRouteConfigBase(meshName, vrName, "grpc", vn1Name, vn2Name), fmt.Sprintf(`
 resource "aws_appmesh_route" "test" {
   name                = %[1]q
@@ -1735,7 +1735,7 @@ resource "aws_appmesh_route" "test" {
 `, rName))
 }
 
-func testAccAwsAppmeshRouteConfig_http2Route(meshName, vrName, vn1Name, vn2Name, rName string) string {
+func testAccRouteConfig_http2Route(meshName, vrName, vn1Name, vn2Name, rName string) string {
 	return acctest.ConfigCompose(testAccAppmeshRouteConfigBase(meshName, vrName, "http2", vn1Name, vn2Name), fmt.Sprintf(`
 resource "aws_appmesh_route" "test" {
   name                = %[1]q
@@ -1779,7 +1779,7 @@ resource "aws_appmesh_route" "test" {
 `, rName))
 }
 
-func testAccAwsAppmeshRouteConfig_http2RouteUpdated(meshName, vrName, vn1Name, vn2Name, rName string) string {
+func testAccRouteConfig_http2RouteUpdated(meshName, vrName, vn1Name, vn2Name, rName string) string {
 	return acctest.ConfigCompose(testAccAppmeshRouteConfigBase(meshName, vrName, "http2", vn1Name, vn2Name), fmt.Sprintf(`
 resource "aws_appmesh_route" "test" {
   name                = %[1]q
@@ -1841,7 +1841,7 @@ resource "aws_appmesh_route" "test" {
 `, rName))
 }
 
-func testAccAwsAppmeshRouteConfig_http2RouteWithTimeout(meshName, vrName, vn1Name, vn2Name, rName string) string {
+func testAccRouteConfig_http2RouteWithTimeout(meshName, vrName, vn1Name, vn2Name, rName string) string {
 	return acctest.ConfigCompose(testAccAppmeshRouteConfigBase(meshName, vrName, "http2", vn1Name, vn2Name), fmt.Sprintf(`
 resource "aws_appmesh_route" "test" {
   name                = %[1]q
@@ -1879,7 +1879,7 @@ resource "aws_appmesh_route" "test" {
 `, rName))
 }
 
-func testAccAwsAppmeshRouteConfig_http2RouteWithTimeoutUpdated(meshName, vrName, vn1Name, vn2Name, rName string) string {
+func testAccRouteConfig_http2RouteWithTimeoutUpdated(meshName, vrName, vn1Name, vn2Name, rName string) string {
 	return acctest.ConfigCompose(testAccAppmeshRouteConfigBase(meshName, vrName, "http2", vn1Name, vn2Name), fmt.Sprintf(`
 resource "aws_appmesh_route" "test" {
   name                = %[1]q
@@ -2235,7 +2235,7 @@ resource "aws_appmesh_route" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
-func testAccAwsAppmeshRouteConfig_httpHeader(meshName, vrName, vn1Name, vn2Name, rName string) string {
+func testAccRouteConfig_httpHeader(meshName, vrName, vn1Name, vn2Name, rName string) string {
 	return acctest.ConfigCompose(testAccAppmeshRouteConfigBase(meshName, vrName, "http", vn1Name, vn2Name), fmt.Sprintf(`
 resource "aws_appmesh_route" "test" {
   name                = %[1]q
@@ -2265,7 +2265,7 @@ resource "aws_appmesh_route" "test" {
 `, rName))
 }
 
-func testAccAwsAppmeshRouteConfig_httpHeaderUpdated(meshName, vrName, vn1Name, vn2Name, rName string) string {
+func testAccRouteConfig_httpHeaderUpdated(meshName, vrName, vn1Name, vn2Name, rName string) string {
 	return acctest.ConfigCompose(testAccAppmeshRouteConfigBase(meshName, vrName, "http", vn1Name, vn2Name), fmt.Sprintf(`
 resource "aws_appmesh_route" "test" {
   name                = %[1]q
@@ -2308,7 +2308,7 @@ resource "aws_appmesh_route" "test" {
 `, rName))
 }
 
-func testAccAwsAppmeshRouteConfig_routePriority(meshName, vrName, vn1Name, vn2Name, rName string, priority int) string {
+func testAccRouteConfig_routePriority(meshName, vrName, vn1Name, vn2Name, rName string, priority int) string {
 	return acctest.ConfigCompose(testAccAppmeshRouteConfigBase(meshName, vrName, "http", vn1Name, vn2Name), fmt.Sprintf(`
 resource "aws_appmesh_route" "test" {
   name                = %[1]q
@@ -2335,7 +2335,7 @@ resource "aws_appmesh_route" "test" {
 `, rName, priority))
 }
 
-func testAccAwsAppmeshRouteConfig_httpRetryPolicy(meshName, vrName, vn1Name, vn2Name, rName string) string {
+func testAccRouteConfig_httpRetryPolicy(meshName, vrName, vn1Name, vn2Name, rName string) string {
 	return acctest.ConfigCompose(testAccAppmeshRouteConfigBase(meshName, vrName, "http", vn1Name, vn2Name), fmt.Sprintf(`
 resource "aws_appmesh_route" "test" {
   name                = %[1]q
@@ -2373,7 +2373,7 @@ resource "aws_appmesh_route" "test" {
 `, rName))
 }
 
-func testAccAwsAppmeshRouteConfig_httpRetryPolicyUpdated(meshName, vrName, vn1Name, vn2Name, rName string) string {
+func testAccRouteConfig_httpRetryPolicyUpdated(meshName, vrName, vn1Name, vn2Name, rName string) string {
 	return acctest.ConfigCompose(testAccAppmeshRouteConfigBase(meshName, vrName, "http", vn1Name, vn2Name), fmt.Sprintf(`
 resource "aws_appmesh_route" "test" {
   name                = %[1]q

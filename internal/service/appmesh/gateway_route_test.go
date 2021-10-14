@@ -21,11 +21,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_appmesh_gateway_route", &resource.Sweeper{
 		Name: "aws_appmesh_gateway_route",
-		F:    testSweepAppmeshGatewayRoutes,
+		F:    sweepGatewayRoutes,
 	})
 }
 
-func testSweepAppmeshGatewayRoutes(region string) error {
+func sweepGatewayRoutes(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -103,7 +103,7 @@ func testSweepAppmeshGatewayRoutes(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func testAccAwsAppmeshGatewayRoute_basic(t *testing.T) {
+func testAccGatewayRoute_basic(t *testing.T) {
 	var v appmesh.GatewayRouteData
 	resourceName := "aws_appmesh_gateway_route.test"
 	vsResourceName := "aws_appmesh_virtual_service.test.0"
@@ -143,7 +143,7 @@ func testAccAwsAppmeshGatewayRoute_basic(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccAwsAppmeshGatewayRouteImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccGatewayRouteImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -151,7 +151,7 @@ func testAccAwsAppmeshGatewayRoute_basic(t *testing.T) {
 	})
 }
 
-func testAccAwsAppmeshGatewayRoute_disappears(t *testing.T) {
+func testAccGatewayRoute_disappears(t *testing.T) {
 	var v appmesh.GatewayRouteData
 	resourceName := "aws_appmesh_gateway_route.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -176,7 +176,7 @@ func testAccAwsAppmeshGatewayRoute_disappears(t *testing.T) {
 	})
 }
 
-func testAccAwsAppmeshGatewayRoute_GrpcRoute(t *testing.T) {
+func testAccGatewayRoute_GRPCRoute(t *testing.T) {
 	var v appmesh.GatewayRouteData
 	resourceName := "aws_appmesh_gateway_route.test"
 	vs1ResourceName := "aws_appmesh_virtual_service.test.0"
@@ -241,7 +241,7 @@ func testAccAwsAppmeshGatewayRoute_GrpcRoute(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccAwsAppmeshGatewayRouteImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccGatewayRouteImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -249,7 +249,7 @@ func testAccAwsAppmeshGatewayRoute_GrpcRoute(t *testing.T) {
 	})
 }
 
-func testAccAwsAppmeshGatewayRoute_HttpRoute(t *testing.T) {
+func testAccGatewayRoute_HTTPRoute(t *testing.T) {
 	var v appmesh.GatewayRouteData
 	resourceName := "aws_appmesh_gateway_route.test"
 	vs1ResourceName := "aws_appmesh_virtual_service.test.0"
@@ -314,7 +314,7 @@ func testAccAwsAppmeshGatewayRoute_HttpRoute(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccAwsAppmeshGatewayRouteImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccGatewayRouteImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -322,7 +322,7 @@ func testAccAwsAppmeshGatewayRoute_HttpRoute(t *testing.T) {
 	})
 }
 
-func testAccAwsAppmeshGatewayRoute_Http2Route(t *testing.T) {
+func testAccGatewayRoute_HTTP2Route(t *testing.T) {
 	var v appmesh.GatewayRouteData
 	resourceName := "aws_appmesh_gateway_route.test"
 	vs1ResourceName := "aws_appmesh_virtual_service.test.0"
@@ -387,7 +387,7 @@ func testAccAwsAppmeshGatewayRoute_Http2Route(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccAwsAppmeshGatewayRouteImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccGatewayRouteImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -395,7 +395,7 @@ func testAccAwsAppmeshGatewayRoute_Http2Route(t *testing.T) {
 	})
 }
 
-func testAccAwsAppmeshGatewayRoute_Tags(t *testing.T) {
+func testAccGatewayRoute_Tags(t *testing.T) {
 	var v appmesh.GatewayRouteData
 	resourceName := "aws_appmesh_gateway_route.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -418,7 +418,7 @@ func testAccAwsAppmeshGatewayRoute_Tags(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccAwsAppmeshGatewayRouteImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccGatewayRouteImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -443,7 +443,7 @@ func testAccAwsAppmeshGatewayRoute_Tags(t *testing.T) {
 	})
 }
 
-func testAccAwsAppmeshGatewayRouteImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccGatewayRouteImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {

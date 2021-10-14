@@ -22,14 +22,14 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_appmesh_virtual_gateway", &resource.Sweeper{
 		Name: "aws_appmesh_virtual_gateway",
-		F:    testSweepAppmeshVirtualGateways,
+		F:    sweepVirtualGateways,
 		Dependencies: []string{
 			"aws_appmesh_gateway_route",
 		},
 	})
 }
 
-func testSweepAppmeshVirtualGateways(region string) error {
+func sweepVirtualGateways(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -90,7 +90,7 @@ func testSweepAppmeshVirtualGateways(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func testAccAwsAppmeshVirtualGateway_basic(t *testing.T) {
+func testAccVirtualGateway_basic(t *testing.T) {
 	var v appmesh.VirtualGatewayData
 	resourceName := "aws_appmesh_virtual_gateway.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -135,7 +135,7 @@ func testAccAwsAppmeshVirtualGateway_basic(t *testing.T) {
 	})
 }
 
-func testAccAwsAppmeshVirtualGateway_disappears(t *testing.T) {
+func testAccVirtualGateway_disappears(t *testing.T) {
 	var v appmesh.VirtualGatewayData
 	resourceName := "aws_appmesh_virtual_gateway.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -159,7 +159,7 @@ func testAccAwsAppmeshVirtualGateway_disappears(t *testing.T) {
 	})
 }
 
-func testAccAwsAppmeshVirtualGateway_BackendDefaults(t *testing.T) {
+func testAccVirtualGateway_BackendDefaults(t *testing.T) {
 	var v appmesh.VirtualGatewayData
 	resourceName := "aws_appmesh_virtual_gateway.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -252,7 +252,7 @@ func testAccAwsAppmeshVirtualGateway_BackendDefaults(t *testing.T) {
 	})
 }
 
-func testAccAwsAppmeshVirtualGateway_BackendDefaultsCertificate(t *testing.T) {
+func testAccVirtualGateway_BackendDefaultsCertificate(t *testing.T) {
 	var v appmesh.VirtualGatewayData
 	resourceName := "aws_appmesh_virtual_gateway.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -316,7 +316,7 @@ func testAccAwsAppmeshVirtualGateway_BackendDefaultsCertificate(t *testing.T) {
 	})
 }
 
-func testAccAwsAppmeshVirtualGateway_ListenerConnectionPool(t *testing.T) {
+func testAccVirtualGateway_ListenerConnectionPool(t *testing.T) {
 	var v appmesh.VirtualGatewayData
 	resourceName := "aws_appmesh_virtual_gateway.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -393,7 +393,7 @@ func testAccAwsAppmeshVirtualGateway_ListenerConnectionPool(t *testing.T) {
 	})
 }
 
-func testAccAwsAppmeshVirtualGateway_ListenerHealthChecks(t *testing.T) {
+func testAccVirtualGateway_ListenerHealthChecks(t *testing.T) {
 	var v appmesh.VirtualGatewayData
 	resourceName := "aws_appmesh_virtual_gateway.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -475,7 +475,7 @@ func testAccAwsAppmeshVirtualGateway_ListenerHealthChecks(t *testing.T) {
 	})
 }
 
-func testAccAwsAppmeshVirtualGateway_ListenerTls(t *testing.T) {
+func testAccVirtualGateway_ListenerTLS(t *testing.T) {
 	var v appmesh.VirtualGatewayData
 	var ca acmpca.CertificateAuthority
 	resourceName := "aws_appmesh_virtual_gateway.test"
@@ -584,7 +584,7 @@ func testAccAwsAppmeshVirtualGateway_ListenerTls(t *testing.T) {
 	})
 }
 
-func testAccAwsAppmeshVirtualGateway_ListenerValidation(t *testing.T) {
+func testAccVirtualGateway_ListenerValidation(t *testing.T) {
 	var v appmesh.VirtualGatewayData
 	resourceName := "aws_appmesh_virtual_gateway.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -682,7 +682,7 @@ func testAccAwsAppmeshVirtualGateway_ListenerValidation(t *testing.T) {
 	})
 }
 
-func testAccAwsAppmeshVirtualGateway_Logging(t *testing.T) {
+func testAccVirtualGateway_Logging(t *testing.T) {
 	var v appmesh.VirtualGatewayData
 	resourceName := "aws_appmesh_virtual_gateway.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -754,7 +754,7 @@ func testAccAwsAppmeshVirtualGateway_Logging(t *testing.T) {
 	})
 }
 
-func testAccAwsAppmeshVirtualGateway_Tags(t *testing.T) {
+func testAccVirtualGateway_Tags(t *testing.T) {
 	var v appmesh.VirtualGatewayData
 	resourceName := "aws_appmesh_virtual_gateway.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

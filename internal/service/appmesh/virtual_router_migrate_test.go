@@ -7,7 +7,7 @@ import (
 	tfappmesh "github.com/hashicorp/terraform-provider-aws/internal/service/appmesh"
 )
 
-func TestAWSAppmeshVirtualRouterMigrateState(t *testing.T) {
+func TestVirtualRouterMigrateState(t *testing.T) {
 	cases := map[string]struct {
 		StateVersion int
 		Attributes   map[string]string
