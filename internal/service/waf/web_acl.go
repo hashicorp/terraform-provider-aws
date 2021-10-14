@@ -164,7 +164,7 @@ func resourceWebACLCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if len(tags) > 0 {
-			params.Tags = tags.IgnoreAws().WafTags()
+			params.Tags = Tags(tags.IgnoreAws())
 		}
 
 		return conn.CreateWebACL(params)
@@ -255,7 +255,7 @@ func resourceWebACLRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", resp.WebACL.Name)
 	d.Set("metric_name", resp.WebACL.MetricName)
 
-	tags, err := tftags.WafListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 	if err != nil {
 		return fmt.Errorf("error listing tags for WAF Web ACL (%s): %w", arn, err)
 	}
@@ -345,7 +345,7 @@ func resourceWebACLUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.WafUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating WAF Web ACL (%s) tags: %w", d.Id(), err)
 		}
 	}
