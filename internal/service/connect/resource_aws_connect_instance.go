@@ -1,4 +1,4 @@
-package aws
+package connect
 
 import (
 	"context"
@@ -15,23 +15,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tfconnect "github.com/hashicorp/terraform-provider-aws/aws/internal/service/connect"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/connect/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
-	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
-	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
-	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
-	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
-	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
-	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
-	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
-	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
-	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
-	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
-	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
 )
 
 func ResourceInstance() *schema.Resource {
@@ -44,8 +30,8 @@ func ResourceInstance() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(tfconnect.connectInstanceCreatedTimeout),
-			Delete: schema.DefaultTimeout(tfconnect.connectInstanceDeletedTimeout),
+			Create: schema.DefaultTimeout(connectInstanceCreatedTimeout),
+			Delete: schema.DefaultTimeout(connectInstanceDeletedTimeout),
 		},
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -152,17 +138,17 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.SetId(aws.StringValue(output.Id))
 
-	if _, err := tfconnect.waitInstanceCreated(ctx, conn, d.Id()); err != nil {
+	if _, err := waitInstanceCreated(ctx, conn, d.Id()); err != nil {
 		return diag.FromErr(fmt.Errorf("error waiting for Connect instance creation (%s): %w", d.Id(), err))
 	}
 
-	for att := range tfconnect.InstanceAttributeMapping() {
-		rKey := tfconnect.InstanceAttributeMapping()[att]
+	for att := range InstanceAttributeMapping() {
+		rKey := InstanceAttributeMapping()[att]
 
 		if v, ok := d.GetOk(rKey); ok {
 			err := resourceAwsConnectInstanceUpdateAttribute(ctx, conn, d.Id(), att, strconv.FormatBool(v.(bool)))
 			//Pre-release attribute, user/account/instance now allow-listed
-			if err != nil && tfawserr.ErrCodeEquals(err, tfconnect.ErrCodeAccessDeniedException) || tfawserr.ErrMessageContains(err, tfconnect.ErrCodeAccessDeniedException, "not authorized to update") {
+			if err != nil && tfawserr.ErrCodeEquals(err, ErrCodeAccessDeniedException) || tfawserr.ErrMessageContains(err, ErrCodeAccessDeniedException, "not authorized to update") {
 				log.Printf("[WARN] error setting Connect instance (%s) attribute (%s): %s", d.Id(), att, err)
 			} else if err != nil {
 				return diag.FromErr(fmt.Errorf("error setting Connect instance (%s) attribute (%s): %w", d.Id(), att, err))
@@ -176,13 +162,13 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ConnectConn
 
-	for att := range tfconnect.InstanceAttributeMapping() {
-		rKey := tfconnect.InstanceAttributeMapping()[att]
+	for att := range InstanceAttributeMapping() {
+		rKey := InstanceAttributeMapping()[att]
 		if d.HasChange(rKey) {
 			_, n := d.GetChange(rKey)
 			err := resourceAwsConnectInstanceUpdateAttribute(ctx, conn, d.Id(), att, strconv.FormatBool(n.(bool)))
 			//Pre-release attribute, user/account/instance now allow-listed
-			if err != nil && tfawserr.ErrCodeEquals(err, tfconnect.ErrCodeAccessDeniedException) || tfawserr.ErrMessageContains(err, tfconnect.ErrCodeAccessDeniedException, "not authorized to update") {
+			if err != nil && tfawserr.ErrCodeEquals(err, ErrCodeAccessDeniedException) || tfawserr.ErrMessageContains(err, ErrCodeAccessDeniedException, "not authorized to update") {
 				log.Printf("[WARN] error setting Connect instance (%s) attribute (%s): %s", d.Id(), att, err)
 			} else if err != nil {
 				return diag.FromErr(fmt.Errorf("error setting Connect instance (%s) attribute (%s): %s", d.Id(), att, err))
@@ -224,12 +210,12 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("service_role", instance.ServiceRole)
 	d.Set("status", instance.InstanceStatus)
 
-	for att := range tfconnect.InstanceAttributeMapping() {
+	for att := range InstanceAttributeMapping() {
 		value, err := resourceAwsConnectInstanceReadAttribute(ctx, conn, d.Id(), att)
 		if err != nil {
 			return diag.FromErr(fmt.Errorf("error reading Connect instance (%s) attribute (%s): %s", d.Id(), att, err))
 		}
-		d.Set(tfconnect.InstanceAttributeMapping()[att], value)
+		d.Set(InstanceAttributeMapping()[att], value)
 	}
 
 	return nil
@@ -254,7 +240,7 @@ func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta in
 		return diag.FromErr(fmt.Errorf("error deleting Connect Instance (%s): %s", d.Id(), err))
 	}
 
-	if _, err := tfconnect.waitInstanceDeleted(ctx, conn, d.Id()); err != nil {
+	if _, err := waitInstanceDeleted(ctx, conn, d.Id()); err != nil {
 		return diag.FromErr(fmt.Errorf("error waiting for Connect Instance deletion (%s): %s", d.Id(), err))
 	}
 	return nil

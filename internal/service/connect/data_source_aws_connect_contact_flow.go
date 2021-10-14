@@ -1,4 +1,4 @@
-package aws
+package connect
 
 import (
 	"context"
@@ -8,16 +8,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/connect"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	tfconnect "github.com/hashicorp/terraform-provider-aws/aws/internal/service/connect"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
-	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
-	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
-	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
-	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
 )
 
 func DataSourceContactFlow() *schema.Resource {
@@ -122,7 +116,7 @@ func dataSourceAwsConnectGetConnectContactFlowSummaryByName(ctx context.Context,
 
 	input := &connect.ListContactFlowsInput{
 		InstanceId: aws.String(instanceID),
-		MaxResults: aws.Int64(tfconnect.ListContactFlowsMaxResults),
+		MaxResults: aws.Int64(ListContactFlowsMaxResults),
 	}
 
 	err := conn.ListContactFlowsPagesWithContext(ctx, input, func(page *connect.ListContactFlowsOutput, lastPage bool) bool {

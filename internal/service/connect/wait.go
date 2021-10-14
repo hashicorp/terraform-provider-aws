@@ -6,13 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/connect"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	tfconnect "github.com/hashicorp/terraform-provider-aws/aws/internal/service/connect"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
-	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
-	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
-	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
-	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
 )
 
 const (
@@ -47,7 +41,7 @@ func waitInstanceCreated(ctx context.Context, conn *connect.Connect, instanceId 
 func waitInstanceDeleted(ctx context.Context, conn *connect.Connect, instanceId string) (*connect.DescribeInstanceOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{connect.InstanceStatusActive},
-		Target:  []string{tfconnect.InstanceStatusStatusNotFound},
+		Target:  []string{InstanceStatusStatusNotFound},
 		Refresh: statusInstance(ctx, conn, instanceId),
 		Timeout: connectInstanceDeletedTimeout,
 	}

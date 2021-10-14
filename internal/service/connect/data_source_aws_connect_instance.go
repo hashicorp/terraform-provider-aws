@@ -1,4 +1,4 @@
-package aws
+package connect
 
 import (
 	"context"
@@ -11,15 +11,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/connect"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	tfconnect "github.com/hashicorp/terraform-provider-aws/aws/internal/service/connect"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
-	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
-	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
-	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
-	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
 )
 
 func DataSourceInstance() *schema.Resource {
@@ -157,12 +151,12 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("service_role", matchedInstance.ServiceRole)
 	d.Set("status", matchedInstance.InstanceStatus)
 
-	for att := range tfconnect.InstanceAttributeMapping() {
+	for att := range InstanceAttributeMapping() {
 		value, err := dataResourceAwsConnectInstanceReadAttribute(ctx, conn, d.Id(), att)
 		if err != nil {
 			return diag.FromErr(fmt.Errorf("error reading Connect Instance (%s) attribute (%s): %w", d.Id(), att, err))
 		}
-		d.Set(tfconnect.InstanceAttributeMapping()[att], value)
+		d.Set(InstanceAttributeMapping()[att], value)
 	}
 
 	return nil
@@ -172,7 +166,7 @@ func dataSourceAwsConnectGetConnectInstanceSummaryByInstanceAlias(ctx context.Co
 	var result *connect.InstanceSummary
 
 	input := &connect.ListInstancesInput{
-		MaxResults: aws.Int64(tfconnect.ListInstancesMaxResults),
+		MaxResults: aws.Int64(ListInstancesMaxResults),
 	}
 
 	err := conn.ListInstancesPagesWithContext(ctx, input, func(page *connect.ListInstancesOutput, lastPage bool) bool {

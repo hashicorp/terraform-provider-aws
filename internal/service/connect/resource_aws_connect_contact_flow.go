@@ -1,4 +1,4 @@
-package aws
+package connect
 
 import (
 	"context"
@@ -13,19 +13,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/connect/waiter"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/mitchellh/go-homedir"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
-	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
-	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
-	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
-	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
-	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
-	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
 )
 
 const awsMutexConnectContactFlowKey = `aws_connect_contact_flow`
@@ -40,8 +32,8 @@ func ResourceContactFlow() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(tfconnect.connectContactFlowCreateTimeout),
-			Update: schema.DefaultTimeout(tfconnect.connectContactFlowUpdateTimeout),
+			Create: schema.DefaultTimeout(connectContactFlowCreateTimeout),
+			Update: schema.DefaultTimeout(connectContactFlowUpdateTimeout),
 		},
 		CustomizeDiff: verify.SetTagsDiff,
 		Schema: map[string]*schema.Schema{

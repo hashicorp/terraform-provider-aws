@@ -1,4 +1,4 @@
-package aws
+package connect_test
 
 import (
 	"fmt"
