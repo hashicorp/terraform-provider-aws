@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsWorkLinkFleet() *schema.Resource {
+func ResourceFleet() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsWorkLinkFleetCreate,
-		Read:   resourceAwsWorkLinkFleetRead,
-		Update: resourceAwsWorkLinkFleetUpdate,
-		Delete: resourceAwsWorkLinkFleetDelete,
+		Create: resourceFleetCreate,
+		Read:   resourceFleetRead,
+		Update: resourceFleetUpdate,
+		Delete: resourceFleetDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -120,7 +120,7 @@ func resourceAwsWorkLinkFleet() *schema.Resource {
 	}
 }
 
-func resourceAwsWorkLinkFleetCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceFleetCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WorkLinkConn
 
 	input := &worklink.CreateFleetInput{
@@ -155,10 +155,10 @@ func resourceAwsWorkLinkFleetCreate(d *schema.ResourceData, meta interface{}) er
 		return err
 	}
 
-	return resourceAwsWorkLinkFleetRead(d, meta)
+	return resourceFleetRead(d, meta)
 }
 
-func resourceAwsWorkLinkFleetRead(d *schema.ResourceData, meta interface{}) error {
+func resourceFleetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WorkLinkConn
 
 	resp, err := conn.DescribeFleetMetadata(&worklink.DescribeFleetMetadataInput{
@@ -222,7 +222,7 @@ func resourceAwsWorkLinkFleetRead(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func resourceAwsWorkLinkFleetUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceFleetUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WorkLinkConn
 
 	input := &worklink.UpdateFleetMetadataInput{
@@ -270,10 +270,10 @@ func resourceAwsWorkLinkFleetUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
-	return resourceAwsWorkLinkFleetRead(d, meta)
+	return resourceFleetRead(d, meta)
 }
 
-func resourceAwsWorkLinkFleetDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceFleetDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WorkLinkConn
 
 	input := &worklink.DeleteFleetInput{
