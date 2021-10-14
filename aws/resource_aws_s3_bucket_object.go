@@ -21,9 +21,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/mitchellh/go-homedir"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/mitchellh/go-homedir"
 )
 
 const s3BucketObjectCreationTimeout = 2 * time.Minute
@@ -655,7 +655,7 @@ func deleteAllS3ObjectVersions(conn *s3.S3, bucketName, key string, force, ignor
 			}
 
 			err := deleteS3ObjectVersion(conn, bucketName, objectKey, objectVersionID, force)
-			if isAWSErr(err, "AccessDenied", "") && force {
+			if tfawserr.ErrMessageContains(err, "AccessDenied", "") && force {
 				// Remove any legal hold.
 				resp, err := conn.HeadObject(&s3.HeadObjectInput{
 					Bucket:    aws.String(bucketName),
@@ -708,7 +708,7 @@ func deleteAllS3ObjectVersions(conn *s3.S3, bucketName, key string, force, ignor
 		return !lastPage
 	})
 
-	if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") {
+	if tfawserr.ErrMessageContains(err, s3.ErrCodeNoSuchBucket, "") {
 		err = nil
 	}
 
@@ -748,7 +748,7 @@ func deleteAllS3ObjectVersions(conn *s3.S3, bucketName, key string, force, ignor
 		return !lastPage
 	})
 
-	if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") {
+	if tfawserr.ErrMessageContains(err, s3.ErrCodeNoSuchBucket, "") {
 		err = nil
 	}
 
@@ -790,7 +790,7 @@ func deleteS3ObjectVersion(conn *s3.S3, b, k, v string, force bool) error {
 		log.Printf("[WARN] Error deleting S3 Bucket (%s) Object (%s) Version (%s): %s", b, k, v, err)
 	}
 
-	if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") || isAWSErr(err, s3.ErrCodeNoSuchKey, "") {
+	if tfawserr.ErrMessageContains(err, s3.ErrCodeNoSuchBucket, "") || tfawserr.ErrMessageContains(err, s3.ErrCodeNoSuchKey, "") {
 		return nil
 	}
 

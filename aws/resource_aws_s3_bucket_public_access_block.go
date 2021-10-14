@@ -77,7 +77,7 @@ func resourceAwsS3BucketPublicAccessBlockCreate(d *schema.ResourceData, meta int
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 		_, err := s3conn.PutPublicAccessBlock(input)
 
-		if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") {
+		if tfawserr.ErrMessageContains(err, s3.ErrCodeNoSuchBucket, "") {
 			return resource.RetryableError(err)
 		}
 
@@ -87,7 +87,7 @@ func resourceAwsS3BucketPublicAccessBlockCreate(d *schema.ResourceData, meta int
 
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = s3conn.PutPublicAccessBlock(input)
 	}
 	if err != nil {

@@ -576,7 +576,7 @@ func testAccCheckAWSS3BucketMetricDestroy(s *terraform.State) error {
 			log.Printf("[DEBUG] Reading S3 bucket metrics configuration: %s", input)
 			output, err := conn.GetBucketMetricsConfiguration(input)
 			if err != nil {
-				if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") || isAWSErr(err, "NoSuchConfiguration", "The specified configuration does not exist.") {
+				if tfawserr.ErrMessageContains(err, s3.ErrCodeNoSuchBucket, "") || tfawserr.ErrMessageContains(err, "NoSuchConfiguration", "The specified configuration does not exist.") {
 					return nil
 				}
 				return resource.NonRetryableError(err)
