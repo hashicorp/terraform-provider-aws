@@ -96,7 +96,7 @@ func resourceEventSubscriptionCreate(d *schema.ResourceData, meta interface{}) e
 		SnsTopicArn:      aws.String(d.Get("sns_topic_arn").(string)),
 		SubscriptionName: aws.String(d.Get("name").(string)),
 		SourceType:       aws.String(d.Get("source_type").(string)),
-		Tags:             tags.IgnoreAws().DatabasemigrationserviceTags(),
+		Tags:             Tags(tags.IgnoreAws()),
 	}
 
 	if v, ok := d.GetOk("event_categories"); ok {
@@ -171,7 +171,7 @@ func resourceEventSubscriptionUpdate(d *schema.ResourceData, meta interface{}) e
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.DatabasemigrationserviceUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating DMS Event Subscription (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
@@ -224,7 +224,7 @@ func resourceEventSubscriptionRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("event_categories", flex.FlattenStringList(subscription.EventCategoriesList))
 	d.Set("source_ids", flex.FlattenStringList(subscription.SourceIdsList))
 
-	tags, err := tftags.DatabasemigrationserviceListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for DMS Event Subscription (%s): %s", arn, err)

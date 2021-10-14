@@ -147,7 +147,7 @@ func resourceReplicationInstanceCreate(d *schema.ResourceData, meta interface{})
 		MultiAZ:                       aws.Bool(d.Get("multi_az").(bool)),
 		ReplicationInstanceClass:      aws.String(d.Get("replication_instance_class").(string)),
 		ReplicationInstanceIdentifier: aws.String(d.Get("replication_instance_id").(string)),
-		Tags:                          tags.IgnoreAws().DatabasemigrationserviceTags(),
+		Tags:                          Tags(tags.IgnoreAws()),
 	}
 
 	// WARNING: GetOk returns the zero value for the type if the key is omitted in config. This means for optional
@@ -266,7 +266,7 @@ func resourceReplicationInstanceRead(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("error setting vpc_security_group_ids: %s", err)
 	}
 
-	tags, err := tftags.DatabasemigrationserviceListTags(conn, d.Get("replication_instance_arn").(string))
+	tags, err := ListTags(conn, d.Get("replication_instance_arn").(string))
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for DMS Replication Instance (%s): %s", d.Get("replication_instance_arn").(string), err)
@@ -348,7 +348,7 @@ func resourceReplicationInstanceUpdate(d *schema.ResourceData, meta interface{})
 		arn := d.Get("replication_instance_arn").(string)
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.DatabasemigrationserviceUpdateTags(conn, arn, o, n); err != nil {
+		if err := UpdateTags(conn, arn, o, n); err != nil {
 			return fmt.Errorf("error updating DMS Replication Instance (%s) tags: %s", arn, err)
 		}
 	}
