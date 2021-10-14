@@ -48,7 +48,7 @@ func testSweepFSXWindowsFileSystems(region string) error {
 				continue
 			}
 
-			r := ResourceWindowsFileSystem()
+			r := tffsx.ResourceWindowsFileSystem()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(fs.FileSystemId))
 			d.Set("skip_final_backup", true)
@@ -273,7 +273,7 @@ func TestAccAWSFsxWindowsFileSystem_disappears(t *testing.T) {
 				Config: testAccAwsFsxWindowsFileSystemConfigSubnetIds1(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxWindowsFileSystemExists(resourceName, &filesystem),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceWindowsFileSystem(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tffsx.ResourceWindowsFileSystem(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

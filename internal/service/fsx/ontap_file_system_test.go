@@ -48,7 +48,7 @@ func testSweepFSXOntapFileSystems(region string) error {
 				continue
 			}
 
-			r := ResourceOntapFileSystem()
+			r := tffsx.ResourceOntapFileSystem()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(fs.FileSystemId))
 
@@ -234,7 +234,7 @@ func TestAccAWSFsxOntapFileSystem_disappears(t *testing.T) {
 				Config: testAccAwsFsxOntapFileSystemConfigBasic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxOntapFileSystemExists(resourceName, &filesystem),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceOntapFileSystem(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tffsx.ResourceOntapFileSystem(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
