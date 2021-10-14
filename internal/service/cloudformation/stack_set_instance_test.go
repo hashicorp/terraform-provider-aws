@@ -53,7 +53,7 @@ func testSweepCloudformationStackSetInstances(region string) error {
 				}
 
 				for _, summary := range page.Summaries {
-					r := ResourceStackSetInstance()
+					r := tfcloudformation.ResourceStackSetInstance()
 					d := r.Data(nil)
 					id := tfcloudformation.StackSetInstanceCreateResourceID(
 						aws.StringValue(summary.StackSetId),
@@ -150,7 +150,7 @@ func TestAccAWSCloudFormationStackSetInstance_disappears(t *testing.T) {
 				Config: testAccAWSCloudFormationStackSetInstanceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFormationStackSetInstanceExists(resourceName, &stackInstance1),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceStackSetInstance(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcloudformation.ResourceStackSetInstance(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -176,8 +176,8 @@ func TestAccAWSCloudFormationStackSetInstance_disappears_StackSet(t *testing.T) 
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFormationStackSetExists(stackSetResourceName, &stackSet1),
 					testAccCheckCloudFormationStackSetInstanceExists(resourceName, &stackInstance1),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceStackSetInstance(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceStackSet(), stackSetResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcloudformation.ResourceStackSetInstance(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcloudformation.ResourceStackSet(), stackSetResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

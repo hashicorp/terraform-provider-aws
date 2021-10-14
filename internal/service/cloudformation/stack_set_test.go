@@ -46,7 +46,7 @@ func testSweepCloudformationStackSets(region string) error {
 		}
 
 		for _, summary := range page.Summaries {
-			r := ResourceStackSet()
+			r := tfcloudformation.ResourceStackSet()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(summary.StackSetName))
 
@@ -131,7 +131,7 @@ func TestAccAWSCloudFormationStackSet_disappears(t *testing.T) {
 				Config: testAccAWSCloudFormationStackSetConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFormationStackSetExists(resourceName, &stackSet1),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceStackSet(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcloudformation.ResourceStackSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

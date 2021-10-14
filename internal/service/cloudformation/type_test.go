@@ -77,9 +77,9 @@ func TestAccAwsCloudformationType_disappears(t *testing.T) {
 				Config: testAccCloudformationTypeConfigTypeName(rName, zipPath, typeName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsCloudformationTypeExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceType(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcloudformation.ResourceType(), resourceName),
 					// Verify Delete error handling
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceType(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcloudformation.ResourceType(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

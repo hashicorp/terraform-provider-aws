@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -200,7 +201,7 @@ func TestAccAWSCloudFormationStack_disappears(t *testing.T) {
 				Config: testAccAWSCloudFormationStackConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFormationStackExists(resourceName, &stack),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceStack(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcloudformation.ResourceStack(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
