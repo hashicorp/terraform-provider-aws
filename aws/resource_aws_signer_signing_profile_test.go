@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSSignerSigningProfile_basic(t *testing.T) {
@@ -155,7 +156,7 @@ func TestAccAWSSignerSigningProfile_SignatureValidityPeriod(t *testing.T) {
 }
 
 func testAccPreCheckSingerSigningProfile(t *testing.T, platformID string) {
-	conn := acctest.Provider.Meta().(*AWSClient).signerconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SignerConn
 
 	input := &signer.ListSigningPlatformsInput{}
 
@@ -275,7 +276,7 @@ func testAccCheckAWSSignerSigningProfileExists(res string, sp *signer.GetSigning
 			return fmt.Errorf("Signing Profile with that ARN does not exist")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).signerconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SignerConn
 
 		params := &signer.GetSigningProfileInput{
 			ProfileName: aws.String(rs.Primary.ID),
@@ -293,7 +294,7 @@ func testAccCheckAWSSignerSigningProfileExists(res string, sp *signer.GetSigning
 }
 
 func testAccCheckAWSSignerSigningProfileDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).signerconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SignerConn
 
 	time.Sleep(5 * time.Second)
 

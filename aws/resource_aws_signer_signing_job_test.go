@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSSignerSigningJob_basic(t *testing.T) {
@@ -101,7 +102,7 @@ func testAccCheckAWSSignerSigningJobExists(res string, job *signer.DescribeSigni
 			return fmt.Errorf("Signing job with that ID does not exist")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).signerconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SignerConn
 
 		params := &signer.DescribeSigningJobInput{
 			JobId: aws.String(rs.Primary.ID),

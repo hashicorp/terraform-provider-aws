@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/signer"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsSignerSigningJob() *schema.Resource {
@@ -195,7 +196,7 @@ func resourceAwsSignerSigningJob() *schema.Resource {
 }
 
 func resourceAwsSignerSigningJobCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).signerconn
+	conn := meta.(*conns.AWSClient).SignerConn
 	profileName := d.Get("profile_name")
 	source := d.Get("source").([]interface{})
 	destination := d.Get("destination").([]interface{})
@@ -231,7 +232,7 @@ func resourceAwsSignerSigningJobCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsSignerSigningJobRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).signerconn
+	conn := meta.(*conns.AWSClient).SignerConn
 	jobId := d.Id()
 
 	describeSigningJobOutput, err := conn.DescribeSigningJob(&signer.DescribeSigningJobInput{

@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/naming"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsSignerSigningProfile() *schema.Resource {
@@ -122,8 +123,8 @@ func resourceAwsSignerSigningProfile() *schema.Resource {
 }
 
 func resourceAwsSignerSigningProfileCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).signerconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).SignerConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	log.Printf("[DEBUG] Creating Signer signing profile")
@@ -159,9 +160,9 @@ func resourceAwsSignerSigningProfileCreate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsSignerSigningProfileRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).signerconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).SignerConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	signingProfileOutput, err := conn.GetSigningProfile(&signer.GetSigningProfileInput{
 		ProfileName: aws.String(d.Id()),
@@ -233,7 +234,7 @@ func resourceAwsSignerSigningProfileRead(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsSignerSigningProfileUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).signerconn
+	conn := meta.(*conns.AWSClient).SignerConn
 
 	arn := d.Get("arn").(string)
 	if d.HasChange("tags_all") {
@@ -248,7 +249,7 @@ func resourceAwsSignerSigningProfileUpdate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsSignerSigningProfileDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).signerconn
+	conn := meta.(*conns.AWSClient).SignerConn
 
 	_, err := conn.CancelSigningProfile(&signer.CancelSigningProfileInput{
 		ProfileName: aws.String(d.Id()),

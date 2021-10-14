@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/naming"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSSignerSigningProfilePermission_basic(t *testing.T) {
@@ -238,7 +239,7 @@ func testAccCheckAWSSignerSigningProfilePermissionExists(res, profileName string
 			return fmt.Errorf("Signing Profile with that ARN does not exist")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).signerconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SignerConn
 
 		params := &signer.ListProfilePermissionsInput{
 			ProfileName: aws.String(profileName),
