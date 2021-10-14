@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsPrometheusWorkspace() *schema.Resource {
+func ResourceWorkspace() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceAwsPrometheusWorkspaceCreate,
-		ReadContext:   resourceAwsPrometheusWorkspaceRead,
-		UpdateContext: resourceAwsPrometheusWorkspaceUpdate,
-		DeleteContext: resourceAwsPrometheusWorkspaceDelete,
+		CreateContext: resourceWorkspaceCreate,
+		ReadContext:   resourceWorkspaceRead,
+		UpdateContext: resourceWorkspaceUpdate,
+		DeleteContext: resourceWorkspaceDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -41,7 +41,7 @@ func resourceAwsPrometheusWorkspace() *schema.Resource {
 	}
 }
 
-func resourceAwsPrometheusWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Reading AMP workspace %s", d.Id())
 	conn := meta.(*conns.AWSClient).PrometheusConn
 
@@ -71,7 +71,7 @@ func resourceAwsPrometheusWorkspaceRead(ctx context.Context, d *schema.ResourceD
 	return nil
 }
 
-func resourceAwsPrometheusWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Updating AMP workspace %s", d.Id())
 
 	req := &prometheusservice.UpdateWorkspaceAliasInput{
@@ -85,10 +85,10 @@ func resourceAwsPrometheusWorkspaceUpdate(ctx context.Context, d *schema.Resourc
 		return diag.FromErr(fmt.Errorf("error updating Prometheus WorkSpace (%s): %w", d.Id(), err))
 	}
 
-	return resourceAwsPrometheusWorkspaceRead(ctx, d, meta)
+	return resourceWorkspaceRead(ctx, d, meta)
 }
 
-func resourceAwsPrometheusWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Creating AMP workspace %s", d.Id())
 	conn := meta.(*conns.AWSClient).PrometheusConn
 
@@ -107,10 +107,10 @@ func resourceAwsPrometheusWorkspaceCreate(ctx context.Context, d *schema.Resourc
 		return diag.FromErr(fmt.Errorf("error waiting for Workspace (%s) to be created: %w", d.Id(), err))
 	}
 
-	return resourceAwsPrometheusWorkspaceRead(ctx, d, meta)
+	return resourceWorkspaceRead(ctx, d, meta)
 }
 
-func resourceAwsPrometheusWorkspaceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWorkspaceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Deleting AMP workspace %s", d.Id())
 	conn := meta.(*conns.AWSClient).PrometheusConn
 
