@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsGuardDutyPublishingDestination() *schema.Resource {
+func ResourcePublishingDestination() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsGuardDutyPublishingDestinationCreate,
-		Read:   resourceAwsGuardDutyPublishingDestinationRead,
-		Update: resourceAwsGuardDutyPublishingDestinationUpdate,
-		Delete: resourceAwsGuardDutyPublishingDestinationDelete,
+		Create: resourcePublishingDestinationCreate,
+		Read:   resourcePublishingDestinationRead,
+		Update: resourcePublishingDestinationUpdate,
+		Delete: resourcePublishingDestinationDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -50,7 +50,7 @@ func resourceAwsGuardDutyPublishingDestination() *schema.Resource {
 	}
 }
 
-func resourceAwsGuardDutyPublishingDestinationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourcePublishingDestinationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GuardDutyConn
 
 	detectorID := d.Get("detector_id").(string)
@@ -78,10 +78,10 @@ func resourceAwsGuardDutyPublishingDestinationCreate(d *schema.ResourceData, met
 			guardduty.PublishingStatusPublishing, err)
 	}
 
-	return resourceAwsGuardDutyPublishingDestinationRead(d, meta)
+	return resourcePublishingDestinationRead(d, meta)
 }
 
-func resourceAwsGuardDutyPublishingDestinationRead(d *schema.ResourceData, meta interface{}) error {
+func resourcePublishingDestinationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GuardDutyConn
 
 	destinationId, detectorId, errStateRead := decodeGuardDutyPublishDestinationID(d.Id())
@@ -113,7 +113,7 @@ func resourceAwsGuardDutyPublishingDestinationRead(d *schema.ResourceData, meta 
 	return nil
 }
 
-func resourceAwsGuardDutyPublishingDestinationUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourcePublishingDestinationUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GuardDutyConn
 
 	destinationId, detectorId, errStateRead := decodeGuardDutyPublishDestinationID(d.Id())
@@ -137,10 +137,10 @@ func resourceAwsGuardDutyPublishingDestinationUpdate(d *schema.ResourceData, met
 		return fmt.Errorf("Updating GuardDuty publishing destination '%s' failed: %w", d.Id(), err)
 	}
 
-	return resourceAwsGuardDutyPublishingDestinationRead(d, meta)
+	return resourcePublishingDestinationRead(d, meta)
 }
 
-func resourceAwsGuardDutyPublishingDestinationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourcePublishingDestinationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GuardDutyConn
 
 	destinationId, detectorId, errStateRead := decodeGuardDutyPublishDestinationID(d.Id())

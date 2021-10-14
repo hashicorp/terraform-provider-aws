@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func testAccAwsGuardDutyFilter_basic(t *testing.T) {
@@ -184,7 +185,7 @@ func testAccAwsGuardDutyFilter_disappears(t *testing.T) {
 				Config: testAccGuardDutyFilterConfig_full(startDate, endDate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsGuardDutyFilterExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsGuardDutyFilter(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceFilter(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

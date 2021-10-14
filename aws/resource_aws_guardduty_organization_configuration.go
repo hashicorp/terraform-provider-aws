@@ -11,11 +11,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsGuardDutyOrganizationConfiguration() *schema.Resource {
+func ResourceOrganizationConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsGuardDutyOrganizationConfigurationUpdate,
-		Read:   resourceAwsGuardDutyOrganizationConfigurationRead,
-		Update: resourceAwsGuardDutyOrganizationConfigurationUpdate,
+		Create: resourceOrganizationConfigurationUpdate,
+		Read:   resourceOrganizationConfigurationRead,
+		Update: resourceOrganizationConfigurationUpdate,
 		Delete: schema.Noop,
 
 		Importer: &schema.ResourceImporter{
@@ -63,7 +63,7 @@ func resourceAwsGuardDutyOrganizationConfiguration() *schema.Resource {
 	}
 }
 
-func resourceAwsGuardDutyOrganizationConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceOrganizationConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GuardDutyConn
 
 	detectorID := d.Get("detector_id").(string)
@@ -85,10 +85,10 @@ func resourceAwsGuardDutyOrganizationConfigurationUpdate(d *schema.ResourceData,
 
 	d.SetId(detectorID)
 
-	return resourceAwsGuardDutyOrganizationConfigurationRead(d, meta)
+	return resourceOrganizationConfigurationRead(d, meta)
 }
 
-func resourceAwsGuardDutyOrganizationConfigurationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceOrganizationConfigurationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GuardDutyConn
 
 	input := &guardduty.DescribeOrganizationConfigurationInput{

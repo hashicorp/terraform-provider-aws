@@ -11,11 +11,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsGuardDutyOrganizationAdminAccount() *schema.Resource {
+func ResourceOrganizationAdminAccount() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsGuardDutyOrganizationAdminAccountCreate,
-		Read:   resourceAwsGuardDutyOrganizationAdminAccountRead,
-		Delete: resourceAwsGuardDutyOrganizationAdminAccountDelete,
+		Create: resourceOrganizationAdminAccountCreate,
+		Read:   resourceOrganizationAdminAccountRead,
+		Delete: resourceOrganizationAdminAccountDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -32,7 +32,7 @@ func resourceAwsGuardDutyOrganizationAdminAccount() *schema.Resource {
 	}
 }
 
-func resourceAwsGuardDutyOrganizationAdminAccountCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceOrganizationAdminAccountCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GuardDutyConn
 
 	adminAccountID := d.Get("admin_account_id").(string)
@@ -53,10 +53,10 @@ func resourceAwsGuardDutyOrganizationAdminAccountCreate(d *schema.ResourceData, 
 		return fmt.Errorf("error waiting for GuardDuty Organization Admin Account (%s) to enable: %w", d.Id(), err)
 	}
 
-	return resourceAwsGuardDutyOrganizationAdminAccountRead(d, meta)
+	return resourceOrganizationAdminAccountRead(d, meta)
 }
 
-func resourceAwsGuardDutyOrganizationAdminAccountRead(d *schema.ResourceData, meta interface{}) error {
+func resourceOrganizationAdminAccountRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GuardDutyConn
 
 	adminAccount, err := getGuardDutyOrganizationAdminAccount(conn, d.Id())
@@ -76,7 +76,7 @@ func resourceAwsGuardDutyOrganizationAdminAccountRead(d *schema.ResourceData, me
 	return nil
 }
 
-func resourceAwsGuardDutyOrganizationAdminAccountDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceOrganizationAdminAccountDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GuardDutyConn
 
 	input := &guardduty.DisableOrganizationAdminAccountInput{
