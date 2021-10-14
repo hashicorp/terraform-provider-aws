@@ -153,13 +153,13 @@ func resourcePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	loadBalancerName, policyName := PolicyParseID(d.Id())
 
-	assigned, err := resourceAwsLoadBalancerPolicyAssigned(policyName, loadBalancerName, conn)
+	assigned, err := resourcePolicyAssigned(policyName, loadBalancerName, conn)
 	if err != nil {
 		return fmt.Errorf("Error determining assignment status of Load Balancer Policy %s: %s", policyName, err)
 	}
 
 	if assigned {
-		reassignments, err = resourceAwsLoadBalancerPolicyUnassign(policyName, loadBalancerName, conn)
+		reassignments, err = resourcePolicyUnassign(policyName, loadBalancerName, conn)
 		if err != nil {
 			return fmt.Errorf("Error unassigning Load Balancer Policy %s: %s", policyName, err)
 		}
@@ -199,13 +199,13 @@ func resourcePolicyDelete(d *schema.ResourceData, meta interface{}) error {
 
 	loadBalancerName, policyName := PolicyParseID(d.Id())
 
-	assigned, err := resourceAwsLoadBalancerPolicyAssigned(policyName, loadBalancerName, conn)
+	assigned, err := resourcePolicyAssigned(policyName, loadBalancerName, conn)
 	if err != nil {
 		return fmt.Errorf("Error determining assignment status of Load Balancer Policy %s: %s", policyName, err)
 	}
 
 	if assigned {
-		_, err := resourceAwsLoadBalancerPolicyUnassign(policyName, loadBalancerName, conn)
+		_, err := resourcePolicyUnassign(policyName, loadBalancerName, conn)
 		if err != nil {
 			return fmt.Errorf("Error unassigning Load Balancer Policy %s: %s", policyName, err)
 		}
@@ -228,7 +228,7 @@ func PolicyParseID(id string) (string, string) {
 	return parts[0], parts[1]
 }
 
-func resourceAwsLoadBalancerPolicyAssigned(policyName, loadBalancerName string, conn *elb.ELB) (bool, error) {
+func resourcePolicyAssigned(policyName, loadBalancerName string, conn *elb.ELB) (bool, error) {
 	describeElbOpts := &elb.DescribeLoadBalancersInput{
 		LoadBalancerNames: []*string{aws.String(loadBalancerName)},
 	}
@@ -276,7 +276,7 @@ type Reassignment struct {
 	listenerPolicies      []*elb.SetLoadBalancerPoliciesOfListenerInput
 }
 
-func resourceAwsLoadBalancerPolicyUnassign(policyName, loadBalancerName string, conn *elb.ELB) (Reassignment, error) {
+func resourcePolicyUnassign(policyName, loadBalancerName string, conn *elb.ELB) (Reassignment, error) {
 	reassignments := Reassignment{}
 
 	describeElbOpts := &elb.DescribeLoadBalancersInput{

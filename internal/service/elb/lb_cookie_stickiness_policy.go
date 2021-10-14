@@ -113,7 +113,7 @@ func resourceCookieStickinessPolicyRead(d *schema.ResourceData, meta interface{}
 	}
 
 	// we know the policy exists now, but we have to check if it's assigned to a listener
-	assigned, err := resourceAwsELBSticknessPolicyAssigned(policyName, lbName, lbPort, conn)
+	assigned, err := resourceSticknessPolicyAssigned(policyName, lbName, lbPort, conn)
 	if err != nil {
 		return err
 	}

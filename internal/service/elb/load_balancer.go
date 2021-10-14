@@ -374,11 +374,11 @@ func resourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Unable to find ELB: %#v", describeResp.LoadBalancerDescriptions)
 	}
 
-	return flattenAwsELbResource(d, meta.(*conns.AWSClient).EC2Conn, elbconn, describeResp.LoadBalancerDescriptions[0], ignoreTagsConfig, defaultTagsConfig)
+	return flattenLoadBalancerEResource(d, meta.(*conns.AWSClient).EC2Conn, elbconn, describeResp.LoadBalancerDescriptions[0], ignoreTagsConfig, defaultTagsConfig)
 }
 
-// flattenAwsELbResource takes a *elbv2.LoadBalancer and populates all respective resource fields.
-func flattenAwsELbResource(d *schema.ResourceData, ec2conn *ec2.EC2, elbconn *elb.ELB, lb *elb.LoadBalancerDescription, ignoreTagsConfig *tftags.IgnoreConfig, defaultTagsConfig *tftags.DefaultConfig) error {
+// flattenLoadBalancerEResource takes a *elbv2.LoadBalancer and populates all respective resource fields.
+func flattenLoadBalancerEResource(d *schema.ResourceData, ec2conn *ec2.EC2, elbconn *elb.ELB, lb *elb.LoadBalancerDescription, ignoreTagsConfig *tftags.IgnoreConfig, defaultTagsConfig *tftags.DefaultConfig) error {
 	describeAttrsOpts := &elb.DescribeLoadBalancerAttributesInput{
 		LoadBalancerName: aws.String(d.Id()),
 	}

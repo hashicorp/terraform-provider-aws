@@ -115,7 +115,7 @@ func resourceProxyProtocolPolicyUpdate(d *schema.ResourceData, meta interface{})
 	}
 
 	backends := flattenBackendPolicies(resp.LoadBalancerDescriptions[0].BackendServerDescriptions)
-	policyName := resourceAwsProxyProtocolPolicyParseId(d.Id())
+	policyName := resourceProxyProtocolPolicyParseID(d.Id())
 
 	if d.HasChange("instance_ports") {
 		o, n := d.GetChange("instance_ports")
@@ -126,13 +126,13 @@ func resourceProxyProtocolPolicyUpdate(d *schema.ResourceData, meta interface{})
 
 		inputs := []*elb.SetLoadBalancerPoliciesForBackendServerInput{}
 
-		i, err := resourceAwsProxyProtocolPolicyRemove(policyName, remove, backends)
+		i, err := resourceProxyProtocolPolicyRemove(policyName, remove, backends)
 		if err != nil {
 			return err
 		}
 		inputs = append(inputs, i...)
 
-		i, err = resourceAwsProxyProtocolPolicyAdd(policyName, add, backends)
+		i, err = resourceProxyProtocolPolicyAdd(policyName, add, backends)
 		if err != nil {
 			return err
 		}
@@ -168,9 +168,9 @@ func resourceProxyProtocolPolicyDelete(d *schema.ResourceData, meta interface{})
 
 	backends := flattenBackendPolicies(resp.LoadBalancerDescriptions[0].BackendServerDescriptions)
 	ports := d.Get("instance_ports").(*schema.Set).List()
-	policyName := resourceAwsProxyProtocolPolicyParseId(d.Id())
+	policyName := resourceProxyProtocolPolicyParseID(d.Id())
 
-	inputs, err := resourceAwsProxyProtocolPolicyRemove(policyName, ports, backends)
+	inputs, err := resourceProxyProtocolPolicyRemove(policyName, ports, backends)
 	if err != nil {
 		return fmt.Errorf("Error detaching a policy from backend: %s", err)
 	}
@@ -192,7 +192,7 @@ func resourceProxyProtocolPolicyDelete(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
-func resourceAwsProxyProtocolPolicyRemove(policyName string, ports []interface{}, backends map[int64][]string) ([]*elb.SetLoadBalancerPoliciesForBackendServerInput, error) {
+func resourceProxyProtocolPolicyRemove(policyName string, ports []interface{}, backends map[int64][]string) ([]*elb.SetLoadBalancerPoliciesForBackendServerInput, error) {
 	inputs := make([]*elb.SetLoadBalancerPoliciesForBackendServerInput, 0, len(ports))
 	for _, p := range ports {
 		ip, err := strconv.ParseInt(p.(string), 10, 64)
@@ -223,7 +223,7 @@ func resourceAwsProxyProtocolPolicyRemove(policyName string, ports []interface{}
 	return inputs, nil
 }
 
-func resourceAwsProxyProtocolPolicyAdd(policyName string, ports []interface{}, backends map[int64][]string) ([]*elb.SetLoadBalancerPoliciesForBackendServerInput, error) {
+func resourceProxyProtocolPolicyAdd(policyName string, ports []interface{}, backends map[int64][]string) ([]*elb.SetLoadBalancerPoliciesForBackendServerInput, error) {
 	inputs := make([]*elb.SetLoadBalancerPoliciesForBackendServerInput, 0, len(ports))
 	for _, p := range ports {
 		ip, err := strconv.ParseInt(p.(string), 10, 64)
@@ -251,10 +251,10 @@ func resourceAwsProxyProtocolPolicyAdd(policyName string, ports []interface{}, b
 	return inputs, nil
 }
 
-// resourceAwsProxyProtocolPolicyParseId takes an ID and parses it into
+// resourceProxyProtocolPolicyParseID takes an ID and parses it into
 // it's constituent parts. You need two axes (LB name, policy name)
 // to create or identify a proxy protocol policy in AWS's API.
-func resourceAwsProxyProtocolPolicyParseId(id string) string {
+func resourceProxyProtocolPolicyParseID(id string) string {
 	parts := strings.SplitN(id, ":", 2)
 	// We currently omit the ELB name as it is not currently used anywhere
 	return parts[1]

@@ -118,7 +118,7 @@ func resourceAppCookieStickinessPolicyRead(d *schema.ResourceData, meta interfac
 	}
 
 	// we know the policy exists now, but we have to check if it's assigned to a listener
-	assigned, err := resourceAwsELBSticknessPolicyAssigned(policyName, lbName, lbPort, conn)
+	assigned, err := resourceSticknessPolicyAssigned(policyName, lbName, lbPort, conn)
 	if err != nil {
 		return err
 	}
@@ -148,7 +148,7 @@ func resourceAppCookieStickinessPolicyRead(d *schema.ResourceData, meta interfac
 }
 
 // Determine if a particular policy is assigned to an ELB listener
-func resourceAwsELBSticknessPolicyAssigned(policyName, lbName, lbPort string, conn *elb.ELB) (bool, error) {
+func resourceSticknessPolicyAssigned(policyName, lbName, lbPort string, conn *elb.ELB) (bool, error) {
 	describeElbOpts := &elb.DescribeLoadBalancersInput{
 		LoadBalancerNames: []*string{aws.String(lbName)},
 	}
