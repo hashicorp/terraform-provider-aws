@@ -17,8 +17,8 @@ import (
 
 func ResourcePermission() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsOpsworksSetPermission,
-		Update: resourceAwsOpsworksSetPermission,
+		Create: resourceSetPermission,
+		Update: resourceSetPermission,
 		Delete: resourcePermissionDelete,
 		Read:   resourcePermissionRead,
 
@@ -109,7 +109,7 @@ func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsOpsworksSetPermission(d *schema.ResourceData, meta interface{}) error {
+func resourceSetPermission(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*conns.AWSClient).OpsWorksConn
 
 	req := &opsworks.SetPermissionInput{

@@ -24,7 +24,7 @@ func ResourceInstance() *schema.Resource {
 		Update: resourceInstanceUpdate,
 		Delete: resourceInstanceDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsOpsworksInstanceImport,
+			State: resourceInstanceImport,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -441,7 +441,7 @@ func ResourceInstance() *schema.Resource {
 	}
 }
 
-func resourceAwsOpsworksInstanceValidate(d *schema.ResourceData) error {
+func resourceInstanceValidate(d *schema.ResourceData) error {
 	if d.HasChange("ami_id") {
 		if v, ok := d.GetOk("os"); ok {
 			if v.(string) != "Custom" {
@@ -576,7 +576,7 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*conns.AWSClient).OpsWorksConn
 
-	err := resourceAwsOpsworksInstanceValidate(d)
+	err := resourceInstanceValidate(d)
 	if err != nil {
 		return err
 	}
@@ -739,7 +739,7 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*conns.AWSClient).OpsWorksConn
 
-	err := resourceAwsOpsworksInstanceValidate(d)
+	err := resourceInstanceValidate(d)
 	if err != nil {
 		return err
 	}
@@ -839,7 +839,7 @@ func resourceInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 	return err
 }
 
-func resourceAwsOpsworksInstanceImport(
+func resourceInstanceImport(
 	d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	// Neither delete_eip nor delete_ebs can be fetched
 	// from any API call, so we need to default to the values

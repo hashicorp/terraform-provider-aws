@@ -207,7 +207,7 @@ func ResourceStack() *schema.Resource {
 	}
 }
 
-func resourceAwsOpsworksStackValidate(d *schema.ResourceData) error {
+func resourceStackValidate(d *schema.ResourceData) error {
 	cookbooksSourceCount := d.Get("custom_cookbooks_source.#").(int)
 	if cookbooksSourceCount > 1 {
 		return fmt.Errorf("Only one custom_cookbooks_source is permitted")
@@ -227,7 +227,7 @@ func resourceAwsOpsworksStackValidate(d *schema.ResourceData) error {
 	return nil
 }
 
-func resourceAwsOpsworksStackCustomCookbooksSource(d *schema.ResourceData) *opsworks.Source {
+func resourceStackCustomCookbooksSource(d *schema.ResourceData) *opsworks.Source {
 	count := d.Get("custom_cookbooks_source.#").(int)
 	if count == 0 {
 		return nil
@@ -243,7 +243,7 @@ func resourceAwsOpsworksStackCustomCookbooksSource(d *schema.ResourceData) *opsw
 	}
 }
 
-func resourceAwsOpsworksSetStackCustomCookbooksSource(d *schema.ResourceData, v *opsworks.Source) error {
+func resourceSetStackCustomCookbooksSource(d *schema.ResourceData, v *opsworks.Source) error {
 	nv := make([]interface{}, 0, 1)
 	if v != nil && v.Type != nil && *v.Type != "" {
 		m := make(map[string]interface{})
@@ -378,7 +378,7 @@ func resourceStackRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("berkshelf_version", stack.ChefConfiguration.BerkshelfVersion)
 		d.Set("manage_berkshelf", stack.ChefConfiguration.ManageBerkshelf)
 	}
-	err := resourceAwsOpsworksSetStackCustomCookbooksSource(d, stack.CustomCookbooksSource)
+	err := resourceSetStackCustomCookbooksSource(d, stack.CustomCookbooksSource)
 	if err != nil {
 		return err
 	}
@@ -436,7 +436,7 @@ func opsworksConnForRegion(region string, meta interface{}) (*opsworks.OpsWorks,
 func resourceStackCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*conns.AWSClient).OpsWorksConn
 
-	err := resourceAwsOpsworksStackValidate(d)
+	err := resourceStackValidate(d)
 	if err != nil {
 		return err
 	}
@@ -525,7 +525,7 @@ func resourceStackUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	err := resourceAwsOpsworksStackValidate(d)
+	err := resourceStackValidate(d)
 	if err != nil {
 		return err
 	}
@@ -541,7 +541,7 @@ func resourceStackUpdate(d *schema.ResourceData, meta interface{}) error {
 		UseCustomCookbooks:        aws.Bool(d.Get("use_custom_cookbooks").(bool)),
 		UseOpsworksSecurityGroups: aws.Bool(d.Get("use_opsworks_security_groups").(bool)),
 		Attributes:                make(map[string]*string),
-		CustomCookbooksSource:     resourceAwsOpsworksStackCustomCookbooksSource(d),
+		CustomCookbooksSource:     resourceStackCustomCookbooksSource(d),
 	}
 	if v, ok := d.GetOk("agent_version"); ok {
 		req.AgentVersion = aws.String(v.(string))

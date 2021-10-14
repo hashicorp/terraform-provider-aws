@@ -13,9 +13,9 @@ import (
 
 func ResourceRDSDBInstance() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsOpsworksRdsDbInstanceRegister,
+		Create: resourceRDSDBInstanceRegister,
 		Update: resourceRDSDBInstanceUpdate,
-		Delete: resourceAwsOpsworksRdsDbInstanceDeregister,
+		Delete: resourceRDSDBInstanceDeregister,
 		Read:   resourceRDSDBInstanceRead,
 
 		Schema: map[string]*schema.Schema{
@@ -71,7 +71,7 @@ func resourceRDSDBInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 	return resourceRDSDBInstanceRead(d, meta)
 }
 
-func resourceAwsOpsworksRdsDbInstanceDeregister(d *schema.ResourceData, meta interface{}) error {
+func resourceRDSDBInstanceDeregister(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*conns.AWSClient).OpsWorksConn
 
 	req := &opsworks.DeregisterRdsDbInstanceInput{
@@ -130,7 +130,7 @@ func resourceRDSDBInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsOpsworksRdsDbInstanceRegister(d *schema.ResourceData, meta interface{}) error {
+func resourceRDSDBInstanceRegister(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*conns.AWSClient).OpsWorksConn
 
 	req := &opsworks.RegisterRdsDbInstanceInput{

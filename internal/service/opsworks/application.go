@@ -211,7 +211,7 @@ func ResourceApplication() *schema.Resource {
 	}
 }
 
-func resourceAwsOpsworksApplicationValidate(d *schema.ResourceData) error {
+func resourceApplicationValidate(d *schema.ResourceData) error {
 	appSourceCount := d.Get("app_source.#").(int)
 	if appSourceCount > 1 {
 		return fmt.Errorf("Only one app_source is permitted.")
@@ -283,17 +283,17 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("description", app.Description)
 	d.Set("domains", flex.FlattenStringList(app.Domains))
 	d.Set("enable_ssl", app.EnableSsl)
-	err = resourceAwsOpsworksSetApplicationSsl(d, app.SslConfiguration)
+	err = resourceSetApplicationSSL(d, app.SslConfiguration)
 	if err != nil {
 		return err
 	}
-	err = resourceAwsOpsworksSetApplicationSource(d, app.AppSource)
+	err = resourceSetApplicationSource(d, app.AppSource)
 	if err != nil {
 		return err
 	}
-	resourceAwsOpsworksSetApplicationDataSources(d, app.DataSources)
-	resourceAwsOpsworksSetApplicationEnvironmentVariable(d, app.Environment)
-	resourceAwsOpsworksSetApplicationAttributes(d, app.Attributes)
+	resourceSetApplicationsDataSource(d, app.DataSources)
+	resourceSetApplicationEnvironmentVariable(d, app.Environment)
+	resourceSetApplicationAttributes(d, app.Attributes)
 
 	return nil
 }
@@ -301,7 +301,7 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*conns.AWSClient).OpsWorksConn
 
-	err := resourceAwsOpsworksApplicationValidate(d)
+	err := resourceApplicationValidate(d)
 	if err != nil {
 		return err
 	}
@@ -314,11 +314,11 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 		Description:      aws.String(d.Get("description").(string)),
 		Domains:          flex.ExpandStringList(d.Get("domains").([]interface{})),
 		EnableSsl:        aws.Bool(d.Get("enable_ssl").(bool)),
-		SslConfiguration: resourceAwsOpsworksApplicationSsl(d),
-		AppSource:        resourceAwsOpsworksApplicationSource(d),
-		DataSources:      resourceAwsOpsworksApplicationDataSources(d),
-		Environment:      resourceAwsOpsworksApplicationEnvironmentVariable(d),
-		Attributes:       resourceAwsOpsworksApplicationAttributes(d),
+		SslConfiguration: resourceApplicationSSL(d),
+		AppSource:        resourceApplicationSource(d),
+		DataSources:      resourceApplicationsDataSource(d),
+		Environment:      resourceApplicationEnvironmentVariable(d),
+		Attributes:       resourceApplicationAttributes(d),
 	}
 
 	resp, err := client.CreateApp(req)
@@ -335,7 +335,7 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*conns.AWSClient).OpsWorksConn
 
-	err := resourceAwsOpsworksApplicationValidate(d)
+	err := resourceApplicationValidate(d)
 	if err != nil {
 		return err
 	}
@@ -347,11 +347,11 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 		Description:      aws.String(d.Get("description").(string)),
 		Domains:          flex.ExpandStringList(d.Get("domains").([]interface{})),
 		EnableSsl:        aws.Bool(d.Get("enable_ssl").(bool)),
-		SslConfiguration: resourceAwsOpsworksApplicationSsl(d),
-		AppSource:        resourceAwsOpsworksApplicationSource(d),
-		DataSources:      resourceAwsOpsworksApplicationDataSources(d),
-		Environment:      resourceAwsOpsworksApplicationEnvironmentVariable(d),
-		Attributes:       resourceAwsOpsworksApplicationAttributes(d),
+		SslConfiguration: resourceApplicationSSL(d),
+		AppSource:        resourceApplicationSource(d),
+		DataSources:      resourceApplicationsDataSource(d),
+		Environment:      resourceApplicationEnvironmentVariable(d),
+		Attributes:       resourceApplicationAttributes(d),
 	}
 
 	log.Printf("[DEBUG] Updating OpsWorks layer: %s", d.Id())
@@ -377,7 +377,7 @@ func resourceApplicationDelete(d *schema.ResourceData, meta interface{}) error {
 	return err
 }
 
-func resourceAwsOpsworksFindEnvironmentVariable(key string, vs []*opsworks.EnvironmentVariable) *opsworks.EnvironmentVariable {
+func resourceFindEnvironmentVariable(key string, vs []*opsworks.EnvironmentVariable) *opsworks.EnvironmentVariable {
 	for _, v := range vs {
 		if aws.StringValue(v.Key) == key {
 			return v
@@ -386,7 +386,7 @@ func resourceAwsOpsworksFindEnvironmentVariable(key string, vs []*opsworks.Envir
 	return nil
 }
 
-func resourceAwsOpsworksSetApplicationEnvironmentVariable(d *schema.ResourceData, vs []*opsworks.EnvironmentVariable) {
+func resourceSetApplicationEnvironmentVariable(d *schema.ResourceData, vs []*opsworks.EnvironmentVariable) {
 	if len(vs) == 0 {
 		d.Set("environment", nil)
 		return
@@ -399,7 +399,7 @@ func resourceAwsOpsworksSetApplicationEnvironmentVariable(d *schema.ResourceData
 
 	for i := 0; i < len(values); i++ {
 		value := values[i].(map[string]interface{})
-		if v := resourceAwsOpsworksFindEnvironmentVariable(value["key"].(string), vs); v != nil {
+		if v := resourceFindEnvironmentVariable(value["key"].(string), vs); v != nil {
 			if !aws.BoolValue(v.Secure) {
 				value["secure"] = aws.BoolValue(v.Secure)
 				value["key"] = aws.StringValue(v.Key)
@@ -415,7 +415,7 @@ func resourceAwsOpsworksSetApplicationEnvironmentVariable(d *schema.ResourceData
 	d.Set("environment", values)
 }
 
-func resourceAwsOpsworksApplicationEnvironmentVariable(d *schema.ResourceData) []*opsworks.EnvironmentVariable {
+func resourceApplicationEnvironmentVariable(d *schema.ResourceData) []*opsworks.EnvironmentVariable {
 	environmentVariables := d.Get("environment").(*schema.Set).List()
 	result := make([]*opsworks.EnvironmentVariable, len(environmentVariables))
 
@@ -431,7 +431,7 @@ func resourceAwsOpsworksApplicationEnvironmentVariable(d *schema.ResourceData) [
 	return result
 }
 
-func resourceAwsOpsworksApplicationSource(d *schema.ResourceData) *opsworks.Source {
+func resourceApplicationSource(d *schema.ResourceData) *opsworks.Source {
 	count := d.Get("app_source.#").(int)
 	if count == 0 {
 		return nil
@@ -447,7 +447,7 @@ func resourceAwsOpsworksApplicationSource(d *schema.ResourceData) *opsworks.Sour
 	}
 }
 
-func resourceAwsOpsworksSetApplicationSource(d *schema.ResourceData, v *opsworks.Source) error {
+func resourceSetApplicationSource(d *schema.ResourceData, v *opsworks.Source) error {
 	nv := make([]interface{}, 0, 1)
 	if v != nil {
 		m := make(map[string]interface{})
@@ -481,7 +481,7 @@ func resourceAwsOpsworksSetApplicationSource(d *schema.ResourceData, v *opsworks
 	return nil
 }
 
-func resourceAwsOpsworksApplicationDataSources(d *schema.ResourceData) []*opsworks.DataSource {
+func resourceApplicationsDataSource(d *schema.ResourceData) []*opsworks.DataSource {
 	arn := d.Get("data_source_arn").(string)
 	databaseName := d.Get("data_source_database_name").(string)
 	databaseType := d.Get("data_source_type").(string)
@@ -498,7 +498,7 @@ func resourceAwsOpsworksApplicationDataSources(d *schema.ResourceData) []*opswor
 	return result
 }
 
-func resourceAwsOpsworksSetApplicationDataSources(d *schema.ResourceData, v []*opsworks.DataSource) {
+func resourceSetApplicationsDataSource(d *schema.ResourceData, v []*opsworks.DataSource) {
 	d.Set("data_source_arn", nil)
 	d.Set("data_source_database_name", nil)
 	d.Set("data_source_type", nil)
@@ -512,7 +512,7 @@ func resourceAwsOpsworksSetApplicationDataSources(d *schema.ResourceData, v []*o
 	d.Set("data_source_type", v[0].Type)
 }
 
-func resourceAwsOpsworksApplicationSsl(d *schema.ResourceData) *opsworks.SslConfiguration {
+func resourceApplicationSSL(d *schema.ResourceData) *opsworks.SslConfiguration {
 	count := d.Get("ssl_configuration.#").(int)
 	if count == 0 {
 		return nil
@@ -525,7 +525,7 @@ func resourceAwsOpsworksApplicationSsl(d *schema.ResourceData) *opsworks.SslConf
 	}
 }
 
-func resourceAwsOpsworksSetApplicationSsl(d *schema.ResourceData, v *opsworks.SslConfiguration) error {
+func resourceSetApplicationSSL(d *schema.ResourceData, v *opsworks.SslConfiguration) error {
 	nv := make([]interface{}, 0, 1)
 	set := false
 	if v != nil {
@@ -555,7 +555,7 @@ func resourceAwsOpsworksSetApplicationSsl(d *schema.ResourceData, v *opsworks.Ss
 	return nil
 }
 
-func resourceAwsOpsworksApplicationAttributes(d *schema.ResourceData) map[string]*string {
+func resourceApplicationAttributes(d *schema.ResourceData) map[string]*string {
 	attributes := make(map[string]*string)
 
 	if val := d.Get("document_root").(string); len(val) > 0 {
@@ -579,7 +579,7 @@ func resourceAwsOpsworksApplicationAttributes(d *schema.ResourceData) map[string
 	return attributes
 }
 
-func resourceAwsOpsworksSetApplicationAttributes(d *schema.ResourceData, v map[string]*string) {
+func resourceSetApplicationAttributes(d *schema.ResourceData, v map[string]*string) {
 	d.Set("document_root", nil)
 	d.Set("rails_env", nil)
 	d.Set("aws_flow_ruby_settings", nil)
