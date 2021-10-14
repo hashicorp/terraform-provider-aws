@@ -9,9 +9,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsCurReportDefinition() *schema.Resource {
+func DataSourceReportDefinition() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsCurReportDefinitionRead,
+		Read: dataSourceReportDefinitionRead,
 
 		Schema: map[string]*schema.Schema{
 			"report_name": {
@@ -66,7 +66,7 @@ func dataSourceAwsCurReportDefinition() *schema.Resource {
 	}
 }
 
-func dataSourceAwsCurReportDefinitionRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceReportDefinitionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CURConn
 
 	reportName := d.Get("report_name").(string)

@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/costandusagereportservice/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -45,7 +46,7 @@ func testSweepCurReportDefinitions(region string) error {
 		}
 
 		for _, reportDefinition := range page.ReportDefinitions {
-			r := resourceAwsCurReportDefinition()
+			r := ResourceReportDefinition()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(reportDefinition.ReportName))
 			err = r.Delete(d, client)
@@ -359,7 +360,7 @@ func testAccAwsCurReportDefinition_disappears(t *testing.T) {
 				Config: testAccAwsCurReportDefinitionConfig_basic(reportName, bucketName, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsCurReportDefinitionExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsCurReportDefinition(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceReportDefinition(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
