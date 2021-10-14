@@ -1,4 +1,4 @@
-package aws
+package elasticache
 
 import (
 	"fmt"
@@ -11,75 +11,10 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/elasticache/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/elasticache/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
-	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
-	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
-	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
-	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
-	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
-	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
-	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
-	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
-	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
-	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
-	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
-	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
-	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
-	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
-	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
-	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
-	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
-	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
-	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
-	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
-	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
-	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
-	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
-	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
-	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
-	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
-	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
-	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
-	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
-	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
-	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
-	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
-	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
-	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
-	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
-	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
-	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
-	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
-	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
-	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
-	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
-	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
-	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
-	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
-	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
-	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
-	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
-	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
-	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
-	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
-	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
-	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
-	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
-	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
-	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
-	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
-	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
-	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
-	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
-	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
-	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
-	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
 )
 
 const (
@@ -234,7 +169,7 @@ func resourceGlobalReplicationGroupCreate(d *schema.ResourceData, meta interface
 
 	d.SetId(aws.StringValue(output.GlobalReplicationGroup.GlobalReplicationGroupId))
 
-	if _, err := tfelasticache.WaitGlobalReplicationGroupAvailable(conn, d.Id(), tfelasticache.GlobalReplicationGroupDefaultCreatedTimeout); err != nil {
+	if _, err := WaitGlobalReplicationGroupAvailable(conn, d.Id(), GlobalReplicationGroupDefaultCreatedTimeout); err != nil {
 		return fmt.Errorf("error waiting for ElastiCache Global Replication Group (%s) availability: %w", d.Id(), err)
 	}
 
@@ -244,7 +179,7 @@ func resourceGlobalReplicationGroupCreate(d *schema.ResourceData, meta interface
 func resourceGlobalReplicationGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElastiCacheConn
 
-	globalReplicationGroup, err := tfelasticache.FindGlobalReplicationGroupByID(conn, d.Id())
+	globalReplicationGroup, err := FindGlobalReplicationGroupByID(conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ElastiCache Global Replication Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -312,7 +247,7 @@ func updateElasticacheGlobalReplicationGroup(conn *elasticache.ElastiCache, id s
 		return err
 	}
 
-	if _, err := tfelasticache.WaitGlobalReplicationGroupAvailable(conn, id, tfelasticache.GlobalReplicationGroupDefaultUpdatedTimeout); err != nil {
+	if _, err := WaitGlobalReplicationGroupAvailable(conn, id, GlobalReplicationGroupDefaultUpdatedTimeout); err != nil {
 		return fmt.Errorf("waiting for completion: %w", err)
 	}
 
@@ -323,7 +258,7 @@ func resourceGlobalReplicationGroupDelete(d *schema.ResourceData, meta interface
 	conn := meta.(*conns.AWSClient).ElastiCacheConn
 
 	// Using Update timeout because the Global Replication Group could be in the middle of an update operation
-	err := deleteElasticacheGlobalReplicationGroup(conn, d.Id(), tfelasticache.GlobalReplicationGroupDefaultUpdatedTimeout)
+	err := deleteElasticacheGlobalReplicationGroup(conn, d.Id(), GlobalReplicationGroupDefaultUpdatedTimeout)
 	if err != nil {
 		return fmt.Errorf("error deleting ElastiCache Global Replication Group: %w", err)
 	}
@@ -364,7 +299,7 @@ func deleteElasticacheGlobalReplicationGroup(conn *elasticache.ElastiCache, id s
 		return err
 	}
 
-	if _, err := tfelasticache.WaitGlobalReplicationGroupDeleted(conn, id); err != nil {
+	if _, err := WaitGlobalReplicationGroupDeleted(conn, id); err != nil {
 		return fmt.Errorf("waiting for completion: %w", err)
 	}
 
