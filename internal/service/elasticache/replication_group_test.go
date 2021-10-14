@@ -23,66 +23,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_elasticache_replication_group", &resource.Sweeper{
-		Name: "aws_elasticache_replication_group",
-		F:    sweepReplicationGroups,
-		Dependencies: []string{
-			"aws_elasticache_global_replication_group",
-		},
-	})
-}
 
-func sweepReplicationGroups(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
 
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
 
-	conn := client.(*conns.AWSClient).ElastiCacheConn
-	sweepResources := make([]*sweep.SweepResource, 0)
-	var errs *multierror.Error
-
-	err = conn.DescribeReplicationGroupsPages(&elasticache.DescribeReplicationGroupsInput{}, func(page *elasticache.DescribeReplicationGroupsOutput, lastPage bool) bool {
-		if len(page.ReplicationGroups) == 0 {
-			log.Print("[DEBUG] No ElastiCache Replicaton Groups to sweep")
-			return !lastPage // in rare cases across API, one page may have empty results but not be last page
-		}
-
-		for _, replicationGroup := range page.ReplicationGroups {
-			r := tfelasticache.ResourceReplicationGroup()
-			d := r.Data(nil)
-
-			if replicationGroup.GlobalReplicationGroupInfo != nil {
-				d.Set("global_replication_group_id", replicationGroup.GlobalReplicationGroupInfo.GlobalReplicationGroupId)
-			}
-
-			d.SetId(aws.StringValue(replicationGroup.ReplicationGroupId))
-
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error describing Elasticache Replication Groups: %w", err))
-	}
-
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping Elasticache Replication Groups for %s: %w", region, err))
-	}
-
-	// waiting for deletion is not necessary in the sweeper since the resource's delete waits
-
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping Elasticache Replication Group sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
-}
 
 func TestAccElastiCacheReplicationGroup_basic(t *testing.T) {
 	var rg elasticache.ReplicationGroup

@@ -16,57 +16,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_elasticache_security_group", &resource.Sweeper{
-		Name: "aws_elasticache_security_group",
-		F:    sweepCacheSecurityGroups,
-		Dependencies: []string{
-			"aws_elasticache_cluster",
-			"aws_elasticache_replication_group",
-		},
-	})
-}
 
-func sweepCacheSecurityGroups(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).ElastiCacheConn
 
-	err = conn.DescribeCacheSecurityGroupsPages(&elasticache.DescribeCacheSecurityGroupsInput{}, func(page *elasticache.DescribeCacheSecurityGroupsOutput, lastPage bool) bool {
-		if len(page.CacheSecurityGroups) == 0 {
-			log.Print("[DEBUG] No Elasticache Cache Security Groups to sweep")
-			return false
-		}
 
-		for _, securityGroup := range page.CacheSecurityGroups {
-			name := aws.StringValue(securityGroup.CacheSecurityGroupName)
-
-			if name == "default" {
-				log.Printf("[INFO] Skipping Elasticache Cache Security Group: %s", name)
-				continue
-			}
-
-			log.Printf("[INFO] Deleting Elasticache Cache Security Group: %s", name)
-			_, err := conn.DeleteCacheSecurityGroup(&elasticache.DeleteCacheSecurityGroupInput{
-				CacheSecurityGroupName: aws.String(name),
-			})
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete Elasticache Cache Security Group (%s): %s", name, err)
-			}
-		}
-		return !lastPage
-	})
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Elasticache Cache Security Group sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error retrieving Elasticache Cache Security Groups: %s", err)
-	}
-	return nil
-}
 
 func TestAccElastiCacheSecurityGroup_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

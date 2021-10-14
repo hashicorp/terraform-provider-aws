@@ -22,104 +22,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_elasticache_global_replication_group", &resource.Sweeper{
-		Name: "aws_elasticache_global_replication_group",
-		F:    sweepGlobalReplicationGroups,
-	})
-}
 
-// These timeouts are lower to fail faster during sweepers
-const (
-	sweeperGlobalReplicationGroupDisassociationReadyTimeout = 10 * time.Minute
-	sweeperGlobalReplicationGroupDefaultUpdatedTimeout      = 10 * time.Minute
-)
 
-func sweepGlobalReplicationGroups(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-	conn := client.(*conns.AWSClient).ElastiCacheConn
 
-	var grgGroup multierror.Group
 
-	input := &elasticache.DescribeGlobalReplicationGroupsInput{
-		ShowMemberInfo: aws.Bool(true),
-	}
-	err = conn.DescribeGlobalReplicationGroupsPages(input, func(page *elasticache.DescribeGlobalReplicationGroupsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
 
-		for _, globalReplicationGroup := range page.GlobalReplicationGroups {
-			globalReplicationGroup := globalReplicationGroup
 
-			grgGroup.Go(func() error {
-				id := aws.StringValue(globalReplicationGroup.GlobalReplicationGroupId)
 
-				disassociationErrors := disassociateMembers(conn, globalReplicationGroup)
-				if disassociationErrors != nil {
-					sweeperErr := fmt.Errorf("failed to disassociate ElastiCache Global Replication Group (%s) members: %w", id, disassociationErrors)
-					log.Printf("[ERROR] %s", sweeperErr)
-					return sweeperErr
-				}
 
-				log.Printf("[INFO] Deleting ElastiCache Global Replication Group: %s", id)
-				err := tfelasticache.DeleteGlobalReplicationGroup(conn, id, sweeperGlobalReplicationGroupDefaultUpdatedTimeout)
-				if err != nil {
-					sweeperErr := fmt.Errorf("error deleting ElastiCache Global Replication Group (%s): %w", id, err)
-					log.Printf("[ERROR] %s", sweeperErr)
-					return sweeperErr
-				}
-				return nil
-			})
-		}
-
-		return !lastPage
-	})
-
-	grgErrs := grgGroup.Wait()
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping ElastiCache Global Replication Group sweep for %q: %s", region, err)
-		return grgErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-	}
-
-	if err != nil {
-		grgErrs = multierror.Append(grgErrs, fmt.Errorf("error listing ElastiCache Global Replication Groups: %w", err))
-	}
-
-	return grgErrs.ErrorOrNil()
-}
-
-func disassociateMembers(conn *elasticache.ElastiCache, globalReplicationGroup *elasticache.GlobalReplicationGroup) error {
-	var membersGroup multierror.Group
-
-	for _, member := range globalReplicationGroup.Members {
-		member := member
-
-		if aws.StringValue(member.Role) == tfelasticache.GlobalReplicationGroupMemberRolePrimary {
-			continue
-		}
-
-		id := aws.StringValue(globalReplicationGroup.GlobalReplicationGroupId)
-
-		membersGroup.Go(func() error {
-			if err := tfelasticache.DisassociateReplicationGroup(conn, id, aws.StringValue(member.ReplicationGroupId), aws.StringValue(member.ReplicationGroupRegion), sweeperGlobalReplicationGroupDisassociationReadyTimeout); err != nil {
-				sweeperErr := fmt.Errorf(
-					"error disassociating ElastiCache Replication Group (%s) in %s from Global Group (%s): %w",
-					aws.StringValue(member.ReplicationGroupId), aws.StringValue(member.ReplicationGroupRegion), id, err,
-				)
-				log.Printf("[ERROR] %s", sweeperErr)
-				return sweeperErr
-			}
-			return nil
-		})
-	}
-
-	return membersGroup.Wait().ErrorOrNil()
-}
 
 func TestAccElastiCacheGlobalReplicationGroup_basic(t *testing.T) {
 	var globalReplicationGroup elasticache.GlobalReplicationGroup

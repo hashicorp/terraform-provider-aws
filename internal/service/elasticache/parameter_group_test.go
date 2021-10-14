@@ -20,57 +20,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_elasticache_parameter_group", &resource.Sweeper{
-		Name: "aws_elasticache_parameter_group",
-		F:    sweepParameterGroups,
-		Dependencies: []string{
-			"aws_elasticache_cluster",
-			"aws_elasticache_replication_group",
-		},
-	})
-}
 
-func sweepParameterGroups(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-	conn := client.(*conns.AWSClient).ElastiCacheConn
 
-	err = conn.DescribeCacheParameterGroupsPages(&elasticache.DescribeCacheParameterGroupsInput{}, func(page *elasticache.DescribeCacheParameterGroupsOutput, lastPage bool) bool {
-		if len(page.CacheParameterGroups) == 0 {
-			log.Print("[DEBUG] No Elasticache Parameter Groups to sweep")
-			return false
-		}
 
-		for _, parameterGroup := range page.CacheParameterGroups {
-			name := aws.StringValue(parameterGroup.CacheParameterGroupName)
-
-			if strings.HasPrefix(name, "default.") {
-				log.Printf("[INFO] Skipping Elasticache Cache Parameter Group: %s", name)
-				continue
-			}
-
-			log.Printf("[INFO] Deleting Elasticache Parameter Group: %s", name)
-			_, err := conn.DeleteCacheParameterGroup(&elasticache.DeleteCacheParameterGroupInput{
-				CacheParameterGroupName: aws.String(name),
-			})
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete Elasticache Parameter Group (%s): %s", name, err)
-			}
-		}
-		return !lastPage
-	})
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Elasticache Parameter Group sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error retrieving Elasticache Parameter Group: %w", err)
-	}
-	return nil
-}
 
 func TestAccElastiCacheParameterGroup_basic(t *testing.T) {
 	var v elasticache.CacheParameterGroup

@@ -25,60 +25,10 @@ import (
 func init() {
 	acctest.RegisterServiceErrorCheckFunc(elasticache.EndpointsID, testAccErrorCheckSkipElasticache)
 
-	resource.AddTestSweepers("aws_elasticache_cluster", &resource.Sweeper{
-		Name: "aws_elasticache_cluster",
-		F:    sweepClusters,
-		Dependencies: []string{
-			"aws_elasticache_replication_group",
-		},
-	})
+
 }
 
-func sweepClusters(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-	conn := client.(*conns.AWSClient).ElastiCacheConn
 
-	var sweeperErrs *multierror.Error
-
-	input := &elasticache.DescribeCacheClustersInput{
-		ShowCacheClustersNotInReplicationGroups: aws.Bool(true),
-	}
-	err = conn.DescribeCacheClustersPages(input, func(page *elasticache.DescribeCacheClustersOutput, lastPage bool) bool {
-		if len(page.CacheClusters) == 0 {
-			log.Print("[DEBUG] No ElastiCache Replicaton Groups to sweep")
-			return false
-		}
-
-		for _, cluster := range page.CacheClusters {
-			id := aws.StringValue(cluster.CacheClusterId)
-
-			log.Printf("[INFO] Deleting ElastiCache Cluster: %s", id)
-			err := tfelasticache.DeleteCacheCluster(conn, id, "")
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete ElastiCache Cache Cluster (%s): %s", id, err)
-				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error deleting ElastiCache Cache Cluster (%s): %w", id, err))
-			}
-			_, err = tfelasticache.WaitCacheClusterDeleted(conn, id, tfelasticache.CacheClusterDeletedTimeout)
-			if err != nil {
-				log.Printf("[ERROR] Failed waiting for ElastiCache Cache Cluster (%s) to be deleted: %s", id, err)
-				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error deleting ElastiCache Cache Cluster (%s): waiting for completion: %w", id, err))
-			}
-		}
-		return !lastPage
-	})
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping ElastiCache Cluster sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-	}
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("Error retrieving ElastiCache Clusters: %w", err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func testAccErrorCheckSkipElasticache(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
