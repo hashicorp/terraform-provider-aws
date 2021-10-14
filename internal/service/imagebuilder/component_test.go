@@ -19,92 +19,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_imagebuilder_component", &resource.Sweeper{
-		Name: "aws_imagebuilder_component",
-		F:    sweepComponents,
-	})
-}
 
-func sweepComponents(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).ImageBuilderConn
 
-	var sweeperErrs *multierror.Error
 
-	input := &imagebuilder.ListComponentsInput{
-		Owner: aws.String(imagebuilder.OwnershipSelf),
-	}
-
-	err = conn.ListComponentsPages(input, func(page *imagebuilder.ListComponentsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, componentVersion := range page.ComponentVersionList {
-			if componentVersion == nil {
-				continue
-			}
-
-			arn := aws.StringValue(componentVersion.Arn)
-			input := &imagebuilder.ListComponentBuildVersionsInput{
-				ComponentVersionArn: componentVersion.Arn,
-			}
-
-			err := conn.ListComponentBuildVersionsPages(input, func(page *imagebuilder.ListComponentBuildVersionsOutput, lastPage bool) bool {
-				if page == nil {
-					return !lastPage
-				}
-
-				for _, componentSummary := range page.ComponentSummaryList {
-					if componentSummary == nil {
-						continue
-					}
-
-					arn := aws.StringValue(componentSummary.Arn)
-
-					r := tfimagebuilder.ResourceComponent()
-					d := r.Data(nil)
-					d.SetId(arn)
-
-					err := r.Delete(d, client)
-
-					if err != nil {
-						sweeperErr := fmt.Errorf("error deleting Image Builder Component (%s): %w", arn, err)
-						log.Printf("[ERROR] %s", sweeperErr)
-						sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-						continue
-					}
-				}
-
-				return !lastPage
-			})
-
-			if err != nil {
-				sweeperErr := fmt.Errorf("error listing Image Builder Component (%s) versions: %w", arn, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
-		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Image Builder Component sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-	}
-
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Image Builder Components: %w", err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func TestAccImageBuilderComponent_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

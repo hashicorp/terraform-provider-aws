@@ -18,64 +18,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_imagebuilder_distribution_configuration", &resource.Sweeper{
-		Name: "aws_imagebuilder_distribution_configuration",
-		F:    sweepDistributionConfigurations,
-	})
-}
 
-func sweepDistributionConfigurations(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).ImageBuilderConn
 
-	var sweeperErrs *multierror.Error
 
-	input := &imagebuilder.ListDistributionConfigurationsInput{}
-
-	err = conn.ListDistributionConfigurationsPages(input, func(page *imagebuilder.ListDistributionConfigurationsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, distributionConfigurationSummary := range page.DistributionConfigurationSummaryList {
-			if distributionConfigurationSummary == nil {
-				continue
-			}
-
-			arn := aws.StringValue(distributionConfigurationSummary.Arn)
-
-			r := tfimagebuilder.ResourceDistributionConfiguration()
-			d := r.Data(nil)
-			d.SetId(arn)
-
-			err := r.Delete(d, client)
-
-			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting Image Builder Distribution Configuration (%s): %w", arn, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
-		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Image Builder Distribution Configuration sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-	}
-
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Image Builder Distribution Configurations: %w", err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func TestAccImageBuilderDistributionConfiguration_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

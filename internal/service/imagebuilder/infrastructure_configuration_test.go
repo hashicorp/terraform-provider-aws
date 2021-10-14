@@ -18,64 +18,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_imagebuilder_infrastructure_configuration", &resource.Sweeper{
-		Name: "aws_imagebuilder_infrastructure_configuration",
-		F:    sweepInfrastructureConfigurations,
-	})
-}
 
-func sweepInfrastructureConfigurations(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).ImageBuilderConn
 
-	var sweeperErrs *multierror.Error
 
-	input := &imagebuilder.ListInfrastructureConfigurationsInput{}
-
-	err = conn.ListInfrastructureConfigurationsPages(input, func(page *imagebuilder.ListInfrastructureConfigurationsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, infrastructureConfigurationSummary := range page.InfrastructureConfigurationSummaryList {
-			if infrastructureConfigurationSummary == nil {
-				continue
-			}
-
-			arn := aws.StringValue(infrastructureConfigurationSummary.Arn)
-
-			r := tfimagebuilder.ResourceInfrastructureConfiguration()
-			d := r.Data(nil)
-			d.SetId(arn)
-
-			err := r.Delete(d, client)
-
-			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting Image Builder Infrastructure Configuration (%s): %w", arn, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
-		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Image Builder Infrastructure Configuration sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-	}
-
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Image Builder Infrastructure Configurations: %w", err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func TestAccImageBuilderInfrastructureConfiguration_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

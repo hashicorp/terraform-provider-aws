@@ -19,66 +19,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_imagebuilder_image_recipe", &resource.Sweeper{
-		Name: "aws_imagebuilder_image_recipe",
-		F:    sweepImageRecipes,
-	})
-}
 
-func sweepImageRecipes(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-	conn := client.(*conns.AWSClient).ImageBuilderConn
 
-	var sweeperErrs *multierror.Error
 
-	input := &imagebuilder.ListImageRecipesInput{
-		Owner: aws.String(imagebuilder.OwnershipSelf),
-	}
-
-	err = conn.ListImageRecipesPages(input, func(page *imagebuilder.ListImageRecipesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, imageRecipeSummary := range page.ImageRecipeSummaryList {
-			if imageRecipeSummary == nil {
-				continue
-			}
-
-			arn := aws.StringValue(imageRecipeSummary.Arn)
-
-			r := tfimagebuilder.ResourceImageRecipe()
-			d := r.Data(nil)
-			d.SetId(arn)
-
-			err := r.Delete(d, client)
-
-			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting Image Builder Image Recipe (%s): %w", arn, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
-		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Image Builder Image Recipe sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-	}
-
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Image Builder Image Recipes: %w", err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func TestAccImageBuilderImageRecipe_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

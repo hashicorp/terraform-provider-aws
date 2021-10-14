@@ -19,92 +19,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_imagebuilder_image", &resource.Sweeper{
-		Name: "aws_imagebuilder_image",
-		F:    sweepImages,
-	})
-}
 
-func sweepImages(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
 
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
 
-	conn := client.(*conns.AWSClient).ImageBuilderConn
-	sweepResources := make([]*sweep.SweepResource, 0)
-	var errs *multierror.Error
-
-	input := &imagebuilder.ListImagesInput{
-		Owner: aws.String(imagebuilder.OwnershipSelf),
-	}
-
-	err = conn.ListImagesPages(input, func(page *imagebuilder.ListImagesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, imageVersion := range page.ImageVersionList {
-			if imageVersion == nil {
-				continue
-			}
-
-			// Retrieve the Image's Build Version ARNs required as input
-			// to the tfimagebuilder.ResourceImage()'s Delete operation
-			// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/19851
-			imageVersionArn := aws.StringValue(imageVersion.Arn)
-
-			input := &imagebuilder.ListImageBuildVersionsInput{
-				ImageVersionArn: imageVersion.Arn,
-			}
-
-			err := conn.ListImageBuildVersionsPages(input, func(page *imagebuilder.ListImageBuildVersionsOutput, lastPage bool) bool {
-				if page == nil {
-					return !lastPage
-				}
-
-				for _, imageSummary := range page.ImageSummaryList {
-					if imageSummary == nil {
-						continue
-					}
-
-					imageBuildVersionArn := aws.StringValue(imageSummary.Arn)
-
-					r := tfimagebuilder.ResourceImage()
-					d := r.Data(nil)
-					d.SetId(imageBuildVersionArn)
-
-					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-				}
-
-				return !lastPage
-			})
-
-			if err != nil {
-				errs = multierror.Append(errs, fmt.Errorf("error listing Image Builder Image Build Versions for image (%s): %w", imageVersionArn, err))
-			}
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error listing Image Builder Images for %s: %w", region, err))
-	}
-
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping Image Builder Images for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Image Builder Image sweep for %s: %s", region, err)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
-}
 
 func TestAccImageBuilderImage_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
