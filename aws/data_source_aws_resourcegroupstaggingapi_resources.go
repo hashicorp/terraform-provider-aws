@@ -108,7 +108,7 @@ func dataSourceAwsResourceGroupsTaggingAPIResourcesRead(d *schema.ResourceData, 
 	}
 
 	if v, ok := d.GetOk("resource_arn_list"); ok && v.(*schema.Set).Len() > 0 {
-		input.ResourceARNList = expandStringSet(v.(*schema.Set))
+		input.ResourceARNList = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("tag_filter"); ok {
@@ -116,7 +116,7 @@ func dataSourceAwsResourceGroupsTaggingAPIResourcesRead(d *schema.ResourceData, 
 	}
 
 	if v, ok := d.GetOk("resource_type_filters"); ok && v.(*schema.Set).Len() > 0 {
-		input.ResourceTypeFilters = expandStringSet(v.(*schema.Set))
+		input.ResourceTypeFilters = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	var taggings []*resourcegroupstaggingapi.ResourceTagMapping
@@ -153,7 +153,7 @@ func expandAwsResourceGroupsTaggingAPITagFilters(filters []interface{}) []*resou
 		}
 
 		if v, ok := m["values"]; ok && v.(*schema.Set).Len() > 0 {
-			result[i].Values = expandStringSet(v.(*schema.Set))
+			result[i].Values = flex.ExpandStringSet(v.(*schema.Set))
 		}
 	}
 
@@ -186,8 +186,8 @@ func flattenAwsResourceGroupsTaggingAPIComplianceDetails(details *resourcegroups
 
 	m := map[string]interface{}{
 		"compliance_status":             aws.BoolValue(details.ComplianceStatus),
-		"keys_with_noncompliant_values": flattenStringSet(details.KeysWithNoncompliantValues),
-		"non_compliant_keys":            flattenStringSet(details.NoncompliantKeys),
+		"keys_with_noncompliant_values": flex.FlattenStringSet(details.KeysWithNoncompliantValues),
+		"non_compliant_keys":            flex.FlattenStringSet(details.NoncompliantKeys),
 	}
 
 	return []map[string]interface{}{m}
