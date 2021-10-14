@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/waf/lister"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -36,7 +37,7 @@ func testSweepWafGeoMatchSet(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*AWSClient).wafconn
+	conn := client.(*conns.AWSClient).WAFConn
 	sweepResources := make([]*testSweepResource, 0)
 	var errs *multierror.Error
 	var g multierror.Group
@@ -282,7 +283,7 @@ func TestAccAWSWafGeoMatchSet_noConstraints(t *testing.T) {
 
 func testAccCheckAWSWafGeoMatchSetDisappears(v *waf.GeoMatchSet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).wafconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn
 
 		wr := newWafRetryer(conn)
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
@@ -332,7 +333,7 @@ func testAccCheckAWSWafGeoMatchSetExists(n string, v *waf.GeoMatchSet) resource.
 			return fmt.Errorf("No WAF GeoMatchSet ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).wafconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn
 		resp, err := conn.GetGeoMatchSet(&waf.GetGeoMatchSetInput{
 			GeoMatchSetId: aws.String(rs.Primary.ID),
 		})
@@ -356,7 +357,7 @@ func testAccCheckAWSWafGeoMatchSetDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).wafconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn
 		resp, err := conn.GetGeoMatchSet(
 			&waf.GetGeoMatchSetInput{
 				GeoMatchSetId: aws.String(rs.Primary.ID),

@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsWafIpSet() *schema.Resource {
@@ -22,7 +23,7 @@ func dataSourceAwsWafIpSet() *schema.Resource {
 }
 
 func dataSourceAWSWafIpSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafconn
+	conn := meta.(*conns.AWSClient).WAFConn
 	name := d.Get("name").(string)
 
 	ipsets := make([]*waf.IPSetSummary, 0)

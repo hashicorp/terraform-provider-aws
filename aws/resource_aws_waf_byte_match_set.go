@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsWafByteMatchSet() *schema.Resource {
@@ -77,7 +78,7 @@ func resourceAwsWafByteMatchSet() *schema.Resource {
 }
 
 func resourceAwsWafByteMatchSetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafconn
+	conn := meta.(*conns.AWSClient).WAFConn
 
 	log.Printf("[INFO] Creating ByteMatchSet: %s", d.Get("name").(string))
 
@@ -100,7 +101,7 @@ func resourceAwsWafByteMatchSetCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsWafByteMatchSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafconn
+	conn := meta.(*conns.AWSClient).WAFConn
 	log.Printf("[INFO] Reading ByteMatchSet: %s", d.Get("name").(string))
 	params := &waf.GetByteMatchSetInput{
 		ByteMatchSetId: aws.String(d.Id()),
@@ -124,7 +125,7 @@ func resourceAwsWafByteMatchSetRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsWafByteMatchSetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafconn
+	conn := meta.(*conns.AWSClient).WAFConn
 
 	log.Printf("[INFO] Updating ByteMatchSet: %s", d.Get("name").(string))
 
@@ -141,7 +142,7 @@ func resourceAwsWafByteMatchSetUpdate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsWafByteMatchSetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafconn
+	conn := meta.(*conns.AWSClient).WAFConn
 
 	oldTuples := d.Get("byte_match_tuples").(*schema.Set).List()
 	if len(oldTuples) > 0 {

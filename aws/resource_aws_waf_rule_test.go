@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/waf/lister"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -36,7 +37,7 @@ func testSweepWafRules(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*AWSClient).wafconn
+	conn := client.(*conns.AWSClient).WAFConn
 	sweepResources := make([]*testSweepResource, 0)
 	var errs *multierror.Error
 	var g multierror.Group
@@ -376,7 +377,7 @@ func testAccCheckAWSWafRuleDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).wafconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn
 		resp, err := conn.GetRule(
 			&waf.GetRuleInput{
 				RuleId: aws.String(rs.Primary.ID),
@@ -409,7 +410,7 @@ func testAccCheckAWSWafRuleExists(n string, v *waf.Rule) resource.TestCheckFunc 
 			return fmt.Errorf("No WAF Rule ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).wafconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn
 		resp, err := conn.GetRule(&waf.GetRuleInput{
 			RuleId: aws.String(rs.Primary.ID),
 		})
@@ -428,7 +429,7 @@ func testAccCheckAWSWafRuleExists(n string, v *waf.Rule) resource.TestCheckFunc 
 }
 
 func testAccPreCheckAWSWaf(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).wafconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn
 
 	input := &waf.ListRulesInput{}
 

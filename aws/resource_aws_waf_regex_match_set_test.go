@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/waf/lister"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -36,7 +37,7 @@ func testSweepWafRegexMatchSet(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*AWSClient).wafconn
+	conn := client.(*conns.AWSClient).WAFConn
 	sweepResources := make([]*testSweepResource, 0)
 	var errs *multierror.Error
 	var g multierror.Group
@@ -291,7 +292,7 @@ func computeWafRegexMatchSetTuple(patternSet *waf.RegexPatternSet, fieldToMatch 
 
 func testAccCheckAWSWafRegexMatchSetDisappears(set *waf.RegexMatchSet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).wafconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn
 
 		wr := newWafRetryer(conn)
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
@@ -339,7 +340,7 @@ func testAccCheckAWSWafRegexMatchSetExists(n string, v *waf.RegexMatchSet) resou
 			return fmt.Errorf("No WAF Regex Match Set ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).wafconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn
 		resp, err := conn.GetRegexMatchSet(&waf.GetRegexMatchSetInput{
 			RegexMatchSetId: aws.String(rs.Primary.ID),
 		})
@@ -363,7 +364,7 @@ func testAccCheckAWSWafRegexMatchSetDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).wafconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn
 		resp, err := conn.GetRegexMatchSet(&waf.GetRegexMatchSetInput{
 			RegexMatchSetId: aws.String(rs.Primary.ID),
 		})

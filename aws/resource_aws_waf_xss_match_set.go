@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsWafXssMatchSet() *schema.Resource {
@@ -67,7 +68,7 @@ func resourceAwsWafXssMatchSet() *schema.Resource {
 }
 
 func resourceAwsWafXssMatchSetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafconn
+	conn := meta.(*conns.AWSClient).WAFConn
 
 	log.Printf("[INFO] Creating XssMatchSet: %s", d.Get("name").(string))
 
@@ -97,7 +98,7 @@ func resourceAwsWafXssMatchSetCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsWafXssMatchSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafconn
+	conn := meta.(*conns.AWSClient).WAFConn
 	log.Printf("[INFO] Reading WAF XSS Match Set: %s", d.Get("name").(string))
 	params := &waf.GetXssMatchSetInput{
 		XssMatchSetId: aws.String(d.Id()),
@@ -120,9 +121,9 @@ func resourceAwsWafXssMatchSetRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "waf",
-		AccountID: meta.(*AWSClient).accountid,
+		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("xssmatchset/%s", d.Id()),
 	}
 	d.Set("arn", arn.String())
@@ -131,7 +132,7 @@ func resourceAwsWafXssMatchSetRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsWafXssMatchSetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafconn
+	conn := meta.(*conns.AWSClient).WAFConn
 
 	if d.HasChange("xss_match_tuples") {
 		o, n := d.GetChange("xss_match_tuples")
@@ -147,7 +148,7 @@ func resourceAwsWafXssMatchSetUpdate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsWafXssMatchSetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafconn
+	conn := meta.(*conns.AWSClient).WAFConn
 
 	oldTuples := d.Get("xss_match_tuples").(*schema.Set).List()
 	if len(oldTuples) > 0 {
