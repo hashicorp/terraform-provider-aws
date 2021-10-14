@@ -125,7 +125,7 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	tableName, databaseName, err := resourceAwsTimestreamWriteTableParseId(d.Id())
+	tableName, databaseName, err := TableParseID(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -184,7 +184,7 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).TimestreamWriteConn
 
 	if d.HasChange("retention_properties") {
-		tableName, databaseName, err := resourceAwsTimestreamWriteTableParseId(d.Id())
+		tableName, databaseName, err := TableParseID(d.Id())
 
 		if err != nil {
 			return diag.FromErr(err)
@@ -217,7 +217,7 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 func resourceTableDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).TimestreamWriteConn
 
-	tableName, databaseName, err := resourceAwsTimestreamWriteTableParseId(d.Id())
+	tableName, databaseName, err := TableParseID(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -278,7 +278,7 @@ func flattenTimestreamWriteRetentionProperties(rp *timestreamwrite.RetentionProp
 	return []interface{}{m}
 }
 
-func resourceAwsTimestreamWriteTableParseId(id string) (string, string, error) {
+func TableParseID(id string) (string, string, error) {
 	idParts := strings.SplitN(id, ":", 2)
 	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 		return "", "", fmt.Errorf("unexpected format of ID (%s), expected table_name:database_name", id)

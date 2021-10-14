@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftimestreamwrite "github.com/hashicorp/terraform-provider-aws/internal/service/timestreamwrite"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -52,7 +53,7 @@ func testSweepTimestreamWriteTables(region string) error {
 			dbName := aws.StringValue(table.TableName)
 
 			log.Printf("[INFO] Deleting Timestream Table (%s) from Database (%s)", tableName, dbName)
-			r := ResourceTable()
+			r := tftimestreamwrite.ResourceTable()
 			d := r.Data(nil)
 			d.SetId(fmt.Sprintf("%s:%s", tableName, dbName))
 
@@ -129,7 +130,7 @@ func TestAccAWSTimestreamWriteTable_disappears(t *testing.T) {
 				Config: testAccAWSTimestreamWriteTableConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSTimestreamWriteTableExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceTable(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tftimestreamwrite.ResourceTable(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -246,7 +247,7 @@ func testAccCheckAWSTimestreamWriteTableDestroy(s *terraform.State) error {
 			continue
 		}
 
-		tableName, dbName, err := resourceAwsTimestreamWriteTableParseId(rs.Primary.ID)
+		tableName, dbName, err := tftimestreamwrite.TableParseID(rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -286,7 +287,7 @@ func testAccCheckAWSTimestreamWriteTableExists(n string) resource.TestCheckFunc 
 			return fmt.Errorf("no resource ID is set")
 		}
 
-		tableName, dbName, err := resourceAwsTimestreamWriteTableParseId(rs.Primary.ID)
+		tableName, dbName, err := tftimestreamwrite.TableParseID(rs.Primary.ID)
 
 		if err != nil {
 			return err

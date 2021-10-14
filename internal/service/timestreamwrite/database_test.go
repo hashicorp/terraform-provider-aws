@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftimestreamwrite "github.com/hashicorp/terraform-provider-aws/internal/service/timestreamwrite"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -53,7 +54,7 @@ func testSweepTimestreamWriteDatabases(region string) error {
 			dbName := aws.StringValue(database.DatabaseName)
 
 			log.Printf("[INFO] Deleting Timestream Database (%s)", dbName)
-			r := ResourceDatabase()
+			r := tftimestreamwrite.ResourceDatabase()
 			d := r.Data(nil)
 			d.SetId(dbName)
 
@@ -128,7 +129,7 @@ func TestAccAWSTimestreamWriteDatabase_disappears(t *testing.T) {
 				Config: testAccAWSTimestreamWriteDatabaseConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSTimestreamWriteDatabaseExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceDatabase(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tftimestreamwrite.ResourceDatabase(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
