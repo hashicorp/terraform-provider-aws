@@ -19,13 +19,13 @@ func TestAccAWSServiceDiscoveryDnsNamespaceDataSource_private(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t)
-			testAccPreCheckAWSServiceDiscovery(t)
+			testAccPreCheck(t)
 		},
 		ErrorCheck: acctest.ErrorCheck(t, servicediscovery.EndpointsID),
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsServiceDiscoveryPrivateDnsNamespaceConfig(rName),
+				Config: testAccCheckPrivateDNSNamespaceConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
@@ -46,13 +46,13 @@ func TestAccAWSServiceDiscoveryDnsNamespaceDataSource_public(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t)
-			testAccPreCheckAWSServiceDiscovery(t)
+			testAccPreCheck(t)
 		},
 		ErrorCheck: acctest.ErrorCheck(t, servicediscovery.EndpointsID),
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsServiceDiscoveryPublicDnsNamespaceConfig(rName),
+				Config: testAccCheckPublicDNSNamespaceConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
@@ -64,7 +64,7 @@ func TestAccAWSServiceDiscoveryDnsNamespaceDataSource_public(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsServiceDiscoveryPrivateDnsNamespaceConfig(rName string) string {
+func testAccCheckPrivateDNSNamespaceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -82,7 +82,7 @@ data "aws_service_discovery_dns_namespace" "test" {
 `, rName)
 }
 
-func testAccCheckAwsServiceDiscoveryPublicDnsNamespaceConfig(rName string) string {
+func testAccCheckPublicDNSNamespaceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_service_discovery_public_dns_namespace" "test" {
   name = "%[1]s.tf"

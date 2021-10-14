@@ -22,14 +22,14 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_service_discovery_public_dns_namespace", &resource.Sweeper{
 		Name: "aws_service_discovery_public_dns_namespace",
-		F:    testSweepServiceDiscoveryPublicDnsNamespaces,
+		F:    sweepPublicDNSNamespaces,
 		Dependencies: []string{
 			"aws_service_discovery_service",
 		},
 	})
 }
 
-func testSweepServiceDiscoveryPublicDnsNamespaces(region string) error {
+func sweepPublicDNSNamespaces(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -105,16 +105,16 @@ func TestAccAWSServiceDiscoveryPublicDnsNamespace_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t)
-			testAccPreCheckAWSServiceDiscovery(t)
+			testAccPreCheck(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, servicediscovery.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsServiceDiscoveryPublicDnsNamespaceDestroy,
+		CheckDestroy: testAccCheckPublicDNSNamespaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceDiscoveryPublicDnsNamespaceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsServiceDiscoveryPublicDnsNamespaceExists(resourceName),
+					testAccCheckPublicDNSNamespaceExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "servicediscovery", regexp.MustCompile(`namespace/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "hosted_zone"),
@@ -138,16 +138,16 @@ func TestAccAWSServiceDiscoveryPublicDnsNamespace_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t)
-			testAccPreCheckAWSServiceDiscovery(t)
+			testAccPreCheck(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, servicediscovery.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsServiceDiscoveryPublicDnsNamespaceDestroy,
+		CheckDestroy: testAccCheckPublicDNSNamespaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceDiscoveryPublicDnsNamespaceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsServiceDiscoveryPublicDnsNamespaceExists(resourceName),
+					testAccCheckPublicDNSNamespaceExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfservicediscovery.ResourcePublicDNSNamespace(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -164,16 +164,16 @@ func TestAccAWSServiceDiscoveryPublicDnsNamespace_Description(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t)
-			testAccPreCheckAWSServiceDiscovery(t)
+			testAccPreCheck(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, servicediscovery.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsServiceDiscoveryPublicDnsNamespaceDestroy,
+		CheckDestroy: testAccCheckPublicDNSNamespaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceDiscoveryPublicDnsNamespaceConfigDescription(rName, "test"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsServiceDiscoveryPublicDnsNamespaceExists(resourceName),
+					testAccCheckPublicDNSNamespaceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "test"),
 				),
 			},
@@ -189,16 +189,16 @@ func TestAccAWSServiceDiscoveryPublicDnsNamespace_Tags(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t)
-			testAccPreCheckAWSServiceDiscovery(t)
+			testAccPreCheck(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, servicediscovery.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsServiceDiscoveryPublicDnsNamespaceDestroy,
+		CheckDestroy: testAccCheckPublicDNSNamespaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceDiscoveryPublicDnsNamespaceConfigTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsServiceDiscoveryPublicDnsNamespaceExists(resourceName),
+					testAccCheckPublicDNSNamespaceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -211,7 +211,7 @@ func TestAccAWSServiceDiscoveryPublicDnsNamespace_Tags(t *testing.T) {
 			{
 				Config: testAccServiceDiscoveryPublicDnsNamespaceConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsServiceDiscoveryPublicDnsNamespaceExists(resourceName),
+					testAccCheckPublicDNSNamespaceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -220,7 +220,7 @@ func TestAccAWSServiceDiscoveryPublicDnsNamespace_Tags(t *testing.T) {
 			{
 				Config: testAccServiceDiscoveryPublicDnsNamespaceConfigTags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsServiceDiscoveryPublicDnsNamespaceExists(resourceName),
+					testAccCheckPublicDNSNamespaceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -229,7 +229,7 @@ func TestAccAWSServiceDiscoveryPublicDnsNamespace_Tags(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsServiceDiscoveryPublicDnsNamespaceDestroy(s *terraform.State) error {
+func testAccCheckPublicDNSNamespaceDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -252,7 +252,7 @@ func testAccCheckAwsServiceDiscoveryPublicDnsNamespaceDestroy(s *terraform.State
 	return nil
 }
 
-func testAccCheckAwsServiceDiscoveryPublicDnsNamespaceExists(name string) resource.TestCheckFunc {
+func testAccCheckPublicDNSNamespaceExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
