@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsKmsKey() *schema.Resource {
@@ -80,7 +81,7 @@ func dataSourceAwsKmsKey() *schema.Resource {
 }
 
 func dataSourceAwsKmsKeyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kmsconn
+	conn := meta.(*conns.AWSClient).KMSConn
 	keyId := d.Get("key_id")
 	var grantTokens []*string
 	if v, ok := d.GetOk("grant_tokens"); ok {

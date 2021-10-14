@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/kms/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsKmsAlias() *schema.Resource {
@@ -34,7 +35,7 @@ func dataSourceAwsKmsAlias() *schema.Resource {
 }
 
 func dataSourceAwsKmsAliasRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kmsconn
+	conn := meta.(*conns.AWSClient).KMSConn
 
 	target := d.Get("name").(string)
 

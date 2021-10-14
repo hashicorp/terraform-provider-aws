@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSKmsGrant_basic(t *testing.T) {
@@ -229,7 +230,7 @@ func TestAccAWSKmsGrant_disappears(t *testing.T) {
 }
 
 func testAccCheckAWSKmsGrantDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).kmsconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_kms_grant" {
@@ -261,7 +262,7 @@ func testAccCheckAWSKmsGrantDisappears(name string) resource.TestCheckFunc {
 			return fmt.Errorf("not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).kmsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn
 
 		revokeInput := kms.RevokeGrantInput{
 			GrantId: aws.String(rs.Primary.Attributes["grant_id"]),

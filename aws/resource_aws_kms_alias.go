@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/kms/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/kms/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsKmsAlias() *schema.Resource {
@@ -65,7 +66,7 @@ func resourceAwsKmsAlias() *schema.Resource {
 }
 
 func resourceAwsKmsAliasCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kmsconn
+	conn := meta.(*conns.AWSClient).KMSConn
 
 	namePrefix := d.Get("name_prefix").(string)
 	if namePrefix == "" {
@@ -95,7 +96,7 @@ func resourceAwsKmsAliasCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsKmsAliasRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kmsconn
+	conn := meta.(*conns.AWSClient).KMSConn
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(waiter.PropagationTimeout, func() (interface{}, error) {
 		return finder.AliasByName(conn, d.Id())
@@ -130,7 +131,7 @@ func resourceAwsKmsAliasRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsKmsAliasUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kmsconn
+	conn := meta.(*conns.AWSClient).KMSConn
 
 	if d.HasChange("target_key_id") {
 		input := &kms.UpdateAliasInput{
@@ -150,7 +151,7 @@ func resourceAwsKmsAliasUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsKmsAliasDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kmsconn
+	conn := meta.(*conns.AWSClient).KMSConn
 
 	log.Printf("[DEBUG] Deleting KMS Alias: (%s)", d.Id())
 	_, err := conn.DeleteAlias(&kms.DeleteAliasInput{

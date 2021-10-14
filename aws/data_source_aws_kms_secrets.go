@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsKmsSecrets() *schema.Resource {
@@ -52,7 +53,7 @@ func dataSourceAwsKmsSecrets() *schema.Resource {
 }
 
 func dataSourceAwsKmsSecretsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kmsconn
+	conn := meta.(*conns.AWSClient).KMSConn
 
 	secrets := d.Get("secret").(*schema.Set)
 	plaintext := make(map[string]string, len(secrets.List()))
@@ -98,7 +99,7 @@ func dataSourceAwsKmsSecretsRead(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error setting plaintext: %w", err)
 	}
 
-	d.SetId(meta.(*AWSClient).region)
+	d.SetId(meta.(*conns.AWSClient).Region)
 
 	return nil
 }

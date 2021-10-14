@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsKmsGrant() *schema.Resource {
@@ -120,7 +121,7 @@ func resourceAwsKmsGrant() *schema.Resource {
 }
 
 func resourceAwsKmsGrantCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kmsconn
+	conn := meta.(*conns.AWSClient).KMSConn
 	keyId := d.Get("key_id").(string)
 
 	input := kms.CreateGrantInput{
@@ -182,7 +183,7 @@ func resourceAwsKmsGrantCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsKmsGrantRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kmsconn
+	conn := meta.(*conns.AWSClient).KMSConn
 
 	keyId, grantId, err := decodeKmsGrantId(d.Id())
 	if err != nil {
@@ -242,7 +243,7 @@ func resourceAwsKmsGrantRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsKmsGrantDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kmsconn
+	conn := meta.(*conns.AWSClient).KMSConn
 
 	keyId, grantId, decodeErr := decodeKmsGrantId(d.Id())
 	if decodeErr != nil {
