@@ -212,7 +212,7 @@ func testAccAWSDmsCertificateConfigCertificateWallet(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dms_certificate" "dms_certificate" {
   certificate_id     = %q
-  certificate_wallet = filebase64("testdata/service/dms/oracle_wallet_certificate.pem")
+  certificate_wallet = filebase64("testdata/oracle_wallet_certificate.pem")
 }
 `, rName)
 }
