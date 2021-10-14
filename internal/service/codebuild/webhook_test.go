@@ -20,18 +20,18 @@ func TestAccAWSCodeBuildWebhook_Bitbucket(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_webhook.test"
 
-	sourceLocation := testAccAWSCodeBuildBitbucketSourceLocationFromEnv()
+	sourceLocation := testAccBitbucketSourceLocationFromEnv()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCodeBuildWebhookDestroy,
+		CheckDestroy: testAccCheckWebhookDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCodeBuildWebhookConfig_Bitbucket(rName, sourceLocation),
+				Config: testAccWebhookConfig_Bitbucket(rName, sourceLocation),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCodeBuildWebhookExists(resourceName, &webhook),
+					testAccCheckWebhookExists(resourceName, &webhook),
 					resource.TestCheckResourceAttr(resourceName, "branch_filter", ""),
 					resource.TestCheckResourceAttr(resourceName, "project_name", rName),
 					resource.TestMatchResourceAttr(resourceName, "payload_url", regexp.MustCompile(`^https://`)),
@@ -55,15 +55,15 @@ func TestAccAWSCodeBuildWebhook_GitHub(t *testing.T) {
 	resourceName := "aws_codebuild_webhook.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCodeBuildWebhookDestroy,
+		CheckDestroy: testAccCheckWebhookDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCodeBuildWebhookConfig_GitHub(rName),
+				Config: testAccWebhookConfig_GitHub(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCodeBuildWebhookExists(resourceName, &webhook),
+					testAccCheckWebhookExists(resourceName, &webhook),
 					resource.TestCheckResourceAttr(resourceName, "branch_filter", ""),
 					resource.TestCheckResourceAttr(resourceName, "project_name", rName),
 					resource.TestMatchResourceAttr(resourceName, "payload_url", regexp.MustCompile(`^https://`)),
@@ -87,15 +87,15 @@ func TestAccAWSCodeBuildWebhook_GitHubEnterprise(t *testing.T) {
 	resourceName := "aws_codebuild_webhook.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCodeBuildWebhookDestroy,
+		CheckDestroy: testAccCheckWebhookDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCodeBuildWebhookConfig_GitHubEnterprise(rName, "dev"),
+				Config: testAccWebhookConfig_GitHubEnterprise(rName, "dev"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCodeBuildWebhookExists(resourceName, &webhook),
+					testAccCheckWebhookExists(resourceName, &webhook),
 					resource.TestCheckResourceAttr(resourceName, "branch_filter", "dev"),
 					resource.TestCheckResourceAttr(resourceName, "project_name", rName),
 					resource.TestMatchResourceAttr(resourceName, "payload_url", regexp.MustCompile(`^https://`)),
@@ -110,9 +110,9 @@ func TestAccAWSCodeBuildWebhook_GitHubEnterprise(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"secret"},
 			},
 			{
-				Config: testAccAWSCodeBuildWebhookConfig_GitHubEnterprise(rName, "master"),
+				Config: testAccWebhookConfig_GitHubEnterprise(rName, "master"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCodeBuildWebhookExists(resourceName, &webhook),
+					testAccCheckWebhookExists(resourceName, &webhook),
 					resource.TestCheckResourceAttr(resourceName, "branch_filter", "master"),
 					resource.TestCheckResourceAttr(resourceName, "project_name", rName),
 					resource.TestMatchResourceAttr(resourceName, "payload_url", regexp.MustCompile(`^https://`)),
@@ -136,29 +136,29 @@ func TestAccAWSCodeBuildWebhook_BuildType(t *testing.T) {
 	resourceName := "aws_codebuild_webhook.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCodeBuildWebhookDestroy,
+		CheckDestroy: testAccCheckWebhookDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCodeBuildWebhookConfig_BuildType(rName, "BUILD"),
+				Config: testAccWebhookConfig_BuildType(rName, "BUILD"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCodeBuildWebhookExists(resourceName, &webhook),
+					testAccCheckWebhookExists(resourceName, &webhook),
 					resource.TestCheckResourceAttr(resourceName, "build_type", "BUILD"),
 				),
 			},
 			{
-				Config: testAccAWSCodeBuildWebhookConfig_GitHub(rName),
+				Config: testAccWebhookConfig_GitHub(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCodeBuildWebhookExists(resourceName, &webhook),
+					testAccCheckWebhookExists(resourceName, &webhook),
 				),
 				ExpectNonEmptyPlan: true,
 			},
 			{
-				Config: testAccAWSCodeBuildWebhookConfig_BuildType(rName, "BUILD_BATCH"),
+				Config: testAccWebhookConfig_BuildType(rName, "BUILD_BATCH"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCodeBuildWebhookExists(resourceName, &webhook),
+					testAccCheckWebhookExists(resourceName, &webhook),
 					resource.TestCheckResourceAttr(resourceName, "build_type", "BUILD_BATCH"),
 				),
 			},
@@ -178,22 +178,22 @@ func TestAccAWSCodeBuildWebhook_BranchFilter(t *testing.T) {
 	resourceName := "aws_codebuild_webhook.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCodeBuildWebhookDestroy,
+		CheckDestroy: testAccCheckWebhookDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCodeBuildWebhookConfig_BranchFilter(rName, "master"),
+				Config: testAccWebhookConfig_BranchFilter(rName, "master"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCodeBuildWebhookExists(resourceName, &webhook),
+					testAccCheckWebhookExists(resourceName, &webhook),
 					resource.TestCheckResourceAttr(resourceName, "branch_filter", "master"),
 				),
 			},
 			{
-				Config: testAccAWSCodeBuildWebhookConfig_BranchFilter(rName, "dev"),
+				Config: testAccWebhookConfig_BranchFilter(rName, "dev"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCodeBuildWebhookExists(resourceName, &webhook),
+					testAccCheckWebhookExists(resourceName, &webhook),
 					resource.TestCheckResourceAttr(resourceName, "branch_filter", "dev"),
 				),
 			},
@@ -213,16 +213,16 @@ func TestAccAWSCodeBuildWebhook_FilterGroup(t *testing.T) {
 	resourceName := "aws_codebuild_webhook.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCodeBuildWebhookDestroy,
+		CheckDestroy: testAccCheckWebhookDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCodeBuildWebhookConfig_FilterGroup(rName),
+				Config: testAccWebhookConfig_FilterGroup(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCodeBuildWebhookExists(resourceName, &webhook),
-					testAccCheckAWSCodeBuildWebhookFilter(&webhook, [][]*codebuild.WebhookFilter{
+					testAccCheckWebhookExists(resourceName, &webhook),
+					testAccCheckWebhookFilter(&webhook, [][]*codebuild.WebhookFilter{
 						{
 							{
 								Type:                  aws.String("EVENT"),
@@ -255,7 +255,7 @@ func TestAccAWSCodeBuildWebhook_FilterGroup(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSCodeBuildWebhookFilter(webhook *codebuild.Webhook, expectedFilters [][]*codebuild.WebhookFilter) resource.TestCheckFunc {
+func testAccCheckWebhookFilter(webhook *codebuild.Webhook, expectedFilters [][]*codebuild.WebhookFilter) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if webhook == nil {
 			return fmt.Errorf("webhook missing")
@@ -269,7 +269,7 @@ func testAccCheckAWSCodeBuildWebhookFilter(webhook *codebuild.Webhook, expectedF
 	}
 }
 
-func testAccCheckAWSCodeBuildWebhookDestroy(s *terraform.State) error {
+func testAccCheckWebhookDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -299,7 +299,7 @@ func testAccCheckAWSCodeBuildWebhookDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSCodeBuildWebhookExists(name string, webhook *codebuild.Webhook) resource.TestCheckFunc {
+func testAccCheckWebhookExists(name string, webhook *codebuild.Webhook) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -333,9 +333,9 @@ func testAccCheckAWSCodeBuildWebhookExists(name string, webhook *codebuild.Webho
 	}
 }
 
-func testAccAWSCodeBuildWebhookConfig_Bitbucket(rName, sourceLocation string) string {
+func testAccWebhookConfig_Bitbucket(rName, sourceLocation string) string {
 	return acctest.ConfigCompose(
-		testAccAWSCodeBuildProjectConfig_Source_Type_Bitbucket(rName, sourceLocation),
+		testAccProjectConfig_Source_Type_Bitbucket(rName, sourceLocation),
 		`
 resource "aws_codebuild_webhook" "test" {
   project_name = aws_codebuild_project.test.name
@@ -343,9 +343,9 @@ resource "aws_codebuild_webhook" "test" {
 `)
 }
 
-func testAccAWSCodeBuildWebhookConfig_GitHub(rName string) string {
+func testAccWebhookConfig_GitHub(rName string) string {
 	return acctest.ConfigCompose(
-		testAccAWSCodeBuildProjectConfig_basic(rName),
+		testAccProjectConfig_basic(rName),
 		`
 resource "aws_codebuild_webhook" "test" {
   project_name = aws_codebuild_project.test.name
@@ -353,8 +353,8 @@ resource "aws_codebuild_webhook" "test" {
 `)
 }
 
-func testAccAWSCodeBuildWebhookConfig_GitHubEnterprise(rName string, branchFilter string) string {
-	return acctest.ConfigCompose(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+func testAccWebhookConfig_GitHubEnterprise(rName string, branchFilter string) string {
+	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -382,8 +382,8 @@ resource "aws_codebuild_webhook" "test" {
 `, rName, branchFilter))
 }
 
-func testAccAWSCodeBuildWebhookConfig_BuildType(rName, branchFilter string) string {
-	return acctest.ConfigCompose(testAccAWSCodeBuildProjectConfig_basic(rName), fmt.Sprintf(`
+func testAccWebhookConfig_BuildType(rName, branchFilter string) string {
+	return acctest.ConfigCompose(testAccProjectConfig_basic(rName), fmt.Sprintf(`
 resource "aws_codebuild_webhook" "test" {
   build_type   = %[1]q
   project_name = aws_codebuild_project.test.name
@@ -391,8 +391,8 @@ resource "aws_codebuild_webhook" "test" {
 `, branchFilter))
 }
 
-func testAccAWSCodeBuildWebhookConfig_BranchFilter(rName, branchFilter string) string {
-	return acctest.ConfigCompose(testAccAWSCodeBuildProjectConfig_basic(rName), fmt.Sprintf(`
+func testAccWebhookConfig_BranchFilter(rName, branchFilter string) string {
+	return acctest.ConfigCompose(testAccProjectConfig_basic(rName), fmt.Sprintf(`
 resource "aws_codebuild_webhook" "test" {
   branch_filter = %[1]q
   project_name  = aws_codebuild_project.test.name
@@ -400,9 +400,9 @@ resource "aws_codebuild_webhook" "test" {
 `, branchFilter))
 }
 
-func testAccAWSCodeBuildWebhookConfig_FilterGroup(rName string) string {
+func testAccWebhookConfig_FilterGroup(rName string) string {
 	return acctest.ConfigCompose(
-		testAccAWSCodeBuildProjectConfig_basic(rName),
+		testAccProjectConfig_basic(rName),
 		`
 resource "aws_codebuild_webhook" "test" {
   project_name = aws_codebuild_project.test.name
