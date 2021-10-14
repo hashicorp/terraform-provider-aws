@@ -1,16 +1,13 @@
-package aws
+package firehose
 
 import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/firehose/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tffirehose "github.com/hashicorp/terraform-provider-aws/internal/service/firehose"
-	tffirehose "github.com/hashicorp/terraform-provider-aws/internal/service/firehose"
 )
 
 func DataSourceDeliveryStream() *schema.Resource {
@@ -33,7 +30,7 @@ func dataSourceDeliveryStreamRead(d *schema.ResourceData, meta interface{}) erro
 	conn := meta.(*conns.AWSClient).FirehoseConn
 
 	sn := d.Get("name").(string)
-	output, err := tffirehose.FindDeliveryStreamByName(conn, sn)
+	output, err := FindDeliveryStreamByName(conn, sn)
 
 	if err != nil {
 		return fmt.Errorf("error reading Kinesis Firehose Delivery Stream (%s): %w", sn, err)
