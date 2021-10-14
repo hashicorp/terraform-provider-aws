@@ -25,7 +25,7 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_synthetics_canary", &resource.Sweeper{
 		Name: "aws_synthetics_canary",
-		F:    testSweepSyntheticsCanaries,
+		F:    sweepCanaries,
 		Dependencies: []string{
 			"aws_lambda_function",
 			"aws_lambda_layer",
@@ -34,7 +34,7 @@ func init() {
 	})
 }
 
-func testSweepSyntheticsCanaries(region string) error {
+func sweepCanaries(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -87,12 +87,12 @@ func TestAccAWSSyntheticsCanary_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, synthetics.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsSyntheticsCanaryDestroy,
+		CheckDestroy: testAccCheckCanaryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSyntheticsCanaryBasicConfig(rName),
+				Config: testAccCanaryBasicConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf1),
+					testAccCheckCanaryExists(resourceName, &conf1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", synthetics.ServiceName, regexp.MustCompile(`canary:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "runtime_version", "syn-nodejs-puppeteer-3.2"),
@@ -121,9 +121,9 @@ func TestAccAWSSyntheticsCanary_basic(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"zip_file", "start_canary"},
 			},
 			{
-				Config: testAccAWSSyntheticsCanaryZipUpdatedConfig(rName),
+				Config: testAccCanaryZipUpdatedConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf2),
+					testAccCheckCanaryExists(resourceName, &conf2),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", synthetics.ServiceName, regexp.MustCompile(`canary:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "runtime_version", "syn-nodejs-puppeteer-3.2"),
@@ -144,7 +144,7 @@ func TestAccAWSSyntheticsCanary_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "timeline.0.created"),
 					resource.TestCheckResourceAttrSet(resourceName, "timeline.0.last_modified"),
 					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
-					testAccCheckAwsSyntheticsCanaryIsUpdated(&conf1, &conf2),
+					testAccCheckCanaryIsUpdated(&conf1, &conf2),
 				),
 			},
 		},
@@ -160,12 +160,12 @@ func TestAccAWSSyntheticsCanary_runtimeVersion(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, synthetics.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsSyntheticsCanaryDestroy,
+		CheckDestroy: testAccCheckCanaryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSyntheticsCanaryRuntimeVersionConfig(rName, "syn-nodejs-puppeteer-3.1"),
+				Config: testAccCanaryRuntimeVersionConfig(rName, "syn-nodejs-puppeteer-3.1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf1),
+					testAccCheckCanaryExists(resourceName, &conf1),
 					resource.TestCheckResourceAttr(resourceName, "runtime_version", "syn-nodejs-puppeteer-3.1"),
 				),
 			},
@@ -176,9 +176,9 @@ func TestAccAWSSyntheticsCanary_runtimeVersion(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"zip_file", "start_canary"},
 			},
 			{
-				Config: testAccAWSSyntheticsCanaryRuntimeVersionConfig(rName, "syn-nodejs-puppeteer-3.2"),
+				Config: testAccCanaryRuntimeVersionConfig(rName, "syn-nodejs-puppeteer-3.2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf1),
+					testAccCheckCanaryExists(resourceName, &conf1),
 					resource.TestCheckResourceAttr(resourceName, "runtime_version", "syn-nodejs-puppeteer-3.2"),
 				),
 			},
@@ -195,12 +195,12 @@ func TestAccAWSSyntheticsCanary_startCanary(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, synthetics.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsSyntheticsCanaryDestroy,
+		CheckDestroy: testAccCheckCanaryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSyntheticsCanaryStartCanaryConfig(rName, true),
+				Config: testAccCanaryStartCanaryConfig(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf1),
+					testAccCheckCanaryExists(resourceName, &conf1),
 					resource.TestCheckResourceAttr(resourceName, "timeline.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "timeline.0.last_started"),
 				),
@@ -212,22 +212,22 @@ func TestAccAWSSyntheticsCanary_startCanary(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"zip_file", "start_canary"},
 			},
 			{
-				Config: testAccAWSSyntheticsCanaryStartCanaryConfig(rName, false),
+				Config: testAccCanaryStartCanaryConfig(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf2),
+					testAccCheckCanaryExists(resourceName, &conf2),
 					resource.TestCheckResourceAttr(resourceName, "timeline.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "timeline.0.last_started"),
 					resource.TestCheckResourceAttrSet(resourceName, "timeline.0.last_stopped"),
 				),
 			},
 			{
-				Config: testAccAWSSyntheticsCanaryStartCanaryConfig(rName, true),
+				Config: testAccCanaryStartCanaryConfig(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf3),
+					testAccCheckCanaryExists(resourceName, &conf3),
 					resource.TestCheckResourceAttr(resourceName, "timeline.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "timeline.0.last_started"),
 					resource.TestCheckResourceAttrSet(resourceName, "timeline.0.last_stopped"),
-					testAccCheckAwsSyntheticsCanaryIsStartedAfter(&conf2, &conf3),
+					testAccCheckCanaryIsStartedAfter(&conf2, &conf3),
 				),
 			},
 		},
@@ -243,12 +243,12 @@ func TestAccAWSSyntheticsCanary_startCanary_codeChanges(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, synthetics.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsSyntheticsCanaryDestroy,
+		CheckDestroy: testAccCheckCanaryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSyntheticsCanaryStartCanaryConfig(rName, true),
+				Config: testAccCanaryStartCanaryConfig(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf1),
+					testAccCheckCanaryExists(resourceName, &conf1),
 					resource.TestCheckResourceAttr(resourceName, "status", "RUNNING"),
 					resource.TestCheckResourceAttr(resourceName, "timeline.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "timeline.0.last_started"),
@@ -261,14 +261,14 @@ func TestAccAWSSyntheticsCanary_startCanary_codeChanges(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"zip_file", "start_canary"},
 			},
 			{
-				Config: testAccAWSSyntheticsCanaryStartCanaryZipUpdatedConfig(rName, true),
+				Config: testAccCanaryStartCanaryZipUpdatedConfig(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf2),
+					testAccCheckCanaryExists(resourceName, &conf2),
 					resource.TestCheckResourceAttr(resourceName, "status", "RUNNING"),
 					resource.TestCheckResourceAttr(resourceName, "timeline.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "timeline.0.last_started"),
 					resource.TestCheckResourceAttrSet(resourceName, "timeline.0.last_stopped"),
-					testAccCheckAwsSyntheticsCanaryIsStartedAfter(&conf1, &conf2),
+					testAccCheckCanaryIsStartedAfter(&conf1, &conf2),
 				),
 			},
 		},
@@ -284,12 +284,12 @@ func TestAccAWSSyntheticsCanary_s3(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, synthetics.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsSyntheticsCanaryDestroy,
+		CheckDestroy: testAccCheckCanaryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSyntheticsCanaryBasicS3CodeConfig(rName),
+				Config: testAccCanaryBasicS3CodeConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf),
+					testAccCheckCanaryExists(resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", synthetics.ServiceName, regexp.MustCompile(`canary:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "runtime_version", "syn-nodejs-puppeteer-3.2"),
@@ -328,12 +328,12 @@ func TestAccAWSSyntheticsCanary_runConfig(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, synthetics.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsSyntheticsCanaryDestroy,
+		CheckDestroy: testAccCheckCanaryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSyntheticsCanaryRunConfigConfig1(rName),
+				Config: testAccCanaryRun1Config(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf),
+					testAccCheckCanaryExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.memory_in_mb", "1000"),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.timeout_in_seconds", "60"),
@@ -346,17 +346,17 @@ func TestAccAWSSyntheticsCanary_runConfig(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"zip_file", "start_canary"},
 			},
 			{
-				Config: testAccAWSSyntheticsCanaryRunConfigConfig2(rName),
+				Config: testAccCanaryRun2Config(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf),
+					testAccCheckCanaryExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.memory_in_mb", "960"),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.timeout_in_seconds", "120"),
 				),
 			},
 			{
-				Config: testAccAWSSyntheticsCanaryRunConfigConfig1(rName),
+				Config: testAccCanaryRun1Config(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf),
+					testAccCheckCanaryExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.memory_in_mb", "960"),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.timeout_in_seconds", "60"),
 				),
@@ -374,12 +374,12 @@ func TestAccAWSSyntheticsCanary_runConfigTracing(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, synthetics.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsSyntheticsCanaryDestroy,
+		CheckDestroy: testAccCheckCanaryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSyntheticsCanaryRunConfigTracingConfig(rName, true),
+				Config: testAccCanaryRunTracingConfig(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf),
+					testAccCheckCanaryExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.active_tracing", "true"),
 				),
 			},
@@ -390,16 +390,16 @@ func TestAccAWSSyntheticsCanary_runConfigTracing(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"zip_file", "start_canary"},
 			},
 			{
-				Config: testAccAWSSyntheticsCanaryRunConfigTracingConfig(rName, false),
+				Config: testAccCanaryRunTracingConfig(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf),
+					testAccCheckCanaryExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.active_tracing", "false"),
 				),
 			},
 			{
-				Config: testAccAWSSyntheticsCanaryRunConfigTracingConfig(rName, true),
+				Config: testAccCanaryRunTracingConfig(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf),
+					testAccCheckCanaryExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.active_tracing", "true"),
 				),
 			},
@@ -416,12 +416,12 @@ func TestAccAWSSyntheticsCanary_vpc(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, synthetics.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsSyntheticsCanaryDestroy,
+		CheckDestroy: testAccCheckCanaryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSyntheticsCanaryVPCConfig1(rName),
+				Config: testAccCanaryVPC1Config(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf),
+					testAccCheckCanaryExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_config.0.vpc_id", "aws_vpc.test", "id"),
@@ -434,22 +434,22 @@ func TestAccAWSSyntheticsCanary_vpc(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"zip_file", "start_canary"},
 			},
 			{
-				Config: testAccAWSSyntheticsCanaryVPCConfig2(rName),
+				Config: testAccCanaryVPC2Config(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf),
+					testAccCheckCanaryExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "2"),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_config.0.vpc_id", "aws_vpc.test", "id"),
 				),
 			},
 			{
-				Config: testAccAWSSyntheticsCanaryVPCConfig3(rName),
+				Config: testAccCanaryVPC3Config(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf),
+					testAccCheckCanaryExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_config.0.vpc_id", "aws_vpc.test", "id"),
-					testAccCheckAwsSyntheticsCanaryDeleteImplicitResources(resourceName),
+					testAccCheckCanaryDeleteImplicitResources(resourceName),
 				),
 			},
 		},
@@ -465,12 +465,12 @@ func TestAccAWSSyntheticsCanary_tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, synthetics.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsSyntheticsCanaryDestroy,
+		CheckDestroy: testAccCheckCanaryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSyntheticsCanaryConfigTags1(rName, "key1", "value1"),
+				Config: testAccCanaryTags1Config(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf),
+					testAccCheckCanaryExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -482,18 +482,18 @@ func TestAccAWSSyntheticsCanary_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"zip_file", "start_canary"},
 			},
 			{
-				Config: testAccAWSSyntheticsCanaryConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccCanaryTags2Config(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf),
+					testAccCheckCanaryExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccAWSSyntheticsCanaryConfigTags1(rName, "key2", "value2"),
+				Config: testAccCanaryTags1Config(rName, "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf),
+					testAccCheckCanaryExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -511,12 +511,12 @@ func TestAccAWSSyntheticsCanary_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, synthetics.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsSyntheticsCanaryDestroy,
+		CheckDestroy: testAccCheckCanaryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSyntheticsCanaryBasicConfig(rName),
+				Config: testAccCanaryBasicConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf),
+					testAccCheckCanaryExists(resourceName, &conf),
 					acctest.CheckResourceDisappears(acctest.Provider, tfsynthetics.ResourceCanary(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -525,7 +525,7 @@ func TestAccAWSSyntheticsCanary_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsSyntheticsCanaryDestroy(s *terraform.State) error {
+func testAccCheckCanaryDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).SyntheticsConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -549,7 +549,7 @@ func testAccCheckAwsSyntheticsCanaryDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAwsSyntheticsCanaryExists(n string, canary *synthetics.Canary) resource.TestCheckFunc {
+func testAccCheckCanaryExists(n string, canary *synthetics.Canary) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -574,7 +574,7 @@ func testAccCheckAwsSyntheticsCanaryExists(n string, canary *synthetics.Canary) 
 	}
 }
 
-func testAccCheckAwsSyntheticsCanaryDeleteImplicitResources(n string) resource.TestCheckFunc {
+func testAccCheckCanaryDeleteImplicitResources(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -625,7 +625,7 @@ func testAccCheckAwsSyntheticsCanaryDeleteImplicitResources(n string) resource.T
 	}
 }
 
-func testAccCheckAwsSyntheticsCanaryIsUpdated(first, second *synthetics.Canary) resource.TestCheckFunc {
+func testAccCheckCanaryIsUpdated(first, second *synthetics.Canary) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if !second.Timeline.LastModified.After(*first.Timeline.LastModified) {
 			return fmt.Errorf("synthetics Canary not updated")
@@ -636,7 +636,7 @@ func testAccCheckAwsSyntheticsCanaryIsUpdated(first, second *synthetics.Canary) 
 	}
 }
 
-func testAccCheckAwsSyntheticsCanaryIsStartedAfter(first, second *synthetics.Canary) resource.TestCheckFunc {
+func testAccCheckCanaryIsStartedAfter(first, second *synthetics.Canary) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if !second.Timeline.LastStarted.After(*first.Timeline.LastStarted) {
 			return fmt.Errorf("synthetics Canary not updated")
@@ -647,7 +647,7 @@ func testAccCheckAwsSyntheticsCanaryIsStartedAfter(first, second *synthetics.Can
 	}
 }
 
-func testAccAWSSyntheticsCanaryConfigBase(rName string) string {
+func testAccCanaryBaseConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
@@ -741,8 +741,8 @@ EOF
 `, rName)
 }
 
-func testAccAWSSyntheticsCanaryRunConfigConfig1(rName string) string {
-	return acctest.ConfigCompose(testAccAWSSyntheticsCanaryConfigBase(rName), fmt.Sprintf(`
+func testAccCanaryRun1Config(rName string) string {
+	return acctest.ConfigCompose(testAccCanaryBaseConfig(rName), fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
   artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
@@ -762,8 +762,8 @@ resource "aws_synthetics_canary" "test" {
 `, rName))
 }
 
-func testAccAWSSyntheticsCanaryRunConfigConfig2(rName string) string {
-	return acctest.ConfigCompose(testAccAWSSyntheticsCanaryConfigBase(rName), fmt.Sprintf(`
+func testAccCanaryRun2Config(rName string) string {
+	return acctest.ConfigCompose(testAccCanaryBaseConfig(rName), fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
   artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
@@ -784,8 +784,8 @@ resource "aws_synthetics_canary" "test" {
 `, rName))
 }
 
-func testAccAWSSyntheticsCanaryRunConfigTracingConfig(rName string, tracing bool) string {
-	return acctest.ConfigCompose(testAccAWSSyntheticsCanaryConfigBase(rName), fmt.Sprintf(`
+func testAccCanaryRunTracingConfig(rName string, tracing bool) string {
+	return acctest.ConfigCompose(testAccCanaryBaseConfig(rName), fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
   artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
@@ -806,8 +806,8 @@ resource "aws_synthetics_canary" "test" {
 `, rName, tracing))
 }
 
-func testAccAWSSyntheticsCanaryBasicConfig(rName string) string {
-	return acctest.ConfigCompose(testAccAWSSyntheticsCanaryConfigBase(rName), fmt.Sprintf(`
+func testAccCanaryBasicConfig(rName string) string {
+	return acctest.ConfigCompose(testAccCanaryBaseConfig(rName), fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
   artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
@@ -823,8 +823,8 @@ resource "aws_synthetics_canary" "test" {
 `, rName))
 }
 
-func testAccAWSSyntheticsCanaryRuntimeVersionConfig(rName, version string) string {
-	return acctest.ConfigCompose(testAccAWSSyntheticsCanaryConfigBase(rName), fmt.Sprintf(`
+func testAccCanaryRuntimeVersionConfig(rName, version string) string {
+	return acctest.ConfigCompose(testAccCanaryBaseConfig(rName), fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
   artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
@@ -840,8 +840,8 @@ resource "aws_synthetics_canary" "test" {
 `, rName, version))
 }
 
-func testAccAWSSyntheticsCanaryZipUpdatedConfig(rName string) string {
-	return acctest.ConfigCompose(testAccAWSSyntheticsCanaryConfigBase(rName), fmt.Sprintf(`
+func testAccCanaryZipUpdatedConfig(rName string) string {
+	return acctest.ConfigCompose(testAccCanaryBaseConfig(rName), fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
   artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
@@ -857,8 +857,8 @@ resource "aws_synthetics_canary" "test" {
 `, rName))
 }
 
-func testAccAWSSyntheticsCanaryStartCanaryConfig(rName string, state bool) string {
-	return acctest.ConfigCompose(testAccAWSSyntheticsCanaryConfigBase(rName), fmt.Sprintf(`
+func testAccCanaryStartCanaryConfig(rName string, state bool) string {
+	return acctest.ConfigCompose(testAccCanaryBaseConfig(rName), fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
   artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
@@ -875,8 +875,8 @@ resource "aws_synthetics_canary" "test" {
 `, rName, state))
 }
 
-func testAccAWSSyntheticsCanaryStartCanaryZipUpdatedConfig(rName string, state bool) string {
-	return acctest.ConfigCompose(testAccAWSSyntheticsCanaryConfigBase(rName), fmt.Sprintf(`
+func testAccCanaryStartCanaryZipUpdatedConfig(rName string, state bool) string {
+	return acctest.ConfigCompose(testAccCanaryBaseConfig(rName), fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
   artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
@@ -893,8 +893,8 @@ resource "aws_synthetics_canary" "test" {
 `, rName, state))
 }
 
-func testAccAWSSyntheticsCanaryBasicS3CodeConfig(rName string) string {
-	return acctest.ConfigCompose(testAccAWSSyntheticsCanaryConfigBase(rName), fmt.Sprintf(`
+func testAccCanaryBasicS3CodeConfig(rName string) string {
+	return acctest.ConfigCompose(testAccCanaryBaseConfig(rName), fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
   artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
@@ -920,7 +920,7 @@ resource "aws_s3_bucket_object" "test" {
 `, rName))
 }
 
-func testAccAWSSyntheticsCanaryVPCConfigBase(rName string) string {
+func testAccCanaryVPCBaseConfig(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -973,10 +973,10 @@ resource "aws_iam_role_policy_attachment" "test" {
 `, rName))
 }
 
-func testAccAWSSyntheticsCanaryVPCConfig1(rName string) string {
+func testAccCanaryVPC1Config(rName string) string {
 	return acctest.ConfigCompose(
-		testAccAWSSyntheticsCanaryConfigBase(rName),
-		testAccAWSSyntheticsCanaryVPCConfigBase(rName),
+		testAccCanaryBaseConfig(rName),
+		testAccCanaryVPCBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
@@ -1000,10 +1000,10 @@ resource "aws_synthetics_canary" "test" {
 `, rName))
 }
 
-func testAccAWSSyntheticsCanaryVPCConfig2(rName string) string {
+func testAccCanaryVPC2Config(rName string) string {
 	return acctest.ConfigCompose(
-		testAccAWSSyntheticsCanaryConfigBase(rName),
-		testAccAWSSyntheticsCanaryVPCConfigBase(rName),
+		testAccCanaryBaseConfig(rName),
+		testAccCanaryVPCBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
@@ -1027,10 +1027,10 @@ resource "aws_synthetics_canary" "test" {
 `, rName))
 }
 
-func testAccAWSSyntheticsCanaryVPCConfig3(rName string) string {
+func testAccCanaryVPC3Config(rName string) string {
 	return acctest.ConfigCompose(
-		testAccAWSSyntheticsCanaryConfigBase(rName),
-		testAccAWSSyntheticsCanaryVPCConfigBase(rName),
+		testAccCanaryBaseConfig(rName),
+		testAccCanaryVPCBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
@@ -1054,8 +1054,8 @@ resource "aws_synthetics_canary" "test" {
 `, rName))
 }
 
-func testAccAWSSyntheticsCanaryConfigTags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccAWSSyntheticsCanaryConfigBase(rName), fmt.Sprintf(`
+func testAccCanaryTags1Config(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccCanaryBaseConfig(rName), fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
   artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
@@ -1075,8 +1075,8 @@ resource "aws_synthetics_canary" "test" {
 `, rName, tagKey1, tagValue1))
 }
 
-func testAccAWSSyntheticsCanaryConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccAWSSyntheticsCanaryConfigBase(rName), fmt.Sprintf(`
+func testAccCanaryTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccCanaryBaseConfig(rName), fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
   artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
