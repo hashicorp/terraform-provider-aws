@@ -20,7 +20,7 @@ func TestAccAWSDmsReplicationSubnetGroup_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: dmsReplicationSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -46,7 +46,7 @@ func TestAccAWSDmsReplicationSubnetGroup_basic(t *testing.T) {
 }
 
 func checkDmsReplicationSubnetGroupExists(n string) resource.TestCheckFunc {
-	providers := []*schema.Provider{testAccProvider}
+	providers := []*schema.Provider{acctest.Provider}
 	return checkDmsReplicationSubnetGroupExistsWithProviders(n, &providers)
 }
 

@@ -21,7 +21,7 @@ func TestAccAwsDmsEndpoint_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDmsEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -61,7 +61,7 @@ func TestAccAwsDmsEndpoint_S3(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDmsEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -114,7 +114,7 @@ func TestAccAwsDmsEndpoint_S3_ExtraConnectionAttributes(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDmsEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -141,7 +141,7 @@ func TestAccAwsDmsEndpoint_DynamoDb(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDmsEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -169,12 +169,12 @@ func TestAccAwsDmsEndpoint_DynamoDb(t *testing.T) {
 
 func TestAccAwsDmsEndpoint_Elasticsearch(t *testing.T) {
 	resourceName := "aws_dms_endpoint.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDmsEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -203,12 +203,12 @@ func TestAccAwsDmsEndpoint_Elasticsearch(t *testing.T) {
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/8009
 func TestAccAwsDmsEndpoint_Elasticsearch_ExtraConnectionAttributes(t *testing.T) {
 	resourceName := "aws_dms_endpoint.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDmsEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -230,12 +230,12 @@ func TestAccAwsDmsEndpoint_Elasticsearch_ExtraConnectionAttributes(t *testing.T)
 
 func TestAccAwsDmsEndpoint_Elasticsearch_ErrorRetryDuration(t *testing.T) {
 	resourceName := "aws_dms_endpoint.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDmsEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -268,12 +268,12 @@ func TestAccAwsDmsEndpoint_Elasticsearch_ErrorRetryDuration(t *testing.T) {
 
 func TestAccAwsDmsEndpoint_Elasticsearch_FullLoadErrorPercentage(t *testing.T) {
 	resourceName := "aws_dms_endpoint.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDmsEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -306,13 +306,13 @@ func TestAccAwsDmsEndpoint_Elasticsearch_FullLoadErrorPercentage(t *testing.T) {
 
 func TestAccAwsDmsEndpoint_Kafka(t *testing.T) {
 	domainName := acctest.RandomSubdomain()
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dms_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDmsEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -380,7 +380,7 @@ func TestAccAwsDmsEndpoint_Kinesis(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDmsEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -418,7 +418,7 @@ func TestAccAwsDmsEndpoint_MongoDb(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDmsEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -448,7 +448,7 @@ func TestAccAwsDmsEndpoint_MongoDb_Update(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDmsEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -493,7 +493,7 @@ func TestAccAwsDmsEndpoint_DocDB(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDmsEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -533,7 +533,7 @@ func TestAccAwsDmsEndpoint_Db2(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDmsEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -567,7 +567,7 @@ func TestAccAwsDmsEndpoint_Db2(t *testing.T) {
 }
 
 func testAccCheckAWSDmsEndpointDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).dmsconn
+	conn := acctest.Provider.Meta().(*AWSClient).dmsconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_dms_endpoint" {
@@ -601,7 +601,7 @@ func testAccCheckAWSDmsEndpointExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No DMS Endpoint ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).dmsconn
+		conn := acctest.Provider.Meta().(*AWSClient).dmsconn
 
 		_, err := finder.EndpointByID(conn, rs.Primary.ID)
 

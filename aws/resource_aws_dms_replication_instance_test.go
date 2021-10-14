@@ -67,12 +67,12 @@ func TestAccAWSDmsReplicationInstance_basic(t *testing.T) {
 	// NOTE: Using larger dms.c4.large here for AWS GovCloud (US) support
 	replicationInstanceClass := "dms.c4.large"
 	resourceName := "aws_dms_replication_instance.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDmsReplicationInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -106,12 +106,12 @@ func TestAccAWSDmsReplicationInstance_basic(t *testing.T) {
 
 func TestAccAWSDmsReplicationInstance_AllocatedStorage(t *testing.T) {
 	resourceName := "aws_dms_replication_instance.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDmsReplicationInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -140,12 +140,12 @@ func TestAccAWSDmsReplicationInstance_AllocatedStorage(t *testing.T) {
 
 func TestAccAWSDmsReplicationInstance_AutoMinorVersionUpgrade(t *testing.T) {
 	resourceName := "aws_dms_replication_instance.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDmsReplicationInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -182,12 +182,12 @@ func TestAccAWSDmsReplicationInstance_AutoMinorVersionUpgrade(t *testing.T) {
 func TestAccAWSDmsReplicationInstance_AvailabilityZone(t *testing.T) {
 	dataSourceName := "data.aws_availability_zones.available"
 	resourceName := "aws_dms_replication_instance.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDmsReplicationInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -209,7 +209,7 @@ func TestAccAWSDmsReplicationInstance_AvailabilityZone(t *testing.T) {
 
 func TestAccAWSDmsReplicationInstance_EngineVersion(t *testing.T) {
 	resourceName := "aws_dms_replication_instance.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	// This acceptance test is designed to test engine version upgrades.
 	// Over time, DMS replication instance engine versions are deprecated
@@ -252,7 +252,7 @@ func TestAccAWSDmsReplicationInstance_EngineVersion(t *testing.T) {
 			}
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDmsReplicationInstanceDestroy,
 		Steps:        testSteps,
 	})
@@ -261,12 +261,12 @@ func TestAccAWSDmsReplicationInstance_EngineVersion(t *testing.T) {
 func TestAccAWSDmsReplicationInstance_KmsKeyArn(t *testing.T) {
 	kmsKeyResourceName := "aws_kms_key.test"
 	resourceName := "aws_dms_replication_instance.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDmsReplicationInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -288,12 +288,12 @@ func TestAccAWSDmsReplicationInstance_KmsKeyArn(t *testing.T) {
 
 func TestAccAWSDmsReplicationInstance_MultiAz(t *testing.T) {
 	resourceName := "aws_dms_replication_instance.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDmsReplicationInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -329,12 +329,12 @@ func TestAccAWSDmsReplicationInstance_MultiAz(t *testing.T) {
 
 func TestAccAWSDmsReplicationInstance_PreferredMaintenanceWindow(t *testing.T) {
 	resourceName := "aws_dms_replication_instance.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDmsReplicationInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -363,12 +363,12 @@ func TestAccAWSDmsReplicationInstance_PreferredMaintenanceWindow(t *testing.T) {
 
 func TestAccAWSDmsReplicationInstance_PubliclyAccessible(t *testing.T) {
 	resourceName := "aws_dms_replication_instance.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDmsReplicationInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -394,12 +394,12 @@ func TestAccAWSDmsReplicationInstance_ReplicationInstanceClass(t *testing.T) {
 	replicationInstanceClass1 := "dms.c4.large"
 	replicationInstanceClass2 := "dms.c4.xlarge"
 	resourceName := "aws_dms_replication_instance.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDmsReplicationInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -429,12 +429,12 @@ func TestAccAWSDmsReplicationInstance_ReplicationInstanceClass(t *testing.T) {
 func TestAccAWSDmsReplicationInstance_ReplicationSubnetGroupId(t *testing.T) {
 	dmsReplicationSubnetGroupResourceName := "aws_dms_replication_subnet_group.test"
 	resourceName := "aws_dms_replication_instance.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDmsReplicationInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -456,12 +456,12 @@ func TestAccAWSDmsReplicationInstance_ReplicationSubnetGroupId(t *testing.T) {
 
 func TestAccAWSDmsReplicationInstance_Tags(t *testing.T) {
 	resourceName := "aws_dms_replication_instance.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDmsReplicationInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -501,12 +501,12 @@ func TestAccAWSDmsReplicationInstance_Tags(t *testing.T) {
 
 func TestAccAWSDmsReplicationInstance_VpcSecurityGroupIds(t *testing.T) {
 	resourceName := "aws_dms_replication_instance.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDmsReplicationInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -536,7 +536,7 @@ func testAccCheckAWSDmsReplicationInstanceExists(n string) resource.TestCheckFun
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("No ID is set")
 		}
-		conn := testAccProvider.Meta().(*AWSClient).dmsconn
+		conn := acctest.Provider.Meta().(*AWSClient).dmsconn
 		resp, err := conn.DescribeReplicationInstances(&dms.DescribeReplicationInstancesInput{
 			Filters: []*dms.Filter{
 				{
@@ -563,7 +563,7 @@ func testAccCheckAWSDmsReplicationInstanceDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).dmsconn
+		conn := acctest.Provider.Meta().(*AWSClient).dmsconn
 
 		resp, err := conn.DescribeReplicationInstances(&dms.DescribeReplicationInstancesInput{
 			Filters: []*dms.Filter{
@@ -596,7 +596,7 @@ func testAccCheckAWSDmsReplicationInstanceDestroy(s *terraform.State) error {
 
 // Ensure at least two engine versions of the replication instance class are available
 func testAccAWSDmsReplicationInstanceEngineVersionsPreCheck(t *testing.T) []string {
-	conn := testAccProvider.Meta().(*AWSClient).dmsconn
+	conn := acctest.Provider.Meta().(*AWSClient).dmsconn
 
 	// Gather all orderable DMS replication instances of the instance class
 	// used in the acceptance testing. Not currently available as an input
