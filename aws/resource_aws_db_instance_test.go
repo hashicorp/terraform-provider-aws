@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
 func init() {
@@ -27,13 +28,13 @@ func init() {
 }
 
 func testSweepDbInstances(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
 	conn := client.(*conns.AWSClient).RDSConn
-	sweepResources := make([]*testSweepResource, 0)
+	sweepResources := make([]*sweep.SweepResource, 0)
 
 	err = conn.DescribeDBInstancesPages(&rds.DescribeDBInstancesInput{}, func(out *rds.DescribeDBInstancesOutput, lastPage bool) bool {
 		for _, dbi := range out.DBInstances {
@@ -41,19 +42,19 @@ func testSweepDbInstances(region string) error {
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(dbi.DBInstanceIdentifier))
 			d.Set("skip_final_snapshot", true)
-			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 		return !lastPage
 	})
 	if err != nil {
-		if testSweepSkipSweepError(err) {
+		if sweep.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping RDS DB Instance sweep for %s: %s", region, err)
 			return nil
 		}
 		return fmt.Errorf("Error retrieving DB instances: %s", err)
 	}
 
-	return testSweepResourceOrchestrator(sweepResources)
+	return sweep.SweepOrchestrator(sweepResources)
 }
 
 func TestAccAWSDBInstance_basic(t *testing.T) {

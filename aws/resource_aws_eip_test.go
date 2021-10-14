@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
 // This will currently skip EIPs with associations,
@@ -37,7 +38,7 @@ func init() {
 }
 
 func testSweepEC2Eips(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -50,7 +51,7 @@ func testSweepEC2Eips(region string) error {
 
 	output, err := conn.DescribeAddresses(input)
 
-	if testSweepSkipSweepError(err) {
+	if sweep.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping EC2 EIP sweep for %s: %s", region, err)
 		return nil
 	}
@@ -64,7 +65,7 @@ func testSweepEC2Eips(region string) error {
 		return nil
 	}
 
-	sweepResources := make([]*testSweepResource, 0)
+	sweepResources := make([]*sweep.SweepResource, 0)
 	var errs *multierror.Error
 
 	for _, address := range output.Addresses {
@@ -83,14 +84,14 @@ func testSweepEC2Eips(region string) error {
 			d.SetId(aws.StringValue(address.PublicIp))
 		}
 
-		sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 	}
 
-	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping EC2 EIPs for %s: %w", region, err))
 	}
 
-	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+	if sweep.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping EC2 EIP sweep for %s: %s", region, errs)
 		return nil
 	}
