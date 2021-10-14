@@ -166,7 +166,7 @@ func resourceAwsMediaPackageChannelDelete(d *schema.ResourceData, meta interface
 	}
 	_, err := conn.DeleteChannel(input)
 	if err != nil {
-		if isAWSErr(err, mediapackage.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, mediapackage.ErrCodeNotFoundException, "") {
 			return nil
 		}
 		return fmt.Errorf("error deleting MediaPackage Channel: %s", err)
@@ -178,14 +178,14 @@ func resourceAwsMediaPackageChannelDelete(d *schema.ResourceData, meta interface
 	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.DescribeChannel(dcinput)
 		if err != nil {
-			if isAWSErr(err, mediapackage.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, mediapackage.ErrCodeNotFoundException, "") {
 				return nil
 			}
 			return resource.NonRetryableError(err)
 		}
 		return resource.RetryableError(fmt.Errorf("MediaPackage Channel (%s) still exists", d.Id()))
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.DescribeChannel(dcinput)
 	}
 	if err != nil {
