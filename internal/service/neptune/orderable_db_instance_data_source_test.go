@@ -19,13 +19,13 @@ func TestAccAWSNeptuneOrderableDbInstanceDataSource_basic(t *testing.T) {
 	class := "db.t3.medium"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSNeptuneOrderableDbInstance(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckOrderableDBInstance(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSNeptuneOrderableDbInstanceDataSourceConfigBasic(class, engine, engineVersion, licenseModel),
+				Config: testAccOrderableDBInstanceBasicDataSourceConfig(class, engine, engineVersion, licenseModel),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "engine", engine),
 					resource.TestCheckResourceAttr(dataSourceName, "engine_version", engineVersion),
@@ -45,13 +45,13 @@ func TestAccAWSNeptuneOrderableDbInstanceDataSource_preferred(t *testing.T) {
 	preferredOption := "db.r4.2xlarge"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSNeptuneOrderableDbInstance(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckOrderableDBInstance(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSNeptuneOrderableDbInstanceDataSourceConfigPreferred(engine, engineVersion, licenseModel, preferredOption),
+				Config: testAccOrderableDBInstancePreferredDataSourceConfig(engine, engineVersion, licenseModel, preferredOption),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "engine", engine),
 					resource.TestCheckResourceAttr(dataSourceName, "engine_version", engineVersion),
@@ -63,7 +63,7 @@ func TestAccAWSNeptuneOrderableDbInstanceDataSource_preferred(t *testing.T) {
 	})
 }
 
-func testAccPreCheckAWSNeptuneOrderableDbInstance(t *testing.T) {
+func testAccPreCheckOrderableDBInstance(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn
 
 	input := &neptune.DescribeOrderableDBInstanceOptionsInput{
@@ -81,7 +81,7 @@ func testAccPreCheckAWSNeptuneOrderableDbInstance(t *testing.T) {
 	}
 }
 
-func testAccAWSNeptuneOrderableDbInstanceDataSourceConfigBasic(class, engine, version, license string) string {
+func testAccOrderableDBInstanceBasicDataSourceConfig(class, engine, version, license string) string {
 	return fmt.Sprintf(`
 data "aws_neptune_orderable_db_instance" "test" {
   instance_class = %q
@@ -92,7 +92,7 @@ data "aws_neptune_orderable_db_instance" "test" {
 `, class, engine, version, license)
 }
 
-func testAccAWSNeptuneOrderableDbInstanceDataSourceConfigPreferred(engine, version, license, preferredOption string) string {
+func testAccOrderableDBInstancePreferredDataSourceConfig(engine, version, license, preferredOption string) string {
 	return fmt.Sprintf(`
 data "aws_neptune_orderable_db_instance" "test" {
   engine         = %q

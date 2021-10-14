@@ -31,13 +31,13 @@ func TestAccAWSNeptuneClusterInstance_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
+		CheckDestroy: testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSNeptuneClusterInstanceConfig(clusterInstanceName, rInt),
+				Config: testAccClusterInstanceConfig(clusterInstanceName, rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSNeptuneClusterInstanceExists(resourceName, &v),
-					testAccCheckAWSNeptuneClusterInstanceAttributes(&v),
+					testAccCheckClusterInstanceExists(resourceName, &v),
+					testAccCheckClusterInstanceAttributes(&v),
 					testAccCheckNeptuneClusterAddress(&v, resourceName, tfneptune.DefaultPort),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "rds", fmt.Sprintf("db:%s", clusterInstanceName)),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
@@ -61,10 +61,10 @@ func TestAccAWSNeptuneClusterInstance_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSNeptuneClusterInstanceConfigModified(clusterInstanceName, rInt),
+				Config: testAccClusterInstanceModifiedConfig(clusterInstanceName, rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSNeptuneClusterInstanceExists(resourceName, &v),
-					testAccCheckAWSNeptuneClusterInstanceAttributes(&v),
+					testAccCheckClusterInstanceExists(resourceName, &v),
+					testAccCheckClusterInstanceAttributes(&v),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
 				),
 			},
@@ -83,13 +83,13 @@ func TestAccAWSNeptuneClusterInstance_withaz(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
+		CheckDestroy: testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSNeptuneClusterInstanceConfig_az(rInt),
+				Config: testAccClusterInstanceConfig_az(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSNeptuneClusterInstanceExists(resourceName, &v),
-					testAccCheckAWSNeptuneClusterInstanceAttributes(&v),
+					testAccCheckClusterInstanceExists(resourceName, &v),
+					testAccCheckClusterInstanceAttributes(&v),
 					resource.TestMatchResourceAttr(resourceName, "availability_zone", regexp.MustCompile(fmt.Sprintf("^%s[a-z]{1}$", acctest.Region()))), // NOPE
 					resource.TestCheckResourceAttrPair(resourceName, "availability_zone", availabiltyZonesDataSourceName, "names.0"),
 				),
@@ -110,13 +110,13 @@ func TestAccAWSNeptuneClusterInstance_namePrefix(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
+		CheckDestroy: testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSNeptuneClusterInstanceConfig_namePrefix(namePrefix, rInt),
+				Config: testAccClusterInstanceConfig_namePrefix(namePrefix, rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSNeptuneClusterInstanceExists(resourceName, &v),
-					testAccCheckAWSNeptuneClusterInstanceAttributes(&v),
+					testAccCheckClusterInstanceExists(resourceName, &v),
+					testAccCheckClusterInstanceAttributes(&v),
 					resource.TestMatchResourceAttr(resourceName, "identifier", regexp.MustCompile(fmt.Sprintf("^%s", namePrefix))),
 				),
 			},
@@ -135,13 +135,13 @@ func TestAccAWSNeptuneClusterInstance_withSubnetGroup(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
+		CheckDestroy: testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSNeptuneClusterInstanceConfig_withSubnetGroup(rInt),
+				Config: testAccClusterInstanceConfig_withSubnetGroup(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSNeptuneClusterInstanceExists(resourceName, &v),
-					testAccCheckAWSNeptuneClusterInstanceAttributes(&v),
+					testAccCheckClusterInstanceExists(resourceName, &v),
+					testAccCheckClusterInstanceAttributes(&v),
 					resource.TestCheckResourceAttrPair(resourceName, "neptune_subnet_group_name", subnetGroupResourceName, "name"),
 				),
 			},
@@ -159,13 +159,13 @@ func TestAccAWSNeptuneClusterInstance_generatedName(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
+		CheckDestroy: testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSNeptuneClusterInstanceConfig_generatedName(rInt),
+				Config: testAccClusterInstanceConfig_generatedName(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSNeptuneClusterInstanceExists(resourceName, &v),
-					testAccCheckAWSNeptuneClusterInstanceAttributes(&v),
+					testAccCheckClusterInstanceExists(resourceName, &v),
+					testAccCheckClusterInstanceAttributes(&v),
 					resource.TestMatchResourceAttr(resourceName, "identifier", regexp.MustCompile("^tf-")),
 				),
 			},
@@ -184,12 +184,12 @@ func TestAccAWSNeptuneClusterInstance_kmsKey(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
+		CheckDestroy: testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSNeptuneClusterInstanceConfigKmsKey(rInt),
+				Config: testAccClusterInstanceKMSKeyConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSNeptuneClusterInstanceExists(resourceName, &v),
+					testAccCheckClusterInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key_arn", kmsKeyResourceName, "arn"),
 				),
 			},
@@ -197,7 +197,7 @@ func TestAccAWSNeptuneClusterInstance_kmsKey(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSNeptuneClusterInstanceExists(n string, v *neptune.DBInstance) resource.TestCheckFunc {
+func testAccCheckClusterInstanceExists(n string, v *neptune.DBInstance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -228,7 +228,7 @@ func testAccCheckAWSNeptuneClusterInstanceExists(n string, v *neptune.DBInstance
 	}
 }
 
-func testAccCheckAWSNeptuneClusterInstanceAttributes(v *neptune.DBInstance) resource.TestCheckFunc {
+func testAccCheckClusterInstanceAttributes(v *neptune.DBInstance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.StringValue(v.Engine) != "neptune" {
 			return fmt.Errorf("Incorrect engine, expected \"neptune\": %#v", aws.StringValue(v.Engine))
@@ -262,9 +262,9 @@ func testAccCheckNeptuneClusterAddress(v *neptune.DBInstance, resourceName strin
 	}
 }
 
-func testAccAWSNeptuneClusterInstanceConfig(instanceName string, n int) string {
+func testAccClusterInstanceConfig(instanceName string, n int) string {
 	return acctest.ConfigCompose(
-		testAccAWSNeptuneClusterConfigBase(),
+		testAccClusterBaseConfig(),
 		fmt.Sprintf(`
 data "aws_neptune_orderable_db_instance" "test" {
   engine        = "neptune"
@@ -305,9 +305,9 @@ resource "aws_neptune_parameter_group" "test" {
 `, instanceName, n))
 }
 
-func testAccAWSNeptuneClusterInstanceConfigModified(instanceName string, n int) string {
+func testAccClusterInstanceModifiedConfig(instanceName string, n int) string {
 	return acctest.ConfigCompose(
-		testAccAWSNeptuneClusterConfigBase(),
+		testAccClusterBaseConfig(),
 		fmt.Sprintf(`
 data "aws_neptune_orderable_db_instance" "test" {
   engine        = "neptune"
@@ -349,9 +349,9 @@ resource "aws_neptune_parameter_group" "test" {
 `, instanceName, n))
 }
 
-func testAccAWSNeptuneClusterInstanceConfig_az(n int) string {
+func testAccClusterInstanceConfig_az(n int) string {
 	return acctest.ConfigCompose(
-		testAccAWSNeptuneClusterConfigBase(),
+		testAccClusterBaseConfig(),
 		fmt.Sprintf(`
 data "aws_neptune_orderable_db_instance" "test" {
   engine        = "neptune"
@@ -393,9 +393,9 @@ resource "aws_neptune_parameter_group" "test" {
 `, n))
 }
 
-func testAccAWSNeptuneClusterInstanceConfig_withSubnetGroup(n int) string {
+func testAccClusterInstanceConfig_withSubnetGroup(n int) string {
 	return acctest.ConfigCompose(
-		testAccAWSNeptuneClusterConfigBase(),
+		testAccClusterBaseConfig(),
 		fmt.Sprintf(`
 data "aws_neptune_orderable_db_instance" "test" {
   engine        = "neptune"
@@ -453,9 +453,9 @@ resource "aws_neptune_subnet_group" "test" {
 `, n))
 }
 
-func testAccAWSNeptuneClusterInstanceConfig_namePrefix(namePrefix string, n int) string {
+func testAccClusterInstanceConfig_namePrefix(namePrefix string, n int) string {
 	return acctest.ConfigCompose(
-		testAccAWSNeptuneClusterConfigBase(),
+		testAccClusterBaseConfig(),
 		fmt.Sprintf(`
 data "aws_neptune_orderable_db_instance" "test" {
   engine        = "neptune"
@@ -513,9 +513,9 @@ resource "aws_neptune_subnet_group" "test" {
 `, namePrefix, n))
 }
 
-func testAccAWSNeptuneClusterInstanceConfig_generatedName(n int) string {
+func testAccClusterInstanceConfig_generatedName(n int) string {
 	return acctest.ConfigCompose(
-		testAccAWSNeptuneClusterConfigBase(),
+		testAccClusterBaseConfig(),
 		fmt.Sprintf(`
 data "aws_neptune_orderable_db_instance" "test" {
   engine        = "neptune"
@@ -572,9 +572,9 @@ resource "aws_neptune_subnet_group" "test" {
 `, n))
 }
 
-func testAccAWSNeptuneClusterInstanceConfigKmsKey(n int) string {
+func testAccClusterInstanceKMSKeyConfig(n int) string {
 	return acctest.ConfigCompose(
-		testAccAWSNeptuneClusterConfigBase(),
+		testAccClusterBaseConfig(),
 		fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description = "Terraform acc test %[1]d"
