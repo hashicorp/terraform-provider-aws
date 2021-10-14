@@ -31,7 +31,7 @@ func TestAccAWSQuickSightUser_basic(t *testing.T) {
 		CheckDestroy: testAccCheckQuickSightUserDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSQuickSightUserConfig(rName1),
+				Config: testAccUserConfig(rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQuickSightUserExists(resourceName1, &user),
 					resource.TestCheckResourceAttr(resourceName1, "user_name", rName1),
@@ -39,7 +39,7 @@ func TestAccAWSQuickSightUser_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSQuickSightUserConfig(rName2),
+				Config: testAccUserConfig(rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQuickSightUserExists(resourceName2, &user),
 					resource.TestCheckResourceAttr(resourceName2, "user_name", rName2),
@@ -62,14 +62,14 @@ func TestAccAWSQuickSightUser_withInvalidFormattedEmailStillWorks(t *testing.T) 
 		CheckDestroy: testAccCheckQuickSightUserDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSQuickSightUserConfigWithEmail(rName, "nottarealemailbutworks"),
+				Config: testAccUserWithEmailConfig(rName, "nottarealemailbutworks"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQuickSightUserExists(resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "email", "nottarealemailbutworks"),
 				),
 			},
 			{
-				Config: testAccAWSQuickSightUserConfigWithEmail(rName, "nottarealemailbutworks2"),
+				Config: testAccUserWithEmailConfig(rName, "nottarealemailbutworks2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQuickSightUserExists(resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "email", "nottarealemailbutworks2"),
@@ -91,7 +91,7 @@ func TestAccAWSQuickSightUser_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckQuickSightUserDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSQuickSightUserConfig(rName),
+				Config: testAccUserConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQuickSightUserExists(resourceName, &user),
 					testAccCheckQuickSightUserDisappears(&user),
@@ -194,7 +194,7 @@ func testAccCheckQuickSightUserDisappears(v *quicksight.User) resource.TestCheck
 	}
 }
 
-func testAccAWSQuickSightUserConfigWithEmail(rName, email string) string {
+func testAccUserWithEmailConfig(rName, email string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
@@ -208,6 +208,6 @@ resource "aws_quicksight_user" %[1]q {
 `, rName, email)
 }
 
-func testAccAWSQuickSightUserConfig(rName string) string {
-	return testAccAWSQuickSightUserConfigWithEmail(rName, acctest.DefaultEmailAddress)
+func testAccUserConfig(rName string) string {
+	return testAccUserWithEmailConfig(rName, acctest.DefaultEmailAddress)
 }

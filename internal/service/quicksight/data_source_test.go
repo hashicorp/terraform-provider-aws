@@ -25,11 +25,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_quicksight_data_source", &resource.Sweeper{
 		Name: "aws_quicksight_data_source",
-		F:    testSweepQuickSightDataSources,
+		F:    sweepsDataSource,
 	})
 }
 
-func testSweepQuickSightDataSources(region string) error {
+func sweepsDataSource(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
@@ -304,7 +304,7 @@ func TestAccAWSQuickSightDataSource_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckQuickSightDataSourceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSQuickSightDataSourceConfig(rId, rName),
+				Config: testAccDataSourceConfig(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQuickSightDataSourceExists(resourceName, &dataSource),
 					resource.TestCheckResourceAttr(resourceName, "data_source_id", rId),
@@ -341,7 +341,7 @@ func TestAccAWSQuickSightDataSource_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckQuickSightDataSourceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSQuickSightDataSourceConfig(rId, rName),
+				Config: testAccDataSourceConfig(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQuickSightDataSourceExists(resourceName, &dataSource),
 					acctest.CheckResourceDisappears(acctest.Provider, tfquicksight.ResourceDataSource(), resourceName),
@@ -365,7 +365,7 @@ func TestAccAWSQuickSightDataSource_Tags(t *testing.T) {
 		CheckDestroy:      testAccCheckQuickSightDataSourceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSQuickSightDataSourceConfigTags1(rId, rName, "key1", "value1"),
+				Config: testAccTags1DataSourceConfig(rId, rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQuickSightDataSourceExists(resourceName, &dataSource),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -378,7 +378,7 @@ func TestAccAWSQuickSightDataSource_Tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSQuickSightDataSourceConfigTags2(rId, rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccTags2DataSourceConfig(rId, rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQuickSightDataSourceExists(resourceName, &dataSource),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -387,7 +387,7 @@ func TestAccAWSQuickSightDataSource_Tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSQuickSightDataSourceConfigTags1(rId, rName, "key1", "value1"),
+				Config: testAccTags1DataSourceConfig(rId, rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQuickSightDataSourceExists(resourceName, &dataSource),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -411,7 +411,7 @@ func TestAccAWSQuickSightDataSource_Permissions(t *testing.T) {
 		CheckDestroy:      testAccCheckQuickSightDataSourceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSQuickSightDataSourceConfig_Permissions(rId, rName),
+				Config: testAccDataSourceConfig_Permissions(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQuickSightDataSourceExists(resourceName, &dataSource),
 					resource.TestCheckResourceAttr(resourceName, "permission.#", "1"),
@@ -429,7 +429,7 @@ func TestAccAWSQuickSightDataSource_Permissions(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSQuickSightDataSourceConfig_UpdatePermissions(rId, rName),
+				Config: testAccDataSourceConfig_UpdatePermissions(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQuickSightDataSourceExists(resourceName, &dataSource),
 					resource.TestCheckResourceAttr(resourceName, "permission.#", "1"),
@@ -450,7 +450,7 @@ func TestAccAWSQuickSightDataSource_Permissions(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSQuickSightDataSourceConfig(rId, rName),
+				Config: testAccDataSourceConfig(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQuickSightDataSourceExists(resourceName, &dataSource),
 					resource.TestCheckResourceAttr(resourceName, "permission.#", "0"),
@@ -528,7 +528,7 @@ func testAccCheckQuickSightDataSourceDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSQuickSightDataSourceConfigBase(rName string) string {
+func testAccBaseDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -560,9 +560,9 @@ EOF
 `, rName)
 }
 
-func testAccAWSQuickSightDataSourceConfig(rId, rName string) string {
+func testAccDataSourceConfig(rId, rName string) string {
 	return acctest.ConfigCompose(
-		testAccAWSQuickSightDataSourceConfigBase(rName),
+		testAccBaseDataSourceConfig(rName),
 		fmt.Sprintf(`
 resource "aws_quicksight_data_source" "test" {
   data_source_id = %[1]q
@@ -582,9 +582,9 @@ resource "aws_quicksight_data_source" "test" {
 `, rId, rName))
 }
 
-func testAccAWSQuickSightDataSourceConfigTags1(rId, rName, key, value string) string {
+func testAccTags1DataSourceConfig(rId, rName, key, value string) string {
 	return acctest.ConfigCompose(
-		testAccAWSQuickSightDataSourceConfigBase(rName),
+		testAccBaseDataSourceConfig(rName),
 		fmt.Sprintf(`
 resource "aws_quicksight_data_source" "test" {
   data_source_id = %[1]q
@@ -608,9 +608,9 @@ resource "aws_quicksight_data_source" "test" {
 `, rId, rName, key, value))
 }
 
-func testAccAWSQuickSightDataSourceConfigTags2(rId, rName, key1, value1, key2, value2 string) string {
+func testAccTags2DataSourceConfig(rId, rName, key1, value1, key2, value2 string) string {
 	return acctest.ConfigCompose(
-		testAccAWSQuickSightDataSourceConfigBase(rName),
+		testAccBaseDataSourceConfig(rName),
 		fmt.Sprintf(`
 resource "aws_quicksight_data_source" "test" {
   data_source_id = %[1]q
@@ -634,7 +634,7 @@ resource "aws_quicksight_data_source" "test" {
 `, rId, rName, key1, value1, key2, value2))
 }
 
-func testAccAWSQuickSightDataSource_UserConfig(rName string) string {
+func testAccDataSource_UserConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
@@ -652,10 +652,10 @@ resource "aws_quicksight_user" "test" {
 `, rName, acctest.DefaultEmailAddress)
 }
 
-func testAccAWSQuickSightDataSourceConfig_Permissions(rId, rName string) string {
+func testAccDataSourceConfig_Permissions(rId, rName string) string {
 	return acctest.ConfigCompose(
-		testAccAWSQuickSightDataSourceConfigBase(rName),
-		testAccAWSQuickSightDataSource_UserConfig(rName),
+		testAccBaseDataSourceConfig(rName),
+		testAccDataSource_UserConfig(rName),
 		fmt.Sprintf(`
 resource "aws_quicksight_data_source" "test" {
   data_source_id = %[1]q
@@ -685,10 +685,10 @@ resource "aws_quicksight_data_source" "test" {
 `, rId, rName))
 }
 
-func testAccAWSQuickSightDataSourceConfig_UpdatePermissions(rId, rName string) string {
+func testAccDataSourceConfig_UpdatePermissions(rId, rName string) string {
 	return acctest.ConfigCompose(
-		testAccAWSQuickSightDataSourceConfigBase(rName),
-		testAccAWSQuickSightDataSource_UserConfig(rName),
+		testAccBaseDataSourceConfig(rName),
+		testAccDataSource_UserConfig(rName),
 		fmt.Sprintf(`
 resource "aws_quicksight_data_source" "test" {
   data_source_id = %[1]q
