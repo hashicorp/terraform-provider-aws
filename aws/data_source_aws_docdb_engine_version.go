@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsDocdbEngineVersion() *schema.Resource {
+func DataSourceEngineVersion() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsDocdbEngineVersionRead,
+		Read: dataSourceEngineVersionRead,
 		Schema: map[string]*schema.Schema{
 			"engine": {
 				Type:     schema.TypeString,
@@ -72,7 +72,7 @@ func dataSourceAwsDocdbEngineVersion() *schema.Resource {
 	}
 }
 
-func dataSourceAwsDocdbEngineVersionRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceEngineVersionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DocDBConn
 
 	input := &docdb.DescribeDBEngineVersionsInput{}

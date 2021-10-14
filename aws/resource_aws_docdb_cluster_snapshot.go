@@ -12,11 +12,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsDocDBClusterSnapshot() *schema.Resource {
+func ResourceClusterSnapshot() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDocDBClusterSnapshotCreate,
-		Read:   resourceAwsDocDBClusterSnapshotRead,
-		Delete: resourceAwsDocDBClusterSnapshotDelete,
+		Create: resourceClusterSnapshotCreate,
+		Read:   resourceClusterSnapshotRead,
+		Delete: resourceClusterSnapshotDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -88,7 +88,7 @@ func resourceAwsDocDBClusterSnapshot() *schema.Resource {
 	}
 }
 
-func resourceAwsDocDBClusterSnapshotCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterSnapshotCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DocDBConn
 
 	params := &docdb.CreateDBClusterSnapshotInput{
@@ -117,10 +117,10 @@ func resourceAwsDocDBClusterSnapshotCreate(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("error waiting for DocDB Cluster Snapshot %q to create: %s", d.Id(), err)
 	}
 
-	return resourceAwsDocDBClusterSnapshotRead(d, meta)
+	return resourceClusterSnapshotRead(d, meta)
 }
 
-func resourceAwsDocDBClusterSnapshotRead(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterSnapshotRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DocDBConn
 
 	params := &docdb.DescribeDBClusterSnapshotsInput{
@@ -163,7 +163,7 @@ func resourceAwsDocDBClusterSnapshotRead(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func resourceAwsDocDBClusterSnapshotDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterSnapshotDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DocDBConn
 
 	params := &docdb.DeleteDBClusterSnapshotInput{

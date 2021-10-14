@@ -16,13 +16,13 @@ import (
 
 const docdbClusterParameterGroupMaxParamsBulkEdit = 20
 
-func resourceAwsDocDBClusterParameterGroup() *schema.Resource {
+func ResourceClusterParameterGroup() *schema.Resource {
 
 	return &schema.Resource{
-		Create: resourceAwsDocDBClusterParameterGroupCreate,
-		Read:   resourceAwsDocDBClusterParameterGroupRead,
-		Update: resourceAwsDocDBClusterParameterGroupUpdate,
-		Delete: resourceAwsDocDBClusterParameterGroupDelete,
+		Create: resourceClusterParameterGroupCreate,
+		Read:   resourceClusterParameterGroupRead,
+		Update: resourceClusterParameterGroupUpdate,
+		Delete: resourceClusterParameterGroupDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -94,7 +94,7 @@ func resourceAwsDocDBClusterParameterGroup() *schema.Resource {
 
 }
 
-func resourceAwsDocDBClusterParameterGroupCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterParameterGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DocDBConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -126,10 +126,10 @@ func resourceAwsDocDBClusterParameterGroupCreate(d *schema.ResourceData, meta in
 
 	d.Set("arn", resp.DBClusterParameterGroup.DBClusterParameterGroupArn)
 
-	return resourceAwsDocDBClusterParameterGroupUpdate(d, meta)
+	return resourceClusterParameterGroupUpdate(d, meta)
 }
 
-func resourceAwsDocDBClusterParameterGroupRead(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterParameterGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DocDBConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -192,7 +192,7 @@ func resourceAwsDocDBClusterParameterGroupRead(d *schema.ResourceData, meta inte
 	return nil
 }
 
-func resourceAwsDocDBClusterParameterGroupUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterParameterGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DocDBConn
 
 	if d.HasChange("parameter") {
@@ -246,10 +246,10 @@ func resourceAwsDocDBClusterParameterGroupUpdate(d *schema.ResourceData, meta in
 		}
 	}
 
-	return resourceAwsDocDBClusterParameterGroupRead(d, meta)
+	return resourceClusterParameterGroupRead(d, meta)
 }
 
-func resourceAwsDocDBClusterParameterGroupDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterParameterGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DocDBConn
 
 	deleteOpts := &docdb.DeleteDBClusterParameterGroupInput{
