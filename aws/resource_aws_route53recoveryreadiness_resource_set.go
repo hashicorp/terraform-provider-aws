@@ -10,8 +10,9 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceResourceSet() *schema.Resource {
@@ -130,18 +131,18 @@ func ResourceResourceSet() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceResourceSetCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &route53recoveryreadiness.CreateResourceSetInput{
 		ResourceSetName: aws.String(d.Get("resource_set_name").(string)),
@@ -158,7 +159,7 @@ func resourceResourceSetCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if len(tags) > 0 {
 		arn := aws.StringValue(resp.ResourceSetArn)
-		if err := keyvaluetags.Route53recoveryreadinessUpdateTags(conn, arn, nil, tags); err != nil {
+		if err := tftags.Route53recoveryreadinessUpdateTags(conn, arn, nil, tags); err != nil {
 			return fmt.Errorf("error adding Route53 Recovery Readiness Resource Set (%s) tags: %w", d.Id(), err)
 		}
 	}
@@ -195,7 +196,7 @@ func resourceResourceSetRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error setting AWS Route53 Recovery Readiness Resource Set resources: %s", err)
 	}
 
-	tags, err := keyvaluetags.Route53recoveryreadinessListTags(conn, d.Get("arn").(string))
+	tags, err := tftags.Route53recoveryreadinessListTags(conn, d.Get("arn").(string))
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Route53 Recovery Readiness Resource Set (%s): %w", d.Id(), err)
@@ -232,7 +233,7 @@ func resourceResourceSetUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 		arn := d.Get("arn").(string)
-		if err := keyvaluetags.Route53recoveryreadinessUpdateTags(conn, arn, o, n); err != nil {
+		if err := tftags.Route53recoveryreadinessUpdateTags(conn, arn, o, n); err != nil {
 			return fmt.Errorf("error updating Route53 Recovery Readiness Resource Set (%s) tags: %w", d.Id(), err)
 		}
 	}

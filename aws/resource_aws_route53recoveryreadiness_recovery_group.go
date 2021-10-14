@@ -10,8 +10,9 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceRecoveryGroup() *schema.Resource {
@@ -45,18 +46,18 @@ func ResourceRecoveryGroup() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceRecoveryGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &route53recoveryreadiness.CreateRecoveryGroupInput{
 		RecoveryGroupName: aws.String(d.Get("recovery_group_name").(string)),
@@ -72,7 +73,7 @@ func resourceRecoveryGroupCreate(d *schema.ResourceData, meta interface{}) error
 
 	if len(tags) > 0 {
 		arn := aws.StringValue(resp.RecoveryGroupArn)
-		if err := keyvaluetags.Route53recoveryreadinessUpdateTags(conn, arn, nil, tags); err != nil {
+		if err := tftags.Route53recoveryreadinessUpdateTags(conn, arn, nil, tags); err != nil {
 			return fmt.Errorf("error adding Route53 Recovery Readiness RecoveryGroup (%s) tags: %w", d.Id(), err)
 		}
 	}
@@ -104,7 +105,7 @@ func resourceRecoveryGroupRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("recovery_group_name", resp.RecoveryGroupName)
 	d.Set("cells", resp.Cells)
 
-	tags, err := keyvaluetags.Route53recoveryreadinessListTags(conn, d.Get("arn").(string))
+	tags, err := tftags.Route53recoveryreadinessListTags(conn, d.Get("arn").(string))
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Route53 Recovery Readiness RecoveryGroup (%s): %w", d.Id(), err)
@@ -141,7 +142,7 @@ func resourceRecoveryGroupUpdate(d *schema.ResourceData, meta interface{}) error
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 		arn := d.Get("arn").(string)
-		if err := keyvaluetags.Route53recoveryreadinessUpdateTags(conn, arn, o, n); err != nil {
+		if err := tftags.Route53recoveryreadinessUpdateTags(conn, arn, o, n); err != nil {
 			return fmt.Errorf("error updating Route53 Recovery Readiness RecoveryGroup (%s) tags: %w", d.Id(), err)
 		}
 	}
