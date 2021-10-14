@@ -6,8 +6,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/signer"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceSigningProfile() *schema.Resource {
@@ -71,7 +72,7 @@ func DataSourceSigningProfile() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 			"version": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -130,7 +131,7 @@ func dataSourceSigningProfileRead(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error setting signer signing profile status: %w", err)
 	}
 
-	if err := d.Set("tags", keyvaluetags.SignerKeyValueTags(signingProfileOutput.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", tftags.SignerKeyValueTags(signingProfileOutput.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting signer signing profile tags: %w", err)
 	}
 
