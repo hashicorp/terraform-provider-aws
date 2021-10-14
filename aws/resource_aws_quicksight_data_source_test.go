@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -54,7 +55,7 @@ func testSweepQuickSightDataSources(region string) error {
 				continue
 			}
 
-			r := resourceAwsQuickSightDataSource()
+			r := ResourceDataSource()
 
 			d := r.Data(nil)
 
@@ -341,7 +342,7 @@ func TestAccAWSQuickSightDataSource_disappears(t *testing.T) {
 				Config: testAccAWSQuickSightDataSourceConfig(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQuickSightDataSourceExists(resourceName, &dataSource),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsQuickSightDataSource(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceDataSource(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

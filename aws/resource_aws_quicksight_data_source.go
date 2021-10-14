@@ -17,12 +17,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsQuickSightDataSource() *schema.Resource {
+func ResourceDataSource() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceAwsQuickSightDataSourceCreate,
-		ReadWithoutTimeout:   resourceAwsQuickSightDataSourceRead,
-		UpdateWithoutTimeout: resourceAwsQuickSightDataSourceUpdate,
-		DeleteWithoutTimeout: resourceAwsQuickSightDataSourceDelete,
+		CreateWithoutTimeout: resourceDataSourceCreate,
+		ReadWithoutTimeout:   resourceDataSourceRead,
+		UpdateWithoutTimeout: resourceDataSourceUpdate,
+		DeleteWithoutTimeout: resourceDataSourceDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -601,7 +601,7 @@ func resourceAwsQuickSightDataSource() *schema.Resource {
 	}
 }
 
-func resourceAwsQuickSightDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).QuickSightConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -652,10 +652,10 @@ func resourceAwsQuickSightDataSourceCreate(ctx context.Context, d *schema.Resour
 		return diag.Errorf("error waiting from QuickSight Data Source (%s) creation: %s", d.Id(), err)
 	}
 
-	return resourceAwsQuickSightDataSourceRead(ctx, d, meta)
+	return resourceDataSourceRead(ctx, d, meta)
 }
 
-func resourceAwsQuickSightDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).QuickSightConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -740,7 +740,7 @@ func resourceAwsQuickSightDataSourceRead(ctx context.Context, d *schema.Resource
 	return nil
 }
 
-func resourceAwsQuickSightDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).QuickSightConn
 
 	if d.HasChangesExcept("permission", "tags", "tags_all") {
@@ -822,10 +822,10 @@ func resourceAwsQuickSightDataSourceUpdate(ctx context.Context, d *schema.Resour
 		}
 	}
 
-	return resourceAwsQuickSightDataSourceRead(ctx, d, meta)
+	return resourceDataSourceRead(ctx, d, meta)
 }
 
-func resourceAwsQuickSightDataSourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataSourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).QuickSightConn
 
 	awsAccountId, dataSourceId, err := resourceAwsQuickSightDataSourceParseID(d.Id())

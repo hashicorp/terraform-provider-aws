@@ -12,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsQuickSightGroup() *schema.Resource {
+func ResourceGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsQuickSightGroupCreate,
-		Read:   resourceAwsQuickSightGroupRead,
-		Update: resourceAwsQuickSightGroupUpdate,
-		Delete: resourceAwsQuickSightGroupDelete,
+		Create: resourceGroupCreate,
+		Read:   resourceGroupRead,
+		Update: resourceGroupUpdate,
+		Delete: resourceGroupDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -60,7 +60,7 @@ func resourceAwsQuickSightGroup() *schema.Resource {
 	}
 }
 
-func resourceAwsQuickSightGroupCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).QuickSightConn
 
 	awsAccountID := meta.(*conns.AWSClient).AccountID
@@ -87,10 +87,10 @@ func resourceAwsQuickSightGroupCreate(d *schema.ResourceData, meta interface{}) 
 
 	d.SetId(fmt.Sprintf("%s/%s/%s", awsAccountID, namespace, aws.StringValue(resp.Group.GroupName)))
 
-	return resourceAwsQuickSightGroupRead(d, meta)
+	return resourceGroupRead(d, meta)
 }
 
-func resourceAwsQuickSightGroupRead(d *schema.ResourceData, meta interface{}) error {
+func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).QuickSightConn
 
 	awsAccountID, namespace, groupName, err := resourceAwsQuickSightGroupParseID(d.Id())
@@ -123,7 +123,7 @@ func resourceAwsQuickSightGroupRead(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func resourceAwsQuickSightGroupUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).QuickSightConn
 
 	awsAccountID, namespace, groupName, err := resourceAwsQuickSightGroupParseID(d.Id())
@@ -151,10 +151,10 @@ func resourceAwsQuickSightGroupUpdate(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("Error updating QuickSight Group %s: %s", d.Id(), err)
 	}
 
-	return resourceAwsQuickSightGroupRead(d, meta)
+	return resourceGroupRead(d, meta)
 }
 
-func resourceAwsQuickSightGroupDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).QuickSightConn
 
 	awsAccountID, namespace, groupName, err := resourceAwsQuickSightGroupParseID(d.Id())

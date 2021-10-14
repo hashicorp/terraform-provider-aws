@@ -15,11 +15,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsQuickSightGroupMembership() *schema.Resource {
+func ResourceGroupMembership() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceAwsQuickSightGroupMembershipCreate,
-		ReadWithoutTimeout:   resourceAwsQuickSightGroupMembershipRead,
-		DeleteWithoutTimeout: resourceAwsQuickSightGroupMembershipDelete,
+		CreateWithoutTimeout: resourceGroupMembershipCreate,
+		ReadWithoutTimeout:   resourceGroupMembershipRead,
+		DeleteWithoutTimeout: resourceGroupMembershipDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -63,7 +63,7 @@ func resourceAwsQuickSightGroupMembership() *schema.Resource {
 	}
 }
 
-func resourceAwsQuickSightGroupMembershipCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGroupMembershipCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).QuickSightConn
 
 	awsAccountID := meta.(*conns.AWSClient).AccountID
@@ -89,10 +89,10 @@ func resourceAwsQuickSightGroupMembershipCreate(ctx context.Context, d *schema.R
 
 	d.SetId(fmt.Sprintf("%s/%s/%s/%s", awsAccountID, namespace, groupName, aws.StringValue(resp.GroupMember.MemberName)))
 
-	return resourceAwsQuickSightGroupMembershipRead(ctx, d, meta)
+	return resourceGroupMembershipRead(ctx, d, meta)
 }
 
-func resourceAwsQuickSightGroupMembershipRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGroupMembershipRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).QuickSightConn
 
 	awsAccountID, namespace, groupName, userName, err := resourceAwsQuickSightGroupMembershipParseID(d.Id())
@@ -125,7 +125,7 @@ func resourceAwsQuickSightGroupMembershipRead(ctx context.Context, d *schema.Res
 	return nil
 }
 
-func resourceAwsQuickSightGroupMembershipDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGroupMembershipDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).QuickSightConn
 
 	awsAccountID, namespace, groupName, userName, err := resourceAwsQuickSightGroupMembershipParseID(d.Id())
