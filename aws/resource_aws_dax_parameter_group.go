@@ -81,7 +81,7 @@ func resourceAwsDaxParameterGroupRead(d *schema.ResourceData, meta interface{}) 
 		ParameterGroupNames: []*string{aws.String(d.Id())},
 	})
 	if err != nil {
-		if isAWSErr(err, dax.ErrCodeParameterGroupNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, dax.ErrCodeParameterGroupNotFoundFault, "") {
 			log.Printf("[WARN] DAX ParameterGroup %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -101,7 +101,7 @@ func resourceAwsDaxParameterGroupRead(d *schema.ResourceData, meta interface{}) 
 		ParameterGroupName: aws.String(d.Id()),
 	})
 	if err != nil {
-		if isAWSErr(err, dax.ErrCodeParameterGroupNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, dax.ErrCodeParameterGroupNotFoundFault, "") {
 			log.Printf("[WARN] DAX ParameterGroup %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -150,7 +150,7 @@ func resourceAwsDaxParameterGroupDelete(d *schema.ResourceData, meta interface{}
 
 	_, err := conn.DeleteParameterGroup(input)
 	if err != nil {
-		if isAWSErr(err, dax.ErrCodeParameterGroupNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, dax.ErrCodeParameterGroupNotFoundFault, "") {
 			return nil
 		}
 		return err

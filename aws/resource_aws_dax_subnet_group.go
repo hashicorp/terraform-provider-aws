@@ -70,7 +70,7 @@ func resourceAwsDaxSubnetGroupRead(d *schema.ResourceData, meta interface{}) err
 		SubnetGroupNames: []*string{aws.String(d.Id())},
 	})
 	if err != nil {
-		if isAWSErr(err, dax.ErrCodeSubnetGroupNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, dax.ErrCodeSubnetGroupNotFoundFault, "") {
 			log.Printf("[WARN] DAX SubnetGroup %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -122,7 +122,7 @@ func resourceAwsDaxSubnetGroupDelete(d *schema.ResourceData, meta interface{}) e
 
 	_, err := conn.DeleteSubnetGroup(input)
 	if err != nil {
-		if isAWSErr(err, dax.ErrCodeSubnetGroupNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, dax.ErrCodeSubnetGroupNotFoundFault, "") {
 			return nil
 		}
 		return err
