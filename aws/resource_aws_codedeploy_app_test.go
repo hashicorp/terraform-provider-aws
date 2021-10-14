@@ -71,13 +71,13 @@ func testSweepCodeDeployApps(region string) error {
 
 func TestAccAWSCodeDeployApp_basic(t *testing.T) {
 	var application1 codedeploy.ApplicationInfo
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codedeploy_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCodeDeployAppDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -111,13 +111,13 @@ func TestAccAWSCodeDeployApp_basic(t *testing.T) {
 
 func TestAccAWSCodeDeployApp_computePlatform(t *testing.T) {
 	var application1, application2 codedeploy.ApplicationInfo
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codedeploy_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCodeDeployAppDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -141,13 +141,13 @@ func TestAccAWSCodeDeployApp_computePlatform(t *testing.T) {
 
 func TestAccAWSCodeDeployApp_computePlatform_ECS(t *testing.T) {
 	var application1 codedeploy.ApplicationInfo
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codedeploy_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCodeDeployAppDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -168,13 +168,13 @@ func TestAccAWSCodeDeployApp_computePlatform_ECS(t *testing.T) {
 
 func TestAccAWSCodeDeployApp_computePlatform_Lambda(t *testing.T) {
 	var application1 codedeploy.ApplicationInfo
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codedeploy_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCodeDeployAppDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -195,14 +195,14 @@ func TestAccAWSCodeDeployApp_computePlatform_Lambda(t *testing.T) {
 
 func TestAccAWSCodeDeployApp_name(t *testing.T) {
 	var application1, application2 codedeploy.ApplicationInfo
-	rName1 := sdkacctest.RandomWithPrefix("tf-acc-test")
-	rName2 := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codedeploy_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCodeDeployAppDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -230,13 +230,13 @@ func TestAccAWSCodeDeployApp_name(t *testing.T) {
 
 func TestAccAWSCodeDeployApp_tags(t *testing.T) {
 	var application codedeploy.ApplicationInfo
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codedeploy_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCodeDeployAppDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -275,20 +275,20 @@ func TestAccAWSCodeDeployApp_tags(t *testing.T) {
 
 func TestAccAWSCodeDeployApp_disappears(t *testing.T) {
 	var application1 codedeploy.ApplicationInfo
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codedeploy_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCodeDeployAppDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCodeDeployAppConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeDeployAppExists(resourceName, &application1),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsCodeDeployApp(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsCodeDeployApp(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -297,7 +297,7 @@ func TestAccAWSCodeDeployApp_disappears(t *testing.T) {
 }
 
 func testAccCheckAWSCodeDeployAppDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).codedeployconn
+	conn := acctest.Provider.Meta().(*AWSClient).codedeployconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_codedeploy_app" {
@@ -329,7 +329,7 @@ func testAccCheckAWSCodeDeployAppExists(name string, application *codedeploy.App
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).codedeployconn
+		conn := acctest.Provider.Meta().(*AWSClient).codedeployconn
 
 		input := &codedeploy.GetApplicationInput{
 			ApplicationName: aws.String(rs.Primary.Attributes["name"]),

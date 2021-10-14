@@ -16,12 +16,12 @@ import (
 func TestAccAWSCodeDeployDeploymentConfig_basic(t *testing.T) {
 	var config1 codedeploy.DeploymentConfigInfo
 	resourceName := "aws_codedeploy_deployment_config.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentConfigDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -45,12 +45,12 @@ func TestAccAWSCodeDeployDeploymentConfig_basic(t *testing.T) {
 func TestAccAWSCodeDeployDeploymentConfig_fleetPercent(t *testing.T) {
 	var config1, config2 codedeploy.DeploymentConfigInfo
 	resourceName := "aws_codedeploy_deployment_config.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentConfigDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -88,12 +88,12 @@ func TestAccAWSCodeDeployDeploymentConfig_fleetPercent(t *testing.T) {
 func TestAccAWSCodeDeployDeploymentConfig_hostCount(t *testing.T) {
 	var config1, config2 codedeploy.DeploymentConfigInfo
 	resourceName := "aws_codedeploy_deployment_config.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentConfigDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -131,12 +131,12 @@ func TestAccAWSCodeDeployDeploymentConfig_hostCount(t *testing.T) {
 func TestAccAWSCodeDeployDeploymentConfig_trafficCanary(t *testing.T) {
 	var config1, config2 codedeploy.DeploymentConfigInfo
 	resourceName := "aws_codedeploy_deployment_config.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentConfigDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -180,12 +180,12 @@ func TestAccAWSCodeDeployDeploymentConfig_trafficCanary(t *testing.T) {
 func TestAccAWSCodeDeployDeploymentConfig_trafficLinear(t *testing.T) {
 	var config1, config2 codedeploy.DeploymentConfigInfo
 	resourceName := "aws_codedeploy_deployment_config.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentConfigDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -227,7 +227,7 @@ func TestAccAWSCodeDeployDeploymentConfig_trafficLinear(t *testing.T) {
 }
 
 func testAccCheckAWSCodeDeployDeploymentConfigDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).codedeployconn
+	conn := acctest.Provider.Meta().(*AWSClient).codedeployconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_codedeploy_deployment_config" {
@@ -261,7 +261,7 @@ func testAccCheckAWSCodeDeployDeploymentConfigExists(name string, config *codede
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).codedeployconn
+		conn := acctest.Provider.Meta().(*AWSClient).codedeployconn
 
 		resp, err := conn.GetDeploymentConfig(&codedeploy.GetDeploymentConfigInput{
 			DeploymentConfigName: aws.String(rs.Primary.ID),
