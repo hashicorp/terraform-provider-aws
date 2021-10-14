@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSEcsDataSource_ecsContainerDefinition(t *testing.T) {
+func TestAccECSContainerDefinitionDataSource_ecsContainerDefinition(t *testing.T) {
 	rString := sdkacctest.RandString(8)
 	clusterName := fmt.Sprintf("tf_acc_td_ds_cluster_ecs_containter_definition_%s", rString)
 	svcName := fmt.Sprintf("tf_acc_svc_td_ds_ecs_containter_definition_%s", rString)

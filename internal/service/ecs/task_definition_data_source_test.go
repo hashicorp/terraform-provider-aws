@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSEcsDataSource_ecsTaskDefinition(t *testing.T) {
+func TestAccECSTaskDefinitionDataSource_ecsTaskDefinition(t *testing.T) {
 	resourceName := "data.aws_ecs_task_definition.mongo"
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(5))
 

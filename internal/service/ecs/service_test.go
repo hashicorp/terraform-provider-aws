@@ -110,7 +110,7 @@ func sweepServices(region string) error {
 	return nil
 }
 
-func TestAccAWSEcsService_withARN(t *testing.T) {
+func TestAccECSService_withARN(t *testing.T) {
 	var service ecs.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
@@ -142,7 +142,7 @@ func TestAccAWSEcsService_withARN(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsService_basicImport(t *testing.T) {
+func TestAccECSService_basicImport(t *testing.T) {
 	var service ecs.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
@@ -181,7 +181,7 @@ func TestAccAWSEcsService_basicImport(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsService_disappears(t *testing.T) {
+func TestAccECSService_disappears(t *testing.T) {
 	var service ecs.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
@@ -204,7 +204,7 @@ func TestAccAWSEcsService_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsService_withUnnormalizedPlacementStrategy(t *testing.T) {
+func TestAccECSService_withUnnormalizedPlacementStrategy(t *testing.T) {
 	var service ecs.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
@@ -225,7 +225,7 @@ func TestAccAWSEcsService_withUnnormalizedPlacementStrategy(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsService_withCapacityProviderStrategy(t *testing.T) {
+func TestAccECSService_withCapacityProviderStrategy(t *testing.T) {
 	var service ecs.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
@@ -252,7 +252,7 @@ func TestAccAWSEcsService_withCapacityProviderStrategy(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsService_withMultipleCapacityProviderStrategies(t *testing.T) {
+func TestAccECSService_withMultipleCapacityProviderStrategies(t *testing.T) {
 	var service ecs.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
@@ -274,7 +274,7 @@ func TestAccAWSEcsService_withMultipleCapacityProviderStrategies(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsService_withFamilyAndRevision(t *testing.T) {
+func TestAccECSService_withFamilyAndRevision(t *testing.T) {
 	var service ecs.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
@@ -303,7 +303,7 @@ func TestAccAWSEcsService_withFamilyAndRevision(t *testing.T) {
 }
 
 // Regression for https://github.com/hashicorp/terraform/issues/2427
-func TestAccAWSEcsService_withRenamedCluster(t *testing.T) {
+func TestAccECSService_withRenamedCluster(t *testing.T) {
 	var service ecs.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
@@ -333,7 +333,7 @@ func TestAccAWSEcsService_withRenamedCluster(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsService_healthCheckGracePeriodSeconds(t *testing.T) {
+func TestAccECSService_healthCheckGracePeriodSeconds(t *testing.T) {
 	var service ecs.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
@@ -377,7 +377,7 @@ func TestAccAWSEcsService_healthCheckGracePeriodSeconds(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsService_withIamRole(t *testing.T) {
+func TestAccECSService_withIAMRole(t *testing.T) {
 	var service ecs.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
@@ -398,7 +398,7 @@ func TestAccAWSEcsService_withIamRole(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsService_withDeploymentController_Type_CodeDeploy(t *testing.T) {
+func TestAccECSService_WithDeploymentControllerType_codeDeploy(t *testing.T) {
 	var service ecs.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
@@ -430,7 +430,7 @@ func TestAccAWSEcsService_withDeploymentController_Type_CodeDeploy(t *testing.T)
 	})
 }
 
-func TestAccAWSEcsService_withDeploymentController_Type_External(t *testing.T) {
+func TestAccECSService_WithDeploymentControllerType_external(t *testing.T) {
 	var service ecs.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
@@ -461,7 +461,7 @@ func TestAccAWSEcsService_withDeploymentController_Type_External(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsService_withDeploymentValues(t *testing.T) {
+func TestAccECSService_withDeploymentValues(t *testing.T) {
 	var service ecs.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
@@ -485,7 +485,7 @@ func TestAccAWSEcsService_withDeploymentValues(t *testing.T) {
 }
 
 // Regression for https://github.com/hashicorp/terraform-provider-aws/issues/6315
-func TestAccAWSEcsService_withDeploymentMinimumZeroMaximumOneHundred(t *testing.T) {
+func TestAccECSService_withDeploymentMinimumZeroMaximumOneHundred(t *testing.T) {
 	var service ecs.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
@@ -508,7 +508,7 @@ func TestAccAWSEcsService_withDeploymentMinimumZeroMaximumOneHundred(t *testing.
 	})
 }
 
-func TestAccAWSEcsService_withDeploymentCircuitBreaker(t *testing.T) {
+func TestAccECSService_withDeploymentCircuitBreaker(t *testing.T) {
 	var service ecs.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
@@ -533,7 +533,7 @@ func TestAccAWSEcsService_withDeploymentCircuitBreaker(t *testing.T) {
 }
 
 // Regression for https://github.com/hashicorp/terraform/issues/3444
-func TestAccAWSEcsService_withLbChanges(t *testing.T) {
+func TestAccECSService_withLbChanges(t *testing.T) {
 	var service ecs.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
@@ -561,7 +561,7 @@ func TestAccAWSEcsService_withLbChanges(t *testing.T) {
 }
 
 // Regression for https://github.com/hashicorp/terraform/issues/3361
-func TestAccAWSEcsService_withEcsClusterName(t *testing.T) {
+func TestAccECSService_withECSClusterName(t *testing.T) {
 	var service ecs.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
@@ -583,7 +583,7 @@ func TestAccAWSEcsService_withEcsClusterName(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsService_withAlb(t *testing.T) {
+func TestAccECSService_withAlb(t *testing.T) {
 	var service ecs.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
@@ -605,7 +605,7 @@ func TestAccAWSEcsService_withAlb(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsService_withMultipleTargetGroups(t *testing.T) {
+func TestAccECSService_withMultipleTargetGroups(t *testing.T) {
 	var service ecs.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
@@ -627,7 +627,7 @@ func TestAccAWSEcsService_withMultipleTargetGroups(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsService_withForceNewDeployment(t *testing.T) {
+func TestAccECSService_withForceNewDeployment(t *testing.T) {
 	var service1, service2 ecs.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
@@ -659,7 +659,7 @@ func TestAccAWSEcsService_withForceNewDeployment(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsService_withPlacementStrategy(t *testing.T) {
+func TestAccECSService_withPlacementStrategy(t *testing.T) {
 	var service1, service2, service3, service4 ecs.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
@@ -714,7 +714,7 @@ func TestAccAWSEcsService_withPlacementStrategy(t *testing.T) {
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/13146
-func TestAccAWSEcsService_withPlacementStrategy_Type_Missing(t *testing.T) {
+func TestAccECSService_WithPlacementStrategyType_missing(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -731,7 +731,7 @@ func TestAccAWSEcsService_withPlacementStrategy_Type_Missing(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsService_withPlacementConstraints(t *testing.T) {
+func TestAccECSService_withPlacementConstraints(t *testing.T) {
 	var service1, service2 ecs.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
@@ -761,7 +761,7 @@ func TestAccAWSEcsService_withPlacementConstraints(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsService_withPlacementConstraints_emptyExpression(t *testing.T) {
+func TestAccECSService_WithPlacementConstraints_emptyExpression(t *testing.T) {
 	var service ecs.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
@@ -783,7 +783,7 @@ func TestAccAWSEcsService_withPlacementConstraints_emptyExpression(t *testing.T)
 	})
 }
 
-func TestAccAWSEcsService_withLaunchTypeFargate(t *testing.T) {
+func TestAccECSService_withLaunchTypeFargate(t *testing.T) {
 	var service ecs.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
@@ -823,7 +823,7 @@ func TestAccAWSEcsService_withLaunchTypeFargate(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsService_withLaunchTypeFargateAndPlatformVersion(t *testing.T) {
+func TestAccECSService_withLaunchTypeFargateAndPlatformVersion(t *testing.T) {
 	var service ecs.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
@@ -859,7 +859,7 @@ func TestAccAWSEcsService_withLaunchTypeFargateAndPlatformVersion(t *testing.T) 
 	})
 }
 
-func TestAccAWSEcsService_withLaunchTypeFargateAndWaitForSteadyState(t *testing.T) {
+func TestAccECSService_withLaunchTypeFargateAndWaitForSteadyState(t *testing.T) {
 	var service ecs.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
@@ -892,7 +892,7 @@ func TestAccAWSEcsService_withLaunchTypeFargateAndWaitForSteadyState(t *testing.
 	})
 }
 
-func TestAccAWSEcsService_withLaunchTypeFargateAndUpdateWaitForSteadyState(t *testing.T) {
+func TestAccECSService_withLaunchTypeFargateAndUpdateWaitForSteadyState(t *testing.T) {
 	var service ecs.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
@@ -933,7 +933,7 @@ func TestAccAWSEcsService_withLaunchTypeFargateAndUpdateWaitForSteadyState(t *te
 	})
 }
 
-func TestAccAWSEcsService_withLaunchTypeEC2AndNetworkConfiguration(t *testing.T) {
+func TestAccECSService_withLaunchTypeEC2AndNetwork(t *testing.T) {
 	var service ecs.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
@@ -966,7 +966,7 @@ func TestAccAWSEcsService_withLaunchTypeEC2AndNetworkConfiguration(t *testing.T)
 	})
 }
 
-func TestAccAWSEcsService_withDaemonSchedulingStrategy(t *testing.T) {
+func TestAccECSService_withDaemonSchedulingStrategy(t *testing.T) {
 	var service ecs.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
@@ -988,7 +988,7 @@ func TestAccAWSEcsService_withDaemonSchedulingStrategy(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsService_withDaemonSchedulingStrategySetDeploymentMinimum(t *testing.T) {
+func TestAccECSService_withDaemonSchedulingStrategySetDeploymentMinimum(t *testing.T) {
 	var service ecs.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
@@ -1010,7 +1010,7 @@ func TestAccAWSEcsService_withDaemonSchedulingStrategySetDeploymentMinimum(t *te
 	})
 }
 
-func TestAccAWSEcsService_withReplicaSchedulingStrategy(t *testing.T) {
+func TestAccECSService_withReplicaSchedulingStrategy(t *testing.T) {
 	var service ecs.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
@@ -1032,7 +1032,7 @@ func TestAccAWSEcsService_withReplicaSchedulingStrategy(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsService_withServiceRegistries(t *testing.T) {
+func TestAccECSService_withServiceRegistries(t *testing.T) {
 	var service ecs.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
@@ -1054,7 +1054,7 @@ func TestAccAWSEcsService_withServiceRegistries(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsService_withServiceRegistries_container(t *testing.T) {
+func TestAccECSService_WithServiceRegistries_container(t *testing.T) {
 	var service ecs.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
@@ -1076,7 +1076,7 @@ func TestAccAWSEcsService_withServiceRegistries_container(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsService_withServiceRegistriesChanges(t *testing.T) {
+func TestAccECSService_withServiceRegistriesChanges(t *testing.T) {
 	var service ecs.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	serviceDiscoveryName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1107,7 +1107,7 @@ func TestAccAWSEcsService_withServiceRegistriesChanges(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsService_Tags(t *testing.T) {
+func TestAccECSService_tags(t *testing.T) {
 	var service ecs.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
@@ -1156,7 +1156,7 @@ func TestAccAWSEcsService_Tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsService_ManagedTags(t *testing.T) {
+func TestAccECSService_managedTags(t *testing.T) {
 	var service ecs.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
@@ -1179,7 +1179,7 @@ func TestAccAWSEcsService_ManagedTags(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsService_PropagateTags(t *testing.T) {
+func TestAccECSService_propagateTags(t *testing.T) {
 	var first, second, third ecs.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
@@ -1216,7 +1216,7 @@ func TestAccAWSEcsService_PropagateTags(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsService_ExecuteCommand(t *testing.T) {
+func TestAccECSService_executeCommand(t *testing.T) {
 	var service ecs.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
