@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceConformancePack() *schema.Resource {
@@ -73,10 +74,10 @@ func ResourceConformancePack() *schema.Resource {
 			"template_body": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				DiffSuppressFunc: suppressEquivalentJsonOrYamlDiffs,
+				DiffSuppressFunc: verify.SuppressEquivalentJSONOrYAMLDiffs,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 51200),
-					validateStringIsJsonOrYaml,
+					verify.ValidStringIsJSONOrYAML,
 				),
 				AtLeastOneOf: []string{"template_body", "template_s3_uri"},
 			},

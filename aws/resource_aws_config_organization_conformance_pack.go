@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceOrganizationConformancePack() *schema.Resource {
@@ -56,7 +57,7 @@ func ResourceOrganizationConformancePack() *schema.Resource {
 				MaxItems: 1000,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validateAwsAccountId,
+					ValidateFunc: verify.ValidAccountID,
 				},
 			},
 			"input_parameter": {
@@ -89,10 +90,10 @@ func ResourceOrganizationConformancePack() *schema.Resource {
 			"template_body": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				DiffSuppressFunc: suppressEquivalentJsonOrYamlDiffs,
+				DiffSuppressFunc: verify.SuppressEquivalentJSONOrYAMLDiffs,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 51200),
-					validateStringIsJsonOrYaml,
+					verify.ValidStringIsJSONOrYAML,
 				),
 				ConflictsWith: []string{"template_s3_uri"},
 			},

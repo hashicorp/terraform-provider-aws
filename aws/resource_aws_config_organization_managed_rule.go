@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceOrganizationManagedRule() *schema.Resource {
@@ -46,13 +47,13 @@ func ResourceOrganizationManagedRule() *schema.Resource {
 				MaxItems: 1000,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validateAwsAccountId,
+					ValidateFunc: verify.ValidAccountID,
 				},
 			},
 			"input_parameters": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				DiffSuppressFunc: suppressEquivalentJsonDiffs,
+				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(0, 2048),
 					validation.StringIsJSON,

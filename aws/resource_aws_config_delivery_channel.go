@@ -14,6 +14,7 @@ import (
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceDeliveryChannel() *schema.Resource {
@@ -46,12 +47,12 @@ func ResourceDeliveryChannel() *schema.Resource {
 			"s3_kms_key_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"sns_topic_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"snapshot_delivery_properties": {
 				Type:     schema.TypeList,
@@ -62,7 +63,7 @@ func ResourceDeliveryChannel() *schema.Resource {
 						"delivery_frequency": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateConfigExecutionFrequency(),
+							ValidateFunc: validExecutionFrequency(),
 						},
 					},
 				},
