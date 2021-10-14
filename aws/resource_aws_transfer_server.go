@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	ec2finder "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 	ec2waiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/waiter"
 	tftransfer "github.com/hashicorp/terraform-provider-aws/aws/internal/service/transfer"
@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceServer() *schema.Resource {
@@ -37,7 +38,7 @@ func ResourceServer() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			SetTagsDiff,
+			verify.SetTagsDiff,
 			customdiff.ForceNewIfChange("endpoint_details.0.vpc_id", func(_ context.Context, old, new, meta interface{}) bool {
 				// "InvalidRequestException: Changing VpcId is not supported".
 				if old, new := old.(string), new.(string); old != "" && new != old {
@@ -183,8 +184,8 @@ func ResourceServer() *schema.Resource {
 				ValidateFunc: validation.StringInSlice(tftransfer.SecurityPolicyName_Values(), false),
 			},
 
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 
 			"url": {
 				Type:     schema.TypeString,
@@ -197,7 +198,7 @@ func ResourceServer() *schema.Resource {
 func resourceServerCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).TransferConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &transfer.CreateServerInput{}
 
@@ -378,7 +379,7 @@ func resourceServerRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("url", "")
 	}
 
-	tags := keyvaluetags.TransferKeyValueTags(output.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := tftags.TransferKeyValueTags(output.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -589,7 +590,7 @@ func resourceServerUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := keyvaluetags.TransferUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := tftags.TransferUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %w", err)
 		}
 	}
