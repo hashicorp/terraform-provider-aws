@@ -134,7 +134,7 @@ func dataSourceVirtualServiceRead(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error setting spec: %s", err)
 	}
 
-	tags, err := tftags.AppmeshListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for App Mesh Virtual Service (%s): %s", arn, err)

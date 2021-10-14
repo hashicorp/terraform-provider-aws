@@ -107,7 +107,7 @@ func dataSourceMeshRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting spec: %s", err)
 	}
 
-	tags, err := tftags.AppmeshListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for App Mesh service mesh (%s): %s", arn, err)

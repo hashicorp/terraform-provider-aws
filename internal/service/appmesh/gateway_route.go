@@ -307,7 +307,7 @@ func resourceGatewayRouteCreate(d *schema.ResourceData, meta interface{}) error 
 		GatewayRouteName:   aws.String(d.Get("name").(string)),
 		MeshName:           aws.String(d.Get("mesh_name").(string)),
 		Spec:               expandAppmeshGatewayRouteSpec(d.Get("spec").([]interface{})),
-		Tags:               tags.IgnoreAws().AppmeshTags(),
+		Tags:               Tags(tags.IgnoreAws()),
 		VirtualGatewayName: aws.String(d.Get("virtual_gateway_name").(string)),
 	}
 	if v, ok := d.GetOk("mesh_owner"); ok {
@@ -397,7 +397,7 @@ func resourceGatewayRouteRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("virtual_gateway_name", gatewayRoute.VirtualGatewayName)
 
-	tags, err := tftags.AppmeshListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for App Mesh gateway route (%s): %s", arn, err)
@@ -443,7 +443,7 @@ func resourceGatewayRouteUpdate(d *schema.ResourceData, meta interface{}) error 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.AppmeshUpdateTags(conn, arn, o, n); err != nil {
+		if err := UpdateTags(conn, arn, o, n); err != nil {
 			return fmt.Errorf("error updating App Mesh gateway route (%s) tags: %s", arn, err)
 		}
 	}

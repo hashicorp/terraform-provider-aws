@@ -135,7 +135,7 @@ func resourceVirtualRouterCreate(d *schema.ResourceData, meta interface{}) error
 		MeshName:          aws.String(d.Get("mesh_name").(string)),
 		VirtualRouterName: aws.String(d.Get("name").(string)),
 		Spec:              expandVirtualRouterSpec(d.Get("spec").([]interface{})),
-		Tags:              tags.IgnoreAws().AppmeshTags(),
+		Tags:              Tags(tags.IgnoreAws()),
 	}
 	if v, ok := d.GetOk("mesh_owner"); ok {
 		req.MeshOwner = aws.String(v.(string))
@@ -224,7 +224,7 @@ func resourceVirtualRouterRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting spec: %s", err)
 	}
 
-	tags, err := tftags.AppmeshListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for App Mesh virtual router (%s): %s", arn, err)
@@ -269,7 +269,7 @@ func resourceVirtualRouterUpdate(d *schema.ResourceData, meta interface{}) error
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.AppmeshUpdateTags(conn, arn, o, n); err != nil {
+		if err := UpdateTags(conn, arn, o, n); err != nil {
 			return fmt.Errorf("error updating App Mesh virtual router (%s) tags: %s", arn, err)
 		}
 	}

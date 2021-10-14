@@ -109,7 +109,7 @@ func resourceMeshCreate(d *schema.ResourceData, meta interface{}) error {
 	req := &appmesh.CreateMeshInput{
 		MeshName: aws.String(meshName),
 		Spec:     expandMeshSpec(d.Get("spec").([]interface{})),
-		Tags:     tags.IgnoreAws().AppmeshTags(),
+		Tags:     Tags(tags.IgnoreAws()),
 	}
 
 	log.Printf("[DEBUG] Creating App Mesh service mesh: %#v", req)
@@ -193,7 +193,7 @@ func resourceMeshRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting spec: %s", err)
 	}
 
-	tags, err := tftags.AppmeshListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for App Mesh service mesh (%s): %s", arn, err)
@@ -234,7 +234,7 @@ func resourceMeshUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.AppmeshUpdateTags(conn, arn, o, n); err != nil {
+		if err := UpdateTags(conn, arn, o, n); err != nil {
 			return fmt.Errorf("error updating App Mesh service mesh (%s) tags: %s", arn, err)
 		}
 	}

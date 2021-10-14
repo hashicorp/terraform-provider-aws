@@ -1067,7 +1067,7 @@ func resourceVirtualNodeCreate(d *schema.ResourceData, meta interface{}) error {
 		MeshName:        aws.String(d.Get("mesh_name").(string)),
 		VirtualNodeName: aws.String(d.Get("name").(string)),
 		Spec:            expandVirtualNodeSpec(d.Get("spec").([]interface{})),
-		Tags:            tags.IgnoreAws().AppmeshTags(),
+		Tags:            Tags(tags.IgnoreAws()),
 	}
 	if v, ok := d.GetOk("mesh_owner"); ok {
 		req.MeshOwner = aws.String(v.(string))
@@ -1157,7 +1157,7 @@ func resourceVirtualNodeRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting spec: %w", err)
 	}
 
-	tags, err := tftags.AppmeshListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for App Mesh virtual node (%s): %w", arn, err)
@@ -1203,7 +1203,7 @@ func resourceVirtualNodeUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.AppmeshUpdateTags(conn, arn, o, n); err != nil {
+		if err := UpdateTags(conn, arn, o, n); err != nil {
 			return fmt.Errorf("error updating App Mesh virtual node (%s) tags: %w", arn, err)
 		}
 	}
