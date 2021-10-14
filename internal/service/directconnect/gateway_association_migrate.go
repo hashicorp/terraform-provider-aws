@@ -75,7 +75,7 @@ func resourceAwsDxGatewayAssociationResourceV0() *schema.Resource {
 	}
 }
 
-func resourceAwsDxGatewayAssociationStateUpgradeV0(_ context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+func GatewayAssociationStateUpgradeV0(_ context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	log.Println("[INFO] Found Direct Connect Gateway Association state v0; migrating to v1")

@@ -67,7 +67,7 @@ func testSweepDxLags(region string) error {
 
 		id := aws.StringValue(lag.LagId)
 
-		r := ResourceLag()
+		r := tfdirectconnect.ResourceLag()
 		d := r.Data(nil)
 		d.SetId(id)
 
@@ -155,7 +155,7 @@ func TestAccAwsDxLag_disappears(t *testing.T) {
 				Config: testAccDxLagConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsDxLagExists(resourceName, &lag),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceLag(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfdirectconnect.ResourceLag(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

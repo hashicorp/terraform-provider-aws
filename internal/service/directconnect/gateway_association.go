@@ -30,7 +30,7 @@ func ResourceGatewayAssociation() *schema.Resource {
 		StateUpgraders: []schema.StateUpgrader{
 			{
 				Type:    resourceAwsDxGatewayAssociationResourceV0().CoreConfigSchema().ImpliedType(),
-				Upgrade: resourceAwsDxGatewayAssociationStateUpgradeV0,
+				Upgrade: GatewayAssociationStateUpgradeV0,
 				Version: 0,
 			},
 		},

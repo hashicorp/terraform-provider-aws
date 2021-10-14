@@ -66,7 +66,7 @@ func testSweepDxConnections(region string) error {
 
 		id := aws.StringValue(connection.ConnectionId)
 
-		r := ResourceConnection()
+		r := tfdirectconnect.ResourceConnection()
 		d := r.Data(nil)
 		d.SetId(id)
 
@@ -132,7 +132,7 @@ func TestAccAwsDxConnection_disappears(t *testing.T) {
 				Config: testAccDxConnectionConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsDxConnectionExists(resourceName, &connection),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceConnection(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfdirectconnect.ResourceConnection(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
