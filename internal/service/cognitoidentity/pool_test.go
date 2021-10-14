@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSCognitoIdentityPool_basic(t *testing.T) {
+func TestAccCognitoIdentityPool_basic(t *testing.T) {
 	name := sdkacctest.RandString(10)
 	updatedName := sdkacctest.RandString(10)
 	resourceName := "aws_cognito_identity_pool.main"
@@ -52,7 +52,7 @@ func TestAccAWSCognitoIdentityPool_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCognitoIdentityPool_supportedLoginProviders(t *testing.T) {
+func TestAccCognitoIdentityPool_supportedLoginProviders(t *testing.T) {
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_cognito_identity_pool.main"
 
@@ -95,7 +95,7 @@ func TestAccAWSCognitoIdentityPool_supportedLoginProviders(t *testing.T) {
 	})
 }
 
-func TestAccAWSCognitoIdentityPool_openidConnectProviderArns(t *testing.T) {
+func TestAccCognitoIdentityPool_openidConnectProviderARNs(t *testing.T) {
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_cognito_identity_pool.main"
 
@@ -137,7 +137,7 @@ func TestAccAWSCognitoIdentityPool_openidConnectProviderArns(t *testing.T) {
 	})
 }
 
-func TestAccAWSCognitoIdentityPool_samlProviderArns(t *testing.T) {
+func TestAccCognitoIdentityPool_samlProviderARNs(t *testing.T) {
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_cognito_identity_pool.main"
 
@@ -180,7 +180,7 @@ func TestAccAWSCognitoIdentityPool_samlProviderArns(t *testing.T) {
 	})
 }
 
-func TestAccAWSCognitoIdentityPool_cognitoIdentityProviders(t *testing.T) {
+func TestAccCognitoIdentityPool_cognitoIdentityProviders(t *testing.T) {
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_cognito_identity_pool.main"
 
@@ -235,7 +235,7 @@ func TestAccAWSCognitoIdentityPool_cognitoIdentityProviders(t *testing.T) {
 	})
 }
 
-func TestAccAWSCognitoIdentityPool_addingNewProviderKeepsOldProvider(t *testing.T) {
+func TestAccCognitoIdentityPool_addingNewProviderKeepsOldProvider(t *testing.T) {
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_cognito_identity_pool.main"
 
@@ -280,7 +280,7 @@ func TestAccAWSCognitoIdentityPool_addingNewProviderKeepsOldProvider(t *testing.
 	})
 }
 
-func TestAccAWSCognitoIdentityPool_tags(t *testing.T) {
+func TestAccCognitoIdentityPool_tags(t *testing.T) {
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_cognito_identity_pool.main"
 

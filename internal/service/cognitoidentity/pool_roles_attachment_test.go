@@ -17,7 +17,7 @@ import (
 	tfcognitoidentity "github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidentity"
 )
 
-func TestAccAWSCognitoIdentityPoolRolesAttachment_basic(t *testing.T) {
+func TestAccCognitoIdentityPoolRolesAttachment_basic(t *testing.T) {
 	resourceName := "aws_cognito_identity_pool_roles_attachment.test"
 	name := sdkacctest.RandString(10)
 	updatedName := sdkacctest.RandString(10)
@@ -53,7 +53,7 @@ func TestAccAWSCognitoIdentityPoolRolesAttachment_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCognitoIdentityPoolRolesAttachment_roleMappings(t *testing.T) {
+func TestAccCognitoIdentityPoolRolesAttachment_roleMappings(t *testing.T) {
 	resourceName := "aws_cognito_identity_pool_roles_attachment.test"
 	name := sdkacctest.RandString(10)
 
@@ -108,7 +108,7 @@ func TestAccAWSCognitoIdentityPoolRolesAttachment_roleMappings(t *testing.T) {
 	})
 }
 
-func TestAccAWSCognitoIdentityPoolRolesAttachment_disappears(t *testing.T) {
+func TestAccCognitoIdentityPoolRolesAttachment_disappears(t *testing.T) {
 	resourceName := "aws_cognito_identity_pool_roles_attachment.test"
 	name := sdkacctest.RandString(10)
 
@@ -130,7 +130,7 @@ func TestAccAWSCognitoIdentityPoolRolesAttachment_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSCognitoIdentityPoolRolesAttachment_roleMappingsWithAmbiguousRoleResolutionError(t *testing.T) {
+func TestAccCognitoIdentityPoolRolesAttachment_roleMappingsWithAmbiguousRoleResolutionError(t *testing.T) {
 	name := sdkacctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -147,7 +147,7 @@ func TestAccAWSCognitoIdentityPoolRolesAttachment_roleMappingsWithAmbiguousRoleR
 	})
 }
 
-func TestAccAWSCognitoIdentityPoolRolesAttachment_roleMappingsWithRulesTypeError(t *testing.T) {
+func TestAccCognitoIdentityPoolRolesAttachment_roleMappingsWithRulesTypeError(t *testing.T) {
 	name := sdkacctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -164,7 +164,7 @@ func TestAccAWSCognitoIdentityPoolRolesAttachment_roleMappingsWithRulesTypeError
 	})
 }
 
-func TestAccAWSCognitoIdentityPoolRolesAttachment_roleMappingsWithTokenTypeError(t *testing.T) {
+func TestAccCognitoIdentityPoolRolesAttachment_roleMappingsWithTokenTypeError(t *testing.T) {
 	name := sdkacctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
