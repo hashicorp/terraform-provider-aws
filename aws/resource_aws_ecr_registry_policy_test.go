@@ -34,7 +34,7 @@ func testAccAWSEcrRegistryPolicy_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecr.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEcrRegistryPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -70,14 +70,14 @@ func testAccAWSEcrRegistryPolicy_disappears(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecr.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEcrRegistryPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSEcrRegistryPolicy(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcrRegistryPolicyExists(resourceName, &v),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsEcrRegistryPolicy(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsEcrRegistryPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -86,7 +86,7 @@ func testAccAWSEcrRegistryPolicy_disappears(t *testing.T) {
 }
 
 func testAccCheckAWSEcrRegistryPolicyDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ecrconn
+	conn := acctest.Provider.Meta().(*AWSClient).ecrconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ecr_registry_policy" {
@@ -116,7 +116,7 @@ func testAccCheckAWSEcrRegistryPolicyExists(name string, res *ecr.GetRegistryPol
 			return fmt.Errorf("No ECR registry policy ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ecrconn
+		conn := acctest.Provider.Meta().(*AWSClient).ecrconn
 
 		output, err := conn.GetRegistryPolicy(&ecr.GetRegistryPolicyInput{})
 		if err != nil {
