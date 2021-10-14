@@ -5,21 +5,22 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/elasticache"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/elasticache/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSElasticacheUserGroup_basic(t *testing.T) {
 	var userGroup elasticache.UserGroup
-	rName := acctest.RandomWithPrefix("tf-acc")
+	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_elasticache_user_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheUserGroupDestroy,
 		Steps: []resource.TestStep{
@@ -43,12 +44,12 @@ func TestAccAWSElasticacheUserGroup_basic(t *testing.T) {
 
 func TestAccAWSElasticacheUserGroup_update(t *testing.T) {
 	var userGroup elasticache.UserGroup
-	rName := acctest.RandomWithPrefix("tf-acc")
+	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_elasticache_user_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheUserGroupDestroy,
 		Steps: []resource.TestStep{
@@ -85,12 +86,12 @@ func TestAccAWSElasticacheUserGroup_update(t *testing.T) {
 
 func TestAccAWSElasticacheUserGroup_tags(t *testing.T) {
 	var userGroup elasticache.UserGroup
-	rName := acctest.RandomWithPrefix("tf-acc")
+	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_elasticache_user_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheUserGroupDestroy,
 		Steps: []resource.TestStep{
@@ -126,12 +127,12 @@ func TestAccAWSElasticacheUserGroup_tags(t *testing.T) {
 
 func TestAccAWSElasticacheUserGroup_disappears(t *testing.T) {
 	var userGroup elasticache.UserGroup
-	rName := acctest.RandomWithPrefix("tf-acc")
+	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_elasticache_user_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneClusterEndpointDestroy,
 		Steps: []resource.TestStep{
@@ -139,7 +140,7 @@ func TestAccAWSElasticacheUserGroup_disappears(t *testing.T) {
 				Config: testAccAWSElasticacheUserGroupConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticacheUserGroupExists(resourceName, &userGroup),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsElasticacheUserGroup(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsElasticacheUserGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -201,7 +202,7 @@ func testAccCheckAWSElasticacheUserGroupExistsWithProvider(n string, v *elastica
 }
 
 func testAccAWSElasticacheUserGroupConfigBasic(rName string) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_elasticache_user" "test1" {
   user_id       = "%[1]s-1"
   user_name     = "default"
@@ -227,7 +228,7 @@ resource "aws_elasticache_user_group" "test" {
 }
 
 func testAccAWSElasticacheUserGroupConfigMultiple(rName string) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_elasticache_user" "test1" {
   user_id       = "%[1]s-1"
   user_name     = "default"
@@ -253,7 +254,7 @@ resource "aws_elasticache_user_group" "test" {
 }
 
 func testAccAWSElasticacheUserGroupConfigTags(rName, tagKey, tagValue string) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_elasticache_user" "test" {
   user_id       = %[1]q
   user_name     = "default"

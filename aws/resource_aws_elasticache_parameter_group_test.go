@@ -10,10 +10,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -71,11 +72,11 @@ func testSweepElasticacheParameterGroups(region string) error {
 func TestAccAWSElasticacheParameterGroup_basic(t *testing.T) {
 	var v elasticache.CacheParameterGroup
 	resourceName := "aws_elasticache_parameter_group.test"
-	rName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
+	rName := fmt.Sprintf("parameter-group-test-terraform-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheParameterGroupDestroy,
 		Steps: []resource.TestStep{
@@ -102,11 +103,11 @@ func TestAccAWSElasticacheParameterGroup_basic(t *testing.T) {
 func TestAccAWSElasticacheParameterGroup_addParameter(t *testing.T) {
 	var v elasticache.CacheParameterGroup
 	resourceName := "aws_elasticache_parameter_group.test"
-	rName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
+	rName := fmt.Sprintf("parameter-group-test-terraform-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheParameterGroupDestroy,
 		Steps: []resource.TestStep{
@@ -149,11 +150,11 @@ func TestAccAWSElasticacheParameterGroup_addParameter(t *testing.T) {
 func TestAccAWSElasticacheParameterGroup_removeAllParameters(t *testing.T) {
 	var v elasticache.CacheParameterGroup
 	resourceName := "aws_elasticache_parameter_group.test"
-	rName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
+	rName := fmt.Sprintf("parameter-group-test-terraform-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheParameterGroupDestroy,
 		Steps: []resource.TestStep{
@@ -188,11 +189,11 @@ func TestAccAWSElasticacheParameterGroup_removeAllParameters(t *testing.T) {
 func TestAccAWSElasticacheParameterGroup_removeReservedMemoryParameter_AllParameters(t *testing.T) {
 	var cacheParameterGroup1 elasticache.CacheParameterGroup
 	resourceName := "aws_elasticache_parameter_group.test"
-	rName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
+	rName := fmt.Sprintf("parameter-group-test-terraform-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheParameterGroupDestroy,
 		Steps: []resource.TestStep{
@@ -228,11 +229,11 @@ func TestAccAWSElasticacheParameterGroup_removeReservedMemoryParameter_AllParame
 func TestAccAWSElasticacheParameterGroup_removeReservedMemoryParameter_RemainingParameters(t *testing.T) {
 	var cacheParameterGroup1 elasticache.CacheParameterGroup
 	resourceName := "aws_elasticache_parameter_group.test"
-	rName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
+	rName := fmt.Sprintf("parameter-group-test-terraform-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheParameterGroupDestroy,
 		Steps: []resource.TestStep{
@@ -276,11 +277,11 @@ func TestAccAWSElasticacheParameterGroup_removeReservedMemoryParameter_Remaining
 func TestAccAWSElasticacheParameterGroup_switchReservedMemoryParameter(t *testing.T) {
 	var cacheParameterGroup1 elasticache.CacheParameterGroup
 	resourceName := "aws_elasticache_parameter_group.test"
-	rName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
+	rName := fmt.Sprintf("parameter-group-test-terraform-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheParameterGroupDestroy,
 		Steps: []resource.TestStep{
@@ -320,11 +321,11 @@ func TestAccAWSElasticacheParameterGroup_switchReservedMemoryParameter(t *testin
 func TestAccAWSElasticacheParameterGroup_updateReservedMemoryParameter(t *testing.T) {
 	var cacheParameterGroup1 elasticache.CacheParameterGroup
 	resourceName := "aws_elasticache_parameter_group.test"
-	rName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
+	rName := fmt.Sprintf("parameter-group-test-terraform-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheParameterGroupDestroy,
 		Steps: []resource.TestStep{
@@ -362,12 +363,12 @@ func TestAccAWSElasticacheParameterGroup_updateReservedMemoryParameter(t *testin
 func TestAccAWSElasticacheParameterGroup_UppercaseName(t *testing.T) {
 	var v elasticache.CacheParameterGroup
 	resourceName := "aws_elasticache_parameter_group.test"
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	rName := fmt.Sprintf("TF-ELASTIPG-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheParameterGroupDestroy,
 		Steps: []resource.TestStep{
@@ -390,11 +391,11 @@ func TestAccAWSElasticacheParameterGroup_UppercaseName(t *testing.T) {
 func TestAccAWSElasticacheParameterGroup_Description(t *testing.T) {
 	var v elasticache.CacheParameterGroup
 	resourceName := "aws_elasticache_parameter_group.test"
-	rName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
+	rName := fmt.Sprintf("parameter-group-test-terraform-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheParameterGroupDestroy,
 		Steps: []resource.TestStep{
@@ -417,11 +418,11 @@ func TestAccAWSElasticacheParameterGroup_Description(t *testing.T) {
 func TestAccAWSElasticacheParameterGroup_Tags(t *testing.T) {
 	var cacheParameterGroup1 elasticache.CacheParameterGroup
 	resourceName := "aws_elasticache_parameter_group.test"
-	rName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
+	rName := fmt.Sprintf("parameter-group-test-terraform-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheParameterGroupDestroy,
 		Steps: []resource.TestStep{

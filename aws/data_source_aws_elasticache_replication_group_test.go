@@ -6,18 +6,19 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/elasticache"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccDataSourceAwsElasticacheReplicationGroup_basic(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_elasticache_replication_group.test"
 	dataSourceName := "data.aws_elasticache_replication_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, elasticache.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, elasticache.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -43,13 +44,13 @@ func TestAccDataSourceAwsElasticacheReplicationGroup_basic(t *testing.T) {
 }
 
 func TestAccDataSourceAwsElasticacheReplicationGroup_ClusterMode(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_elasticache_replication_group.test"
 	dataSourceName := "data.aws_elasticache_replication_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, elasticache.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, elasticache.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -70,13 +71,13 @@ func TestAccDataSourceAwsElasticacheReplicationGroup_ClusterMode(t *testing.T) {
 }
 
 func TestAccDataSourceAwsElasticacheReplicationGroup_MultiAZ(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_elasticache_replication_group.test"
 	dataSourceName := "data.aws_elasticache_replication_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, elasticache.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, elasticache.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -93,8 +94,8 @@ func TestAccDataSourceAwsElasticacheReplicationGroup_MultiAZ(t *testing.T) {
 func TestAccDataSourceAwsElasticacheReplicationGroup_NonExistent(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, elasticache.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, elasticache.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -106,7 +107,7 @@ func TestAccDataSourceAwsElasticacheReplicationGroup_NonExistent(t *testing.T) {
 }
 
 func testAccDataSourceAwsElasticacheReplicationGroupConfig_basic(rName string) string {
-	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
+	return acctest.ConfigAvailableAZsNoOptIn() + fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id          = %[1]q
   replication_group_description = "test description"

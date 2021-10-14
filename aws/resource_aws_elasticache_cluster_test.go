@@ -12,16 +12,17 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/elasticache/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/elasticache/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
-	RegisterServiceErrorCheckFunc(elasticache.EndpointsID, testAccErrorCheckSkipElasticache)
+	acctest.RegisterServiceErrorCheckFunc(elasticache.EndpointsID, testAccErrorCheckSkipElasticache)
 
 	resource.AddTestSweepers("aws_elasticache_cluster", &resource.Sweeper{
 		Name: "aws_elasticache_cluster",
@@ -79,19 +80,19 @@ func testSweepElasticacheClusters(region string) error {
 }
 
 func testAccErrorCheckSkipElasticache(t *testing.T) resource.ErrorCheckFunc {
-	return testAccErrorCheckSkipMessagesContaining(t,
+	return acctest.ErrorCheckSkipMessagesContaining(t,
 		"is not suppored in this region",
 	)
 }
 
 func TestAccAWSElasticacheCluster_Engine_Memcached(t *testing.T) {
 	var ec elasticache.CacheCluster
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_elasticache_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheClusterDestroy,
 		Steps: []resource.TestStep{
@@ -120,12 +121,12 @@ func TestAccAWSElasticacheCluster_Engine_Memcached(t *testing.T) {
 
 func TestAccAWSElasticacheCluster_Engine_Redis(t *testing.T) {
 	var ec elasticache.CacheCluster
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_elasticache_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheClusterDestroy,
 		Steps: []resource.TestStep{
@@ -153,8 +154,8 @@ func TestAccAWSElasticacheCluster_Engine_Redis(t *testing.T) {
 func TestAccAWSElasticacheCluster_Port_Redis_Default(t *testing.T) {
 	var ec elasticache.CacheCluster
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheClusterDestroy,
 		Steps: []resource.TestStep{
@@ -172,12 +173,12 @@ func TestAccAWSElasticacheCluster_Port_Redis_Default(t *testing.T) {
 
 func TestAccAWSElasticacheCluster_ParameterGroupName_Default(t *testing.T) {
 	var ec elasticache.CacheCluster
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_elasticache_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheClusterDestroy,
 		Steps: []resource.TestStep{
@@ -206,12 +207,12 @@ func TestAccAWSElasticacheCluster_ParameterGroupName_Default(t *testing.T) {
 func TestAccAWSElasticacheCluster_Port(t *testing.T) {
 	var ec elasticache.CacheCluster
 	port := 11212
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_elasticache_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheClusterDestroy,
 		Steps: []resource.TestStep{
@@ -242,11 +243,11 @@ func TestAccAWSElasticacheCluster_SecurityGroup_Ec2Classic(t *testing.T) {
 	var ec elasticache.CacheCluster
 	resourceName := "aws_elasticache_cluster.test"
 	resourceSecurityGroupName := "aws_elasticache_security_group.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, elasticache.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckEC2Classic(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAWSElasticacheClusterDestroy,
 		Steps: []resource.TestStep{
@@ -266,11 +267,11 @@ func TestAccAWSElasticacheCluster_SecurityGroup_Ec2Classic(t *testing.T) {
 
 func TestAccAWSElasticacheCluster_snapshotsWithUpdates(t *testing.T) {
 	var ec elasticache.CacheCluster
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheClusterDestroy,
 		Steps: []resource.TestStep{
@@ -296,12 +297,12 @@ func TestAccAWSElasticacheCluster_snapshotsWithUpdates(t *testing.T) {
 
 func TestAccAWSElasticacheCluster_NumCacheNodes_Decrease(t *testing.T) {
 	var ec elasticache.CacheCluster
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_elasticache_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheClusterDestroy,
 		Steps: []resource.TestStep{
@@ -325,12 +326,12 @@ func TestAccAWSElasticacheCluster_NumCacheNodes_Decrease(t *testing.T) {
 
 func TestAccAWSElasticacheCluster_NumCacheNodes_Increase(t *testing.T) {
 	var ec elasticache.CacheCluster
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_elasticache_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheClusterDestroy,
 		Steps: []resource.TestStep{
@@ -354,12 +355,12 @@ func TestAccAWSElasticacheCluster_NumCacheNodes_Increase(t *testing.T) {
 
 func TestAccAWSElasticacheCluster_NumCacheNodes_IncreaseWithPreferredAvailabilityZones(t *testing.T) {
 	var ec elasticache.CacheCluster
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_elasticache_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheClusterDestroy,
 		Steps: []resource.TestStep{
@@ -386,11 +387,11 @@ func TestAccAWSElasticacheCluster_NumCacheNodes_IncreaseWithPreferredAvailabilit
 func TestAccAWSElasticacheCluster_vpc(t *testing.T) {
 	var csg elasticache.CacheSubnetGroup
 	var ec elasticache.CacheCluster
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheClusterDestroy,
 		Steps: []resource.TestStep{
@@ -409,11 +410,11 @@ func TestAccAWSElasticacheCluster_vpc(t *testing.T) {
 func TestAccAWSElasticacheCluster_multiAZInVpc(t *testing.T) {
 	var csg elasticache.CacheSubnetGroup
 	var ec elasticache.CacheCluster
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheClusterDestroy,
 		Steps: []resource.TestStep{
@@ -431,12 +432,12 @@ func TestAccAWSElasticacheCluster_multiAZInVpc(t *testing.T) {
 
 func TestAccAWSElasticacheCluster_AZMode_Memcached(t *testing.T) {
 	var cluster elasticache.CacheCluster
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_elasticache_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheClusterDestroy,
 		Steps: []resource.TestStep{
@@ -465,12 +466,12 @@ func TestAccAWSElasticacheCluster_AZMode_Memcached(t *testing.T) {
 
 func TestAccAWSElasticacheCluster_AZMode_Redis(t *testing.T) {
 	var cluster elasticache.CacheCluster
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_elasticache_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheClusterDestroy,
 		Steps: []resource.TestStep{
@@ -495,12 +496,12 @@ func TestAccAWSElasticacheCluster_AZMode_Redis(t *testing.T) {
 
 func TestAccAWSElasticacheCluster_EngineVersion_Memcached(t *testing.T) {
 	var pre, mid, post elasticache.CacheCluster
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_elasticache_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheClusterDestroy,
 		Steps: []resource.TestStep{
@@ -536,12 +537,12 @@ func TestAccAWSElasticacheCluster_EngineVersion_Memcached(t *testing.T) {
 
 func TestAccAWSElasticacheCluster_EngineVersion_Redis(t *testing.T) {
 	var v1, v2, v3, v4, v5 elasticache.CacheCluster
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_elasticache_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheClusterDestroy,
 		Steps: []resource.TestStep{
@@ -595,12 +596,12 @@ func TestAccAWSElasticacheCluster_EngineVersion_Redis(t *testing.T) {
 
 func TestAccAWSElasticacheCluster_NodeTypeResize_Memcached(t *testing.T) {
 	var pre, post elasticache.CacheCluster
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_elasticache_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheClusterDestroy,
 		Steps: []resource.TestStep{
@@ -625,12 +626,12 @@ func TestAccAWSElasticacheCluster_NodeTypeResize_Memcached(t *testing.T) {
 
 func TestAccAWSElasticacheCluster_NodeTypeResize_Redis(t *testing.T) {
 	var pre, post elasticache.CacheCluster
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_elasticache_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheClusterDestroy,
 		Steps: []resource.TestStep{
@@ -654,11 +655,11 @@ func TestAccAWSElasticacheCluster_NodeTypeResize_Redis(t *testing.T) {
 }
 
 func TestAccAWSElasticacheCluster_NumCacheNodes_Redis(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheClusterDestroy,
 		Steps: []resource.TestStep{
@@ -673,13 +674,13 @@ func TestAccAWSElasticacheCluster_NumCacheNodes_Redis(t *testing.T) {
 func TestAccAWSElasticacheCluster_ReplicationGroupID_AvailabilityZone(t *testing.T) {
 	var cluster elasticache.CacheCluster
 	var replicationGroup elasticache.ReplicationGroup
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	clusterResourceName := "aws_elasticache_cluster.test"
 	replicationGroupResourceName := "aws_elasticache_replication_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheClusterDestroy,
 		Steps: []resource.TestStep{
@@ -698,13 +699,13 @@ func TestAccAWSElasticacheCluster_ReplicationGroupID_AvailabilityZone(t *testing
 func TestAccAWSElasticacheCluster_ReplicationGroupID_SingleReplica(t *testing.T) {
 	var cluster elasticache.CacheCluster
 	var replicationGroup elasticache.ReplicationGroup
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	clusterResourceName := "aws_elasticache_cluster.test.0"
 	replicationGroupResourceName := "aws_elasticache_replication_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheClusterDestroy,
 		Steps: []resource.TestStep{
@@ -726,14 +727,14 @@ func TestAccAWSElasticacheCluster_ReplicationGroupID_SingleReplica(t *testing.T)
 func TestAccAWSElasticacheCluster_ReplicationGroupID_MultipleReplica(t *testing.T) {
 	var cluster1, cluster2 elasticache.CacheCluster
 	var replicationGroup elasticache.ReplicationGroup
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	clusterResourceName1 := "aws_elasticache_cluster.test.0"
 	clusterResourceName2 := "aws_elasticache_cluster.test.1"
 	replicationGroupResourceName := "aws_elasticache_replication_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheClusterDestroy,
 		Steps: []resource.TestStep{
@@ -760,11 +761,11 @@ func TestAccAWSElasticacheCluster_ReplicationGroupID_MultipleReplica(t *testing.
 }
 
 func TestAccAWSElasticacheCluster_Memcached_FinalSnapshot(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheClusterDestroy,
 		Steps: []resource.TestStep{
@@ -778,12 +779,12 @@ func TestAccAWSElasticacheCluster_Memcached_FinalSnapshot(t *testing.T) {
 
 func TestAccAWSElasticacheCluster_Redis_FinalSnapshot(t *testing.T) {
 	var cluster elasticache.CacheCluster
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_elasticache_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheClusterDestroy,
 		Steps: []resource.TestStep{
@@ -977,8 +978,8 @@ resource "aws_elasticache_cluster" "test" {
 }
 
 func testAccAWSElasticacheClusterConfig_SecurityGroup_Ec2Classic(rName string) string {
-	return composeConfig(
-		testAccEc2ClassicRegionProviderConfig(),
+	return acctest.ConfigCompose(
+		acctest.ConfigEC2ClassicRegionProvider(),
 		fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name        = %[1]q
