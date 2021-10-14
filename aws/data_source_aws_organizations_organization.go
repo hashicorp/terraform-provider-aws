@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsOrganizationsOrganization() *schema.Resource {
@@ -142,7 +143,7 @@ func dataSourceAwsOrganizationsOrganization() *schema.Resource {
 }
 
 func dataSourceAwsOrganizationsOrganizationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).organizationsconn
+	conn := meta.(*conns.AWSClient).OrganizationsConn
 
 	org, err := conn.DescribeOrganization(&organizations.DescribeOrganizationInput{})
 	if err != nil {
@@ -156,7 +157,7 @@ func dataSourceAwsOrganizationsOrganizationRead(d *schema.ResourceData, meta int
 	d.Set("master_account_email", org.Organization.MasterAccountEmail)
 	d.Set("master_account_id", org.Organization.MasterAccountId)
 
-	if aws.StringValue(org.Organization.MasterAccountId) == meta.(*AWSClient).accountid {
+	if aws.StringValue(org.Organization.MasterAccountId) == meta.(*conns.AWSClient).AccountID {
 		var accounts []*organizations.Account
 		var nonMasterAccounts []*organizations.Account
 		err = conn.ListAccountsPages(&organizations.ListAccountsInput{}, func(page *organizations.ListAccountsOutput, lastPage bool) bool {

@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsOrganizationsPolicy() *schema.Resource {
@@ -60,8 +61,8 @@ func resourceAwsOrganizationsPolicy() *schema.Resource {
 }
 
 func resourceAwsOrganizationsPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).organizationsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).OrganizationsConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
@@ -106,9 +107,9 @@ func resourceAwsOrganizationsPolicyCreate(ctx context.Context, d *schema.Resourc
 }
 
 func resourceAwsOrganizationsPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).organizationsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).OrganizationsConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &organizations.DescribePolicyInput{
 		PolicyId: aws.String(d.Id()),
@@ -167,7 +168,7 @@ func resourceAwsOrganizationsPolicyRead(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceAwsOrganizationsPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).organizationsconn
+	conn := meta.(*conns.AWSClient).OrganizationsConn
 
 	input := &organizations.UpdatePolicyInput{
 		PolicyId: aws.String(d.Id()),
@@ -202,7 +203,7 @@ func resourceAwsOrganizationsPolicyUpdate(ctx context.Context, d *schema.Resourc
 }
 
 func resourceAwsOrganizationsPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).organizationsconn
+	conn := meta.(*conns.AWSClient).OrganizationsConn
 
 	input := &organizations.DeletePolicyInput{
 		PolicyId: aws.String(d.Id()),
@@ -220,7 +221,7 @@ func resourceAwsOrganizationsPolicyDelete(ctx context.Context, d *schema.Resourc
 }
 
 func resourceAwsOrganizationsPolicyImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	conn := meta.(*AWSClient).organizationsconn
+	conn := meta.(*conns.AWSClient).OrganizationsConn
 
 	input := &organizations.DescribePolicyInput{
 		PolicyId: aws.String(d.Id()),

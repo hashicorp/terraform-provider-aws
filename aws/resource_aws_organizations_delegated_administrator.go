@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsOrganizationsDelegatedAdministrator() *schema.Resource {
@@ -68,7 +69,7 @@ func resourceAwsOrganizationsDelegatedAdministrator() *schema.Resource {
 }
 
 func resourceAwsOrganizationsDelegatedAdministratorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).organizationsconn
+	conn := meta.(*conns.AWSClient).OrganizationsConn
 
 	accountID := d.Get("account_id").(string)
 	servicePrincipal := d.Get("service_principal").(string)
@@ -88,7 +89,7 @@ func resourceAwsOrganizationsDelegatedAdministratorCreate(ctx context.Context, d
 }
 
 func resourceAwsOrganizationsDelegatedAdministratorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).organizationsconn
+	conn := meta.(*conns.AWSClient).OrganizationsConn
 
 	accountID, servicePrincipal, err := decodeOrganizationDelegatedAdministratorID(d.Id())
 	if err != nil {
@@ -131,7 +132,7 @@ func resourceAwsOrganizationsDelegatedAdministratorRead(ctx context.Context, d *
 }
 
 func resourceAwsOrganizationsDelegatedAdministratorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).organizationsconn
+	conn := meta.(*conns.AWSClient).OrganizationsConn
 
 	accountID, servicePrincipal, err := decodeOrganizationDelegatedAdministratorID(d.Id())
 	if err != nil {

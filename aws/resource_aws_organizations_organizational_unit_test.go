@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func testAccAwsOrganizationsOrganizationalUnit_basic(t *testing.T) {
@@ -153,7 +154,7 @@ func testAccAwsOrganizationsOrganizationalUnit_Tags(t *testing.T) {
 }
 
 func testAccCheckAwsOrganizationsOrganizationalUnitDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).organizationsconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_organizations_organizational_unit" {
@@ -192,7 +193,7 @@ func testAccCheckAwsOrganizationsOrganizationalUnitExists(n string, ou *organiza
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).organizationsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn
 		params := &organizations.DescribeOrganizationalUnitInput{
 			OrganizationalUnitId: &rs.Primary.ID,
 		}

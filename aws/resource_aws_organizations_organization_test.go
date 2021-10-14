@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func testAccAwsOrganizationsOrganization_basic(t *testing.T) {
@@ -281,7 +282,7 @@ func testAccAwsOrganizationsOrganization_FeatureSetUpdate(t *testing.T) {
 }
 
 func testAccCheckAwsOrganizationsOrganizationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).organizationsconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_organizations_organization" {
@@ -319,7 +320,7 @@ func testAccCheckAwsOrganizationsOrganizationExists(n string, org *organizations
 			return fmt.Errorf("Organization ID not set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).organizationsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn
 		params := &organizations.DescribeOrganizationInput{}
 
 		resp, err := conn.DescribeOrganization(params)
