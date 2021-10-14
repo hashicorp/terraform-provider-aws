@@ -19,60 +19,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_fsx_ontap_file_system", &resource.Sweeper{
-		Name: "aws_fsx_ontap_file_system",
-		F:    sweepFSXOntapFileSystems,
-	})
-}
 
-func sweepFSXOntapFileSystems(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
 
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
 
-	conn := client.(*conns.AWSClient).FSxConn
-	sweepResources := make([]*sweep.SweepResource, 0)
-	var errs *multierror.Error
-	input := &fsx.DescribeFileSystemsInput{}
-
-	err = conn.DescribeFileSystemsPages(input, func(page *fsx.DescribeFileSystemsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, fs := range page.FileSystems {
-			if aws.StringValue(fs.FileSystemType) != fsx.FileSystemTypeOntap {
-				continue
-			}
-
-			r := tffsx.ResourceOntapFileSystem()
-			d := r.Data(nil)
-			d.SetId(aws.StringValue(fs.FileSystemId))
-
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error listing FSx Ontap File Systems for %s: %w", region, err))
-	}
-
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping FSx Ontap File Systems for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping FSx Ontap File System sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
-}
 
 func TestAccFSxOntapFileSystem_basic(t *testing.T) {
 	var filesystem fsx.FileSystem

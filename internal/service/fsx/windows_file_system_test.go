@@ -19,61 +19,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_fsx_windows_file_system", &resource.Sweeper{
-		Name: "aws_fsx_windows_file_system",
-		F:    sweepFSXWindowsFileSystems,
-	})
-}
 
-func sweepFSXWindowsFileSystems(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
 
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
 
-	conn := client.(*conns.AWSClient).FSxConn
-	sweepResources := make([]*sweep.SweepResource, 0)
-	var errs *multierror.Error
-	input := &fsx.DescribeFileSystemsInput{}
-
-	err = conn.DescribeFileSystemsPages(input, func(page *fsx.DescribeFileSystemsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, fs := range page.FileSystems {
-			if aws.StringValue(fs.FileSystemType) != fsx.FileSystemTypeWindows {
-				continue
-			}
-
-			r := tffsx.ResourceWindowsFileSystem()
-			d := r.Data(nil)
-			d.SetId(aws.StringValue(fs.FileSystemId))
-			d.Set("skip_final_backup", true)
-
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error listing FSx Windows File Systems for %s: %w", region, err))
-	}
-
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping FSx Windows File Systems for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping FSx Windows File System sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
-}
 
 func TestAccFSxWindowsFileSystem_basic(t *testing.T) {
 	var filesystem fsx.FileSystem
