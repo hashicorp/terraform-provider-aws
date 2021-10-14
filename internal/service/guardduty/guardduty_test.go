@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestAccAWSGuardDuty_serial(t *testing.T) {
+func TestAccGuardDuty_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Detector": {
 			"basic":              testAccDetector_basic,
