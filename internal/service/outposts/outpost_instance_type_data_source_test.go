@@ -19,7 +19,7 @@ func TestAccAWSOutpostsOutpostInstanceTypeDataSource_InstanceType(t *testing.T) 
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSOutpostsOutpostInstanceTypeDataSourceConfigInstanceType(),
+				Config: testAccOutpostInstanceTypeInstanceTypeDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, "instance_type", regexp.MustCompile(`^.+$`)),
 				),
@@ -38,7 +38,7 @@ func TestAccAWSOutpostsOutpostInstanceTypeDataSource_PreferredInstanceTypes(t *t
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSOutpostsOutpostInstanceTypeDataSourceConfigPreferredInstanceTypes(),
+				Config: testAccOutpostInstanceTypePreferredInstanceTypesDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, "instance_type", regexp.MustCompile(`^.+$`)),
 				),
@@ -47,7 +47,7 @@ func TestAccAWSOutpostsOutpostInstanceTypeDataSource_PreferredInstanceTypes(t *t
 	})
 }
 
-func testAccAWSOutpostsOutpostInstanceTypeDataSourceConfigInstanceType() string {
+func testAccOutpostInstanceTypeInstanceTypeDataSourceConfig() string {
 	return `
 data "aws_outposts_outposts" "test" {}
 
@@ -62,7 +62,7 @@ data "aws_outposts_outpost_instance_type" "test" {
 `
 }
 
-func testAccAWSOutpostsOutpostInstanceTypeDataSourceConfigPreferredInstanceTypes() string {
+func testAccOutpostInstanceTypePreferredInstanceTypesDataSourceConfig() string {
 	return `
 data "aws_outposts_outposts" "test" {}
 

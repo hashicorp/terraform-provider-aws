@@ -19,7 +19,7 @@ func TestAccAWSOutpostsOutpostDataSource_Id(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSOutpostsOutpostDataSourceConfigId(),
+				Config: testAccOutpostIDDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceAttrRegionalARNIgnoreRegionAndAccount(dataSourceName, "arn", "outposts", regexp.MustCompile(`outpost/op-.+$`).String()),
 					resource.TestMatchResourceAttr(dataSourceName, "availability_zone", regexp.MustCompile(`^.+$`)),
@@ -45,7 +45,7 @@ func TestAccAWSOutpostsOutpostDataSource_Name(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSOutpostsOutpostDataSourceConfigName(),
+				Config: testAccOutpostNameDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", sourceDataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "availability_zone", sourceDataSourceName, "availability_zone"),
@@ -71,7 +71,7 @@ func TestAccAWSOutpostsOutpostDataSource_Arn(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSOutpostsOutpostDataSourceConfigArn(),
+				Config: testAccOutpostARNDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", sourceDataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "availability_zone", sourceDataSourceName, "availability_zone"),
@@ -97,7 +97,7 @@ func TestAccAWSOutpostsOutpostDataSource_OwnerId(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSOutpostsOutpostDataSourceConfigOwnerId(),
+				Config: testAccOutpostOwnerIDDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", sourceDataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "availability_zone", sourceDataSourceName, "availability_zone"),
@@ -112,7 +112,7 @@ func TestAccAWSOutpostsOutpostDataSource_OwnerId(t *testing.T) {
 	})
 }
 
-func testAccAWSOutpostsOutpostDataSourceConfigId() string {
+func testAccOutpostIDDataSourceConfig() string {
 	return `
 data "aws_outposts_outposts" "test" {}
 
@@ -122,7 +122,7 @@ data "aws_outposts_outpost" "test" {
 `
 }
 
-func testAccAWSOutpostsOutpostDataSourceConfigName() string {
+func testAccOutpostNameDataSourceConfig() string {
 	return `
 data "aws_outposts_outposts" "test" {}
 
@@ -136,7 +136,7 @@ data "aws_outposts_outpost" "test" {
 `
 }
 
-func testAccAWSOutpostsOutpostDataSourceConfigArn() string {
+func testAccOutpostARNDataSourceConfig() string {
 	return `
 data "aws_outposts_outposts" "test" {}
 
@@ -150,7 +150,7 @@ data "aws_outposts_outpost" "test" {
 `
 }
 
-func testAccAWSOutpostsOutpostDataSourceConfigOwnerId() string {
+func testAccOutpostOwnerIDDataSourceConfig() string {
 	return `
 data "aws_outposts_outposts" "test" {}
 
