@@ -27,12 +27,12 @@ func TestAccAWSCloud9EnvironmentEc2_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloud9.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloud9.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCloud9EnvironmentEc2Destroy,
+		CheckDestroy: testAccCheckEnvironmentEC2Destroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloud9EnvironmentEc2Config(rName),
+				Config: testAccEnvironmentEC2Config(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCloud9EnvironmentEc2Exists(resourceName, &conf),
+					testAccCheckEnvironmentEC2Exists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "instance_type", "t2.micro"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -47,9 +47,9 @@ func TestAccAWSCloud9EnvironmentEc2_basic(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"instance_type", "subnet_id"},
 			},
 			{
-				Config: testAccAWSCloud9EnvironmentEc2Config(rNameUpdated),
+				Config: testAccEnvironmentEC2Config(rNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCloud9EnvironmentEc2Exists(resourceName, &conf),
+					testAccCheckEnvironmentEC2Exists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "instance_type", "t2.micro"),
 					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -75,12 +75,12 @@ func TestAccAWSCloud9EnvironmentEc2_allFields(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloud9.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloud9.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCloud9EnvironmentEc2Destroy,
+		CheckDestroy: testAccCheckEnvironmentEC2Destroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloud9EnvironmentEc2AllFieldsConfig(rName, description, userName),
+				Config: testAccEnvironmentEC2AllFieldsConfig(rName, description, userName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCloud9EnvironmentEc2Exists(resourceName, &conf),
+					testAccCheckEnvironmentEC2Exists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "instance_type", "t2.micro"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "cloud9", regexp.MustCompile(`environment:.+$`)),
@@ -95,9 +95,9 @@ func TestAccAWSCloud9EnvironmentEc2_allFields(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"instance_type", "automatic_stop_time_minutes", "subnet_id"},
 			},
 			{
-				Config: testAccAWSCloud9EnvironmentEc2AllFieldsConfig(rNameUpdated, uDescription, userName),
+				Config: testAccEnvironmentEC2AllFieldsConfig(rNameUpdated, uDescription, userName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCloud9EnvironmentEc2Exists(resourceName, &conf),
+					testAccCheckEnvironmentEC2Exists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "instance_type", "t2.micro"),
 					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "cloud9", regexp.MustCompile(`environment:.+$`)),
@@ -119,12 +119,12 @@ func TestAccAWSCloud9EnvironmentEc2_tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloud9.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloud9.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCloud9EnvironmentEc2Destroy,
+		CheckDestroy: testAccCheckEnvironmentEC2Destroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloud9EnvironmentEc2ConfigTags1(rName, "key1", "value1"),
+				Config: testAccEnvironmentEC2Tags1Config(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCloud9EnvironmentEc2Exists(resourceName, &conf),
+					testAccCheckEnvironmentEC2Exists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -136,18 +136,18 @@ func TestAccAWSCloud9EnvironmentEc2_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"instance_type", "subnet_id"},
 			},
 			{
-				Config: testAccAWSCloud9EnvironmentEc2ConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccEnvironmentEC2Tags2Config(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCloud9EnvironmentEc2Exists(resourceName, &conf),
+					testAccCheckEnvironmentEC2Exists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccAWSCloud9EnvironmentEc2ConfigTags1(rName, "key2", "value2"),
+				Config: testAccEnvironmentEC2Tags1Config(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCloud9EnvironmentEc2Exists(resourceName, &conf),
+					testAccCheckEnvironmentEC2Exists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -166,13 +166,13 @@ func TestAccAWSCloud9EnvironmentEc2_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloud9.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloud9.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCloud9EnvironmentEc2Destroy,
+		CheckDestroy: testAccCheckEnvironmentEC2Destroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloud9EnvironmentEc2Config(rName),
+				Config: testAccEnvironmentEC2Config(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCloud9EnvironmentEc2Exists(resourceName, &conf),
-					testAccCheckAWSCloud9EnvironmentEc2Disappears(&conf),
+					testAccCheckEnvironmentEC2Exists(resourceName, &conf),
+					testAccCheckEnvironmentEC2Disappears(&conf),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -180,7 +180,7 @@ func TestAccAWSCloud9EnvironmentEc2_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSCloud9EnvironmentEc2Exists(n string, res *cloud9.Environment) resource.TestCheckFunc {
+func testAccCheckEnvironmentEC2Exists(n string, res *cloud9.Environment) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -213,7 +213,7 @@ func testAccCheckAWSCloud9EnvironmentEc2Exists(n string, res *cloud9.Environment
 	}
 }
 
-func testAccCheckAWSCloud9EnvironmentEc2Disappears(res *cloud9.Environment) resource.TestCheckFunc {
+func testAccCheckEnvironmentEC2Disappears(res *cloud9.Environment) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).Cloud9Conn
 
@@ -250,7 +250,7 @@ func testAccCheckAWSCloud9EnvironmentEc2Disappears(res *cloud9.Environment) reso
 	}
 }
 
-func testAccCheckAWSCloud9EnvironmentEc2Destroy(s *terraform.State) error {
+func testAccCheckEnvironmentEC2Destroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).Cloud9Conn
 
 	for _, rs := range s.RootModule().Resources {
@@ -280,7 +280,7 @@ func testAccCheckAWSCloud9EnvironmentEc2Destroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSCloud9EnvironmentEc2ConfigBase() string {
+func testAccEnvironmentEC2BaseConfig() string {
 	return `
 data "aws_availability_zones" "available" {
   # t2.micro instance type is not available in these Availability Zones
@@ -327,8 +327,8 @@ resource "aws_route" "test" {
 `
 }
 
-func testAccAWSCloud9EnvironmentEc2Config(name string) string {
-	return testAccAWSCloud9EnvironmentEc2ConfigBase() + fmt.Sprintf(`
+func testAccEnvironmentEC2Config(name string) string {
+	return testAccEnvironmentEC2BaseConfig() + fmt.Sprintf(`
 resource "aws_cloud9_environment_ec2" "test" {
   depends_on = [aws_route.test]
 
@@ -342,8 +342,8 @@ data "aws_caller_identity" "current" {}
 `, name)
 }
 
-func testAccAWSCloud9EnvironmentEc2AllFieldsConfig(name, description, userName string) string {
-	return testAccAWSCloud9EnvironmentEc2ConfigBase() + fmt.Sprintf(`
+func testAccEnvironmentEC2AllFieldsConfig(name, description, userName string) string {
+	return testAccEnvironmentEC2BaseConfig() + fmt.Sprintf(`
 resource "aws_cloud9_environment_ec2" "test" {
   depends_on = [aws_route.test]
 
@@ -361,8 +361,8 @@ resource "aws_iam_user" "test" {
 `, name, description, userName)
 }
 
-func testAccAWSCloud9EnvironmentEc2ConfigTags1(name, tagKey1, tagValue1 string) string {
-	return testAccAWSCloud9EnvironmentEc2ConfigBase() + fmt.Sprintf(`
+func testAccEnvironmentEC2Tags1Config(name, tagKey1, tagValue1 string) string {
+	return testAccEnvironmentEC2BaseConfig() + fmt.Sprintf(`
 resource "aws_cloud9_environment_ec2" "test" {
   depends_on = [aws_route.test]
 
@@ -377,8 +377,8 @@ resource "aws_cloud9_environment_ec2" "test" {
 `, name, tagKey1, tagValue1)
 }
 
-func testAccAWSCloud9EnvironmentEc2ConfigTags2(name, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return testAccAWSCloud9EnvironmentEc2ConfigBase() + fmt.Sprintf(`
+func testAccEnvironmentEC2Tags2Config(name, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return testAccEnvironmentEC2BaseConfig() + fmt.Sprintf(`
 resource "aws_cloud9_environment_ec2" "test" {
   depends_on = [aws_route.test]
 
