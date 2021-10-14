@@ -23,12 +23,12 @@ func TestAccAWSEcrLifecyclePolicy_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecr.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEcrLifecyclePolicyDestroy,
+		CheckDestroy: testAccCheckLifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEcrLifecyclePolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcrLifecyclePolicyExists(resourceName),
+					testAccCheckLifecyclePolicyExists(resourceName),
 				),
 			},
 			{
@@ -40,7 +40,7 @@ func TestAccAWSEcrLifecyclePolicy_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSEcrLifecyclePolicyDestroy(s *terraform.State) error {
+func testAccCheckLifecyclePolicyDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -67,7 +67,7 @@ func testAccCheckAWSEcrLifecyclePolicyDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSEcrLifecyclePolicyExists(name string) resource.TestCheckFunc {
+func testAccCheckLifecyclePolicyExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {

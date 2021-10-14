@@ -22,7 +22,7 @@ func TestAccAWSEcrRepositoryDataSource_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsEcrRepositoryDataSourceConfig(rName),
+				Config: testAccCheckRepositoryDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "registry_id", dataSourceName, "registry_id"),
@@ -48,7 +48,7 @@ func TestAccAWSEcrRepositoryDataSource_encryption(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsEcrRepositoryDataSourceConfig_encryption(rName),
+				Config: testAccCheckRepositoryDataSourceConfig_encryption(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "registry_id", dataSourceName, "registry_id"),
@@ -73,20 +73,20 @@ func TestAccAWSEcrRepositoryDataSource_nonExistent(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccCheckAwsEcrRepositoryDataSourceConfig_NonExistent,
+				Config:      testAccCheckAWSEcrRepositoryDataSourceConfig_NonExistent,
 				ExpectError: regexp.MustCompile(`not found`),
 			},
 		},
 	})
 }
 
-const testAccCheckAwsEcrRepositoryDataSourceConfig_NonExistent = `
+const testAccCheckAWSEcrRepositoryDataSourceConfig_NonExistent = `
 data "aws_ecr_repository" "test" {
   name = "tf-acc-test-non-existent"
 }
 `
 
-func testAccCheckAwsEcrRepositoryDataSourceConfig(rName string) string {
+func testAccCheckRepositoryDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecr_repository" "test" {
   name = %q
@@ -103,7 +103,7 @@ data "aws_ecr_repository" "test" {
 `, rName)
 }
 
-func testAccCheckAwsEcrRepositoryDataSourceConfig_encryption(rName string) string {
+func testAccCheckRepositoryDataSourceConfig_encryption(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {}
 

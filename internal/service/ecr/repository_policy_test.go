@@ -24,12 +24,12 @@ func TestAccAWSEcrRepositoryPolicy_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecr.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEcrRepositoryPolicyDestroy,
+		CheckDestroy: testAccCheckRepositoryPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcrRepositoryPolicyConfig(rName),
+				Config: testAccRepositoryPolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcrRepositoryPolicyExists(resourceName),
+					testAccCheckRepositoryPolicyExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "repository", "aws_ecr_repository.test", "name"),
 					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(rName)),
 					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
@@ -41,9 +41,9 @@ func TestAccAWSEcrRepositoryPolicy_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSEcrRepositoryPolicyConfigUpdated(rName),
+				Config: testAccRepositoryPolicyUpdatedConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcrRepositoryPolicyExists(resourceName),
+					testAccCheckRepositoryPolicyExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "repository", "aws_ecr_repository.test", "name"),
 					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(rName)),
 					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile("ecr:DescribeImages")),
@@ -62,12 +62,12 @@ func TestAccAWSEcrRepositoryPolicy_iam(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecr.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEcrRepositoryPolicyDestroy,
+		CheckDestroy: testAccCheckRepositoryPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcrRepositoryPolicyWithIAMRoleConfig(rName),
+				Config: testAccRepositoryPolicyWithIAMRoleConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcrRepositoryPolicyExists(resourceName),
+					testAccCheckRepositoryPolicyExists(resourceName),
 					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(rName)),
 					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile("iam")),
 				),
@@ -89,12 +89,12 @@ func TestAccAWSEcrRepositoryPolicy_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecr.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEcrRepositoryPolicyDestroy,
+		CheckDestroy: testAccCheckRepositoryPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcrRepositoryPolicyConfig(rName),
+				Config: testAccRepositoryPolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcrRepositoryPolicyExists(resourceName),
+					testAccCheckRepositoryPolicyExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfecr.ResourceRepositoryPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -111,12 +111,12 @@ func TestAccAWSEcrRepositoryPolicy_disappears_repository(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecr.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEcrRepositoryPolicyDestroy,
+		CheckDestroy: testAccCheckRepositoryPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcrRepositoryPolicyConfig(rName),
+				Config: testAccRepositoryPolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcrRepositoryPolicyExists(resourceName),
+					testAccCheckRepositoryPolicyExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfecr.ResourceRepository(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -125,7 +125,7 @@ func TestAccAWSEcrRepositoryPolicy_disappears_repository(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSEcrRepositoryPolicyDestroy(s *terraform.State) error {
+func testAccCheckRepositoryPolicyDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -149,7 +149,7 @@ func testAccCheckAWSEcrRepositoryPolicyDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSEcrRepositoryPolicyExists(name string) resource.TestCheckFunc {
+func testAccCheckRepositoryPolicyExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		_, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -160,7 +160,7 @@ func testAccCheckAWSEcrRepositoryPolicyExists(name string) resource.TestCheckFun
 	}
 }
 
-func testAccAWSEcrRepositoryPolicyConfig(rName string) string {
+func testAccRepositoryPolicyConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecr_repository" "test" {
   name = %[1]q
@@ -188,7 +188,7 @@ EOF
 `, rName)
 }
 
-func testAccAWSEcrRepositoryPolicyConfigUpdated(rName string) string {
+func testAccRepositoryPolicyUpdatedConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecr_repository" "test" {
   name = %[1]q
@@ -217,11 +217,11 @@ EOF
 `, rName)
 }
 
-// testAccAWSEcrRepositoryPolicyWithIAMRoleConfig creates a new IAM Role and tries
+// testAccRepositoryPolicyWithIAMRoleConfig creates a new IAM Role and tries
 // to use it's ARN in an ECR Repository Policy. IAM changes need some time to
 // be propagated to other services - like ECR. So the following code should
 // exercise our retry logic, since we try to use the new resource instantly.
-func testAccAWSEcrRepositoryPolicyWithIAMRoleConfig(rName string) string {
+func testAccRepositoryPolicyWithIAMRoleConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecr_repository" "test" {
   name = %[1]q

@@ -22,11 +22,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_ecr_repository", &resource.Sweeper{
 		Name: "aws_ecr_repository",
-		F:    testSweepEcrRepositories,
+		F:    sweepRepositories,
 	})
 }
 
-func testSweepEcrRepositories(region string) error {
+func sweepRepositories(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -81,16 +81,16 @@ func TestAccAWSEcrRepository_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecr.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEcrRepositoryDestroy,
+		CheckDestroy: testAccCheckRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcrRepositoryConfig(rName),
+				Config: testAccRepositoryConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcrRepositoryExists(resourceName, &v),
+					testAccCheckRepositoryExists(resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "ecr", fmt.Sprintf("repository/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					testAccCheckAWSEcrRepositoryRegistryID(resourceName),
-					testAccCheckAWSEcrRepositoryRepositoryURL(resourceName, rName),
+					testAccCheckRepositoryRegistryID(resourceName),
+					testAccCheckRepositoryRepositoryURL(resourceName, rName),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.encryption_type", ecr.EncryptionTypeAes256),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.kms_key", ""),
@@ -114,21 +114,21 @@ func TestAccAWSEcrRepository_tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecr.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEcrRepositoryDestroy,
+		CheckDestroy: testAccCheckRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcrRepositoryConfig_tags(rName),
+				Config: testAccRepositoryConfig_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcrRepositoryExists(resourceName, &v1),
+					testAccCheckRepositoryExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Usage", "original"),
 				),
 			},
 			{
-				Config: testAccAWSEcrRepositoryConfig_tagsChanged(rName),
+				Config: testAccRepositoryConfig_tagsChanged(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcrRepositoryExists(resourceName, &v2),
+					testAccCheckRepositoryExists(resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Usage", "changed"),
@@ -147,12 +147,12 @@ func TestAccAWSEcrRepository_immutability(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecr.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEcrRepositoryDestroy,
+		CheckDestroy: testAccCheckRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcrRepositoryConfig_immutability(rName),
+				Config: testAccRepositoryConfig_immutability(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcrRepositoryExists(resourceName, &v),
+					testAccCheckRepositoryExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "image_tag_mutability", "IMMUTABLE"),
 				),
@@ -175,12 +175,12 @@ func TestAccAWSEcrRepository_image_scanning_configuration(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecr.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEcrRepositoryDestroy,
+		CheckDestroy: testAccCheckRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcrRepositoryConfig_image_scanning_configuration(rName, true),
+				Config: testAccRepositoryConfig_image_scanning_configuration(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcrRepositoryExists(resourceName, &v1),
+					testAccCheckRepositoryExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.0.scan_on_push", "true"),
@@ -193,22 +193,22 @@ func TestAccAWSEcrRepository_image_scanning_configuration(t *testing.T) {
 			},
 			{
 				// Test that the removal of the non-default image_scanning_configuration causes plan changes
-				Config:             testAccAWSEcrRepositoryConfig(rName),
+				Config:             testAccRepositoryConfig(rName),
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: true,
 			},
 			{
 				// Test attribute update
-				Config: testAccAWSEcrRepositoryConfig_image_scanning_configuration(rName, false),
+				Config: testAccRepositoryConfig_image_scanning_configuration(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcrRepositoryExists(resourceName, &v2),
+					testAccCheckRepositoryExists(resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.0.scan_on_push", "false"),
 				),
 			},
 			{
 				// Test that the removal of the default image_scanning_configuration doesn't cause any plan changes
-				Config:             testAccAWSEcrRepositoryConfig(rName),
+				Config:             testAccRepositoryConfig(rName),
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: false,
 			},
@@ -226,12 +226,12 @@ func TestAccAWSEcrRepository_encryption_kms(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecr.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEcrRepositoryDestroy,
+		CheckDestroy: testAccCheckRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcrRepositoryConfig_encryption_kms_defaultkey(rName),
+				Config: testAccRepositoryConfig_encryption_kms_defaultkey(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcrRepositoryExists(resourceName, &v1),
+					testAccCheckRepositoryExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.encryption_type", ecr.EncryptionTypeKms),
 					// This will be the default ECR service KMS key. We don't currently have a way to look this up.
@@ -244,10 +244,10 @@ func TestAccAWSEcrRepository_encryption_kms(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSEcrRepositoryConfig_encryption_kms_customkey(rName),
+				Config: testAccRepositoryConfig_encryption_kms_customkey(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcrRepositoryExists(resourceName, &v2),
-					testAccCheckAWSEcrRepositoryRecreated(&v1, &v2),
+					testAccCheckRepositoryExists(resourceName, &v2),
+					testAccCheckRepositoryRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.encryption_type", ecr.EncryptionTypeKms),
 					resource.TestCheckResourceAttrPair(resourceName, "encryption_configuration.0.kms_key", kmsKeyDataSourceName, "arn"),
@@ -271,20 +271,20 @@ func TestAccAWSEcrRepository_encryption_aes256(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecr.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEcrRepositoryDestroy,
+		CheckDestroy: testAccCheckRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
 				// Test that the addition of the default encryption_configuration doesn't recreation in the next step
-				Config: testAccAWSEcrRepositoryConfig(rName),
+				Config: testAccRepositoryConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcrRepositoryExists(resourceName, &v1),
+					testAccCheckRepositoryExists(resourceName, &v1),
 				),
 			},
 			{
-				Config: testAccAWSEcrRepositoryConfig_encryption_aes256(rName),
+				Config: testAccRepositoryConfig_encryption_aes256(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcrRepositoryExists(resourceName, &v2),
-					testAccCheckAWSEcrRepositoryNotRecreated(&v1, &v2),
+					testAccCheckRepositoryExists(resourceName, &v2),
+					testAccCheckRepositoryNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.encryption_type", ecr.EncryptionTypeAes256),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.kms_key", ""),
@@ -297,14 +297,14 @@ func TestAccAWSEcrRepository_encryption_aes256(t *testing.T) {
 			},
 			{
 				// Test that the removal of the default encryption_configuration doesn't cause any plan changes
-				Config:   testAccAWSEcrRepositoryConfig(rName),
+				Config:   testAccRepositoryConfig(rName),
 				PlanOnly: true,
 			},
 		},
 	})
 }
 
-func testAccCheckAWSEcrRepositoryDestroy(s *terraform.State) error {
+func testAccCheckRepositoryDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -336,7 +336,7 @@ func testAccCheckAWSEcrRepositoryDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSEcrRepositoryExists(name string, res *ecr.Repository) resource.TestCheckFunc {
+func testAccCheckRepositoryExists(name string, res *ecr.Repository) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -365,21 +365,21 @@ func testAccCheckAWSEcrRepositoryExists(name string, res *ecr.Repository) resour
 	}
 }
 
-func testAccCheckAWSEcrRepositoryRegistryID(resourceName string) resource.TestCheckFunc {
+func testAccCheckRepositoryRegistryID(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		attributeValue := acctest.AccountID()
 		return resource.TestCheckResourceAttr(resourceName, "registry_id", attributeValue)(s)
 	}
 }
 
-func testAccCheckAWSEcrRepositoryRepositoryURL(resourceName, repositoryName string) resource.TestCheckFunc {
+func testAccCheckRepositoryRepositoryURL(resourceName, repositoryName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		attributeValue := fmt.Sprintf("%s.dkr.ecr.%s.amazonaws.com/%s", acctest.AccountID(), acctest.Region(), repositoryName)
 		return resource.TestCheckResourceAttr(resourceName, "repository_url", attributeValue)(s)
 	}
 }
 
-func testAccCheckAWSEcrRepositoryRecreated(i, j *ecr.Repository) resource.TestCheckFunc {
+func testAccCheckRepositoryRecreated(i, j *ecr.Repository) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.TimeValue(i.CreatedAt).Equal(aws.TimeValue(j.CreatedAt)) {
 			return fmt.Errorf("ECR repository was not recreated")
@@ -389,7 +389,7 @@ func testAccCheckAWSEcrRepositoryRecreated(i, j *ecr.Repository) resource.TestCh
 	}
 }
 
-func testAccCheckAWSEcrRepositoryNotRecreated(i, j *ecr.Repository) resource.TestCheckFunc {
+func testAccCheckRepositoryNotRecreated(i, j *ecr.Repository) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if !aws.TimeValue(i.CreatedAt).Equal(aws.TimeValue(j.CreatedAt)) {
 			return fmt.Errorf("ECR repository was recreated")
@@ -399,7 +399,7 @@ func testAccCheckAWSEcrRepositoryNotRecreated(i, j *ecr.Repository) resource.Tes
 	}
 }
 
-func testAccAWSEcrRepositoryConfig(rName string) string {
+func testAccRepositoryConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecr_repository" "test" {
   name = %q
@@ -407,7 +407,7 @@ resource "aws_ecr_repository" "test" {
 `, rName)
 }
 
-func testAccAWSEcrRepositoryConfig_tags(rName string) string {
+func testAccRepositoryConfig_tags(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecr_repository" "test" {
   name = %q
@@ -420,7 +420,7 @@ resource "aws_ecr_repository" "test" {
 `, rName)
 }
 
-func testAccAWSEcrRepositoryConfig_tagsChanged(rName string) string {
+func testAccRepositoryConfig_tagsChanged(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecr_repository" "test" {
   name = %q
@@ -432,7 +432,7 @@ resource "aws_ecr_repository" "test" {
 `, rName)
 }
 
-func testAccAWSEcrRepositoryConfig_immutability(rName string) string {
+func testAccRepositoryConfig_immutability(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecr_repository" "test" {
   name                 = %q
@@ -441,7 +441,7 @@ resource "aws_ecr_repository" "test" {
 `, rName)
 }
 
-func testAccAWSEcrRepositoryConfig_image_scanning_configuration(rName string, scanOnPush bool) string {
+func testAccRepositoryConfig_image_scanning_configuration(rName string, scanOnPush bool) string {
 	return fmt.Sprintf(`
 resource "aws_ecr_repository" "test" {
   name = %q
@@ -453,7 +453,7 @@ resource "aws_ecr_repository" "test" {
 `, rName, scanOnPush)
 }
 
-func testAccAWSEcrRepositoryConfig_encryption_kms_defaultkey(rName string) string {
+func testAccRepositoryConfig_encryption_kms_defaultkey(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecr_repository" "test" {
   name = %q
@@ -465,7 +465,7 @@ resource "aws_ecr_repository" "test" {
 `, rName)
 }
 
-func testAccAWSEcrRepositoryConfig_encryption_kms_customkey(rName string) string {
+func testAccRepositoryConfig_encryption_kms_customkey(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {}
 
@@ -480,7 +480,7 @@ resource "aws_ecr_repository" "test" {
 `, rName)
 }
 
-func testAccAWSEcrRepositoryConfig_encryption_aes256(rName string) string {
+func testAccRepositoryConfig_encryption_aes256(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecr_repository" "test" {
   name = %q

@@ -16,8 +16,8 @@ import (
 
 func TestAccAWSEcrRegistryPolicy_serial(t *testing.T) {
 	testFuncs := map[string]func(t *testing.T){
-		"basic":      testAccAWSEcrRegistryPolicy_basic,
-		"disappears": testAccAWSEcrRegistryPolicy_disappears,
+		"basic":      testAccRegistryPolicy_basic,
+		"disappears": testAccRegistryPolicy_disappears,
 	}
 
 	for name, testFunc := range testFuncs {
@@ -29,7 +29,7 @@ func TestAccAWSEcrRegistryPolicy_serial(t *testing.T) {
 	}
 }
 
-func testAccAWSEcrRegistryPolicy_basic(t *testing.T) {
+func testAccRegistryPolicy_basic(t *testing.T) {
 	var v ecr.GetRegistryPolicyOutput
 	resourceName := "aws_ecr_registry_policy.test"
 
@@ -37,12 +37,12 @@ func testAccAWSEcrRegistryPolicy_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecr.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEcrRegistryPolicyDestroy,
+		CheckDestroy: testAccCheckRegistryPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcrRegistryPolicy(),
+				Config: testAccRegistryPolicy(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcrRegistryPolicyExists(resourceName, &v),
+					testAccCheckRegistryPolicyExists(resourceName, &v),
 					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`"ecr:ReplicateImage".+`)),
 					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
 				),
@@ -53,9 +53,9 @@ func testAccAWSEcrRegistryPolicy_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSEcrRegistryPolicyUpdated(),
+				Config: testAccRegistryPolicyUpdated(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcrRegistryPolicyExists(resourceName, &v),
+					testAccCheckRegistryPolicyExists(resourceName, &v),
 					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`"ecr:ReplicateImage".+`)),
 					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`"ecr:CreateRepository".+`)),
 					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
@@ -65,7 +65,7 @@ func testAccAWSEcrRegistryPolicy_basic(t *testing.T) {
 	})
 }
 
-func testAccAWSEcrRegistryPolicy_disappears(t *testing.T) {
+func testAccRegistryPolicy_disappears(t *testing.T) {
 	var v ecr.GetRegistryPolicyOutput
 	resourceName := "aws_ecr_registry_policy.test"
 
@@ -73,12 +73,12 @@ func testAccAWSEcrRegistryPolicy_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecr.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEcrRegistryPolicyDestroy,
+		CheckDestroy: testAccCheckRegistryPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcrRegistryPolicy(),
+				Config: testAccRegistryPolicy(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcrRegistryPolicyExists(resourceName, &v),
+					testAccCheckRegistryPolicyExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfecr.ResourceRegistryPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -87,7 +87,7 @@ func testAccAWSEcrRegistryPolicy_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSEcrRegistryPolicyDestroy(s *terraform.State) error {
+func testAccCheckRegistryPolicyDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -107,7 +107,7 @@ func testAccCheckAWSEcrRegistryPolicyDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSEcrRegistryPolicyExists(name string, res *ecr.GetRegistryPolicyOutput) resource.TestCheckFunc {
+func testAccCheckRegistryPolicyExists(name string, res *ecr.GetRegistryPolicyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -134,7 +134,7 @@ func testAccCheckAWSEcrRegistryPolicyExists(name string, res *ecr.GetRegistryPol
 	}
 }
 
-func testAccAWSEcrRegistryPolicy() string {
+func testAccRegistryPolicy() string {
 	return `
 data "aws_caller_identity" "current" {}
 
@@ -165,7 +165,7 @@ resource "aws_ecr_registry_policy" "test" {
 `
 }
 
-func testAccAWSEcrRegistryPolicyUpdated() string {
+func testAccRegistryPolicyUpdated() string {
 	return `
 data "aws_caller_identity" "current" {}
 
