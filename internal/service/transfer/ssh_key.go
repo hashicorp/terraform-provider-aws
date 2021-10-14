@@ -75,7 +75,7 @@ func resourceSSHKeyCreate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceSSHKeyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).TransferConn
-	serverID, userName, sshKeyID, err := decodeTransferSshKeyId(d.Id())
+	serverID, userName, sshKeyID, err := DecodeSSHKeyID(d.Id())
 	if err != nil {
 		return fmt.Errorf("error parsing Transfer SSH Public Key ID: %s", err)
 	}
@@ -118,7 +118,7 @@ func resourceSSHKeyRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceSSHKeyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).TransferConn
-	serverID, userName, sshKeyID, err := decodeTransferSshKeyId(d.Id())
+	serverID, userName, sshKeyID, err := DecodeSSHKeyID(d.Id())
 	if err != nil {
 		return fmt.Errorf("error parsing Transfer SSH Public Key ID: %s", err)
 	}
@@ -142,7 +142,7 @@ func resourceSSHKeyDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func decodeTransferSshKeyId(id string) (string, string, string, error) {
+func DecodeSSHKeyID(id string) (string, string, string, error) {
 	idParts := strings.SplitN(id, "/", 3)
 	if len(idParts) != 3 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" {
 		return "", "", "", fmt.Errorf("unexpected format of ID (%s), expected SERVERID/USERNAME/SSHKEYID", id)

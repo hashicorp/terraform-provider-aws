@@ -43,7 +43,7 @@ func testSweepTransferServers(region string) error {
 		}
 
 		for _, server := range page.Servers {
-			r := ResourceServer()
+			r := tftransfer.ResourceServer()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(server.ServerId))
 			d.Set("force_destroy", true) // In lieu of an aws_transfer_user sweeper.
@@ -188,7 +188,7 @@ func testAccAWSTransferServer_disappears(t *testing.T) {
 				Config: testAccAWSTransferServerBasicConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSTransferServerExists(resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceServer(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tftransfer.ResourceServer(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
