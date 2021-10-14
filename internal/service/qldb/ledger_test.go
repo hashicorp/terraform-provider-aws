@@ -67,7 +67,7 @@ func sweepLedgers(region string) error {
 	return nil
 }
 
-func TestAccAWSQLDBLedger_basic(t *testing.T) {
+func TestAccQLDBLedger_basic(t *testing.T) {
 	var qldbCluster qldb.DescribeLedgerOutput
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_qldb_ledger.test"
@@ -98,7 +98,7 @@ func TestAccAWSQLDBLedger_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSQLDBLedger_update(t *testing.T) {
+func TestAccQLDBLedger_update(t *testing.T) {
 	var qldbCluster qldb.DescribeLedgerOutput
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_qldb_ledger.test"
@@ -223,7 +223,7 @@ resource "aws_qldb_ledger" "test" {
 `, n)
 }
 
-func TestAccAWSQLDBLedger_Tags(t *testing.T) {
+func TestAccQLDBLedger_tags(t *testing.T) {
 	var cluster1, cluster2, cluster3 qldb.DescribeLedgerOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_qldb_ledger.test"
