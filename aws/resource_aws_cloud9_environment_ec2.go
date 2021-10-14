@@ -102,14 +102,14 @@ func resourceAwsCloud9EnvironmentEc2Create(d *schema.ResourceData, meta interfac
 		out, err = conn.CreateEnvironmentEC2(params)
 		if err != nil {
 			// NotFoundException: User arn:aws:iam::*******:user/****** does not exist.
-			if isAWSErr(err, cloud9.ErrCodeNotFoundException, "User") {
+			if tfawserr.ErrMessageContains(err, cloud9.ErrCodeNotFoundException, "User") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		out, err = conn.CreateEnvironmentEC2(params)
 	}
 
@@ -163,7 +163,7 @@ func resourceAwsCloud9EnvironmentEc2Read(d *schema.ResourceData, meta interface{
 		EnvironmentIds: []*string{aws.String(d.Id())},
 	})
 	if err != nil {
-		if isAWSErr(err, cloud9.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, cloud9.ErrCodeNotFoundException, "") {
 			log.Printf("[WARN] Cloud9 Environment EC2 (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -253,11 +253,11 @@ func resourceAwsCloud9EnvironmentEc2Delete(d *schema.ResourceData, meta interfac
 	err = resource.Retry(20*time.Minute, func() *resource.RetryError { // Deleting instances can take a long time
 		out, err = conn.DescribeEnvironments(input)
 		if err != nil {
-			if isAWSErr(err, cloud9.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, cloud9.ErrCodeNotFoundException, "") {
 				return nil
 			}
 			// :'-(
-			if isAWSErr(err, "AccessDeniedException", "is not authorized to access this resource") {
+			if tfawserr.ErrMessageContains(err, "AccessDeniedException", "is not authorized to access this resource") {
 				return nil
 			}
 			return resource.NonRetryableError(err)
@@ -267,12 +267,12 @@ func resourceAwsCloud9EnvironmentEc2Delete(d *schema.ResourceData, meta interfac
 		}
 		return resource.RetryableError(fmt.Errorf("Cloud9 EC2 Environment %q still exists", d.Id()))
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		out, err = conn.DescribeEnvironments(input)
-		if isAWSErr(err, cloud9.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, cloud9.ErrCodeNotFoundException, "") {
 			return nil
 		}
-		if isAWSErr(err, "AccessDeniedException", "is not authorized to access this resource") {
+		if tfawserr.ErrMessageContains(err, "AccessDeniedException", "is not authorized to access this resource") {
 			return nil
 		}
 	}

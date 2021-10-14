@@ -194,7 +194,7 @@ func testAccCheckAWSCloud9EnvironmentEc2Exists(n string, res *cloud9.Environment
 			EnvironmentIds: []*string{aws.String(rs.Primary.ID)},
 		})
 		if err != nil {
-			if isAWSErr(err, cloud9.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, cloud9.ErrCodeNotFoundException, "") {
 				return fmt.Errorf("Cloud9 Environment EC2 (%q) not found", rs.Primary.ID)
 			}
 			return err
@@ -229,10 +229,10 @@ func testAccCheckAWSCloud9EnvironmentEc2Disappears(res *cloud9.Environment) reso
 		err = resource.Retry(20*time.Minute, func() *resource.RetryError { // Deleting instances can take a long time
 			out, err = conn.DescribeEnvironments(input)
 			if err != nil {
-				if isAWSErr(err, cloud9.ErrCodeNotFoundException, "") {
+				if tfawserr.ErrMessageContains(err, cloud9.ErrCodeNotFoundException, "") {
 					return nil
 				}
-				if isAWSErr(err, "AccessDeniedException", "is not authorized to access this resource") {
+				if tfawserr.ErrMessageContains(err, "AccessDeniedException", "is not authorized to access this resource") {
 					return nil
 				}
 				return resource.NonRetryableError(err)
@@ -259,11 +259,11 @@ func testAccCheckAWSCloud9EnvironmentEc2Destroy(s *terraform.State) error {
 			EnvironmentIds: []*string{aws.String(rs.Primary.ID)},
 		})
 		if err != nil {
-			if isAWSErr(err, cloud9.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, cloud9.ErrCodeNotFoundException, "") {
 				return nil
 			}
 			// :'-(
-			if isAWSErr(err, "AccessDeniedException", "is not authorized to access this resource") {
+			if tfawserr.ErrMessageContains(err, "AccessDeniedException", "is not authorized to access this resource") {
 				return nil
 			}
 			return err
