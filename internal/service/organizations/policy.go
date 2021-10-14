@@ -26,7 +26,7 @@ func ResourcePolicy() *schema.Resource {
 		UpdateContext: resourcePolicyUpdate,
 		DeleteContext: resourcePolicyDelete,
 		Importer: &schema.ResourceImporter{
-			StateContext: resourceAwsOrganizationsPolicyImport,
+			StateContext: resourcePolicyImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -223,7 +223,7 @@ func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	return nil
 }
 
-func resourceAwsOrganizationsPolicyImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourcePolicyImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	conn := meta.(*conns.AWSClient).OrganizationsConn
 
 	input := &organizations.DescribePolicyInput{

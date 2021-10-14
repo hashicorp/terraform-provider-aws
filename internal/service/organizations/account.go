@@ -144,7 +144,7 @@ func resourceAccountCreate(d *schema.ResourceData, meta interface{}) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:      []string{organizations.CreateAccountStateInProgress},
 		Target:       []string{organizations.CreateAccountStateSucceeded},
-		Refresh:      resourceAwsOrganizationsAccountStateRefreshFunc(conn, requestId),
+		Refresh:      resourceAccountStateRefreshFunc(conn, requestId),
 		PollInterval: 10 * time.Second,
 		Timeout:      5 * time.Minute,
 	}
@@ -162,7 +162,7 @@ func resourceAccountCreate(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("parent_id"); ok {
 		newParentID := v.(string)
 
-		existingParentID, err := resourceAwsOrganizationsAccountGetParentId(conn, d.Id())
+		existingParentID, err := resourceAccountGetParentID(conn, d.Id())
 
 		if err != nil {
 			return fmt.Errorf("error getting AWS Organizations Account (%s) parent: %s", d.Id(), err)
@@ -211,7 +211,7 @@ func resourceAccountRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	parentId, err := resourceAwsOrganizationsAccountGetParentId(conn, d.Id())
+	parentId, err := resourceAccountGetParentID(conn, d.Id())
 	if err != nil {
 		return fmt.Errorf("error getting AWS Organizations Account (%s) parent: %s", d.Id(), err)
 	}
@@ -289,9 +289,9 @@ func resourceAccountDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-// resourceAwsOrganizationsAccountStateRefreshFunc returns a resource.StateRefreshFunc
+// resourceAccountStateRefreshFunc returns a resource.StateRefreshFunc
 // that is used to watch a CreateAccount request
-func resourceAwsOrganizationsAccountStateRefreshFunc(conn *organizations.Organizations, id string) resource.StateRefreshFunc {
+func resourceAccountStateRefreshFunc(conn *organizations.Organizations, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		opts := &organizations.DescribeCreateAccountStatusInput{
 			CreateAccountRequestId: aws.String(id),
@@ -320,7 +320,7 @@ func resourceAwsOrganizationsAccountStateRefreshFunc(conn *organizations.Organiz
 	}
 }
 
-func resourceAwsOrganizationsAccountGetParentId(conn *organizations.Organizations, childId string) (string, error) {
+func resourceAccountGetParentID(conn *organizations.Organizations, childId string) (string, error) {
 	input := &organizations.ListParentsInput{
 		ChildId: aws.String(childId),
 	}

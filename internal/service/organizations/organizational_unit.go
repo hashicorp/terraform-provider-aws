@@ -152,7 +152,7 @@ func resourceOrganizationalUnitRead(d *schema.ResourceData, meta interface{}) er
 		return nil
 	}
 
-	parentId, err := resourceAwsOrganizationsOrganizationalUnitGetParentId(conn, d.Id())
+	parentId, err := resourceOrganizationalUnitGetParentID(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error listing Organizations Organizational Unit (%s) parents: %w", d.Id(), err)
@@ -247,7 +247,7 @@ func resourceOrganizationalUnitDelete(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func resourceAwsOrganizationsOrganizationalUnitGetParentId(conn *organizations.Organizations, childId string) (string, error) {
+func resourceOrganizationalUnitGetParentID(conn *organizations.Organizations, childId string) (string, error) {
 	input := &organizations.ListParentsInput{
 		ChildId: aws.String(childId),
 	}
