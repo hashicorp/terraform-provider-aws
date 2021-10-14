@@ -5,7 +5,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (

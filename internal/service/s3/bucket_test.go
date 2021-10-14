@@ -21,37 +21,17 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/provider"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
-	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
-	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
-	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
-	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
-	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
-	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
-	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
-	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
-	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
-	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
-	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
-	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
-	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
-	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
-	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
-	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
-	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
-	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
-	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func init() {
@@ -2602,7 +2582,7 @@ func TestBucketRegionalDomainName(t *testing.T) {
 func TestWebsiteEndpoint(t *testing.T) {
 	// https://docs.aws.amazon.com/AmazonS3/latest/dev/WebsiteEndpoints.html
 	testCases := []struct {
-		TestingClient          *conns.AWSClient
+		TestingClient      *conns.AWSClient
 		LocationConstraint string
 		Expected           string
 	}{
