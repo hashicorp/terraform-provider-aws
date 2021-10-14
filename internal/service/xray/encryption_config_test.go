@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSXrayEncryptionConfig_basic(t *testing.T) {
+func TestAccXRayEncryptionConfig_basic(t *testing.T) {
 	var EncryptionConfig xray.EncryptionConfig
 	resourceName := "aws_xray_encryption_config.test"
 	keyResourceName := "aws_kms_key.test"

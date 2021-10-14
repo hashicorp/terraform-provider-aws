@@ -13,7 +13,7 @@ import (
 	tfxray "github.com/hashicorp/terraform-provider-aws/internal/service/xray"
 )
 
-func TestAccAWSXraySamplingRule_basic(t *testing.T) {
+func TestAccXRaySamplingRule_basic(t *testing.T) {
 	var samplingRule xray.SamplingRule
 	resourceName := "aws_xray_sampling_rule.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -52,7 +52,7 @@ func TestAccAWSXraySamplingRule_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSXraySamplingRule_update(t *testing.T) {
+func TestAccXRaySamplingRule_update(t *testing.T) {
 	var samplingRule xray.SamplingRule
 	resourceName := "aws_xray_sampling_rule.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -110,7 +110,7 @@ func TestAccAWSXraySamplingRule_update(t *testing.T) {
 	})
 }
 
-func TestAccAWSXraySamplingRule_tags(t *testing.T) {
+func TestAccXRaySamplingRule_tags(t *testing.T) {
 	var samplingRule xray.SamplingRule
 	resourceName := "aws_xray_sampling_rule.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -155,7 +155,7 @@ func TestAccAWSXraySamplingRule_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSXraySamplingRule_disappears(t *testing.T) {
+func TestAccXRaySamplingRule_disappears(t *testing.T) {
 	var samplingRule xray.SamplingRule
 	resourceName := "aws_xray_sampling_rule.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
