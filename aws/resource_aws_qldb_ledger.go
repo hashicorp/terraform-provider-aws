@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsQLDBLedger() *schema.Resource {
@@ -63,8 +64,8 @@ func resourceAwsQLDBLedger() *schema.Resource {
 }
 
 func resourceAwsQLDBLedgerCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).qldbconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).QLDBConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	var name string
@@ -115,9 +116,9 @@ func resourceAwsQLDBLedgerCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsQLDBLedgerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).qldbconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).QLDBConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	// Refresh the QLDB state
 	input := &qldb.DescribeLedgerInput{
@@ -176,7 +177,7 @@ func resourceAwsQLDBLedgerRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsQLDBLedgerUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).qldbconn
+	conn := meta.(*conns.AWSClient).QLDBConn
 
 	if d.HasChange("permissions_mode") {
 		updateOpts := &qldb.UpdateLedgerPermissionsModeInput{
@@ -214,7 +215,7 @@ func resourceAwsQLDBLedgerUpdate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsQLDBLedgerDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).qldbconn
+	conn := meta.(*conns.AWSClient).QLDBConn
 	deleteLedgerOpts := &qldb.DeleteLedgerInput{
 		Name: aws.String(d.Id()),
 	}
