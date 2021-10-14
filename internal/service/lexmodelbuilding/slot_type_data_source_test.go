@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAwsLexSlotType_basic(t *testing.T) {
+func TestAccLexModelBuildingSlotTypeDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 	dataSourceName := "data.aws_lex_slot_type.test"
 	resourceName := "aws_lex_slot_type.test"
@@ -42,7 +42,7 @@ func TestAccDataSourceAwsLexSlotType_basic(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsLexSlotType_withVersion(t *testing.T) {
+func TestAccLexModelBuildingSlotTypeDataSource_withVersion(t *testing.T) {
 	rName := sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 	dataSourceName := "data.aws_lex_slot_type.test"
 	resourceName := "aws_lex_slot_type.test"

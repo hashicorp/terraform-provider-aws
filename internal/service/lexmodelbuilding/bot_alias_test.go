@@ -99,7 +99,7 @@ func sweepBotAliases(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func TestAccAwsLexBotAlias_basic(t *testing.T) {
+func TestAccLexModelBuildingBotAlias_basic(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotAliasOutput
 	resourceName := "aws_lex_bot_alias.test"
 	testBotAliasID := "test_bot_alias" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
@@ -195,7 +195,7 @@ func testAccBotAlias_botVersion(t *testing.T) {
 	})
 }
 
-func TestAccAwsLexBotAlias_conversationLogsText(t *testing.T) {
+func TestAccLexModelBuildingBotAlias_conversationLogsText(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotAliasOutput
 	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 	testBotAliasID := "test_bot_alias" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
@@ -244,7 +244,7 @@ func TestAccAwsLexBotAlias_conversationLogsText(t *testing.T) {
 	})
 }
 
-func TestAccAwsLexBotAlias_conversationLogsAudio(t *testing.T) {
+func TestAccLexModelBuildingBotAlias_conversationLogsAudio(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotAliasOutput
 	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 	testBotAliasID := sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
@@ -294,7 +294,7 @@ func TestAccAwsLexBotAlias_conversationLogsAudio(t *testing.T) {
 	})
 }
 
-func TestAccAwsLexBotAlias_conversationLogsBoth(t *testing.T) {
+func TestAccLexModelBuildingBotAlias_conversationLogsBoth(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotAliasOutput
 	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 	testBotAliasID := sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
@@ -350,7 +350,7 @@ func TestAccAwsLexBotAlias_conversationLogsBoth(t *testing.T) {
 	})
 }
 
-func TestAccAwsLexBotAlias_description(t *testing.T) {
+func TestAccLexModelBuildingBotAlias_description(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotAliasOutput
 	resourceName := "aws_lex_bot_alias.test"
 	testBotAliasID := "test_bot_alias" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
@@ -399,7 +399,7 @@ func TestAccAwsLexBotAlias_description(t *testing.T) {
 	})
 }
 
-func TestAccAwsLexBotAlias_disappears(t *testing.T) {
+func TestAccLexModelBuildingBotAlias_disappears(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotAliasOutput
 	resourceName := "aws_lex_bot_alias.test"
 	testBotAliasID := "test_bot_alias" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
