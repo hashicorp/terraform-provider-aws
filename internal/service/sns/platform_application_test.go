@@ -25,11 +25,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_sns_platform_application", &resource.Sweeper{
 		Name: "aws_sns_platform_application",
-		F:    testSweepSnsPlatformApplications,
+		F:    sweepPlatformApplications,
 	})
 }
 
-func testSweepSnsPlatformApplications(region string) error {
+func sweepPlatformApplications(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -83,21 +83,21 @@ func testSweepSnsPlatformApplications(region string) error {
  APNS_SANDBOX_PRINCIPAL_PATH - Apple Push Notification Sandbox Certificate file location
 **/
 
-type testAccAwsSnsPlatformApplicationPlatform struct {
+type testAccAWSSnsPlatformApplicationPlatform struct {
 	Name       string
 	Credential string
 	Principal  string
 }
 
-func testAccAwsSnsPlatformApplicationPlatformFromEnv(t *testing.T) []*testAccAwsSnsPlatformApplicationPlatform {
-	platforms := make([]*testAccAwsSnsPlatformApplicationPlatform, 0, 2)
+func testAccPlatformApplicationPlatformFromEnv(t *testing.T) []*testAccAWSSnsPlatformApplicationPlatform {
+	platforms := make([]*testAccAWSSnsPlatformApplicationPlatform, 0, 2)
 
 	if os.Getenv("APNS_SANDBOX_CREDENTIAL") != "" {
 		if os.Getenv("APNS_SANDBOX_PRINCIPAL") == "" {
 			t.Fatalf("APNS_SANDBOX_CREDENTIAL set but missing APNS_SANDBOX_PRINCIPAL")
 		}
 
-		platform := &testAccAwsSnsPlatformApplicationPlatform{
+		platform := &testAccAWSSnsPlatformApplicationPlatform{
 			Name:       "APNS_SANDBOX",
 			Credential: fmt.Sprintf("<<EOF\n%s\nEOF\n", strings.TrimSpace(os.Getenv("APNS_SANDBOX_CREDENTIAL"))),
 			Principal:  fmt.Sprintf("<<EOF\n%s\nEOF\n", strings.TrimSpace(os.Getenv("APNS_SANDBOX_PRINCIPAL"))),
@@ -108,7 +108,7 @@ func testAccAwsSnsPlatformApplicationPlatformFromEnv(t *testing.T) []*testAccAws
 			t.Fatalf("APNS_SANDBOX_CREDENTIAL_PATH set but missing APNS_SANDBOX_PRINCIPAL_PATH")
 		}
 
-		platform := &testAccAwsSnsPlatformApplicationPlatform{
+		platform := &testAccAWSSnsPlatformApplicationPlatform{
 			Name:       "APNS_SANDBOX",
 			Credential: strconv.Quote(fmt.Sprintf("${file(pathexpand(%q))}", os.Getenv("APNS_SANDBOX_CREDENTIAL_PATH"))),
 			Principal:  strconv.Quote(fmt.Sprintf("${file(pathexpand(%q))}", os.Getenv("APNS_SANDBOX_PRINCIPAL_PATH"))),
@@ -117,7 +117,7 @@ func testAccAwsSnsPlatformApplicationPlatformFromEnv(t *testing.T) []*testAccAws
 	}
 
 	if os.Getenv("GCM_API_KEY") != "" {
-		platform := &testAccAwsSnsPlatformApplicationPlatform{
+		platform := &testAccAWSSnsPlatformApplicationPlatform{
 			Name:       "GCM",
 			Credential: strconv.Quote(os.Getenv("GCM_API_KEY")),
 		}
@@ -203,7 +203,7 @@ func TestDecodePlatformApplicationID(t *testing.T) {
 }
 
 func TestAccAWSSnsPlatformApplication_basic(t *testing.T) {
-	platforms := testAccAwsSnsPlatformApplicationPlatformFromEnv(t)
+	platforms := testAccPlatformApplicationPlatformFromEnv(t)
 	resourceName := "aws_sns_platform_application.test"
 
 	for _, platform := range platforms {
@@ -218,12 +218,12 @@ func TestAccAWSSnsPlatformApplication_basic(t *testing.T) {
 				PreCheck:     func() { acctest.PreCheck(t) },
 				ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
 				Providers:    acctest.Providers,
-				CheckDestroy: testAccCheckAWSSNSPlatformApplicationDestroy,
+				CheckDestroy: testAccCheckPlatformApplicationDestroy,
 				Steps: []resource.TestStep{
 					{
-						Config: testAccAwsSnsPlatformApplicationConfig_basic(name, platform),
+						Config: testAccPlatformApplicationConfig_basic(name, platform),
 						Check: resource.ComposeTestCheckFunc(
-							testAccCheckAwsSnsPlatformApplicationExists(resourceName),
+							testAccCheckPlatformApplicationExists(resourceName),
 							acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "sns", regexp.MustCompile(fmt.Sprintf("app/%s/%s$", platform.Name, name))),
 							resource.TestCheckResourceAttr(resourceName, "name", name),
 							resource.TestCheckResourceAttr(resourceName, "platform", platform.Name),
@@ -244,7 +244,7 @@ func TestAccAWSSnsPlatformApplication_basic(t *testing.T) {
 }
 
 func TestAccAWSSnsPlatformApplication_basicAttributes(t *testing.T) {
-	platforms := testAccAwsSnsPlatformApplicationPlatformFromEnv(t)
+	platforms := testAccPlatformApplicationPlatformFromEnv(t)
 	resourceName := "aws_sns_platform_application.test"
 
 	var testCases = []struct {
@@ -269,19 +269,19 @@ func TestAccAWSSnsPlatformApplication_basicAttributes(t *testing.T) {
 						PreCheck:     func() { acctest.PreCheck(t) },
 						ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
 						Providers:    acctest.Providers,
-						CheckDestroy: testAccCheckAWSSNSPlatformApplicationDestroy,
+						CheckDestroy: testAccCheckPlatformApplicationDestroy,
 						Steps: []resource.TestStep{
 							{
-								Config: testAccAwsSnsPlatformApplicationConfig_basicAttribute(name, platform, tc.AttributeKey, tc.AttributeValue),
+								Config: testAccPlatformApplicationConfig_basicAttribute(name, platform, tc.AttributeKey, tc.AttributeValue),
 								Check: resource.ComposeTestCheckFunc(
-									testAccCheckAwsSnsPlatformApplicationExists(resourceName),
+									testAccCheckPlatformApplicationExists(resourceName),
 									resource.TestCheckResourceAttr(resourceName, tc.AttributeKey, tc.AttributeValue),
 								),
 							},
 							{
-								Config: testAccAwsSnsPlatformApplicationConfig_basicAttribute(name, platform, tc.AttributeKey, tc.AttributeValueUpdate),
+								Config: testAccPlatformApplicationConfig_basicAttribute(name, platform, tc.AttributeKey, tc.AttributeValueUpdate),
 								Check: resource.ComposeTestCheckFunc(
-									testAccCheckAwsSnsPlatformApplicationExists(resourceName),
+									testAccCheckPlatformApplicationExists(resourceName),
 									resource.TestCheckResourceAttr(resourceName, tc.AttributeKey, tc.AttributeValueUpdate),
 								),
 							},
@@ -300,7 +300,7 @@ func TestAccAWSSnsPlatformApplication_basicAttributes(t *testing.T) {
 }
 
 func TestAccAWSSnsPlatformApplication_iamRoleAttributes(t *testing.T) {
-	platforms := testAccAwsSnsPlatformApplicationPlatformFromEnv(t)
+	platforms := testAccPlatformApplicationPlatformFromEnv(t)
 	resourceName := "aws_sns_platform_application.test"
 
 	var testCases = []string{
@@ -320,19 +320,19 @@ func TestAccAWSSnsPlatformApplication_iamRoleAttributes(t *testing.T) {
 						PreCheck:     func() { acctest.PreCheck(t) },
 						ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
 						Providers:    acctest.Providers,
-						CheckDestroy: testAccCheckAWSSNSPlatformApplicationDestroy,
+						CheckDestroy: testAccCheckPlatformApplicationDestroy,
 						Steps: []resource.TestStep{
 							{
-								Config: testAccAwsSnsPlatformApplicationConfig_iamRoleAttribute(name, platform, tc, iamRoleName1),
+								Config: testAccPlatformApplicationConfig_iamRoleAttribute(name, platform, tc, iamRoleName1),
 								Check: resource.ComposeTestCheckFunc(
-									testAccCheckAwsSnsPlatformApplicationExists(resourceName),
+									testAccCheckPlatformApplicationExists(resourceName),
 									resource.TestMatchResourceAttr(resourceName, tc, regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:iam::[^:]+:role/%s$", iamRoleName1))),
 								),
 							},
 							{
-								Config: testAccAwsSnsPlatformApplicationConfig_iamRoleAttribute(name, platform, tc, iamRoleName2),
+								Config: testAccPlatformApplicationConfig_iamRoleAttribute(name, platform, tc, iamRoleName2),
 								Check: resource.ComposeTestCheckFunc(
-									testAccCheckAwsSnsPlatformApplicationExists(resourceName),
+									testAccCheckPlatformApplicationExists(resourceName),
 									resource.TestMatchResourceAttr(resourceName, tc, regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:iam::[^:]+:role/%s$", iamRoleName2))),
 								),
 							},
@@ -351,7 +351,7 @@ func TestAccAWSSnsPlatformApplication_iamRoleAttributes(t *testing.T) {
 }
 
 func TestAccAWSSnsPlatformApplication_snsTopicAttributes(t *testing.T) {
-	platforms := testAccAwsSnsPlatformApplicationPlatformFromEnv(t)
+	platforms := testAccPlatformApplicationPlatformFromEnv(t)
 	resourceName := "aws_sns_platform_application.test"
 
 	var testCases = []string{
@@ -373,19 +373,19 @@ func TestAccAWSSnsPlatformApplication_snsTopicAttributes(t *testing.T) {
 						PreCheck:     func() { acctest.PreCheck(t) },
 						ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
 						Providers:    acctest.Providers,
-						CheckDestroy: testAccCheckAWSSNSPlatformApplicationDestroy,
+						CheckDestroy: testAccCheckPlatformApplicationDestroy,
 						Steps: []resource.TestStep{
 							{
-								Config: testAccAwsSnsPlatformApplicationConfig_snsTopicAttribute(name, platform, tc, snsTopicName1),
+								Config: testAccPlatformApplicationConfig_snsTopicAttribute(name, platform, tc, snsTopicName1),
 								Check: resource.ComposeTestCheckFunc(
-									testAccCheckAwsSnsPlatformApplicationExists(resourceName),
+									testAccCheckPlatformApplicationExists(resourceName),
 									resource.TestMatchResourceAttr(resourceName, tc, regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:sns:[^:]+:[^:]+:%s$", snsTopicName1))),
 								),
 							},
 							{
-								Config: testAccAwsSnsPlatformApplicationConfig_snsTopicAttribute(name, platform, tc, snsTopicName2),
+								Config: testAccPlatformApplicationConfig_snsTopicAttribute(name, platform, tc, snsTopicName2),
 								Check: resource.ComposeTestCheckFunc(
-									testAccCheckAwsSnsPlatformApplicationExists(resourceName),
+									testAccCheckPlatformApplicationExists(resourceName),
 									resource.TestMatchResourceAttr(resourceName, tc, regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:sns:[^:]+:[^:]+:%s$", snsTopicName2))),
 								),
 							},
@@ -403,7 +403,7 @@ func TestAccAWSSnsPlatformApplication_snsTopicAttributes(t *testing.T) {
 	}
 }
 
-func testAccCheckAwsSnsPlatformApplicationExists(name string) resource.TestCheckFunc {
+func testAccCheckPlatformApplicationExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -427,7 +427,7 @@ func testAccCheckAwsSnsPlatformApplicationExists(name string) resource.TestCheck
 	}
 }
 
-func testAccCheckAWSSNSPlatformApplicationDestroy(s *terraform.State) error {
+func testAccCheckPlatformApplicationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -451,7 +451,7 @@ func testAccCheckAWSSNSPlatformApplicationDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAwsSnsPlatformApplicationConfig_basic(name string, platform *testAccAwsSnsPlatformApplicationPlatform) string {
+func testAccPlatformApplicationConfig_basic(name string, platform *testAccAWSSnsPlatformApplicationPlatform) string {
 	if platform.Principal == "" {
 		return fmt.Sprintf(`
 resource "aws_sns_platform_application" "test" {
@@ -471,7 +471,7 @@ resource "aws_sns_platform_application" "test" {
 `, name, platform.Name, platform.Credential, platform.Principal)
 }
 
-func testAccAwsSnsPlatformApplicationConfig_basicAttribute(name string, platform *testAccAwsSnsPlatformApplicationPlatform, attributeKey, attributeValue string) string {
+func testAccPlatformApplicationConfig_basicAttribute(name string, platform *testAccAWSSnsPlatformApplicationPlatform, attributeKey, attributeValue string) string {
 	if platform.Principal == "" {
 		return fmt.Sprintf(`
 resource "aws_sns_platform_application" "test" {
@@ -493,7 +493,7 @@ resource "aws_sns_platform_application" "test" {
 `, name, platform.Name, platform.Credential, platform.Principal, attributeKey, attributeValue)
 }
 
-func testAccAwsSnsPlatformApplicationConfig_iamRoleAttribute(name string, platform *testAccAwsSnsPlatformApplicationPlatform, attributeKey, iamRoleName string) string {
+func testAccPlatformApplicationConfig_iamRoleAttribute(name string, platform *testAccAWSSnsPlatformApplicationPlatform, attributeKey, iamRoleName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -520,15 +520,15 @@ resource "aws_iam_role_policy_attachment" "test" {
 }
 
 %s
-`, iamRoleName, testAccAwsSnsPlatformApplicationConfig_basicAttribute(name, platform, attributeKey, "${aws_iam_role.test.arn}"))
+`, iamRoleName, testAccPlatformApplicationConfig_basicAttribute(name, platform, attributeKey, "${aws_iam_role.test.arn}"))
 }
 
-func testAccAwsSnsPlatformApplicationConfig_snsTopicAttribute(name string, platform *testAccAwsSnsPlatformApplicationPlatform, attributeKey, snsTopicName string) string {
+func testAccPlatformApplicationConfig_snsTopicAttribute(name string, platform *testAccAWSSnsPlatformApplicationPlatform, attributeKey, snsTopicName string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = "%s"
 }
 
 %s
-`, snsTopicName, testAccAwsSnsPlatformApplicationConfig_basicAttribute(name, platform, attributeKey, "${aws_sns_topic.test.arn}"))
+`, snsTopicName, testAccPlatformApplicationConfig_basicAttribute(name, platform, attributeKey, "${aws_sns_topic.test.arn}"))
 }

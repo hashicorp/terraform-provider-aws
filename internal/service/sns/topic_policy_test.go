@@ -25,12 +25,12 @@ func TestAccAWSSNSTopicPolicy_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSNSTopicPolicyDestroy,
+		CheckDestroy: testAccCheckTopicPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSNSTopicPolicyBasicConfig(rName),
+				Config: testAccTopicPolicyBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSNSTopicExists("aws_sns_topic.test", attributes),
+					testAccCheckTopicExists("aws_sns_topic.test", attributes),
 					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_sns_topic.test", "arn"),
 					resource.TestMatchResourceAttr(resourceName, "policy",
 						regexp.MustCompile(fmt.Sprintf("\"Sid\":\"%[1]s\"", rName))),
@@ -55,12 +55,12 @@ func TestAccAWSSNSTopicPolicy_updated(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSNSTopicPolicyDestroy,
+		CheckDestroy: testAccCheckTopicPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSNSTopicPolicyBasicConfig(rName),
+				Config: testAccTopicPolicyBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSNSTopicExists("aws_sns_topic.test", attributes),
+					testAccCheckTopicExists("aws_sns_topic.test", attributes),
 					resource.TestMatchResourceAttr(resourceName, "policy",
 						regexp.MustCompile(fmt.Sprintf("\"Sid\":\"%[1]s\"", rName))),
 				),
@@ -71,9 +71,9 @@ func TestAccAWSSNSTopicPolicy_updated(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSSNSTopicPolicyUpdatedConfig(rName),
+				Config: testAccTopicPolicyUpdatedConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSNSTopicExists("aws_sns_topic.test", attributes),
+					testAccCheckTopicExists("aws_sns_topic.test", attributes),
 					resource.TestMatchResourceAttr(resourceName, "policy",
 						regexp.MustCompile(fmt.Sprintf("\"Sid\":\"%[1]s\"", rName))),
 					resource.TestMatchResourceAttr(resourceName, "policy",
@@ -93,12 +93,12 @@ func TestAccAWSSNSTopicPolicy_disappears_topic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSNSTopicPolicyDestroy,
+		CheckDestroy: testAccCheckTopicPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSNSTopicPolicyBasicConfig(rName),
+				Config: testAccTopicPolicyBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSNSTopicExists(topicResourceName, attributes),
+					testAccCheckTopicExists(topicResourceName, attributes),
 					acctest.CheckResourceDisappears(acctest.Provider, tfsns.ResourceTopic(), topicResourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -116,12 +116,12 @@ func TestAccAWSSNSTopicPolicy_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSNSTopicPolicyDestroy,
+		CheckDestroy: testAccCheckTopicPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSNSTopicPolicyBasicConfig(rName),
+				Config: testAccTopicPolicyBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSNSTopicExists("aws_sns_topic.test", attributes),
+					testAccCheckTopicExists("aws_sns_topic.test", attributes),
 					acctest.CheckResourceDisappears(acctest.Provider, tfsns.ResourceTopicPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -130,7 +130,7 @@ func TestAccAWSSNSTopicPolicy_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSSNSTopicPolicyDestroy(s *terraform.State) error {
+func testAccCheckTopicPolicyDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -155,7 +155,7 @@ func testAccCheckAWSSNSTopicPolicyDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSSNSTopicPolicyBasicConfig(rName string) string {
+func testAccTopicPolicyBasicConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q
@@ -189,7 +189,7 @@ POLICY
 `, rName)
 }
 
-func testAccAWSSNSTopicPolicyUpdatedConfig(rName string) string {
+func testAccTopicPolicyUpdatedConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q

@@ -76,12 +76,12 @@ func TestAccAWSSNSTopicSubscription_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSNSTopicSubscriptionDestroy,
+		CheckDestroy: testAccCheckTopicSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSNSTopicSubscriptionConfig(rName),
+				Config: testAccTopicSubscriptionConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSNSTopicSubscriptionExists(resourceName, attributes),
+					testAccCheckTopicSubscriptionExists(resourceName, attributes),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", sns.ServiceName, regexp.MustCompile(fmt.Sprintf("%s:.+", rName))),
 					resource.TestCheckResourceAttr(resourceName, "confirmation_was_authenticated", "true"),
 					resource.TestCheckResourceAttr(resourceName, "delivery_policy", ""),
@@ -117,12 +117,12 @@ func TestAccAWSSNSTopicSubscription_filterPolicy(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSNSTopicSubscriptionDestroy,
+		CheckDestroy: testAccCheckTopicSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSNSTopicSubscriptionConfig_filterPolicy(rName, strconv.Quote(filterPolicy1)),
+				Config: testAccTopicSubscriptionConfig_filterPolicy(rName, strconv.Quote(filterPolicy1)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSNSTopicSubscriptionExists(resourceName, attributes),
+					testAccCheckTopicSubscriptionExists(resourceName, attributes),
 					resource.TestCheckResourceAttr(resourceName, "filter_policy", filterPolicy1),
 				),
 			},
@@ -137,17 +137,17 @@ func TestAccAWSSNSTopicSubscription_filterPolicy(t *testing.T) {
 			},
 			// Test attribute update
 			{
-				Config: testAccAWSSNSTopicSubscriptionConfig_filterPolicy(rName, strconv.Quote(filterPolicy2)),
+				Config: testAccTopicSubscriptionConfig_filterPolicy(rName, strconv.Quote(filterPolicy2)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSNSTopicSubscriptionExists(resourceName, attributes),
+					testAccCheckTopicSubscriptionExists(resourceName, attributes),
 					resource.TestCheckResourceAttr(resourceName, "filter_policy", filterPolicy2),
 				),
 			},
 			// Test attribute removal
 			{
-				Config: testAccAWSSNSTopicSubscriptionConfig(rName),
+				Config: testAccTopicSubscriptionConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSNSTopicSubscriptionExists(resourceName, attributes),
+					testAccCheckTopicSubscriptionExists(resourceName, attributes),
 					resource.TestCheckResourceAttr(resourceName, "filter_policy", ""),
 				),
 			},
@@ -164,13 +164,13 @@ func TestAccAWSSNSTopicSubscription_deliveryPolicy(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSNSTopicSubscriptionDestroy,
+		CheckDestroy: testAccCheckTopicSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSNSTopicSubscriptionConfig_deliveryPolicy(rName, strconv.Quote(`{"healthyRetryPolicy":{"minDelayTarget":5,"maxDelayTarget":20,"numRetries": 5}}`)),
+				Config: testAccTopicSubscriptionConfig_deliveryPolicy(rName, strconv.Quote(`{"healthyRetryPolicy":{"minDelayTarget":5,"maxDelayTarget":20,"numRetries": 5}}`)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSNSTopicSubscriptionExists(resourceName, attributes),
-					testAccCheckAWSSNSTopicSubscriptionDeliveryPolicyAttribute(attributes, &tfsns.TopicSubscriptionDeliveryPolicy{
+					testAccCheckTopicSubscriptionExists(resourceName, attributes),
+					testAccCheckTopicSubscriptionDeliveryPolicyAttribute(attributes, &tfsns.TopicSubscriptionDeliveryPolicy{
 						HealthyRetryPolicy: &tfsns.TopicSubscriptionDeliveryPolicyHealthyRetryPolicy{
 							MaxDelayTarget: 20,
 							MinDelayTarget: 5,
@@ -190,10 +190,10 @@ func TestAccAWSSNSTopicSubscription_deliveryPolicy(t *testing.T) {
 			},
 			// Test attribute update
 			{
-				Config: testAccAWSSNSTopicSubscriptionConfig_deliveryPolicy(rName, strconv.Quote(`{"healthyRetryPolicy":{"minDelayTarget":3,"maxDelayTarget":78,"numRetries": 11}}`)),
+				Config: testAccTopicSubscriptionConfig_deliveryPolicy(rName, strconv.Quote(`{"healthyRetryPolicy":{"minDelayTarget":3,"maxDelayTarget":78,"numRetries": 11}}`)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSNSTopicSubscriptionExists(resourceName, attributes),
-					testAccCheckAWSSNSTopicSubscriptionDeliveryPolicyAttribute(attributes, &tfsns.TopicSubscriptionDeliveryPolicy{
+					testAccCheckTopicSubscriptionExists(resourceName, attributes),
+					testAccCheckTopicSubscriptionDeliveryPolicyAttribute(attributes, &tfsns.TopicSubscriptionDeliveryPolicy{
 						HealthyRetryPolicy: &tfsns.TopicSubscriptionDeliveryPolicyHealthyRetryPolicy{
 							MaxDelayTarget: 78,
 							MinDelayTarget: 3,
@@ -204,9 +204,9 @@ func TestAccAWSSNSTopicSubscription_deliveryPolicy(t *testing.T) {
 			},
 			// Test attribute removal
 			{
-				Config: testAccAWSSNSTopicSubscriptionConfig(rName),
+				Config: testAccTopicSubscriptionConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSNSTopicSubscriptionExists(resourceName, attributes),
+					testAccCheckTopicSubscriptionExists(resourceName, attributes),
 					resource.TestCheckResourceAttr(resourceName, "delivery_policy", ""),
 				),
 			},
@@ -225,13 +225,13 @@ func TestAccAWSSNSTopicSubscription_redrivePolicy(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSNSTopicSubscriptionDestroy,
+		CheckDestroy: testAccCheckTopicSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSNSTopicSubscriptionConfig_redrivePolicy(rName, dlqName),
+				Config: testAccTopicSubscriptionConfig_redrivePolicy(rName, dlqName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSNSTopicSubscriptionExists(resourceName, attributes),
-					testAccCheckAWSSNSTopicSubscriptionRedrivePolicyAttribute(attributes, dlqName),
+					testAccCheckTopicSubscriptionExists(resourceName, attributes),
+					testAccCheckTopicSubscriptionRedrivePolicyAttribute(attributes, dlqName),
 				),
 			},
 			{
@@ -245,10 +245,10 @@ func TestAccAWSSNSTopicSubscription_redrivePolicy(t *testing.T) {
 			},
 			// Test attribute update
 			{
-				Config: testAccAWSSNSTopicSubscriptionConfig_redrivePolicy(rName, updatedDlqName),
+				Config: testAccTopicSubscriptionConfig_redrivePolicy(rName, updatedDlqName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSNSTopicSubscriptionExists(resourceName, attributes),
-					testAccCheckAWSSNSTopicSubscriptionRedrivePolicyAttribute(attributes, updatedDlqName),
+					testAccCheckTopicSubscriptionExists(resourceName, attributes),
+					testAccCheckTopicSubscriptionRedrivePolicyAttribute(attributes, updatedDlqName),
 				),
 			},
 			{
@@ -262,9 +262,9 @@ func TestAccAWSSNSTopicSubscription_redrivePolicy(t *testing.T) {
 			},
 			// Test attribute removal
 			{
-				Config: testAccAWSSNSTopicSubscriptionConfig(rName),
+				Config: testAccTopicSubscriptionConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSNSTopicSubscriptionExists(resourceName, attributes),
+					testAccCheckTopicSubscriptionExists(resourceName, attributes),
 					resource.TestCheckResourceAttr(resourceName, "redrive_policy", ""),
 				),
 			},
@@ -281,12 +281,12 @@ func TestAccAWSSNSTopicSubscription_rawMessageDelivery(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSNSTopicSubscriptionDestroy,
+		CheckDestroy: testAccCheckTopicSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSNSTopicSubscriptionConfig_rawMessageDelivery(rName, true),
+				Config: testAccTopicSubscriptionConfig_rawMessageDelivery(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSNSTopicSubscriptionExists(resourceName, attributes),
+					testAccCheckTopicSubscriptionExists(resourceName, attributes),
 					resource.TestCheckResourceAttr(resourceName, "raw_message_delivery", "true"),
 				),
 			},
@@ -301,17 +301,17 @@ func TestAccAWSSNSTopicSubscription_rawMessageDelivery(t *testing.T) {
 			},
 			// Test attribute update
 			{
-				Config: testAccAWSSNSTopicSubscriptionConfig_rawMessageDelivery(rName, false),
+				Config: testAccTopicSubscriptionConfig_rawMessageDelivery(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSNSTopicSubscriptionExists(resourceName, attributes),
+					testAccCheckTopicSubscriptionExists(resourceName, attributes),
 					resource.TestCheckResourceAttr(resourceName, "raw_message_delivery", "false"),
 				),
 			},
 			// Test attribute removal
 			{
-				Config: testAccAWSSNSTopicSubscriptionConfig(rName),
+				Config: testAccTopicSubscriptionConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSNSTopicSubscriptionExists(resourceName, attributes),
+					testAccCheckTopicSubscriptionExists(resourceName, attributes),
 					resource.TestCheckResourceAttr(resourceName, "raw_message_delivery", "false"),
 				),
 			},
@@ -328,12 +328,12 @@ func TestAccAWSSNSTopicSubscription_autoConfirmingEndpoint(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSNSTopicSubscriptionDestroy,
+		CheckDestroy: testAccCheckTopicSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSNSTopicSubscriptionConfig_autoConfirmingEndpoint(rName),
+				Config: testAccTopicSubscriptionConfig_autoConfirmingEndpoint(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSNSTopicSubscriptionExists(resourceName, attributes),
+					testAccCheckTopicSubscriptionExists(resourceName, attributes),
 				),
 			},
 			{
@@ -358,12 +358,12 @@ func TestAccAWSSNSTopicSubscription_autoConfirmingSecuredEndpoint(t *testing.T) 
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSNSTopicSubscriptionDestroy,
+		CheckDestroy: testAccCheckTopicSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSNSTopicSubscriptionConfig_autoConfirmingSecuredEndpoint(rName),
+				Config: testAccTopicSubscriptionConfig_autoConfirmingSecuredEndpoint(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSNSTopicSubscriptionExists(resourceName, attributes),
+					testAccCheckTopicSubscriptionExists(resourceName, attributes),
 				),
 			},
 			{
@@ -388,12 +388,12 @@ func TestAccAWSSNSTopicSubscription_email(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSNSTopicSubscriptionDestroy,
+		CheckDestroy: testAccCheckTopicSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSNSTopicSubscriptionEmailConfig(rName, acctest.DefaultEmailAddress),
+				Config: testAccTopicSubscriptionEmailConfig(rName, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSNSTopicSubscriptionExists(resourceName, attributes),
+					testAccCheckTopicSubscriptionExists(resourceName, attributes),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", sns.ServiceName, regexp.MustCompile(fmt.Sprintf("%s:.+", rName))),
 					resource.TestCheckResourceAttr(resourceName, "confirmation_was_authenticated", "false"),
 					resource.TestCheckResourceAttr(resourceName, "delivery_policy", ""),
@@ -418,12 +418,12 @@ func TestAccAWSSNSTopicSubscription_firehose(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSNSTopicSubscriptionDestroy,
+		CheckDestroy: testAccCheckTopicSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSNSTopicSubscriptionConfig_firehose(rName),
+				Config: testAccTopicSubscriptionConfig_firehose(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSNSTopicSubscriptionExists(resourceName, attributes),
+					testAccCheckTopicSubscriptionExists(resourceName, attributes),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", sns.ServiceName, regexp.MustCompile(fmt.Sprintf("%s:.+", rName))),
 					resource.TestCheckResourceAttr(resourceName, "delivery_policy", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "endpoint", "aws_kinesis_firehose_delivery_stream.test_stream", "arn"),
@@ -447,12 +447,12 @@ func TestAccAWSSNSTopicSubscription_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSNSTopicSubscriptionDestroy,
+		CheckDestroy: testAccCheckTopicSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSNSTopicSubscriptionConfig(rName),
+				Config: testAccTopicSubscriptionConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSNSTopicSubscriptionExists(resourceName, attributes),
+					testAccCheckTopicSubscriptionExists(resourceName, attributes),
 					acctest.CheckResourceDisappears(acctest.Provider, tfsns.ResourceTopicSubscription(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -470,12 +470,12 @@ func TestAccAWSSNSTopicSubscription_disappears_topic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSNSTopicSubscriptionDestroy,
+		CheckDestroy: testAccCheckTopicSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSNSTopicSubscriptionConfig(rName),
+				Config: testAccTopicSubscriptionConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSNSTopicSubscriptionExists(resourceName, attributes),
+					testAccCheckTopicSubscriptionExists(resourceName, attributes),
 					acctest.CheckResourceDisappears(acctest.Provider, tfsns.ResourceTopic(), "aws_sns_topic.test"),
 				),
 				ExpectNonEmptyPlan: true,
@@ -484,7 +484,7 @@ func TestAccAWSSNSTopicSubscription_disappears_topic(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSSNSTopicSubscriptionDestroy(s *terraform.State) error {
+func testAccCheckTopicSubscriptionDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -507,7 +507,7 @@ func testAccCheckAWSSNSTopicSubscriptionDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSSNSTopicSubscriptionExists(n string, attributes map[string]string) resource.TestCheckFunc {
+func testAccCheckTopicSubscriptionExists(n string, attributes map[string]string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -529,7 +529,7 @@ func testAccCheckAWSSNSTopicSubscriptionExists(n string, attributes map[string]s
 	}
 }
 
-func testAccCheckAWSSNSTopicSubscriptionDeliveryPolicyAttribute(attributes map[string]string, expectedDeliveryPolicy *tfsns.TopicSubscriptionDeliveryPolicy) resource.TestCheckFunc {
+func testAccCheckTopicSubscriptionDeliveryPolicyAttribute(attributes map[string]string, expectedDeliveryPolicy *tfsns.TopicSubscriptionDeliveryPolicy) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		apiDeliveryPolicyJSONString, ok := attributes["DeliveryPolicy"]
 
@@ -550,7 +550,7 @@ func testAccCheckAWSSNSTopicSubscriptionDeliveryPolicyAttribute(attributes map[s
 	}
 }
 
-func testAccCheckAWSSNSTopicSubscriptionRedrivePolicyAttribute(attributes map[string]string, expectedRedrivePolicyResource string) resource.TestCheckFunc {
+func testAccCheckTopicSubscriptionRedrivePolicyAttribute(attributes map[string]string, expectedRedrivePolicyResource string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		apiRedrivePolicyJSONString, ok := attributes["RedrivePolicy"]
 
@@ -617,7 +617,7 @@ func TestObfuscateEndpointPassword(t *testing.T) {
 	}
 }
 
-func testAccAWSSNSTopicSubscriptionConfig(rName string) string {
+func testAccTopicSubscriptionConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q
@@ -635,7 +635,7 @@ resource "aws_sns_topic_subscription" "test" {
 `, rName)
 }
 
-func testAccAWSSNSTopicSubscriptionConfig_filterPolicy(rName, policy string) string {
+func testAccTopicSubscriptionConfig_filterPolicy(rName, policy string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q
@@ -654,7 +654,7 @@ resource "aws_sns_topic_subscription" "test" {
 `, rName, policy)
 }
 
-func testAccAWSSNSTopicSubscriptionConfig_deliveryPolicy(rName, policy string) string {
+func testAccTopicSubscriptionConfig_deliveryPolicy(rName, policy string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q
@@ -673,7 +673,7 @@ resource "aws_sns_topic_subscription" "test" {
 `, rName, policy)
 }
 
-func testAccAWSSNSTopicSubscriptionConfig_redrivePolicy(rName, dlqName string) string {
+func testAccTopicSubscriptionConfig_redrivePolicy(rName, dlqName string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q
@@ -696,7 +696,7 @@ resource "aws_sns_topic_subscription" "test" {
 `, rName, dlqName)
 }
 
-func testAccAWSSNSTopicSubscriptionConfig_rawMessageDelivery(rName string, rawMessageDelivery bool) string {
+func testAccTopicSubscriptionConfig_rawMessageDelivery(rName string, rawMessageDelivery bool) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q
@@ -715,7 +715,7 @@ resource "aws_sns_topic_subscription" "test" {
 `, rName, rawMessageDelivery)
 }
 
-func testAccAWSSNSTopicSubscriptionConfig_autoConfirmingEndpoint(rName string) string {
+func testAccTopicSubscriptionConfig_autoConfirmingEndpoint(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q
@@ -840,7 +840,7 @@ resource "aws_sns_topic_subscription" "test" {
 `, rName)
 }
 
-func testAccAWSSNSTopicSubscriptionConfig_autoConfirmingSecuredEndpoint(rName string) string {
+func testAccTopicSubscriptionConfig_autoConfirmingSecuredEndpoint(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q
@@ -1042,7 +1042,7 @@ resource "aws_sns_topic_subscription" "test" {
 `, rName)
 }
 
-func testAccAWSSNSTopicSubscriptionEmailConfig(rName, email string) string {
+func testAccTopicSubscriptionEmailConfig(rName, email string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q
@@ -1056,7 +1056,7 @@ resource "aws_sns_topic_subscription" "test" {
 `, rName, email)
 }
 
-func testAccAWSSNSTopicSubscriptionConfig_firehose(rName string) string {
+func testAccTopicSubscriptionConfig_firehose(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q
