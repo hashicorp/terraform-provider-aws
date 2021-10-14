@@ -505,7 +505,7 @@ func resourceAwsCodeDeployDeploymentGroupCreate(d *schema.ResourceData, meta int
 	}
 
 	if attr, ok := d.GetOk("autoscaling_groups"); ok {
-		input.AutoScalingGroups = expandStringSet(attr.(*schema.Set))
+		input.AutoScalingGroups = flex.ExpandStringSet(attr.(*schema.Set))
 	}
 
 	if attr, ok := d.GetOk("on_premises_instance_tag_filter"); ok {
@@ -724,7 +724,7 @@ func resourceAwsCodeDeployDeploymentGroupUpdate(d *schema.ResourceData, meta int
 		// include (original or new) autoscaling groups when blue_green_deployment_config changes except for ECS
 		if _, isEcs := d.GetOk("ecs_service"); d.HasChange("autoscaling_groups") || (d.HasChange("blue_green_deployment_config") && !isEcs) {
 			_, n := d.GetChange("autoscaling_groups")
-			input.AutoScalingGroups = expandStringSet(n.(*schema.Set))
+			input.AutoScalingGroups = flex.ExpandStringSet(n.(*schema.Set))
 		}
 
 		// TagFilters aren't like tags. They don't append. They simply replace.
@@ -897,7 +897,7 @@ func buildTriggerConfigs(configured []interface{}) []*codedeploy.TriggerConfig {
 		var config codedeploy.TriggerConfig
 		m := raw.(map[string]interface{})
 
-		config.TriggerEvents = expandStringSet(m["trigger_events"].(*schema.Set))
+		config.TriggerEvents = flex.ExpandStringSet(m["trigger_events"].(*schema.Set))
 		config.TriggerName = aws.String(m["trigger_name"].(string))
 		config.TriggerTargetArn = aws.String(m["trigger_target_arn"].(string))
 
@@ -914,7 +914,7 @@ func buildAutoRollbackConfig(configured []interface{}) *codedeploy.AutoRollbackC
 	if len(configured) == 1 {
 		config := configured[0].(map[string]interface{})
 		result.Enabled = aws.Bool(config["enabled"].(bool))
-		result.Events = expandStringSet(config["events"].(*schema.Set))
+		result.Events = flex.ExpandStringSet(config["events"].(*schema.Set))
 	} else { // delete the configuration
 		result.Enabled = aws.Bool(false)
 		result.Events = make([]*string, 0)
@@ -930,7 +930,7 @@ func buildAlarmConfig(configured []interface{}) *codedeploy.AlarmConfiguration {
 
 	if len(configured) == 1 {
 		config := configured[0].(map[string]interface{})
-		names := expandStringSet(config["alarms"].(*schema.Set))
+		names := flex.ExpandStringSet(config["alarms"].(*schema.Set))
 		alarms := make([]*codedeploy.Alarm, 0, len(names))
 
 		for _, name := range names {
@@ -1043,7 +1043,7 @@ func expandCodeDeployTrafficRoute(l []interface{}) *codedeploy.TrafficRoute {
 	m := l[0].(map[string]interface{})
 
 	trafficRoute := &codedeploy.TrafficRoute{
-		ListenerArns: expandStringSet(m["listener_arns"].(*schema.Set)),
+		ListenerArns: flex.ExpandStringSet(m["listener_arns"].(*schema.Set)),
 	}
 
 	return trafficRoute
@@ -1220,7 +1220,7 @@ func triggerConfigsToMap(list []*codedeploy.TriggerConfig) []map[string]interfac
 	result := make([]map[string]interface{}, 0, len(list))
 	for _, tc := range list {
 		item := make(map[string]interface{})
-		item["trigger_events"] = flattenStringSet(tc.TriggerEvents)
+		item["trigger_events"] = flex.FlattenStringSet(tc.TriggerEvents)
 		item["trigger_name"] = aws.StringValue(tc.TriggerName)
 		item["trigger_target_arn"] = aws.StringValue(tc.TriggerTargetArn)
 		result = append(result, item)
@@ -1238,7 +1238,7 @@ func autoRollbackConfigToMap(config *codedeploy.AutoRollbackConfiguration) []map
 	if config != nil && (*config.Enabled || len(config.Events) > 0) {
 		item := make(map[string]interface{})
 		item["enabled"] = aws.BoolValue(config.Enabled)
-		item["events"] = flattenStringSet(config.Events)
+		item["events"] = flex.FlattenStringSet(config.Events)
 		result = append(result, item)
 	}
 
@@ -1259,7 +1259,7 @@ func alarmConfigToMap(config *codedeploy.AlarmConfiguration) []map[string]interf
 		}
 
 		item := make(map[string]interface{})
-		item["alarms"] = flattenStringSet(names)
+		item["alarms"] = flex.FlattenStringSet(names)
 		item["enabled"] = aws.BoolValue(config.Enabled)
 		item["ignore_poll_alarm_failure"] = aws.BoolValue(config.IgnorePollAlarmFailure)
 
@@ -1350,7 +1350,7 @@ func flattenCodeDeployTrafficRoute(trafficRoute *codedeploy.TrafficRoute) []inte
 	}
 
 	m := map[string]interface{}{
-		"listener_arns": flattenStringSet(trafficRoute.ListenerArns),
+		"listener_arns": flex.FlattenStringSet(trafficRoute.ListenerArns),
 	}
 
 	return []interface{}{m}
