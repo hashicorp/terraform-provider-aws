@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAWSSignerSigningProfile_basic(t *testing.T) {
+func TestAccSignerSigningProfileDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_signer_signing_profile.test"
 	resourceName := "aws_signer_signing_profile.test"
 	rString := sdkacctest.RandString(48)

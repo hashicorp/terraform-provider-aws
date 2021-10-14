@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSSignerSigningProfile_basic(t *testing.T) {
+func TestAccSignerSigningProfile_basic(t *testing.T) {
 	resourceName := "aws_signer_signing_profile.test_sp"
 	rString := sdkacctest.RandString(48)
 	profileName := fmt.Sprintf("tf_acc_sp_basic_%s", rString)
@@ -47,7 +47,7 @@ func TestAccAWSSignerSigningProfile_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSignerSigningProfile_GenerateNameWithNamePrefix(t *testing.T) {
+func TestAccSignerSigningProfile_generateNameWithNamePrefix(t *testing.T) {
 	resourceName := "aws_signer_signing_profile.test_sp"
 	namePrefix := "tf_acc_sp_basic_"
 
@@ -70,7 +70,7 @@ func TestAccAWSSignerSigningProfile_GenerateNameWithNamePrefix(t *testing.T) {
 	})
 }
 
-func TestAccAWSSignerSigningProfile_GenerateName(t *testing.T) {
+func TestAccSignerSigningProfile_generateName(t *testing.T) {
 	resourceName := "aws_signer_signing_profile.test_sp"
 
 	var conf signer.GetSigningProfileOutput
@@ -92,7 +92,7 @@ func TestAccAWSSignerSigningProfile_GenerateName(t *testing.T) {
 	})
 }
 
-func TestAccAWSSignerSigningProfile_tags(t *testing.T) {
+func TestAccSignerSigningProfile_tags(t *testing.T) {
 	resourceName := "aws_signer_signing_profile.test_sp"
 	namePrefix := "tf_acc_sp_basic_"
 
@@ -123,7 +123,7 @@ func TestAccAWSSignerSigningProfile_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSSignerSigningProfile_SignatureValidityPeriod(t *testing.T) {
+func TestAccSignerSigningProfile_signatureValidityPeriod(t *testing.T) {
 	resourceName := "aws_signer_signing_profile.test_sp"
 	namePrefix := "tf_acc_sp_basic_"
 
