@@ -1,10 +1,10 @@
-package datasync
+package datasync_test
 
 import (
 	"testing"
 
-	tfdatasync "github.com/hashicorp/terraform-provider-aws/aws/internal/service/datasync"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfdatasync "github.com/hashicorp/terraform-provider-aws/internal/service/datasync"
 	tfdatasync "github.com/hashicorp/terraform-provider-aws/internal/service/datasync"
 )
 
