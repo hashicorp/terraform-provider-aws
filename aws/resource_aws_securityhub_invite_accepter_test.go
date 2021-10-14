@@ -27,13 +27,13 @@ func testAccAWSSecurityHubInviteAccepter_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckAWSSecurityHubInviteAccepterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSecurityHubInviteAccepterConfig_basic(testAccDefaultEmailAddress),
+				Config: testAccAWSSecurityHubInviteAccepterConfig_basic(acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSecurityHubInviteAccepterExists(resourceName),
 				),
 			},
 			{
-				Config:            testAccAWSSecurityHubInviteAccepterConfig_basic(testAccDefaultEmailAddress),
+				Config:            testAccAWSSecurityHubInviteAccepterConfig_basic(acctest.DefaultEmailAddress),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -49,7 +49,7 @@ func testAccCheckAWSSecurityHubInviteAccepterExists(resourceName string) resourc
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).securityhubconn
+		conn := acctest.Provider.Meta().(*AWSClient).securityhubconn
 
 		resp, err := conn.GetMasterAccount(&securityhub.GetMasterAccountInput{})
 
@@ -66,7 +66,7 @@ func testAccCheckAWSSecurityHubInviteAccepterExists(resourceName string) resourc
 }
 
 func testAccCheckAWSSecurityHubInviteAccepterDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).securityhubconn
+	conn := acctest.Provider.Meta().(*AWSClient).securityhubconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_securityhub_invite_accepter" {

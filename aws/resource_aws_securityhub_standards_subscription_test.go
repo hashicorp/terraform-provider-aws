@@ -20,7 +20,7 @@ func testAccAWSSecurityHubStandardsSubscription_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSecurityHubStandardsSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -45,14 +45,14 @@ func testAccAWSSecurityHubStandardsSubscription_disappears(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSecurityHubStandardsSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSecurityHubStandardsSubscriptionConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSecurityHubStandardsSubscriptionExists(resourceName, &standardsSubscription),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSecurityHubStandardsSubscription(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSecurityHubStandardsSubscription(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -71,7 +71,7 @@ func testAccCheckAWSSecurityHubStandardsSubscriptionExists(n string, standardsSu
 			return fmt.Errorf("No Security Hub Standards Subscription ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).securityhubconn
+		conn := acctest.Provider.Meta().(*AWSClient).securityhubconn
 
 		output, err := finder.StandardsSubscriptionByARN(conn, rs.Primary.ID)
 
@@ -86,7 +86,7 @@ func testAccCheckAWSSecurityHubStandardsSubscriptionExists(n string, standardsSu
 }
 
 func testAccCheckAWSSecurityHubStandardsSubscriptionDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).securityhubconn
+	conn := acctest.Provider.Meta().(*AWSClient).securityhubconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_securityhub_standards_subscription" {

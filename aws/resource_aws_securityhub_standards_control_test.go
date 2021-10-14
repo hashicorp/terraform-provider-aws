@@ -21,7 +21,7 @@ func testAccAWSSecurityHubStandardsControl_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: nil, //lintignore:AT001
 		Steps: []resource.TestStep{
 			{
@@ -50,7 +50,7 @@ func testAccAWSSecurityHubStandardsControl_disabledControlStatus(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: nil, //lintignore:AT001
 		Steps: []resource.TestStep{
 			{
@@ -69,7 +69,7 @@ func testAccAWSSecurityHubStandardsControl_enabledControlStatusAndDisabledReason
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: nil, //lintignore:AT001
 		Steps: []resource.TestStep{
 			{
@@ -91,7 +91,7 @@ func testAccCheckAWSSecurityHubStandardsControlExists(n string, control *securit
 			return fmt.Errorf("No Security Hub Standards Control ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).securityhubconn
+		conn := acctest.Provider.Meta().(*AWSClient).securityhubconn
 
 		standardsSubscriptionARN, err := tfsecurityhub.StandardsControlARNToStandardsSubscriptionARN(rs.Primary.ID)
 
