@@ -21,64 +21,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_networkfirewall_firewall", &resource.Sweeper{
-		Name:         "aws_networkfirewall_firewall",
-		F:            sweepFirewalls,
-		Dependencies: []string{"aws_networkfirewall_logging_configuration"},
-	})
-}
 
-func sweepFirewalls(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).NetworkFirewallConn
-	ctx := context.TODO()
-	input := &networkfirewall.ListFirewallsInput{MaxResults: aws.Int64(100)}
-	var sweeperErrs *multierror.Error
 
-	for {
-		resp, err := conn.ListFirewallsWithContext(ctx, input)
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping NetworkFirewall Firewall sweep for %s: %s", region, err)
-			return nil
-		}
-		if err != nil {
-			return fmt.Errorf("error retrieving NetworkFirewall firewalls: %s", err)
-		}
 
-		for _, f := range resp.Firewalls {
-			if f == nil {
-				continue
-			}
-
-			arn := aws.StringValue(f.FirewallArn)
-
-			log.Printf("[INFO] Deleting NetworkFirewall Firewall: %s", arn)
-
-			r := tfnetworkfirewall.ResourceFirewall()
-			d := r.Data(nil)
-			d.SetId(arn)
-			diags := r.DeleteContext(ctx, d, client)
-			for i := range diags {
-				if diags[i].Severity == diag.Error {
-					log.Printf("[ERROR] %s", diags[i].Summary)
-					sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf(diags[i].Summary))
-					continue
-				}
-			}
-		}
-
-		if aws.StringValue(resp.NextToken) == "" {
-			break
-		}
-		input.NextToken = resp.NextToken
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func TestAccNetworkFirewallFirewall_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

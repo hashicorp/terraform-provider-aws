@@ -20,65 +20,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_networkfirewall_rule_group", &resource.Sweeper{
-		Name: "aws_networkfirewall_rule_group",
-		F:    sweepRuleGroups,
-		Dependencies: []string{
-			"aws_networkfirewall_firewall_policy",
-		},
-	})
-}
 
-func sweepRuleGroups(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-	conn := client.(*conns.AWSClient).NetworkFirewallConn
-	ctx := context.Background()
-	input := &networkfirewall.ListRuleGroupsInput{MaxResults: aws.Int64(100)}
-	var sweeperErrs *multierror.Error
 
-	for {
-		resp, err := conn.ListRuleGroupsWithContext(ctx, input)
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping NetworkFirewall Rule Group sweep for %s: %s", region, err)
-			return nil
-		}
-		if err != nil {
-			return fmt.Errorf("error retrieving NetworkFirewall Rule Groups: %w", err)
-		}
 
-		for _, r := range resp.RuleGroups {
-			if r == nil {
-				continue
-			}
-
-			arn := aws.StringValue(r.Arn)
-			log.Printf("[INFO] Deleting NetworkFirewall Rule Group: %s", arn)
-
-			r := tfnetworkfirewall.ResourceRuleGroup()
-			d := r.Data(nil)
-			d.SetId(arn)
-			diags := r.DeleteContext(ctx, d, client)
-			for i := range diags {
-				if diags[i].Severity == diag.Error {
-					log.Printf("[ERROR] %s", diags[i].Summary)
-					sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf(diags[i].Summary))
-					continue
-				}
-			}
-		}
-
-		if aws.StringValue(resp.NextToken) == "" {
-			break
-		}
-		input.NextToken = resp.NextToken
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func TestAccNetworkFirewallRuleGroup_Basic_rulesSourceList(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
