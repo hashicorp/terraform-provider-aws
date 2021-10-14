@@ -13,13 +13,13 @@ import (
 )
 
 func TestAccAWSChimeVoiceConnectorTerminationCredentials_basic(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_chime_voice_connector_termination_credentials.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, chime.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSChimeVoiceConnectorTerminationCredentialsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -40,20 +40,20 @@ func TestAccAWSChimeVoiceConnectorTerminationCredentials_basic(t *testing.T) {
 }
 
 func TestAccAWSChimeVoiceConnectorTerminationCredentials_disappears(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_chime_voice_connector_termination_credentials.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, chime.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSChimeVoiceConnectorTerminationCredentialsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSChimeVoiceConnectorTerminationCredentialsConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSChimeVoiceConnectorTerminationCredentialsExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsChimeVoiceConnectorTerminationCredentials(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsChimeVoiceConnectorTerminationCredentials(), resourceName),
 				),
 				ExpectNonEmptyPlan: false,
 			},
@@ -62,13 +62,13 @@ func TestAccAWSChimeVoiceConnectorTerminationCredentials_disappears(t *testing.T
 }
 
 func TestAccAWSChimeVoiceConnectorTerminationCredentials_update(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_chime_voice_connector_termination_credentials.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, chime.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSChimeVoiceConnectorTerminationCredentialsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -100,7 +100,7 @@ func testAccCheckAWSChimeVoiceConnectorTerminationCredentialsExists(name string)
 			return fmt.Errorf("no Chime Voice Connector termination credentials ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).chimeconn
+		conn := acctest.Provider.Meta().(*AWSClient).chimeconn
 		input := &chime.ListVoiceConnectorTerminationCredentialsInput{
 			VoiceConnectorId: aws.String(rs.Primary.ID),
 		}
@@ -123,7 +123,7 @@ func testAccCheckAWSChimeVoiceConnectorTerminationCredentialsDestroy(s *terrafor
 		if rs.Type != "aws_chime_voice_connector_termination_credentials" {
 			continue
 		}
-		conn := testAccProvider.Meta().(*AWSClient).chimeconn
+		conn := acctest.Provider.Meta().(*AWSClient).chimeconn
 		input := &chime.ListVoiceConnectorTerminationCredentialsInput{
 			VoiceConnectorId: aws.String(rs.Primary.ID),
 		}

@@ -13,13 +13,13 @@ import (
 )
 
 func TestAccAWSChimeVoiceConnectorLogging_basic(t *testing.T) {
-	name := sdkacctest.RandomWithPrefix("tf-acc-test")
+	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_chime_voice_connector_logging.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, chime.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSChimeVoiceConnectorDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -39,20 +39,20 @@ func TestAccAWSChimeVoiceConnectorLogging_basic(t *testing.T) {
 }
 
 func TestAccAWSChimeVoiceConnectorLogging_disappears(t *testing.T) {
-	name := sdkacctest.RandomWithPrefix("tf-acc-test")
+	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_chime_voice_connector_logging.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, chime.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSChimeVoiceConnectorDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSChimeVoiceConnectorLoggingConfig(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSChimeVoiceConnectorLoggingExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsChimeVoiceConnectorLogging(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsChimeVoiceConnectorLogging(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -61,13 +61,13 @@ func TestAccAWSChimeVoiceConnectorLogging_disappears(t *testing.T) {
 }
 
 func TestAccAWSChimeVoiceConnectorLogging_update(t *testing.T) {
-	name := sdkacctest.RandomWithPrefix("tf-acc-test")
+	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_chime_voice_connector_logging.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, chime.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSChimeVoiceConnectorDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -131,7 +131,7 @@ func testAccCheckAWSChimeVoiceConnectorLoggingExists(name string) resource.TestC
 			return fmt.Errorf("no Chime Voice Connector logging ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).chimeconn
+		conn := acctest.Provider.Meta().(*AWSClient).chimeconn
 		input := &chime.GetVoiceConnectorLoggingConfigurationInput{
 			VoiceConnectorId: aws.String(rs.Primary.ID),
 		}
