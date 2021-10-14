@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/quicksight/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceDataSource() *schema.Resource {
@@ -40,7 +41,7 @@ func ResourceDataSource() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ValidateFunc: validateAwsAccountId,
+				ValidateFunc: verify.ValidAccountID,
 			},
 
 			"credentials": {
@@ -52,7 +53,7 @@ func ResourceDataSource() *schema.Resource {
 						"copy_source_arn": {
 							Type:          schema.TypeString,
 							Optional:      true,
-							ValidateFunc:  validateArn,
+							ValidateFunc:  verify.ValidARN,
 							ConflictsWith: []string{"credentials.0.credential_pair"},
 						},
 						"credential_pair": {
@@ -552,7 +553,7 @@ func ResourceDataSource() *schema.Resource {
 						"principal": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 					},
 				},
@@ -592,7 +593,7 @@ func ResourceDataSource() *schema.Resource {
 						"vpc_connection_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 					},
 				},
