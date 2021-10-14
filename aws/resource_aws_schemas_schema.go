@@ -18,12 +18,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSchemasSchema() *schema.Resource {
+func ResourceSchema() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSchemasSchemaCreate,
-		Read:   resourceAwsSchemasSchemaRead,
-		Update: resourceAwsSchemasSchemaUpdate,
-		Delete: resourceAwsSchemasSchemaDelete,
+		Create: resourceSchemaCreate,
+		Read:   resourceSchemaRead,
+		Update: resourceSchemaUpdate,
+		Delete: resourceSchemaDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -91,7 +91,7 @@ func resourceAwsSchemasSchema() *schema.Resource {
 	}
 }
 
-func resourceAwsSchemasSchemaCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceSchemaCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SchemasConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -124,10 +124,10 @@ func resourceAwsSchemasSchemaCreate(d *schema.ResourceData, meta interface{}) er
 
 	d.SetId(id)
 
-	return resourceAwsSchemasSchemaRead(d, meta)
+	return resourceSchemaRead(d, meta)
 }
 
-func resourceAwsSchemasSchemaRead(d *schema.ResourceData, meta interface{}) error {
+func resourceSchemaRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SchemasConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -187,7 +187,7 @@ func resourceAwsSchemasSchemaRead(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func resourceAwsSchemasSchemaUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceSchemaUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SchemasConn
 
 	if d.HasChanges("content", "description", "type") {
@@ -226,10 +226,10 @@ func resourceAwsSchemasSchemaUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
-	return resourceAwsSchemasSchemaRead(d, meta)
+	return resourceSchemaRead(d, meta)
 }
 
-func resourceAwsSchemasSchemaDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceSchemaDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SchemasConn
 
 	name, registryName, err := tfschemas.SchemaParseResourceID(d.Id())

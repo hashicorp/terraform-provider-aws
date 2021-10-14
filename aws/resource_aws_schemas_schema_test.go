@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 const (
@@ -118,7 +119,7 @@ func TestAccAWSSchemasSchema_disappears(t *testing.T) {
 				Config: testAccAWSSchemasSchemaConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemasSchemaExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSchemasSchema(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceSchema(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

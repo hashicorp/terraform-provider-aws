@@ -15,12 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSchemasDiscoverer() *schema.Resource {
+func ResourceDiscoverer() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSchemasDiscovererCreate,
-		Read:   resourceAwsSchemasDiscovererRead,
-		Update: resourceAwsSchemasDiscovererUpdate,
-		Delete: resourceAwsSchemasDiscovererDelete,
+		Create: resourceDiscovererCreate,
+		Read:   resourceDiscovererRead,
+		Update: resourceDiscovererUpdate,
+		Delete: resourceDiscovererDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -52,7 +52,7 @@ func resourceAwsSchemasDiscoverer() *schema.Resource {
 	}
 }
 
-func resourceAwsSchemasDiscovererCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceDiscovererCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SchemasConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -79,10 +79,10 @@ func resourceAwsSchemasDiscovererCreate(d *schema.ResourceData, meta interface{}
 
 	d.SetId(aws.StringValue(output.DiscovererId))
 
-	return resourceAwsSchemasDiscovererRead(d, meta)
+	return resourceDiscovererRead(d, meta)
 }
 
-func resourceAwsSchemasDiscovererRead(d *schema.ResourceData, meta interface{}) error {
+func resourceDiscovererRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SchemasConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -122,7 +122,7 @@ func resourceAwsSchemasDiscovererRead(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func resourceAwsSchemasDiscovererUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceDiscovererUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SchemasConn
 
 	if d.HasChange("description") {
@@ -146,10 +146,10 @@ func resourceAwsSchemasDiscovererUpdate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	return resourceAwsSchemasDiscovererRead(d, meta)
+	return resourceDiscovererRead(d, meta)
 }
 
-func resourceAwsSchemasDiscovererDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDiscovererDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SchemasConn
 
 	log.Printf("[INFO] Deleting EventBridge Schemas Discoverer (%s)", d.Id())

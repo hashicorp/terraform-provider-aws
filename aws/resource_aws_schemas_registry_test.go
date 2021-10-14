@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -58,7 +59,7 @@ func testSweepSchemasRegistries(region string) error {
 						continue
 					}
 
-					r := resourceAwsSchemasSchema()
+					r := ResourceSchema()
 					d := r.Data(nil)
 					d.SetId(tfschemas.SchemaCreateResourceID(schemaName, registryName))
 					err = r.Delete(d, client)
@@ -81,7 +82,7 @@ func testSweepSchemasRegistries(region string) error {
 				continue
 			}
 
-			r := resourceAwsSchemasRegistry()
+			r := ResourceRegistry()
 			d := r.Data(nil)
 			d.SetId(registryName)
 			err = r.Delete(d, client)
@@ -153,7 +154,7 @@ func TestAccAWSSchemasRegistry_disappears(t *testing.T) {
 				Config: testAccAWSSchemasRegistryConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemasRegistryExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSchemasRegistry(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceRegistry(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
