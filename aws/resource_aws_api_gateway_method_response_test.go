@@ -7,19 +7,20 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSAPIGatewayMethodResponse_basic(t *testing.T) {
 	var conf apigateway.MethodResponse
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(10))
+	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(10))
 	resourceName := "aws_api_gateway_method_response.error"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayMethodResponseDestroy,
 		Steps: []resource.TestStep{
@@ -58,12 +59,12 @@ func TestAccAWSAPIGatewayMethodResponse_basic(t *testing.T) {
 
 func TestAccAWSAPIGatewayMethodResponse_disappears(t *testing.T) {
 	var conf apigateway.MethodResponse
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(10))
+	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(10))
 	resourceName := "aws_api_gateway_method_response.error"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayMethodResponseDestroy,
 		Steps: []resource.TestStep{
@@ -71,7 +72,7 @@ func TestAccAWSAPIGatewayMethodResponse_disappears(t *testing.T) {
 				Config: testAccAWSAPIGatewayMethodResponseConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayMethodResponseExists(resourceName, &conf),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsApiGatewayMethodResponse(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsApiGatewayMethodResponse(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

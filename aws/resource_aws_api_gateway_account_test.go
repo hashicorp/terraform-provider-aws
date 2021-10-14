@@ -7,15 +7,16 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSAPIGatewayAccount_basic(t *testing.T) {
 	var conf apigateway.Account
 
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	firstName := fmt.Sprintf("tf_acc_api_gateway_cloudwatch_%d", rInt)
 	secondName := fmt.Sprintf("tf_acc_api_gateway_cloudwatch_modified_%d", rInt)
 	resourceName := "aws_api_gateway_account.test"
@@ -23,8 +24,8 @@ func TestAccAWSAPIGatewayAccount_basic(t *testing.T) {
 	expectedRoleArn_second := regexp.MustCompile("role/" + secondName + "$")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayAccountDestroy,
 		Steps: []resource.TestStep{
@@ -33,7 +34,7 @@ func TestAccAWSAPIGatewayAccount_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayAccountExists(resourceName, &conf),
 					testAccCheckAWSAPIGatewayAccountCloudwatchRoleArn(&conf, expectedRoleArn_first),
-					testAccMatchResourceAttrGlobalARN(resourceName, "cloudwatch_role_arn", "iam", expectedRoleArn_first),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "cloudwatch_role_arn", "iam", expectedRoleArn_first),
 				),
 			},
 			{
@@ -47,7 +48,7 @@ func TestAccAWSAPIGatewayAccount_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayAccountExists(resourceName, &conf),
 					testAccCheckAWSAPIGatewayAccountCloudwatchRoleArn(&conf, expectedRoleArn_second),
-					testAccMatchResourceAttrGlobalARN(resourceName, "cloudwatch_role_arn", "iam", expectedRoleArn_second),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "cloudwatch_role_arn", "iam", expectedRoleArn_second),
 				),
 			},
 			{
@@ -122,7 +123,7 @@ func testAccPreCheckAWSAPIGatewayAccountCloudWatchRoleArn(t *testing.T) {
 
 	output, err := conn.GetAccount(&apigateway.GetAccountInput{})
 
-	if testAccPreCheckSkipError(err) {
+	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping tests: %s", err)
 	}
 

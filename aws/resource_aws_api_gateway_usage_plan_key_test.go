@@ -8,21 +8,22 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSAPIGatewayUsagePlanKey_basic(t *testing.T) {
 	var conf apigateway.UsagePlanKey
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	apiGatewayApiKeyResourceName := "aws_api_gateway_api_key.test"
 	apiGatewayUsagePlanResourceName := "aws_api_gateway_usage_plan.test"
 	resourceName := "aws_api_gateway_usage_plan_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayUsagePlanKeyDestroy,
 		Steps: []resource.TestStep{
@@ -49,12 +50,12 @@ func TestAccAWSAPIGatewayUsagePlanKey_basic(t *testing.T) {
 
 func TestAccAWSAPIGatewayUsagePlanKey_disappears(t *testing.T) {
 	var conf apigateway.UsagePlanKey
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_api_gateway_usage_plan_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayUsagePlanKeyDestroy,
 		Steps: []resource.TestStep{
@@ -62,7 +63,7 @@ func TestAccAWSAPIGatewayUsagePlanKey_disappears(t *testing.T) {
 				Config: testAccAWSApiGatewayUsagePlanKeyConfigKeyTypeApiKey(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayUsagePlanKeyExists(resourceName, &conf),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsApiGatewayUsagePlanKey(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsApiGatewayUsagePlanKey(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -72,11 +73,11 @@ func TestAccAWSAPIGatewayUsagePlanKey_disappears(t *testing.T) {
 
 func TestAccAWSAPIGatewayUsagePlanKey_KeyId_Concurrency(t *testing.T) {
 	var conf apigateway.UsagePlanKey
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayUsagePlanKeyDestroy,
 		Steps: []resource.TestStep{
@@ -232,7 +233,7 @@ resource "aws_api_gateway_deployment" "test" {
 }
 
 func testAccAWSApiGatewayUsagePlanKeyConfigKeyTypeApiKey(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSAPIGatewayUsagePlanKeyConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_api_gateway_api_key" "test" {
@@ -257,7 +258,7 @@ resource "aws_api_gateway_usage_plan_key" "test" {
 }
 
 func testAccAWSApiGatewayUsagePlanKeyConfigKeyIdConcurrency(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSAPIGatewayUsagePlanKeyConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_api_gateway_api_key" "test" {

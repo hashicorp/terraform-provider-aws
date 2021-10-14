@@ -8,19 +8,20 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSAPIGatewayApiKey_basic(t *testing.T) {
 	var apiKey1 apigateway.ApiKey
 	resourceName := "aws_api_gateway_api_key.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayApiKeyDestroy,
 		Steps: []resource.TestStep{
@@ -28,7 +29,7 @@ func TestAccAWSAPIGatewayApiKey_basic(t *testing.T) {
 				Config: testAccAWSAPIGatewayApiKeyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayApiKeyExists(resourceName, &apiKey1),
-					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/apikeys/+.`)),
+					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/apikeys/+.`)),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
@@ -49,11 +50,11 @@ func TestAccAWSAPIGatewayApiKey_basic(t *testing.T) {
 func TestAccAWSAPIGatewayApiKey_Tags(t *testing.T) {
 	var apiKey1 apigateway.ApiKey
 	resourceName := "aws_api_gateway_api_key.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayApiKeyDestroy,
 		Steps: []resource.TestStep{
@@ -94,11 +95,11 @@ func TestAccAWSAPIGatewayApiKey_Tags(t *testing.T) {
 func TestAccAWSAPIGatewayApiKey_Description(t *testing.T) {
 	var apiKey1, apiKey2 apigateway.ApiKey
 	resourceName := "aws_api_gateway_api_key.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayApiKeyDestroy,
 		Steps: []resource.TestStep{
@@ -129,11 +130,11 @@ func TestAccAWSAPIGatewayApiKey_Description(t *testing.T) {
 func TestAccAWSAPIGatewayApiKey_Enabled(t *testing.T) {
 	var apiKey1, apiKey2 apigateway.ApiKey
 	resourceName := "aws_api_gateway_api_key.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayApiKeyDestroy,
 		Steps: []resource.TestStep{
@@ -164,11 +165,11 @@ func TestAccAWSAPIGatewayApiKey_Enabled(t *testing.T) {
 func TestAccAWSAPIGatewayApiKey_Value(t *testing.T) {
 	var apiKey1 apigateway.ApiKey
 	resourceName := "aws_api_gateway_api_key.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayApiKeyDestroy,
 		Steps: []resource.TestStep{
@@ -191,11 +192,11 @@ func TestAccAWSAPIGatewayApiKey_Value(t *testing.T) {
 func TestAccAWSAPIGatewayApiKey_disappears(t *testing.T) {
 	var apiKey1 apigateway.ApiKey
 	resourceName := "aws_api_gateway_api_key.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayApiKeyDestroy,
 		Steps: []resource.TestStep{
@@ -203,7 +204,7 @@ func TestAccAWSAPIGatewayApiKey_disappears(t *testing.T) {
 				Config: testAccAWSAPIGatewayApiKeyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayApiKeyExists(resourceName, &apiKey1),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsApiGatewayApiKey(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsApiGatewayApiKey(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSAPIGatewayClientCertificate_basic(t *testing.T) {
@@ -17,8 +18,8 @@ func TestAccAWSAPIGatewayClientCertificate_basic(t *testing.T) {
 	resourceName := "aws_api_gateway_client_certificate.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayClientCertificateDestroy,
 		Steps: []resource.TestStep{
@@ -26,7 +27,7 @@ func TestAccAWSAPIGatewayClientCertificate_basic(t *testing.T) {
 				Config: testAccAWSAPIGatewayClientCertificateConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayClientCertificateExists(resourceName, &conf),
-					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/clientcertificates/+.`)),
+					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/clientcertificates/+.`)),
 					resource.TestCheckResourceAttr(resourceName, "description", "Hello from TF acceptance test"),
 				),
 			},
@@ -39,7 +40,7 @@ func TestAccAWSAPIGatewayClientCertificate_basic(t *testing.T) {
 				Config: testAccAWSAPIGatewayClientCertificateConfig_basic_updated,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayClientCertificateExists(resourceName, &conf),
-					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/clientcertificates/+.`)),
+					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/clientcertificates/+.`)),
 					resource.TestCheckResourceAttr(resourceName, "description", "Hello from TF acceptance test - updated"),
 				),
 			},
@@ -52,8 +53,8 @@ func TestAccAWSAPIGatewayClientCertificate_tags(t *testing.T) {
 	resourceName := "aws_api_gateway_client_certificate.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayClientCertificateDestroy,
 		Steps: []resource.TestStep{
@@ -96,8 +97,8 @@ func TestAccAWSAPIGatewayClientCertificate_disappears(t *testing.T) {
 	resourceName := "aws_api_gateway_client_certificate.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayClientCertificateDestroy,
 		Steps: []resource.TestStep{
@@ -105,7 +106,7 @@ func TestAccAWSAPIGatewayClientCertificate_disappears(t *testing.T) {
 				Config: testAccAWSAPIGatewayClientCertificateConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayClientCertificateExists(resourceName, &conf),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsApiGatewayClientCertificate(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsApiGatewayClientCertificate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
