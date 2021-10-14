@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func RegexMatchSetByID(conn *wafregional.WAFRegional, id string) (*waf.RegexMatchSet, error) {
+func FindRegexMatchSetByID(conn *wafregional.WAFRegional, id string) (*waf.RegexMatchSet, error) {
 	result, err := conn.GetRegexMatchSet(&waf.GetRegexMatchSetInput{
 		RegexMatchSetId: aws.String(id),
 	})

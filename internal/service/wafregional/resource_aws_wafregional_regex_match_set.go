@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfwafregional "github.com/hashicorp/terraform-provider-aws/internal/service/wafregional"
 )
 
 func ResourceRegexMatchSet() *schema.Resource {
@@ -101,7 +102,7 @@ func resourceRegexMatchSetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFRegionalConn
 
 	log.Printf("[INFO] Reading WAF Regional Regex Match Set: %s", d.Get("name").(string))
-	set, err := finder.RegexMatchSetByID(conn, d.Id())
+	set, err := tfwafregional.FindRegexMatchSetByID(conn, d.Id())
 	if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
 		log.Printf("[WARN] WAF Regional Regex Match Set (%s) not found, removing from state", d.Id())
 		d.SetId("")

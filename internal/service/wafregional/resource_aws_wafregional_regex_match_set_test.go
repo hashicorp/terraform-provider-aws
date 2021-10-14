@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfwafregional "github.com/hashicorp/terraform-provider-aws/internal/service/wafregional"
 )
 
 func init() {
@@ -46,7 +47,7 @@ func testSweepWafRegionalRegexMatchSet(region string) error {
 		for _, r := range page.RegexMatchSets {
 			id := aws.StringValue(r.RegexMatchSetId)
 
-			set, err := finder.RegexMatchSetByID(conn, id)
+			set, err := tfwafregional.FindRegexMatchSetByID(conn, id)
 			if err != nil {
 				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving WAF Regional Regex Match Set (%s): %w", id, err))
 				continue
