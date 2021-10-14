@@ -12,14 +12,14 @@ import (
 )
 
 func TestAccDataSourceAwsSecretsManagerSecretRotation_basic(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_secretsmanager_secret_rotation.test"
 	datasourceName := "data.aws_secretsmanager_secret_rotation.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckAWSSecretsManager(t) },
 		ErrorCheck: acctest.ErrorCheck(t, secretsmanager.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDataSourceAwsSecretsManagerSecretRotationConfig_NonExistent,

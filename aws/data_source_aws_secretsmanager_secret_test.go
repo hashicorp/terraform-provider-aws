@@ -16,7 +16,7 @@ func TestAccDataSourceAwsSecretsManagerSecret_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckAWSSecretsManager(t) },
 		ErrorCheck: acctest.ErrorCheck(t, secretsmanager.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDataSourceAwsSecretsManagerSecretConfig_MissingRequired,
@@ -35,14 +35,14 @@ func TestAccDataSourceAwsSecretsManagerSecret_basic(t *testing.T) {
 }
 
 func TestAccDataSourceAwsSecretsManagerSecret_ARN(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_secretsmanager_secret.test"
 	datasourceName := "data.aws_secretsmanager_secret.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckAWSSecretsManager(t) },
 		ErrorCheck: acctest.ErrorCheck(t, secretsmanager.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsSecretsManagerSecretConfig_ARN(rName),
@@ -55,14 +55,14 @@ func TestAccDataSourceAwsSecretsManagerSecret_ARN(t *testing.T) {
 }
 
 func TestAccDataSourceAwsSecretsManagerSecret_Name(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_secretsmanager_secret.test"
 	datasourceName := "data.aws_secretsmanager_secret.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckAWSSecretsManager(t) },
 		ErrorCheck: acctest.ErrorCheck(t, secretsmanager.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsSecretsManagerSecretConfig_Name(rName),
@@ -75,14 +75,14 @@ func TestAccDataSourceAwsSecretsManagerSecret_Name(t *testing.T) {
 }
 
 func TestAccDataSourceAwsSecretsManagerSecret_Policy(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_secretsmanager_secret.test"
 	datasourceName := "data.aws_secretsmanager_secret.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckAWSSecretsManager(t) },
 		ErrorCheck: acctest.ErrorCheck(t, secretsmanager.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsSecretsManagerSecretConfig_Policy(rName),

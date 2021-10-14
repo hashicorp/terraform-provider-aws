@@ -13,14 +13,14 @@ import (
 )
 
 func TestAccDataSourceAwsSecretsManagerSecretVersion_basic(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_secretsmanager_secret_version.test"
 	datasourceName := "data.aws_secretsmanager_secret_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckAWSSecretsManager(t) },
 		ErrorCheck: acctest.ErrorCheck(t, secretsmanager.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDataSourceAwsSecretsManagerSecretVersionConfig_NonExistent,
@@ -37,14 +37,14 @@ func TestAccDataSourceAwsSecretsManagerSecretVersion_basic(t *testing.T) {
 }
 
 func TestAccDataSourceAwsSecretsManagerSecretVersion_VersionID(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_secretsmanager_secret_version.test"
 	datasourceName := "data.aws_secretsmanager_secret_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckAWSSecretsManager(t) },
 		ErrorCheck: acctest.ErrorCheck(t, secretsmanager.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsSecretsManagerSecretVersionConfig_VersionID(rName),
@@ -57,14 +57,14 @@ func TestAccDataSourceAwsSecretsManagerSecretVersion_VersionID(t *testing.T) {
 }
 
 func TestAccDataSourceAwsSecretsManagerSecretVersion_VersionStage(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_secretsmanager_secret_version.test"
 	datasourceName := "data.aws_secretsmanager_secret_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckAWSSecretsManager(t) },
 		ErrorCheck: acctest.ErrorCheck(t, secretsmanager.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsSecretsManagerSecretVersionConfig_VersionStage_Custom(rName),
