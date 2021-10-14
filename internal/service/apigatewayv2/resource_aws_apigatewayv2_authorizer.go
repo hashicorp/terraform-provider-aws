@@ -13,6 +13,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfapigatewayv2 "github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
+	tfapigatewayv2 "github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
+	tfapigatewayv2 "github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
+	tfapigatewayv2 "github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
+	tfapigatewayv2 "github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
 )
 
 func ResourceAuthorizer() *schema.Resource {
@@ -100,7 +105,7 @@ func resourceAuthorizerCreate(d *schema.ResourceData, meta interface{}) error {
 	apiId := d.Get("api_id").(string)
 	authorizerType := d.Get("authorizer_type").(string)
 
-	apiOutput, err := finder.ApiByID(conn, apiId)
+	apiOutput, err := tfapigatewayv2.FindAPIByID(conn, apiId)
 
 	if err != nil {
 		return fmt.Errorf("error reading API Gateway v2 API (%s): %s", apiId, err)

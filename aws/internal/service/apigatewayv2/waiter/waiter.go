@@ -13,18 +13,18 @@ const (
 	DeploymentDeployedTimeout = 5 * time.Minute
 
 	// Maximum amount of time to wait for a VPC Link to return Available
-	VpcLinkAvailableTimeout = 10 * time.Minute
+	VPCLinkAvailableTimeout = 10 * time.Minute
 
 	// Maximum amount of time to wait for a VPC Link to return Deleted
-	VpcLinkDeletedTimeout = 10 * time.Minute
+	VPCLinkDeletedTimeout = 10 * time.Minute
 )
 
-// DeploymentDeployed waits for a Deployment to return Deployed
-func DeploymentDeployed(conn *apigatewayv2.ApiGatewayV2, apiId, deploymentId string) (*apigatewayv2.GetDeploymentOutput, error) {
+// WaitDeploymentDeployed waits for a Deployment to return Deployed
+func WaitDeploymentDeployed(conn *apigatewayv2.ApiGatewayV2, apiId, deploymentId string) (*apigatewayv2.GetDeploymentOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{apigatewayv2.DeploymentStatusPending},
 		Target:  []string{apigatewayv2.DeploymentStatusDeployed},
-		Refresh: DeploymentStatus(conn, apiId, deploymentId),
+		Refresh: StatusDeployment(conn, apiId, deploymentId),
 		Timeout: DeploymentDeployedTimeout,
 	}
 
@@ -37,11 +37,11 @@ func DeploymentDeployed(conn *apigatewayv2.ApiGatewayV2, apiId, deploymentId str
 	return nil, err
 }
 
-func DomainNameAvailable(conn *apigatewayv2.ApiGatewayV2, name string, timeout time.Duration) (*apigatewayv2.GetDomainNameOutput, error) {
+func WaitDomainNameAvailable(conn *apigatewayv2.ApiGatewayV2, name string, timeout time.Duration) (*apigatewayv2.GetDomainNameOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{apigatewayv2.DomainNameStatusUpdating},
 		Target:  []string{apigatewayv2.DomainNameStatusAvailable},
-		Refresh: DomainNameStatus(conn, name),
+		Refresh: StatusDomainName(conn, name),
 		Timeout: timeout,
 	}
 
@@ -54,13 +54,13 @@ func DomainNameAvailable(conn *apigatewayv2.ApiGatewayV2, name string, timeout t
 	return nil, err
 }
 
-// VpcLinkAvailable waits for a VPC Link to return Available
-func VpcLinkAvailable(conn *apigatewayv2.ApiGatewayV2, vpcLinkId string) (*apigatewayv2.GetVpcLinkOutput, error) {
+// WaitVPCLinkAvailable waits for a VPC Link to return Available
+func WaitVPCLinkAvailable(conn *apigatewayv2.ApiGatewayV2, vpcLinkId string) (*apigatewayv2.GetVpcLinkOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{apigatewayv2.VpcLinkStatusPending},
 		Target:  []string{apigatewayv2.VpcLinkStatusAvailable},
-		Refresh: VpcLinkStatus(conn, vpcLinkId),
-		Timeout: VpcLinkAvailableTimeout,
+		Refresh: StatusVPCLink(conn, vpcLinkId),
+		Timeout: VPCLinkAvailableTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -72,13 +72,13 @@ func VpcLinkAvailable(conn *apigatewayv2.ApiGatewayV2, vpcLinkId string) (*apiga
 	return nil, err
 }
 
-// VpcLinkAvailable waits for a VPC Link to return Deleted
-func VpcLinkDeleted(conn *apigatewayv2.ApiGatewayV2, vpcLinkId string) (*apigatewayv2.GetVpcLinkOutput, error) {
+// WaitVPCLinkAvailable waits for a VPC Link to return Deleted
+func WaitVPCLinkDeleted(conn *apigatewayv2.ApiGatewayV2, vpcLinkId string) (*apigatewayv2.GetVpcLinkOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{apigatewayv2.VpcLinkStatusDeleting},
 		Target:  []string{apigatewayv2.VpcLinkStatusFailed},
-		Refresh: VpcLinkStatus(conn, vpcLinkId),
-		Timeout: VpcLinkDeletedTimeout,
+		Refresh: StatusVPCLink(conn, vpcLinkId),
+		Timeout: VPCLinkDeletedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()

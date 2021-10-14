@@ -19,6 +19,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfapigatewayv2 "github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
+	tfapigatewayv2 "github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
+	tfapigatewayv2 "github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
+	tfapigatewayv2 "github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
+	tfapigatewayv2 "github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
+	tfapigatewayv2 "github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
+	tfapigatewayv2 "github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
+	tfapigatewayv2 "github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
+	tfapigatewayv2 "github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
+	tfapigatewayv2 "github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
 )
 
 func init() {
@@ -62,7 +72,7 @@ func testSweepAPIGatewayV2VpcLinks(region string) error {
 				continue
 			}
 
-			_, err = waiter.VpcLinkDeleted(conn, aws.StringValue(link.VpcLinkId))
+			_, err = tfapigatewayv2.WaitVPCLinkDeleted(conn, aws.StringValue(link.VpcLinkId))
 			if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
 				continue
 			}
@@ -224,7 +234,7 @@ func testAccCheckAWSAPIGatewayV2VpcLinkDisappears(v *apigatewayv2.GetVpcLinkOutp
 			return err
 		}
 
-		_, err := waiter.VpcLinkDeleted(conn, aws.StringValue(v.VpcLinkId))
+		_, err := tfapigatewayv2.WaitVPCLinkDeleted(conn, aws.StringValue(v.VpcLinkId))
 		if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
 			return nil
 		}

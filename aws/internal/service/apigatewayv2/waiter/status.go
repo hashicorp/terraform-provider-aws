@@ -10,10 +10,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/apigatewayv2/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfapigatewayv2 "github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
+	tfapigatewayv2 "github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
+	tfapigatewayv2 "github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
+	tfapigatewayv2 "github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
+	tfapigatewayv2 "github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
 )
 
-// DeploymentStatus fetches the Deployment and its Status
-func DeploymentStatus(conn *apigatewayv2.ApiGatewayV2, apiId, deploymentId string) resource.StateRefreshFunc {
+// StatusDeployment fetches the Deployment and its Status
+func StatusDeployment(conn *apigatewayv2.ApiGatewayV2, apiId, deploymentId string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &apigatewayv2.GetDeploymentInput{
 			ApiId:        aws.String(apiId),
@@ -36,9 +41,9 @@ func DeploymentStatus(conn *apigatewayv2.ApiGatewayV2, apiId, deploymentId strin
 	}
 }
 
-func DomainNameStatus(conn *apigatewayv2.ApiGatewayV2, name string) resource.StateRefreshFunc {
+func StatusDomainName(conn *apigatewayv2.ApiGatewayV2, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		domainName, err := finder.DomainNameByName(conn, name)
+		domainName, err := tfapigatewayv2.FindDomainNameByName(conn, name)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -56,8 +61,8 @@ func DomainNameStatus(conn *apigatewayv2.ApiGatewayV2, name string) resource.Sta
 	}
 }
 
-// VpcLinkStatus fetches the VPC Link and its Status
-func VpcLinkStatus(conn *apigatewayv2.ApiGatewayV2, vpcLinkId string) resource.StateRefreshFunc {
+// StatusVPCLink fetches the VPC Link and its Status
+func StatusVPCLink(conn *apigatewayv2.ApiGatewayV2, vpcLinkId string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &apigatewayv2.GetVpcLinkInput{
 			VpcLinkId: aws.String(vpcLinkId),

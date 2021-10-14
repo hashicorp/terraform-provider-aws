@@ -11,6 +11,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfapigatewayv2 "github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
+	tfapigatewayv2 "github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
+	tfapigatewayv2 "github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
+	tfapigatewayv2 "github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
+	tfapigatewayv2 "github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
 )
 
 func DataSourceAPI() *schema.Resource {
@@ -112,7 +117,7 @@ func dataSourceAwsAwsApiGatewayV2ApiRead(d *schema.ResourceData, meta interface{
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 	apiID := d.Get("api_id").(string)
 
-	api, err := finder.ApiByID(conn, apiID)
+	api, err := tfapigatewayv2.FindAPIByID(conn, apiID)
 
 	if tfresource.NotFound(err) {
 		return fmt.Errorf("no API Gateway v2 API matched; change the search criteria and try again")
