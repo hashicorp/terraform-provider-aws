@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/service/batch"
 	"github.com/aws/aws-sdk-go/service/ecs"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -11,13 +12,13 @@ import (
 )
 
 func TestAccAWSEcsTag_basic(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckEcsTagDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -38,20 +39,20 @@ func TestAccAWSEcsTag_basic(t *testing.T) {
 }
 
 func TestAccAWSEcsTag_disappears(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckEcsTagDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEcsTagConfig(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEcsTagExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsEcsTag(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsEcsTag(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -61,13 +62,13 @@ func TestAccAWSEcsTag_disappears(t *testing.T) {
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/11951
 func TestAccAWSEcsTag_ResourceArn_BatchComputeEnvironment(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBatch(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckEcsTagDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -86,13 +87,13 @@ func TestAccAWSEcsTag_ResourceArn_BatchComputeEnvironment(t *testing.T) {
 }
 
 func TestAccAWSEcsTag_Value(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckEcsTagDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -177,8 +178,9 @@ resource "aws_ecs_tag" "test" {
 }
 `, rName)
 }
+
 func testAccPreCheckAWSBatch(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).batchconn
+	conn := acctest.Provider.Meta().(*AWSClient).batchconn
 
 	input := &batch.DescribeComputeEnvironmentsInput{}
 
@@ -192,4 +194,3 @@ func testAccPreCheckAWSBatch(t *testing.T) {
 		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
-

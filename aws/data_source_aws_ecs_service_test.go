@@ -13,12 +13,12 @@ import (
 func TestAccAWSEcsServiceDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_ecs_service.test"
 	resourceName := "aws_ecs_service.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAwsEcsServiceDataSourceConfig(rName),

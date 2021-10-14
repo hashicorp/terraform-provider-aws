@@ -108,13 +108,13 @@ func testSweepEcsServices(region string) error {
 
 func TestAccAWSEcsService_withARN(t *testing.T) {
 	var service ecs.Service
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -140,14 +140,14 @@ func TestAccAWSEcsService_withARN(t *testing.T) {
 
 func TestAccAWSEcsService_basicImport(t *testing.T) {
 	var service ecs.Service
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 	importInput := fmt.Sprintf("%s/%s", rName, rName)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -179,20 +179,20 @@ func TestAccAWSEcsService_basicImport(t *testing.T) {
 
 func TestAccAWSEcsService_disappears(t *testing.T) {
 	var service ecs.Service
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSEcsService(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsServiceExists(resourceName, &service),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsEcsService(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsEcsService(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -202,13 +202,13 @@ func TestAccAWSEcsService_disappears(t *testing.T) {
 
 func TestAccAWSEcsService_withUnnormalizedPlacementStrategy(t *testing.T) {
 	var service ecs.Service
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -223,13 +223,13 @@ func TestAccAWSEcsService_withUnnormalizedPlacementStrategy(t *testing.T) {
 
 func TestAccAWSEcsService_withCapacityProviderStrategy(t *testing.T) {
 	var service ecs.Service
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -250,13 +250,13 @@ func TestAccAWSEcsService_withCapacityProviderStrategy(t *testing.T) {
 
 func TestAccAWSEcsService_withMultipleCapacityProviderStrategies(t *testing.T) {
 	var service ecs.Service
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -272,13 +272,13 @@ func TestAccAWSEcsService_withMultipleCapacityProviderStrategies(t *testing.T) {
 
 func TestAccAWSEcsService_withFamilyAndRevision(t *testing.T) {
 	var service ecs.Service
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -301,13 +301,13 @@ func TestAccAWSEcsService_withFamilyAndRevision(t *testing.T) {
 // Regression for https://github.com/hashicorp/terraform/issues/2427
 func TestAccAWSEcsService_withRenamedCluster(t *testing.T) {
 	var service ecs.Service
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -331,13 +331,13 @@ func TestAccAWSEcsService_withRenamedCluster(t *testing.T) {
 
 func TestAccAWSEcsService_healthCheckGracePeriodSeconds(t *testing.T) {
 	var service ecs.Service
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -375,13 +375,13 @@ func TestAccAWSEcsService_healthCheckGracePeriodSeconds(t *testing.T) {
 
 func TestAccAWSEcsService_withIamRole(t *testing.T) {
 	var service ecs.Service
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -396,13 +396,13 @@ func TestAccAWSEcsService_withIamRole(t *testing.T) {
 
 func TestAccAWSEcsService_withDeploymentController_Type_CodeDeploy(t *testing.T) {
 	var service ecs.Service
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -428,13 +428,13 @@ func TestAccAWSEcsService_withDeploymentController_Type_CodeDeploy(t *testing.T)
 
 func TestAccAWSEcsService_withDeploymentController_Type_External(t *testing.T) {
 	var service ecs.Service
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -459,13 +459,13 @@ func TestAccAWSEcsService_withDeploymentController_Type_External(t *testing.T) {
 
 func TestAccAWSEcsService_withDeploymentValues(t *testing.T) {
 	var service ecs.Service
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -483,13 +483,13 @@ func TestAccAWSEcsService_withDeploymentValues(t *testing.T) {
 // Regression for https://github.com/hashicorp/terraform-provider-aws/issues/6315
 func TestAccAWSEcsService_withDeploymentMinimumZeroMaximumOneHundred(t *testing.T) {
 	var service ecs.Service
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -506,13 +506,13 @@ func TestAccAWSEcsService_withDeploymentMinimumZeroMaximumOneHundred(t *testing.
 
 func TestAccAWSEcsService_withDeploymentCircuitBreaker(t *testing.T) {
 	var service ecs.Service
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -531,13 +531,13 @@ func TestAccAWSEcsService_withDeploymentCircuitBreaker(t *testing.T) {
 // Regression for https://github.com/hashicorp/terraform/issues/3444
 func TestAccAWSEcsService_withLbChanges(t *testing.T) {
 	var service ecs.Service
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -559,13 +559,13 @@ func TestAccAWSEcsService_withLbChanges(t *testing.T) {
 // Regression for https://github.com/hashicorp/terraform/issues/3361
 func TestAccAWSEcsService_withEcsClusterName(t *testing.T) {
 	var service ecs.Service
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -581,13 +581,13 @@ func TestAccAWSEcsService_withEcsClusterName(t *testing.T) {
 
 func TestAccAWSEcsService_withAlb(t *testing.T) {
 	var service ecs.Service
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -603,13 +603,13 @@ func TestAccAWSEcsService_withAlb(t *testing.T) {
 
 func TestAccAWSEcsService_withMultipleTargetGroups(t *testing.T) {
 	var service ecs.Service
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -625,13 +625,13 @@ func TestAccAWSEcsService_withMultipleTargetGroups(t *testing.T) {
 
 func TestAccAWSEcsService_withForceNewDeployment(t *testing.T) {
 	var service1, service2 ecs.Service
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -657,13 +657,13 @@ func TestAccAWSEcsService_withForceNewDeployment(t *testing.T) {
 
 func TestAccAWSEcsService_withPlacementStrategy(t *testing.T) {
 	var service1, service2, service3, service4 ecs.Service
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -711,12 +711,12 @@ func TestAccAWSEcsService_withPlacementStrategy(t *testing.T) {
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/13146
 func TestAccAWSEcsService_withPlacementStrategy_Type_Missing(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -729,13 +729,13 @@ func TestAccAWSEcsService_withPlacementStrategy_Type_Missing(t *testing.T) {
 
 func TestAccAWSEcsService_withPlacementConstraints(t *testing.T) {
 	var service1, service2 ecs.Service
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -759,13 +759,13 @@ func TestAccAWSEcsService_withPlacementConstraints(t *testing.T) {
 
 func TestAccAWSEcsService_withPlacementConstraints_emptyExpression(t *testing.T) {
 	var service ecs.Service
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -781,13 +781,13 @@ func TestAccAWSEcsService_withPlacementConstraints_emptyExpression(t *testing.T)
 
 func TestAccAWSEcsService_withLaunchTypeFargate(t *testing.T) {
 	var service ecs.Service
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -821,13 +821,13 @@ func TestAccAWSEcsService_withLaunchTypeFargate(t *testing.T) {
 
 func TestAccAWSEcsService_withLaunchTypeFargateAndPlatformVersion(t *testing.T) {
 	var service ecs.Service
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -857,13 +857,13 @@ func TestAccAWSEcsService_withLaunchTypeFargateAndPlatformVersion(t *testing.T) 
 
 func TestAccAWSEcsService_withLaunchTypeFargateAndWaitForSteadyState(t *testing.T) {
 	var service ecs.Service
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -890,13 +890,13 @@ func TestAccAWSEcsService_withLaunchTypeFargateAndWaitForSteadyState(t *testing.
 
 func TestAccAWSEcsService_withLaunchTypeFargateAndUpdateWaitForSteadyState(t *testing.T) {
 	var service ecs.Service
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -931,13 +931,13 @@ func TestAccAWSEcsService_withLaunchTypeFargateAndUpdateWaitForSteadyState(t *te
 
 func TestAccAWSEcsService_withLaunchTypeEC2AndNetworkConfiguration(t *testing.T) {
 	var service ecs.Service
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -964,13 +964,13 @@ func TestAccAWSEcsService_withLaunchTypeEC2AndNetworkConfiguration(t *testing.T)
 
 func TestAccAWSEcsService_withDaemonSchedulingStrategy(t *testing.T) {
 	var service ecs.Service
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -986,13 +986,13 @@ func TestAccAWSEcsService_withDaemonSchedulingStrategy(t *testing.T) {
 
 func TestAccAWSEcsService_withDaemonSchedulingStrategySetDeploymentMinimum(t *testing.T) {
 	var service ecs.Service
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1008,13 +1008,13 @@ func TestAccAWSEcsService_withDaemonSchedulingStrategySetDeploymentMinimum(t *te
 
 func TestAccAWSEcsService_withReplicaSchedulingStrategy(t *testing.T) {
 	var service ecs.Service
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1030,13 +1030,13 @@ func TestAccAWSEcsService_withReplicaSchedulingStrategy(t *testing.T) {
 
 func TestAccAWSEcsService_withServiceRegistries(t *testing.T) {
 	var service ecs.Service
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1052,13 +1052,13 @@ func TestAccAWSEcsService_withServiceRegistries(t *testing.T) {
 
 func TestAccAWSEcsService_withServiceRegistries_container(t *testing.T) {
 	var service ecs.Service
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1074,15 +1074,15 @@ func TestAccAWSEcsService_withServiceRegistries_container(t *testing.T) {
 
 func TestAccAWSEcsService_withServiceRegistriesChanges(t *testing.T) {
 	var service ecs.Service
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
-	serviceDiscoveryName := sdkacctest.RandomWithPrefix("tf-acc-test")
-	updatedServiceDiscoveryName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	serviceDiscoveryName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	updatedServiceDiscoveryName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1105,13 +1105,13 @@ func TestAccAWSEcsService_withServiceRegistriesChanges(t *testing.T) {
 
 func TestAccAWSEcsService_Tags(t *testing.T) {
 	var service ecs.Service
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1154,13 +1154,13 @@ func TestAccAWSEcsService_Tags(t *testing.T) {
 
 func TestAccAWSEcsService_ManagedTags(t *testing.T) {
 	var service ecs.Service
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1177,13 +1177,13 @@ func TestAccAWSEcsService_ManagedTags(t *testing.T) {
 
 func TestAccAWSEcsService_PropagateTags(t *testing.T) {
 	var first, second, third ecs.Service
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1214,13 +1214,13 @@ func TestAccAWSEcsService_PropagateTags(t *testing.T) {
 
 func TestAccAWSEcsService_ExecuteCommand(t *testing.T) {
 	var service ecs.Service
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1242,7 +1242,7 @@ func TestAccAWSEcsService_ExecuteCommand(t *testing.T) {
 }
 
 func testAccCheckAWSEcsServiceDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ecsconn
+	conn := acctest.Provider.Meta().(*AWSClient).ecsconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ecs_service" {
@@ -1284,7 +1284,7 @@ func testAccCheckAWSEcsServiceExists(name string, service *ecs.Service) resource
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ecsconn
+		conn := acctest.Provider.Meta().(*AWSClient).ecsconn
 
 		input := &ecs.DescribeServicesInput{
 			Cluster:  aws.String(rs.Primary.Attributes["cluster"]),
