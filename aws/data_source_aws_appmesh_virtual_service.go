@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsAppmeshVirtualService() *schema.Resource {
+func DataSourceVirtualService() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsAppmeshVirtualServiceRead,
+		Read: dataSourceVirtualServiceRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -99,7 +99,7 @@ func dataSourceAwsAppmeshVirtualService() *schema.Resource {
 	}
 }
 
-func dataSourceAwsAppmeshVirtualServiceRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceVirtualServiceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppMeshConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

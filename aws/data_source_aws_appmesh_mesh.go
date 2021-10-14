@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsAppmeshMesh() *schema.Resource {
+func DataSourceMesh() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsAppmeshMeshRead,
+		Read: dataSourceMeshRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -73,7 +73,7 @@ func dataSourceAwsAppmeshMesh() *schema.Resource {
 	}
 }
 
-func dataSourceAwsAppmeshMeshRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceMeshRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppMeshConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

@@ -20,12 +20,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsAppmeshGatewayRoute() *schema.Resource {
+func ResourceGatewayRoute() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAppmeshGatewayRouteCreate,
-		Read:   resourceAwsAppmeshGatewayRouteRead,
-		Update: resourceAwsAppmeshGatewayRouteUpdate,
-		Delete: resourceAwsAppmeshGatewayRouteDelete,
+		Create: resourceGatewayRouteCreate,
+		Read:   resourceGatewayRouteRead,
+		Update: resourceGatewayRouteUpdate,
+		Delete: resourceGatewayRouteDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsAppmeshGatewayRouteImport,
 		},
@@ -299,7 +299,7 @@ func resourceAwsAppmeshGatewayRoute() *schema.Resource {
 	}
 }
 
-func resourceAwsAppmeshGatewayRouteCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceGatewayRouteCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppMeshConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -324,10 +324,10 @@ func resourceAwsAppmeshGatewayRouteCreate(d *schema.ResourceData, meta interface
 
 	d.SetId(aws.StringValue(output.GatewayRoute.Metadata.Uid))
 
-	return resourceAwsAppmeshGatewayRouteRead(d, meta)
+	return resourceGatewayRouteRead(d, meta)
 }
 
-func resourceAwsAppmeshGatewayRouteRead(d *schema.ResourceData, meta interface{}) error {
+func resourceGatewayRouteRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppMeshConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -418,7 +418,7 @@ func resourceAwsAppmeshGatewayRouteRead(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceAwsAppmeshGatewayRouteUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceGatewayRouteUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppMeshConn
 
 	if d.HasChange("spec") {
@@ -449,10 +449,10 @@ func resourceAwsAppmeshGatewayRouteUpdate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	return resourceAwsAppmeshGatewayRouteRead(d, meta)
+	return resourceGatewayRouteRead(d, meta)
 }
 
-func resourceAwsAppmeshGatewayRouteDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceGatewayRouteDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppMeshConn
 
 	log.Printf("[DEBUG] Deleting App Mesh gateway route (%s)", d.Id())

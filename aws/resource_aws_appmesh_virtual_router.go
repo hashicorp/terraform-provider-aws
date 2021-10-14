@@ -18,13 +18,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsAppmeshVirtualRouter() *schema.Resource {
+func ResourceVirtualRouter() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
-		Create: resourceAwsAppmeshVirtualRouterCreate,
-		Read:   resourceAwsAppmeshVirtualRouterRead,
-		Update: resourceAwsAppmeshVirtualRouterUpdate,
-		Delete: resourceAwsAppmeshVirtualRouterDelete,
+		Create: resourceVirtualRouterCreate,
+		Read:   resourceVirtualRouterRead,
+		Update: resourceVirtualRouterUpdate,
+		Delete: resourceVirtualRouterDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsAppmeshVirtualRouterImport,
 		},
@@ -126,7 +126,7 @@ func resourceAwsAppmeshVirtualRouter() *schema.Resource {
 	}
 }
 
-func resourceAwsAppmeshVirtualRouterCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceVirtualRouterCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppMeshConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -149,10 +149,10 @@ func resourceAwsAppmeshVirtualRouterCreate(d *schema.ResourceData, meta interfac
 
 	d.SetId(aws.StringValue(resp.VirtualRouter.Metadata.Uid))
 
-	return resourceAwsAppmeshVirtualRouterRead(d, meta)
+	return resourceVirtualRouterRead(d, meta)
 }
 
-func resourceAwsAppmeshVirtualRouterRead(d *schema.ResourceData, meta interface{}) error {
+func resourceVirtualRouterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppMeshConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -244,7 +244,7 @@ func resourceAwsAppmeshVirtualRouterRead(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func resourceAwsAppmeshVirtualRouterUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceVirtualRouterUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppMeshConn
 
 	if d.HasChange("spec") {
@@ -274,10 +274,10 @@ func resourceAwsAppmeshVirtualRouterUpdate(d *schema.ResourceData, meta interfac
 		}
 	}
 
-	return resourceAwsAppmeshVirtualRouterRead(d, meta)
+	return resourceVirtualRouterRead(d, meta)
 }
 
-func resourceAwsAppmeshVirtualRouterDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceVirtualRouterDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppMeshConn
 
 	log.Printf("[DEBUG] Deleting App Mesh virtual router: %s", d.Id())
