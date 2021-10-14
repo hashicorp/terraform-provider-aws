@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/connect"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	tfconnect "github.com/hashicorp/terraform-provider-aws/aws/internal/service/connect"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (
