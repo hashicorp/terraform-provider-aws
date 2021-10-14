@@ -153,7 +153,7 @@ func resourceKeyPairCreate(d *schema.ResourceData, meta interface{}) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"Started"},
 		Target:     []string{"Completed", "Succeeded"},
-		Refresh:    resourceAwsLightsailOperationRefreshFunc(op.Id, meta),
+		Refresh:    resourceOperationRefreshFunc(op.Id, meta),
 		Timeout:    10 * time.Minute,
 		Delay:      5 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -209,7 +209,7 @@ func resourceKeyPairDelete(d *schema.ResourceData, meta interface{}) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"Started"},
 		Target:     []string{"Completed", "Succeeded"},
-		Refresh:    resourceAwsLightsailOperationRefreshFunc(op.Id, meta),
+		Refresh:    resourceOperationRefreshFunc(op.Id, meta),
 		Timeout:    10 * time.Minute,
 		Delay:      5 * time.Second,
 		MinTimeout: 3 * time.Second,

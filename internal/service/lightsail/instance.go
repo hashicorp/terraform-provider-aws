@@ -167,7 +167,7 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"Started"},
 		Target:     []string{"Completed", "Succeeded"},
-		Refresh:    resourceAwsLightsailOperationRefreshFunc(op.Id, meta),
+		Refresh:    resourceOperationRefreshFunc(op.Id, meta),
 		Timeout:    10 * time.Minute,
 		Delay:      5 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -263,7 +263,7 @@ func resourceInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"Started"},
 		Target:     []string{"Completed", "Succeeded"},
-		Refresh:    resourceAwsLightsailOperationRefreshFunc(op.Id, meta),
+		Refresh:    resourceOperationRefreshFunc(op.Id, meta),
 		Timeout:    10 * time.Minute,
 		Delay:      5 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -301,7 +301,7 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 // - Failed
 // - Completed
 // - Succeeded (not documented?)
-func resourceAwsLightsailOperationRefreshFunc(
+func resourceOperationRefreshFunc(
 	oid *string, meta interface{}) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		conn := meta.(*conns.AWSClient).LightsailConn
