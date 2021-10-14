@@ -148,7 +148,7 @@ func resourceAwsImageBuilderComponentCreate(d *schema.ResourceData, meta interfa
 	}
 
 	if v, ok := d.GetOk("supported_os_versions"); ok && v.(*schema.Set).Len() > 0 {
-		input.SupportedOsVersions = expandStringSet(v.(*schema.Set))
+		input.SupportedOsVersions = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if len(tags) > 0 {
