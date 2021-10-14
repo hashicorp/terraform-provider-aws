@@ -19,7 +19,7 @@ func TestAccAWSXrayEncryptionConfig_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, xray.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -63,7 +63,7 @@ func testAccCheckXrayEncryptionConfigExists(n string, EncryptionConfig *xray.Enc
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("No XRay Encryption Config ID is set")
 		}
-		conn := testAccProvider.Meta().(*AWSClient).xrayconn
+		conn := acctest.Provider.Meta().(*AWSClient).xrayconn
 
 		config, err := conn.GetEncryptionConfig(&xray.GetEncryptionConfigInput{})
 

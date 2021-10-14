@@ -74,7 +74,7 @@ func testAccConfigConfigurationRecorder_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckConfigConfigurationRecorderDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -101,7 +101,7 @@ func testAccConfigConfigurationRecorder_allParams(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckConfigConfigurationRecorderDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -128,7 +128,7 @@ func testAccConfigConfigurationRecorder_importBasic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckConfigConfigurationRecorderDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -171,7 +171,7 @@ func testAccCheckConfigConfigurationRecorderExists(n string, obj *configservice.
 			return fmt.Errorf("No configuration recorder ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).configconn
+		conn := acctest.Provider.Meta().(*AWSClient).configconn
 		out, err := conn.DescribeConfigurationRecorders(&configservice.DescribeConfigurationRecordersInput{
 			ConfigurationRecorderNames: []*string{aws.String(rs.Primary.Attributes["name"])},
 		})
@@ -190,7 +190,7 @@ func testAccCheckConfigConfigurationRecorderExists(n string, obj *configservice.
 }
 
 func testAccCheckConfigConfigurationRecorderDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).configconn
+	conn := acctest.Provider.Meta().(*AWSClient).configconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_config_configuration_recorder_status" {

@@ -81,7 +81,7 @@ func testAccConfigDeliveryChannel_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckConfigDeliveryChannelDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -107,7 +107,7 @@ func testAccConfigDeliveryChannel_allParams(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckConfigDeliveryChannelDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -134,7 +134,7 @@ func testAccConfigDeliveryChannel_importBasic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckConfigDeliveryChannelDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -174,7 +174,7 @@ func testAccCheckConfigDeliveryChannelExists(n string, obj *configservice.Delive
 			return fmt.Errorf("No delivery channel ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).configconn
+		conn := acctest.Provider.Meta().(*AWSClient).configconn
 		out, err := conn.DescribeDeliveryChannels(&configservice.DescribeDeliveryChannelsInput{
 			DeliveryChannelNames: []*string{aws.String(rs.Primary.Attributes["name"])},
 		})
@@ -193,7 +193,7 @@ func testAccCheckConfigDeliveryChannelExists(n string, obj *configservice.Delive
 }
 
 func testAccCheckConfigDeliveryChannelDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).configconn
+	conn := acctest.Provider.Meta().(*AWSClient).configconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_config_delivery_channel" {

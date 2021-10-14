@@ -13,14 +13,14 @@ import (
 )
 
 func TestAccAWSLambdaProvisionedConcurrencyConfig_basic(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	lambdaFunctionResourceName := "aws_lambda_function.test"
 	resourceName := "aws_lambda_provisioned_concurrency_config.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLambdaProvisionedConcurrencyConfigDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -43,14 +43,14 @@ func TestAccAWSLambdaProvisionedConcurrencyConfig_basic(t *testing.T) {
 
 func TestAccAWSLambdaProvisionedConcurrencyConfig_disappears_LambdaFunction(t *testing.T) {
 	var function lambda.GetFunctionOutput
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	lambdaFunctionResourceName := "aws_lambda_function.test"
 	resourceName := "aws_lambda_provisioned_concurrency_config.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLambdaProvisionedConcurrencyConfigDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -67,13 +67,13 @@ func TestAccAWSLambdaProvisionedConcurrencyConfig_disappears_LambdaFunction(t *t
 }
 
 func TestAccAWSLambdaProvisionedConcurrencyConfig_disappears_LambdaProvisionedConcurrencyConfig(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_provisioned_concurrency_config.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLambdaProvisionedConcurrencyConfigDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -89,13 +89,13 @@ func TestAccAWSLambdaProvisionedConcurrencyConfig_disappears_LambdaProvisionedCo
 }
 
 func TestAccAWSLambdaProvisionedConcurrencyConfig_ProvisionedConcurrentExecutions(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_provisioned_concurrency_config.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLambdaProvisionedConcurrencyConfigDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -126,14 +126,14 @@ func TestAccAWSLambdaProvisionedConcurrencyConfig_ProvisionedConcurrentExecution
 }
 
 func TestAccAWSLambdaProvisionedConcurrencyConfig_Qualifier_AliasName(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	lambdaAliasResourceName := "aws_lambda_alias.test"
 	resourceName := "aws_lambda_provisioned_concurrency_config.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLambdaProvisionedConcurrencyConfigDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -153,7 +153,7 @@ func TestAccAWSLambdaProvisionedConcurrencyConfig_Qualifier_AliasName(t *testing
 }
 
 func testAccCheckLambdaProvisionedConcurrencyConfigDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).lambdaconn
+	conn := acctest.Provider.Meta().(*AWSClient).lambdaconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lambda_provisioned_concurrency_config" {
@@ -201,7 +201,7 @@ func testAccCheckAwsLambdaProvisionedConcurrencyConfigDisappears(resourceName st
 			return fmt.Errorf("Resource (%s) ID not set", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).lambdaconn
+		conn := acctest.Provider.Meta().(*AWSClient).lambdaconn
 
 		functionName, qualifier, err := resourceAwsLambdaProvisionedConcurrencyConfigParseId(rs.Primary.ID)
 
@@ -231,7 +231,7 @@ func testAccCheckAwsLambdaProvisionedConcurrencyConfigExists(resourceName string
 			return fmt.Errorf("Resource (%s) ID not set", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).lambdaconn
+		conn := acctest.Provider.Meta().(*AWSClient).lambdaconn
 
 		functionName, qualifier, err := resourceAwsLambdaProvisionedConcurrencyConfigParseId(rs.Primary.ID)
 

@@ -21,7 +21,7 @@ func testAccConfigConfigurationRecorderStatus_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckConfigConfigurationRecorderStatusDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -47,7 +47,7 @@ func testAccConfigConfigurationRecorderStatus_startEnabled(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckConfigConfigurationRecorderStatusDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -91,7 +91,7 @@ func testAccConfigConfigurationRecorderStatus_importBasic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckConfigConfigurationRecorderStatusDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -114,7 +114,7 @@ func testAccCheckConfigConfigurationRecorderStatusExists(n string, obj *configse
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).configconn
+		conn := acctest.Provider.Meta().(*AWSClient).configconn
 		out, err := conn.DescribeConfigurationRecorderStatus(&configservice.DescribeConfigurationRecorderStatusInput{
 			ConfigurationRecorderNames: []*string{aws.String(rs.Primary.Attributes["name"])},
 		})
@@ -149,7 +149,7 @@ func testAccCheckConfigConfigurationRecorderStatus(n string, desired bool, obj *
 }
 
 func testAccCheckConfigConfigurationRecorderStatusDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).configconn
+	conn := acctest.Provider.Meta().(*AWSClient).configconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_config_configuration_recorder_status" {

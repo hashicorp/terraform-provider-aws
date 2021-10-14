@@ -23,7 +23,7 @@ func testAccConfigRemediationConfiguration_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckConfigRemediationConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -55,14 +55,14 @@ func testAccConfigRemediationConfiguration_disappears(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckConfigRemediationConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigRemediationConfigurationConfig(prefix, sseAlgorithm, rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigRemediationConfigurationExists(resourceName, &rc),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsConfigRemediationConfiguration(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsConfigRemediationConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -83,7 +83,7 @@ func testAccConfigRemediationConfiguration_recreates(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckConfigRemediationConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -118,7 +118,7 @@ func testAccConfigRemediationConfiguration_updates(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckConfigRemediationConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -151,7 +151,7 @@ func testAccCheckConfigRemediationConfigurationExists(n string, obj *configservi
 			return fmt.Errorf("No config rule ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).configconn
+		conn := acctest.Provider.Meta().(*AWSClient).configconn
 		out, err := conn.DescribeRemediationConfigurations(&configservice.DescribeRemediationConfigurationsInput{
 			ConfigRuleNames: []*string{aws.String(rs.Primary.Attributes["config_rule_name"])},
 		})
@@ -170,7 +170,7 @@ func testAccCheckConfigRemediationConfigurationExists(n string, obj *configservi
 }
 
 func testAccCheckConfigRemediationConfigurationDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).configconn
+	conn := acctest.Provider.Meta().(*AWSClient).configconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_config_remediation_configuration" {

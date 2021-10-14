@@ -13,14 +13,14 @@ import (
 )
 
 func TestAccAWSLambdaFunctionEventInvokeConfig_basic(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	lambdaFunctionResourceName := "aws_lambda_function.test"
 	resourceName := "aws_lambda_function_event_invoke_config.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLambdaFunctionEventInvokeConfigDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -45,14 +45,14 @@ func TestAccAWSLambdaFunctionEventInvokeConfig_basic(t *testing.T) {
 
 func TestAccAWSLambdaFunctionEventInvokeConfig_disappears_LambdaFunction(t *testing.T) {
 	var function lambda.GetFunctionOutput
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	lambdaFunctionResourceName := "aws_lambda_function.test"
 	resourceName := "aws_lambda_function_event_invoke_config.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLambdaFunctionEventInvokeConfigDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -69,13 +69,13 @@ func TestAccAWSLambdaFunctionEventInvokeConfig_disappears_LambdaFunction(t *test
 }
 
 func TestAccAWSLambdaFunctionEventInvokeConfig_disappears_LambdaFunctionEventInvokeConfig(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function_event_invoke_config.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLambdaFunctionEventInvokeConfigDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -91,7 +91,7 @@ func TestAccAWSLambdaFunctionEventInvokeConfig_disappears_LambdaFunctionEventInv
 }
 
 func TestAccAWSLambdaFunctionEventInvokeConfig_DestinationConfig_OnFailure_Destination(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function_event_invoke_config.test"
 	sqsQueueResourceName := "aws_sqs_queue.test"
 	snsTopicResourceName := "aws_sns_topic.test"
@@ -99,7 +99,7 @@ func TestAccAWSLambdaFunctionEventInvokeConfig_DestinationConfig_OnFailure_Desti
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLambdaFunctionEventInvokeConfigDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -130,7 +130,7 @@ func TestAccAWSLambdaFunctionEventInvokeConfig_DestinationConfig_OnFailure_Desti
 }
 
 func TestAccAWSLambdaFunctionEventInvokeConfig_DestinationConfig_OnSuccess_Destination(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function_event_invoke_config.test"
 	sqsQueueResourceName := "aws_sqs_queue.test"
 	snsTopicResourceName := "aws_sns_topic.test"
@@ -138,7 +138,7 @@ func TestAccAWSLambdaFunctionEventInvokeConfig_DestinationConfig_OnSuccess_Desti
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLambdaFunctionEventInvokeConfigDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -169,14 +169,14 @@ func TestAccAWSLambdaFunctionEventInvokeConfig_DestinationConfig_OnSuccess_Desti
 }
 
 func TestAccAWSLambdaFunctionEventInvokeConfig_DestinationConfig_Remove(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function_event_invoke_config.test"
 	sqsQueueResourceName := "aws_sqs_queue.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLambdaFunctionEventInvokeConfigDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -205,14 +205,14 @@ func TestAccAWSLambdaFunctionEventInvokeConfig_DestinationConfig_Remove(t *testi
 }
 
 func TestAccAWSLambdaFunctionEventInvokeConfig_DestinationConfig_Swap(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function_event_invoke_config.test"
 	sqsQueueResourceName := "aws_sqs_queue.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLambdaFunctionEventInvokeConfigDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -243,14 +243,14 @@ func TestAccAWSLambdaFunctionEventInvokeConfig_DestinationConfig_Swap(t *testing
 }
 
 func TestAccAWSLambdaFunctionEventInvokeConfig_FunctionName_Arn(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	lambdaFunctionResourceName := "aws_lambda_function.test"
 	resourceName := "aws_lambda_function_event_invoke_config.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLambdaFunctionEventInvokeConfigDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -271,14 +271,14 @@ func TestAccAWSLambdaFunctionEventInvokeConfig_FunctionName_Arn(t *testing.T) {
 }
 
 func TestAccAWSLambdaFunctionEventInvokeConfig_Qualifier_FunctionName_Arn(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	lambdaFunctionResourceName := "aws_lambda_function.test"
 	resourceName := "aws_lambda_function_event_invoke_config.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLambdaFunctionEventInvokeConfigDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -299,13 +299,13 @@ func TestAccAWSLambdaFunctionEventInvokeConfig_Qualifier_FunctionName_Arn(t *tes
 }
 
 func TestAccAWSLambdaFunctionEventInvokeConfig_MaximumEventAgeInSeconds(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function_event_invoke_config.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLambdaFunctionEventInvokeConfigDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -332,13 +332,13 @@ func TestAccAWSLambdaFunctionEventInvokeConfig_MaximumEventAgeInSeconds(t *testi
 }
 
 func TestAccAWSLambdaFunctionEventInvokeConfig_MaximumRetryAttempts(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function_event_invoke_config.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLambdaFunctionEventInvokeConfigDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -372,14 +372,14 @@ func TestAccAWSLambdaFunctionEventInvokeConfig_MaximumRetryAttempts(t *testing.T
 }
 
 func TestAccAWSLambdaFunctionEventInvokeConfig_Qualifier_AliasName(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	lambdaAliasResourceName := "aws_lambda_alias.test"
 	resourceName := "aws_lambda_function_event_invoke_config.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLambdaFunctionEventInvokeConfigDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -399,14 +399,14 @@ func TestAccAWSLambdaFunctionEventInvokeConfig_Qualifier_AliasName(t *testing.T)
 }
 
 func TestAccAWSLambdaFunctionEventInvokeConfig_Qualifier_FunctionVersion(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	lambdaFunctionResourceName := "aws_lambda_function.test"
 	resourceName := "aws_lambda_function_event_invoke_config.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLambdaFunctionEventInvokeConfigDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -427,13 +427,13 @@ func TestAccAWSLambdaFunctionEventInvokeConfig_Qualifier_FunctionVersion(t *test
 }
 
 func TestAccAWSLambdaFunctionEventInvokeConfig_Qualifier_Latest(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function_event_invoke_config.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLambdaFunctionEventInvokeConfigDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -453,7 +453,7 @@ func TestAccAWSLambdaFunctionEventInvokeConfig_Qualifier_Latest(t *testing.T) {
 }
 
 func testAccCheckLambdaFunctionEventInvokeConfigDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).lambdaconn
+	conn := acctest.Provider.Meta().(*AWSClient).lambdaconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lambda_function_event_invoke_config" {
@@ -504,7 +504,7 @@ func testAccCheckAwsLambdaFunctionEventInvokeConfigDisappears(resourceName strin
 			return fmt.Errorf("Resource (%s) ID not set", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).lambdaconn
+		conn := acctest.Provider.Meta().(*AWSClient).lambdaconn
 
 		functionName, qualifier, err := resourceAwsLambdaFunctionEventInvokeConfigParseId(rs.Primary.ID)
 
@@ -537,7 +537,7 @@ func testAccCheckAwsLambdaFunctionEventInvokeConfigExists(resourceName string) r
 			return fmt.Errorf("Resource (%s) ID not set", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).lambdaconn
+		conn := acctest.Provider.Meta().(*AWSClient).lambdaconn
 
 		functionName, qualifier, err := resourceAwsLambdaFunctionEventInvokeConfigParseId(rs.Primary.ID)
 

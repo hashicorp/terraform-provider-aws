@@ -79,12 +79,12 @@ func testSweepRoute53ResolverDnssecConfig(region string) error {
 
 func TestAccAWSRoute53ResolverDnssecConfig_basic(t *testing.T) {
 	resourceName := "aws_route53_resolver_dnssec_config.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53resolver.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53ResolverDnssecConfigDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -109,19 +109,19 @@ func TestAccAWSRoute53ResolverDnssecConfig_basic(t *testing.T) {
 
 func TestAccAWSRoute53ResolverDnssecConfig_disappear(t *testing.T) {
 	resourceName := "aws_route53_resolver_dnssec_config.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53resolver.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53ResolverDnssecConfigDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoute53ResolverDnssecConfigConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ResolverDnssecConfigExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsRoute53ResolverDnssecConfig(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsRoute53ResolverDnssecConfig(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -130,7 +130,7 @@ func TestAccAWSRoute53ResolverDnssecConfig_disappear(t *testing.T) {
 }
 
 func testAccCheckRoute53ResolverDnssecConfigDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).route53resolverconn
+	conn := acctest.Provider.Meta().(*AWSClient).route53resolverconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route53_resolver_dnssec_config" {
@@ -169,7 +169,7 @@ func testAccCheckRoute53ResolverDnssecConfigExists(n string) resource.TestCheckF
 		}
 
 		id := rs.Primary.ID
-		conn := testAccProvider.Meta().(*AWSClient).route53resolverconn
+		conn := acctest.Provider.Meta().(*AWSClient).route53resolverconn
 
 		config, err := finder.ResolverDnssecConfigByID(conn, id)
 
