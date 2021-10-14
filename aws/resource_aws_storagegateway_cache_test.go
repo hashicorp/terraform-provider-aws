@@ -6,9 +6,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestDecodeStorageGatewayCacheID(t *testing.T) {
@@ -68,13 +69,13 @@ func TestDecodeStorageGatewayCacheID(t *testing.T) {
 }
 
 func TestAccAWSStorageGatewayCache_FileGateway(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_cache.test"
 	gatewayResourceName := "aws_storagegateway_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, storagegateway.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, storagegateway.EndpointsID),
 		Providers:  testAccProviders,
 		// Storage Gateway API does not support removing caches,
 		// but we want to ensure other resources are removed.
@@ -98,13 +99,13 @@ func TestAccAWSStorageGatewayCache_FileGateway(t *testing.T) {
 }
 
 func TestAccAWSStorageGatewayCache_TapeAndVolumeGateway(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_cache.test"
 	gatewayResourceName := "aws_storagegateway_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, storagegateway.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, storagegateway.EndpointsID),
 		Providers:  testAccProviders,
 		// Storage Gateway API does not support removing caches,
 		// but we want to ensure other resources are removed.
