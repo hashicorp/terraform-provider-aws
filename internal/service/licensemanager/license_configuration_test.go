@@ -19,11 +19,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_licensemanager_license_configuration", &resource.Sweeper{
 		Name: "aws_licensemanager_license_configuration",
-		F:    testSweepLicenseManagerLicenseConfigurations,
+		F:    sweepLicenseConfigurations,
 	})
 }
 
-func testSweepLicenseManagerLicenseConfigurations(region string) error {
+func sweepLicenseConfigurations(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
