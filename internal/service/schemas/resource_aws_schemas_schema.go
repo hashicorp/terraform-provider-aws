@@ -1,4 +1,4 @@
-package aws
+package schemas
 
 import (
 	"fmt"
@@ -11,18 +11,11 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	tfschemas "github.com/hashicorp/terraform-provider-aws/aws/internal/service/schemas"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/schemas/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfschemas "github.com/hashicorp/terraform-provider-aws/internal/service/schemas"
-	tfschemas "github.com/hashicorp/terraform-provider-aws/internal/service/schemas"
-	tfschemas "github.com/hashicorp/terraform-provider-aws/internal/service/schemas"
-	tfschemas "github.com/hashicorp/terraform-provider-aws/internal/service/schemas"
-	tfschemas "github.com/hashicorp/terraform-provider-aws/internal/service/schemas"
 )
 
 func ResourceSchema() *schema.Resource {
@@ -120,7 +113,7 @@ func resourceSchemaCreate(d *schema.ResourceData, meta interface{}) error {
 		input.Tags = tags.IgnoreAws().SchemasTags()
 	}
 
-	id := tfschemas.SchemaCreateResourceID(name, registryName)
+	id := SchemaCreateResourceID(name, registryName)
 
 	log.Printf("[DEBUG] Creating EventBridge Schemas Schema: %s", input)
 	_, err := conn.CreateSchema(input)
@@ -139,13 +132,13 @@ func resourceSchemaRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	name, registryName, err := tfschemas.SchemaParseResourceID(d.Id())
+	name, registryName, err := SchemaParseResourceID(d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error parsing EventBridge Schemas Schema ID: %w", err)
 	}
 
-	output, err := tfschemas.FindSchemaByNameAndRegistryName(conn, name, registryName)
+	output, err := FindSchemaByNameAndRegistryName(conn, name, registryName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EventBridge Schemas Schema (%s) not found, removing from state", d.Id())
@@ -198,7 +191,7 @@ func resourceSchemaUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SchemasConn
 
 	if d.HasChanges("content", "description", "type") {
-		name, registryName, err := tfschemas.SchemaParseResourceID(d.Id())
+		name, registryName, err := SchemaParseResourceID(d.Id())
 
 		if err != nil {
 			return fmt.Errorf("error parsing EventBridge Schemas Schema ID: %w", err)
@@ -239,7 +232,7 @@ func resourceSchemaUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceSchemaDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SchemasConn
 
-	name, registryName, err := tfschemas.SchemaParseResourceID(d.Id())
+	name, registryName, err := SchemaParseResourceID(d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error parsing EventBridge Schemas Schema ID: %w", err)
