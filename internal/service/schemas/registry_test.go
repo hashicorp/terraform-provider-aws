@@ -19,94 +19,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_schemas_registry", &resource.Sweeper{
-		Name: "aws_schemas_registry",
-		F:    sweepRegistries,
-	})
-}
 
-func sweepRegistries(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("Error getting client: %w", err)
-	}
-	conn := client.(*conns.AWSClient).SchemasConn
-	input := &schemas.ListRegistriesInput{}
-	var sweeperErrs *multierror.Error
 
-	err = conn.ListRegistriesPages(input, func(page *schemas.ListRegistriesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
 
-		for _, registry := range page.Registries {
-			registryName := aws.StringValue(registry.RegistryName)
-
-			input := &schemas.ListSchemasInput{
-				RegistryName: aws.String(registryName),
-			}
-
-			err = conn.ListSchemasPages(input, func(page *schemas.ListSchemasOutput, lastPage bool) bool {
-				if page == nil {
-					return !lastPage
-				}
-
-				for _, schema := range page.Schemas {
-					schemaName := aws.StringValue(schema.SchemaName)
-					if strings.HasPrefix(schemaName, "aws.") {
-						continue
-					}
-
-					r := tfschemas.ResourceSchema()
-					d := r.Data(nil)
-					d.SetId(tfschemas.SchemaCreateResourceID(schemaName, registryName))
-					err = r.Delete(d, client)
-
-					if err != nil {
-						log.Printf("[ERROR] %s", err)
-						sweeperErrs = multierror.Append(sweeperErrs, err)
-						continue
-					}
-				}
-
-				return !lastPage
-			})
-
-			if err != nil {
-				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EventBridge Schemas Schemas: %w", err))
-			}
-
-			if strings.HasPrefix(registryName, "aws.") {
-				continue
-			}
-
-			r := tfschemas.ResourceRegistry()
-			d := r.Data(nil)
-			d.SetId(registryName)
-			err = r.Delete(d, client)
-
-			if err != nil {
-				log.Printf("[ERROR] %s", err)
-				sweeperErrs = multierror.Append(sweeperErrs, err)
-				continue
-			}
-		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EventBridge Schemas Registry sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-	}
-
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EventBridge Schemas Registries: %w", err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func TestAccSchemasRegistry_basic(t *testing.T) {
 	var v schemas.DescribeRegistryOutput
