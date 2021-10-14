@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsCodeArtifactRepositoryEndpoint() *schema.Resource {
+func DataSourceRepositoryEndpoint() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsCodeArtifactRepositoryEndpointRead,
+		Read: dataSourceRepositoryEndpointRead,
 
 		Schema: map[string]*schema.Schema{
 			"domain": {
@@ -43,7 +43,7 @@ func dataSourceAwsCodeArtifactRepositoryEndpoint() *schema.Resource {
 	}
 }
 
-func dataSourceAwsCodeArtifactRepositoryEndpointRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceRepositoryEndpointRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodeArtifactConn
 	domainOwner := meta.(*conns.AWSClient).AccountID
 	domain := d.Get("domain").(string)

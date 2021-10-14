@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSCodeArtifactDomainPermissionsPolicy_basic(t *testing.T) {
@@ -97,7 +98,7 @@ func TestAccAWSCodeArtifactDomainPermissionsPolicy_disappears(t *testing.T) {
 				Config: testAccAWSCodeArtifactDomainPermissionsPolicyBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeArtifactDomainPermissionsExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsCodeArtifactDomainPermissionsPolicy(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceDomainPermissionsPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -119,7 +120,7 @@ func TestAccAWSCodeArtifactDomainPermissionsPolicy_disappears_domain(t *testing.
 				Config: testAccAWSCodeArtifactDomainPermissionsPolicyBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeArtifactDomainPermissionsExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsCodeArtifactDomain(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceDomain(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

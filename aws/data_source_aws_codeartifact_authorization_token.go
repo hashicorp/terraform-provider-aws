@@ -12,9 +12,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsCodeArtifactAuthorizationToken() *schema.Resource {
+func DataSourceAuthorizationToken() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsCodeArtifactAuthorizationTokenRead,
+		Read: dataSourceAuthorizationTokenRead,
 
 		Schema: map[string]*schema.Schema{
 			"domain": {
@@ -47,7 +47,7 @@ func dataSourceAwsCodeArtifactAuthorizationToken() *schema.Resource {
 	}
 }
 
-func dataSourceAwsCodeArtifactAuthorizationTokenRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAuthorizationTokenRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodeArtifactConn
 	domain := d.Get("domain").(string)
 	domainOwner := meta.(*conns.AWSClient).AccountID
