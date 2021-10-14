@@ -15,7 +15,7 @@ import (
 
 func ResourceAggregateAuthorization() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsConfigAggregateAuthorizationPut,
+		Create: resourceAggregateAuthorizationPut,
 		Read:   resourceAggregateAuthorizationRead,
 		Update: resourceAggregateAuthorizationUpdate,
 		Delete: resourceAggregateAuthorizationDelete,
@@ -48,7 +48,7 @@ func ResourceAggregateAuthorization() *schema.Resource {
 	}
 }
 
-func resourceAwsConfigAggregateAuthorizationPut(d *schema.ResourceData, meta interface{}) error {
+func resourceAggregateAuthorizationPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ConfigConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))

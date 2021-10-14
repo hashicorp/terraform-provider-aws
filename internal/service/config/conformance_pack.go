@@ -18,9 +18,9 @@ import (
 
 func ResourceConformancePack() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsConfigConformancePackPut,
+		Create: resourceConformancePackPut,
 		Read:   resourceConformancePackRead,
-		Update: resourceAwsConfigConformancePackPut,
+		Update: resourceConformancePackPut,
 		Delete: resourceConformancePackDelete,
 
 		Importer: &schema.ResourceImporter{
@@ -93,7 +93,7 @@ func ResourceConformancePack() *schema.Resource {
 	}
 }
 
-func resourceAwsConfigConformancePackPut(d *schema.ResourceData, meta interface{}) error {
+func resourceConformancePackPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ConfigConn
 
 	name := d.Get("name").(string)

@@ -15,9 +15,9 @@ import (
 
 func ResourceConfigurationRecorder() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsConfigConfigurationRecorderPut,
+		Create: resourceConfigurationRecorderPut,
 		Read:   resourceConfigurationRecorderRead,
-		Update: resourceAwsConfigConfigurationRecorderPut,
+		Update: resourceConfigurationRecorderPut,
 		Delete: resourceConfigurationRecorderDelete,
 
 		Importer: &schema.ResourceImporter{
@@ -66,7 +66,7 @@ func ResourceConfigurationRecorder() *schema.Resource {
 	}
 }
 
-func resourceAwsConfigConfigurationRecorderPut(d *schema.ResourceData, meta interface{}) error {
+func resourceConfigurationRecorderPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ConfigConn
 
 	name := d.Get("name").(string)

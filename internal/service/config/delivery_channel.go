@@ -20,9 +20,9 @@ import (
 
 func ResourceDeliveryChannel() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsConfigDeliveryChannelPut,
+		Create: resourceDeliveryChannelPut,
 		Read:   resourceDeliveryChannelRead,
-		Update: resourceAwsConfigDeliveryChannelPut,
+		Update: resourceDeliveryChannelPut,
 		Delete: resourceDeliveryChannelDelete,
 
 		Importer: &schema.ResourceImporter{
@@ -73,7 +73,7 @@ func ResourceDeliveryChannel() *schema.Resource {
 	}
 }
 
-func resourceAwsConfigDeliveryChannelPut(d *schema.ResourceData, meta interface{}) error {
+func resourceDeliveryChannelPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ConfigConn
 
 	name := d.Get("name").(string)

@@ -22,9 +22,9 @@ import (
 
 func ResourceConfigRule() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsConfigConfigRulePut,
+		Create: resourceRulePutConfig,
 		Read:   resourceConfigRuleRead,
-		Update: resourceAwsConfigConfigRulePut,
+		Update: resourceRulePutConfig,
 		Delete: resourceConfigRuleDelete,
 
 		Importer: &schema.ResourceImporter{
@@ -148,7 +148,7 @@ func ResourceConfigRule() *schema.Resource {
 	}
 }
 
-func resourceAwsConfigConfigRulePut(d *schema.ResourceData, meta interface{}) error {
+func resourceRulePutConfig(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ConfigConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))

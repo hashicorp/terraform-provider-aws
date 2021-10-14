@@ -22,9 +22,9 @@ const (
 
 func ResourceRemediationConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsConfigRemediationConfigurationPut,
+		Create: resourceRemediationConfigurationPut,
 		Read:   resourceRemediationConfigurationRead,
-		Update: resourceAwsConfigRemediationConfigurationPut,
+		Update: resourceRemediationConfigurationPut,
 		Delete: resourceRemediationConfigurationDelete,
 
 		Importer: &schema.ResourceImporter{
@@ -133,7 +133,7 @@ func flattenRemediationConfigurationParameters(parameters map[string]*configserv
 	return items
 }
 
-func resourceAwsConfigRemediationConfigurationPut(d *schema.ResourceData, meta interface{}) error {
+func resourceRemediationConfigurationPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ConfigConn
 
 	name := d.Get("config_rule_name").(string)

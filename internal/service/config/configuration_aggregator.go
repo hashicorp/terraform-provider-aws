@@ -18,9 +18,9 @@ import (
 
 func ResourceConfigurationAggregator() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsConfigConfigurationAggregatorPut,
+		Create: resourceConfigurationAggregatorPut,
 		Read:   resourceConfigurationAggregatorRead,
-		Update: resourceAwsConfigConfigurationAggregatorPut,
+		Update: resourceConfigurationAggregatorPut,
 		Delete: resourceConfigurationAggregatorDelete,
 
 		Importer: &schema.ResourceImporter{
@@ -116,7 +116,7 @@ func ResourceConfigurationAggregator() *schema.Resource {
 	}
 }
 
-func resourceAwsConfigConfigurationAggregatorPut(d *schema.ResourceData, meta interface{}) error {
+func resourceConfigurationAggregatorPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ConfigConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
