@@ -80,7 +80,7 @@ func sweepImageBuilder(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func TestAccAwsAppStreamImageBuilder_basic(t *testing.T) {
+func TestAccAppStreamImageBuilder_basic(t *testing.T) {
 	resourceName := "aws_appstream_image_builder.test"
 	instanceType := "stream.standard.small"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -110,7 +110,7 @@ func TestAccAwsAppStreamImageBuilder_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsAppStreamImageBuilder_disappears(t *testing.T) {
+func TestAccAppStreamImageBuilder_disappears(t *testing.T) {
 	resourceName := "aws_appstream_image_builder.test"
 	instanceType := "stream.standard.medium"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -133,7 +133,7 @@ func TestAccAwsAppStreamImageBuilder_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAwsAppStreamImageBuilder_complete(t *testing.T) {
+func TestAccAppStreamImageBuilder_complete(t *testing.T) {
 	resourceName := "aws_appstream_image_builder.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	description := "Description of a test"
@@ -185,7 +185,7 @@ func TestAccAwsAppStreamImageBuilder_complete(t *testing.T) {
 	})
 }
 
-func TestAccAwsAppStreamImageBuilder_Tags(t *testing.T) {
+func TestAccAppStreamImageBuilder_tags(t *testing.T) {
 	resourceName := "aws_appstream_image_builder.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	instanceType := "stream.standard.small"
