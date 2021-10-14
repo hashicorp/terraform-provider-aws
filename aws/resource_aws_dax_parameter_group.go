@@ -9,12 +9,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsDaxParameterGroup() *schema.Resource {
+func ResourceParameterGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDaxParameterGroupCreate,
-		Read:   resourceAwsDaxParameterGroupRead,
-		Update: resourceAwsDaxParameterGroupUpdate,
-		Delete: resourceAwsDaxParameterGroupDelete,
+		Create: resourceParameterGroupCreate,
+		Read:   resourceParameterGroupRead,
+		Update: resourceParameterGroupUpdate,
+		Delete: resourceParameterGroupDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -52,7 +52,7 @@ func resourceAwsDaxParameterGroup() *schema.Resource {
 	}
 }
 
-func resourceAwsDaxParameterGroupCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceParameterGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DAXConn
 
 	input := &dax.CreateParameterGroupInput{
@@ -70,12 +70,12 @@ func resourceAwsDaxParameterGroupCreate(d *schema.ResourceData, meta interface{}
 	d.SetId(d.Get("name").(string))
 
 	if len(d.Get("parameters").(*schema.Set).List()) > 0 {
-		return resourceAwsDaxParameterGroupUpdate(d, meta)
+		return resourceParameterGroupUpdate(d, meta)
 	}
-	return resourceAwsDaxParameterGroupRead(d, meta)
+	return resourceParameterGroupRead(d, meta)
 }
 
-func resourceAwsDaxParameterGroupRead(d *schema.ResourceData, meta interface{}) error {
+func resourceParameterGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DAXConn
 
 	resp, err := conn.DescribeParameterGroups(&dax.DescribeParameterGroupsInput{
@@ -121,7 +121,7 @@ func resourceAwsDaxParameterGroupRead(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func resourceAwsDaxParameterGroupUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceParameterGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DAXConn
 
 	input := &dax.UpdateParameterGroupInput{
@@ -139,10 +139,10 @@ func resourceAwsDaxParameterGroupUpdate(d *schema.ResourceData, meta interface{}
 		return err
 	}
 
-	return resourceAwsDaxParameterGroupRead(d, meta)
+	return resourceParameterGroupRead(d, meta)
 }
 
-func resourceAwsDaxParameterGroupDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceParameterGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DAXConn
 
 	input := &dax.DeleteParameterGroupInput{
