@@ -1,4 +1,4 @@
-package aws
+package globalaccelerator
 
 import (
 	"fmt"
@@ -11,27 +11,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tfglobalaccelerator "github.com/hashicorp/terraform-provider-aws/aws/internal/service/globalaccelerator"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/globalaccelerator/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/globalaccelerator/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfglobalaccelerator "github.com/hashicorp/terraform-provider-aws/internal/service/globalaccelerator"
-	tfglobalaccelerator "github.com/hashicorp/terraform-provider-aws/internal/service/globalaccelerator"
-	tfglobalaccelerator "github.com/hashicorp/terraform-provider-aws/internal/service/globalaccelerator"
-	tfglobalaccelerator "github.com/hashicorp/terraform-provider-aws/internal/service/globalaccelerator"
-	tfglobalaccelerator "github.com/hashicorp/terraform-provider-aws/internal/service/globalaccelerator"
-	tfglobalaccelerator "github.com/hashicorp/terraform-provider-aws/internal/service/globalaccelerator"
-	tfglobalaccelerator "github.com/hashicorp/terraform-provider-aws/internal/service/globalaccelerator"
-	tfglobalaccelerator "github.com/hashicorp/terraform-provider-aws/internal/service/globalaccelerator"
-	tfglobalaccelerator "github.com/hashicorp/terraform-provider-aws/internal/service/globalaccelerator"
-	tfglobalaccelerator "github.com/hashicorp/terraform-provider-aws/internal/service/globalaccelerator"
-	tfglobalaccelerator "github.com/hashicorp/terraform-provider-aws/internal/service/globalaccelerator"
-	tfglobalaccelerator "github.com/hashicorp/terraform-provider-aws/internal/service/globalaccelerator"
-	tfglobalaccelerator "github.com/hashicorp/terraform-provider-aws/internal/service/globalaccelerator"
-	tfglobalaccelerator "github.com/hashicorp/terraform-provider-aws/internal/service/globalaccelerator"
 )
 
 func ResourceEndpointGroup() *schema.Resource {
@@ -219,13 +202,13 @@ func resourceEndpointGroupCreate(d *schema.ResourceData, meta interface{}) error
 
 	d.SetId(aws.StringValue(resp.EndpointGroup.EndpointGroupArn))
 
-	acceleratorARN, err := tfglobalaccelerator.ListenerOrEndpointGroupARNToAcceleratorARN(d.Id())
+	acceleratorARN, err := ListenerOrEndpointGroupARNToAcceleratorARN(d.Id())
 
 	if err != nil {
 		return err
 	}
 
-	if _, err := tfglobalaccelerator.waitAcceleratorDeployed(conn, acceleratorARN, d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitAcceleratorDeployed(conn, acceleratorARN, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for Global Accelerator Accelerator (%s) deployment: %w", acceleratorARN, err)
 	}
 
@@ -235,7 +218,7 @@ func resourceEndpointGroupCreate(d *schema.ResourceData, meta interface{}) error
 func resourceEndpointGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn
 
-	endpointGroup, err := tfglobalaccelerator.FindEndpointGroupByARN(conn, d.Id())
+	endpointGroup, err := FindEndpointGroupByARN(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Global Accelerator endpoint group (%s) not found, removing from state", d.Id())
@@ -247,7 +230,7 @@ func resourceEndpointGroupRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error reading Global Accelerator endpoint group (%s): %w", d.Id(), err)
 	}
 
-	listenerARN, err := tfglobalaccelerator.EndpointGroupARNToListenerARN(d.Id())
+	listenerARN, err := EndpointGroupARNToListenerARN(d.Id())
 
 	if err != nil {
 		return err
@@ -323,13 +306,13 @@ func resourceEndpointGroupUpdate(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error updating Global Accelerator endpoint group (%s): %w", d.Id(), err)
 	}
 
-	acceleratorARN, err := tfglobalaccelerator.ListenerOrEndpointGroupARNToAcceleratorARN(d.Id())
+	acceleratorARN, err := ListenerOrEndpointGroupARNToAcceleratorARN(d.Id())
 
 	if err != nil {
 		return err
 	}
 
-	if _, err := tfglobalaccelerator.waitAcceleratorDeployed(conn, acceleratorARN, d.Timeout(schema.TimeoutUpdate)); err != nil {
+	if _, err := waitAcceleratorDeployed(conn, acceleratorARN, d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return fmt.Errorf("error waiting for Global Accelerator Accelerator (%s) deployment: %w", acceleratorARN, err)
 	}
 
@@ -354,13 +337,13 @@ func resourceEndpointGroupDelete(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error deleting Global Accelerator endpoint group (%s): %w", d.Id(), err)
 	}
 
-	acceleratorARN, err := tfglobalaccelerator.ListenerOrEndpointGroupARNToAcceleratorARN(d.Id())
+	acceleratorARN, err := ListenerOrEndpointGroupARNToAcceleratorARN(d.Id())
 
 	if err != nil {
 		return err
 	}
 
-	if _, err := tfglobalaccelerator.waitAcceleratorDeployed(conn, acceleratorARN, d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := waitAcceleratorDeployed(conn, acceleratorARN, d.Timeout(schema.TimeoutDelete)); err != nil {
 		return fmt.Errorf("error waiting for Global Accelerator Accelerator (%s) deployment: %w", acceleratorARN, err)
 	}
 
