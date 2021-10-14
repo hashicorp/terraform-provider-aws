@@ -15,6 +15,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceDatabase() *schema.Resource {
@@ -52,7 +53,7 @@ func ResourceDatabase() *schema.Resource {
 				// The ARN is of the format 'arn:aws:kms:REGION:ACCOUNT_ID:key/KMS_KEY_ID'. Appropriate diff suppression
 				// would require an extra API call to the kms service's DescribeKey method to decipher aliases.
 				// To avoid importing an extra service in this resource, input here is restricted to only ARNs.
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 
 			"table_count": {
