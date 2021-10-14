@@ -51,7 +51,7 @@ func resourceAwsMskScramSecretAssociationCreate(d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).KafkaConn
 
 	clusterArn := d.Get("cluster_arn").(string)
-	secretArnList := expandStringSet(d.Get("secret_arn_list").(*schema.Set))
+	secretArnList := flex.ExpandStringSet(d.Get("secret_arn_list").(*schema.Set))
 
 	output, err := associateMSKClusterSecrets(conn, clusterArn, secretArnList)
 	if err != nil {
@@ -82,7 +82,7 @@ func resourceAwsMskScramSecretAssociationRead(d *schema.ResourceData, meta inter
 	}
 
 	d.Set("cluster_arn", d.Id())
-	if err := d.Set("secret_arn_list", flattenStringSet(secretArnList)); err != nil {
+	if err := d.Set("secret_arn_list", flex.FlattenStringSet(secretArnList)); err != nil {
 		return fmt.Errorf("error setting secret_arn_list: %w", err)
 	}
 
@@ -97,7 +97,7 @@ func resourceAwsMskScramSecretAssociationUpdate(d *schema.ResourceData, meta int
 
 	if newSet.Len() > 0 {
 		if newSecrets := newSet.Difference(oldSet); newSecrets.Len() > 0 {
-			output, err := associateMSKClusterSecrets(conn, d.Id(), expandStringSet(newSecrets))
+			output, err := associateMSKClusterSecrets(conn, d.Id(), flex.ExpandStringSet(newSecrets))
 			if err != nil {
 				return fmt.Errorf("error associating scram secret(s) with MSK cluster (%s): %w", d.Id(), err)
 			}
@@ -110,7 +110,7 @@ func resourceAwsMskScramSecretAssociationUpdate(d *schema.ResourceData, meta int
 
 	if oldSet.Len() > 0 {
 		if deleteSecrets := oldSet.Difference(newSet); deleteSecrets.Len() > 0 {
-			output, err := disassociateMSKClusterSecrets(conn, d.Id(), expandStringSet(deleteSecrets))
+			output, err := disassociateMSKClusterSecrets(conn, d.Id(), flex.ExpandStringSet(deleteSecrets))
 			if err != nil {
 				return fmt.Errorf("error disassociating scram secret(s) from MSK cluster (%s): %w", d.Id(), err)
 			}

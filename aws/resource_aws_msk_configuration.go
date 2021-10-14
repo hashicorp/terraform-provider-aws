@@ -69,7 +69,7 @@ func resourceAwsMskConfigurationCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	if v, ok := d.GetOk("kafka_versions"); ok && v.(*schema.Set).Len() > 0 {
-		input.KafkaVersions = expandStringSet(v.(*schema.Set))
+		input.KafkaVersions = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	output, err := conn.CreateConfiguration(input)
