@@ -10,8 +10,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceReplicationInstance() *schema.Resource {
@@ -118,8 +119,8 @@ func ResourceReplicationInstance() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 			"vpc_security_group_ids": {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -129,14 +130,14 @@ func ResourceReplicationInstance() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceReplicationInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DMSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	request := &dms.CreateReplicationInstanceInput{
 		AutoMinorVersionUpgrade:       aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
@@ -263,7 +264,7 @@ func resourceReplicationInstanceRead(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("error setting vpc_security_group_ids: %s", err)
 	}
 
-	tags, err := keyvaluetags.DatabasemigrationserviceListTags(conn, d.Get("replication_instance_arn").(string))
+	tags, err := tftags.DatabasemigrationserviceListTags(conn, d.Get("replication_instance_arn").(string))
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for DMS Replication Instance (%s): %s", d.Get("replication_instance_arn").(string), err)
@@ -345,7 +346,7 @@ func resourceReplicationInstanceUpdate(d *schema.ResourceData, meta interface{})
 		arn := d.Get("replication_instance_arn").(string)
 		o, n := d.GetChange("tags_all")
 
-		if err := keyvaluetags.DatabasemigrationserviceUpdateTags(conn, arn, o, n); err != nil {
+		if err := tftags.DatabasemigrationserviceUpdateTags(conn, arn, o, n); err != nil {
 			return fmt.Errorf("error updating DMS Replication Instance (%s) tags: %s", arn, err)
 		}
 	}

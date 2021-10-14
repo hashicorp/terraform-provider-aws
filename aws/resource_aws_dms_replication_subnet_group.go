@@ -8,8 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceReplicationSubnetGroup() *schema.Resource {
@@ -44,22 +45,22 @@ func ResourceReplicationSubnetGroup() *schema.Resource {
 				Set:      schema.HashString,
 				Required: true,
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 			"vpc_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceReplicationSubnetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DMSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	request := &dms.CreateReplicationSubnetGroupInput{
 		ReplicationSubnetGroupIdentifier:  aws.String(d.Get("replication_subnet_group_id").(string)),
@@ -116,7 +117,7 @@ func resourceReplicationSubnetGroupRead(d *schema.ResourceData, meta interface{}
 		return err
 	}
 
-	tags, err := keyvaluetags.DatabasemigrationserviceListTags(conn, arn)
+	tags, err := tftags.DatabasemigrationserviceListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for DMS Replication Subnet Group (%s): %s", arn, err)
@@ -154,7 +155,7 @@ func resourceReplicationSubnetGroupUpdate(d *schema.ResourceData, meta interface
 		arn := d.Get("replication_subnet_group_arn").(string)
 		o, n := d.GetChange("tags_all")
 
-		if err := keyvaluetags.DatabasemigrationserviceUpdateTags(conn, arn, o, n); err != nil {
+		if err := tftags.DatabasemigrationserviceUpdateTags(conn, arn, o, n); err != nil {
 			return fmt.Errorf("error updating DMS Replication Subnet Group (%s) tags: %s", arn, err)
 		}
 	}
