@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsKinesisVideoStream() *schema.Resource {
@@ -90,8 +91,8 @@ func resourceAwsKinesisVideoStream() *schema.Resource {
 }
 
 func resourceAwsKinesisVideoStreamCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kinesisvideoconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).KinesisVideoConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	createOpts := &kinesisvideo.CreateStreamInput{
@@ -140,9 +141,9 @@ func resourceAwsKinesisVideoStreamCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsKinesisVideoStreamRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kinesisvideoconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).KinesisVideoConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	descOpts := &kinesisvideo.DescribeStreamInput{
 		StreamARN: aws.String(d.Id()),
@@ -190,7 +191,7 @@ func resourceAwsKinesisVideoStreamRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsKinesisVideoStreamUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kinesisvideoconn
+	conn := meta.(*conns.AWSClient).KinesisVideoConn
 
 	updateOpts := &kinesisvideo.UpdateStreamInput{
 		StreamARN:      aws.String(d.Id()),
@@ -239,7 +240,7 @@ func resourceAwsKinesisVideoStreamUpdate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsKinesisVideoStreamDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kinesisvideoconn
+	conn := meta.(*conns.AWSClient).KinesisVideoConn
 
 	if _, err := conn.DeleteStream(&kinesisvideo.DeleteStreamInput{
 		StreamARN:      aws.String(d.Id()),
