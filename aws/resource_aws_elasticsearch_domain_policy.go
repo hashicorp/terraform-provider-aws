@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsElasticSearchDomainPolicy() *schema.Resource {
+func ResourceDomainPolicy() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsElasticSearchDomainPolicyUpsert,
-		Read:   resourceAwsElasticSearchDomainPolicyRead,
+		Read:   resourceDomainPolicyRead,
 		Update: resourceAwsElasticSearchDomainPolicyUpsert,
-		Delete: resourceAwsElasticSearchDomainPolicyDelete,
+		Delete: resourceDomainPolicyDelete,
 
 		Schema: map[string]*schema.Schema{
 			"domain_name": {
@@ -34,7 +34,7 @@ func resourceAwsElasticSearchDomainPolicy() *schema.Resource {
 	}
 }
 
-func resourceAwsElasticSearchDomainPolicyRead(d *schema.ResourceData, meta interface{}) error {
+func resourceDomainPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElasticSearchConn
 	name := d.Get("domain_name").(string)
 	out, err := conn.DescribeElasticsearchDomain(&elasticsearch.DescribeElasticsearchDomainInput{
@@ -97,10 +97,10 @@ func resourceAwsElasticSearchDomainPolicyUpsert(d *schema.ResourceData, meta int
 		return fmt.Errorf("Error upserting Elasticsearch domain policy: %s", err)
 	}
 
-	return resourceAwsElasticSearchDomainPolicyRead(d, meta)
+	return resourceDomainPolicyRead(d, meta)
 }
 
-func resourceAwsElasticSearchDomainPolicyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDomainPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElasticSearchConn
 
 	_, err := conn.UpdateElasticsearchDomainConfig(&elasticsearch.UpdateElasticsearchDomainConfigInput{

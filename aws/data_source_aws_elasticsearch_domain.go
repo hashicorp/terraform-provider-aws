@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsElasticSearchDomain() *schema.Resource {
+func DataSourceDomain() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsElasticSearchDomainRead,
+		Read: dataSourceDomainRead,
 
 		Schema: map[string]*schema.Schema{
 			"access_policies": {
@@ -276,7 +276,7 @@ func dataSourceAwsElasticSearchDomain() *schema.Resource {
 	}
 }
 
-func dataSourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElasticSearchConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

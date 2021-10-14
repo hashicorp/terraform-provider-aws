@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsElasticSearchDomainSAMLOptions() *schema.Resource {
+func ResourceDomainSAMLOptions() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsElasticSearchDomainSAMLOptionsPut,
-		Read:   resourceAwsElasticSearchDomainSAMLOptionsRead,
+		Read:   resourceDomainSAMLOptionsRead,
 		Update: resourceAwsElasticSearchDomainSAMLOptionsPut,
-		Delete: resourceAwsElasticSearchDomainSAMLOptionsDelete,
+		Delete: resourceDomainSAMLOptionsDelete,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				d.Set("domain_name", d.Id())
@@ -105,7 +105,7 @@ func elasticsearchDomainSamlOptionsDiffSupress(k, old, new string, d *schema.Res
 	return false
 }
 
-func resourceAwsElasticSearchDomainSAMLOptionsRead(d *schema.ResourceData, meta interface{}) error {
+func resourceDomainSAMLOptionsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElasticSearchConn
 
 	input := &elasticsearch.DescribeElasticsearchDomainInput{
@@ -183,10 +183,10 @@ func resourceAwsElasticSearchDomainSAMLOptionsPut(d *schema.ResourceData, meta i
 		return fmt.Errorf("Error updating Elasticsearch domain SAML Options: %s", err)
 	}
 
-	return resourceAwsElasticSearchDomainSAMLOptionsRead(d, meta)
+	return resourceDomainSAMLOptionsRead(d, meta)
 }
 
-func resourceAwsElasticSearchDomainSAMLOptionsDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDomainSAMLOptionsDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElasticSearchConn
 
 	domainName := d.Get("domain_name").(string)
