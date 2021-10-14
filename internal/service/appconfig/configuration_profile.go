@@ -176,7 +176,7 @@ func resourceConfigurationProfileRead(d *schema.ResourceData, meta interface{}) 
 
 	d.Set("retrieval_role_arn", output.RetrievalRoleArn)
 
-	if err := d.Set("validator", flattenAwsAppconfigValidators(output.Validators)); err != nil {
+	if err := d.Set("validator", flattenValidators(output.Validators)); err != nil {
 		return fmt.Errorf("error setting validator: %w", err)
 	}
 
@@ -338,7 +338,7 @@ func expandAppconfigValidators(tfList []interface{}) []*appconfig.Validator {
 	return validators
 }
 
-func flattenAwsAppconfigValidator(validator *appconfig.Validator) map[string]interface{} {
+func flattenValidator(validator *appconfig.Validator) map[string]interface{} {
 	if validator == nil {
 		return nil
 	}
@@ -356,7 +356,7 @@ func flattenAwsAppconfigValidator(validator *appconfig.Validator) map[string]int
 	return tfMap
 }
 
-func flattenAwsAppconfigValidators(validators []*appconfig.Validator) []interface{} {
+func flattenValidators(validators []*appconfig.Validator) []interface{} {
 	if len(validators) == 0 {
 		return nil
 	}
@@ -368,7 +368,7 @@ func flattenAwsAppconfigValidators(validators []*appconfig.Validator) []interfac
 			continue
 		}
 
-		tfList = append(tfList, flattenAwsAppconfigValidator(validator))
+		tfList = append(tfList, flattenValidator(validator))
 	}
 
 	return tfList

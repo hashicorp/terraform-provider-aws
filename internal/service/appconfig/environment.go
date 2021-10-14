@@ -160,7 +160,7 @@ func resourceEnvironmentRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", output.Name)
 	d.Set("state", output.State)
 
-	if err := d.Set("monitor", flattenAwsAppconfigEnvironmentMonitors(output.Monitors)); err != nil {
+	if err := d.Set("monitor", flattenEnvironmentMonitors(output.Monitors)); err != nil {
 		return fmt.Errorf("error setting monitor: %w", err)
 	}
 
@@ -317,7 +317,7 @@ func expandAppconfigEnvironmentMonitors(tfList []interface{}) []*appconfig.Monit
 	return monitors
 }
 
-func flattenAwsAppconfigEnvironmentMonitor(monitor *appconfig.Monitor) map[string]interface{} {
+func flattenEnvironmentMonitor(monitor *appconfig.Monitor) map[string]interface{} {
 	if monitor == nil {
 		return nil
 	}
@@ -335,7 +335,7 @@ func flattenAwsAppconfigEnvironmentMonitor(monitor *appconfig.Monitor) map[strin
 	return tfMap
 }
 
-func flattenAwsAppconfigEnvironmentMonitors(monitors []*appconfig.Monitor) []interface{} {
+func flattenEnvironmentMonitors(monitors []*appconfig.Monitor) []interface{} {
 	if len(monitors) == 0 {
 		return nil
 	}
@@ -347,7 +347,7 @@ func flattenAwsAppconfigEnvironmentMonitors(monitors []*appconfig.Monitor) []int
 			continue
 		}
 
-		tfList = append(tfList, flattenAwsAppconfigEnvironmentMonitor(monitor))
+		tfList = append(tfList, flattenEnvironmentMonitor(monitor))
 	}
 
 	return tfList
