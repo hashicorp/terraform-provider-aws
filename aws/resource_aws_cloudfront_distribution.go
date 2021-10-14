@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsCloudFrontDistribution() *schema.Resource {
@@ -797,8 +798,8 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 }
 
 func resourceAwsCloudFrontDistributionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudfrontconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).CloudFrontConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	params := &cloudfront.CreateDistributionWithTagsInput{
@@ -849,9 +850,9 @@ func resourceAwsCloudFrontDistributionCreate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsCloudFrontDistributionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudfrontconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).CloudFrontConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	params := &cloudfront.GetDistributionInput{
 		Id: aws.String(d.Id()),
@@ -907,7 +908,7 @@ func resourceAwsCloudFrontDistributionRead(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsCloudFrontDistributionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudfrontconn
+	conn := meta.(*conns.AWSClient).CloudFrontConn
 	params := &cloudfront.UpdateDistributionInput{
 		Id:                 aws.String(d.Id()),
 		DistributionConfig: expandDistributionConfig(d),
@@ -958,7 +959,7 @@ func resourceAwsCloudFrontDistributionUpdate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsCloudFrontDistributionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudfrontconn
+	conn := meta.(*conns.AWSClient).CloudFrontConn
 
 	if d.Get("retain_on_delete").(bool) {
 		// Check if we need to disable first
@@ -1143,7 +1144,7 @@ func resourceAwsCloudFrontDistributionWaitUntilDeployed(id string, meta interfac
 // The refresh function for resourceAwsCloudFrontWebDistributionWaitUntilDeployed.
 func resourceAwsCloudFrontWebDistributionStateRefreshFunc(id string, meta interface{}) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		conn := meta.(*AWSClient).cloudfrontconn
+		conn := meta.(*conns.AWSClient).CloudFrontConn
 		params := &cloudfront.GetDistributionInput{
 			Id: aws.String(id),
 		}

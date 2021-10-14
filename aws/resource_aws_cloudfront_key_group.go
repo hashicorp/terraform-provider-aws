@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsCloudFrontKeyGroup() *schema.Resource {
@@ -43,7 +44,7 @@ func resourceAwsCloudFrontKeyGroup() *schema.Resource {
 }
 
 func resourceAwsCloudFrontKeyGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudfrontconn
+	conn := meta.(*conns.AWSClient).CloudFrontConn
 
 	input := &cloudfront.CreateKeyGroupInput{
 		KeyGroupConfig: expandCloudFrontKeyGroupConfig(d),
@@ -65,7 +66,7 @@ func resourceAwsCloudFrontKeyGroupCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsCloudFrontKeyGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudfrontconn
+	conn := meta.(*conns.AWSClient).CloudFrontConn
 	input := &cloudfront.GetKeyGroupInput{
 		Id: aws.String(d.Id()),
 	}
@@ -95,7 +96,7 @@ func resourceAwsCloudFrontKeyGroupRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsCloudFrontKeyGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudfrontconn
+	conn := meta.(*conns.AWSClient).CloudFrontConn
 
 	input := &cloudfront.UpdateKeyGroupInput{
 		Id:             aws.String(d.Id()),
@@ -112,7 +113,7 @@ func resourceAwsCloudFrontKeyGroupUpdate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsCloudFrontKeyGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudfrontconn
+	conn := meta.(*conns.AWSClient).CloudFrontConn
 
 	input := &cloudfront.DeleteKeyGroupInput{
 		Id:      aws.String(d.Id()),

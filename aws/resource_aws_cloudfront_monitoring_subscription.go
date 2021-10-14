@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudfront/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsCloudFrontMonitoringSubscription() *schema.Resource {
@@ -59,7 +60,7 @@ func resourceAwsCloudFrontMonitoringSubscription() *schema.Resource {
 }
 
 func resourceAwsCloudFrontMonitoringSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudfrontconn
+	conn := meta.(*conns.AWSClient).CloudFrontConn
 
 	id := d.Get("distribution_id").(string)
 	input := &cloudfront.CreateMonitoringSubscriptionInput{
@@ -80,7 +81,7 @@ func resourceAwsCloudFrontMonitoringSubscriptionCreate(d *schema.ResourceData, m
 }
 
 func resourceAwsCloudFrontMonitoringSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudfrontconn
+	conn := meta.(*conns.AWSClient).CloudFrontConn
 
 	subscription, err := finder.MonitoringSubscriptionByDistributionId(conn, d.Id())
 
@@ -111,7 +112,7 @@ func resourceAwsCloudFrontMonitoringSubscriptionRead(d *schema.ResourceData, met
 }
 
 func resourceAwsCloudFrontMonitoringSubscriptionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudfrontconn
+	conn := meta.(*conns.AWSClient).CloudFrontConn
 
 	log.Printf("[DEBUG] Deleting CloudFront Monitoring Subscription (%s)", d.Id())
 	_, err := conn.DeleteMonitoringSubscription(&cloudfront.DeleteMonitoringSubscriptionInput{

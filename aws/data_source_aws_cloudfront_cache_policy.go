@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsCloudFrontCachePolicy() *schema.Resource {
@@ -138,7 +139,7 @@ func dataSourceAwsCloudFrontCachePolicy() *schema.Resource {
 	}
 }
 func dataSourceAwsCloudFrontCachePolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudfrontconn
+	conn := meta.(*conns.AWSClient).CloudFrontConn
 
 	if d.Id() == "" {
 		if err := dataSourceAwsCloudFrontCachePolicyFindByName(d, conn); err != nil {

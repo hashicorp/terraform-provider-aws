@@ -3,6 +3,7 @@ package aws
 import (
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 const (
@@ -29,7 +30,7 @@ func dataSourceAwsCloudFrontLogDeliveryCanonicalUserId() *schema.Resource {
 func dataSourceAwsCloudFrontLogDeliveryCanonicalUserIdRead(d *schema.ResourceData, meta interface{}) error {
 	canonicalId := defaultCloudFrontLogDeliveryCanonicalUserId
 
-	region := meta.(*AWSClient).region
+	region := meta.(*conns.AWSClient).Region
 	if v, ok := d.GetOk("region"); ok {
 		region = v.(string)
 	}

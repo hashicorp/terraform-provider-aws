@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsCloudFrontPublicKey() *schema.Resource {
@@ -59,7 +60,7 @@ func resourceAwsCloudFrontPublicKey() *schema.Resource {
 }
 
 func resourceAwsCloudFrontPublicKeyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudfrontconn
+	conn := meta.(*conns.AWSClient).CloudFrontConn
 
 	if v, ok := d.GetOk("name"); ok {
 		d.Set("name", v.(string))
@@ -85,7 +86,7 @@ func resourceAwsCloudFrontPublicKeyCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsCloudFrontPublicKeyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudfrontconn
+	conn := meta.(*conns.AWSClient).CloudFrontConn
 	request := &cloudfront.GetPublicKeyInput{
 		Id: aws.String(d.Id()),
 	}
@@ -117,7 +118,7 @@ func resourceAwsCloudFrontPublicKeyRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsCloudFrontPublicKeyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudfrontconn
+	conn := meta.(*conns.AWSClient).CloudFrontConn
 
 	request := &cloudfront.UpdatePublicKeyInput{
 		Id:              aws.String(d.Id()),
@@ -134,7 +135,7 @@ func resourceAwsCloudFrontPublicKeyUpdate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsCloudFrontPublicKeyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudfrontconn
+	conn := meta.(*conns.AWSClient).CloudFrontConn
 
 	request := &cloudfront.DeletePublicKeyInput{
 		Id:      aws.String(d.Id()),
