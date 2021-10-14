@@ -57,7 +57,7 @@ func testSweepSyntheticsCanaries(region string) error {
 			name := aws.StringValue(canary.Name)
 			log.Printf("[INFO] Deleting Synthetics Canary: %s", name)
 
-			r := ResourceCanary()
+			r := tfsynthetics.ResourceCanary()
 			d := r.Data(nil)
 			d.SetId(name)
 			err := r.Delete(d, client)
@@ -517,7 +517,7 @@ func TestAccAWSSyntheticsCanary_disappears(t *testing.T) {
 				Config: testAccAWSSyntheticsCanaryBasicConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceCanary(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfsynthetics.ResourceCanary(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
