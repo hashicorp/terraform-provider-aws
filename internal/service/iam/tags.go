@@ -1,22 +1,23 @@
 //go:build !generate
 // +build !generate
 
-package keyvaluetags
+package iam
 
 import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // Custom IAM tag service update functions using the same format as generated code.
 
-// IamRoleUpdateTags updates IAM role tags.
+// roleUpdateTags updates IAM role tags.
 // The identifier is the role name.
-func IamRoleUpdateTags(conn *iam.IAM, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
-	oldTags := New(oldTagsMap)
-	newTags := New(newTagsMap)
+func roleUpdateTags(conn *iam.IAM, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := tftags.New(oldTagsMap)
+	newTags := tftags.New(newTagsMap)
 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &iam.UntagRoleInput{
@@ -47,11 +48,11 @@ func IamRoleUpdateTags(conn *iam.IAM, identifier string, oldTagsMap interface{},
 	return nil
 }
 
-// IamUserUpdateTags updates IAM user tags.
+// userUpdateTags updates IAM user tags.
 // The identifier is the user name.
-func IamUserUpdateTags(conn *iam.IAM, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
-	oldTags := New(oldTagsMap)
-	newTags := New(newTagsMap)
+func userUpdateTags(conn *iam.IAM, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := tftags.New(oldTagsMap)
+	newTags := tftags.New(newTagsMap)
 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &iam.UntagUserInput{
@@ -82,11 +83,11 @@ func IamUserUpdateTags(conn *iam.IAM, identifier string, oldTagsMap interface{},
 	return nil
 }
 
-// IamInstanceProfileUpdateTags updates IAM Instance Profile tags.
+// instanceProfileUpdateTags updates IAM Instance Profile tags.
 // The identifier is the Instance Profile name.
-func IamInstanceProfileUpdateTags(conn *iam.IAM, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
-	oldTags := New(oldTagsMap)
-	newTags := New(newTagsMap)
+func instanceProfileUpdateTags(conn *iam.IAM, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := tftags.New(oldTagsMap)
+	newTags := tftags.New(newTagsMap)
 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &iam.UntagInstanceProfileInput{
@@ -117,11 +118,11 @@ func IamInstanceProfileUpdateTags(conn *iam.IAM, identifier string, oldTagsMap i
 	return nil
 }
 
-// IamOpenIDConnectProviderUpdateTags updates IAM OpenID Connect Provider tags.
+// openIDConnectProviderUpdateTags updates IAM OpenID Connect Provider tags.
 // The identifier is the OpenID Connect Provider ARN.
-func IamOpenIDConnectProviderUpdateTags(conn *iam.IAM, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
-	oldTags := New(oldTagsMap)
-	newTags := New(newTagsMap)
+func openIDConnectProviderUpdateTags(conn *iam.IAM, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := tftags.New(oldTagsMap)
+	newTags := tftags.New(newTagsMap)
 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &iam.UntagOpenIDConnectProviderInput{
@@ -152,11 +153,11 @@ func IamOpenIDConnectProviderUpdateTags(conn *iam.IAM, identifier string, oldTag
 	return nil
 }
 
-// IamPolicyUpdateTags updates IAM Policy tags.
+// policyUpdateTags updates IAM Policy tags.
 // The identifier is the Policy ARN.
-func IamPolicyUpdateTags(conn *iam.IAM, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
-	oldTags := New(oldTagsMap)
-	newTags := New(newTagsMap)
+func policyUpdateTags(conn *iam.IAM, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := tftags.New(oldTagsMap)
+	newTags := tftags.New(newTagsMap)
 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &iam.UntagPolicyInput{
@@ -187,11 +188,11 @@ func IamPolicyUpdateTags(conn *iam.IAM, identifier string, oldTagsMap interface{
 	return nil
 }
 
-// IamSAMLProviderUpdateTags updates IAM SAML Provider tags.
+// samlProviderUpdateTags updates IAM SAML Provider tags.
 // The identifier is the SAML Provider ARN.
-func IamSAMLProviderUpdateTags(conn *iam.IAM, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
-	oldTags := New(oldTagsMap)
-	newTags := New(newTagsMap)
+func samlProviderUpdateTags(conn *iam.IAM, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := tftags.New(oldTagsMap)
+	newTags := tftags.New(newTagsMap)
 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &iam.UntagSAMLProviderInput{
@@ -222,11 +223,11 @@ func IamSAMLProviderUpdateTags(conn *iam.IAM, identifier string, oldTagsMap inte
 	return nil
 }
 
-// IamServerCertificateUpdateTags updates IAM Server Certificate tags.
+// serverCertificateUpdateTags updates IAM Server Certificate tags.
 // The identifier is the Server Certificate name.
-func IamServerCertificateUpdateTags(conn *iam.IAM, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
-	oldTags := New(oldTagsMap)
-	newTags := New(newTagsMap)
+func serverCertificateUpdateTags(conn *iam.IAM, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := tftags.New(oldTagsMap)
+	newTags := tftags.New(newTagsMap)
 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &iam.UntagServerCertificateInput{
