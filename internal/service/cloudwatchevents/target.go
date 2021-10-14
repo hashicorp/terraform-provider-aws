@@ -26,13 +26,13 @@ func ResourceTarget() *schema.Resource {
 		Delete: resourceTargetDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsCloudWatchEventTargetImport,
+			State: resourceTargetImport,
 		},
 
 		SchemaVersion: 1,
 		StateUpgraders: []schema.StateUpgrader{
 			{
-				Type:    resourceAwsCloudWatchEventTargetV0().CoreConfigSchema().ImpliedType(),
+				Type:    resourceTargetV0().CoreConfigSchema().ImpliedType(),
 				Upgrade: TargetStateUpgradeV0,
 				Version: 0,
 			},
@@ -448,13 +448,13 @@ func resourceTargetRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("event_bus_name", busName)
 
 	if t.RunCommandParameters != nil {
-		if err := d.Set("run_command_targets", flattenAwsCloudWatchEventTargetRunParameters(t.RunCommandParameters)); err != nil {
+		if err := d.Set("run_command_targets", flattenTargetRunParameters(t.RunCommandParameters)); err != nil {
 			return fmt.Errorf("Error setting run_command_targets error: %w", err)
 		}
 	}
 
 	if t.HttpParameters != nil {
-		if err := d.Set("http_target", []interface{}{flattenAwsCloudWatchEventTargetHttpParameters(t.HttpParameters)}); err != nil {
+		if err := d.Set("http_target", []interface{}{flattenTargetHTTPParameters(t.HttpParameters)}); err != nil {
 			return fmt.Errorf("error setting http_target: %w", err)
 		}
 	} else {
@@ -462,49 +462,49 @@ func resourceTargetRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if t.RedshiftDataParameters != nil {
-		if err := d.Set("redshift_target", flattenAwsCloudWatchEventTargetRedshiftParameters(t.RedshiftDataParameters)); err != nil {
+		if err := d.Set("redshift_target", flattenTargetRedshiftParameters(t.RedshiftDataParameters)); err != nil {
 			return fmt.Errorf("Error setting ecs_target error: %w", err)
 		}
 	}
 
 	if t.EcsParameters != nil {
-		if err := d.Set("ecs_target", flattenAwsCloudWatchEventTargetEcsParameters(t.EcsParameters)); err != nil {
+		if err := d.Set("ecs_target", flattenTargetECSParameters(t.EcsParameters)); err != nil {
 			return fmt.Errorf("Error setting ecs_target error: %w", err)
 		}
 	}
 
 	if t.BatchParameters != nil {
-		if err := d.Set("batch_target", flattenAwsCloudWatchEventTargetBatchParameters(t.BatchParameters)); err != nil {
+		if err := d.Set("batch_target", flattenTargetBatchParameters(t.BatchParameters)); err != nil {
 			return fmt.Errorf("Error setting batch_target error: %w", err)
 		}
 	}
 
 	if t.KinesisParameters != nil {
-		if err := d.Set("kinesis_target", flattenAwsCloudWatchEventTargetKinesisParameters(t.KinesisParameters)); err != nil {
+		if err := d.Set("kinesis_target", flattenTargetKinesisParameters(t.KinesisParameters)); err != nil {
 			return fmt.Errorf("Error setting kinesis_target error: %w", err)
 		}
 	}
 
 	if t.SqsParameters != nil {
-		if err := d.Set("sqs_target", flattenAwsCloudWatchEventTargetSqsParameters(t.SqsParameters)); err != nil {
+		if err := d.Set("sqs_target", flattenTargetSQSParameters(t.SqsParameters)); err != nil {
 			return fmt.Errorf("Error setting sqs_target error: %w", err)
 		}
 	}
 
 	if t.InputTransformer != nil {
-		if err := d.Set("input_transformer", flattenAwsCloudWatchInputTransformer(t.InputTransformer)); err != nil {
+		if err := d.Set("input_transformer", flattenCloudWatchInputTransformer(t.InputTransformer)); err != nil {
 			return fmt.Errorf("Error setting input_transformer error: %w", err)
 		}
 	}
 
 	if t.RetryPolicy != nil {
-		if err := d.Set("retry_policy", flatternAwsCloudWatchEventTargetRetryPolicy(t.RetryPolicy)); err != nil {
+		if err := d.Set("retry_policy", flattenTargetRetryPolicy(t.RetryPolicy)); err != nil {
 			return fmt.Errorf("Error setting retry_policy error: #{err}")
 		}
 	}
 
 	if t.DeadLetterConfig != nil {
-		if err := d.Set("dead_letter_config", flatternAwsCloudWatchEventTargetDeadLetterConfig(t.DeadLetterConfig)); err != nil {
+		if err := d.Set("dead_letter_config", flattenTargetDeadLetterConfig(t.DeadLetterConfig)); err != nil {
 			return fmt.Errorf("Error setting dead_letter_config error: #{err}")
 		}
 	}
@@ -572,43 +572,43 @@ func buildPutTargetInputStruct(d *schema.ResourceData) *events.PutTargetsInput {
 	}
 
 	if v, ok := d.GetOk("run_command_targets"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		e.RunCommandParameters = expandAwsCloudWatchEventTargetRunParameters(v.([]interface{}))
+		e.RunCommandParameters = expandTargetRunParameters(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("ecs_target"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		e.EcsParameters = expandAwsCloudWatchEventTargetEcsParameters(v.([]interface{}))
+		e.EcsParameters = expandTargetECSParameters(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("redshift_target"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		e.RedshiftDataParameters = expandAwsCloudWatchEventTargetRedshiftParameters(v.([]interface{}))
+		e.RedshiftDataParameters = expandTargetRedshiftParameters(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("http_target"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		e.HttpParameters = expandAwsCloudWatchEventTargetHttpParameters(v.([]interface{})[0].(map[string]interface{}))
+		e.HttpParameters = expandTargetHTTPParameters(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("batch_target"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		e.BatchParameters = expandAwsCloudWatchEventTargetBatchParameters(v.([]interface{}))
+		e.BatchParameters = expandTargetBatchParameters(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("kinesis_target"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		e.KinesisParameters = expandAwsCloudWatchEventTargetKinesisParameters(v.([]interface{}))
+		e.KinesisParameters = expandTargetKinesisParameters(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("sqs_target"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		e.SqsParameters = expandAwsCloudWatchEventTargetSqsParameters(v.([]interface{}))
+		e.SqsParameters = expandTargetSQSParameters(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("input_transformer"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		e.InputTransformer = expandAwsCloudWatchEventTransformerParameters(v.([]interface{}))
+		e.InputTransformer = expandTransformerParameters(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("retry_policy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		e.RetryPolicy = expandAwsCloudWatchEventRetryPolicyParameters(v.([]interface{}))
+		e.RetryPolicy = expandRetryPolicyParameters(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("dead_letter_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		e.DeadLetterConfig = expandAwsCloudWatchEventDeadLetterConfigParameters(v.([]interface{}))
+		e.DeadLetterConfig = expandDeadLetterParametersConfig(v.([]interface{}))
 	}
 
 	input := events.PutTargetsInput{
@@ -622,7 +622,7 @@ func buildPutTargetInputStruct(d *schema.ResourceData) *events.PutTargetsInput {
 	return &input
 }
 
-func expandAwsCloudWatchEventTargetRunParameters(config []interface{}) *events.RunCommandParameters {
+func expandTargetRunParameters(config []interface{}) *events.RunCommandParameters {
 	commands := make([]*events.RunCommandTarget, 0)
 	for _, c := range config {
 		param := c.(map[string]interface{})
@@ -640,7 +640,7 @@ func expandAwsCloudWatchEventTargetRunParameters(config []interface{}) *events.R
 	return command
 }
 
-func expandAwsCloudWatchEventTargetRedshiftParameters(config []interface{}) *events.RedshiftDataParameters {
+func expandTargetRedshiftParameters(config []interface{}) *events.RedshiftDataParameters {
 	redshiftParameters := &events.RedshiftDataParameters{}
 	for _, c := range config {
 		param := c.(map[string]interface{})
@@ -668,7 +668,7 @@ func expandAwsCloudWatchEventTargetRedshiftParameters(config []interface{}) *eve
 	return redshiftParameters
 }
 
-func expandAwsCloudWatchEventTargetEcsParameters(config []interface{}) *events.EcsParameters {
+func expandTargetECSParameters(config []interface{}) *events.EcsParameters {
 	ecsParameters := &events.EcsParameters{}
 	for _, c := range config {
 		param := c.(map[string]interface{})
@@ -683,7 +683,7 @@ func expandAwsCloudWatchEventTargetEcsParameters(config []interface{}) *events.E
 		}
 
 		if val, ok := param["network_configuration"]; ok {
-			ecsParameters.NetworkConfiguration = expandAwsCloudWatchEventTargetEcsParametersNetworkConfiguration(val.([]interface{}))
+			ecsParameters.NetworkConfiguration = expandTargetECSParametersNetworkConfiguration(val.([]interface{}))
 		}
 
 		if val, ok := param["platform_version"].(string); ok && val != "" {
@@ -691,7 +691,7 @@ func expandAwsCloudWatchEventTargetEcsParameters(config []interface{}) *events.E
 		}
 
 		if v, ok := param["placement_constraint"].(*schema.Set); ok && v.Len() > 0 {
-			ecsParameters.PlacementConstraints = expandAwsCloudWatchEventTargetPlacementConstraints(v.List())
+			ecsParameters.PlacementConstraints = expandTargetPlacementConstraints(v.List())
 		}
 
 		if v, ok := param["propagate_tags"].(string); ok {
@@ -711,7 +711,7 @@ func expandAwsCloudWatchEventTargetEcsParameters(config []interface{}) *events.E
 	return ecsParameters
 }
 
-func expandAwsCloudWatchEventRetryPolicyParameters(rp []interface{}) *events.RetryPolicy {
+func expandRetryPolicyParameters(rp []interface{}) *events.RetryPolicy {
 	retryPolicy := &events.RetryPolicy{}
 
 	for _, v := range rp {
@@ -729,7 +729,7 @@ func expandAwsCloudWatchEventRetryPolicyParameters(rp []interface{}) *events.Ret
 	return retryPolicy
 }
 
-func expandAwsCloudWatchEventDeadLetterConfigParameters(dlp []interface{}) *events.DeadLetterConfig {
+func expandDeadLetterParametersConfig(dlp []interface{}) *events.DeadLetterConfig {
 	deadLetterConfig := &events.DeadLetterConfig{}
 
 	for _, v := range dlp {
@@ -743,7 +743,7 @@ func expandAwsCloudWatchEventDeadLetterConfigParameters(dlp []interface{}) *even
 	return deadLetterConfig
 }
 
-func expandAwsCloudWatchEventTargetEcsParametersNetworkConfiguration(nc []interface{}) *events.NetworkConfiguration {
+func expandTargetECSParametersNetworkConfiguration(nc []interface{}) *events.NetworkConfiguration {
 	if len(nc) == 0 {
 		return nil
 	}
@@ -763,7 +763,7 @@ func expandAwsCloudWatchEventTargetEcsParametersNetworkConfiguration(nc []interf
 	return &events.NetworkConfiguration{AwsvpcConfiguration: awsVpcConfig}
 }
 
-func expandAwsCloudWatchEventTargetBatchParameters(config []interface{}) *events.BatchParameters {
+func expandTargetBatchParameters(config []interface{}) *events.BatchParameters {
 	batchParameters := &events.BatchParameters{}
 	for _, c := range config {
 		param := c.(map[string]interface{})
@@ -784,7 +784,7 @@ func expandAwsCloudWatchEventTargetBatchParameters(config []interface{}) *events
 	return batchParameters
 }
 
-func expandAwsCloudWatchEventTargetKinesisParameters(config []interface{}) *events.KinesisParameters {
+func expandTargetKinesisParameters(config []interface{}) *events.KinesisParameters {
 	kinesisParameters := &events.KinesisParameters{}
 	for _, c := range config {
 		param := c.(map[string]interface{})
@@ -796,7 +796,7 @@ func expandAwsCloudWatchEventTargetKinesisParameters(config []interface{}) *even
 	return kinesisParameters
 }
 
-func expandAwsCloudWatchEventTargetSqsParameters(config []interface{}) *events.SqsParameters {
+func expandTargetSQSParameters(config []interface{}) *events.SqsParameters {
 	sqsParameters := &events.SqsParameters{}
 	for _, c := range config {
 		param := c.(map[string]interface{})
@@ -808,7 +808,7 @@ func expandAwsCloudWatchEventTargetSqsParameters(config []interface{}) *events.S
 	return sqsParameters
 }
 
-func expandAwsCloudWatchEventTargetHttpParameters(tfMap map[string]interface{}) *events.HttpParameters {
+func expandTargetHTTPParameters(tfMap map[string]interface{}) *events.HttpParameters {
 	if tfMap == nil {
 		return nil
 	}
@@ -830,7 +830,7 @@ func expandAwsCloudWatchEventTargetHttpParameters(tfMap map[string]interface{}) 
 	return apiObject
 }
 
-func expandAwsCloudWatchEventTransformerParameters(config []interface{}) *events.InputTransformer {
+func expandTransformerParameters(config []interface{}) *events.InputTransformer {
 	transformerParameters := &events.InputTransformer{}
 
 	inputPathsMaps := map[string]*string{}
@@ -849,7 +849,7 @@ func expandAwsCloudWatchEventTransformerParameters(config []interface{}) *events
 	return transformerParameters
 }
 
-func flattenAwsCloudWatchEventTargetRunParameters(runCommand *events.RunCommandParameters) []map[string]interface{} {
+func flattenTargetRunParameters(runCommand *events.RunCommandParameters) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0)
 
 	for _, x := range runCommand.RunCommandTargets {
@@ -864,7 +864,7 @@ func flattenAwsCloudWatchEventTargetRunParameters(runCommand *events.RunCommandP
 	return result
 }
 
-func flattenAwsCloudWatchEventTargetEcsParameters(ecsParameters *events.EcsParameters) []map[string]interface{} {
+func flattenTargetECSParameters(ecsParameters *events.EcsParameters) []map[string]interface{} {
 	config := make(map[string]interface{})
 	if ecsParameters.Group != nil {
 		config["group"] = aws.StringValue(ecsParameters.Group)
@@ -874,7 +874,7 @@ func flattenAwsCloudWatchEventTargetEcsParameters(ecsParameters *events.EcsParam
 		config["launch_type"] = aws.StringValue(ecsParameters.LaunchType)
 	}
 
-	config["network_configuration"] = flattenAwsCloudWatchEventTargetEcsParametersNetworkConfiguration(ecsParameters.NetworkConfiguration)
+	config["network_configuration"] = flattenTargetECSParametersNetworkConfiguration(ecsParameters.NetworkConfiguration)
 	if ecsParameters.PlatformVersion != nil {
 		config["platform_version"] = aws.StringValue(ecsParameters.PlatformVersion)
 	}
@@ -884,7 +884,7 @@ func flattenAwsCloudWatchEventTargetEcsParameters(ecsParameters *events.EcsParam
 	}
 
 	if ecsParameters.PlacementConstraints != nil {
-		config["placement_constraint"] = flattenAwsCloudWatchEventTargetPlacementConstraints(ecsParameters.PlacementConstraints)
+		config["placement_constraint"] = flattenTargetPlacementConstraints(ecsParameters.PlacementConstraints)
 	}
 
 	config["tags"] = KeyValueTags(ecsParameters.Tags).IgnoreAWS().Map()
@@ -896,7 +896,7 @@ func flattenAwsCloudWatchEventTargetEcsParameters(ecsParameters *events.EcsParam
 	return result
 }
 
-func flattenAwsCloudWatchEventTargetRedshiftParameters(redshiftParameters *events.RedshiftDataParameters) []map[string]interface{} {
+func flattenTargetRedshiftParameters(redshiftParameters *events.RedshiftDataParameters) []map[string]interface{} {
 	config := make(map[string]interface{})
 
 	if redshiftParameters == nil {
@@ -914,7 +914,7 @@ func flattenAwsCloudWatchEventTargetRedshiftParameters(redshiftParameters *event
 	return result
 }
 
-func flattenAwsCloudWatchEventTargetEcsParametersNetworkConfiguration(nc *events.NetworkConfiguration) []interface{} {
+func flattenTargetECSParametersNetworkConfiguration(nc *events.NetworkConfiguration) []interface{} {
 	if nc == nil {
 		return nil
 	}
@@ -930,7 +930,7 @@ func flattenAwsCloudWatchEventTargetEcsParametersNetworkConfiguration(nc *events
 	return []interface{}{result}
 }
 
-func flattenAwsCloudWatchEventTargetBatchParameters(batchParameters *events.BatchParameters) []map[string]interface{} {
+func flattenTargetBatchParameters(batchParameters *events.BatchParameters) []map[string]interface{} {
 	config := make(map[string]interface{})
 	config["job_definition"] = aws.StringValue(batchParameters.JobDefinition)
 	config["job_name"] = aws.StringValue(batchParameters.JobName)
@@ -944,21 +944,21 @@ func flattenAwsCloudWatchEventTargetBatchParameters(batchParameters *events.Batc
 	return result
 }
 
-func flattenAwsCloudWatchEventTargetKinesisParameters(kinesisParameters *events.KinesisParameters) []map[string]interface{} {
+func flattenTargetKinesisParameters(kinesisParameters *events.KinesisParameters) []map[string]interface{} {
 	config := make(map[string]interface{})
 	config["partition_key_path"] = aws.StringValue(kinesisParameters.PartitionKeyPath)
 	result := []map[string]interface{}{config}
 	return result
 }
 
-func flattenAwsCloudWatchEventTargetSqsParameters(sqsParameters *events.SqsParameters) []map[string]interface{} {
+func flattenTargetSQSParameters(sqsParameters *events.SqsParameters) []map[string]interface{} {
 	config := make(map[string]interface{})
 	config["message_group_id"] = aws.StringValue(sqsParameters.MessageGroupId)
 	result := []map[string]interface{}{config}
 	return result
 }
 
-func flattenAwsCloudWatchEventTargetHttpParameters(apiObject *events.HttpParameters) map[string]interface{} {
+func flattenTargetHTTPParameters(apiObject *events.HttpParameters) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -980,7 +980,7 @@ func flattenAwsCloudWatchEventTargetHttpParameters(apiObject *events.HttpParamet
 	return tfMap
 }
 
-func flattenAwsCloudWatchInputTransformer(inputTransformer *events.InputTransformer) []map[string]interface{} {
+func flattenCloudWatchInputTransformer(inputTransformer *events.InputTransformer) []map[string]interface{} {
 	config := make(map[string]interface{})
 	inputPathsMap := make(map[string]string)
 	for k, v := range inputTransformer.InputPathsMap {
@@ -993,7 +993,7 @@ func flattenAwsCloudWatchInputTransformer(inputTransformer *events.InputTransfor
 	return result
 }
 
-func flatternAwsCloudWatchEventTargetRetryPolicy(rp *events.RetryPolicy) []map[string]interface{} {
+func flattenTargetRetryPolicy(rp *events.RetryPolicy) []map[string]interface{} {
 	config := make(map[string]interface{})
 
 	config["maximum_event_age_in_seconds"] = aws.Int64Value(rp.MaximumEventAgeInSeconds)
@@ -1003,7 +1003,7 @@ func flatternAwsCloudWatchEventTargetRetryPolicy(rp *events.RetryPolicy) []map[s
 	return result
 }
 
-func flatternAwsCloudWatchEventTargetDeadLetterConfig(dlc *events.DeadLetterConfig) []map[string]interface{} {
+func flattenTargetDeadLetterConfig(dlc *events.DeadLetterConfig) []map[string]interface{} {
 	config := make(map[string]interface{})
 
 	config["arn"] = aws.StringValue(dlc.Arn)
@@ -1012,7 +1012,7 @@ func flatternAwsCloudWatchEventTargetDeadLetterConfig(dlc *events.DeadLetterConf
 	return result
 }
 
-func expandAwsCloudWatchEventTargetPlacementConstraints(tfList []interface{}) []*events.PlacementConstraint {
+func expandTargetPlacementConstraints(tfList []interface{}) []*events.PlacementConstraint {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1042,7 +1042,7 @@ func expandAwsCloudWatchEventTargetPlacementConstraints(tfList []interface{}) []
 	return result
 }
 
-func flattenAwsCloudWatchEventTargetPlacementConstraints(pcs []*events.PlacementConstraint) []map[string]interface{} {
+func flattenTargetPlacementConstraints(pcs []*events.PlacementConstraint) []map[string]interface{} {
 	if len(pcs) == 0 {
 		return nil
 	}
@@ -1059,7 +1059,7 @@ func flattenAwsCloudWatchEventTargetPlacementConstraints(pcs []*events.Placement
 	return results
 }
 
-func resourceAwsCloudWatchEventTargetImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceTargetImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	busName, ruleName, targetID, err := TargetParseImportID(d.Id())
 	if err != nil {
 		return []*schema.ResourceData{}, err

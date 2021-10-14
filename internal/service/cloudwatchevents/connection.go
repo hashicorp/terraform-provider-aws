@@ -241,7 +241,7 @@ func resourceConnectionCreate(d *schema.ResourceData, meta interface{}) error {
 	name := d.Get("name").(string)
 	input := &events.CreateConnectionInput{
 		AuthorizationType: aws.String(d.Get("authorization_type").(string)),
-		AuthParameters:    expandAwsCloudWatchEventCreateConnectionAuthRequestParameters(d.Get("auth_parameters").([]interface{})),
+		AuthParameters:    expandCreateConnectionAuthRequestParameters(d.Get("auth_parameters").([]interface{})),
 		Name:              aws.String(name),
 	}
 
@@ -290,7 +290,7 @@ func resourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("secret_arn", output.SecretArn)
 
 	if output.AuthParameters != nil {
-		authParameters := flattenAwsCloudWatchEventConnectionAuthParameters(output.AuthParameters, d)
+		authParameters := flattenConnectionAuthParameters(output.AuthParameters, d)
 		if err := d.Set("auth_parameters", authParameters); err != nil {
 			return fmt.Errorf("error setting auth_parameters error: %w", err)
 		}
@@ -311,7 +311,7 @@ func resourceConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("auth_parameters"); ok {
-		input.AuthParameters = expandAwsCloudWatchEventUpdateConnectionAuthRequestParameters(v.([]interface{}))
+		input.AuthParameters = expandUpdateConnectionAuthRequestParameters(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -359,28 +359,28 @@ func resourceConnectionDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func expandAwsCloudWatchEventCreateConnectionAuthRequestParameters(config []interface{}) *events.CreateConnectionAuthRequestParameters {
+func expandCreateConnectionAuthRequestParameters(config []interface{}) *events.CreateConnectionAuthRequestParameters {
 	authParameters := &events.CreateConnectionAuthRequestParameters{}
 	for _, c := range config {
 		param := c.(map[string]interface{})
 		if val, ok := param["api_key"]; ok {
-			authParameters.ApiKeyAuthParameters = expandAwsCreateConnectionApiKeyAuthRequestParameters(val.([]interface{}))
+			authParameters.ApiKeyAuthParameters = expandCreateConnectionAPIKeyAuthRequestParameters(val.([]interface{}))
 		}
 		if val, ok := param["basic"]; ok {
-			authParameters.BasicAuthParameters = expandAwsCreateConnectionBasicAuthRequestParameters(val.([]interface{}))
+			authParameters.BasicAuthParameters = expandCreateConnectionBasicAuthRequestParameters(val.([]interface{}))
 		}
 		if val, ok := param["oauth"]; ok {
-			authParameters.OAuthParameters = expandAwsCreateConnectionOAuthAuthRequestParameters(val.([]interface{}))
+			authParameters.OAuthParameters = expandCreateConnectionOAuthAuthRequestParameters(val.([]interface{}))
 		}
 		if val, ok := param["invocation_http_parameters"]; ok {
-			authParameters.InvocationHttpParameters = expandAwsConnectionHttpParameters(val.([]interface{}))
+			authParameters.InvocationHttpParameters = expandConnectionHTTPParameters(val.([]interface{}))
 		}
 	}
 
 	return authParameters
 }
 
-func expandAwsCreateConnectionApiKeyAuthRequestParameters(config []interface{}) *events.CreateConnectionApiKeyAuthRequestParameters {
+func expandCreateConnectionAPIKeyAuthRequestParameters(config []interface{}) *events.CreateConnectionApiKeyAuthRequestParameters {
 	if len(config) == 0 {
 		return nil
 	}
@@ -397,7 +397,7 @@ func expandAwsCreateConnectionApiKeyAuthRequestParameters(config []interface{}) 
 	return apiKeyAuthParameters
 }
 
-func expandAwsCreateConnectionBasicAuthRequestParameters(config []interface{}) *events.CreateConnectionBasicAuthRequestParameters {
+func expandCreateConnectionBasicAuthRequestParameters(config []interface{}) *events.CreateConnectionBasicAuthRequestParameters {
 	if len(config) == 0 {
 		return nil
 	}
@@ -414,7 +414,7 @@ func expandAwsCreateConnectionBasicAuthRequestParameters(config []interface{}) *
 	return basicAuthParameters
 }
 
-func expandAwsCreateConnectionOAuthAuthRequestParameters(config []interface{}) *events.CreateConnectionOAuthRequestParameters {
+func expandCreateConnectionOAuthAuthRequestParameters(config []interface{}) *events.CreateConnectionOAuthRequestParameters {
 	if len(config) == 0 {
 		return nil
 	}
@@ -428,16 +428,16 @@ func expandAwsCreateConnectionOAuthAuthRequestParameters(config []interface{}) *
 			oAuthParameters.HttpMethod = aws.String(val)
 		}
 		if val, ok := param["oauth_http_parameters"]; ok {
-			oAuthParameters.OAuthHttpParameters = expandAwsConnectionHttpParameters(val.([]interface{}))
+			oAuthParameters.OAuthHttpParameters = expandConnectionHTTPParameters(val.([]interface{}))
 		}
 		if val, ok := param["client_parameters"]; ok {
-			oAuthParameters.ClientParameters = expandAwsCreateConnectionOAuthClientRequestParameters(val.([]interface{}))
+			oAuthParameters.ClientParameters = expandCreateConnectionOAuthClientRequestParameters(val.([]interface{}))
 		}
 	}
 	return oAuthParameters
 }
 
-func expandAwsCreateConnectionOAuthClientRequestParameters(config []interface{}) *events.CreateConnectionOAuthClientRequestParameters {
+func expandCreateConnectionOAuthClientRequestParameters(config []interface{}) *events.CreateConnectionOAuthClientRequestParameters {
 	oAuthClientRequestParameters := &events.CreateConnectionOAuthClientRequestParameters{}
 	for _, c := range config {
 		param := c.(map[string]interface{})
@@ -451,7 +451,7 @@ func expandAwsCreateConnectionOAuthClientRequestParameters(config []interface{})
 	return oAuthClientRequestParameters
 }
 
-func expandAwsConnectionHttpParameters(config []interface{}) *events.ConnectionHttpParameters {
+func expandConnectionHTTPParameters(config []interface{}) *events.ConnectionHttpParameters {
 	if len(config) == 0 {
 		return nil
 	}
@@ -459,19 +459,19 @@ func expandAwsConnectionHttpParameters(config []interface{}) *events.ConnectionH
 	for _, c := range config {
 		param := c.(map[string]interface{})
 		if val, ok := param["body"]; ok {
-			httpParameters.BodyParameters = expandAwsConnectionHttpParametersBody(val.([]interface{}))
+			httpParameters.BodyParameters = expandConnectionHTTPParametersBody(val.([]interface{}))
 		}
 		if val, ok := param["header"]; ok {
-			httpParameters.HeaderParameters = expandAwsConnectionHttpParametersHeader(val.([]interface{}))
+			httpParameters.HeaderParameters = expandConnectionHTTPParametersHeader(val.([]interface{}))
 		}
 		if val, ok := param["query_string"]; ok {
-			httpParameters.QueryStringParameters = expandAwsConnectionHttpParametersQueryString(val.([]interface{}))
+			httpParameters.QueryStringParameters = expandConnectionHTTPParametersQueryString(val.([]interface{}))
 		}
 	}
 	return httpParameters
 }
 
-func expandAwsConnectionHttpParametersBody(config []interface{}) []*events.ConnectionBodyParameter {
+func expandConnectionHTTPParametersBody(config []interface{}) []*events.ConnectionBodyParameter {
 	if len(config) == 0 {
 		return nil
 	}
@@ -494,7 +494,7 @@ func expandAwsConnectionHttpParametersBody(config []interface{}) []*events.Conne
 	return parameters
 }
 
-func expandAwsConnectionHttpParametersHeader(config []interface{}) []*events.ConnectionHeaderParameter {
+func expandConnectionHTTPParametersHeader(config []interface{}) []*events.ConnectionHeaderParameter {
 	if len(config) == 0 {
 		return nil
 	}
@@ -517,7 +517,7 @@ func expandAwsConnectionHttpParametersHeader(config []interface{}) []*events.Con
 	return parameters
 }
 
-func expandAwsConnectionHttpParametersQueryString(config []interface{}) []*events.ConnectionQueryStringParameter {
+func expandConnectionHTTPParametersQueryString(config []interface{}) []*events.ConnectionQueryStringParameter {
 	if len(config) == 0 {
 		return nil
 	}
@@ -540,33 +540,33 @@ func expandAwsConnectionHttpParametersQueryString(config []interface{}) []*event
 	return parameters
 }
 
-func flattenAwsCloudWatchEventConnectionAuthParameters(
+func flattenConnectionAuthParameters(
 	authParameters *events.ConnectionAuthResponseParameters,
 	resourceData *schema.ResourceData,
 ) []map[string]interface{} {
 	config := make(map[string]interface{})
 
 	if authParameters.ApiKeyAuthParameters != nil {
-		config["api_key"] = flattenAwsConnectionApiKeyAuthParameters(authParameters.ApiKeyAuthParameters, resourceData)
+		config["api_key"] = flattenConnectionAPIKeyAuthParameters(authParameters.ApiKeyAuthParameters, resourceData)
 	}
 
 	if authParameters.BasicAuthParameters != nil {
-		config["basic"] = flattenAwsConnectionBasicAuthParameters(authParameters.BasicAuthParameters, resourceData)
+		config["basic"] = flattenConnectionBasicAuthParameters(authParameters.BasicAuthParameters, resourceData)
 	}
 
 	if authParameters.OAuthParameters != nil {
-		config["oauth"] = flattenAwsConnectionOAuthParameters(authParameters.OAuthParameters, resourceData)
+		config["oauth"] = flattenConnectionOAuthParameters(authParameters.OAuthParameters, resourceData)
 	}
 
 	if authParameters.InvocationHttpParameters != nil {
-		config["invocation_http_parameters"] = flattenAwsConnectionHttpParameters(authParameters.InvocationHttpParameters, resourceData, "auth_parameters.0.invocation_http_parameters")
+		config["invocation_http_parameters"] = flattenConnectionHTTPParameters(authParameters.InvocationHttpParameters, resourceData, "auth_parameters.0.invocation_http_parameters")
 	}
 
 	result := []map[string]interface{}{config}
 	return result
 }
 
-func flattenAwsConnectionApiKeyAuthParameters(apiKeyAuthParameters *events.ConnectionApiKeyAuthResponseParameters, resourceData *schema.ResourceData) []map[string]interface{} {
+func flattenConnectionAPIKeyAuthParameters(apiKeyAuthParameters *events.ConnectionApiKeyAuthResponseParameters, resourceData *schema.ResourceData) []map[string]interface{} {
 	if apiKeyAuthParameters == nil {
 		return nil
 	}
@@ -584,7 +584,7 @@ func flattenAwsConnectionApiKeyAuthParameters(apiKeyAuthParameters *events.Conne
 	return result
 }
 
-func flattenAwsConnectionBasicAuthParameters(basicAuthParameters *events.ConnectionBasicAuthResponseParameters, resourceData *schema.ResourceData) []map[string]interface{} {
+func flattenConnectionBasicAuthParameters(basicAuthParameters *events.ConnectionBasicAuthResponseParameters, resourceData *schema.ResourceData) []map[string]interface{} {
 	if basicAuthParameters == nil {
 		return nil
 	}
@@ -602,7 +602,7 @@ func flattenAwsConnectionBasicAuthParameters(basicAuthParameters *events.Connect
 	return result
 }
 
-func flattenAwsConnectionOAuthParameters(oAuthParameters *events.ConnectionOAuthResponseParameters, resourceData *schema.ResourceData) []map[string]interface{} {
+func flattenConnectionOAuthParameters(oAuthParameters *events.ConnectionOAuthResponseParameters, resourceData *schema.ResourceData) []map[string]interface{} {
 	if oAuthParameters == nil {
 		return nil
 	}
@@ -614,14 +614,14 @@ func flattenAwsConnectionOAuthParameters(oAuthParameters *events.ConnectionOAuth
 	if oAuthParameters.HttpMethod != nil {
 		config["http_method"] = aws.StringValue(oAuthParameters.HttpMethod)
 	}
-	config["oauth_http_parameters"] = flattenAwsConnectionHttpParameters(oAuthParameters.OAuthHttpParameters, resourceData, "auth_parameters.0.oauth.0.oauth_http_parameters")
-	config["client_parameters"] = flattenAwsConnectionOAuthClientResponseParameters(oAuthParameters.ClientParameters, resourceData)
+	config["oauth_http_parameters"] = flattenConnectionHTTPParameters(oAuthParameters.OAuthHttpParameters, resourceData, "auth_parameters.0.oauth.0.oauth_http_parameters")
+	config["client_parameters"] = flattenConnectionOAuthClientResponseParameters(oAuthParameters.ClientParameters, resourceData)
 
 	result := []map[string]interface{}{config}
 	return result
 }
 
-func flattenAwsConnectionOAuthClientResponseParameters(oAuthClientRequestParameters *events.ConnectionOAuthClientResponseParameters, resourceData *schema.ResourceData) []map[string]interface{} {
+func flattenConnectionOAuthClientResponseParameters(oAuthClientRequestParameters *events.ConnectionOAuthClientResponseParameters, resourceData *schema.ResourceData) []map[string]interface{} {
 	if oAuthClientRequestParameters == nil {
 		return nil
 	}
@@ -639,7 +639,7 @@ func flattenAwsConnectionOAuthClientResponseParameters(oAuthClientRequestParamet
 	return result
 }
 
-func flattenAwsConnectionHttpParameters(
+func flattenConnectionHTTPParameters(
 	httpParameters *events.ConnectionHttpParameters,
 	resourceData *schema.ResourceData,
 	path string,
@@ -699,28 +699,28 @@ func flattenAwsConnectionHttpParameters(
 	return result
 }
 
-func expandAwsCloudWatchEventUpdateConnectionAuthRequestParameters(config []interface{}) *events.UpdateConnectionAuthRequestParameters {
+func expandUpdateConnectionAuthRequestParameters(config []interface{}) *events.UpdateConnectionAuthRequestParameters {
 	authParameters := &events.UpdateConnectionAuthRequestParameters{}
 	for _, c := range config {
 		param := c.(map[string]interface{})
 		if val, ok := param["api_key"]; ok {
-			authParameters.ApiKeyAuthParameters = expandAwsUpdateConnectionApiKeyAuthRequestParameters(val.([]interface{}))
+			authParameters.ApiKeyAuthParameters = expandUpdateConnectionAPIKeyAuthRequestParameters(val.([]interface{}))
 		}
 		if val, ok := param["basic"]; ok {
-			authParameters.BasicAuthParameters = expandAwsUpdateConnectionBasicAuthRequestParameters(val.([]interface{}))
+			authParameters.BasicAuthParameters = expandUpdateConnectionBasicAuthRequestParameters(val.([]interface{}))
 		}
 		if val, ok := param["oauth"]; ok {
-			authParameters.OAuthParameters = expandAwsUpdateConnectionOAuthAuthRequestParameters(val.([]interface{}))
+			authParameters.OAuthParameters = expandUpdateConnectionOAuthAuthRequestParameters(val.([]interface{}))
 		}
 		if val, ok := param["invocation_http_parameters"]; ok {
-			authParameters.InvocationHttpParameters = expandAwsConnectionHttpParameters(val.([]interface{}))
+			authParameters.InvocationHttpParameters = expandConnectionHTTPParameters(val.([]interface{}))
 		}
 	}
 
 	return authParameters
 }
 
-func expandAwsUpdateConnectionApiKeyAuthRequestParameters(config []interface{}) *events.UpdateConnectionApiKeyAuthRequestParameters {
+func expandUpdateConnectionAPIKeyAuthRequestParameters(config []interface{}) *events.UpdateConnectionApiKeyAuthRequestParameters {
 	if len(config) == 0 {
 		return nil
 	}
@@ -737,7 +737,7 @@ func expandAwsUpdateConnectionApiKeyAuthRequestParameters(config []interface{}) 
 	return apiKeyAuthParameters
 }
 
-func expandAwsUpdateConnectionBasicAuthRequestParameters(config []interface{}) *events.UpdateConnectionBasicAuthRequestParameters {
+func expandUpdateConnectionBasicAuthRequestParameters(config []interface{}) *events.UpdateConnectionBasicAuthRequestParameters {
 	if len(config) == 0 {
 		return nil
 	}
@@ -754,7 +754,7 @@ func expandAwsUpdateConnectionBasicAuthRequestParameters(config []interface{}) *
 	return basicAuthParameters
 }
 
-func expandAwsUpdateConnectionOAuthAuthRequestParameters(config []interface{}) *events.UpdateConnectionOAuthRequestParameters {
+func expandUpdateConnectionOAuthAuthRequestParameters(config []interface{}) *events.UpdateConnectionOAuthRequestParameters {
 	if len(config) == 0 {
 		return nil
 	}
@@ -768,16 +768,16 @@ func expandAwsUpdateConnectionOAuthAuthRequestParameters(config []interface{}) *
 			oAuthParameters.HttpMethod = aws.String(val)
 		}
 		if val, ok := param["oauth_http_parameters"]; ok {
-			oAuthParameters.OAuthHttpParameters = expandAwsConnectionHttpParameters(val.([]interface{}))
+			oAuthParameters.OAuthHttpParameters = expandConnectionHTTPParameters(val.([]interface{}))
 		}
 		if val, ok := param["client_parameters"]; ok {
-			oAuthParameters.ClientParameters = expandAwsUpdateConnectionOAuthClientRequestParameters(val.([]interface{}))
+			oAuthParameters.ClientParameters = expandUpdateConnectionOAuthClientRequestParameters(val.([]interface{}))
 		}
 	}
 	return oAuthParameters
 }
 
-func expandAwsUpdateConnectionOAuthClientRequestParameters(config []interface{}) *events.UpdateConnectionOAuthClientRequestParameters {
+func expandUpdateConnectionOAuthClientRequestParameters(config []interface{}) *events.UpdateConnectionOAuthClientRequestParameters {
 	oAuthClientRequestParameters := &events.UpdateConnectionOAuthClientRequestParameters{}
 	for _, c := range config {
 		param := c.(map[string]interface{})
