@@ -18,12 +18,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsFsxBackup() *schema.Resource {
+func ResourceBackup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsFsxBackupCreate,
-		Read:   resourceAwsFsxBackupRead,
-		Update: resourceAwsFsxBackupUpdate,
-		Delete: resourceAwsFsxBackupDelete,
+		Create: resourceBackupCreate,
+		Read:   resourceBackupRead,
+		Update: resourceBackupUpdate,
+		Delete: resourceBackupDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -65,7 +65,7 @@ func resourceAwsFsxBackup() *schema.Resource {
 	}
 }
 
-func resourceAwsFsxBackupCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceBackupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).FSxConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -91,10 +91,10 @@ func resourceAwsFsxBackupCreate(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error waiting for FSx Backup (%s) to be available: %w", d.Id(), err)
 	}
 
-	return resourceAwsFsxBackupRead(d, meta)
+	return resourceBackupRead(d, meta)
 }
 
-func resourceAwsFsxBackupUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceBackupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).FSxConn
 
 	if d.HasChange("tags_all") {
@@ -105,10 +105,10 @@ func resourceAwsFsxBackupUpdate(d *schema.ResourceData, meta interface{}) error 
 		}
 	}
 
-	return resourceAwsFsxBackupRead(d, meta)
+	return resourceBackupRead(d, meta)
 }
 
-func resourceAwsFsxBackupRead(d *schema.ResourceData, meta interface{}) error {
+func resourceBackupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).FSxConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -148,7 +148,7 @@ func resourceAwsFsxBackupRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsFsxBackupDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceBackupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).FSxConn
 
 	request := &fsx.DeleteBackupInput{

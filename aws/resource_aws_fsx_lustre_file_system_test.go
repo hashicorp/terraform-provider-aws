@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -48,7 +49,7 @@ func testSweepFSXLustreFileSystems(region string) error {
 				continue
 			}
 
-			r := resourceAwsFsxLustreFileSystem()
+			r := ResourceLustreFileSystem()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(fs.FileSystemId))
 
@@ -138,7 +139,7 @@ func TestAccAWSFsxLustreFileSystem_disappears(t *testing.T) {
 				Config: testAccAwsFsxLustreFileSystemConfigSubnetIds1(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxLustreFileSystemExists(resourceName, &filesystem),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsFsxLustreFileSystem(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceLustreFileSystem(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

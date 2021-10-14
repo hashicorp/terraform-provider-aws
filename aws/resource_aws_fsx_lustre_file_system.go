@@ -21,12 +21,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsFsxLustreFileSystem() *schema.Resource {
+func ResourceLustreFileSystem() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsFsxLustreFileSystemCreate,
-		Read:   resourceAwsFsxLustreFileSystemRead,
-		Update: resourceAwsFsxLustreFileSystemUpdate,
-		Delete: resourceAwsFsxLustreFileSystemDelete,
+		Create: resourceLustreFileSystemCreate,
+		Read:   resourceLustreFileSystemRead,
+		Update: resourceLustreFileSystemUpdate,
+		Delete: resourceLustreFileSystemDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -222,7 +222,7 @@ func resourceFsxLustreFileSystemSchemaCustomizeDiff(_ context.Context, d *schema
 	return nil
 }
 
-func resourceAwsFsxLustreFileSystemCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceLustreFileSystemCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).FSxConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -344,10 +344,10 @@ func resourceAwsFsxLustreFileSystemCreate(d *schema.ResourceData, meta interface
 		return fmt.Errorf("error waiting for FSx Lustre File System (%s) create: %w", d.Id(), err)
 	}
 
-	return resourceAwsFsxLustreFileSystemRead(d, meta)
+	return resourceLustreFileSystemRead(d, meta)
 }
 
-func resourceAwsFsxLustreFileSystemUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceLustreFileSystemUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).FSxConn
 
 	if d.HasChange("tags_all") {
@@ -399,10 +399,10 @@ func resourceAwsFsxLustreFileSystemUpdate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	return resourceAwsFsxLustreFileSystemRead(d, meta)
+	return resourceLustreFileSystemRead(d, meta)
 }
 
-func resourceAwsFsxLustreFileSystemRead(d *schema.ResourceData, meta interface{}) error {
+func resourceLustreFileSystemRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).FSxConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -485,7 +485,7 @@ func resourceAwsFsxLustreFileSystemRead(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceAwsFsxLustreFileSystemDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceLustreFileSystemDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).FSxConn
 
 	request := &fsx.DeleteFileSystemInput{

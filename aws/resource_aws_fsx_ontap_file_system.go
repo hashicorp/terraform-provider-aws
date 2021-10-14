@@ -19,12 +19,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsFsxOntapFileSystem() *schema.Resource {
+func ResourceOntapFileSystem() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsFsxOntapFileSystemCreate,
-		Read:   resourceAwsFsxOntapFileSystemRead,
-		Update: resourceAwsFsxOntapFileSystemUpdate,
-		Delete: resourceAwsFsxOntapFileSystemDelete,
+		Create: resourceOntapFileSystemCreate,
+		Read:   resourceOntapFileSystemRead,
+		Update: resourceOntapFileSystemUpdate,
+		Delete: resourceOntapFileSystemDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -228,7 +228,7 @@ func resourceAwsFsxOntapFileSystem() *schema.Resource {
 	}
 }
 
-func resourceAwsFsxOntapFileSystemCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceOntapFileSystemCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).FSxConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -296,10 +296,10 @@ func resourceAwsFsxOntapFileSystemCreate(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("error waiting for FSx ONTAP File System (%s) create: %w", d.Id(), err)
 	}
 
-	return resourceAwsFsxOntapFileSystemRead(d, meta)
+	return resourceOntapFileSystemRead(d, meta)
 }
 
-func resourceAwsFsxOntapFileSystemRead(d *schema.ResourceData, meta interface{}) error {
+func resourceOntapFileSystemRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).FSxConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -374,7 +374,7 @@ func resourceAwsFsxOntapFileSystemRead(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
-func resourceAwsFsxOntapFileSystemUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceOntapFileSystemUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).FSxConn
 
 	if d.HasChange("tags_all") {
@@ -419,10 +419,10 @@ func resourceAwsFsxOntapFileSystemUpdate(d *schema.ResourceData, meta interface{
 		}
 	}
 
-	return resourceAwsFsxOntapFileSystemRead(d, meta)
+	return resourceOntapFileSystemRead(d, meta)
 }
 
-func resourceAwsFsxOntapFileSystemDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceOntapFileSystemDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).FSxConn
 
 	log.Printf("[DEBUG] Deleting FSx ONTAP File System: %s", d.Id())

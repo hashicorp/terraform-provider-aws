@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -47,7 +48,7 @@ func testSweepFSXWindowsFileSystems(region string) error {
 				continue
 			}
 
-			r := resourceAwsFsxWindowsFileSystem()
+			r := ResourceWindowsFileSystem()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(fs.FileSystemId))
 			d.Set("skip_final_backup", true)
@@ -272,7 +273,7 @@ func TestAccAWSFsxWindowsFileSystem_disappears(t *testing.T) {
 				Config: testAccAwsFsxWindowsFileSystemConfigSubnetIds1(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxWindowsFileSystemExists(resourceName, &filesystem),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsFsxWindowsFileSystem(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceWindowsFileSystem(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

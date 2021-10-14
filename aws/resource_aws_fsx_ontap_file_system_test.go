@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -47,7 +48,7 @@ func testSweepFSXOntapFileSystems(region string) error {
 				continue
 			}
 
-			r := resourceAwsFsxOntapFileSystem()
+			r := ResourceOntapFileSystem()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(fs.FileSystemId))
 
@@ -233,7 +234,7 @@ func TestAccAWSFsxOntapFileSystem_disappears(t *testing.T) {
 				Config: testAccAwsFsxOntapFileSystemConfigBasic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxOntapFileSystemExists(resourceName, &filesystem),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsFsxOntapFileSystem(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceOntapFileSystem(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

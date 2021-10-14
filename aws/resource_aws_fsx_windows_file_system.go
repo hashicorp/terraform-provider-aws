@@ -21,12 +21,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsFsxWindowsFileSystem() *schema.Resource {
+func ResourceWindowsFileSystem() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsFsxWindowsFileSystemCreate,
-		Read:   resourceAwsFsxWindowsFileSystemRead,
-		Update: resourceAwsFsxWindowsFileSystemUpdate,
-		Delete: resourceAwsFsxWindowsFileSystemDelete,
+		Create: resourceWindowsFileSystemCreate,
+		Read:   resourceWindowsFileSystemRead,
+		Update: resourceWindowsFileSystemUpdate,
+		Delete: resourceWindowsFileSystemDelete,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				d.Set("skip_final_backup", false)
@@ -267,7 +267,7 @@ func resourceAwsFsxWindowsFileSystem() *schema.Resource {
 	}
 }
 
-func resourceAwsFsxWindowsFileSystemCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceWindowsFileSystemCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).FSxConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -380,10 +380,10 @@ func resourceAwsFsxWindowsFileSystemCreate(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("error waiting for FSx Windows File System (%s) create: %w", d.Id(), err)
 	}
 
-	return resourceAwsFsxWindowsFileSystemRead(d, meta)
+	return resourceWindowsFileSystemRead(d, meta)
 }
 
-func resourceAwsFsxWindowsFileSystemUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceWindowsFileSystemUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).FSxConn
 
 	if d.HasChange("tags_all") {
@@ -448,10 +448,10 @@ func resourceAwsFsxWindowsFileSystemUpdate(d *schema.ResourceData, meta interfac
 		}
 	}
 
-	return resourceAwsFsxWindowsFileSystemRead(d, meta)
+	return resourceWindowsFileSystemRead(d, meta)
 }
 
-func resourceAwsFsxWindowsFileSystemRead(d *schema.ResourceData, meta interface{}) error {
+func resourceWindowsFileSystemRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).FSxConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -530,7 +530,7 @@ func resourceAwsFsxWindowsFileSystemRead(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func resourceAwsFsxWindowsFileSystemDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceWindowsFileSystemDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).FSxConn
 
 	input := &fsx.DeleteFileSystemInput{
