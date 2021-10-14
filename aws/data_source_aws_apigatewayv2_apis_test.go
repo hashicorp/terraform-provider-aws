@@ -13,13 +13,13 @@ import (
 func TestAccAWSAPIGatewayV2ApisDataSource_Name(t *testing.T) {
 	dataSource1Name := "data.aws_apigatewayv2_apis.test1"
 	dataSource2Name := "data.aws_apigatewayv2_apis.test2"
-	rName1 := sdkacctest.RandomWithPrefix("tf-acc-test")
-	rName2 := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -36,13 +36,13 @@ func TestAccAWSAPIGatewayV2ApisDataSource_Name(t *testing.T) {
 func TestAccAWSAPIGatewayV2ApisDataSource_ProtocolType(t *testing.T) {
 	dataSource1Name := "data.aws_apigatewayv2_apis.test1"
 	dataSource2Name := "data.aws_apigatewayv2_apis.test2"
-	rName1 := sdkacctest.RandomWithPrefix("tf-acc-test")
-	rName2 := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -60,13 +60,13 @@ func TestAccAWSAPIGatewayV2ApisDataSource_Tags(t *testing.T) {
 	dataSource1Name := "data.aws_apigatewayv2_apis.test1"
 	dataSource2Name := "data.aws_apigatewayv2_apis.test2"
 	dataSource3Name := "data.aws_apigatewayv2_apis.test3"
-	rName1 := sdkacctest.RandomWithPrefix("tf-acc-test")
-	rName2 := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{

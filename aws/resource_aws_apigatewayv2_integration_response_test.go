@@ -17,12 +17,12 @@ func TestAccAWSAPIGatewayV2IntegrationResponse_basic(t *testing.T) {
 	var v apigatewayv2.GetIntegrationResponseOutput
 	resourceName := "aws_apigatewayv2_integration_response.test"
 	integrationResourceName := "aws_apigatewayv2_integration.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2IntegrationResponseDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -50,12 +50,12 @@ func TestAccAWSAPIGatewayV2IntegrationResponse_disappears(t *testing.T) {
 	var apiId, integrationId string
 	var v apigatewayv2.GetIntegrationResponseOutput
 	resourceName := "aws_apigatewayv2_integration_response.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2IntegrationResponseDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -75,12 +75,12 @@ func TestAccAWSAPIGatewayV2IntegrationResponse_AllAttributes(t *testing.T) {
 	var v apigatewayv2.GetIntegrationResponseOutput
 	resourceName := "aws_apigatewayv2_integration_response.test"
 	integrationResourceName := "aws_apigatewayv2_integration.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2IntegrationResponseDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -119,7 +119,7 @@ func TestAccAWSAPIGatewayV2IntegrationResponse_AllAttributes(t *testing.T) {
 }
 
 func testAccCheckAWSAPIGatewayV2IntegrationResponseDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).apigatewayv2conn
+	conn := acctest.Provider.Meta().(*AWSClient).apigatewayv2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_apigatewayv2_integration_response" {
@@ -146,7 +146,7 @@ func testAccCheckAWSAPIGatewayV2IntegrationResponseDestroy(s *terraform.State) e
 
 func testAccCheckAWSAPIGatewayV2IntegrationResponseDisappears(apiId, integrationId *string, v *apigatewayv2.GetIntegrationResponseOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).apigatewayv2conn
+		conn := acctest.Provider.Meta().(*AWSClient).apigatewayv2conn
 
 		_, err := conn.DeleteIntegrationResponse(&apigatewayv2.DeleteIntegrationResponseInput{
 			ApiId:                 apiId,
@@ -169,7 +169,7 @@ func testAccCheckAWSAPIGatewayV2IntegrationResponseExists(n string, vApiId, vInt
 			return fmt.Errorf("No API Gateway v2 integration response ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).apigatewayv2conn
+		conn := acctest.Provider.Meta().(*AWSClient).apigatewayv2conn
 
 		apiId := aws.String(rs.Primary.Attributes["api_id"])
 		integrationId := aws.String(rs.Primary.Attributes["integration_id"])
