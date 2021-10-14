@@ -24,6 +24,17 @@ import (
 	"github.com/mitchellh/go-homedir"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	tfsynthetics "github.com/hashicorp/terraform-provider-aws/internal/service/synthetics"
+	tfsynthetics "github.com/hashicorp/terraform-provider-aws/internal/service/synthetics"
+	tfsynthetics "github.com/hashicorp/terraform-provider-aws/internal/service/synthetics"
+	tfsynthetics "github.com/hashicorp/terraform-provider-aws/internal/service/synthetics"
+	tfsynthetics "github.com/hashicorp/terraform-provider-aws/internal/service/synthetics"
+	tfsynthetics "github.com/hashicorp/terraform-provider-aws/internal/service/synthetics"
+	tfsynthetics "github.com/hashicorp/terraform-provider-aws/internal/service/synthetics"
+	tfsynthetics "github.com/hashicorp/terraform-provider-aws/internal/service/synthetics"
+	tfsynthetics "github.com/hashicorp/terraform-provider-aws/internal/service/synthetics"
+	tfsynthetics "github.com/hashicorp/terraform-provider-aws/internal/service/synthetics"
 )
 
 const awsMutexCanary = `aws_synthetics_canary`
@@ -286,12 +297,12 @@ func resourceCanaryCreate(d *schema.ResourceData, meta interface{}) error {
 	// operation. The goal is only retry these types of errors up to the IAM
 	// timeout. Since the creation process is asynchronous and can take up to
 	// its own timeout, we store a stop time upfront for checking.
-	iamwaiterStopTime := time.Now().Add(iamwaiter.PropagationTimeout)
+	iamwaiterStopTime := time.Now().Add(tfiam.PropagationTimeout)
 
 	_, err = tfresource.RetryWhen(
-		iamwaiter.PropagationTimeout+waiter.CanaryCreatedTimeout,
+		tfiam.PropagationTimeout+tfsynthetics.canaryCreatedTimeout,
 		func() (interface{}, error) {
-			return waiter.CanaryReady(conn, d.Id())
+			return tfsynthetics.waitCanaryReady(conn, d.Id())
 		},
 		func(err error) (bool, error) {
 			// Only retry IAM eventual consistency errors up to that timeout.
@@ -322,7 +333,7 @@ func resourceCanaryRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	canary, err := finder.CanaryByName(conn, d.Id())
+	canary, err := tfsynthetics.FindCanaryByName(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Synthetics Canary (%s) not found, removing from state", d.Id())
@@ -445,11 +456,11 @@ func resourceCanaryUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if status != synthetics.CanaryStateReady {
-			if _, err := waiter.CanaryStopped(conn, d.Id()); err != nil {
+			if _, err := tfsynthetics.waitCanaryStopped(conn, d.Id()); err != nil {
 				return fmt.Errorf("error waiting for Synthetics Canary (%s) stop: %w", d.Id(), err)
 			}
 		} else {
-			if _, err := waiter.CanaryReady(conn, d.Id()); err != nil {
+			if _, err := tfsynthetics.waitCanaryReady(conn, d.Id()); err != nil {
 				return fmt.Errorf("error waiting for Synthetics Canary (%s) ready: %w", d.Id(), err)
 			}
 		}
@@ -511,7 +522,7 @@ func resourceCanaryDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting Synthetics Canary (%s): %w", d.Id(), err)
 	}
 
-	_, err = waiter.CanaryDeleted(conn, d.Id())
+	_, err = tfsynthetics.waitCanaryDeleted(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Synthetics Canary (%s) delete: %w", d.Id(), err)
@@ -675,7 +686,7 @@ func syntheticsStartCanary(name string, conn *synthetics.Synthetics) error {
 		return fmt.Errorf("error starting Synthetics Canary (%s): %w", name, err)
 	}
 
-	_, err = waiter.CanaryRunning(conn, name)
+	_, err = tfsynthetics.waitCanaryRunning(conn, name)
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Synthetics Canary (%s) start: %w", name, err)
@@ -694,7 +705,7 @@ func syntheticsStopCanary(name string, conn *synthetics.Synthetics) error {
 		return fmt.Errorf("error stopping Synthetics Canary (%s): %w", name, err)
 	}
 
-	_, err = waiter.CanaryStopped(conn, name)
+	_, err = tfsynthetics.waitCanaryStopped(conn, name)
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Synthetics Canary (%s) stop: %w", name, err)

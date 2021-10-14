@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfsynthetics "github.com/hashicorp/terraform-provider-aws/internal/service/synthetics"
 )
 
 func init() {
@@ -536,7 +537,7 @@ func testAccCheckAwsSyntheticsCanaryDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.CanaryByName(conn, rs.Primary.ID)
+		_, err := tfsynthetics.FindCanaryByName(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -565,7 +566,7 @@ func testAccCheckAwsSyntheticsCanaryExists(n string, canary *synthetics.Canary) 
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SyntheticsConn
 
-		output, err := finder.CanaryByName(conn, rs.Primary.ID)
+		output, err := tfsynthetics.FindCanaryByName(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

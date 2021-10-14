@@ -7,11 +7,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/synthetics/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfsynthetics "github.com/hashicorp/terraform-provider-aws/internal/service/synthetics"
 )
 
-func CanaryState(conn *synthetics.Synthetics, name string) resource.StateRefreshFunc {
+func statusCanaryState(conn *synthetics.Synthetics, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.CanaryByName(conn, name)
+		output, err := tfsynthetics.FindCanaryByName(conn, name)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
