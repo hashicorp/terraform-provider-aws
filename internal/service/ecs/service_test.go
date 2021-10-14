@@ -24,11 +24,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_ecs_service", &resource.Sweeper{
 		Name: "aws_ecs_service",
-		F:    testSweepEcsServices,
+		F:    sweepServices,
 	})
 }
 
-func testSweepEcsServices(region string) error {
+func sweepServices(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -119,21 +119,21 @@ func TestAccAWSEcsService_withARN(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		CheckDestroy: testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsService(rName),
+				Config: testAccService(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsServiceExists(resourceName, &service),
+					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "service_registries.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "scheduling_strategy", "REPLICA"),
 				),
 			},
 
 			{
-				Config: testAccAWSEcsServiceModified(rName),
+				Config: testAccServiceModified(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsServiceExists(resourceName, &service),
+					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "service_registries.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "scheduling_strategy", "REPLICA"),
 				),
@@ -152,12 +152,12 @@ func TestAccAWSEcsService_basicImport(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		CheckDestroy: testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsServiceWithFamilyAndRevision(rName),
+				Config: testAccServiceWithFamilyAndRevision(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsServiceExists(resourceName, &service),
+					testAccCheckServiceExists(resourceName, &service),
 				),
 			},
 			// Test existent resource import
@@ -190,12 +190,12 @@ func TestAccAWSEcsService_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		CheckDestroy: testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsService(rName),
+				Config: testAccService(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsServiceExists(resourceName, &service),
+					testAccCheckServiceExists(resourceName, &service),
 					acctest.CheckResourceDisappears(acctest.Provider, tfecs.ResourceService(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -213,12 +213,12 @@ func TestAccAWSEcsService_withUnnormalizedPlacementStrategy(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		CheckDestroy: testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsServiceWithInterchangeablePlacementStrategy(rName),
+				Config: testAccServiceWithInterchangeablePlacementStrategy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsServiceExists(resourceName, &service),
+					testAccCheckServiceExists(resourceName, &service),
 				),
 			},
 		},
@@ -234,18 +234,18 @@ func TestAccAWSEcsService_withCapacityProviderStrategy(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		CheckDestroy: testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsServiceWithCapacityProviderStrategy(rName, 1, 0),
+				Config: testAccServiceWithCapacityProviderStrategy(rName, 1, 0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsServiceExists(resourceName, &service),
+					testAccCheckServiceExists(resourceName, &service),
 				),
 			},
 			{
-				Config: testAccAWSEcsServiceWithCapacityProviderStrategy(rName, 10, 1),
+				Config: testAccServiceWithCapacityProviderStrategy(rName, 10, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsServiceExists(resourceName, &service),
+					testAccCheckServiceExists(resourceName, &service),
 				),
 			},
 		},
@@ -261,12 +261,12 @@ func TestAccAWSEcsService_withMultipleCapacityProviderStrategies(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		CheckDestroy: testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsServiceWithMultipleCapacityProviderStrategies(rName),
+				Config: testAccServiceWithMultipleCapacityProviderStrategies(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsServiceExists(resourceName, &service),
+					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "capacity_provider_strategy.#", "2"),
 				),
 			},
@@ -283,19 +283,19 @@ func TestAccAWSEcsService_withFamilyAndRevision(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		CheckDestroy: testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsServiceWithFamilyAndRevision(rName),
+				Config: testAccServiceWithFamilyAndRevision(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsServiceExists(resourceName, &service),
+					testAccCheckServiceExists(resourceName, &service),
 				),
 			},
 
 			{
-				Config: testAccAWSEcsServiceWithFamilyAndRevisionModified(rName),
+				Config: testAccServiceWithFamilyAndRevisionModified(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsServiceExists(resourceName, &service),
+					testAccCheckServiceExists(resourceName, &service),
 				),
 			},
 		},
@@ -312,20 +312,20 @@ func TestAccAWSEcsService_withRenamedCluster(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		CheckDestroy: testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsServiceWithRenamedCluster(rName),
+				Config: testAccServiceWithRenamedCluster(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsServiceExists(resourceName, &service),
+					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttrPair(resourceName, "cluster", "aws_ecs_cluster.default", "arn"),
 				),
 			},
 
 			{
-				Config: testAccAWSEcsServiceWithRenamedCluster(rName),
+				Config: testAccServiceWithRenamedCluster(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsServiceExists(resourceName, &service),
+					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttrPair(resourceName, "cluster", "aws_ecs_cluster.default", "arn"),
 				),
 			},
@@ -342,34 +342,34 @@ func TestAccAWSEcsService_healthCheckGracePeriodSeconds(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		CheckDestroy: testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAWSEcsService_healthCheckGracePeriodSeconds(rName, -1),
+				Config:      testAccService_healthCheckGracePeriodSeconds(rName, -1),
 				ExpectError: regexp.MustCompile(`expected health_check_grace_period_seconds to be in the range`),
 			},
 			{
-				Config:      testAccAWSEcsService_healthCheckGracePeriodSeconds(rName, math.MaxInt32+1),
+				Config:      testAccService_healthCheckGracePeriodSeconds(rName, math.MaxInt32+1),
 				ExpectError: regexp.MustCompile(`expected health_check_grace_period_seconds to be in the range`),
 			},
 			{
-				Config: testAccAWSEcsService_healthCheckGracePeriodSeconds(rName, 300),
+				Config: testAccService_healthCheckGracePeriodSeconds(rName, 300),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsServiceExists(resourceName, &service),
+					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "health_check_grace_period_seconds", "300"),
 				),
 			},
 			{
-				Config: testAccAWSEcsService_healthCheckGracePeriodSeconds(rName, 600),
+				Config: testAccService_healthCheckGracePeriodSeconds(rName, 600),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsServiceExists(resourceName, &service),
+					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "health_check_grace_period_seconds", "600"),
 				),
 			},
 			{
-				Config: testAccAWSEcsService_healthCheckGracePeriodSeconds(rName, math.MaxInt32),
+				Config: testAccService_healthCheckGracePeriodSeconds(rName, math.MaxInt32),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsServiceExists(resourceName, &service),
+					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "health_check_grace_period_seconds", "2147483647"),
 				),
 			},
@@ -386,12 +386,12 @@ func TestAccAWSEcsService_withIamRole(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		CheckDestroy: testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsService_withIamRole(rName),
+				Config: testAccService_withIAMRole(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsServiceExists(resourceName, &service),
+					testAccCheckServiceExists(resourceName, &service),
 				),
 			},
 		},
@@ -407,12 +407,12 @@ func TestAccAWSEcsService_withDeploymentController_Type_CodeDeploy(t *testing.T)
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		CheckDestroy: testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsServiceConfigDeploymentControllerTypeCodeDeploy(rName),
+				Config: testAccServiceDeploymentControllerTypeCodeDeployConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsServiceExists(resourceName, &service),
+					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "deployment_controller.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_controller.0.type", ecs.DeploymentControllerTypeCodeDeploy),
 				),
@@ -439,12 +439,12 @@ func TestAccAWSEcsService_withDeploymentController_Type_External(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		CheckDestroy: testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsServiceConfigDeploymentControllerTypeExternal(rName),
+				Config: testAccServiceDeploymentControllerTypeExternalConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsServiceExists(resourceName, &service),
+					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "deployment_controller.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_controller.0.type", ecs.DeploymentControllerTypeExternal),
 				),
@@ -470,12 +470,12 @@ func TestAccAWSEcsService_withDeploymentValues(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		CheckDestroy: testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsServiceWithDeploymentValues(rName),
+				Config: testAccServiceWithDeploymentValues(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsServiceExists(resourceName, &service),
+					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "deployment_maximum_percent", "200"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_minimum_healthy_percent", "100"),
 				),
@@ -494,12 +494,12 @@ func TestAccAWSEcsService_withDeploymentMinimumZeroMaximumOneHundred(t *testing.
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		CheckDestroy: testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsServiceConfigDeploymentPercents(rName, 0, 100),
+				Config: testAccServiceDeploymentPercentsConfig(rName, 0, 100),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsServiceExists(resourceName, &service),
+					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "deployment_maximum_percent", "100"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_minimum_healthy_percent", "0"),
 				),
@@ -517,12 +517,12 @@ func TestAccAWSEcsService_withDeploymentCircuitBreaker(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		CheckDestroy: testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsServiceConfigDeploymentCircuitBreaker(rName),
+				Config: testAccServiceDeploymentCircuitBreakerConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsServiceExists(resourceName, &service),
+					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "deployment_circuit_breaker.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_circuit_breaker.0.enable", "true"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_circuit_breaker.0.rollback", "true"),
@@ -542,18 +542,18 @@ func TestAccAWSEcsService_withLbChanges(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		CheckDestroy: testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsService_withLbChanges(rName),
+				Config: testAccService_withLbChanges(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsServiceExists(resourceName, &service),
+					testAccCheckServiceExists(resourceName, &service),
 				),
 			},
 			{
-				Config: testAccAWSEcsService_withLbChanges_modified(rName),
+				Config: testAccService_withLbChanges_modified(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsServiceExists(resourceName, &service),
+					testAccCheckServiceExists(resourceName, &service),
 				),
 			},
 		},
@@ -570,12 +570,12 @@ func TestAccAWSEcsService_withEcsClusterName(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		CheckDestroy: testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsServiceWithEcsClusterName(rName),
+				Config: testAccServiceWithEcsClusterName(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsServiceExists(resourceName, &service),
+					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "cluster", rName),
 				),
 			},
@@ -592,12 +592,12 @@ func TestAccAWSEcsService_withAlb(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		CheckDestroy: testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsServiceWithAlb(rName),
+				Config: testAccServiceWithAlb(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsServiceExists(resourceName, &service),
+					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer.#", "1"),
 				),
 			},
@@ -614,12 +614,12 @@ func TestAccAWSEcsService_withMultipleTargetGroups(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		CheckDestroy: testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsServiceWithMultipleTargetGroups(rName),
+				Config: testAccServiceWithMultipleTargetGroups(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsServiceExists(resourceName, &service),
+					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer.#", "2"),
 				),
 			},
@@ -636,20 +636,20 @@ func TestAccAWSEcsService_withForceNewDeployment(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		CheckDestroy: testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsService(rName),
+				Config: testAccService(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsServiceExists(resourceName, &service1),
+					testAccCheckServiceExists(resourceName, &service1),
 					resource.TestCheckResourceAttr(resourceName, "ordered_placement_strategy.#", "0"),
 				),
 			},
 			{
-				Config: testAccAWSEcsServiceWithForceNewDeployment(rName),
+				Config: testAccServiceWithForceNewDeployment(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsServiceExists(resourceName, &service2),
-					testAccCheckAWSEcsServiceNotRecreated(&service1, &service2),
+					testAccCheckServiceExists(resourceName, &service2),
+					testAccCheckServiceNotRecreated(&service1, &service2),
 					resource.TestCheckResourceAttr(resourceName, "ordered_placement_strategy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ordered_placement_strategy.0.type", "binpack"),
 					resource.TestCheckResourceAttr(resourceName, "ordered_placement_strategy.0.field", "memory"),
@@ -668,40 +668,40 @@ func TestAccAWSEcsService_withPlacementStrategy(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		CheckDestroy: testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsService(rName),
+				Config: testAccService(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsServiceExists(resourceName, &service1),
+					testAccCheckServiceExists(resourceName, &service1),
 					resource.TestCheckResourceAttr(resourceName, "ordered_placement_strategy.#", "0"),
 				),
 			},
 			{
-				Config: testAccAWSEcsServiceWithPlacementStrategy(rName),
+				Config: testAccServiceWithPlacementStrategy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsServiceExists(resourceName, &service2),
-					testAccCheckAWSEcsServiceNotRecreated(&service1, &service2),
+					testAccCheckServiceExists(resourceName, &service2),
+					testAccCheckServiceNotRecreated(&service1, &service2),
 					resource.TestCheckResourceAttr(resourceName, "ordered_placement_strategy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ordered_placement_strategy.0.type", "binpack"),
 					resource.TestCheckResourceAttr(resourceName, "ordered_placement_strategy.0.field", "memory"),
 				),
 			},
 			{
-				Config: testAccAWSEcsServiceWithRandomPlacementStrategy(rName),
+				Config: testAccServiceWithRandomPlacementStrategy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsServiceExists(resourceName, &service3),
-					testAccCheckAWSEcsServiceNotRecreated(&service2, &service3),
+					testAccCheckServiceExists(resourceName, &service3),
+					testAccCheckServiceNotRecreated(&service2, &service3),
 					resource.TestCheckResourceAttr(resourceName, "ordered_placement_strategy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ordered_placement_strategy.0.type", "random"),
 					resource.TestCheckResourceAttr(resourceName, "ordered_placement_strategy.0.field", ""),
 				),
 			},
 			{
-				Config: testAccAWSEcsServiceWithMultiPlacementStrategy(rName),
+				Config: testAccServiceWithMultiplacementStrategy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsServiceExists(resourceName, &service4),
-					testAccCheckAWSEcsServiceNotRecreated(&service3, &service4),
+					testAccCheckServiceExists(resourceName, &service4),
+					testAccCheckServiceNotRecreated(&service3, &service4),
 					resource.TestCheckResourceAttr(resourceName, "ordered_placement_strategy.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "ordered_placement_strategy.0.type", "binpack"),
 					resource.TestCheckResourceAttr(resourceName, "ordered_placement_strategy.0.field", "memory"),
@@ -721,10 +721,10 @@ func TestAccAWSEcsService_withPlacementStrategy_Type_Missing(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		CheckDestroy: testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAWSEcsServiceWithPlacementStrategyType(rName, ""),
+				Config:      testAccServiceWithPlacementStrategyType(rName, ""),
 				ExpectError: regexp.MustCompile(`expected ordered_placement_strategy.0.type to be one of`),
 			},
 		},
@@ -740,20 +740,20 @@ func TestAccAWSEcsService_withPlacementConstraints(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		CheckDestroy: testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsServiceWithPlacementConstraint(rName),
+				Config: testAccServiceWithPlacementConstraint(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsServiceExists(resourceName, &service1),
+					testAccCheckServiceExists(resourceName, &service1),
 					resource.TestCheckResourceAttr(resourceName, "placement_constraints.#", "1"),
 				),
 			},
 			{
-				Config: testAccAWSEcsServiceWithPlacementConstraintEmptyExpression(rName),
+				Config: testAccServiceWithPlacementConstraintEmptyExpression(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsServiceExists(resourceName, &service2),
-					testAccCheckAWSEcsServiceNotRecreated(&service1, &service2),
+					testAccCheckServiceExists(resourceName, &service2),
+					testAccCheckServiceNotRecreated(&service1, &service2),
 					resource.TestCheckResourceAttr(resourceName, "placement_constraints.#", "1"),
 				),
 			},
@@ -770,12 +770,12 @@ func TestAccAWSEcsService_withPlacementConstraints_emptyExpression(t *testing.T)
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		CheckDestroy: testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsServiceWithPlacementConstraintEmptyExpression(rName),
+				Config: testAccServiceWithPlacementConstraintEmptyExpression(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsServiceExists(resourceName, &service),
+					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "placement_constraints.#", "1"),
 				),
 			},
@@ -792,12 +792,12 @@ func TestAccAWSEcsService_withLaunchTypeFargate(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		CheckDestroy: testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsServiceWithLaunchTypeFargate(rName, false),
+				Config: testAccServiceWithLaunchTypeFargate(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsServiceExists(resourceName, &service),
+					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "launch_type", "FARGATE"),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.assign_public_ip", "false"),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.security_groups.#", "2"),
@@ -806,16 +806,16 @@ func TestAccAWSEcsService_withLaunchTypeFargate(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSEcsServiceWithLaunchTypeFargate(rName, true),
+				Config: testAccServiceWithLaunchTypeFargate(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsServiceExists(resourceName, &service),
+					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.assign_public_ip", "true"),
 				),
 			},
 			{
-				Config: testAccAWSEcsServiceWithLaunchTypeFargate(rName, false),
+				Config: testAccServiceWithLaunchTypeFargate(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsServiceExists(resourceName, &service),
+					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.assign_public_ip", "false"),
 				),
 			},
@@ -832,26 +832,26 @@ func TestAccAWSEcsService_withLaunchTypeFargateAndPlatformVersion(t *testing.T) 
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		CheckDestroy: testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsServiceWithLaunchTypeFargateAndPlatformVersion(rName, "1.3.0"),
+				Config: testAccServiceWithLaunchTypeFargateAndPlatformVersion(rName, "1.3.0"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsServiceExists(resourceName, &service),
+					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "platform_version", "1.3.0"),
 				),
 			},
 			{
-				Config: testAccAWSEcsServiceWithLaunchTypeFargateAndPlatformVersion(rName, "LATEST"),
+				Config: testAccServiceWithLaunchTypeFargateAndPlatformVersion(rName, "LATEST"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsServiceExists(resourceName, &service),
+					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "platform_version", "LATEST"),
 				),
 			},
 			{
-				Config: testAccAWSEcsServiceWithLaunchTypeFargateAndPlatformVersion(rName, "1.4.0"),
+				Config: testAccServiceWithLaunchTypeFargateAndPlatformVersion(rName, "1.4.0"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsServiceExists(resourceName, &service),
+					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "platform_version", "1.4.0"),
 				),
 			},
@@ -868,13 +868,13 @@ func TestAccAWSEcsService_withLaunchTypeFargateAndWaitForSteadyState(t *testing.
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		CheckDestroy: testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				// Wait for the ECS Cluster to reach a steady state w/specified count
-				Config: testAccAWSEcsServiceWithLaunchTypeFargateAndWait(rName, 1, true),
+				Config: testAccServiceWithLaunchTypeFargateAndWait(rName, 1, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsServiceExists(resourceName, &service),
+					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "desired_count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "wait_for_steady_state", "true"),
 				),
@@ -901,30 +901,30 @@ func TestAccAWSEcsService_withLaunchTypeFargateAndUpdateWaitForSteadyState(t *te
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		CheckDestroy: testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsServiceWithLaunchTypeFargateWithoutWait(rName),
+				Config: testAccServiceWithLaunchTypeFargateWithoutWait(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsServiceExists(resourceName, &service),
+					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "desired_count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "wait_for_steady_state", "false"),
 				),
 			},
 			{
 				// Modify desired count and wait for the ECS Cluster to reach steady state
-				Config: testAccAWSEcsServiceWithLaunchTypeFargateAndWait(rName, 2, true),
+				Config: testAccServiceWithLaunchTypeFargateAndWait(rName, 2, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsServiceExists(resourceName, &service),
+					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "desired_count", "2"),
 					resource.TestCheckResourceAttr(resourceName, "wait_for_steady_state", "true"),
 				),
 			},
 			{
 				// Modify desired count without wait
-				Config: testAccAWSEcsServiceWithLaunchTypeFargateAndWait(rName, 1, false),
+				Config: testAccServiceWithLaunchTypeFargateAndWait(rName, 1, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsServiceExists(resourceName, &service),
+					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "desired_count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "wait_for_steady_state", "false"),
 				),
@@ -942,21 +942,21 @@ func TestAccAWSEcsService_withLaunchTypeEC2AndNetworkConfiguration(t *testing.T)
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		CheckDestroy: testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsServiceWithNetworkConfiguration(rName),
+				Config: testAccServiceWithNetworkConfiguration(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsServiceExists(resourceName, &service),
+					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.assign_public_ip", "false"),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.security_groups.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.subnets.#", "2"),
 				),
 			},
 			{
-				Config: testAccAWSEcsServiceWithNetworkConfiguration_modified(rName),
+				Config: testAccServiceWithNetworkConfiguration_modified(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsServiceExists(resourceName, &service),
+					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.assign_public_ip", "false"),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.security_groups.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.subnets.#", "2"),
@@ -975,12 +975,12 @@ func TestAccAWSEcsService_withDaemonSchedulingStrategy(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		CheckDestroy: testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsServiceWithDaemonSchedulingStrategy(rName),
+				Config: testAccServiceWithDaemonSchedulingStrategy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsServiceExists(resourceName, &service),
+					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "scheduling_strategy", "DAEMON"),
 				),
 			},
@@ -997,12 +997,12 @@ func TestAccAWSEcsService_withDaemonSchedulingStrategySetDeploymentMinimum(t *te
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		CheckDestroy: testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsServiceWithDaemonSchedulingStrategySetDeploymentMinimum(rName),
+				Config: testAccServiceWithDaemonSchedulingStrategySetDeploymentMinimum(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsServiceExists(resourceName, &service),
+					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "scheduling_strategy", "DAEMON"),
 				),
 			},
@@ -1019,12 +1019,12 @@ func TestAccAWSEcsService_withReplicaSchedulingStrategy(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		CheckDestroy: testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsServiceWithReplicaSchedulingStrategy(rName),
+				Config: testAccServiceWithReplicaSchedulingStrategy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsServiceExists(resourceName, &service),
+					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "scheduling_strategy", "REPLICA"),
 				),
 			},
@@ -1041,12 +1041,12 @@ func TestAccAWSEcsService_withServiceRegistries(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		CheckDestroy: testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsService_withServiceRegistries(rName),
+				Config: testAccService_withServiceRegistries(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsServiceExists(resourceName, &service),
+					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "service_registries.#", "1"),
 				),
 			},
@@ -1063,12 +1063,12 @@ func TestAccAWSEcsService_withServiceRegistries_container(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		CheckDestroy: testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsService_withServiceRegistries_container(rName),
+				Config: testAccService_withServiceRegistries_container(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsServiceExists(resourceName, &service),
+					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "service_registries.#", "1"),
 				),
 			},
@@ -1087,19 +1087,19 @@ func TestAccAWSEcsService_withServiceRegistriesChanges(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		CheckDestroy: testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsService_withServiceRegistriesChanges(rName, serviceDiscoveryName),
+				Config: testAccService_withServiceRegistriesChanges(rName, serviceDiscoveryName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsServiceExists(resourceName, &service),
+					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "service_registries.#", "1"),
 				),
 			},
 			{
-				Config: testAccAWSEcsService_withServiceRegistriesChanges(rName, updatedServiceDiscoveryName),
+				Config: testAccService_withServiceRegistriesChanges(rName, updatedServiceDiscoveryName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsServiceExists(resourceName, &service),
+					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "service_registries.#", "1"),
 				),
 			},
@@ -1116,12 +1116,12 @@ func TestAccAWSEcsService_Tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		CheckDestroy: testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsServiceConfigTags1(rName, "key1", "value1"),
+				Config: testAccServiceTags1Config(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsServiceExists(resourceName, &service),
+					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -1136,18 +1136,18 @@ func TestAccAWSEcsService_Tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"task_definition", "wait_for_steady_state"},
 			},
 			{
-				Config: testAccAWSEcsServiceConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccServiceTags2Config(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsServiceExists(resourceName, &service),
+					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccAWSEcsServiceConfigTags1(rName, "key2", "value2"),
+				Config: testAccServiceTags1Config(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsServiceExists(resourceName, &service),
+					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -1165,12 +1165,12 @@ func TestAccAWSEcsService_ManagedTags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		CheckDestroy: testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsServiceConfigManagedTags(rName),
+				Config: testAccServiceManagedTagsConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsServiceExists(resourceName, &service),
+					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "enable_ecs_managed_tags", "true"),
 				),
@@ -1188,27 +1188,27 @@ func TestAccAWSEcsService_PropagateTags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		CheckDestroy: testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsServiceConfigPropagateTags(rName, "SERVICE"),
+				Config: testAccServicePropagateTagsConfig(rName, "SERVICE"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsServiceExists(resourceName, &first),
+					testAccCheckServiceExists(resourceName, &first),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "propagate_tags", ecs.PropagateTagsService),
 				),
 			},
 			{
-				Config: testAccAWSEcsServiceConfigPropagateTags(rName, "TASK_DEFINITION"),
+				Config: testAccServicePropagateTagsConfig(rName, "TASK_DEFINITION"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsServiceExists(resourceName, &second),
+					testAccCheckServiceExists(resourceName, &second),
 					resource.TestCheckResourceAttr(resourceName, "propagate_tags", ecs.PropagateTagsTaskDefinition),
 				),
 			},
 			{
-				Config: testAccAWSEcsServiceConfigManagedTags(rName),
+				Config: testAccServiceManagedTagsConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsServiceExists(resourceName, &third),
+					testAccCheckServiceExists(resourceName, &third),
 					resource.TestCheckResourceAttr(resourceName, "propagate_tags", "NONE"),
 				),
 			},
@@ -1225,19 +1225,19 @@ func TestAccAWSEcsService_ExecuteCommand(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		CheckDestroy: testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsServiceConfigExecuteCommand(rName, true),
+				Config: testAccServiceExecuteCommandConfig(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsServiceExists(resourceName, &service),
+					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "enable_execute_command", "true"),
 				),
 			},
 			{
-				Config: testAccAWSEcsServiceConfigExecuteCommand(rName, false),
+				Config: testAccServiceExecuteCommandConfig(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsServiceExists(resourceName, &service),
+					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "enable_execute_command", "false"),
 				),
 			},
@@ -1245,7 +1245,7 @@ func TestAccAWSEcsService_ExecuteCommand(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSEcsServiceDestroy(s *terraform.State) error {
+func testAccCheckServiceDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -1281,7 +1281,7 @@ func testAccCheckAWSEcsServiceDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSEcsServiceExists(name string, service *ecs.Service) resource.TestCheckFunc {
+func testAccCheckServiceExists(name string, service *ecs.Service) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -1326,7 +1326,7 @@ func testAccCheckAWSEcsServiceExists(name string, service *ecs.Service) resource
 	}
 }
 
-func testAccCheckAWSEcsServiceNotRecreated(i, j *ecs.Service) resource.TestCheckFunc {
+func testAccCheckServiceNotRecreated(i, j *ecs.Service) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if !aws.TimeValue(i.CreatedAt).Equal(aws.TimeValue(j.CreatedAt)) {
 			return fmt.Errorf("ECS Service (%s) unexpectedly recreated", aws.StringValue(j.ServiceArn))
@@ -1336,7 +1336,7 @@ func testAccCheckAWSEcsServiceNotRecreated(i, j *ecs.Service) resource.TestCheck
 	}
 }
 
-func testAccAWSEcsService(rName string) string {
+func testAccService(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "default" {
   name = %[1]q
@@ -1367,7 +1367,7 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
-func testAccAWSEcsServiceModified(rName string) string {
+func testAccServiceModified(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "default" {
   name = %[1]q
@@ -1398,7 +1398,7 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
-func testAccAWSEcsServiceWithLaunchTypeFargateWithoutWait(rName string) string {
+func testAccServiceWithLaunchTypeFargateWithoutWait(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -1511,7 +1511,7 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
-func testAccAWSEcsServiceWithLaunchTypeFargateAndWait(rName string, desiredCount int, waitForSteadyState bool) string {
+func testAccServiceWithLaunchTypeFargateAndWait(rName string, desiredCount int, waitForSteadyState bool) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -1627,7 +1627,7 @@ resource "aws_ecs_service" "test" {
 `, rName, desiredCount, waitForSteadyState)
 }
 
-func testAccAWSEcsServiceWithInterchangeablePlacementStrategy(rName string) string {
+func testAccServiceWithInterchangeablePlacementStrategy(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "default" {
   name = %[1]q
@@ -1663,8 +1663,8 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
-func testAccAWSEcsServiceWithCapacityProviderStrategy(rName string, weight, base int) string {
-	return acctest.ConfigCompose(testAccAWSEcsCapacityProviderConfigBase(rName), fmt.Sprintf(`
+func testAccServiceWithCapacityProviderStrategy(rName string, weight, base int) string {
+	return acctest.ConfigCompose(testAccCapacityProviderBaseConfig(rName), fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
   name = %[1]q
 
@@ -1708,8 +1708,8 @@ resource "aws_ecs_service" "test" {
 `, rName, weight, base))
 }
 
-func testAccAWSEcsServiceWithMultipleCapacityProviderStrategies(rName string) string {
-	return acctest.ConfigCompose(testAccAWSEcsClusterCapacityProviders(rName), fmt.Sprintf(`
+func testAccServiceWithMultipleCapacityProviderStrategies(rName string) string {
+	return acctest.ConfigCompose(testAccClusterCapacityProviders(rName), fmt.Sprintf(`
 resource "aws_ecs_service" "test" {
   name            = %[1]q
   cluster         = aws_ecs_cluster.test.id
@@ -1785,7 +1785,7 @@ resource "aws_vpc" "test" {
 `, rName))
 }
 
-func testAccAWSEcsServiceWithForceNewDeployment(rName string) string {
+func testAccServiceWithForceNewDeployment(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "default" {
   name = %[1]q
@@ -1822,7 +1822,7 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
-func testAccAWSEcsServiceWithPlacementStrategy(rName string) string {
+func testAccServiceWithPlacementStrategy(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "default" {
   name = %[1]q
@@ -1858,7 +1858,7 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
-func testAccAWSEcsServiceWithPlacementStrategyType(rName string, placementStrategyType string) string {
+func testAccServiceWithPlacementStrategyType(rName string, placementStrategyType string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
   name = %[1]q
@@ -1893,7 +1893,7 @@ resource "aws_ecs_service" "test" {
 `, rName, placementStrategyType)
 }
 
-func testAccAWSEcsServiceWithRandomPlacementStrategy(rName string) string {
+func testAccServiceWithRandomPlacementStrategy(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "default" {
   name = %[1]q
@@ -1928,7 +1928,7 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
-func testAccAWSEcsServiceWithMultiPlacementStrategy(rName string) string {
+func testAccServiceWithMultiplacementStrategy(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "default" {
   name = %[1]q
@@ -1969,7 +1969,7 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
-func testAccAWSEcsServiceWithPlacementConstraint(rName string) string {
+func testAccServiceWithPlacementConstraint(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -2014,7 +2014,7 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
-func testAccAWSEcsServiceWithPlacementConstraintEmptyExpression(rName string) string {
+func testAccServiceWithPlacementConstraintEmptyExpression(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "default" {
   name = %[1]q
@@ -2049,7 +2049,7 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
-func testAccAWSEcsServiceWithLaunchTypeFargate(rName string, assignPublicIP bool) string {
+func testAccServiceWithLaunchTypeFargate(rName string, assignPublicIP bool) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -2146,7 +2146,7 @@ resource "aws_ecs_service" "test" {
 `, rName, assignPublicIP)
 }
 
-func testAccAWSEcsServiceWithLaunchTypeFargateAndPlatformVersion(rName, platformVersion string) string {
+func testAccServiceWithLaunchTypeFargateAndPlatformVersion(rName, platformVersion string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -2244,7 +2244,7 @@ resource "aws_ecs_service" "test" {
 `, rName, platformVersion)
 }
 
-func testAccAWSEcsService_healthCheckGracePeriodSeconds(rName string, healthCheckGracePeriodSeconds int) string {
+func testAccService_healthCheckGracePeriodSeconds(rName string, healthCheckGracePeriodSeconds int) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -2388,7 +2388,7 @@ resource "aws_ecs_service" "test" {
 `, rName, healthCheckGracePeriodSeconds)
 }
 
-func testAccAWSEcsService_withIamRole(rName string) string {
+func testAccService_withIAMRole(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -2517,7 +2517,7 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
-func testAccAWSEcsServiceWithDeploymentValues(rName string) string {
+func testAccServiceWithDeploymentValues(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "default" {
   name = %[1]q
@@ -2548,7 +2548,7 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
-func testAccAWSEcsService_withLbChangesBase(rName, image, containerName string, containerPort, hostPort int) string {
+func testAccService_withLbChangesBase(rName, image, containerName string, containerPort, hostPort int) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -2677,15 +2677,15 @@ resource "aws_ecs_service" "test" {
 `, rName, image, containerName, containerPort, hostPort)
 }
 
-func testAccAWSEcsService_withLbChanges(rName string) string {
-	return testAccAWSEcsService_withLbChangesBase(rName, "ghost:latest", "ghost", 2368, 8080)
+func testAccService_withLbChanges(rName string) string {
+	return testAccService_withLbChangesBase(rName, "ghost:latest", "ghost", 2368, 8080)
 }
 
-func testAccAWSEcsService_withLbChanges_modified(rName string) string {
-	return testAccAWSEcsService_withLbChangesBase(rName, "nginx:latest", "nginx", 80, 8080)
+func testAccService_withLbChanges_modified(rName string) string {
+	return testAccService_withLbChangesBase(rName, "nginx:latest", "nginx", 80, 8080)
 }
 
-func testAccAWSEcsServiceWithFamilyAndRevision(rName string) string {
+func testAccServiceWithFamilyAndRevision(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "default" {
   name = %[1]q
@@ -2716,7 +2716,7 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
-func testAccAWSEcsServiceWithFamilyAndRevisionModified(rName string) string {
+func testAccServiceWithFamilyAndRevisionModified(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "default" {
   name = %[1]q
@@ -2747,7 +2747,7 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
-func testAccAWSEcsServiceWithRenamedCluster(rName string) string {
+func testAccServiceWithRenamedCluster(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "default" {
   name = %[1]q
@@ -2778,7 +2778,7 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
-func testAccAWSEcsServiceWithEcsClusterName(rName string) string {
+func testAccServiceWithEcsClusterName(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "default" {
   name = %[1]q
@@ -2809,7 +2809,7 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
-func testAccAWSEcsServiceWithAlb(rName string) string {
+func testAccServiceWithAlb(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -2952,7 +2952,7 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
-func testAccAWSEcsServiceWithMultipleTargetGroups(rName string) string {
+func testAccServiceWithMultipleTargetGroups(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -3080,7 +3080,7 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
-func testAccAWSEcsServiceWithNetworkConfigurationBase(rName, securityGroups string) string {
+func testAccServiceWithNetworkConfigurationBase(rName, securityGroups string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -3169,15 +3169,15 @@ resource "aws_ecs_service" "test" {
 `, rName, securityGroups)
 }
 
-func testAccAWSEcsServiceWithNetworkConfiguration(rName string) string {
-	return testAccAWSEcsServiceWithNetworkConfigurationBase(rName, "aws_security_group.allow_all_a.id, aws_security_group.allow_all_b.id")
+func testAccServiceWithNetworkConfiguration(rName string) string {
+	return testAccServiceWithNetworkConfigurationBase(rName, "aws_security_group.allow_all_a.id, aws_security_group.allow_all_b.id")
 }
 
-func testAccAWSEcsServiceWithNetworkConfiguration_modified(rName string) string {
-	return testAccAWSEcsServiceWithNetworkConfigurationBase(rName, "aws_security_group.allow_all_a.id")
+func testAccServiceWithNetworkConfiguration_modified(rName string) string {
+	return testAccServiceWithNetworkConfigurationBase(rName, "aws_security_group.allow_all_a.id")
 }
 
-func testAccAWSEcsService_withServiceRegistries(rName string) string {
+func testAccService_withServiceRegistries(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "test" {
   state = "available"
@@ -3278,7 +3278,7 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
-func testAccAWSEcsService_withServiceRegistries_container(rName string) string {
+func testAccService_withServiceRegistries_container(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "test" {
   state = "available"
@@ -3382,7 +3382,7 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
-func testAccAWSEcsService_withServiceRegistriesChanges(rName, discoveryName string) string {
+func testAccService_withServiceRegistriesChanges(rName, discoveryName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "test" {
   state = "available"
@@ -3483,7 +3483,7 @@ resource "aws_ecs_service" "test" {
 `, rName, discoveryName)
 }
 
-func testAccAWSEcsServiceWithDaemonSchedulingStrategy(rName string) string {
+func testAccServiceWithDaemonSchedulingStrategy(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "default" {
   name = %[1]q
@@ -3514,7 +3514,7 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
-func testAccAWSEcsServiceWithDaemonSchedulingStrategySetDeploymentMinimum(rName string) string {
+func testAccServiceWithDaemonSchedulingStrategySetDeploymentMinimum(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "default" {
   name = %[1]q
@@ -3546,7 +3546,7 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
-func testAccAWSEcsServiceConfigDeploymentControllerTypeCodeDeploy(rName string) string {
+func testAccServiceDeploymentControllerTypeCodeDeployConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -3646,7 +3646,7 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
-func testAccAWSEcsServiceConfigDeploymentControllerTypeExternal(rName string) string {
+func testAccServiceDeploymentControllerTypeExternalConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
   name = %[1]q
@@ -3664,7 +3664,7 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
-func testAccAWSEcsServiceConfigDeploymentPercents(rName string, deploymentMinimumHealthyPercent, deploymentMaximumPercent int) string {
+func testAccServiceDeploymentPercentsConfig(rName string, deploymentMinimumHealthyPercent, deploymentMaximumPercent int) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
   name = %[1]q
@@ -3697,7 +3697,7 @@ resource "aws_ecs_service" "test" {
 `, rName, deploymentMaximumPercent, deploymentMinimumHealthyPercent)
 }
 
-func testAccAWSEcsServiceConfigDeploymentCircuitBreaker(rName string) string {
+func testAccServiceDeploymentCircuitBreakerConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
   name = %[1]q
@@ -3733,7 +3733,7 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
-func testAccAWSEcsServiceConfigTags1(rName, tag1Key, tag1Value string) string {
+func testAccServiceTags1Config(rName, tag1Key, tag1Value string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
   name = %[1]q
@@ -3768,7 +3768,7 @@ resource "aws_ecs_service" "test" {
 `, rName, tag1Key, tag1Value)
 }
 
-func testAccAWSEcsServiceConfigTags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
+func testAccServiceTags2Config(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
   name = %[1]q
@@ -3804,7 +3804,7 @@ resource "aws_ecs_service" "test" {
 `, rName, tag1Key, tag1Value, tag2Key, tag2Value)
 }
 
-func testAccAWSEcsServiceConfigManagedTags(rName string) string {
+func testAccServiceManagedTagsConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
   name = %[1]q
@@ -3840,7 +3840,7 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
-func testAccAWSEcsServiceConfigPropagateTags(rName, propagate string) string {
+func testAccServicePropagateTagsConfig(rName, propagate string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
   name = %[1]q
@@ -3881,7 +3881,7 @@ resource "aws_ecs_service" "test" {
 `, rName, propagate)
 }
 
-func testAccAWSEcsServiceWithReplicaSchedulingStrategy(rName string) string {
+func testAccServiceWithReplicaSchedulingStrategy(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "default" {
   name = %[1]q
@@ -3913,7 +3913,7 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
-func testAccAWSEcsServiceConfigExecuteCommand(rName string, enable bool) string {
+func testAccServiceExecuteCommandConfig(rName string, enable bool) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name               = %[1]q

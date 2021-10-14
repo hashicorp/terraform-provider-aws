@@ -21,7 +21,7 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_ecs_capacity_provider", &resource.Sweeper{
 		Name: "aws_ecs_capacity_provider",
-		F:    testSweepEcsCapacityProviders,
+		F:    sweepCapacityProviders,
 		Dependencies: []string{
 			"aws_ecs_cluster",
 			"aws_ecs_service",
@@ -29,7 +29,7 @@ func init() {
 	})
 }
 
-func testSweepEcsCapacityProviders(region string) error {
+func sweepCapacityProviders(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -87,12 +87,12 @@ func TestAccAWSEcsCapacityProvider_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEcsCapacityProviderDestroy,
+		CheckDestroy: testAccCheckCapacityProviderDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsCapacityProviderConfig(rName),
+				Config: testAccCapacityProviderConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsCapacityProviderExists(resourceName, &provider),
+					testAccCheckCapacityProviderExists(resourceName, &provider),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "id", "ecs", fmt.Sprintf("capacity-provider/%s", rName)),
 					resource.TestCheckResourceAttrPair(resourceName, "id", resourceName, "arn"),
@@ -125,12 +125,12 @@ func TestAccAWSEcsCapacityProvider_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEcsCapacityProviderDestroy,
+		CheckDestroy: testAccCheckCapacityProviderDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsCapacityProviderConfig(rName),
+				Config: testAccCapacityProviderConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsCapacityProviderExists(resourceName, &provider),
+					testAccCheckCapacityProviderExists(resourceName, &provider),
 					acctest.CheckResourceDisappears(acctest.Provider, tfecs.ResourceCapacityProvider(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -148,12 +148,12 @@ func TestAccAWSEcsCapacityProvider_ManagedScaling(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEcsCapacityProviderDestroy,
+		CheckDestroy: testAccCheckCapacityProviderDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsCapacityProviderConfigManagedScaling(rName, ecs.ManagedScalingStatusEnabled, 300, 10, 1, 50),
+				Config: testAccCapacityProviderManagedScalingConfig(rName, ecs.ManagedScalingStatusEnabled, 300, 10, 1, 50),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsCapacityProviderExists(resourceName, &provider),
+					testAccCheckCapacityProviderExists(resourceName, &provider),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "auto_scaling_group_provider.0.auto_scaling_group_arn", "aws_autoscaling_group.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_termination_protection", "DISABLED"),
@@ -171,9 +171,9 @@ func TestAccAWSEcsCapacityProvider_ManagedScaling(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSEcsCapacityProviderConfigManagedScaling(rName, ecs.ManagedScalingStatusDisabled, 400, 100, 10, 100),
+				Config: testAccCapacityProviderManagedScalingConfig(rName, ecs.ManagedScalingStatusDisabled, 400, 100, 10, 100),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsCapacityProviderExists(resourceName, &provider),
+					testAccCheckCapacityProviderExists(resourceName, &provider),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "auto_scaling_group_provider.0.auto_scaling_group_arn", "aws_autoscaling_group.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_termination_protection", "DISABLED"),
@@ -197,12 +197,12 @@ func TestAccAWSEcsCapacityProvider_ManagedScalingPartial(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEcsCapacityProviderDestroy,
+		CheckDestroy: testAccCheckCapacityProviderDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsCapacityProviderConfigManagedScalingPartial(rName),
+				Config: testAccCapacityProviderManagedScalingPartialConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsCapacityProviderExists(resourceName, &provider),
+					testAccCheckCapacityProviderExists(resourceName, &provider),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "auto_scaling_group_provider.0.auto_scaling_group_arn", "aws_autoscaling_group.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_termination_protection", "DISABLED"),
@@ -232,12 +232,12 @@ func TestAccAWSEcsCapacityProvider_Tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEcsCapacityProviderDestroy,
+		CheckDestroy: testAccCheckCapacityProviderDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsCapacityProviderConfigTags1(rName, "key1", "value1"),
+				Config: testAccCapacityProviderTags1Config(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsCapacityProviderExists(resourceName, &provider),
+					testAccCheckCapacityProviderExists(resourceName, &provider),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -249,18 +249,18 @@ func TestAccAWSEcsCapacityProvider_Tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSEcsCapacityProviderConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccCapacityProviderTags2Config(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsCapacityProviderExists(resourceName, &provider),
+					testAccCheckCapacityProviderExists(resourceName, &provider),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccAWSEcsCapacityProviderConfigTags1(rName, "key2", "value2"),
+				Config: testAccCapacityProviderTags1Config(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsCapacityProviderExists(resourceName, &provider),
+					testAccCheckCapacityProviderExists(resourceName, &provider),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -269,7 +269,7 @@ func TestAccAWSEcsCapacityProvider_Tags(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSEcsCapacityProviderDestroy(s *terraform.State) error {
+func testAccCheckCapacityProviderDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -293,7 +293,7 @@ func testAccCheckAWSEcsCapacityProviderDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSEcsCapacityProviderExists(resourceName string, provider *ecs.CapacityProvider) resource.TestCheckFunc {
+func testAccCheckCapacityProviderExists(resourceName string, provider *ecs.CapacityProvider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -318,7 +318,7 @@ func testAccCheckAWSEcsCapacityProviderExists(resourceName string, provider *ecs
 	}
 }
 
-func testAccAWSEcsCapacityProviderConfigBase(rName string) string {
+func testAccCapacityProviderBaseConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_ami" "test" {
   most_recent = true
@@ -367,8 +367,8 @@ resource "aws_autoscaling_group" "test" {
 `, rName)
 }
 
-func testAccAWSEcsCapacityProviderConfig(rName string) string {
-	return testAccAWSEcsCapacityProviderConfigBase(rName) + fmt.Sprintf(`
+func testAccCapacityProviderConfig(rName string) string {
+	return testAccCapacityProviderBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
   name = %q
 
@@ -379,8 +379,8 @@ resource "aws_ecs_capacity_provider" "test" {
 `, rName)
 }
 
-func testAccAWSEcsCapacityProviderConfigManagedScaling(rName, status string, warmup, max, min, cap int) string {
-	return testAccAWSEcsCapacityProviderConfigBase(rName) + fmt.Sprintf(`
+func testAccCapacityProviderManagedScalingConfig(rName, status string, warmup, max, min, cap int) string {
+	return testAccCapacityProviderBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
   name = %[1]q
 
@@ -399,8 +399,8 @@ resource "aws_ecs_capacity_provider" "test" {
 `, rName, warmup, max, min, status, cap)
 }
 
-func testAccAWSEcsCapacityProviderConfigManagedScalingPartial(rName string) string {
-	return testAccAWSEcsCapacityProviderConfigBase(rName) + fmt.Sprintf(`
+func testAccCapacityProviderManagedScalingPartialConfig(rName string) string {
+	return testAccCapacityProviderBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
   name = %[1]q
 
@@ -416,8 +416,8 @@ resource "aws_ecs_capacity_provider" "test" {
 `, rName)
 }
 
-func testAccAWSEcsCapacityProviderConfigTags1(rName, tag1Key, tag1Value string) string {
-	return testAccAWSEcsCapacityProviderConfigBase(rName) + fmt.Sprintf(`
+func testAccCapacityProviderTags1Config(rName, tag1Key, tag1Value string) string {
+	return testAccCapacityProviderBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
   name = %[1]q
 
@@ -432,8 +432,8 @@ resource "aws_ecs_capacity_provider" "test" {
 `, rName, tag1Key, tag1Value)
 }
 
-func testAccAWSEcsCapacityProviderConfigTags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
-	return testAccAWSEcsCapacityProviderConfigBase(rName) + fmt.Sprintf(`
+func testAccCapacityProviderTags2Config(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
+	return testAccCapacityProviderBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
   name = %[1]q
 

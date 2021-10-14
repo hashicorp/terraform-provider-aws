@@ -6,7 +6,7 @@ import (
 	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
 )
 
-func TestAwsEcsContainerDefinitionsAreEquivalent_basic(t *testing.T) {
+func TestContainerDefinitionsAreEquivalent_basic(t *testing.T) {
 	cfgRepresention := `
 [
     {
@@ -89,7 +89,7 @@ func TestAwsEcsContainerDefinitionsAreEquivalent_basic(t *testing.T) {
 	}
 }
 
-func TestAwsEcsContainerDefinitionsAreEquivalent_portMappings(t *testing.T) {
+func TestContainerDefinitionsAreEquivalent_portMappings(t *testing.T) {
 	cfgRepresention := `
 [
     {
@@ -136,7 +136,7 @@ func TestAwsEcsContainerDefinitionsAreEquivalent_portMappings(t *testing.T) {
 	}
 }
 
-func TestAwsEcsContainerDefinitionsAreEquivalent_portMappingsIgnoreHostPort(t *testing.T) {
+func TestContainerDefinitionsAreEquivalent_portMappingsIgnoreHostPort(t *testing.T) {
 	cfgRepresention := `
 [
     {
@@ -186,7 +186,7 @@ func TestAwsEcsContainerDefinitionsAreEquivalent_portMappingsIgnoreHostPort(t *t
 	}
 }
 
-func TestAwsEcsContainerDefinitionsAreEquivalent_arrays(t *testing.T) {
+func TestContainerDefinitionsAreEquivalent_arrays(t *testing.T) {
 	cfgRepresention := `
 [
     {
@@ -439,7 +439,7 @@ func TestAwsEcsContainerDefinitionsAreEquivalent_arrays(t *testing.T) {
 	}
 }
 
-func TestAwsEcsContainerDefinitionsAreEquivalent_negative(t *testing.T) {
+func TestContainerDefinitionsAreEquivalent_negative(t *testing.T) {
 	cfgRepresention := `
 [
     {
@@ -477,7 +477,7 @@ func TestAwsEcsContainerDefinitionsAreEquivalent_negative(t *testing.T) {
 	}
 }
 
-func TestAwsEcsContainerDefinitionsAreEquivalent_missingEnvironmentName(t *testing.T) {
+func TestContainerDefinitionsAreEquivalent_missingEnvironmentName(t *testing.T) {
 	cfgRepresention := `
 [
     {

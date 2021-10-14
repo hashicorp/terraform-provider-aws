@@ -68,7 +68,7 @@ func TestAccAWSEcsTag_ResourceArn_BatchComputeEnvironment(t *testing.T) {
 	resourceName := "aws_ecs_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBatch(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckBatch(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckTagDestroy,
@@ -181,7 +181,7 @@ resource "aws_ecs_tag" "test" {
 `, rName)
 }
 
-func testAccPreCheckAWSBatch(t *testing.T) {
+func testAccPreCheckBatch(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn
 
 	input := &batch.DescribeComputeEnvironmentsInput{}

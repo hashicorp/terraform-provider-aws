@@ -21,7 +21,7 @@ func TestAccAWSEcsServiceDataSource_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsEcsServiceDataSourceConfig(rName),
+				Config: testAccCheckServiceDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "desired_count", dataSourceName, "desired_count"),
@@ -35,7 +35,7 @@ func TestAccAWSEcsServiceDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsEcsServiceDataSourceConfig(rName string) string {
+func testAccCheckServiceDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
   name = %[1]q

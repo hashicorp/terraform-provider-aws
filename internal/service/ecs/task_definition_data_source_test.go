@@ -21,7 +21,7 @@ func TestAccAWSEcsDataSource_ecsTaskDefinition(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsEcsTaskDefinitionDataSourceConfig(rName),
+				Config: testAccCheckTaskDefinitionDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "family", rName),
 					resource.TestCheckResourceAttr(resourceName, "network_mode", "bridge"),
@@ -34,7 +34,7 @@ func TestAccAWSEcsDataSource_ecsTaskDefinition(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsEcsTaskDefinitionDataSourceConfig(rName string) string {
+func testAccCheckTaskDefinitionDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "mongo_role" {
   name = "%[1]s"

@@ -21,7 +21,7 @@ func TestAccAWSEcsDataSource_ecsCluster(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsEcsClusterDataSourceConfig(rName),
+				Config: testAccCheckClusterDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttr(dataSourceName, "pending_tasks_count", "0"),
@@ -45,7 +45,7 @@ func TestAccAWSEcsDataSource_ecsClusterContainerInsights(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsEcsClusterDataSourceConfigContainerInsights(rName),
+				Config: testAccCheckClusterContainerInsightsDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttr(dataSourceName, "pending_tasks_count", "0"),
@@ -59,7 +59,7 @@ func TestAccAWSEcsDataSource_ecsClusterContainerInsights(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsEcsClusterDataSourceConfig(rName string) string {
+func testAccCheckClusterDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
   name = %[1]q
@@ -71,7 +71,7 @@ data "aws_ecs_cluster" "test" {
 `, rName)
 }
 
-func testAccCheckAwsEcsClusterDataSourceConfigContainerInsights(rName string) string {
+func testAccCheckClusterContainerInsightsDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
   name = %[1]q
