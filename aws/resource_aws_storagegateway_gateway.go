@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/storagegateway/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceGateway() *schema.Resource {
@@ -191,7 +192,7 @@ func ResourceGateway() *schema.Resource {
 			"cloudwatch_log_group_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"smb_security_strategy": {
 				Type:         schema.TypeString,

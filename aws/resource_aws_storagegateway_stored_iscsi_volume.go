@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/storagegateway/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceStorediSCSIVolume() *schema.Resource {
@@ -39,7 +40,7 @@ func ResourceStorediSCSIVolume() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"target_name": {
 				Type:     schema.TypeString,
@@ -60,7 +61,7 @@ func ResourceStorediSCSIVolume() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 				RequiredWith: []string{"kms_encrypted"},
 			},
 			// Poor API naming: this accepts the IP address of the network interface

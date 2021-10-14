@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceSMBFileShare() *schema.Resource {
@@ -55,7 +56,7 @@ func ResourceSMBFileShare() *schema.Resource {
 			"audit_destination_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"authentication": {
 				Type:         schema.TypeString,
@@ -109,7 +110,7 @@ func ResourceSMBFileShare() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"guess_mime_type_enabled": {
 				Type:     schema.TypeBool,
@@ -130,14 +131,14 @@ func ResourceSMBFileShare() *schema.Resource {
 			"kms_key_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 				RequiredWith: []string{"kms_encrypted"},
 			},
 			"location_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"object_acl": {
 				Type:         schema.TypeString,
@@ -177,7 +178,7 @@ func ResourceSMBFileShare() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"smb_acl_enabled": {
 				Type:     schema.TypeBool,

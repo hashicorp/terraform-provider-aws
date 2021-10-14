@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/storagegateway/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceNFSFileShare() *schema.Resource {
@@ -46,7 +47,7 @@ func ResourceNFSFileShare() *schema.Resource {
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 					ValidateFunc: validation.Any(
-						validateIpv4CIDRNetworkAddress,
+						verify.ValidIPv4CIDRNetworkAddress,
 						validation.IsIPv4Address,
 					),
 				},
@@ -70,7 +71,7 @@ func ResourceNFSFileShare() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"guess_mime_type_enabled": {
 				Type:     schema.TypeBool,
@@ -85,13 +86,13 @@ func ResourceNFSFileShare() *schema.Resource {
 			"kms_key_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"location_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"nfs_file_share_defaults": {
 				Type:     schema.TypeList,
@@ -103,25 +104,25 @@ func ResourceNFSFileShare() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Default:      "0777",
-							ValidateFunc: validateLinuxFileMode,
+							ValidateFunc: validLinuxFileMode,
 						},
 						"file_mode": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Default:      "0666",
-							ValidateFunc: validateLinuxFileMode,
+							ValidateFunc: validLinuxFileMode,
 						},
 						"group_id": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Default:      "65534",
-							ValidateFunc: validate4ByteAsn,
+							ValidateFunc: valid4ByteASN,
 						},
 						"owner_id": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Default:      "65534",
-							ValidateFunc: validate4ByteAsn,
+							ValidateFunc: valid4ByteASN,
 						},
 					},
 				},
@@ -164,7 +165,7 @@ func ResourceNFSFileShare() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"squash": {
 				Type:     schema.TypeString,
