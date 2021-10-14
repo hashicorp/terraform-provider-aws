@@ -456,7 +456,7 @@ func resourceAwsElasticTranscoderPipelineRead(d *schema.ResourceData, meta inter
 	})
 
 	if err != nil {
-		if isAWSErr(err, elastictranscoder.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, elastictranscoder.ErrCodeResourceNotFoundException, "") {
 			log.Printf("[WARN] No such resource found for Elastic Transcoder Pipeline (%s)", d.Id())
 			d.SetId("")
 			return nil
