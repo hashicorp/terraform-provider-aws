@@ -60,8 +60,8 @@ func TestAccAWSIAMRolePolicy_basic(t *testing.T) {
 						resourceName2,
 						&rolePolicy3,
 					),
-					testAccCheckAWSIAMRolePolicyNameMatches(&rolePolicy1, &rolePolicy2),
-					testAccCheckAWSIAMRolePolicyNameChanged(&rolePolicy1, &rolePolicy3),
+					testAccCheckRolePolicyNameMatches(&rolePolicy1, &rolePolicy2),
+					testAccCheckRolePolicyNameChanged(&rolePolicy1, &rolePolicy3),
 				),
 			},
 		},
@@ -81,7 +81,7 @@ func TestAccAWSIAMRolePolicy_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckIAMRolePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsIamRolePolicyConfig(suffix),
+				Config: testAccRolePolicyConfig(suffix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIAMRolePolicyExists(
 						roleResourceName,
@@ -133,7 +133,7 @@ func TestAccAWSIAMRolePolicy_namePrefix(t *testing.T) {
 						resourceName,
 						&rolePolicy2,
 					),
-					testAccCheckAWSIAMRolePolicyNameMatches(&rolePolicy1, &rolePolicy2),
+					testAccCheckRolePolicyNameMatches(&rolePolicy1, &rolePolicy2),
 					resource.TestCheckResourceAttrSet(resourceName, "name"),
 				),
 			},
@@ -177,7 +177,7 @@ func TestAccAWSIAMRolePolicy_generatedName(t *testing.T) {
 						resourceName,
 						&rolePolicy2,
 					),
-					testAccCheckAWSIAMRolePolicyNameMatches(&rolePolicy1, &rolePolicy2),
+					testAccCheckRolePolicyNameMatches(&rolePolicy1, &rolePolicy2),
 					resource.TestCheckResourceAttrSet(resourceName, "name"),
 				),
 			},
@@ -307,7 +307,7 @@ func testAccCheckIAMRolePolicyExists(
 	}
 }
 
-func testAccCheckAWSIAMRolePolicyNameChanged(i, j *iam.GetRolePolicyOutput) resource.TestCheckFunc {
+func testAccCheckRolePolicyNameChanged(i, j *iam.GetRolePolicyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.StringValue(i.PolicyName) == aws.StringValue(j.PolicyName) {
 			return errors.New("IAM Role Policy name did not change")
@@ -317,7 +317,7 @@ func testAccCheckAWSIAMRolePolicyNameChanged(i, j *iam.GetRolePolicyOutput) reso
 	}
 }
 
-func testAccCheckAWSIAMRolePolicyNameMatches(i, j *iam.GetRolePolicyOutput) resource.TestCheckFunc {
+func testAccCheckRolePolicyNameMatches(i, j *iam.GetRolePolicyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.StringValue(i.PolicyName) != aws.StringValue(j.PolicyName) {
 			return errors.New("IAM Role Policy name did not match")
@@ -327,7 +327,7 @@ func testAccCheckAWSIAMRolePolicyNameMatches(i, j *iam.GetRolePolicyOutput) reso
 	}
 }
 
-func testAccAwsIamRolePolicyConfig(suffix string) string {
+func testAccRolePolicyConfig(suffix string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "role_%[1]s" {
   name = "tf_test_role_test_%[1]s"

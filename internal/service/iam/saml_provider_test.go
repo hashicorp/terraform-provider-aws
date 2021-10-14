@@ -21,11 +21,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_iam_saml_provider", &resource.Sweeper{
 		Name: "aws_iam_saml_provider",
-		F:    testSweepIamSamlProvider,
+		F:    sweepSamlProvider,
 	})
 }
 
-func testSweepIamSamlProvider(region string) error {
+func sweepSamlProvider(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)

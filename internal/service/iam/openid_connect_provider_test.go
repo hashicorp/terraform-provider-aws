@@ -21,11 +21,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_iam_openid_connect_provider", &resource.Sweeper{
 		Name: "aws_iam_openid_connect_provider",
-		F:    testSweepIamOpenIDConnectProvider,
+		F:    sweepOpenIDConnectProvider,
 	})
 }
 
-func testSweepIamOpenIDConnectProvider(region string) error {
+func sweepOpenIDConnectProvider(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -119,7 +119,7 @@ func TestAccAWSIAMOpenIDConnectProvider_tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSInstanceProfileDestroy,
+		CheckDestroy: testAccCheckInstanceProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIAMOpenIDConnectProviderConfigTags1(rString, "key1", "value1"),

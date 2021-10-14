@@ -28,13 +28,13 @@ func TestAccAWSAccessKey_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAccessKeyDestroy,
+		CheckDestroy: testAccCheckAccessKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAccessKeyConfig(rName),
+				Config: testAccAccessKeyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAccessKeyExists(resourceName, &conf),
-					testAccCheckAWSAccessKeyAttributes(&conf, "Active"),
+					testAccCheckAccessKeyExists(resourceName, &conf),
+					testAccCheckAccessKeyAttributes(&conf, "Active"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "create_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "secret"),
 					resource.TestCheckNoResourceAttr(resourceName, "encrypted_secret"),
@@ -62,13 +62,13 @@ func TestAccAWSAccessKey_encrypted(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAccessKeyDestroy,
+		CheckDestroy: testAccCheckAccessKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAccessKeyConfig_encrypted(rName, testPubKey1),
+				Config: testAccAccessKeyConfig_encrypted(rName, testPubKey1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAccessKeyExists(resourceName, &conf),
-					testAccCheckAWSAccessKeyAttributes(&conf, "Active"),
+					testAccCheckAccessKeyExists(resourceName, &conf),
+					testAccCheckAccessKeyAttributes(&conf, "Active"),
 					testDecryptSecretKeyAndTest(resourceName, testPrivKey1),
 					resource.TestCheckNoResourceAttr(resourceName, "secret"),
 					resource.TestCheckResourceAttrSet(resourceName, "encrypted_secret"),
@@ -96,12 +96,12 @@ func TestAccAWSAccessKey_status(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAccessKeyDestroy,
+		CheckDestroy: testAccCheckAccessKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAccessKeyConfig_Status(rName, iam.StatusTypeInactive),
+				Config: testAccAccessKeyConfig_Status(rName, iam.StatusTypeInactive),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAccessKeyExists(resourceName, &conf),
+					testAccCheckAccessKeyExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "status", iam.StatusTypeInactive),
 				),
 			},
@@ -112,16 +112,16 @@ func TestAccAWSAccessKey_status(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"encrypted_secret", "key_fingerprint", "pgp_key", "secret", "ses_smtp_password_v4", "encrypted_ses_smtp_password_v4"},
 			},
 			{
-				Config: testAccAWSAccessKeyConfig_Status(rName, iam.StatusTypeActive),
+				Config: testAccAccessKeyConfig_Status(rName, iam.StatusTypeActive),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAccessKeyExists(resourceName, &conf),
+					testAccCheckAccessKeyExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "status", iam.StatusTypeActive),
 				),
 			},
 			{
-				Config: testAccAWSAccessKeyConfig_Status(rName, iam.StatusTypeInactive),
+				Config: testAccAccessKeyConfig_Status(rName, iam.StatusTypeInactive),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAccessKeyExists(resourceName, &conf),
+					testAccCheckAccessKeyExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "status", iam.StatusTypeInactive),
 				),
 			},
@@ -129,7 +129,7 @@ func TestAccAWSAccessKey_status(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSAccessKeyDestroy(s *terraform.State) error {
+func testAccCheckAccessKeyDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -161,7 +161,7 @@ func testAccCheckAWSAccessKeyDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSAccessKeyExists(n string, res *iam.AccessKeyMetadata) resource.TestCheckFunc {
+func testAccCheckAccessKeyExists(n string, res *iam.AccessKeyMetadata) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -193,7 +193,7 @@ func testAccCheckAWSAccessKeyExists(n string, res *iam.AccessKeyMetadata) resour
 	}
 }
 
-func testAccCheckAWSAccessKeyAttributes(accessKeyMetadata *iam.AccessKeyMetadata, status string) resource.TestCheckFunc {
+func testAccCheckAccessKeyAttributes(accessKeyMetadata *iam.AccessKeyMetadata, status string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if !strings.Contains(*accessKeyMetadata.UserName, acctest.ResourcePrefix) {
 			return fmt.Errorf("Bad username: %s", *accessKeyMetadata.UserName)
@@ -239,7 +239,7 @@ func testDecryptSecretKeyAndTest(nAccessKey, key string) resource.TestCheckFunc 
 	}
 }
 
-func testAccAWSAccessKeyConfig(rName string) string {
+func testAccAccessKeyConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "test" {
   name = %[1]q
@@ -251,7 +251,7 @@ resource "aws_iam_access_key" "test" {
 `, rName)
 }
 
-func testAccAWSAccessKeyConfig_encrypted(rName, key string) string {
+func testAccAccessKeyConfig_encrypted(rName, key string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "test" {
   name = %[1]q
@@ -267,7 +267,7 @@ EOF
 `, rName, key)
 }
 
-func testAccAWSAccessKeyConfig_Status(rName string, status string) string {
+func testAccAccessKeyConfig_Status(rName string, status string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "test" {
   name = %[1]q

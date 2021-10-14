@@ -103,7 +103,7 @@ func TestAccAWSDataSourceIAMSessionContext_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsIAMSessionContextConfig(rName, "/", "session-id"),
+				Config: testAccSessionContextConfig(rName, "/", "session-id"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "issuer_arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "issuer_id", resourceName, "unique_id"),
@@ -126,7 +126,7 @@ func TestAccAWSDataSourceIAMSessionContext_withPath(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsIAMSessionContextConfig(rName, "/this/is/a/long/path/", "session-id"),
+				Config: testAccSessionContextConfig(rName, "/this/is/a/long/path/", "session-id"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "issuer_arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "issuer_name", resourceName, "name"),
@@ -148,7 +148,7 @@ func TestAccAWSDataSourceIAMSessionContext_notAssumedRole(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsIAMSessionContextNotAssumedConfig(rName, "/"),
+				Config: testAccSessionContextNotAssumedConfig(rName, "/"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "issuer_arn", resourceName, "arn"),
 					resource.TestCheckResourceAttr(dataSourceName, "issuer_name", ""),
@@ -170,7 +170,7 @@ func TestAccAWSDataSourceIAMSessionContext_notAssumedRoleWithPath(t *testing.T) 
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsIAMSessionContextNotAssumedConfig(rName, "/this/is/a/long/path/"),
+				Config: testAccSessionContextNotAssumedConfig(rName, "/this/is/a/long/path/"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "issuer_arn", resourceName, "arn"),
 					resource.TestCheckResourceAttr(dataSourceName, "issuer_name", ""),
@@ -191,7 +191,7 @@ func TestAccAWSDataSourceIAMSessionContext_notAssumedRoleUser(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsIAMSessionContextUserConfig(rName),
+				Config: testAccSessionContextUserConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckResourceAttrGlobalARN(dataSourceName, "arn", "iam", fmt.Sprintf("user/division/extra-division/not-assumed-role/%[1]s", rName)),
 					resource.TestCheckResourceAttr(dataSourceName, "issuer_name", ""),
@@ -202,7 +202,7 @@ func TestAccAWSDataSourceIAMSessionContext_notAssumedRoleUser(t *testing.T) {
 	})
 }
 
-func testAccAwsIAMSessionContextConfig(rName, path, sessionID string) string {
+func testAccSessionContextConfig(rName, path, sessionID string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -230,7 +230,7 @@ data "aws_iam_session_context" "test" {
 `, rName, path, sessionID)
 }
 
-func testAccAwsIAMSessionContextNotAssumedConfig(rName, path string) string {
+func testAccSessionContextNotAssumedConfig(rName, path string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -257,7 +257,7 @@ data "aws_iam_session_context" "test" {
 `, rName, path)
 }
 
-func testAccAwsIAMSessionContextUserConfig(rName string) string {
+func testAccSessionContextUserConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 data "aws_caller_identity" "current" {}

@@ -15,10 +15,10 @@ import (
 func TestAccAWSIAMAccountAlias_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"DataSource": {
-			"basic": testAccAWSIAMAccountAliasDataSource_basic,
+			"basic": testAccAccountAliasDataSource_basic,
 		},
 		"Resource": {
-			"basic": testAccAWSIAMAccountAlias_basic,
+			"basic": testAccAccountAlias_basic,
 		},
 	}
 
@@ -35,7 +35,7 @@ func TestAccAWSIAMAccountAlias_serial(t *testing.T) {
 	}
 }
 
-func testAccAWSIAMAccountAlias_basic(t *testing.T) {
+func testAccAccountAlias_basic(t *testing.T) {
 	resourceName := "aws_iam_account_alias.test"
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -44,12 +44,12 @@ func testAccAWSIAMAccountAlias_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSIAMAccountAliasDestroy,
+		CheckDestroy: testAccCheckAccountAliasDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSIAMAccountAliasConfig(rName),
+				Config: testAccAccountAliasConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSIAMAccountAliasExists(resourceName),
+					testAccCheckAccountAliasExists(resourceName),
 				),
 			},
 			{
@@ -61,7 +61,7 @@ func testAccAWSIAMAccountAlias_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSIAMAccountAliasDestroy(s *terraform.State) error {
+func testAccCheckAccountAliasDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -90,7 +90,7 @@ func testAccCheckAWSIAMAccountAliasDestroy(s *terraform.State) error {
 
 }
 
-func testAccCheckAWSIAMAccountAliasExists(n string) resource.TestCheckFunc {
+func testAccCheckAccountAliasExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -118,7 +118,7 @@ func testAccCheckAWSIAMAccountAliasExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccAWSIAMAccountAliasConfig(rName string) string {
+func testAccAccountAliasConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_account_alias" "test" {
   account_alias = %[1]q

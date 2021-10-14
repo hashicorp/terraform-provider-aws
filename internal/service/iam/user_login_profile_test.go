@@ -72,12 +72,12 @@ func TestAccAWSUserLoginProfile_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSUserLoginProfileDestroy,
+		CheckDestroy: testAccCheckUserLoginProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSUserLoginProfileConfig_Required(username, "/", testPubKey1),
+				Config: testAccUserLoginProfileConfig_Required(username, "/", testPubKey1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSUserLoginProfileExists("aws_iam_user_login_profile.user", &conf),
+					testAccCheckUserLoginProfileExists("aws_iam_user_login_profile.user", &conf),
 					testDecryptPasswordAndTest("aws_iam_user_login_profile.user", "aws_iam_access_key.user", testPrivKey1),
 					resource.TestCheckResourceAttrSet("aws_iam_user_login_profile.user", "encrypted_password"),
 					resource.TestCheckResourceAttrSet("aws_iam_user_login_profile.user", "key_fingerprint"),
@@ -111,12 +111,12 @@ func TestAccAWSUserLoginProfile_keybase(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSUserLoginProfileDestroy,
+		CheckDestroy: testAccCheckUserLoginProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSUserLoginProfileConfig_Required(username, "/", "keybase:terraformacctest"),
+				Config: testAccUserLoginProfileConfig_Required(username, "/", "keybase:terraformacctest"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSUserLoginProfileExists("aws_iam_user_login_profile.user", &conf),
+					testAccCheckUserLoginProfileExists("aws_iam_user_login_profile.user", &conf),
 					resource.TestCheckResourceAttrSet("aws_iam_user_login_profile.user", "encrypted_password"),
 					resource.TestCheckResourceAttrSet("aws_iam_user_login_profile.user", "key_fingerprint"),
 					resource.TestCheckResourceAttr("aws_iam_user_login_profile.user", "password_length", "20"),
@@ -147,11 +147,11 @@ func TestAccAWSUserLoginProfile_keybaseDoesntExist(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSUserLoginProfileDestroy,
+		CheckDestroy: testAccCheckUserLoginProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				// We own this account but it doesn't have any key associated with it
-				Config:      testAccAWSUserLoginProfileConfig_Required(username, "/", "keybase:terraform_nope"),
+				Config:      testAccUserLoginProfileConfig_Required(username, "/", "keybase:terraform_nope"),
 				ExpectError: regexp.MustCompile(`Error retrieving Public Key`),
 			},
 		},
@@ -165,11 +165,11 @@ func TestAccAWSUserLoginProfile_notAKey(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSUserLoginProfileDestroy,
+		CheckDestroy: testAccCheckUserLoginProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				// We own this account but it doesn't have any key associated with it
-				Config:      testAccAWSUserLoginProfileConfig_Required(username, "/", "lolimnotakey"),
+				Config:      testAccUserLoginProfileConfig_Required(username, "/", "lolimnotakey"),
 				ExpectError: regexp.MustCompile(`Error encrypting Password`),
 			},
 		},
@@ -185,12 +185,12 @@ func TestAccAWSUserLoginProfile_PasswordLength(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSUserLoginProfileDestroy,
+		CheckDestroy: testAccCheckUserLoginProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSUserLoginProfileConfig_PasswordLength(username, "/", testPubKey1, 128),
+				Config: testAccUserLoginProfileConfig_PasswordLength(username, "/", testPubKey1, 128),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSUserLoginProfileExists("aws_iam_user_login_profile.user", &conf),
+					testAccCheckUserLoginProfileExists("aws_iam_user_login_profile.user", &conf),
 					resource.TestCheckResourceAttr("aws_iam_user_login_profile.user", "password_length", "128"),
 				),
 			},
@@ -210,7 +210,7 @@ func TestAccAWSUserLoginProfile_PasswordLength(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSUserLoginProfileDestroy(s *terraform.State) error {
+func testAccCheckUserLoginProfileDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -296,7 +296,7 @@ func testDecryptPasswordAndTest(nProfile, nAccessKey, key string) resource.TestC
 	}
 }
 
-func testAccCheckAWSUserLoginProfileExists(n string, res *iam.GetLoginProfileOutput) resource.TestCheckFunc {
+func testAccCheckUserLoginProfileExists(n string, res *iam.GetLoginProfileOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -321,7 +321,7 @@ func testAccCheckAWSUserLoginProfileExists(n string, res *iam.GetLoginProfileOut
 	}
 }
 
-func testAccAWSUserLoginProfileConfig_base(rName, path string) string {
+func testAccUserLoginProfileConfig_base(rName, path string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "user" {
   name          = "%s"
@@ -359,7 +359,7 @@ resource "aws_iam_access_key" "user" {
 `, rName, path)
 }
 
-func testAccAWSUserLoginProfileConfig_PasswordLength(rName, path, pgpKey string, passwordLength int) string {
+func testAccUserLoginProfileConfig_PasswordLength(rName, path, pgpKey string, passwordLength int) string {
 	return fmt.Sprintf(`
 %s
 
@@ -371,10 +371,10 @@ resource "aws_iam_user_login_profile" "user" {
 %s
 EOF
 }
-`, testAccAWSUserLoginProfileConfig_base(rName, path), passwordLength, pgpKey)
+`, testAccUserLoginProfileConfig_base(rName, path), passwordLength, pgpKey)
 }
 
-func testAccAWSUserLoginProfileConfig_Required(rName, path, pgpKey string) string {
+func testAccUserLoginProfileConfig_Required(rName, path, pgpKey string) string {
 	return fmt.Sprintf(`
 %s
 
@@ -385,7 +385,7 @@ resource "aws_iam_user_login_profile" "user" {
 %s
 EOF
 }
-`, testAccAWSUserLoginProfileConfig_base(rName, path), pgpKey)
+`, testAccUserLoginProfileConfig_base(rName, path), pgpKey)
 }
 
 const testPubKey1 = `mQENBFXbjPUBCADjNjCUQwfxKL+RR2GA6pv/1K+zJZ8UWIF9S0lk7cVIEfJiprzzwiMwBS5cD0da

@@ -21,10 +21,10 @@ func TestAccAWSDataSourceIAMPolicyDocument_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSIAMPolicyDocumentConfig,
+				Config: testAccPolicyDocumentConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test", "json",
-						testAccAWSIAMPolicyDocumentExpectedJSON(),
+						testAccPolicyDocumentExpectedJSON(),
 					),
 				),
 			},
@@ -42,18 +42,18 @@ func TestAccAWSDataSourceIAMPolicyDocument_source(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSIAMPolicyDocumentSourceConfig,
+				Config: testAccPolicyDocumentSourceConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test_source", "json",
-						testAccAWSIAMPolicyDocumentSourceExpectedJSON(),
+						testAccPolicyDocumentSourceExpectedJSON(),
 					),
 				),
 			},
 			{
-				Config: testAccAWSIAMPolicyDocumentSourceBlankConfig,
+				Config: testAccPolicyDocumentSourceBlankConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test_source_blank", "json",
-						testAccAWSIAMPolicyDocumentSourceBlankExpectedJSON,
+						testAccPolicyDocumentSourceBlankExpectedJSON,
 					),
 				),
 			},
@@ -68,10 +68,10 @@ func TestAccAWSDataSourceIAMPolicyDocument_sourceList(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSIAMPolicyDocumentSourceListConfig,
+				Config: testAccPolicyDocumentSourceListConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test_source_list", "json",
-						testAccAWSIAMPolicyDocumentSourceListExpectedJSON,
+						testAccPolicyDocumentSourceListExpectedJSON,
 					),
 				),
 			},
@@ -86,10 +86,10 @@ func TestAccAWSDataSourceIAMPolicyDocument_sourceConflicting(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSIAMPolicyDocumentSourceConflictingConfig,
+				Config: testAccPolicyDocumentSourceConflictingConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test_source_conflicting", "json",
-						testAccAWSIAMPolicyDocumentSourceConflictingExpectedJSON,
+						testAccPolicyDocumentSourceConflictingExpectedJSON,
 					),
 				),
 			},
@@ -104,7 +104,7 @@ func TestAccAWSDataSourceIAMPolicyDocument_sourceListConflicting(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAWSIAMPolicyDocumentSourceListConflictingConfig,
+				Config:      testAccPolicyDocumentSourceListConflictingConfig,
 				ExpectError: regexp.MustCompile(`duplicate Sid (.*?)`),
 			},
 		},
@@ -118,10 +118,10 @@ func TestAccAWSDataSourceIAMPolicyDocument_override(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSIAMPolicyDocumentOverrideConfig,
+				Config: testAccPolicyDocumentOverrideConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test_override", "json",
-						testAccAWSIAMPolicyDocumentOverrideExpectedJSON,
+						testAccPolicyDocumentOverrideExpectedJSON,
 					),
 				),
 			},
@@ -136,10 +136,10 @@ func TestAccAWSDataSourceIAMPolicyDocument_overrideList(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSIAMPolicyDocumentOverrideListConfig,
+				Config: testAccPolicyDocumentOverrideListConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test_override_list", "json",
-						testAccAWSIAMPolicyDocumentOverrideListExpectedJSON,
+						testAccPolicyDocumentOverrideListExpectedJSON,
 					),
 				),
 			},
@@ -154,10 +154,10 @@ func TestAccAWSDataSourceIAMPolicyDocument_noStatementMerge(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSIAMPolicyDocumentNoStatementMergeConfig,
+				Config: testAccPolicyDocumentNoStatementMergeConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_iam_policy_document.yak_politik", "json",
-						testAccAWSIAMPolicyDocumentNoStatementMergeExpectedJSON,
+						testAccPolicyDocumentNoStatementMergeExpectedJSON,
 					),
 				),
 			},
@@ -172,10 +172,10 @@ func TestAccAWSDataSourceIAMPolicyDocument_noStatementOverride(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSIAMPolicyDocumentNoStatementOverrideConfig,
+				Config: testAccPolicyDocumentNoStatementOverrideConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_iam_policy_document.yak_politik", "json",
-						testAccAWSIAMPolicyDocumentNoStatementOverrideExpectedJSON,
+						testAccPolicyDocumentNoStatementOverrideExpectedJSON,
 					),
 				),
 			},
@@ -190,14 +190,14 @@ func TestAccAWSDataSourceIAMPolicyDocument_duplicateSid(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAWSIAMPolicyDocumentDuplicateSidConfig,
+				Config:      testAccPolicyDocumentDuplicateSidConfig,
 				ExpectError: regexp.MustCompile(`duplicate Sid`),
 			},
 			{
-				Config: testAccAWSIAMPolicyDocumentDuplicateBlankSidConfig,
+				Config: testAccPolicyDocumentDuplicateBlankSidConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test", "json",
-						testAccAWSIAMPolicyDocumentDuplicateBlankSidExpectedJSON,
+						testAccPolicyDocumentDuplicateBlankSidExpectedJSON,
 					),
 				),
 			},
@@ -215,9 +215,9 @@ func TestAccAWSDataSourceIAMPolicyDocument_statementPrincipalIdentifiers_stringA
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSIAMPolicyDocumentConfigStatementPrincipalIdentifiersStringAndSlice,
+				Config: testAccPolicyDocumentStatementPrincipalIdentifiersStringAndSliceConfig,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "json", testAccAWSIAMPolicyDocumentExpectedJSONStatementPrincipalIdentifiersStringAndSlice()),
+					resource.TestCheckResourceAttr(dataSourceName, "json", testAccPolicyDocumentExpectedJSONStatementPrincipalIdentifiersStringAndSlice()),
 				),
 			},
 		},
@@ -234,9 +234,9 @@ func TestAccAWSDataSourceIAMPolicyDocument_statementPrincipalIdentifiers_multipl
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSIAMPolicyDocumentConfigStatementPrincipalIdentifiersMultiplePrincipals,
+				Config: testAccPolicyDocumentStatementPrincipalIdentifiersMultiplePrincipalsConfig,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "json", testAccAWSIAMPolicyDocumentExpectedJSONStatementPrincipalIdentifiersMultiplePrincipalsAWS()),
+					resource.TestCheckResourceAttr(dataSourceName, "json", testAccPolicyDocumentExpectedJSONStatementPrincipalIdentifiersMultiplePrincipalsAWS()),
 				),
 			},
 		},
@@ -252,9 +252,9 @@ func TestAccAWSDataSourceIAMPolicyDocument_statementPrincipalIdentifiers_multipl
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSIAMPolicyDocumentConfigStatementPrincipalIdentifiersMultiplePrincipals,
+				Config: testAccPolicyDocumentStatementPrincipalIdentifiersMultiplePrincipalsConfig,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "json", testAccAWSIAMPolicyDocumentExpectedJSONStatementPrincipalIdentifiersMultiplePrincipalsGov()),
+					resource.TestCheckResourceAttr(dataSourceName, "json", testAccPolicyDocumentExpectedJSONStatementPrincipalIdentifiersMultiplePrincipalsGov()),
 				),
 			},
 		},
@@ -268,36 +268,36 @@ func TestAccAWSDataSourceIAMPolicyDocument_version20081017(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAWSIAMPolicyDocumentDataSourceConfigVersion20081017ConversionCondition,
+				Config:      testAccPolicyDocumentVersion20081017ConversionConditionDataSourceConfig,
 				ExpectError: regexp.MustCompile(`found \&\{ sequence in \(.+\), which is not supported in document version 2008-10-17`),
 			},
 			{
-				Config:      testAccAWSIAMPolicyDocumentDataSourceConfigVersion20081017ConversionNotPrincipals,
+				Config:      testAccPolicyDocumentVersion20081017ConversionNotPrincipalsDataSourceConfig,
 				ExpectError: regexp.MustCompile(`found \&\{ sequence in \(.+\), which is not supported in document version 2008-10-17`),
 			},
 			{
-				Config:      testAccAWSIAMPolicyDocumentDataSourceConfigVersion20081017ConversionNotResources,
+				Config:      testAccPolicyDocumentVersion20081017ConversionNotResourcesDataSourceConfig,
 				ExpectError: regexp.MustCompile(`found \&\{ sequence in \(.+\), which is not supported in document version 2008-10-17`),
 			},
 			{
-				Config:      testAccAWSIAMPolicyDocumentDataSourceConfigVersion20081017ConversionPrincipal,
+				Config:      testAccPolicyDocumentVersion20081017ConversionPrincipalDataSourceConfig,
 				ExpectError: regexp.MustCompile(`found \&\{ sequence in \(.+\), which is not supported in document version 2008-10-17`),
 			},
 			{
-				Config:      testAccAWSIAMPolicyDocumentDataSourceConfigVersion20081017ConversionResources,
+				Config:      testAccPolicyDocumentVersion20081017ConversionResourcesDataSourceConfig,
 				ExpectError: regexp.MustCompile(`found \&\{ sequence in \(.+\), which is not supported in document version 2008-10-17`),
 			},
 			{
-				Config: testAccAWSIAMPolicyDocumentDataSourceConfigVersion20081017,
+				Config: testAccPolicyDocumentVersion20081017DataSourceConfig,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test", "json", testAccAWSIAMPolicyDocumentDataSourceConfigVersion20081017ExpectedJSON),
+					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test", "json", testAccPolicyDocumentVersion20081017ExpectedJSONDataSourceConfig),
 				),
 			},
 		},
 	})
 }
 
-var testAccAWSIAMPolicyDocumentConfig = `
+var testAccPolicyDocumentConfig = `
 data "aws_partition" "current" {}
 
 data "aws_iam_policy_document" "test" {
@@ -385,7 +385,7 @@ data "aws_iam_policy_document" "test" {
 }
 `
 
-func testAccAWSIAMPolicyDocumentExpectedJSON() string {
+func testAccPolicyDocumentExpectedJSON() string {
 	return fmt.Sprintf(`{
   "Version": "2012-10-17",
   "Id": "policy_id",
@@ -453,7 +453,7 @@ func testAccAWSIAMPolicyDocumentExpectedJSON() string {
 }`, acctest.Partition())
 }
 
-var testAccAWSIAMPolicyDocumentSourceConfig = `
+var testAccPolicyDocumentSourceConfig = `
 data "aws_partition" "current" {}
 
 data "aws_iam_policy_document" "test" {
@@ -553,7 +553,7 @@ data "aws_iam_policy_document" "test_source" {
 }
 `
 
-func testAccAWSIAMPolicyDocumentSourceExpectedJSON() string {
+func testAccPolicyDocumentSourceExpectedJSON() string {
 	return fmt.Sprintf(`{
   "Version": "2012-10-17",
   "Id": "policy_id",
@@ -629,7 +629,7 @@ func testAccAWSIAMPolicyDocumentSourceExpectedJSON() string {
 }`, acctest.Partition())
 }
 
-var testAccAWSIAMPolicyDocumentSourceListConfig = `
+var testAccPolicyDocumentSourceListConfig = `
 data "aws_iam_policy_document" "policy_a" {
   statement {
     sid     = ""
@@ -670,7 +670,7 @@ data "aws_iam_policy_document" "test_source_list" {
   ]
 }
 `
-var testAccAWSIAMPolicyDocumentSourceListExpectedJSON = `{
+var testAccPolicyDocumentSourceListExpectedJSON = `{
   "Version": "2012-10-17",
   "Statement": [
     {
@@ -696,7 +696,7 @@ var testAccAWSIAMPolicyDocumentSourceListExpectedJSON = `{
   ]
 }`
 
-var testAccAWSIAMPolicyDocumentSourceBlankConfig = `
+var testAccPolicyDocumentSourceBlankConfig = `
 data "aws_iam_policy_document" "test_source_blank" {
   source_json = ""
 
@@ -708,7 +708,7 @@ data "aws_iam_policy_document" "test_source_blank" {
 }
 `
 
-var testAccAWSIAMPolicyDocumentSourceBlankExpectedJSON = `{
+var testAccPolicyDocumentSourceBlankExpectedJSON = `{
   "Version": "2012-10-17",
   "Statement": [
     {
@@ -720,7 +720,7 @@ var testAccAWSIAMPolicyDocumentSourceBlankExpectedJSON = `{
   ]
 }`
 
-var testAccAWSIAMPolicyDocumentSourceConflictingConfig = `
+var testAccPolicyDocumentSourceConflictingConfig = `
 data "aws_iam_policy_document" "test_source" {
   statement {
     sid       = "SourceJSONTestConflicting"
@@ -740,7 +740,7 @@ data "aws_iam_policy_document" "test_source_conflicting" {
 }
 `
 
-var testAccAWSIAMPolicyDocumentSourceConflictingExpectedJSON = `{
+var testAccPolicyDocumentSourceConflictingExpectedJSON = `{
   "Version": "2012-10-17",
   "Statement": [
     {
@@ -752,7 +752,7 @@ var testAccAWSIAMPolicyDocumentSourceConflictingExpectedJSON = `{
   ]
 }`
 
-var testAccAWSIAMPolicyDocumentSourceListConflictingConfig = `
+var testAccPolicyDocumentSourceListConflictingConfig = `
 data "aws_iam_policy_document" "policy_a" {
   statement {
     sid     = ""
@@ -794,7 +794,7 @@ data "aws_iam_policy_document" "test_source_list_conflicting" {
 }
 `
 
-var testAccAWSIAMPolicyDocumentOverrideConfig = `
+var testAccPolicyDocumentOverrideConfig = `
 data "aws_partition" "current" {}
 
 data "aws_iam_policy_document" "override" {
@@ -827,7 +827,7 @@ data "aws_iam_policy_document" "test_override" {
 }
 `
 
-var testAccAWSIAMPolicyDocumentOverrideExpectedJSON = `{
+var testAccPolicyDocumentOverrideExpectedJSON = `{
   "Version": "2012-10-17",
   "Statement": [
     {
@@ -845,7 +845,7 @@ var testAccAWSIAMPolicyDocumentOverrideExpectedJSON = `{
   ]
 }`
 
-var testAccAWSIAMPolicyDocumentOverrideListConfig = `
+var testAccPolicyDocumentOverrideListConfig = `
 data "aws_iam_policy_document" "policy_a" {
   statement {
     sid     = ""
@@ -887,7 +887,7 @@ data "aws_iam_policy_document" "test_override_list" {
 }
 `
 
-var testAccAWSIAMPolicyDocumentOverrideListExpectedJSON = `{
+var testAccPolicyDocumentOverrideListExpectedJSON = `{
   "Version": "2012-10-17",
   "Statement": [
     {
@@ -908,7 +908,7 @@ var testAccAWSIAMPolicyDocumentOverrideListExpectedJSON = `{
   ]
 }`
 
-var testAccAWSIAMPolicyDocumentNoStatementMergeConfig = `
+var testAccPolicyDocumentNoStatementMergeConfig = `
 data "aws_iam_policy_document" "source" {
   statement {
     sid       = ""
@@ -931,7 +931,7 @@ data "aws_iam_policy_document" "yak_politik" {
 }
 `
 
-var testAccAWSIAMPolicyDocumentNoStatementMergeExpectedJSON = `{
+var testAccPolicyDocumentNoStatementMergeExpectedJSON = `{
   "Version": "2012-10-17",
   "Statement": [
     {
@@ -949,7 +949,7 @@ var testAccAWSIAMPolicyDocumentNoStatementMergeExpectedJSON = `{
   ]
 }`
 
-var testAccAWSIAMPolicyDocumentNoStatementOverrideConfig = `
+var testAccPolicyDocumentNoStatementOverrideConfig = `
 data "aws_iam_policy_document" "source" {
   statement {
     sid       = "OverridePlaceholder"
@@ -972,7 +972,7 @@ data "aws_iam_policy_document" "yak_politik" {
 }
 `
 
-var testAccAWSIAMPolicyDocumentNoStatementOverrideExpectedJSON = `{
+var testAccPolicyDocumentNoStatementOverrideExpectedJSON = `{
   "Version": "2012-10-17",
   "Statement": [
     {
@@ -984,7 +984,7 @@ var testAccAWSIAMPolicyDocumentNoStatementOverrideExpectedJSON = `{
   ]
 }`
 
-var testAccAWSIAMPolicyDocumentDuplicateSidConfig = `
+var testAccPolicyDocumentDuplicateSidConfig = `
 data "aws_iam_policy_document" "test" {
   statement {
     sid       = "1"
@@ -1002,7 +1002,7 @@ data "aws_iam_policy_document" "test" {
 }
 `
 
-var testAccAWSIAMPolicyDocumentDuplicateBlankSidConfig = `
+var testAccPolicyDocumentDuplicateBlankSidConfig = `
 data "aws_iam_policy_document" "test" {
   statement {
     sid       = ""
@@ -1020,7 +1020,7 @@ data "aws_iam_policy_document" "test" {
 }
 `
 
-var testAccAWSIAMPolicyDocumentDuplicateBlankSidExpectedJSON = `{
+var testAccPolicyDocumentDuplicateBlankSidExpectedJSON = `{
   "Version": "2012-10-17",
   "Statement": [
     {
@@ -1038,7 +1038,7 @@ var testAccAWSIAMPolicyDocumentDuplicateBlankSidExpectedJSON = `{
   ]
 }`
 
-const testAccAWSIAMPolicyDocumentDataSourceConfigVersion20081017 = `
+const testAccPolicyDocumentVersion20081017DataSourceConfig = `
 data "aws_iam_policy_document" "test" {
   version = "2008-10-17"
 
@@ -1049,7 +1049,7 @@ data "aws_iam_policy_document" "test" {
 }
 `
 
-const testAccAWSIAMPolicyDocumentDataSourceConfigVersion20081017ExpectedJSON = `{
+const testAccPolicyDocumentVersion20081017ExpectedJSONDataSourceConfig = `{
   "Version": "2008-10-17",
   "Statement": [
     {
@@ -1061,7 +1061,7 @@ const testAccAWSIAMPolicyDocumentDataSourceConfigVersion20081017ExpectedJSON = `
   ]
 }`
 
-const testAccAWSIAMPolicyDocumentDataSourceConfigVersion20081017ConversionCondition = `
+const testAccPolicyDocumentVersion20081017ConversionConditionDataSourceConfig = `
 data "aws_iam_policy_document" "test" {
   version = "2008-10-17"
 
@@ -1081,7 +1081,7 @@ data "aws_iam_policy_document" "test" {
 }
 `
 
-const testAccAWSIAMPolicyDocumentDataSourceConfigVersion20081017ConversionNotPrincipals = `
+const testAccPolicyDocumentVersion20081017ConversionNotPrincipalsDataSourceConfig = `
 data "aws_iam_policy_document" "test" {
   version = "2008-10-17"
 
@@ -1097,7 +1097,7 @@ data "aws_iam_policy_document" "test" {
 }
 `
 
-const testAccAWSIAMPolicyDocumentDataSourceConfigVersion20081017ConversionNotResources = `
+const testAccPolicyDocumentVersion20081017ConversionNotResourcesDataSourceConfig = `
 data "aws_partition" "current" {}
 
 data "aws_iam_policy_document" "test" {
@@ -1110,7 +1110,7 @@ data "aws_iam_policy_document" "test" {
 }
 `
 
-const testAccAWSIAMPolicyDocumentDataSourceConfigVersion20081017ConversionPrincipal = `
+const testAccPolicyDocumentVersion20081017ConversionPrincipalDataSourceConfig = `
 data "aws_iam_policy_document" "test" {
   version = "2008-10-17"
 
@@ -1126,7 +1126,7 @@ data "aws_iam_policy_document" "test" {
 }
 `
 
-const testAccAWSIAMPolicyDocumentDataSourceConfigVersion20081017ConversionResources = `
+const testAccPolicyDocumentVersion20081017ConversionResourcesDataSourceConfig = `
 data "aws_partition" "current" {}
 
 data "aws_iam_policy_document" "test" {
@@ -1139,7 +1139,7 @@ data "aws_iam_policy_document" "test" {
 }
 `
 
-var testAccAWSIAMPolicyDocumentConfigStatementPrincipalIdentifiersStringAndSlice = `
+var testAccPolicyDocumentStatementPrincipalIdentifiersStringAndSliceConfig = `
 data "aws_partition" "current" {}
 
 data "aws_iam_policy_document" "test" {
@@ -1161,7 +1161,7 @@ data "aws_iam_policy_document" "test" {
 }
 `
 
-func testAccAWSIAMPolicyDocumentExpectedJSONStatementPrincipalIdentifiersStringAndSlice() string {
+func testAccPolicyDocumentExpectedJSONStatementPrincipalIdentifiersStringAndSlice() string {
 	return fmt.Sprintf(`{
   "Version": "2012-10-17",
   "Statement": [
@@ -1182,7 +1182,7 @@ func testAccAWSIAMPolicyDocumentExpectedJSONStatementPrincipalIdentifiersStringA
 }`, acctest.Partition())
 }
 
-var testAccAWSIAMPolicyDocumentConfigStatementPrincipalIdentifiersMultiplePrincipals = `
+var testAccPolicyDocumentStatementPrincipalIdentifiersMultiplePrincipalsConfig = `
 data "aws_partition" "current" {}
 
 data "aws_iam_policy_document" "test" {
@@ -1216,7 +1216,7 @@ data "aws_iam_policy_document" "test" {
 }
 `
 
-func testAccAWSIAMPolicyDocumentExpectedJSONStatementPrincipalIdentifiersMultiplePrincipalsAWS() string {
+func testAccPolicyDocumentExpectedJSONStatementPrincipalIdentifiersMultiplePrincipalsAWS() string {
 	return fmt.Sprintf(`{
   "Version": "2012-10-17",
   "Statement": [
@@ -1238,7 +1238,7 @@ func testAccAWSIAMPolicyDocumentExpectedJSONStatementPrincipalIdentifiersMultipl
 }`, acctest.Partition())
 }
 
-func testAccAWSIAMPolicyDocumentExpectedJSONStatementPrincipalIdentifiersMultiplePrincipalsGov() string {
+func testAccPolicyDocumentExpectedJSONStatementPrincipalIdentifiersMultiplePrincipalsGov() string {
 	return fmt.Sprintf(`{
   "Version": "2012-10-17",
   "Statement": [

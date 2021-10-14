@@ -21,7 +21,7 @@ func TestAccAWSIAMRolesDataSource_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSIAMRolesConfigDataSource_basic,
+				Config: testAccRolesDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, "names.#", regexp.MustCompile("[^0].*$")),
 				),
@@ -41,7 +41,7 @@ func TestAccAWSIAMRolesDataSource_nameRegex(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSIAMRolesConfigDataSource_nameRegex(rCount, rName),
+				Config: testAccRolesDataSourceConfig_nameRegex(rCount, rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "names.#", rCount),
 					resource.TestCheckResourceAttr(dataSourceName, "arns.#", rCount),
@@ -63,7 +63,7 @@ func TestAccAWSIAMRolesDataSource_pathPrefix(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSIAMRolesConfigDataSource_pathPrefix(rCount, rName, rPathPrefix),
+				Config: testAccRolesDataSourceConfig_pathPrefix(rCount, rName, rPathPrefix),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "names.#", rCount),
 					resource.TestCheckResourceAttr(dataSourceName, "arns.#", rCount),
@@ -82,7 +82,7 @@ func TestAccAWSIAMRolesDataSource_nonExistentPathPrefix(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSIAMRolesConfigDataSource_nonExistentPathPrefix,
+				Config: testAccRolesDataSourceConfig_nonExistentPathPrefix,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "arns.#", "0"),
 					resource.TestCheckResourceAttr(dataSourceName, "names.#", "0"),
@@ -104,7 +104,7 @@ func TestAccAWSIAMRolesDataSource_nameRegexAndPathPrefix(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSIAMRolesConfigDataSource_nameRegexAndPathPrefix(rCount, rName, rPathPrefix, "0"),
+				Config: testAccRolesDataSourceConfig_nameRegexAndPathPrefix(rCount, rName, rPathPrefix, "0"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "names.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "arns.#", "1"),
@@ -114,11 +114,11 @@ func TestAccAWSIAMRolesDataSource_nameRegexAndPathPrefix(t *testing.T) {
 	})
 }
 
-const testAccAWSIAMRolesConfigDataSource_basic = `
+const testAccRolesDataSourceConfig_basic = `
 data "aws_iam_roles" "test" {}
 `
 
-func testAccAWSIAMRolesConfigDataSource_nameRegex(rCount, rName string) string {
+func testAccRolesDataSourceConfig_nameRegex(rCount, rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -152,7 +152,7 @@ data "aws_iam_roles" "test" {
 `, rCount, rName)
 }
 
-func testAccAWSIAMRolesConfigDataSource_pathPrefix(rCount, rName, rPathPrefix string) string {
+func testAccRolesDataSourceConfig_pathPrefix(rCount, rName, rPathPrefix string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -185,13 +185,13 @@ data "aws_iam_roles" "test" {
 `, rCount, rName, rPathPrefix)
 }
 
-const testAccAWSIAMRolesConfigDataSource_nonExistentPathPrefix = `
+const testAccRolesDataSourceConfig_nonExistentPathPrefix = `
 data "aws_iam_roles" "test" {
   path_prefix = "/dne/path"
 }
 `
 
-func testAccAWSIAMRolesConfigDataSource_nameRegexAndPathPrefix(rCount, rName, rPathPrefix, rIndex string) string {
+func testAccRolesDataSourceConfig_nameRegexAndPathPrefix(rCount, rName, rPathPrefix, rIndex string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 

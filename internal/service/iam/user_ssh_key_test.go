@@ -28,18 +28,18 @@ func TestAccAWSUserSSHKey_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSUserSSHKeyDestroy,
+		CheckDestroy: testAccCheckUserSSHKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSSHKeyConfig_sshEncoding(rName, publicKey),
+				Config: testAccSSHKeyConfig_sshEncoding(rName, publicKey),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSUserSSHKeyExists(resourceName, "Inactive", &conf),
+					testAccCheckUserSSHKeyExists(resourceName, "Inactive", &conf),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSUserSSHKeyImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccUserSSHKeyImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -50,32 +50,32 @@ func TestAccAWSUserSSHKey_pemEncoding(t *testing.T) {
 	var conf iam.GetSSHPublicKeyOutput
 
 	ri := sdkacctest.RandInt()
-	config := fmt.Sprintf(testAccAWSSSHKeyConfig_pemEncoding, ri)
+	config := fmt.Sprintf(testAccSSHKeyConfig_pemEncoding, ri)
 	resourceName := "aws_iam_user_ssh_key.user"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSUserSSHKeyDestroy,
+		CheckDestroy: testAccCheckUserSSHKeyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSUserSSHKeyExists(resourceName, "Active", &conf),
+					testAccCheckUserSSHKeyExists(resourceName, "Active", &conf),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSUserSSHKeyImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccUserSSHKeyImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
-func testAccCheckAWSUserSSHKeyDestroy(s *terraform.State) error {
+func testAccCheckUserSSHKeyDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -107,7 +107,7 @@ func testAccCheckAWSUserSSHKeyDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSUserSSHKeyExists(n, status string, res *iam.GetSSHPublicKeyOutput) resource.TestCheckFunc {
+func testAccCheckUserSSHKeyExists(n, status string, res *iam.GetSSHPublicKeyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -143,7 +143,7 @@ func testAccCheckAWSUserSSHKeyExists(n, status string, res *iam.GetSSHPublicKeyO
 	}
 }
 
-func testAccAWSUserSSHKeyImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccUserSSHKeyImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -158,7 +158,7 @@ func testAccAWSUserSSHKeyImportStateIdFunc(resourceName string) resource.ImportS
 	}
 }
 
-func testAccAWSSSHKeyConfig_sshEncoding(rName, publicKey string) string {
+func testAccSSHKeyConfig_sshEncoding(rName, publicKey string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "user" {
   name = %[1]q
@@ -174,7 +174,7 @@ resource "aws_iam_user_ssh_key" "user" {
 `, rName, publicKey)
 }
 
-const testAccAWSSSHKeyConfig_pemEncoding = `
+const testAccSSHKeyConfig_pemEncoding = `
 resource "aws_iam_user" "user" {
   name = "test-user-%d"
   path = "/"

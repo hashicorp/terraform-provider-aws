@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func testAccAWSIAMAccountAliasDataSource_basic(t *testing.T) {
+func testAccAccountAliasDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_iam_account_alias.test"
 	resourceName := "aws_iam_account_alias.test"
 
@@ -20,10 +20,10 @@ func testAccAWSIAMAccountAliasDataSource_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSIAMAccountAliasDestroy,
+		CheckDestroy: testAccCheckAccountAliasDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSIAMAccountAliasDataSourceConfig(rName),
+				Config: testAccAccountAliasDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "account_alias", resourceName, "account_alias"),
 				),
@@ -32,7 +32,7 @@ func testAccAWSIAMAccountAliasDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccAWSIAMAccountAliasDataSourceConfig(rName string) string {
+func testAccAccountAliasDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_account_alias" "test" {
   account_alias = %[1]q

@@ -22,7 +22,7 @@ func TestAccAWSIAMUsersDataSource_nameRegex(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSIAMUsersConfigDataSource_nameRegex(rCount, rName),
+				Config: testAccUsersDataSourceConfig_nameRegex(rCount, rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "names.#", rCount),
 					resource.TestCheckResourceAttr(dataSourceName, "arns.#", rCount),
@@ -44,7 +44,7 @@ func TestAccAWSIAMUsersDataSource_pathPrefix(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSIAMUsersConfigDataSource_pathPrefix(rCount, rName, rPathPrefix),
+				Config: testAccUsersDataSourceConfig_pathPrefix(rCount, rName, rPathPrefix),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "names.#", rCount),
 					resource.TestCheckResourceAttr(dataSourceName, "arns.#", rCount),
@@ -63,7 +63,7 @@ func TestAccAWSIAMUsersDataSource_nonExistentNameRegex(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSIAMUsersConfigDataSource_nonExistentNameRegex,
+				Config: testAccUsersDataSourceConfig_nonExistentNameRegex,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "names.#", "0"),
 					resource.TestCheckResourceAttr(dataSourceName, "arns.#", "0"),
@@ -82,7 +82,7 @@ func TestAccAWSIAMUsersDataSource_nonExistentPathPrefix(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSIAMUsersConfigDataSource_nonExistentPathPrefix,
+				Config: testAccUsersDataSourceConfig_nonExistentPathPrefix,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "names.#", "0"),
 					resource.TestCheckResourceAttr(dataSourceName, "arns.#", "0"),
@@ -92,7 +92,7 @@ func TestAccAWSIAMUsersDataSource_nonExistentPathPrefix(t *testing.T) {
 	})
 }
 
-func testAccAWSIAMUsersConfigDataSource_nameRegex(rCount, rName string) string {
+func testAccUsersDataSourceConfig_nameRegex(rCount, rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "test" {
   count = %[1]q
@@ -109,7 +109,7 @@ data "aws_iam_users" "test" {
 `, rCount, rName)
 }
 
-func testAccAWSIAMUsersConfigDataSource_pathPrefix(rCount, rName, rPathPrefix string) string {
+func testAccUsersDataSourceConfig_pathPrefix(rCount, rName, rPathPrefix string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "test" {
   count = %[1]q
@@ -123,13 +123,13 @@ data "aws_iam_users" "test" {
 `, rCount, rName, rPathPrefix)
 }
 
-const testAccAWSIAMUsersConfigDataSource_nonExistentNameRegex = `
+const testAccUsersDataSourceConfig_nonExistentNameRegex = `
 data "aws_iam_users" "test" {
   name_regex = "dne-regex"
 }
 `
 
-const testAccAWSIAMUsersConfigDataSource_nonExistentPathPrefix = `
+const testAccUsersDataSourceConfig_nonExistentPathPrefix = `
 data "aws_iam_users" "test" {
   path_prefix = "/dne/path"
 }

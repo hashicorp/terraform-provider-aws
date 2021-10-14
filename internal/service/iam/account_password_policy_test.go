@@ -20,12 +20,12 @@ func TestAccAWSIAMAccountPasswordPolicy_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSIAMAccountPasswordPolicyDestroy,
+		CheckDestroy: testAccCheckAccountPasswordPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSIAMAccountPasswordPolicy,
+				Config: testAccAccountPasswordPolicy,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSIAMAccountPasswordPolicyExists(resourceName, &policy),
+					testAccCheckAccountPasswordPolicyExists(resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "minimum_password_length", "8"),
 				),
 			},
@@ -35,9 +35,9 @@ func TestAccAWSIAMAccountPasswordPolicy_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSIAMAccountPasswordPolicy_modified,
+				Config: testAccAccountPasswordPolicy_modified,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSIAMAccountPasswordPolicyExists(resourceName, &policy),
+					testAccCheckAccountPasswordPolicyExists(resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "minimum_password_length", "7"),
 				),
 			},
@@ -45,7 +45,7 @@ func TestAccAWSIAMAccountPasswordPolicy_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSIAMAccountPasswordPolicyDestroy(s *terraform.State) error {
+func testAccCheckAccountPasswordPolicyDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -72,7 +72,7 @@ func testAccCheckAWSIAMAccountPasswordPolicyDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSIAMAccountPasswordPolicyExists(n string, res *iam.GetAccountPasswordPolicyOutput) resource.TestCheckFunc {
+func testAccCheckAccountPasswordPolicyExists(n string, res *iam.GetAccountPasswordPolicyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -96,7 +96,7 @@ func testAccCheckAWSIAMAccountPasswordPolicyExists(n string, res *iam.GetAccount
 	}
 }
 
-const testAccAWSIAMAccountPasswordPolicy = `
+const testAccAccountPasswordPolicy = `
 resource "aws_iam_account_password_policy" "test" {
   allow_users_to_change_password = true
   minimum_password_length        = 8
@@ -104,7 +104,7 @@ resource "aws_iam_account_password_policy" "test" {
 }
 `
 
-const testAccAWSIAMAccountPasswordPolicy_modified = `
+const testAccAccountPasswordPolicy_modified = `
 resource "aws_iam_account_password_policy" "test" {
   allow_users_to_change_password = true
   minimum_password_length        = 7

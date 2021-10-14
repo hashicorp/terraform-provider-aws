@@ -49,7 +49,7 @@ func TestAccAWSDataSourceIAMServerCertificate_basic(t *testing.T) {
 		CheckDestroy: testAccCheckIAMServerCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsDataIAMServerCertConfig(rName, key, certificate),
+				Config: testAccDataServerCertConfig(rName, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("aws_iam_server_certificate.test_cert", "arn"),
 					resource.TestCheckResourceAttrSet("data.aws_iam_server_certificate.test", "arn"),
@@ -73,7 +73,7 @@ func TestAccAWSDataSourceIAMServerCertificate_matchNamePrefix(t *testing.T) {
 		CheckDestroy: testAccCheckIAMServerCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAwsDataIAMServerCertConfigMatchNamePrefix,
+				Config:      testAccDataServerCertMatchNamePrefixConfig,
 				ExpectError: regexp.MustCompile(`Search for AWS IAM server certificate returned no results`),
 			},
 		},
@@ -95,7 +95,7 @@ func TestAccAWSDataSourceIAMServerCertificate_path(t *testing.T) {
 		CheckDestroy: testAccCheckIAMServerCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsDataIAMServerCertConfigPath(rName, path, pathPrefix, key, certificate),
+				Config: testAccDataServerCertPathConfig(rName, path, pathPrefix, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_iam_server_certificate.test", "path", path),
 				),
@@ -104,7 +104,7 @@ func TestAccAWSDataSourceIAMServerCertificate_path(t *testing.T) {
 	})
 }
 
-func testAccAwsDataIAMServerCertConfig(rName, key, certificate string) string {
+func testAccDataServerCertConfig(rName, key, certificate string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_server_certificate" "test_cert" {
   name             = "%[1]s"
@@ -119,7 +119,7 @@ data "aws_iam_server_certificate" "test" {
 `, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key))
 }
 
-func testAccAwsDataIAMServerCertConfigPath(rName, path, pathPrefix, key, certificate string) string {
+func testAccDataServerCertPathConfig(rName, path, pathPrefix, key, certificate string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_server_certificate" "test_cert" {
   name             = "%[1]s"
@@ -136,7 +136,7 @@ data "aws_iam_server_certificate" "test" {
 `, rName, path, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key), pathPrefix)
 }
 
-var testAccAwsDataIAMServerCertConfigMatchNamePrefix = `
+var testAccDataServerCertMatchNamePrefixConfig = `
 data "aws_iam_server_certificate" "test" {
   name_prefix = "MyCert"
   latest      = true

@@ -22,7 +22,7 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_iam_policy", &resource.Sweeper{
 		Name: "aws_iam_policy",
-		F:    testSweepIamPolicies,
+		F:    sweepPolicies,
 		Dependencies: []string{
 			"aws_iam_group",
 			"aws_iam_role",
@@ -31,7 +31,7 @@ func init() {
 	})
 }
 
-func testSweepIamPolicies(region string) error {
+func sweepPolicies(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
@@ -120,12 +120,12 @@ func TestAccAWSIAMPolicy_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSIAMPolicyDestroy,
+		CheckDestroy: testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSIAMPolicyConfigName(rName),
+				Config: testAccPolicyNameConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSIAMPolicyExists(resourceName, &out),
+					testAccCheckPolicyExists(resourceName, &out),
 					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "iam", fmt.Sprintf("policy/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -153,12 +153,12 @@ func TestAccAWSIAMPolicy_description(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSIAMPolicyDestroy,
+		CheckDestroy: testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSIAMPolicyConfigDescription(rName, "description1"),
+				Config: testAccPolicyDescriptionConfig(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSIAMPolicyExists(resourceName, &out),
+					testAccCheckPolicyExists(resourceName, &out),
 					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
 				),
 			},
@@ -180,12 +180,12 @@ func TestAccAWSIAMPolicy_tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSIAMPolicyDestroy,
+		CheckDestroy: testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSIAMPolicyConfigTags1(rName, "key1", "value1"),
+				Config: testAccPolicyTags1Config(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSIAMPolicyExists(resourceName, &out),
+					testAccCheckPolicyExists(resourceName, &out),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -196,18 +196,18 @@ func TestAccAWSIAMPolicy_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSIAMPolicyConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccPolicyTags2Config(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSIAMPolicyExists(resourceName, &out),
+					testAccCheckPolicyExists(resourceName, &out),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccAWSIAMPolicyConfigTags1(rName, "key2", "value2"),
+				Config: testAccPolicyTags1Config(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSIAMPolicyExists(resourceName, &out),
+					testAccCheckPolicyExists(resourceName, &out),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -225,12 +225,12 @@ func TestAccAWSIAMPolicy_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSIAMPolicyDestroy,
+		CheckDestroy: testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSIAMPolicyConfigName(rName),
+				Config: testAccPolicyNameConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSIAMPolicyExists(resourceName, &out),
+					testAccCheckPolicyExists(resourceName, &out),
 					acctest.CheckResourceDisappears(acctest.Provider, tfiam.ResourcePolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -248,12 +248,12 @@ func TestAccAWSIAMPolicy_namePrefix(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSIAMPolicyDestroy,
+		CheckDestroy: testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSIAMPolicyConfigNamePrefix(namePrefix),
+				Config: testAccPolicyNamePrefixConfig(namePrefix),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSIAMPolicyExists(resourceName, &out),
+					testAccCheckPolicyExists(resourceName, &out),
 					resource.TestMatchResourceAttr(resourceName, "name", regexp.MustCompile(fmt.Sprintf("^%s", namePrefix))),
 				),
 			},
@@ -276,12 +276,12 @@ func TestAccAWSIAMPolicy_path(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSIAMPolicyDestroy,
+		CheckDestroy: testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSIAMPolicyConfigPath(rName, "/path1/"),
+				Config: testAccPolicyPathConfig(rName, "/path1/"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSIAMPolicyExists(resourceName, &out),
+					testAccCheckPolicyExists(resourceName, &out),
 					resource.TestCheckResourceAttr(resourceName, "path", "/path1/"),
 				),
 			},
@@ -305,23 +305,23 @@ func TestAccAWSIAMPolicy_policy(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSIAMPolicyDestroy,
+		CheckDestroy: testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAWSIAMPolicyConfigPolicy(rName, "not-json"),
+				Config:      testAccPolicyPolicyConfig(rName, "not-json"),
 				ExpectError: regexp.MustCompile("invalid JSON"),
 			},
 			{
-				Config: testAccAWSIAMPolicyConfigPolicy(rName, policy1),
+				Config: testAccPolicyPolicyConfig(rName, policy1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSIAMPolicyExists(resourceName, &out),
+					testAccCheckPolicyExists(resourceName, &out),
 					resource.TestCheckResourceAttr(resourceName, "policy", policy1),
 				),
 			},
 			{
-				Config: testAccAWSIAMPolicyConfigPolicy(rName, policy2),
+				Config: testAccPolicyPolicyConfig(rName, policy2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSIAMPolicyExists(resourceName, &out),
+					testAccCheckPolicyExists(resourceName, &out),
 					resource.TestCheckResourceAttr(resourceName, "policy", policy2),
 				),
 			},
@@ -334,7 +334,7 @@ func TestAccAWSIAMPolicy_policy(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSIAMPolicyExists(resource string, res *iam.GetPolicyOutput) resource.TestCheckFunc {
+func testAccCheckPolicyExists(resource string, res *iam.GetPolicyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resource]
 		if !ok {
@@ -360,7 +360,7 @@ func testAccCheckAWSIAMPolicyExists(resource string, res *iam.GetPolicyOutput) r
 	}
 }
 
-func testAccCheckAWSIAMPolicyDestroy(s *terraform.State) error {
+func testAccCheckPolicyDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -386,7 +386,7 @@ func testAccCheckAWSIAMPolicyDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSIAMPolicyConfigDescription(rName, description string) string {
+func testAccPolicyDescriptionConfig(rName, description string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_policy" "test" {
   description = %q
@@ -410,7 +410,7 @@ EOF
 `, description, rName)
 }
 
-func testAccAWSIAMPolicyConfigName(rName string) string {
+func testAccPolicyNameConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_policy" "test" {
   name = %q
@@ -433,7 +433,7 @@ EOF
 `, rName)
 }
 
-func testAccAWSIAMPolicyConfigNamePrefix(namePrefix string) string {
+func testAccPolicyNamePrefixConfig(namePrefix string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_policy" "test" {
   name_prefix = %q
@@ -456,7 +456,7 @@ EOF
 `, namePrefix)
 }
 
-func testAccAWSIAMPolicyConfigPath(rName, path string) string {
+func testAccPolicyPathConfig(rName, path string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_policy" "test" {
   name = %q
@@ -480,7 +480,7 @@ EOF
 `, rName, path)
 }
 
-func testAccAWSIAMPolicyConfigPolicy(rName, policy string) string {
+func testAccPolicyPolicyConfig(rName, policy string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_policy" "test" {
   name   = %q
@@ -489,7 +489,7 @@ resource "aws_iam_policy" "test" {
 `, rName, policy)
 }
 
-func testAccAWSIAMPolicyConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccPolicyTags1Config(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_policy" "test" {
   name = %q
@@ -516,7 +516,7 @@ EOF
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccAWSIAMPolicyConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccPolicyTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_policy" "test" {
   name = %q

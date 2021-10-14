@@ -25,19 +25,19 @@ func TestAccAWSUserPolicyAttachment_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSUserPolicyAttachmentDestroy,
+		CheckDestroy: testAccCheckUserPolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSUserPolicyAttachConfig(rName, policyName1),
+				Config: testAccUserPolicyAttachConfig(rName, policyName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSUserPolicyAttachmentExists("aws_iam_user_policy_attachment.test-attach", 1, &out),
-					testAccCheckAWSUserPolicyAttachmentAttributes([]string{policyName1}, &out),
+					testAccCheckUserPolicyAttachmentExists("aws_iam_user_policy_attachment.test-attach", 1, &out),
+					testAccCheckUserPolicyAttachmentAttributes([]string{policyName1}, &out),
 				),
 			},
 			{
 				ResourceName:      "aws_iam_user_policy_attachment.test-attach",
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSIAMUserPolicyAttachmentImportStateIdFunc("aws_iam_user_policy_attachment.test-attach"),
+				ImportStateIdFunc: testAccUserPolicyAttachmentImportStateIdFunc("aws_iam_user_policy_attachment.test-attach"),
 				// We do not have a way to align IDs since the Create function uses resource.PrefixedUniqueId()
 				// Failed state verification, resource with ID USER-POLICYARN not found
 				// ImportStateVerify: true,
@@ -56,21 +56,21 @@ func TestAccAWSUserPolicyAttachment_basic(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccAWSUserPolicyAttachConfigUpdate(rName, policyName1, policyName2, policyName3),
+				Config: testAccUserPolicyAttachUpdateConfig(rName, policyName1, policyName2, policyName3),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSUserPolicyAttachmentExists("aws_iam_user_policy_attachment.test-attach", 2, &out),
-					testAccCheckAWSUserPolicyAttachmentAttributes([]string{policyName2, policyName3}, &out),
+					testAccCheckUserPolicyAttachmentExists("aws_iam_user_policy_attachment.test-attach", 2, &out),
+					testAccCheckUserPolicyAttachmentAttributes([]string{policyName2, policyName3}, &out),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckAWSUserPolicyAttachmentDestroy(s *terraform.State) error {
+func testAccCheckUserPolicyAttachmentDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSUserPolicyAttachmentExists(n string, c int, out *iam.ListAttachedUserPoliciesOutput) resource.TestCheckFunc {
+func testAccCheckUserPolicyAttachmentExists(n string, c int, out *iam.ListAttachedUserPoliciesOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -99,7 +99,7 @@ func testAccCheckAWSUserPolicyAttachmentExists(n string, c int, out *iam.ListAtt
 	}
 }
 
-func testAccCheckAWSUserPolicyAttachmentAttributes(policies []string, out *iam.ListAttachedUserPoliciesOutput) resource.TestCheckFunc {
+func testAccCheckUserPolicyAttachmentAttributes(policies []string, out *iam.ListAttachedUserPoliciesOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		matched := 0
 
@@ -119,7 +119,7 @@ func testAccCheckAWSUserPolicyAttachmentAttributes(policies []string, out *iam.L
 	}
 }
 
-func testAccAWSIAMUserPolicyAttachmentImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccUserPolicyAttachmentImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -130,7 +130,7 @@ func testAccAWSIAMUserPolicyAttachmentImportStateIdFunc(resourceName string) res
 	}
 }
 
-func testAccAWSUserPolicyAttachConfig(rName, policyName string) string {
+func testAccUserPolicyAttachConfig(rName, policyName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "user" {
   name = "test-user-%s"
@@ -163,7 +163,7 @@ resource "aws_iam_user_policy_attachment" "test-attach" {
 `, rName, policyName)
 }
 
-func testAccAWSUserPolicyAttachConfigUpdate(rName, policyName1, policyName2, policyName3 string) string {
+func testAccUserPolicyAttachUpdateConfig(rName, policyName1, policyName2, policyName3 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "user" {
   name = "test-user-%s"

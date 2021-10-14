@@ -27,19 +27,19 @@ func TestAccAWSIAMGroupPolicyAttachment_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSGroupPolicyAttachmentDestroy,
+		CheckDestroy: testAccCheckGroupPolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSGroupPolicyAttachConfig(groupName, policyName),
+				Config: testAccGroupPolicyAttachConfig(groupName, policyName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSGroupPolicyAttachmentExists("aws_iam_group_policy_attachment.test-attach", 1, &out),
-					testAccCheckAWSGroupPolicyAttachmentAttributes([]string{policyName}, &out),
+					testAccCheckGroupPolicyAttachmentExists("aws_iam_group_policy_attachment.test-attach", 1, &out),
+					testAccCheckGroupPolicyAttachmentAttributes([]string{policyName}, &out),
 				),
 			},
 			{
 				ResourceName:      "aws_iam_group_policy_attachment.test-attach",
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSIAMGroupPolicyAttachmentImportStateIdFunc("aws_iam_group_policy_attachment.test-attach"),
+				ImportStateIdFunc: testAccGroupPolicyAttachmentImportStateIdFunc("aws_iam_group_policy_attachment.test-attach"),
 				// We do not have a way to align IDs since the Create function uses resource.PrefixedUniqueId()
 				// Failed state verification, resource with ID GROUP-POLICYARN not found
 				// ImportStateVerify: true,
@@ -55,21 +55,21 @@ func TestAccAWSIAMGroupPolicyAttachment_basic(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccAWSGroupPolicyAttachConfigUpdate(groupName, policyName, policyName2, policyName3),
+				Config: testAccGroupPolicyAttachUpdateConfig(groupName, policyName, policyName2, policyName3),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSGroupPolicyAttachmentExists("aws_iam_group_policy_attachment.test-attach", 2, &out),
-					testAccCheckAWSGroupPolicyAttachmentAttributes([]string{policyName2, policyName3}, &out),
+					testAccCheckGroupPolicyAttachmentExists("aws_iam_group_policy_attachment.test-attach", 2, &out),
+					testAccCheckGroupPolicyAttachmentAttributes([]string{policyName2, policyName3}, &out),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckAWSGroupPolicyAttachmentDestroy(s *terraform.State) error {
+func testAccCheckGroupPolicyAttachmentDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSGroupPolicyAttachmentExists(n string, c int, out *iam.ListAttachedGroupPoliciesOutput) resource.TestCheckFunc {
+func testAccCheckGroupPolicyAttachmentExists(n string, c int, out *iam.ListAttachedGroupPoliciesOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -98,7 +98,7 @@ func testAccCheckAWSGroupPolicyAttachmentExists(n string, c int, out *iam.ListAt
 	}
 }
 
-func testAccCheckAWSGroupPolicyAttachmentAttributes(policies []string, out *iam.ListAttachedGroupPoliciesOutput) resource.TestCheckFunc {
+func testAccCheckGroupPolicyAttachmentAttributes(policies []string, out *iam.ListAttachedGroupPoliciesOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		matched := 0
 
@@ -118,7 +118,7 @@ func testAccCheckAWSGroupPolicyAttachmentAttributes(policies []string, out *iam.
 	}
 }
 
-func testAccAWSGroupPolicyAttachConfig(groupName, policyName string) string {
+func testAccGroupPolicyAttachConfig(groupName, policyName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_group" "group" {
   name = "%s"
@@ -151,7 +151,7 @@ resource "aws_iam_group_policy_attachment" "test-attach" {
 `, groupName, policyName)
 }
 
-func testAccAWSGroupPolicyAttachConfigUpdate(groupName, policyName, policyName2, policyName3 string) string {
+func testAccGroupPolicyAttachUpdateConfig(groupName, policyName, policyName2, policyName3 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_group" "group" {
   name = "%s"
@@ -229,7 +229,7 @@ resource "aws_iam_group_policy_attachment" "test-attach2" {
 `, groupName, policyName, policyName2, policyName3)
 }
 
-func testAccAWSIAMGroupPolicyAttachmentImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccGroupPolicyAttachmentImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
