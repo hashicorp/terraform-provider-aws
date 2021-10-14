@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (
@@ -74,7 +75,7 @@ func ResourceBotAlias() *schema.Resource {
 							Required: true,
 							ValidateFunc: validation.All(
 								validation.StringLenBetween(20, 2048),
-								validateArn,
+								verify.ValidARN,
 							),
 						},
 						// Currently the API docs do not list a min and max for this list.
@@ -320,7 +321,7 @@ var lexLogSettings = &schema.Resource{
 			Optional: true,
 			ValidateFunc: validation.All(
 				validation.StringLenBetween(20, 2048),
-				validateArn,
+				verify.ValidARN,
 			),
 		},
 		"log_type": {
@@ -333,7 +334,7 @@ var lexLogSettings = &schema.Resource{
 			Required: true,
 			ValidateFunc: validation.All(
 				validation.StringLenBetween(1, 2048),
-				validateArn,
+				verify.ValidARN,
 			),
 		},
 		"resource_prefix": {

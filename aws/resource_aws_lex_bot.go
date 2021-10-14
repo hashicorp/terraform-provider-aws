@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceBot() *schema.Resource {
@@ -186,7 +187,7 @@ func updateComputedAttributesOnBotCreateVersion(_ context.Context, d *schema.Res
 	return nil
 }
 
-func hasBotConfigChanges(d resourceDiffer) bool {
+func hasBotConfigChanges(d verify.ResourceDiffer) bool {
 	for _, key := range []string{
 		"description",
 		"child_directed",
