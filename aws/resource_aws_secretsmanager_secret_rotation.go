@@ -15,12 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSecretsManagerSecretRotation() *schema.Resource {
+func ResourceSecretRotation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSecretsManagerSecretRotationCreate,
-		Read:   resourceAwsSecretsManagerSecretRotationRead,
-		Update: resourceAwsSecretsManagerSecretRotationUpdate,
-		Delete: resourceAwsSecretsManagerSecretRotationDelete,
+		Create: resourceSecretRotationCreate,
+		Read:   resourceSecretRotationRead,
+		Update: resourceSecretRotationUpdate,
+		Delete: resourceSecretRotationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -57,7 +57,7 @@ func resourceAwsSecretsManagerSecretRotation() *schema.Resource {
 	}
 }
 
-func resourceAwsSecretsManagerSecretRotationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceSecretRotationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SecretsManagerConn
 	secretID := d.Get("secret_id").(string)
 
@@ -95,10 +95,10 @@ func resourceAwsSecretsManagerSecretRotationCreate(d *schema.ResourceData, meta 
 		d.SetId(aws.StringValue(output.ARN))
 	}
 
-	return resourceAwsSecretsManagerSecretRotationRead(d, meta)
+	return resourceSecretRotationRead(d, meta)
 }
 
-func resourceAwsSecretsManagerSecretRotationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceSecretRotationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SecretsManagerConn
 
 	input := &secretsmanager.DescribeSecretInput{
@@ -157,7 +157,7 @@ func resourceAwsSecretsManagerSecretRotationRead(d *schema.ResourceData, meta in
 	return nil
 }
 
-func resourceAwsSecretsManagerSecretRotationUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceSecretRotationUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SecretsManagerConn
 	secretID := d.Get("secret_id").(string)
 
@@ -202,10 +202,10 @@ func resourceAwsSecretsManagerSecretRotationUpdate(d *schema.ResourceData, meta 
 		}
 	}
 
-	return resourceAwsSecretsManagerSecretRotationRead(d, meta)
+	return resourceSecretRotationRead(d, meta)
 }
 
-func resourceAwsSecretsManagerSecretRotationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceSecretRotationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SecretsManagerConn
 	secretID := d.Get("secret_id").(string)
 

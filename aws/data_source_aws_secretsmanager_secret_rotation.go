@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsSecretsManagerSecretRotation() *schema.Resource {
+func DataSourceSecretRotation() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsSecretsManagerSecretRotationRead,
+		Read: dataSourceSecretRotationRead,
 
 		Schema: map[string]*schema.Schema{
 			"secret_id": {
@@ -45,7 +45,7 @@ func dataSourceAwsSecretsManagerSecretRotation() *schema.Resource {
 	}
 }
 
-func dataSourceAwsSecretsManagerSecretRotationRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceSecretRotationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SecretsManagerConn
 	secretID := d.Get("secret_id").(string)
 

@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsSecretsManagerSecretVersion() *schema.Resource {
+func DataSourceSecretVersion() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsSecretsManagerSecretVersionRead,
+		Read: dataSourceSecretVersionRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -52,7 +52,7 @@ func dataSourceAwsSecretsManagerSecretVersion() *schema.Resource {
 	}
 }
 
-func dataSourceAwsSecretsManagerSecretVersionRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceSecretVersionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SecretsManagerConn
 	secretID := d.Get("secret_id").(string)
 	var version string
