@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func testAccAWSLakeFormationPermissions_basic(t *testing.T) {
@@ -58,7 +59,7 @@ func testAccAWSLakeFormationPermissions_disappears(t *testing.T) {
 				Config: testAccAWSLakeFormationPermissionsConfig_twcBasic(rName, "\"event\", \"timestamp\""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLakeFormationPermissionsExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsLakeFormationPermissions(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourcePermissions(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

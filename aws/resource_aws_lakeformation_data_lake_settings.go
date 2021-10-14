@@ -15,12 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsLakeFormationDataLakeSettings() *schema.Resource {
+func ResourceDataLakeSettings() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLakeFormationDataLakeSettingsCreate,
-		Update: resourceAwsLakeFormationDataLakeSettingsCreate,
-		Read:   resourceAwsLakeFormationDataLakeSettingsRead,
-		Delete: resourceAwsLakeFormationDataLakeSettingsDelete,
+		Create: resourceDataLakeSettingsCreate,
+		Update: resourceDataLakeSettingsCreate,
+		Read:   resourceDataLakeSettingsRead,
+		Delete: resourceDataLakeSettingsDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -103,7 +103,7 @@ func resourceAwsLakeFormationDataLakeSettings() *schema.Resource {
 	}
 }
 
-func resourceAwsLakeFormationDataLakeSettingsCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceDataLakeSettingsCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LakeFormationConn
 
 	input := &lakeformation.PutDataLakeSettingsInput{}
@@ -163,10 +163,10 @@ func resourceAwsLakeFormationDataLakeSettingsCreate(d *schema.ResourceData, meta
 
 	d.SetId(fmt.Sprintf("%d", create.StringHashcode(input.String())))
 
-	return resourceAwsLakeFormationDataLakeSettingsRead(d, meta)
+	return resourceDataLakeSettingsRead(d, meta)
 }
 
-func resourceAwsLakeFormationDataLakeSettingsRead(d *schema.ResourceData, meta interface{}) error {
+func resourceDataLakeSettingsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LakeFormationConn
 
 	input := &lakeformation.GetDataLakeSettingsInput{}
@@ -201,7 +201,7 @@ func resourceAwsLakeFormationDataLakeSettingsRead(d *schema.ResourceData, meta i
 	return nil
 }
 
-func resourceAwsLakeFormationDataLakeSettingsDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDataLakeSettingsDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LakeFormationConn
 
 	input := &lakeformation.PutDataLakeSettingsInput{

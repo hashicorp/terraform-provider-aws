@@ -12,11 +12,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsLakeFormationResource() *schema.Resource {
+func ResourceResource() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLakeFormationResourceCreate,
-		Read:   resourceAwsLakeFormationResourceRead,
-		Delete: resourceAwsLakeFormationResourceDelete,
+		Create: resourceResourceCreate,
+		Read:   resourceResourceRead,
+		Delete: resourceResourceDelete,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -40,7 +40,7 @@ func resourceAwsLakeFormationResource() *schema.Resource {
 	}
 }
 
-func resourceAwsLakeFormationResourceCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceResourceCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LakeFormationConn
 	resourceArn := d.Get("arn").(string)
 
@@ -63,10 +63,10 @@ func resourceAwsLakeFormationResourceCreate(d *schema.ResourceData, meta interfa
 	}
 
 	d.SetId(resourceArn)
-	return resourceAwsLakeFormationResourceRead(d, meta)
+	return resourceResourceRead(d, meta)
 }
 
-func resourceAwsLakeFormationResourceRead(d *schema.ResourceData, meta interface{}) error {
+func resourceResourceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LakeFormationConn
 	resourceArn := d.Get("arn").(string)
 
@@ -99,7 +99,7 @@ func resourceAwsLakeFormationResourceRead(d *schema.ResourceData, meta interface
 	return nil
 }
 
-func resourceAwsLakeFormationResourceDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceResourceDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LakeFormationConn
 	resourceArn := d.Get("arn").(string)
 
