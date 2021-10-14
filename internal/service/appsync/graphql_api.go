@@ -238,7 +238,7 @@ func resourceGraphQLAPICreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(tags) > 0 {
-		input.Tags = tags.IgnoreAws().AppsyncTags()
+		input.Tags = Tags(tags.IgnoreAws())
 	}
 
 	if v, ok := d.GetOk("xray_enabled"); ok {
@@ -304,7 +304,7 @@ func resourceGraphQLAPIRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting uris: %s", err)
 	}
 
-	tags := tftags.AppsyncKeyValueTags(resp.GraphqlApi.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(resp.GraphqlApi.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -328,7 +328,7 @@ func resourceGraphQLAPIUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.AppsyncUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating AppSync GraphQL API (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
