@@ -10,12 +10,13 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/rds/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/rds/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceEventSubscription() *schema.Resource {
@@ -85,18 +86,18 @@ func ResourceEventSubscription() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(rds.SourceType_Values(), false),
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceEventSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &rds.CreateEventSubscriptionInput{
@@ -165,7 +166,7 @@ func resourceEventSubscriptionRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("source_ids", aws.StringValueSlice(sub.SourceIdsList))
 	d.Set("source_type", sub.SourceType)
 
-	tags, err := keyvaluetags.RdsListTags(conn, arn)
+	tags, err := tftags.RdsListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for RDS Event Subscription (%s): %w", arn, err)
@@ -224,7 +225,7 @@ func resourceEventSubscriptionUpdate(d *schema.ResourceData, meta interface{}) e
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := keyvaluetags.RdsUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := tftags.RdsUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating RDS Event Subscription (%s) tags: %w", d.Get("arn").(string), err)
 		}
 	}
