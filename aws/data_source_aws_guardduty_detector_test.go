@@ -12,7 +12,7 @@ func testAccAWSGuarddutyDetectorDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(t) },
 		ErrorCheck:                acctest.ErrorCheck(t, guardduty.EndpointsID),
-		Providers:                 testAccProviders,
+		Providers:                 acctest.Providers,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
@@ -36,7 +36,7 @@ func testAccAWSGuarddutyDetectorDataSource_Id(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, guardduty.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsGuarddutyDetectorExplicitConfig(),

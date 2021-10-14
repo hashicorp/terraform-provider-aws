@@ -18,16 +18,16 @@ func testAccAwsGuardDutyMember_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsGuardDutyMemberDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGuardDutyMemberConfig_basic(accountID, testAccDefaultEmailAddress),
+				Config: testAccGuardDutyMemberConfig_basic(accountID, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsGuardDutyMemberExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "account_id", accountID),
 					resource.TestCheckResourceAttrSet(resourceName, "detector_id"),
-					resource.TestCheckResourceAttr(resourceName, "email", testAccDefaultEmailAddress),
+					resource.TestCheckResourceAttr(resourceName, "email", acctest.DefaultEmailAddress),
 					resource.TestCheckResourceAttr(resourceName, "relationship_status", "Created"),
 				),
 			},
@@ -47,7 +47,7 @@ func testAccAwsGuardDutyMember_invite_disassociate(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsGuardDutyMemberDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -86,7 +86,7 @@ func testAccAwsGuardDutyMember_invite_onUpdate(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsGuardDutyMemberDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -126,7 +126,7 @@ func testAccAwsGuardDutyMember_invitationMessage(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsGuardDutyMemberDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -156,7 +156,7 @@ func testAccAwsGuardDutyMember_invitationMessage(t *testing.T) {
 }
 
 func testAccCheckAwsGuardDutyMemberDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).guarddutyconn
+	conn := acctest.Provider.Meta().(*AWSClient).guarddutyconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_guardduty_member" {
@@ -208,7 +208,7 @@ func testAccCheckAwsGuardDutyMemberExists(name string) resource.TestCheckFunc {
 			DetectorId: aws.String(detectorID),
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).guarddutyconn
+		conn := acctest.Provider.Meta().(*AWSClient).guarddutyconn
 		gmo, err := conn.GetMembers(input)
 		if err != nil {
 			return err

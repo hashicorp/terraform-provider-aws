@@ -74,7 +74,7 @@ func testAccAwsGuardDutyDetector_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsGuardDutyDetectorDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -124,7 +124,7 @@ func testAccAwsGuardDutyDetector_tags(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsGuardDutyDetectorDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -167,7 +167,7 @@ func testAccAwsGuardDutyDetector_datasources_s3logs(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsGuardDutyDetectorDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -198,7 +198,7 @@ func testAccAwsGuardDutyDetector_datasources_s3logs(t *testing.T) {
 }
 
 func testAccCheckAwsGuardDutyDetectorDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).guarddutyconn
+	conn := acctest.Provider.Meta().(*AWSClient).guarddutyconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_guardduty_detector" {

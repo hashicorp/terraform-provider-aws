@@ -47,7 +47,7 @@ func testAccAwsGuardDutyInviteAccepter_basic(t *testing.T) {
 }
 
 func testAccCheckAwsGuardDutyInviteAccepterDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).guarddutyconn
+	conn := acctest.Provider.Meta().(*AWSClient).guarddutyconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_guardduty_invite_accepter" {
@@ -89,7 +89,7 @@ func testAccCheckAwsGuardDutyInviteAccepterExists(resourceName string) resource.
 			return fmt.Errorf("Resource (%s) has empty ID", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).guarddutyconn
+		conn := acctest.Provider.Meta().(*AWSClient).guarddutyconn
 
 		input := &guardduty.GetMasterAccountInput{
 			DetectorId: aws.String(rs.Primary.ID),
