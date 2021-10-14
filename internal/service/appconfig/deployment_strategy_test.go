@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfappconfig "github.com/hashicorp/terraform-provider-aws/internal/service/appconfig"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -57,7 +58,7 @@ func testSweepAppConfigDeploymentStrategies(region string) error {
 			}
 
 			log.Printf("[INFO] Deleting AppConfig Deployment Strategy (%s)", id)
-			r := ResourceDeploymentStrategy()
+			r := tfappconfig.ResourceDeploymentStrategy()
 			d := r.Data(nil)
 			d.SetId(id)
 
@@ -207,7 +208,7 @@ func TestAccAWSAppConfigDeploymentStrategy_disappears(t *testing.T) {
 				Config: testAccAWSAppConfigDeploymentStrategyConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAppConfigDeploymentStrategyExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceDeploymentStrategy(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfappconfig.ResourceDeploymentStrategy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

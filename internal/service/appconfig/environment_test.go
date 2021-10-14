@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfappconfig "github.com/hashicorp/terraform-provider-aws/internal/service/appconfig"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -67,7 +68,7 @@ func testSweepAppConfigEnvironments(region string) error {
 					id := fmt.Sprintf("%s:%s", aws.StringValue(item.Id), appId)
 
 					log.Printf("[INFO] Deleting AppConfig Environment (%s)", id)
-					r := ResourceEnvironment()
+					r := tfappconfig.ResourceEnvironment()
 					d := r.Data(nil)
 					d.SetId(id)
 
@@ -147,7 +148,7 @@ func TestAccAWSAppConfigEnvironment_disappears(t *testing.T) {
 				Config: testAccAWSAppConfigEnvironmentConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAppConfigEnvironmentExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceEnvironment(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfappconfig.ResourceEnvironment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -385,7 +386,7 @@ func testAccCheckAppConfigEnvironmentDestroy(s *terraform.State) error {
 			continue
 		}
 
-		envID, appID, err := resourceAwsAppconfigEnvironmentParseID(rs.Primary.ID)
+		envID, appID, err := tfappconfig.EnvironmentParseID(rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -425,7 +426,7 @@ func testAccCheckAWSAppConfigEnvironmentExists(resourceName string) resource.Tes
 			return fmt.Errorf("Resource (%s) ID not set", resourceName)
 		}
 
-		envID, appID, err := resourceAwsAppconfigEnvironmentParseID(rs.Primary.ID)
+		envID, appID, err := tfappconfig.EnvironmentParseID(rs.Primary.ID)
 
 		if err != nil {
 			return err

@@ -127,7 +127,7 @@ func resourceEnvironmentRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	envID, appID, err := resourceAwsAppconfigEnvironmentParseID(d.Id())
+	envID, appID, err := EnvironmentParseID(d.Id())
 
 	if err != nil {
 		return err
@@ -198,7 +198,7 @@ func resourceEnvironmentUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppConfigConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
-		envID, appID, err := resourceAwsAppconfigEnvironmentParseID(d.Id())
+		envID, appID, err := EnvironmentParseID(d.Id())
 
 		if err != nil {
 			return err
@@ -241,7 +241,7 @@ func resourceEnvironmentUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceEnvironmentDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppConfigConn
 
-	envID, appID, err := resourceAwsAppconfigEnvironmentParseID(d.Id())
+	envID, appID, err := EnvironmentParseID(d.Id())
 
 	if err != nil {
 		return err
@@ -265,7 +265,7 @@ func resourceEnvironmentDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsAppconfigEnvironmentParseID(id string) (string, string, error) {
+func EnvironmentParseID(id string) (string, string, error) {
 	parts := strings.Split(id, ":")
 
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {

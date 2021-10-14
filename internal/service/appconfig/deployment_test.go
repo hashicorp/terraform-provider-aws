@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfappconfig "github.com/hashicorp/terraform-provider-aws/internal/service/appconfig"
 )
 
 func TestAccAWSAppConfigDeployment_basic(t *testing.T) {
@@ -140,7 +141,7 @@ func testAccCheckAWSAppConfigDeploymentExists(resourceName string) resource.Test
 			return fmt.Errorf("Resource (%s) ID not set", resourceName)
 		}
 
-		appID, envID, deploymentNum, err := resourceAwsAppconfigDeploymentParseID(rs.Primary.ID)
+		appID, envID, deploymentNum, err := tfappconfig.DeploymentParseID(rs.Primary.ID)
 
 		if err != nil {
 			return err

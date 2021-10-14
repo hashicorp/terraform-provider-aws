@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfappconfig "github.com/hashicorp/terraform-provider-aws/internal/service/appconfig"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -55,7 +56,7 @@ func testSweepAppConfigApplications(region string) error {
 			id := aws.StringValue(item.Id)
 
 			log.Printf("[INFO] Deleting AppConfig Application (%s)", id)
-			r := ResourceApplication()
+			r := tfappconfig.ResourceApplication()
 			d := r.Data(nil)
 			d.SetId(id)
 
@@ -123,7 +124,7 @@ func TestAccAWSAppConfigApplication_disappears(t *testing.T) {
 				Config: testAccAWSAppConfigApplicationConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAppConfigApplicationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceApplication(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfappconfig.ResourceApplication(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

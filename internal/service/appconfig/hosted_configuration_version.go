@@ -99,7 +99,7 @@ func resourceHostedConfigurationVersionCreate(d *schema.ResourceData, meta inter
 func resourceHostedConfigurationVersionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppConfigConn
 
-	appID, confProfID, versionNumber, err := resourceAwsAppconfigHostedConfigurationVersionParseID(d.Id())
+	appID, confProfID, versionNumber, err := HostedConfigurationVersionParseID(d.Id())
 
 	if err != nil {
 		return err
@@ -150,7 +150,7 @@ func resourceHostedConfigurationVersionRead(d *schema.ResourceData, meta interfa
 func resourceHostedConfigurationVersionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppConfigConn
 
-	appID, confProfID, versionNumber, err := resourceAwsAppconfigHostedConfigurationVersionParseID(d.Id())
+	appID, confProfID, versionNumber, err := HostedConfigurationVersionParseID(d.Id())
 
 	if err != nil {
 		return err
@@ -175,7 +175,7 @@ func resourceHostedConfigurationVersionDelete(d *schema.ResourceData, meta inter
 	return nil
 }
 
-func resourceAwsAppconfigHostedConfigurationVersionParseID(id string) (string, string, int, error) {
+func HostedConfigurationVersionParseID(id string) (string, string, int, error) {
 	parts := strings.Split(id, "/")
 
 	if len(parts) != 3 || parts[0] == "" || parts[1] == "" || parts[2] == "" {

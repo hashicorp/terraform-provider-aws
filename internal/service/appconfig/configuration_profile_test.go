@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfappconfig "github.com/hashicorp/terraform-provider-aws/internal/service/appconfig"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -70,7 +71,7 @@ func testSweepAppConfigConfigurationProfiles(region string) error {
 					id := fmt.Sprintf("%s:%s", aws.StringValue(item.Id), appId)
 
 					log.Printf("[INFO] Deleting AppConfig Configuration Profile (%s)", id)
-					r := ResourceConfigurationProfile()
+					r := tfappconfig.ResourceConfigurationProfile()
 					d := r.Data(nil)
 					d.SetId(id)
 
@@ -151,7 +152,7 @@ func TestAccAWSAppConfigConfigurationProfile_disappears(t *testing.T) {
 				Config: testAccAWSAppConfigConfigurationProfileConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAppConfigConfigurationProfileExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceConfigurationProfile(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfappconfig.ResourceConfigurationProfile(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -409,7 +410,7 @@ func testAccCheckAppConfigConfigurationProfileDestroy(s *terraform.State) error 
 			continue
 		}
 
-		confProfID, appID, err := resourceAwsAppconfigConfigurationProfileParseID(rs.Primary.ID)
+		confProfID, appID, err := tfappconfig.ConfigurationProfileParseID(rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -449,7 +450,7 @@ func testAccCheckAWSAppConfigConfigurationProfileExists(resourceName string) res
 			return fmt.Errorf("Resource (%s) ID not set", resourceName)
 		}
 
-		confProfID, appID, err := resourceAwsAppconfigConfigurationProfileParseID(rs.Primary.ID)
+		confProfID, appID, err := tfappconfig.ConfigurationProfileParseID(rs.Primary.ID)
 
 		if err != nil {
 			return err

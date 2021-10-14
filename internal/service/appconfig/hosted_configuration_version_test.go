@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfappconfig "github.com/hashicorp/terraform-provider-aws/internal/service/appconfig"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -84,7 +85,7 @@ func testSweepAppConfigHostedConfigurationVersions(region string) error {
 							id := fmt.Sprintf("%s/%s/%d", appId, profId, aws.Int64Value(item.VersionNumber))
 
 							log.Printf("[INFO] Deleting AppConfig Hosted Configuration Version (%s)", id)
-							r := ResourceHostedConfigurationVersion()
+							r := tfappconfig.ResourceHostedConfigurationVersion()
 							d := r.Data(nil)
 							d.SetId(id)
 
@@ -172,7 +173,7 @@ func TestAccAWSAppConfigHostedConfigurationVersion_disappears(t *testing.T) {
 				Config: testAccAWSAppConfigHostedConfigurationVersion(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAppConfigHostedConfigurationVersionExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceHostedConfigurationVersion(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfappconfig.ResourceHostedConfigurationVersion(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -188,7 +189,7 @@ func testAccCheckAppConfigHostedConfigurationVersionDestroy(s *terraform.State) 
 			continue
 		}
 
-		appID, confProfID, versionNumber, err := resourceAwsAppconfigHostedConfigurationVersionParseID(rs.Primary.ID)
+		appID, confProfID, versionNumber, err := tfappconfig.HostedConfigurationVersionParseID(rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -229,7 +230,7 @@ func testAccCheckAWSAppConfigHostedConfigurationVersionExists(resourceName strin
 			return fmt.Errorf("Resource (%s) ID not set", resourceName)
 		}
 
-		appID, confProfID, versionNumber, err := resourceAwsAppconfigHostedConfigurationVersionParseID(rs.Primary.ID)
+		appID, confProfID, versionNumber, err := tfappconfig.HostedConfigurationVersionParseID(rs.Primary.ID)
 
 		if err != nil {
 			return err

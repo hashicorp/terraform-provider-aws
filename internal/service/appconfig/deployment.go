@@ -123,7 +123,7 @@ func resourceDeploymentRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	appID, envID, deploymentNum, err := resourceAwsAppconfigDeploymentParseID(d.Id())
+	appID, envID, deploymentNum, err := DeploymentParseID(d.Id())
 
 	if err != nil {
 		return err
@@ -208,7 +208,7 @@ func resourceDeploymentDelete(_ *schema.ResourceData, _ interface{}) error {
 	return nil
 }
 
-func resourceAwsAppconfigDeploymentParseID(id string) (string, string, int, error) {
+func DeploymentParseID(id string) (string, string, int, error) {
 	parts := strings.Split(id, "/")
 
 	if len(parts) != 3 || parts[0] == "" || parts[1] == "" || parts[2] == "" {

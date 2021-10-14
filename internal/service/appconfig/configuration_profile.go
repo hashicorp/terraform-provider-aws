@@ -141,7 +141,7 @@ func resourceConfigurationProfileRead(d *schema.ResourceData, meta interface{}) 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	confProfID, appID, err := resourceAwsAppconfigConfigurationProfileParseID(d.Id())
+	confProfID, appID, err := ConfigurationProfileParseID(d.Id())
 
 	if err != nil {
 		return err
@@ -214,7 +214,7 @@ func resourceConfigurationProfileUpdate(d *schema.ResourceData, meta interface{}
 	conn := meta.(*conns.AWSClient).AppConfigConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
-		confProfID, appID, err := resourceAwsAppconfigConfigurationProfileParseID(d.Id())
+		confProfID, appID, err := ConfigurationProfileParseID(d.Id())
 
 		if err != nil {
 			return err
@@ -261,7 +261,7 @@ func resourceConfigurationProfileUpdate(d *schema.ResourceData, meta interface{}
 func resourceConfigurationProfileDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppConfigConn
 
-	confProfID, appID, err := resourceAwsAppconfigConfigurationProfileParseID(d.Id())
+	confProfID, appID, err := ConfigurationProfileParseID(d.Id())
 
 	if err != nil {
 		return err
@@ -285,7 +285,7 @@ func resourceConfigurationProfileDelete(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceAwsAppconfigConfigurationProfileParseID(id string) (string, string, error) {
+func ConfigurationProfileParseID(id string) (string, string, error) {
 	parts := strings.Split(id, ":")
 
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
