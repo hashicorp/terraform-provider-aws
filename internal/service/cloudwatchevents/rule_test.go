@@ -24,63 +24,10 @@ import (
 func init() {
 	acctest.RegisterServiceErrorCheckFunc(events.EndpointsID, testAccErrorCheckSkipEvents)
 
-	resource.AddTestSweepers("aws_cloudwatch_event_rule", &resource.Sweeper{
-		Name: "aws_cloudwatch_event_rule",
-		F:    sweepRules,
-		Dependencies: []string{
-			"aws_cloudwatch_event_target",
-		},
-	})
+
 }
 
-func sweepRules(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("Error getting client: %w", err)
-	}
-	conn := client.(*conns.AWSClient).CloudWatchEventsConn
 
-	var sweeperErrs *multierror.Error
-	var count int
-
-	rulesInput := &events.ListRulesInput{}
-
-	err = tfcloudwatchevents.ListRulesPages(conn, rulesInput, func(rulesPage *events.ListRulesOutput, lastPage bool) bool {
-		if rulesPage == nil {
-			return !lastPage
-		}
-
-		for _, rule := range rulesPage.Rules {
-			count++
-			name := aws.StringValue(rule.Name)
-
-			log.Printf("[INFO] Deleting CloudWatch Events rule (%s)", name)
-			_, err := conn.DeleteRule(&events.DeleteRuleInput{
-				Name:  aws.String(name),
-				Force: aws.Bool(true), // Required for AWS-managed rules, ignored otherwise
-			})
-			if err != nil {
-				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error deleting CloudWatch Events rule (%s): %w", name, err))
-				continue
-			}
-		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping CloudWatch Events rule sweeper for %q: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-	}
-
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing CloudWatch Events rules: %w", err))
-	}
-
-	log.Printf("[INFO] Deleted %d CloudWatch Events rules", count)
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func testAccErrorCheckSkipEvents(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,

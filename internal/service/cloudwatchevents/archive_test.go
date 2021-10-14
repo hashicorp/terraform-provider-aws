@@ -16,63 +16,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_cloudwatch_event_archive", &resource.Sweeper{
-		Name: "aws_cloudwatch_event_archive",
-		F:    sweepArchives,
-		Dependencies: []string{
-			"aws_cloudwatch_event_bus",
-		},
-	})
-}
 
-func sweepArchives(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("Error getting client: %w", err)
-	}
-	conn := client.(*conns.AWSClient).CloudWatchEventsConn
 
-	input := &events.ListArchivesInput{}
 
-	for {
-		output, err := conn.ListArchives(input)
-		if err != nil {
-			if sweep.SkipSweepError(err) {
-				log.Printf("[WARN] Skipping CloudWatch Events archive sweep for %s: %s", region, err)
-				return nil
-			}
-			return fmt.Errorf("Error retrieving CloudWatch Events archive: %w", err)
-		}
-
-		if len(output.Archives) == 0 {
-			log.Print("[DEBUG] No CloudWatch Events archives to sweep")
-			return nil
-		}
-
-		for _, archive := range output.Archives {
-			name := aws.StringValue(archive.ArchiveName)
-			if name == "default" {
-				continue
-			}
-
-			log.Printf("[INFO] Deleting CloudWatch Events archive (%s)", name)
-			_, err := conn.DeleteArchive(&events.DeleteArchiveInput{
-				ArchiveName: aws.String(name),
-			})
-			if err != nil {
-				return fmt.Errorf("Error deleting CloudWatch Events archive (%s): %w", name, err)
-			}
-		}
-
-		if output.NextToken == nil {
-			break
-		}
-		input.NextToken = output.NextToken
-	}
-
-	return nil
-}
 
 func TestAccCloudWatchEventsArchive_basic(t *testing.T) {
 	var v1 events.DescribeArchiveOutput

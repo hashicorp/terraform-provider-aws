@@ -20,56 +20,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_cloudwatch_event_permission", &resource.Sweeper{
-		Name: "aws_cloudwatch_event_permission",
-		F:    sweepPermissions,
-	})
-}
 
-func sweepPermissions(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("Error getting client: %w", err)
-	}
-	conn := client.(*conns.AWSClient).CloudWatchEventsConn
 
-	output, err := conn.DescribeEventBus(&events.DescribeEventBusInput{})
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping CloudWatch Event Permission sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error retrieving CloudWatch Event Permissions: %w", err)
-	}
 
-	policy := aws.StringValue(output.Policy)
-
-	if policy == "" {
-		log.Print("[DEBUG] No CloudWatch Event Permissions to sweep")
-		return nil
-	}
-
-	var policyDoc tfcloudwatchevents.PermissionPolicyDoc
-	err = json.Unmarshal([]byte(policy), &policyDoc)
-	if err != nil {
-		return fmt.Errorf("Parsing CloudWatch Event Permissions policy %q failed: %w", policy, err)
-	}
-
-	for _, statement := range policyDoc.Statements {
-		sid := statement.Sid
-
-		log.Printf("[INFO] Deleting CloudWatch Event Permission %s", sid)
-		_, err := conn.RemovePermission(&events.RemovePermissionInput{
-			StatementId: aws.String(sid),
-		})
-		if err != nil {
-			return fmt.Errorf("Error deleting CloudWatch Event Permission %s: %w", sid, err)
-		}
-	}
-
-	return nil
-}
 
 func TestAccCloudWatchEventsPermission_basic(t *testing.T) {
 	principal1 := "111111111111"

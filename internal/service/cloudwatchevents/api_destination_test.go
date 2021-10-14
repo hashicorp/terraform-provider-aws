@@ -20,58 +20,9 @@ import (
 
 const uuidRegex = "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
 
-func init() {
-	resource.AddTestSweepers("aws_cloudwatch_event_api_destination", &resource.Sweeper{
-		Name: "aws_cloudwatch_event_api_destination",
-		F:    sweepAPIDestination,
-		Dependencies: []string{
-			"aws_cloudwatch_event_connection",
-		},
-	})
-}
 
-func sweepAPIDestination(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("Error getting client: %w", err)
-	}
-	conn := client.(*conns.AWSClient).CloudWatchEventsConn
 
-	var sweeperErrs *multierror.Error
 
-	input := &events.ListApiDestinationsInput{
-		Limit: aws.Int64(100),
-	}
-	var apiDestinations []*events.ApiDestination
-	for {
-		output, err := conn.ListApiDestinations(input)
-		if err != nil {
-			return err
-		}
-		apiDestinations = append(apiDestinations, output.ApiDestinations...)
-
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-		input.NextToken = output.NextToken
-	}
-
-	for _, apiDestination := range apiDestinations {
-
-		input := &events.DeleteApiDestinationInput{
-			Name: apiDestination.Name,
-		}
-		_, err := conn.DeleteApiDestination(input)
-		if err != nil {
-			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("Error deleting CloudWatch Event Api Destination (%s): %w", *apiDestination.Name, err))
-			continue
-		}
-	}
-
-	log.Printf("[INFO] Deleted %d CloudWatch Event Api Destinations", len(apiDestinations))
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func TestAccCloudWatchEventsAPIDestination_basic(t *testing.T) {
 	var v1, v2, v3 events.DescribeApiDestinationOutput

@@ -19,64 +19,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_cloudwatch_event_bus", &resource.Sweeper{
-		Name: "aws_cloudwatch_event_bus",
-		F:    sweepBuses,
-		Dependencies: []string{
-			"aws_cloudwatch_event_rule",
-			"aws_cloudwatch_event_target",
-			"aws_schemas_discoverer",
-		},
-	})
-}
 
-func sweepBuses(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("Error getting client: %w", err)
-	}
-	conn := client.(*conns.AWSClient).CloudWatchEventsConn
-	input := &events.ListEventBusesInput{}
-	var sweeperErrs *multierror.Error
 
-	err = tfcloudwatchevents.ListEventBusesPages(conn, input, func(page *events.ListEventBusesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
 
-		for _, eventBus := range page.EventBuses {
-			name := aws.StringValue(eventBus.Name)
-			if name == tfcloudwatchevents.DefaultEventBusName {
-				continue
-			}
-
-			r := tfcloudwatchevents.ResourceBus()
-			d := r.Data(nil)
-			d.SetId(name)
-			err = r.Delete(d, client)
-
-			if err != nil {
-				log.Printf("[ERROR] %s", err)
-				sweeperErrs = multierror.Append(sweeperErrs, err)
-				continue
-			}
-		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping CloudWatch Events event bus sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-	}
-
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing CloudWatch Events event buses: %w", err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func TestAccCloudWatchEventsBus_basic(t *testing.T) {
 	var v1, v2, v3 events.DescribeEventBusOutput

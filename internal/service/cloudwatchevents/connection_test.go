@@ -20,53 +20,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_cloudwatch_event_connection", &resource.Sweeper{
-		Name: "aws_cloudwatch_event_connection",
-		F:    sweepConnection,
-	})
-}
 
-func sweepConnection(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("Error getting client: %w", err)
-	}
-	conn := client.(*conns.AWSClient).CloudWatchEventsConn
 
-	var sweeperErrs *multierror.Error
 
-	input := &events.ListConnectionsInput{
-		Limit: aws.Int64(100),
-	}
-	var connections []*events.Connection
-	for {
-		output, err := conn.ListConnections(input)
-		if err != nil {
-			return err
-		}
-
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-		input.NextToken = output.NextToken
-	}
-
-	for _, connection := range connections {
-		input := &events.DeleteConnectionInput{
-			Name: connection.Name,
-		}
-		_, err := conn.DeleteConnection(input)
-		if err != nil {
-			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("Error deleting CloudWatch Event Connection (%s): %w", *connection.Name, err))
-			continue
-		}
-	}
-
-	log.Printf("[INFO] Deleted %d CloudWatch Event Connections", len(connections))
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func TestAccCloudWatchEventsConnection_apiKey(t *testing.T) {
 	var v1, v2, v3 events.DescribeConnectionOutput

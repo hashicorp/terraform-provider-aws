@@ -23,91 +23,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_cloudwatch_event_target", &resource.Sweeper{
-		Name: "aws_cloudwatch_event_target",
-		F:    sweepTargets,
-	})
-}
 
-func sweepTargets(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("Error getting client: %w", err)
-	}
-	conn := client.(*conns.AWSClient).CloudWatchEventsConn
 
-	var sweeperErrs *multierror.Error
-	var rulesCount, targetsCount int
 
-	rulesInput := &events.ListRulesInput{}
-
-	err = tfcloudwatchevents.ListRulesPages(conn, rulesInput, func(rulesPage *events.ListRulesOutput, lastPage bool) bool {
-		if rulesPage == nil {
-			return !lastPage
-		}
-
-		for _, rule := range rulesPage.Rules {
-			rulesCount++
-			ruleName := aws.StringValue(rule.Name)
-
-			log.Printf("[INFO] Deleting CloudWatch Events targets for rule (%s)", ruleName)
-			targetsInput := &events.ListTargetsByRuleInput{
-				Rule:  rule.Name,
-				Limit: aws.Int64(100), // Set limit to allowed maximum to prevent API throttling
-			}
-
-			err := tfcloudwatchevents.ListTargetsByRulePages(conn, targetsInput, func(targetsPage *events.ListTargetsByRuleOutput, lastPage bool) bool {
-				if targetsPage == nil {
-					return !lastPage
-				}
-
-				for _, target := range targetsPage.Targets {
-					targetsCount++
-					removeTargetsInput := &events.RemoveTargetsInput{
-						Ids:   []*string{target.Id},
-						Rule:  rule.Name,
-						Force: aws.Bool(true), // Required for AWS-managed rules, ignored otherwise
-					}
-					targetID := aws.StringValue(target.Id)
-
-					log.Printf("[INFO] Deleting CloudWatch Events target (%s/%s)", ruleName, targetID)
-					_, err := conn.RemoveTargets(removeTargetsInput)
-
-					if err != nil {
-						sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("Error deleting CloudWatch Events target (%s/%s): %w", ruleName, targetID, err))
-						continue
-					}
-				}
-
-				return !lastPage
-			})
-
-			if sweep.SkipSweepError(err) {
-				log.Printf("[WARN] Skipping CloudWatch Events target sweeper for %q: %s", region, err)
-				return false
-			}
-			if err != nil {
-				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing CloudWatch Events targets for rule (%s): %w", ruleName, err))
-			}
-		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping CloudWatch Events rule target sweeper for %q: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-	}
-
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing CloudWatch Events rules: %w", err))
-	}
-
-	log.Printf("[INFO] Deleted %d CloudWatch Events targets across %d CloudWatch Events rules", targetsCount, rulesCount)
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func TestAccCloudWatchEventsTarget_basic(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_target.test"
