@@ -37,7 +37,7 @@ func TestAccAWSResourceGroup_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, resourcegroups.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSResourceGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -75,7 +75,7 @@ func TestAccAWSResourceGroup_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, resourcegroups.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSResourceGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -123,7 +123,7 @@ func testAccCheckAWSResourceGroupExists(n string, v *resourcegroups.Group) resou
 			return fmt.Errorf("No resource group name is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).resourcegroupsconn
+		conn := acctest.Provider.Meta().(*AWSClient).resourcegroupsconn
 
 		resp, err := conn.GetGroup(&resourcegroups.GetGroupInput{
 			GroupName: aws.String(rs.Primary.ID),
@@ -148,7 +148,7 @@ func testAccCheckAWSResourceGroupDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).resourcegroupsconn
+		conn := acctest.Provider.Meta().(*AWSClient).resourcegroupsconn
 		resp, err := conn.GetGroup(&resourcegroups.GetGroupInput{
 			GroupName: aws.String(rs.Primary.ID),
 		})
