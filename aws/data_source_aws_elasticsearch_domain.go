@@ -7,8 +7,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/elasticsearchservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceDomain() *schema.Resource {
@@ -271,7 +272,7 @@ func DataSourceDomain() *schema.Resource {
 				Computed: true,
 			},
 
-			"tags": tagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -386,7 +387,7 @@ func dataSourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("processing", ds.Processing)
 
-	tags, err := keyvaluetags.ElasticsearchserviceListTags(conn, d.Id())
+	tags, err := tftags.ElasticsearchserviceListTags(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Elasticsearch Cluster (%s): %w", d.Id(), err)
