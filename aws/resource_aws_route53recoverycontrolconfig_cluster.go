@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53recoverycontrolconfig/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsRoute53RecoveryControlConfigCluster() *schema.Resource {
@@ -56,7 +57,7 @@ func resourceAwsRoute53RecoveryControlConfigCluster() *schema.Resource {
 }
 
 func resourceAwsRoute53RecoveryControlConfigClusterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53recoverycontrolconfigconn
+	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn
 
 	input := &r53rcc.CreateClusterInput{
 		ClientToken: aws.String(resource.UniqueId()),
@@ -84,7 +85,7 @@ func resourceAwsRoute53RecoveryControlConfigClusterCreate(d *schema.ResourceData
 }
 
 func resourceAwsRoute53RecoveryControlConfigClusterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53recoverycontrolconfigconn
+	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn
 
 	input := &r53rcc.DescribeClusterInput{
 		ClusterArn: aws.String(d.Id()),
@@ -119,7 +120,7 @@ func resourceAwsRoute53RecoveryControlConfigClusterRead(d *schema.ResourceData, 
 }
 
 func resourceAwsRoute53RecoveryControlConfigClusterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53recoverycontrolconfigconn
+	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn
 
 	input := &r53rcc.DeleteClusterInput{
 		ClusterArn: aws.String(d.Id()),

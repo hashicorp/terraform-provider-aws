@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func testAccAWSRoute53RecoveryControlConfigRoutingControl_basic(t *testing.T) {
@@ -93,7 +94,7 @@ func testAccCheckAwsRoute53RecoveryControlConfigRoutingControlExists(name string
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).route53recoverycontrolconfigconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryControlConfigConn
 
 		input := &r53rcc.DescribeRoutingControlInput{
 			RoutingControlArn: aws.String(rs.Primary.ID),
@@ -106,7 +107,7 @@ func testAccCheckAwsRoute53RecoveryControlConfigRoutingControlExists(name string
 }
 
 func testAccCheckAwsRoute53RecoveryControlConfigRoutingControlDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).route53recoverycontrolconfigconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryControlConfigConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route53recoverycontrolconfig_routing_control" {
