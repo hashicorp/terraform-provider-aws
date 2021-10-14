@@ -201,7 +201,7 @@ func resourceAwsCloudFrontOriginRequestPolicyDelete(d *schema.ResourceData, meta
 
 	_, err := conn.DeleteOriginRequestPolicy(request)
 	if err != nil {
-		if isAWSErr(err, cloudfront.ErrCodeNoSuchOriginRequestPolicy, "") {
+		if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeNoSuchOriginRequestPolicy, "") {
 			return nil
 		}
 		return err

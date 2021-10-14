@@ -223,7 +223,7 @@ func resourceAwsCloudFrontCachePolicyDelete(d *schema.ResourceData, meta interfa
 
 	_, err := conn.DeleteCachePolicy(request)
 	if err != nil {
-		if isAWSErr(err, cloudfront.ErrCodeNoSuchCachePolicy, "") {
+		if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeNoSuchCachePolicy, "") {
 			return nil
 		}
 		return err

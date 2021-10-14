@@ -205,7 +205,7 @@ func testAccCheckCloudFrontRealtimeLogConfigDestroy(s *terraform.State) error {
 		// Try to find the resource
 		_, err := finder.RealtimeLogConfigByARN(conn, rs.Primary.ID)
 		// Verify the error is what we want
-		if isAWSErr(err, cloudfront.ErrCodeNoSuchRealtimeLogConfig, "") {
+		if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeNoSuchRealtimeLogConfig, "") {
 			continue
 		}
 		if err != nil {
