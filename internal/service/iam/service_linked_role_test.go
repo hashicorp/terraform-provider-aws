@@ -2,8 +2,6 @@ package iam_test
 
 import (
 	"fmt"
-	"log"
-	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -15,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
 func TestDecodeIamServiceLinkedRoleID(t *testing.T) {

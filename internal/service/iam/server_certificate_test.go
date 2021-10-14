@@ -2,7 +2,6 @@ package iam_test
 
 import (
 	"fmt"
-	"log"
 	"strings"
 	"testing"
 
@@ -14,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
 func TestAccIAMServerCertificate_basic(t *testing.T) {
