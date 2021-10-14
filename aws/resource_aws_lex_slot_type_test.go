@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -43,7 +44,7 @@ func testSweepLexSlotTypes(region string) error {
 		}
 
 		for _, slotType := range page.SlotTypes {
-			r := resourceAwsLexSlotType()
+			r := ResourceSlotType()
 			d := r.Data(nil)
 
 			d.SetId(aws.StringValue(slotType.Name))
@@ -340,7 +341,7 @@ func TestAccAwsLexSlotType_disappears(t *testing.T) {
 				Config: testAccAwsLexSlotTypeConfig_basic(testSlotTypeID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLexSlotTypeExists(rName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsLexSlotType(), rName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceSlotType(), rName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

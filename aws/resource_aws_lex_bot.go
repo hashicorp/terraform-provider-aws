@@ -20,12 +20,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsLexBot() *schema.Resource {
+func ResourceBot() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLexBotCreate,
-		Read:   resourceAwsLexBotRead,
-		Update: resourceAwsLexBotUpdate,
-		Delete: resourceAwsLexBotDelete,
+		Create: resourceBotCreate,
+		Read:   resourceBotRead,
+		Update: resourceBotUpdate,
+		Delete: resourceBotDelete,
 
 		// TODO add to other lex resources
 		Importer: &schema.ResourceImporter{
@@ -218,7 +218,7 @@ var validateLexBotVersion = validation.All(
 	validation.StringMatch(regexp.MustCompile(`\$LATEST|[0-9]+`), ""),
 )
 
-func resourceAwsLexBotCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceBotCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LexModelBuildingConn
 
 	name := d.Get("name").(string)
@@ -271,10 +271,10 @@ func resourceAwsLexBotCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error waiting for Lex Bot (%s) create: %w", d.Id(), err)
 	}
 
-	return resourceAwsLexBotRead(d, meta)
+	return resourceBotRead(d, meta)
 }
 
-func resourceAwsLexBotRead(d *schema.ResourceData, meta interface{}) error {
+func resourceBotRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LexModelBuildingConn
 
 	output, err := finder.BotVersionByName(conn, d.Id(), tflex.LexBotVersionLatest)
@@ -344,7 +344,7 @@ func resourceAwsLexBotRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsLexBotUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceBotUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LexModelBuildingConn
 
 	input := &lexmodelbuildingservice.PutBotInput{
@@ -386,10 +386,10 @@ func resourceAwsLexBotUpdate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error waiting for Lex Bot (%s) update: %w", d.Id(), err)
 	}
 
-	return resourceAwsLexBotRead(d, meta)
+	return resourceBotRead(d, meta)
 }
 
-func resourceAwsLexBotDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceBotDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LexModelBuildingConn
 
 	input := &lexmodelbuildingservice.DeleteBotInput{

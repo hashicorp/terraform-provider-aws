@@ -17,6 +17,7 @@ import (
 	tflex "github.com/hashicorp/terraform-provider-aws/aws/internal/service/lex"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -46,7 +47,7 @@ func testSweepLexIntents(region string) error {
 		}
 
 		for _, intent := range page.Intents {
-			r := resourceAwsLexIntent()
+			r := ResourceIntent()
 			d := r.Data(nil)
 
 			d.SetId(aws.StringValue(intent.Name))
@@ -568,7 +569,7 @@ func TestAccAwsLexIntent_disappears(t *testing.T) {
 				Config: testAccAwsLexIntentConfig_basic(testIntentID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLexIntentExists(rName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsLexIntent(), rName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceIntent(), rName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -628,7 +629,7 @@ func TestAccAwsLexIntent_updateWithExternalChange(t *testing.T) {
 				Config: testAccAwsLexIntentConfig_basic(testIntentID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLexIntentExists(rName, &v),
-					testAccCheckAwsLexIntentUpdateDescription(acctest.Provider, resourceAwsLexIntent(), rName),
+					testAccCheckAwsLexIntentUpdateDescription(acctest.Provider, ResourceIntent(), rName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
