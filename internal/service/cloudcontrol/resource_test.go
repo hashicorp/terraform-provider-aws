@@ -27,7 +27,7 @@ func testAccErrorCheckSkipCloudControlAPI(t *testing.T) resource.ErrorCheckFunc 
 	)
 }
 
-func TestAccAwsCloudControlApiResource_basic(t *testing.T) {
+func TestAccCloudControlResource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudcontrolapi_resource.test"
 
@@ -48,7 +48,7 @@ func TestAccAwsCloudControlApiResource_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsCloudControlApiResource_disappears(t *testing.T) {
+func TestAccCloudControlResource_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudcontrolapi_resource.test"
 
@@ -69,7 +69,7 @@ func TestAccAwsCloudControlApiResource_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAwsCloudControlApiResource_DesiredState_BooleanValueAdded(t *testing.T) {
+func TestAccCloudControlResource_DesiredState_booleanValueAdded(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudcontrolapi_resource.test"
 
@@ -95,7 +95,7 @@ func TestAccAwsCloudControlApiResource_DesiredState_BooleanValueAdded(t *testing
 	})
 }
 
-func TestAccAwsCloudControlApiResource_DesiredState_BooleanValueRemoved(t *testing.T) {
+func TestAccCloudControlResource_DesiredState_booleanValueRemoved(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudcontrolapi_resource.test"
 
@@ -121,7 +121,7 @@ func TestAccAwsCloudControlApiResource_DesiredState_BooleanValueRemoved(t *testi
 	})
 }
 
-func TestAccAwsCloudControlApiResource_DesiredState_BooleanValueUpdate(t *testing.T) {
+func TestAccCloudControlResource_DesiredState_booleanValueUpdate(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudcontrolapi_resource.test"
 
@@ -147,7 +147,7 @@ func TestAccAwsCloudControlApiResource_DesiredState_BooleanValueUpdate(t *testin
 	})
 }
 
-func TestAccAwsCloudControlApiResource_DesiredState_CreateOnly(t *testing.T) {
+func TestAccCloudControlResource_DesiredState_createOnly(t *testing.T) {
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudcontrolapi_resource.test"
@@ -174,7 +174,7 @@ func TestAccAwsCloudControlApiResource_DesiredState_CreateOnly(t *testing.T) {
 	})
 }
 
-func TestAccAwsCloudControlApiResource_DesiredState_IntegerValueAdded(t *testing.T) {
+func TestAccCloudControlResource_DesiredState_integerValueAdded(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudcontrolapi_resource.test"
 
@@ -200,7 +200,7 @@ func TestAccAwsCloudControlApiResource_DesiredState_IntegerValueAdded(t *testing
 	})
 }
 
-func TestAccAwsCloudControlApiResource_DesiredState_IntegerValueRemoved(t *testing.T) {
+func TestAccCloudControlResource_DesiredState_integerValueRemoved(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudcontrolapi_resource.test"
 
@@ -226,7 +226,7 @@ func TestAccAwsCloudControlApiResource_DesiredState_IntegerValueRemoved(t *testi
 	})
 }
 
-func TestAccAwsCloudControlApiResource_DesiredState_IntegerValueUpdate(t *testing.T) {
+func TestAccCloudControlResource_DesiredState_integerValueUpdate(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudcontrolapi_resource.test"
 
@@ -252,7 +252,7 @@ func TestAccAwsCloudControlApiResource_DesiredState_IntegerValueUpdate(t *testin
 	})
 }
 
-func TestAccAwsCloudControlApiResource_DesiredState_InvalidPropertyName(t *testing.T) {
+func TestAccCloudControlResource_DesiredState_invalidPropertyName(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -269,7 +269,7 @@ func TestAccAwsCloudControlApiResource_DesiredState_InvalidPropertyName(t *testi
 	})
 }
 
-func TestAccAwsCloudControlApiResource_DesiredState_InvalidPropertyValue(t *testing.T) {
+func TestAccCloudControlResource_DesiredState_invalidPropertyValue(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -286,7 +286,7 @@ func TestAccAwsCloudControlApiResource_DesiredState_InvalidPropertyValue(t *test
 	})
 }
 
-func TestAccAwsCloudControlApiResource_DesiredState_ObjectValueAdded(t *testing.T) {
+func TestAccCloudControlResource_DesiredState_objectValueAdded(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudcontrolapi_resource.test"
 
@@ -312,7 +312,7 @@ func TestAccAwsCloudControlApiResource_DesiredState_ObjectValueAdded(t *testing.
 	})
 }
 
-func TestAccAwsCloudControlApiResource_DesiredState_ObjectValueRemoved(t *testing.T) {
+func TestAccCloudControlResource_DesiredState_objectValueRemoved(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudcontrolapi_resource.test"
 
@@ -338,7 +338,7 @@ func TestAccAwsCloudControlApiResource_DesiredState_ObjectValueRemoved(t *testin
 	})
 }
 
-func TestAccAwsCloudControlApiResource_DesiredState_ObjectValueUpdate(t *testing.T) {
+func TestAccCloudControlResource_DesiredState_objectValueUpdate(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudcontrolapi_resource.test"
 
@@ -370,7 +370,7 @@ func TestAccAwsCloudControlApiResource_DesiredState_ObjectValueUpdate(t *testing
 	})
 }
 
-func TestAccAwsCloudControlApiResource_DesiredState_StringValueAdded(t *testing.T) {
+func TestAccCloudControlResource_DesiredState_stringValueAdded(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudcontrolapi_resource.test"
 
@@ -396,7 +396,7 @@ func TestAccAwsCloudControlApiResource_DesiredState_StringValueAdded(t *testing.
 	})
 }
 
-func TestAccAwsCloudControlApiResource_DesiredState_StringValueRemoved(t *testing.T) {
+func TestAccCloudControlResource_DesiredState_stringValueRemoved(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudcontrolapi_resource.test"
 
@@ -422,7 +422,7 @@ func TestAccAwsCloudControlApiResource_DesiredState_StringValueRemoved(t *testin
 	})
 }
 
-func TestAccAwsCloudControlApiResource_DesiredState_StringValueUpdate(t *testing.T) {
+func TestAccCloudControlResource_DesiredState_stringValueUpdate(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudcontrolapi_resource.test"
 
@@ -448,7 +448,7 @@ func TestAccAwsCloudControlApiResource_DesiredState_StringValueUpdate(t *testing
 	})
 }
 
-func TestAccAwsCloudControlApiResource_ResourceSchema(t *testing.T) {
+func TestAccCloudControlResource_resourceSchema(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudcontrolapi_resource.test"
 

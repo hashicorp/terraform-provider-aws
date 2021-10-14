@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAwsCloudControlApiResourceDataSource_basic(t *testing.T) {
+func TestAccCloudControlResourceDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_cloudcontrolapi_resource.test"
 	resourceName := "aws_cloudcontrolapi_resource.test"
