@@ -3,7 +3,6 @@ package kinesisanalytics
 import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kinesisanalytics"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Custom Kinesisanalytics listing functions using similar formatting as other service generated code.
