@@ -8,14 +8,15 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSAutoscalingSchedule_basic(t *testing.T) {
 	var schedule autoscaling.ScheduledUpdateGroupAction
-	rName := fmt.Sprintf("tf-test-%d", acctest.RandInt())
+	rName := fmt.Sprintf("tf-test-%d", sdkacctest.RandInt())
 	start := testAccAWSAutoscalingScheduleValidStart(t)
 	end := testAccAWSAutoscalingScheduleValidEnd(t)
 
@@ -24,8 +25,8 @@ func TestAccAWSAutoscalingSchedule_basic(t *testing.T) {
 	importInput := fmt.Sprintf("%s/%s", rName, scheduledActionName)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAutoscalingScheduleDestroy,
 		Steps: []resource.TestStep{
@@ -54,13 +55,13 @@ func TestAccAWSAutoscalingSchedule_basic(t *testing.T) {
 
 func TestAccAWSAutoscalingSchedule_disappears(t *testing.T) {
 	var schedule autoscaling.ScheduledUpdateGroupAction
-	rName := fmt.Sprintf("tf-test-%d", acctest.RandInt())
+	rName := fmt.Sprintf("tf-test-%d", sdkacctest.RandInt())
 	start := testAccAWSAutoscalingScheduleValidStart(t)
 	end := testAccAWSAutoscalingScheduleValidEnd(t)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAutoscalingScheduleDestroy,
 		Steps: []resource.TestStep{
@@ -91,15 +92,15 @@ func testAccCheckScalingScheduleDisappears(schedule *autoscaling.ScheduledUpdate
 func TestAccAWSAutoscalingSchedule_recurrence(t *testing.T) {
 	var schedule autoscaling.ScheduledUpdateGroupAction
 
-	rName := fmt.Sprintf("tf-test-%d", acctest.RandInt())
+	rName := fmt.Sprintf("tf-test-%d", sdkacctest.RandInt())
 
 	scheduledActionName := "foobar"
 	resourceName := fmt.Sprintf("aws_autoscaling_schedule.%s", scheduledActionName)
 	importInput := fmt.Sprintf("%s/%s", rName, scheduledActionName)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAutoscalingScheduleDestroy,
 		Steps: []resource.TestStep{
@@ -123,7 +124,7 @@ func TestAccAWSAutoscalingSchedule_recurrence(t *testing.T) {
 func TestAccAWSAutoscalingSchedule_zeroValues(t *testing.T) {
 	var schedule autoscaling.ScheduledUpdateGroupAction
 
-	rName := fmt.Sprintf("tf-test-%d", acctest.RandInt())
+	rName := fmt.Sprintf("tf-test-%d", sdkacctest.RandInt())
 	start := testAccAWSAutoscalingScheduleValidStart(t)
 	end := testAccAWSAutoscalingScheduleValidEnd(t)
 
@@ -132,8 +133,8 @@ func TestAccAWSAutoscalingSchedule_zeroValues(t *testing.T) {
 	importInput := fmt.Sprintf("%s/%s", rName, scheduledActionName)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAutoscalingScheduleDestroy,
 		Steps: []resource.TestStep{
@@ -156,7 +157,7 @@ func TestAccAWSAutoscalingSchedule_zeroValues(t *testing.T) {
 func TestAccAWSAutoscalingSchedule_negativeOne(t *testing.T) {
 	var schedule autoscaling.ScheduledUpdateGroupAction
 
-	rName := fmt.Sprintf("tf-test-%d", acctest.RandInt())
+	rName := fmt.Sprintf("tf-test-%d", sdkacctest.RandInt())
 	start := testAccAWSAutoscalingScheduleValidStart(t)
 	end := testAccAWSAutoscalingScheduleValidEnd(t)
 
@@ -165,8 +166,8 @@ func TestAccAWSAutoscalingSchedule_negativeOne(t *testing.T) {
 	importInput := fmt.Sprintf("%s/%s", rName, scheduledActionName)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAutoscalingScheduleDestroy,
 		Steps: []resource.TestStep{
@@ -272,7 +273,7 @@ func testAccCheckScalingScheduleHasNoDesiredCapacity(
 }
 
 func testAccAWSAutoscalingScheduleConfig(r, start, end string) string {
-	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
+	return acctest.ConfigLatestAmazonLinuxHVMEBSAMI() + fmt.Sprintf(`
 resource "aws_launch_configuration" "foobar" {
   name          = "%s"
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
@@ -319,7 +320,7 @@ resource "aws_autoscaling_schedule" "foobar" {
 }
 
 func testAccAWSAutoscalingScheduleConfig_recurrence(r string) string {
-	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
+	return acctest.ConfigLatestAmazonLinuxHVMEBSAMI() + fmt.Sprintf(`
 resource "aws_launch_configuration" "foobar" {
   name          = "%s"
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
@@ -366,7 +367,7 @@ resource "aws_autoscaling_schedule" "foobar" {
 }
 
 func testAccAWSAutoscalingScheduleConfig_zeroValues(r, start, end string) string {
-	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
+	return acctest.ConfigLatestAmazonLinuxHVMEBSAMI() + fmt.Sprintf(`
 resource "aws_launch_configuration" "foobar" {
   name          = "%s"
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
@@ -413,7 +414,7 @@ resource "aws_autoscaling_schedule" "foobar" {
 }
 
 func testAccAWSAutoscalingScheduleConfig_negativeOne(r, start, end string) string {
-	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
+	return acctest.ConfigLatestAmazonLinuxHVMEBSAMI() + fmt.Sprintf(`
 resource "aws_launch_configuration" "foobar" {
   name          = "%s"
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id

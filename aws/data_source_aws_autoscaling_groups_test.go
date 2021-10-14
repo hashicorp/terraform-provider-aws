@@ -8,22 +8,23 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/autoscaling"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSAutoscalingGroups_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, autoscaling.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsAutoscalingGroupsConfig(acctest.RandInt(), acctest.RandInt(), acctest.RandInt()),
+				Config: testAccCheckAwsAutoscalingGroupsConfig(sdkacctest.RandInt(), sdkacctest.RandInt(), sdkacctest.RandInt()),
 			},
 			{
-				Config: testAccCheckAwsAutoscalingGroupsConfigWithDataSource(acctest.RandInt(), acctest.RandInt(), acctest.RandInt()),
+				Config: testAccCheckAwsAutoscalingGroupsConfigWithDataSource(sdkacctest.RandInt(), sdkacctest.RandInt(), sdkacctest.RandInt()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAutoscalingGroups("data.aws_autoscaling_groups.group_list"),
 					resource.TestCheckResourceAttr("data.aws_autoscaling_groups.group_list", "names.#", "3"),
@@ -83,7 +84,7 @@ func testAccCheckAwsAutoscalingGroupsAvailable(attrs map[string]string) ([]strin
 }
 
 func testAccCheckAwsAutoscalingGroupsConfig(rInt1, rInt2, rInt3 int) string {
-	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
+	return acctest.ConfigAvailableAZsNoOptIn() + fmt.Sprintf(`
 data "aws_ami" "test_ami" {
   most_recent = true
   owners      = ["amazon"]
@@ -156,7 +157,7 @@ resource "aws_autoscaling_group" "barbaz" {
 }
 
 func testAccCheckAwsAutoscalingGroupsConfigWithDataSource(rInt1, rInt2, rInt3 int) string {
-	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
+	return acctest.ConfigAvailableAZsNoOptIn() + fmt.Sprintf(`
 data "aws_ami" "test_ami" {
   most_recent = true
   owners      = ["amazon"]

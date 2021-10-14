@@ -11,14 +11,15 @@ import (
 	tfautoscaling "github.com/hashicorp/terraform-provider-aws/aws/internal/service/autoscaling"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tagresource"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSAutoscalingGroupTag_basic(t *testing.T) {
 	resourceName := "aws_autoscaling_group_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAutoscalingGroupTagDestroy,
 		Steps: []resource.TestStep{
@@ -43,8 +44,8 @@ func TestAccAWSAutoscalingGroupTag_disappears(t *testing.T) {
 	resourceName := "aws_autoscaling_group_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAutoscalingGroupTagDestroy,
 		Steps: []resource.TestStep{
@@ -52,7 +53,7 @@ func TestAccAWSAutoscalingGroupTag_disappears(t *testing.T) {
 				Config: testAccAutoscalingGroupTagConfig("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAutoscalingGroupTagExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsAutoscalingGroupTag(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsAutoscalingGroupTag(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -64,8 +65,8 @@ func TestAccAWSAutoscalingGroupTag_Value(t *testing.T) {
 	resourceName := "aws_autoscaling_group_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAutoscalingGroupTagDestroy,
 		Steps: []resource.TestStep{
@@ -154,9 +155,9 @@ func testAccCheckAutoscalingGroupTagExists(n string) resource.TestCheckFunc {
 }
 
 func testAccAutoscalingGroupTagConfig(key string, value string) string {
-	return composeConfig(
-		testAccAvailableAZsNoOptInDefaultExcludeConfig(),
-		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		fmt.Sprintf(`
 resource "aws_launch_template" "test" {
   name_prefix   = "terraform-test-"

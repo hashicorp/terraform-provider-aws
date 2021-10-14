@@ -8,9 +8,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSAutoscalingPolicy_basic(t *testing.T) {
@@ -20,11 +21,11 @@ func TestAccAWSAutoscalingPolicy_basic(t *testing.T) {
 	resourceStepName := "aws_autoscaling_policy.foobar_step"
 	resourceTargetTrackingName := "aws_autoscaling_policy.foobar_target_tracking"
 
-	name := fmt.Sprintf("terraform-testacc-asp-%s", acctest.RandString(5))
+	name := fmt.Sprintf("terraform-testacc-asp-%s", sdkacctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAutoscalingPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -108,11 +109,11 @@ func TestAccAWSAutoscalingPolicy_predictiveScaling(t *testing.T) {
 
 	resourceSimpleName := "aws_autoscaling_policy.test"
 
-	name := acctest.RandomWithPrefix("terraform-testacc-asp")
+	name := sdkacctest.RandomWithPrefix("terraform-testacc-asp")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAutoscalingPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -146,11 +147,11 @@ func TestAccAWSAutoscalingPolicy_predictiveScalingRemoved(t *testing.T) {
 
 	resourceSimpleName := "aws_autoscaling_policy.test"
 
-	name := acctest.RandomWithPrefix("terraform-testacc-asp")
+	name := sdkacctest.RandomWithPrefix("terraform-testacc-asp")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAutoscalingPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -183,11 +184,11 @@ func TestAccAWSAutoscalingPolicy_predictiveScalingUpdated(t *testing.T) {
 
 	resourceSimpleName := "aws_autoscaling_policy.test"
 
-	name := acctest.RandomWithPrefix("terraform-testacc-asp")
+	name := sdkacctest.RandomWithPrefix("terraform-testacc-asp")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAutoscalingPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -236,11 +237,11 @@ func TestAccAWSAutoscalingPolicy_disappears(t *testing.T) {
 
 	resourceName := "aws_autoscaling_policy.foobar_simple"
 
-	name := fmt.Sprintf("terraform-testacc-asp-%s", acctest.RandString(5))
+	name := fmt.Sprintf("terraform-testacc-asp-%s", sdkacctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAutoscalingPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -298,11 +299,11 @@ func TestAccAWSAutoscalingPolicy_SimpleScalingStepAdjustment(t *testing.T) {
 
 	resourceName := "aws_autoscaling_policy.foobar_simple"
 
-	name := fmt.Sprintf("terraform-testacc-asp-%s", acctest.RandString(5))
+	name := fmt.Sprintf("terraform-testacc-asp-%s", sdkacctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAutoscalingPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -327,11 +328,11 @@ func TestAccAWSAutoscalingPolicy_SimpleScalingStepAdjustment(t *testing.T) {
 func TestAccAWSAutoscalingPolicy_TargetTrack_Predefined(t *testing.T) {
 	var policy autoscaling.ScalingPolicy
 
-	name := fmt.Sprintf("terraform-testacc-asp-%s", acctest.RandString(5))
+	name := fmt.Sprintf("terraform-testacc-asp-%s", sdkacctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAutoscalingPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -354,11 +355,11 @@ func TestAccAWSAutoscalingPolicy_TargetTrack_Predefined(t *testing.T) {
 func TestAccAWSAutoscalingPolicy_TargetTrack_Custom(t *testing.T) {
 	var policy autoscaling.ScalingPolicy
 
-	name := fmt.Sprintf("terraform-testacc-asp-%s", acctest.RandString(5))
+	name := fmt.Sprintf("terraform-testacc-asp-%s", sdkacctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAutoscalingPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -386,13 +387,13 @@ func TestAccAWSAutoscalingPolicy_zerovalue(t *testing.T) {
 	resourceStepName := "aws_autoscaling_policy.foobar_step"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAutoscalingPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAutoscalingPolicyConfig_zerovalue(acctest.RandString(5)),
+				Config: testAccAWSAutoscalingPolicyConfig_zerovalue(sdkacctest.RandString(5)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScalingPolicyExists(resourceSimpleName, &simplepolicy),
 					testAccCheckScalingPolicyExists(resourceStepName, &steppolicy),
@@ -520,7 +521,7 @@ resource "aws_autoscaling_group" "test" {
 }
 
 func testAccAWSAutoscalingPolicyConfig_basic(name string) string {
-	return composeConfig(testAccAWSAutoscalingPolicyConfig_base(name), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSAutoscalingPolicyConfig_base(name), fmt.Sprintf(`
 resource "aws_autoscaling_policy" "foobar_simple" {
   name                   = "%s-foobar_simple"
   adjustment_type        = "ChangeInCapacity"
@@ -562,7 +563,7 @@ resource "aws_autoscaling_policy" "foobar_target_tracking" {
 }
 
 func testAccAWSAutoscalingPolicyConfig_predictiveScaling(name string) string {
-	return composeConfig(testAccAWSAutoscalingPolicyConfig_base(name), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSAutoscalingPolicyConfig_base(name), fmt.Sprintf(`
 resource "aws_autoscaling_policy" "test" {
   name                   = "%[1]s-policy_predictive"
   policy_type            = "PredictiveScaling"
@@ -589,7 +590,7 @@ resource "aws_autoscaling_policy" "test" {
 }
 
 func testAccAWSAutoscalingPolicyConfig_predictiveScalingRemoved(name string) string {
-	return composeConfig(testAccAWSAutoscalingPolicyConfig_base(name), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSAutoscalingPolicyConfig_base(name), fmt.Sprintf(`
 resource "aws_autoscaling_policy" "test" {
   name                   = "%[1]s-foobar_simple"
   adjustment_type        = "ChangeInCapacity"

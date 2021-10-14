@@ -7,19 +7,20 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSASGNotification_basic(t *testing.T) {
 	var asgn autoscaling.DescribeNotificationConfigurationsOutput
 
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckASGNDestroy,
 		Steps: []resource.TestStep{
@@ -37,11 +38,11 @@ func TestAccAWSASGNotification_basic(t *testing.T) {
 func TestAccAWSASGNotification_update(t *testing.T) {
 	var asgn autoscaling.DescribeNotificationConfigurationsOutput
 
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckASGNDestroy,
 		Steps: []resource.TestStep{
@@ -70,8 +71,8 @@ func TestAccAWSASGNotification_Pagination(t *testing.T) {
 	resourceName := "aws_autoscaling_notification.example"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckASGNDestroy,
 		Steps: []resource.TestStep{
@@ -216,7 +217,7 @@ func testAccCheckAWSASGNotificationAttributes(n string, asgn *autoscaling.Descri
 }
 
 func testAccASGNotificationConfig_basic(rName string) string {
-	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
+	return acctest.ConfigLatestAmazonLinuxHVMEBSAMI() + fmt.Sprintf(`
 resource "aws_sns_topic" "topic_example" {
   name = "user-updates-topic-%s"
 }
@@ -263,7 +264,7 @@ resource "aws_autoscaling_notification" "example" {
 }
 
 func testAccASGNotificationConfig_update(rName string) string {
-	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
+	return acctest.ConfigLatestAmazonLinuxHVMEBSAMI() + fmt.Sprintf(`
 resource "aws_sns_topic" "topic_example" {
   name = "user-updates-topic-%s"
 }
@@ -327,7 +328,7 @@ resource "aws_autoscaling_notification" "example" {
 }
 
 func testAccASGNotificationConfig_pagination() string {
-	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), `
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), `
 resource "aws_sns_topic" "user_updates" {
   name = "user-updates-topic"
 }
