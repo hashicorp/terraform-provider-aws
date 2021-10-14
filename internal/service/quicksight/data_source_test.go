@@ -57,7 +57,7 @@ func testSweepQuickSightDataSources(region string) error {
 				continue
 			}
 
-			r := ResourceDataSource()
+			r := tfquicksight.ResourceDataSource()
 
 			d := r.Data(nil)
 
@@ -279,7 +279,7 @@ func TestQuickSightDataSourcePermissionsDiff(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			toGrant, toRevoke := diffQuickSightDataSourcePermissions(testCase.oldPermissions, testCase.newPermissions)
+			toGrant, toRevoke := tfquicksight.DiffPermissions(testCase.oldPermissions, testCase.newPermissions)
 			if !reflect.DeepEqual(toGrant, testCase.expectedGrants) {
 				t.Fatalf("Expected: %v, got: %v", testCase.expectedGrants, toGrant)
 			}
@@ -344,7 +344,7 @@ func TestAccAWSQuickSightDataSource_disappears(t *testing.T) {
 				Config: testAccAWSQuickSightDataSourceConfig(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQuickSightDataSourceExists(resourceName, &dataSource),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceDataSource(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfquicksight.ResourceDataSource(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

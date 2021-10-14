@@ -135,7 +135,7 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).QuickSightConn
 
-	awsAccountID, namespace, userName, err := resourceAwsQuickSightUserParseID(d.Id())
+	awsAccountID, namespace, userName, err := UserParseID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -169,7 +169,7 @@ func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).QuickSightConn
 
-	awsAccountID, namespace, userName, err := resourceAwsQuickSightUserParseID(d.Id())
+	awsAccountID, namespace, userName, err := UserParseID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -198,7 +198,7 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceUserDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).QuickSightConn
 
-	awsAccountID, namespace, userName, err := resourceAwsQuickSightUserParseID(d.Id())
+	awsAccountID, namespace, userName, err := UserParseID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -219,7 +219,7 @@ func resourceUserDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsQuickSightUserParseID(id string) (string, string, string, error) {
+func UserParseID(id string) (string, string, string, error) {
 	parts := strings.SplitN(id, "/", 3)
 	if len(parts) < 3 || parts[0] == "" || parts[1] == "" || parts[2] == "" {
 		return "", "", "", fmt.Errorf("unexpected format of ID (%s), expected AWS_ACCOUNT_ID/NAMESPACE/USER_NAME", id)

@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfquicksight "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
 )
 
 func TestAccAWSQuickSightGroup_basic(t *testing.T) {
@@ -117,7 +118,7 @@ func testAccCheckQuickSightGroupExists(resourceName string, group *quicksight.Gr
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		awsAccountID, namespace, groupName, err := resourceAwsQuickSightGroupParseID(rs.Primary.ID)
+		awsAccountID, namespace, groupName, err := tfquicksight.GroupParseID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -153,7 +154,7 @@ func testAccCheckQuickSightGroupDestroy(s *terraform.State) error {
 			continue
 		}
 
-		awsAccountID, namespace, groupName, err := resourceAwsQuickSightGroupParseID(rs.Primary.ID)
+		awsAccountID, namespace, groupName, err := tfquicksight.GroupParseID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}

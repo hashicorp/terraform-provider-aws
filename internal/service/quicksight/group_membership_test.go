@@ -56,7 +56,7 @@ func TestAccAWSQuickSightGroupMembership_disappears(t *testing.T) {
 				Config: testAccAWSQuickSightGroupMembershipConfig(groupName, memberName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQuickSightGroupMembershipExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceGroupMembership(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfquicksight.ResourceGroupMembership(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -71,7 +71,7 @@ func testAccCheckQuickSightGroupMembershipDestroy(s *terraform.State) error {
 		if rs.Type != "aws_quicksight_group_membership" {
 			continue
 		}
-		awsAccountID, namespace, groupName, userName, err := resourceAwsQuickSightGroupMembershipParseID(rs.Primary.ID)
+		awsAccountID, namespace, groupName, userName, err := tfquicksight.GroupMembershipParseID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -104,7 +104,7 @@ func testAccCheckQuickSightGroupMembershipExists(resourceName string) resource.T
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		awsAccountID, namespace, groupName, userName, err := resourceAwsQuickSightGroupMembershipParseID(rs.Primary.ID)
+		awsAccountID, namespace, groupName, userName, err := tfquicksight.GroupMembershipParseID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}

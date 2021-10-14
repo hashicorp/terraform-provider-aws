@@ -793,7 +793,7 @@ func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		o := oraw.(*schema.Set).List()
 		n := nraw.(*schema.Set).List()
 
-		toGrant, toRevoke := diffQuickSightDataSourcePermissions(o, n)
+		toGrant, toRevoke := DiffPermissions(o, n)
 
 		params := &quicksight.UpdateDataSourcePermissionsInput{
 			AwsAccountId: aws.String(awsAccountId),
@@ -1273,7 +1273,7 @@ func expandQuickSightDataSourceParameters(tfList []interface{}) *quicksight.Data
 	return dataSourceParams
 }
 
-func diffQuickSightDataSourcePermissions(o, n []interface{}) ([]*quicksight.ResourcePermission, []*quicksight.ResourcePermission) {
+func DiffPermissions(o, n []interface{}) ([]*quicksight.ResourcePermission, []*quicksight.ResourcePermission) {
 	old := expandQuickSightDataSourcePermissions(o)
 	new := expandQuickSightDataSourcePermissions(n)
 
