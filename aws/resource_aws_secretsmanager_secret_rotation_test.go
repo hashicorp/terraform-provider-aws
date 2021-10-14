@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAwsSecretsManagerSecretRotation_basic(t *testing.T) {
@@ -59,7 +60,7 @@ func TestAccAwsSecretsManagerSecretRotation_basic(t *testing.T) {
 }
 
 func testAccCheckAwsSecretsManagerSecretRotationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).secretsmanagerconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_secretsmanager_secret_rotation" {
@@ -94,7 +95,7 @@ func testAccCheckAwsSecretsManagerSecretRotationExists(resourceName string, secr
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).secretsmanagerconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn
 		input := &secretsmanager.DescribeSecretInput{
 			SecretId: aws.String(rs.Primary.ID),
 		}

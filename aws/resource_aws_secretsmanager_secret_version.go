@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/secretsmanager/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsSecretsManagerSecretVersion() *schema.Resource {
@@ -64,7 +65,7 @@ func resourceAwsSecretsManagerSecretVersion() *schema.Resource {
 }
 
 func resourceAwsSecretsManagerSecretVersionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).secretsmanagerconn
+	conn := meta.(*conns.AWSClient).SecretsManagerConn
 	secretID := d.Get("secret_id").(string)
 
 	input := &secretsmanager.PutSecretValueInput{
@@ -106,7 +107,7 @@ func resourceAwsSecretsManagerSecretVersionCreate(d *schema.ResourceData, meta i
 }
 
 func resourceAwsSecretsManagerSecretVersionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).secretsmanagerconn
+	conn := meta.(*conns.AWSClient).SecretsManagerConn
 
 	secretID, versionID, err := decodeSecretsManagerSecretVersionID(d.Id())
 	if err != nil {
@@ -178,7 +179,7 @@ func resourceAwsSecretsManagerSecretVersionRead(d *schema.ResourceData, meta int
 }
 
 func resourceAwsSecretsManagerSecretVersionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).secretsmanagerconn
+	conn := meta.(*conns.AWSClient).SecretsManagerConn
 
 	secretID, versionID, err := decodeSecretsManagerSecretVersionID(d.Id())
 	if err != nil {
@@ -227,7 +228,7 @@ func resourceAwsSecretsManagerSecretVersionUpdate(d *schema.ResourceData, meta i
 }
 
 func resourceAwsSecretsManagerSecretVersionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).secretsmanagerconn
+	conn := meta.(*conns.AWSClient).SecretsManagerConn
 
 	secretID, versionID, err := decodeSecretsManagerSecretVersionID(d.Id())
 	if err != nil {
