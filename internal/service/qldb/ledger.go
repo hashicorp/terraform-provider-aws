@@ -87,7 +87,7 @@ func resourceLedgerCreate(d *schema.ResourceData, meta interface{}) error {
 		Name:               aws.String(d.Get("name").(string)),
 		PermissionsMode:    aws.String(d.Get("permissions_mode").(string)),
 		DeletionProtection: aws.Bool(d.Get("deletion_protection").(bool)),
-		Tags:               tags.IgnoreAws().QldbTags(),
+		Tags:               Tags(tags.IgnoreAws()),
 	}
 
 	log.Printf("[DEBUG] QLDB Ledger create config: %#v", *createOpts)
@@ -160,7 +160,7 @@ func resourceLedgerRead(d *schema.ResourceData, meta interface{}) error {
 
 	// Tags
 	log.Printf("[INFO] Fetching tags for %s", d.Id())
-	tags, err := tftags.QldbListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(conn, d.Get("arn").(string))
 	if err != nil {
 		return fmt.Errorf("Error listing tags for QLDB Ledger: %s", err)
 	}
@@ -209,7 +209,7 @@ func resourceLedgerUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.QldbUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)
 		}
 	}
