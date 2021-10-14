@@ -28,9 +28,9 @@ func TestAccAWSCloudwatchLogSubscriptionFilter_basic(t *testing.T) {
 		CheckDestroy: testAccCheckCloudwatchLogSubscriptionFilterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudwatchLogSubscriptionFilterConfigDestinationArnLambda(rName),
+				Config: testAccSubscriptionFilterDestinationARNLambdaConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsCloudwatchLogSubscriptionFilterExists(resourceName, &filter),
+					testAccCheckSubscriptionFilterExists(resourceName, &filter),
 					resource.TestCheckResourceAttrPair(resourceName, "destination_arn", lambdaFunctionResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "distribution", "ByLogStream"),
 					resource.TestCheckResourceAttr(resourceName, "filter_pattern", "logtype test"),
@@ -41,7 +41,7 @@ func TestAccAWSCloudwatchLogSubscriptionFilter_basic(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSCloudwatchLogSubscriptionFilterImportStateIDFunc(resourceName),
+				ImportStateIdFunc: testAccSubscriptionFilterImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -61,9 +61,9 @@ func TestAccAWSCloudwatchLogSubscriptionFilter_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckCloudwatchLogSubscriptionFilterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudwatchLogSubscriptionFilterConfigDestinationArnLambda(rName),
+				Config: testAccSubscriptionFilterDestinationARNLambdaConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsCloudwatchLogSubscriptionFilterExists(resourceName, &filter),
+					testAccCheckSubscriptionFilterExists(resourceName, &filter),
 					testAccCheckCloudwatchLogSubscriptionFilterDisappears(&filter),
 				),
 				ExpectNonEmptyPlan: true,
@@ -87,9 +87,9 @@ func TestAccAWSCloudwatchLogSubscriptionFilter_disappears_LogGroup(t *testing.T)
 		CheckDestroy: testAccCheckCloudwatchLogSubscriptionFilterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudwatchLogSubscriptionFilterConfigDestinationArnLambda(rName),
+				Config: testAccSubscriptionFilterDestinationARNLambdaConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsCloudwatchLogSubscriptionFilterExists(resourceName, &filter),
+					testAccCheckSubscriptionFilterExists(resourceName, &filter),
 					testAccCheckCloudWatchLogGroupExists(logGroupResourceName, &logGroup),
 					testAccCheckCloudWatchLogGroupDisappears(&logGroup),
 				),
@@ -113,16 +113,16 @@ func TestAccAWSCloudwatchLogSubscriptionFilter_DestinationArn_KinesisDataFirehos
 		CheckDestroy: testAccCheckCloudwatchLogSubscriptionFilterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudwatchLogSubscriptionFilterConfigDestinationArnKinesisDataFirehose(rName),
+				Config: testAccSubscriptionFilterDestinationARNKinesisDataFirehoseConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsCloudwatchLogSubscriptionFilterExists(resourceName, &filter),
+					testAccCheckSubscriptionFilterExists(resourceName, &filter),
 					resource.TestCheckResourceAttrPair(resourceName, "destination_arn", firehoseResourceName, "arn"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSCloudwatchLogSubscriptionFilterImportStateIDFunc(resourceName),
+				ImportStateIdFunc: testAccSubscriptionFilterImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -143,16 +143,16 @@ func TestAccAWSCloudwatchLogSubscriptionFilter_DestinationArn_KinesisStream(t *t
 		CheckDestroy: testAccCheckCloudwatchLogSubscriptionFilterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudwatchLogSubscriptionFilterConfigDestinationArnKinesisStream(rName),
+				Config: testAccSubscriptionFilterDestinationARNKinesisStreamConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsCloudwatchLogSubscriptionFilterExists(resourceName, &filter),
+					testAccCheckSubscriptionFilterExists(resourceName, &filter),
 					resource.TestCheckResourceAttrPair(resourceName, "destination_arn", kinesisStream, "arn"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSCloudwatchLogSubscriptionFilterImportStateIDFunc(resourceName),
+				ImportStateIdFunc: testAccSubscriptionFilterImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -172,22 +172,22 @@ func TestAccAWSCloudwatchLogSubscriptionFilter_Distribution(t *testing.T) {
 		CheckDestroy: testAccCheckCloudwatchLogSubscriptionFilterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudwatchLogSubscriptionFilterConfigDistribution(rName, "Random"),
+				Config: testAccSubscriptionFilterDistributionConfig(rName, "Random"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsCloudwatchLogSubscriptionFilterExists(resourceName, &filter),
+					testAccCheckSubscriptionFilterExists(resourceName, &filter),
 					resource.TestCheckResourceAttr(resourceName, "distribution", "Random"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSCloudwatchLogSubscriptionFilterImportStateIDFunc(resourceName),
+				ImportStateIdFunc: testAccSubscriptionFilterImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSCloudwatchLogSubscriptionFilterConfigDistribution(rName, "ByLogStream"),
+				Config: testAccSubscriptionFilterDistributionConfig(rName, "ByLogStream"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsCloudwatchLogSubscriptionFilterExists(resourceName, &filter),
+					testAccCheckSubscriptionFilterExists(resourceName, &filter),
 					resource.TestCheckResourceAttr(resourceName, "distribution", "ByLogStream"),
 				),
 			},
@@ -210,22 +210,22 @@ func TestAccAWSCloudwatchLogSubscriptionFilter_RoleArn(t *testing.T) {
 		CheckDestroy: testAccCheckCloudwatchLogSubscriptionFilterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudwatchLogSubscriptionFilterConfigRoleArn1(rName),
+				Config: testAccSubscriptionFilterRoleARN1Config(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsCloudwatchLogSubscriptionFilterExists(resourceName, &filter),
+					testAccCheckSubscriptionFilterExists(resourceName, &filter),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", iamRoleResourceName1, "arn"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSCloudwatchLogSubscriptionFilterImportStateIDFunc(resourceName),
+				ImportStateIdFunc: testAccSubscriptionFilterImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSCloudwatchLogSubscriptionFilterConfigRoleArn2(rName),
+				Config: testAccSubscriptionFilterRoleARN2Config(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsCloudwatchLogSubscriptionFilterExists(resourceName, &filter),
+					testAccCheckSubscriptionFilterExists(resourceName, &filter),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", iamRoleResourceName2, "arn"),
 				),
 			},
@@ -275,7 +275,7 @@ func testAccCheckCloudwatchLogSubscriptionFilterDestroy(s *terraform.State) erro
 
 }
 
-func testAccCheckAwsCloudwatchLogSubscriptionFilterExists(n string, filter *cloudwatchlogs.SubscriptionFilter) resource.TestCheckFunc {
+func testAccCheckSubscriptionFilterExists(n string, filter *cloudwatchlogs.SubscriptionFilter) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -316,7 +316,7 @@ func testAccCheckAwsCloudwatchLogSubscriptionFilterExists(n string, filter *clou
 	}
 }
 
-func testAccAWSCloudwatchLogSubscriptionFilterImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccSubscriptionFilterImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -331,7 +331,7 @@ func testAccAWSCloudwatchLogSubscriptionFilterImportStateIDFunc(resourceName str
 	}
 }
 
-func testAccAWSCloudwatchLogSubscriptionFilterConfigKinesisDataFirehoseBase(rName string) string {
+func testAccSubscriptionFilterKinesisDataFirehoseBaseConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {
 }
@@ -460,7 +460,7 @@ resource "aws_s3_bucket" "test" {
 `, rName)
 }
 
-func testAccAWSCloudwatchLogSubscriptionFilterConfigKinesisStreamBase(rName string) string {
+func testAccSubscriptionFilterKinesisStreamBaseConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {
 }
@@ -519,7 +519,7 @@ resource "aws_kinesis_stream" "test" {
 `, rName)
 }
 
-func testAccAWSCloudwatchLogSubscriptionFilterConfigLambdaBase(rName string) string {
+func testAccSubscriptionFilterLambdaBaseConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {
 }
@@ -571,8 +571,8 @@ resource "aws_lambda_permission" "test" {
 `, rName)
 }
 
-func testAccAWSCloudwatchLogSubscriptionFilterConfigDestinationArnKinesisDataFirehose(rName string) string {
-	return testAccAWSCloudwatchLogSubscriptionFilterConfigKinesisDataFirehoseBase(rName) + fmt.Sprintf(`
+func testAccSubscriptionFilterDestinationARNKinesisDataFirehoseConfig(rName string) string {
+	return testAccSubscriptionFilterKinesisDataFirehoseBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_cloudwatch_log_subscription_filter" "test" {
   destination_arn = aws_kinesis_firehose_delivery_stream.test.arn
   filter_pattern  = "logtype test"
@@ -583,8 +583,8 @@ resource "aws_cloudwatch_log_subscription_filter" "test" {
 `, rName)
 }
 
-func testAccAWSCloudwatchLogSubscriptionFilterConfigDestinationArnKinesisStream(rName string) string {
-	return testAccAWSCloudwatchLogSubscriptionFilterConfigKinesisStreamBase(rName) + fmt.Sprintf(`
+func testAccSubscriptionFilterDestinationARNKinesisStreamConfig(rName string) string {
+	return testAccSubscriptionFilterKinesisStreamBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_cloudwatch_log_subscription_filter" "test" {
   destination_arn = aws_kinesis_stream.test.arn
   filter_pattern  = "logtype test"
@@ -595,8 +595,8 @@ resource "aws_cloudwatch_log_subscription_filter" "test" {
 `, rName)
 }
 
-func testAccAWSCloudwatchLogSubscriptionFilterConfigDestinationArnLambda(rName string) string {
-	return testAccAWSCloudwatchLogSubscriptionFilterConfigLambdaBase(rName) + fmt.Sprintf(`
+func testAccSubscriptionFilterDestinationARNLambdaConfig(rName string) string {
+	return testAccSubscriptionFilterLambdaBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_cloudwatch_log_subscription_filter" "test" {
   destination_arn = aws_lambda_function.test.arn
   filter_pattern  = "logtype test"
@@ -606,8 +606,8 @@ resource "aws_cloudwatch_log_subscription_filter" "test" {
 `, rName)
 }
 
-func testAccAWSCloudwatchLogSubscriptionFilterConfigDistribution(rName, distribution string) string {
-	return testAccAWSCloudwatchLogSubscriptionFilterConfigLambdaBase(rName) + fmt.Sprintf(`
+func testAccSubscriptionFilterDistributionConfig(rName, distribution string) string {
+	return testAccSubscriptionFilterLambdaBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_cloudwatch_log_subscription_filter" "test" {
   destination_arn = aws_lambda_function.test.arn
   distribution    = %[2]q
@@ -618,8 +618,8 @@ resource "aws_cloudwatch_log_subscription_filter" "test" {
 `, rName, distribution)
 }
 
-func testAccAWSCloudwatchLogSubscriptionFilterConfigRoleArn1(rName string) string {
-	return testAccAWSCloudwatchLogSubscriptionFilterConfigKinesisStreamBase(rName) + fmt.Sprintf(`
+func testAccSubscriptionFilterRoleARN1Config(rName string) string {
+	return testAccSubscriptionFilterKinesisStreamBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_cloudwatch_log_subscription_filter" "test" {
   destination_arn = aws_kinesis_stream.test.arn
   filter_pattern  = "logtype test"
@@ -630,8 +630,8 @@ resource "aws_cloudwatch_log_subscription_filter" "test" {
 `, rName)
 }
 
-func testAccAWSCloudwatchLogSubscriptionFilterConfigRoleArn2(rName string) string {
-	return testAccAWSCloudwatchLogSubscriptionFilterConfigKinesisStreamBase(rName) + fmt.Sprintf(`
+func testAccSubscriptionFilterRoleARN2Config(rName string) string {
+	return testAccSubscriptionFilterKinesisStreamBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_iam_role" "test2" {
   name = "%[1]s-2"
 

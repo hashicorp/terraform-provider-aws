@@ -20,7 +20,7 @@ func TestAccAWSCloudwatchLogGroupDataSource_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAWSCloudwatchLogGroupDataSourceConfig(rName),
+				Config: testAccCheckGroupDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -42,7 +42,7 @@ func TestAccAWSCloudwatchLogGroupDataSource_tags(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAWSCloudwatchLogGroupDataSourceConfigTags(rName),
+				Config: testAccCheckGroupTagsDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -67,7 +67,7 @@ func TestAccAWSCloudwatchLogGroupDataSource_kms(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAWSCloudwatchLogGroupDataSourceConfigKMS(rName),
+				Config: testAccCheckGroupKMSDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -90,7 +90,7 @@ func TestAccAWSCloudwatchLogGroupDataSource_retention(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAWSCloudwatchLogGroupDataSourceConfigRetention(rName),
+				Config: testAccCheckGroupRetentionDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -103,7 +103,7 @@ func TestAccAWSCloudwatchLogGroupDataSource_retention(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSCloudwatchLogGroupDataSourceConfig(rName string) string {
+func testAccCheckGroupDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource aws_cloudwatch_log_group "test" {
   name = "%s"
@@ -115,7 +115,7 @@ data aws_cloudwatch_log_group "test" {
 `, rName)
 }
 
-func testAccCheckAWSCloudwatchLogGroupDataSourceConfigTags(rName string) string {
+func testAccCheckGroupTagsDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource aws_cloudwatch_log_group "test" {
   name = "%s"
@@ -133,7 +133,7 @@ data aws_cloudwatch_log_group "test" {
 `, rName)
 }
 
-func testAccCheckAWSCloudwatchLogGroupDataSourceConfigKMS(rName string) string {
+func testAccCheckGroupKMSDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "foo" {
   description             = "Terraform acc test %s"
@@ -169,7 +169,7 @@ data aws_cloudwatch_log_group "test" {
 `, rName, rName)
 }
 
-func testAccCheckAWSCloudwatchLogGroupDataSourceConfigRetention(rName string) string {
+func testAccCheckGroupRetentionDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource aws_cloudwatch_log_group "test" {
   name              = "%s"

@@ -23,17 +23,17 @@ func TestAccAWSCloudWatchLogStream_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCloudWatchLogStreamDestroy,
+		CheckDestroy: testAccCheckStreamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchLogStreamConfig(rName),
+				Config: testAccStreamConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchLogStreamExists(resourceName, &ls),
 				),
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccAWSCloudWatchLogStreamImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccStreamImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -50,10 +50,10 @@ func TestAccAWSCloudWatchLogStream_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCloudWatchLogStreamDestroy,
+		CheckDestroy: testAccCheckStreamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchLogStreamConfig(rName),
+				Config: testAccStreamConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchLogStreamExists(resourceName, &ls),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcloudwatchlogs.ResourceStream(), resourceName),
@@ -75,10 +75,10 @@ func TestAccAWSCloudWatchLogStream_disappears_LogGroup(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCloudWatchLogStreamDestroy,
+		CheckDestroy: testAccCheckStreamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchLogStreamConfig(rName),
+				Config: testAccStreamConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchLogStreamExists(resourceName, &ls),
 					testAccCheckCloudWatchLogGroupExists(logGroupResourceName, &lg),
@@ -113,7 +113,7 @@ func testAccCheckCloudWatchLogStreamExists(n string, ls *cloudwatchlogs.LogStrea
 	}
 }
 
-func testAccCheckAWSCloudWatchLogStreamDestroy(s *terraform.State) error {
+func testAccCheckStreamDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchLogsConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -141,7 +141,7 @@ func testAccCheckAWSCloudWatchLogStreamDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSCloudWatchLogStreamImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccStreamImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -179,7 +179,7 @@ func TestValidateCloudWatchLogStreamName(t *testing.T) {
 	}
 }
 
-func testAccAWSCloudWatchLogStreamConfig(rName string) string {
+func testAccStreamConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
   name = %[1]q

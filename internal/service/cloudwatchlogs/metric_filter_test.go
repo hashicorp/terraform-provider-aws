@@ -23,10 +23,10 @@ func TestAccAWSCloudWatchLogMetricFilter_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCloudWatchLogMetricFilterDestroy,
+		CheckDestroy: testAccCheckMetricFilterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchLogMetricFilterConfig(rInt),
+				Config: testAccMetricFilterConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchLogMetricFilterExists(resourceName, &mf),
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("MyAppAccessCount-%d", rInt)),
@@ -48,11 +48,11 @@ func TestAccAWSCloudWatchLogMetricFilter_basic(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSCloudwatchLogMetricFilterImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccMetricFilterImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSCloudWatchLogMetricFilterConfigModified(rInt),
+				Config: testAccMetricFilterModifiedConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchLogMetricFilterExists(resourceName, &mf),
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("MyAppAccessCount-%d", rInt)),
@@ -74,7 +74,7 @@ func TestAccAWSCloudWatchLogMetricFilter_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSCloudWatchLogMetricFilterConfigModifiedWithDimensions(rInt),
+				Config: testAccMetricFilterModifiedWithDimensionsConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchLogMetricFilterExists(resourceName, &mf),
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("MyAppAccessCount-%d", rInt)),
@@ -100,7 +100,7 @@ func TestAccAWSCloudWatchLogMetricFilter_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSCloudwatchLogMetricFilterConfigMany(rInt),
+				Config: testAccMetricFilterManyConfig(rInt),
 				Check:  testAccCheckCloudwatchLogMetricFilterManyExist("aws_cloudwatch_log_metric_filter.test", &mf),
 			},
 		},
@@ -116,10 +116,10 @@ func TestAccAWSCloudWatchLogMetricFilter_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCloudWatchLogMetricFilterDestroy,
+		CheckDestroy: testAccCheckMetricFilterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchLogMetricFilterConfig(rInt),
+				Config: testAccMetricFilterConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchLogMetricFilterExists(resourceName, &mf),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcloudwatchlogs.ResourceMetricFilter(), resourceName),
@@ -139,10 +139,10 @@ func TestAccAWSCloudWatchLogMetricFilter_disappears_logGroup(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCloudWatchLogMetricFilterDestroy,
+		CheckDestroy: testAccCheckMetricFilterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchLogMetricFilterConfig(rInt),
+				Config: testAccMetricFilterConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchLogMetricFilterExists(resourceName, &mf),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcloudwatchlogs.ResourceGroup(), "aws_cloudwatch_log_group.test"),
@@ -248,7 +248,7 @@ func testAccCheckCloudWatchLogMetricFilterExists(n string, mf *cloudwatchlogs.Me
 	}
 }
 
-func testAccCheckAWSCloudWatchLogMetricFilterDestroy(s *terraform.State) error {
+func testAccCheckMetricFilterDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchLogsConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -280,7 +280,7 @@ func testAccCheckCloudwatchLogMetricFilterManyExist(basename string, mf *cloudwa
 	}
 }
 
-func testAccAWSCloudWatchLogMetricFilterConfig(rInt int) string {
+func testAccMetricFilterConfig(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_metric_filter" "test" {
   name           = "MyAppAccessCount-%d"
@@ -300,7 +300,7 @@ resource "aws_cloudwatch_log_group" "test" {
 `, rInt, rInt)
 }
 
-func testAccAWSCloudWatchLogMetricFilterConfigModified(rInt int) string {
+func testAccMetricFilterModifiedConfig(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_metric_filter" "test" {
   name = "MyAppAccessCount-%d"
@@ -326,7 +326,7 @@ resource "aws_cloudwatch_log_group" "test" {
 `, rInt, rInt)
 }
 
-func testAccAWSCloudWatchLogMetricFilterConfigModifiedWithDimensions(rInt int) string {
+func testAccMetricFilterModifiedWithDimensionsConfig(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_metric_filter" "test" {
   name = "MyAppAccessCount-%d"
@@ -355,7 +355,7 @@ resource "aws_cloudwatch_log_group" "test" {
 `, rInt, rInt)
 }
 
-func testAccAWSCloudwatchLogMetricFilterConfigMany(rInt int) string {
+func testAccMetricFilterManyConfig(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_metric_filter" "test" {
   count          = 15
@@ -376,7 +376,7 @@ resource "aws_cloudwatch_log_group" "test" {
 `, rInt, rInt)
 }
 
-func testAccAWSCloudwatchLogMetricFilterImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccMetricFilterImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {

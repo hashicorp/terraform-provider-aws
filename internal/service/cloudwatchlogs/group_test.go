@@ -21,7 +21,7 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_cloudwatch_log_group", &resource.Sweeper{
 		Name: "aws_cloudwatch_log_group",
-		F:    testSweepCloudwatchLogGroups,
+		F:    sweepGroups,
 		Dependencies: []string{
 			"aws_api_gateway_rest_api",
 			"aws_cloudhsm_v2_cluster",
@@ -47,7 +47,7 @@ func init() {
 	})
 }
 
-func testSweepCloudwatchLogGroups(region string) error {
+func sweepGroups(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -107,10 +107,10 @@ func TestAccAWSCloudWatchLogGroup_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCloudWatchLogGroupDestroy,
+		CheckDestroy: testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchLogGroupConfig(rInt),
+				Config: testAccGroupConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchLogGroupExists(resourceName, &lg),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "logs", fmt.Sprintf("log-group:foo-bar-%d", rInt)),
@@ -137,10 +137,10 @@ func TestAccAWSCloudWatchLogGroup_namePrefix(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCloudWatchLogGroupDestroy,
+		CheckDestroy: testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchLogGroup_namePrefix,
+				Config: testAccGroup_namePrefix,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchLogGroupExists(resourceName, &lg),
 					resource.TestMatchResourceAttr(resourceName, "name", regexp.MustCompile("^tf-test-")),
@@ -165,10 +165,10 @@ func TestAccAWSCloudWatchLogGroup_namePrefix_retention(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCloudWatchLogGroupDestroy,
+		CheckDestroy: testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchLogGroup_namePrefix_retention(rName, 365),
+				Config: testAccGroup_namePrefix_retention(rName, 365),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchLogGroupExists(resourceName, &lg),
 					resource.TestMatchResourceAttr(resourceName, "name", regexp.MustCompile("^tf-test-")),
@@ -182,7 +182,7 @@ func TestAccAWSCloudWatchLogGroup_namePrefix_retention(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"retention_in_days", "name_prefix"},
 			},
 			{
-				Config: testAccAWSCloudWatchLogGroup_namePrefix_retention(rName, 7),
+				Config: testAccGroup_namePrefix_retention(rName, 7),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchLogGroupExists(resourceName, &lg),
 					resource.TestMatchResourceAttr(resourceName, "name", regexp.MustCompile("^tf-test-")),
@@ -201,10 +201,10 @@ func TestAccAWSCloudWatchLogGroup_generatedName(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCloudWatchLogGroupDestroy,
+		CheckDestroy: testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchLogGroup_generatedName,
+				Config: testAccGroup_generatedName,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchLogGroupExists(resourceName, &lg),
 				),
@@ -228,10 +228,10 @@ func TestAccAWSCloudWatchLogGroup_retentionPolicy(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCloudWatchLogGroupDestroy,
+		CheckDestroy: testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchLogGroupConfig_withRetention(rInt),
+				Config: testAccGroupConfig_withRetention(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchLogGroupExists(resourceName, &lg),
 					resource.TestCheckResourceAttr(resourceName, "retention_in_days", "365"),
@@ -244,7 +244,7 @@ func TestAccAWSCloudWatchLogGroup_retentionPolicy(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"retention_in_days"},
 			},
 			{
-				Config: testAccAWSCloudWatchLogGroupConfigModified_withRetention(rInt),
+				Config: testAccGroupModifiedConfig_withRetention(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchLogGroupExists(resourceName, &lg),
 					resource.TestCheckResourceAttr(resourceName, "retention_in_days", "0"),
@@ -263,10 +263,10 @@ func TestAccAWSCloudWatchLogGroup_multiple(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCloudWatchLogGroupDestroy,
+		CheckDestroy: testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchLogGroupConfig_multiple(rInt),
+				Config: testAccGroupConfig_multiple(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchLogGroupExists("aws_cloudwatch_log_group.alpha", &lg),
 					resource.TestCheckResourceAttr("aws_cloudwatch_log_group.alpha", "retention_in_days", "14"),
@@ -295,10 +295,10 @@ func TestAccAWSCloudWatchLogGroup_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCloudWatchLogGroupDestroy,
+		CheckDestroy: testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchLogGroupConfig(rInt),
+				Config: testAccGroupConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchLogGroupExists(resourceName, &lg),
 					testAccCheckCloudWatchLogGroupDisappears(&lg),
@@ -318,10 +318,10 @@ func TestAccAWSCloudWatchLogGroup_tagging(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCloudWatchLogGroupDestroy,
+		CheckDestroy: testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchLogGroupConfigWithTags(rInt),
+				Config: testAccGroupWithTagsConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchLogGroupExists(resourceName, &lg),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
@@ -337,7 +337,7 @@ func TestAccAWSCloudWatchLogGroup_tagging(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"retention_in_days"},
 			},
 			{
-				Config: testAccAWSCloudWatchLogGroupConfigWithTagsAdded(rInt),
+				Config: testAccGroupWithTagsAddedConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchLogGroupExists(resourceName, &lg),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "4"),
@@ -348,7 +348,7 @@ func TestAccAWSCloudWatchLogGroup_tagging(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSCloudWatchLogGroupConfigWithTagsUpdated(rInt),
+				Config: testAccGroupWithTagsUpdatedConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchLogGroupExists(resourceName, &lg),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "4"),
@@ -359,7 +359,7 @@ func TestAccAWSCloudWatchLogGroup_tagging(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSCloudWatchLogGroupConfigWithTags(rInt),
+				Config: testAccGroupWithTagsConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchLogGroupExists(resourceName, &lg),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
@@ -381,10 +381,10 @@ func TestAccAWSCloudWatchLogGroup_kmsKey(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCloudWatchLogGroupDestroy,
+		CheckDestroy: testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchLogGroupConfig(rInt),
+				Config: testAccGroupConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchLogGroupExists(resourceName, &lg),
 				),
@@ -396,7 +396,7 @@ func TestAccAWSCloudWatchLogGroup_kmsKey(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"retention_in_days"},
 			},
 			{
-				Config: testAccAWSCloudWatchLogGroupConfigWithKmsKeyId(rInt),
+				Config: testAccGroupWithKMSKeyIDConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchLogGroupExists(resourceName, &lg),
 					resource.TestCheckResourceAttrSet(resourceName, "kms_key_id"),
@@ -439,7 +439,7 @@ func testAccCheckCloudWatchLogGroupExists(n string, lg *cloudwatchlogs.LogGroup)
 	}
 }
 
-func testAccCheckAWSCloudWatchLogGroupDestroy(s *terraform.State) error {
+func testAccCheckGroupDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchLogsConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -461,7 +461,7 @@ func testAccCheckAWSCloudWatchLogGroupDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSCloudWatchLogGroupConfig(rInt int) string {
+func testAccGroupConfig(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
   name = "foo-bar-%d"
@@ -469,7 +469,7 @@ resource "aws_cloudwatch_log_group" "test" {
 `, rInt)
 }
 
-func testAccAWSCloudWatchLogGroupConfigWithTags(rInt int) string {
+func testAccGroupWithTagsConfig(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
   name = "foo-bar-%d"
@@ -483,7 +483,7 @@ resource "aws_cloudwatch_log_group" "test" {
 `, rInt)
 }
 
-func testAccAWSCloudWatchLogGroupConfigWithTagsAdded(rInt int) string {
+func testAccGroupWithTagsAddedConfig(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
   name = "foo-bar-%d"
@@ -498,7 +498,7 @@ resource "aws_cloudwatch_log_group" "test" {
 `, rInt)
 }
 
-func testAccAWSCloudWatchLogGroupConfigWithTagsUpdated(rInt int) string {
+func testAccGroupWithTagsUpdatedConfig(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
   name = "foo-bar-%d"
@@ -513,7 +513,7 @@ resource "aws_cloudwatch_log_group" "test" {
 `, rInt)
 }
 
-func testAccAWSCloudWatchLogGroupConfig_withRetention(rInt int) string {
+func testAccGroupConfig_withRetention(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
   name              = "foo-bar-%d"
@@ -522,7 +522,7 @@ resource "aws_cloudwatch_log_group" "test" {
 `, rInt)
 }
 
-func testAccAWSCloudWatchLogGroupConfigModified_withRetention(rInt int) string {
+func testAccGroupModifiedConfig_withRetention(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
   name = "foo-bar-%d"
@@ -530,7 +530,7 @@ resource "aws_cloudwatch_log_group" "test" {
 `, rInt)
 }
 
-func testAccAWSCloudWatchLogGroupConfig_multiple(rInt int) string {
+func testAccGroupConfig_multiple(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "alpha" {
   name              = "foo-bar-%d"
@@ -548,7 +548,7 @@ resource "aws_cloudwatch_log_group" "charlie" {
 `, rInt, rInt+1, rInt+2)
 }
 
-func testAccAWSCloudWatchLogGroupConfigWithKmsKeyId(rInt int) string {
+func testAccGroupWithKMSKeyIDConfig(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "foo" {
   description             = "Terraform acc test %d"
@@ -580,13 +580,13 @@ resource "aws_cloudwatch_log_group" "test" {
 `, rInt, rInt)
 }
 
-const testAccAWSCloudWatchLogGroup_namePrefix = `
+const testAccGroup_namePrefix = `
 resource "aws_cloudwatch_log_group" "test" {
   name_prefix = "tf-test-"
 }
 `
 
-func testAccAWSCloudWatchLogGroup_namePrefix_retention(rName string, retention int) string {
+func testAccGroup_namePrefix_retention(rName string, retention int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
   name_prefix       = "tf-test-%s"
@@ -595,6 +595,6 @@ resource "aws_cloudwatch_log_group" "test" {
 `, rName, retention)
 }
 
-const testAccAWSCloudWatchLogGroup_generatedName = `
+const testAccGroup_generatedName = `
 resource "aws_cloudwatch_log_group" "test" {}
 `

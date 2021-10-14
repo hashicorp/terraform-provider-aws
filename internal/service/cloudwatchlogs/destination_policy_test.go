@@ -22,12 +22,12 @@ func TestAccAWSCloudwatchLogDestinationPolicy_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCloudwatchLogDestinationPolicyDestroy,
+		CheckDestroy: testAccCheckDestinationPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudwatchLogDestinationPolicyConfig(rstring),
+				Config: testAccDestinationPolicyConfig(rstring),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCloudwatchLogDestinationPolicyExists(resourceName, &destination),
+					testAccCheckDestinationPolicyExists(resourceName, &destination),
 				),
 			},
 			{
@@ -39,7 +39,7 @@ func TestAccAWSCloudwatchLogDestinationPolicy_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSCloudwatchLogDestinationPolicyDestroy(s *terraform.State) error {
+func testAccCheckDestinationPolicyDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchLogsConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -61,7 +61,7 @@ func testAccCheckAWSCloudwatchLogDestinationPolicyDestroy(s *terraform.State) er
 
 }
 
-func testAccCheckAWSCloudwatchLogDestinationPolicyExists(n string, d *cloudwatchlogs.Destination) resource.TestCheckFunc {
+func testAccCheckDestinationPolicyExists(n string, d *cloudwatchlogs.Destination) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -83,7 +83,7 @@ func testAccCheckAWSCloudwatchLogDestinationPolicyExists(n string, d *cloudwatch
 	}
 }
 
-func testAccAWSCloudwatchLogDestinationPolicyConfig(rstring string) string {
+func testAccDestinationPolicyConfig(rstring string) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_stream" "test" {
   name        = "RootAccess_%s"

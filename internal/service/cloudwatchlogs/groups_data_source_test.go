@@ -20,7 +20,7 @@ func TestAccAWSCloudwatchLogGroupsDataSource_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAWSCloudwatchLogGroupsDataSourceConfig(rName),
+				Config: testAccCheckGroupsDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "arns.#", "2"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "arns.*", "aws_cloudwatch_log_group.test1", "arn"),
@@ -34,7 +34,7 @@ func TestAccAWSCloudwatchLogGroupsDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSCloudwatchLogGroupsDataSourceConfig(rName string) string {
+func testAccCheckGroupsDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource aws_cloudwatch_log_group "test1" {
   name = "%[1]s/1"
