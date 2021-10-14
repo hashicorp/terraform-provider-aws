@@ -143,7 +143,7 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("home_directory_mappings"); ok {
-		input.HomeDirectoryMappings = expandAwsTransferHomeDirectoryMappings(v.([]interface{}))
+		input.HomeDirectoryMappings = expandHomeDirectoryMappings(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("home_directory_type"); ok {
@@ -199,7 +199,7 @@ func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("arn", user.Arn)
 	d.Set("home_directory", user.HomeDirectory)
-	if err := d.Set("home_directory_mappings", flattenAwsTransferHomeDirectoryMappings(user.HomeDirectoryMappings)); err != nil {
+	if err := d.Set("home_directory_mappings", flattenHomeDirectoryMappings(user.HomeDirectoryMappings)); err != nil {
 		return fmt.Errorf("error setting home_directory_mappings: %w", err)
 	}
 	d.Set("home_directory_type", user.HomeDirectoryType)
@@ -244,7 +244,7 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if d.HasChange("home_directory_mappings") {
-			input.HomeDirectoryMappings = expandAwsTransferHomeDirectoryMappings(d.Get("home_directory_mappings").([]interface{}))
+			input.HomeDirectoryMappings = expandHomeDirectoryMappings(d.Get("home_directory_mappings").([]interface{}))
 		}
 
 		if d.HasChange("home_directory_type") {
@@ -321,7 +321,7 @@ func transferUserDelete(conn *transfer.Transfer, serverID, userName string) erro
 	return nil
 }
 
-func expandAwsTransferHomeDirectoryMappings(in []interface{}) []*transfer.HomeDirectoryMapEntry {
+func expandHomeDirectoryMappings(in []interface{}) []*transfer.HomeDirectoryMapEntry {
 	mappings := make([]*transfer.HomeDirectoryMapEntry, 0)
 
 	for _, tConfig := range in {
@@ -338,7 +338,7 @@ func expandAwsTransferHomeDirectoryMappings(in []interface{}) []*transfer.HomeDi
 	return mappings
 }
 
-func flattenAwsTransferHomeDirectoryMappings(mappings []*transfer.HomeDirectoryMapEntry) []interface{} {
+func flattenHomeDirectoryMappings(mappings []*transfer.HomeDirectoryMapEntry) []interface{} {
 	l := make([]interface{}, len(mappings))
 	for i, m := range mappings {
 		l[i] = map[string]interface{}{

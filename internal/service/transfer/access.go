@@ -129,7 +129,7 @@ func resourceAccessCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("home_directory_mappings"); ok {
-		input.HomeDirectoryMappings = expandAwsTransferHomeDirectoryMappings(v.([]interface{}))
+		input.HomeDirectoryMappings = expandHomeDirectoryMappings(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("home_directory_type"); ok {
@@ -183,7 +183,7 @@ func resourceAccessRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("external_id", access.ExternalId)
 	d.Set("home_directory", access.HomeDirectory)
-	if err := d.Set("home_directory_mappings", flattenAwsTransferHomeDirectoryMappings(access.HomeDirectoryMappings)); err != nil {
+	if err := d.Set("home_directory_mappings", flattenHomeDirectoryMappings(access.HomeDirectoryMappings)); err != nil {
 		return fmt.Errorf("error setting home_directory_mappings: %w", err)
 	}
 	d.Set("home_directory_type", access.HomeDirectoryType)
@@ -217,7 +217,7 @@ func resourceAccessUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("home_directory_mappings") {
-		input.HomeDirectoryMappings = expandAwsTransferHomeDirectoryMappings(d.Get("home_directory_mappings").([]interface{}))
+		input.HomeDirectoryMappings = expandHomeDirectoryMappings(d.Get("home_directory_mappings").([]interface{}))
 	}
 
 	if d.HasChange("home_directory_type") {
