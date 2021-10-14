@@ -113,7 +113,7 @@ func resourceReplicationSubnetGroupRead(d *schema.ResourceData, meta interface{}
 	}.String()
 	d.Set("replication_subnet_group_arn", arn)
 
-	err = resourceAwsDmsReplicationSubnetGroupSetState(d, response.ReplicationSubnetGroups[0])
+	err = resourceReplicationSubnetGroupSetState(d, response.ReplicationSubnetGroups[0])
 	if err != nil {
 		return err
 	}
@@ -184,7 +184,7 @@ func resourceReplicationSubnetGroupDelete(d *schema.ResourceData, meta interface
 	return err
 }
 
-func resourceAwsDmsReplicationSubnetGroupSetState(d *schema.ResourceData, group *dms.ReplicationSubnetGroup) error {
+func resourceReplicationSubnetGroupSetState(d *schema.ResourceData, group *dms.ReplicationSubnetGroup) error {
 	d.SetId(aws.StringValue(group.ReplicationSubnetGroupIdentifier))
 
 	subnet_ids := []string{}

@@ -188,7 +188,7 @@ func resourceReplicationInstanceCreate(d *schema.ResourceData, meta interface{})
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"creating", "modifying"},
 		Target:     []string{"available"},
-		Refresh:    resourceAwsDmsReplicationInstanceStateRefreshFunc(conn, d.Id()),
+		Refresh:    resourceReplicationInstanceStateRefreshFunc(conn, d.Id()),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second, // Wait 30 secs before starting
@@ -362,7 +362,7 @@ func resourceReplicationInstanceUpdate(d *schema.ResourceData, meta interface{})
 		stateConf := &resource.StateChangeConf{
 			Pending:    []string{"modifying", "upgrading"},
 			Target:     []string{"available"},
-			Refresh:    resourceAwsDmsReplicationInstanceStateRefreshFunc(conn, d.Id()),
+			Refresh:    resourceReplicationInstanceStateRefreshFunc(conn, d.Id()),
 			Timeout:    d.Timeout(schema.TimeoutUpdate),
 			MinTimeout: 10 * time.Second,
 			Delay:      30 * time.Second, // Wait 30 secs before starting
@@ -400,7 +400,7 @@ func resourceReplicationInstanceDelete(d *schema.ResourceData, meta interface{})
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"deleting"},
 		Target:     []string{},
-		Refresh:    resourceAwsDmsReplicationInstanceStateRefreshFunc(conn, d.Id()),
+		Refresh:    resourceReplicationInstanceStateRefreshFunc(conn, d.Id()),
 		Timeout:    d.Timeout(schema.TimeoutDelete),
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second, // Wait 30 secs before starting
@@ -415,7 +415,7 @@ func resourceReplicationInstanceDelete(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
-func resourceAwsDmsReplicationInstanceStateRefreshFunc(conn *dms.DatabaseMigrationService, replicationInstanceID string) resource.StateRefreshFunc {
+func resourceReplicationInstanceStateRefreshFunc(conn *dms.DatabaseMigrationService, replicationInstanceID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		v, err := conn.DescribeReplicationInstances(&dms.DescribeReplicationInstancesInput{
 			Filters: []*dms.Filter{

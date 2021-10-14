@@ -118,7 +118,7 @@ func resourceEventSubscriptionCreate(d *schema.ResourceData, meta interface{}) e
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"creating", "modifying"},
 		Target:     []string{"active"},
-		Refresh:    resourceAwsDmsEventSubscriptionStateRefreshFunc(conn, d.Id()),
+		Refresh:    resourceEventSubscriptionStateRefreshFunc(conn, d.Id()),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
 		MinTimeout: 10 * time.Second,
 		Delay:      10 * time.Second,
@@ -156,7 +156,7 @@ func resourceEventSubscriptionUpdate(d *schema.ResourceData, meta interface{}) e
 		stateConf := &resource.StateChangeConf{
 			Pending:    []string{"modifying"},
 			Target:     []string{"active"},
-			Refresh:    resourceAwsDmsEventSubscriptionStateRefreshFunc(conn, d.Id()),
+			Refresh:    resourceEventSubscriptionStateRefreshFunc(conn, d.Id()),
 			Timeout:    d.Timeout(schema.TimeoutUpdate),
 			MinTimeout: 10 * time.Second,
 			Delay:      10 * time.Second,
@@ -264,7 +264,7 @@ func resourceEventSubscriptionDelete(d *schema.ResourceData, meta interface{}) e
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"deleting"},
 		Target:     []string{},
-		Refresh:    resourceAwsDmsEventSubscriptionStateRefreshFunc(conn, d.Id()),
+		Refresh:    resourceEventSubscriptionStateRefreshFunc(conn, d.Id()),
 		Timeout:    d.Timeout(schema.TimeoutDelete),
 		MinTimeout: 10 * time.Second,
 		Delay:      10 * time.Second,
@@ -278,7 +278,7 @@ func resourceEventSubscriptionDelete(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func resourceAwsDmsEventSubscriptionStateRefreshFunc(conn *dms.DatabaseMigrationService, name string) resource.StateRefreshFunc {
+func resourceEventSubscriptionStateRefreshFunc(conn *dms.DatabaseMigrationService, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		v, err := conn.DescribeEventSubscriptions(&dms.DescribeEventSubscriptionsInput{
 			SubscriptionName: aws.String(name),

@@ -398,7 +398,7 @@ func ResourceEndpoint() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			resourceAwsDmsEndpointCustomizeDiff,
+			resourceEndpointCustomizeDiff,
 			verify.SetTagsDiff,
 		),
 	}
@@ -546,7 +546,7 @@ func resourceEndpointRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error reading DMS Endpoint (%s): %w", d.Id(), err)
 	}
 
-	err = resourceAwsDmsEndpointSetState(d, endpoint)
+	err = resourceEndpointSetState(d, endpoint)
 
 	if err != nil {
 		return err
@@ -790,7 +790,7 @@ func resourceEndpointDelete(d *schema.ResourceData, meta interface{}) error {
 	return err
 }
 
-func resourceAwsDmsEndpointCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+func resourceEndpointCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 	switch engineName := diff.Get("engine_name").(string); engineName {
 	case engineNameElasticSearch:
 		if v, ok := diff.GetOk("elasticsearch_settings"); !ok || len(v.([]interface{})) == 0 || v.([]interface{})[0] == nil {
@@ -817,7 +817,7 @@ func resourceAwsDmsEndpointCustomizeDiff(_ context.Context, diff *schema.Resourc
 	return nil
 }
 
-func resourceAwsDmsEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoint) error {
+func resourceEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoint) error {
 	d.SetId(aws.StringValue(endpoint.EndpointIdentifier))
 
 	d.Set("certificate_arn", endpoint.CertificateArn)

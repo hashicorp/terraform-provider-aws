@@ -137,7 +137,7 @@ func resourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	err = resourceAwsDmsCertificateSetState(d, response.Certificates[0])
+	err = resourceCertificateSetState(d, response.Certificates[0])
 	if err != nil {
 		return err
 	}
@@ -196,7 +196,7 @@ func resourceCertificateDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsDmsCertificateSetState(d *schema.ResourceData, cert *dms.Certificate) error {
+func resourceCertificateSetState(d *schema.ResourceData, cert *dms.Certificate) error {
 	d.SetId(aws.StringValue(cert.CertificateIdentifier))
 
 	d.Set("certificate_id", cert.CertificateIdentifier)
