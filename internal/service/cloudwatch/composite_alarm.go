@@ -97,7 +97,7 @@ func resourceCompositeAlarmCreate(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).CloudWatchConn
 	name := d.Get("alarm_name").(string)
 
-	input := expandAwsCloudWatchPutCompositeAlarmInput(d, meta)
+	input := expandPutCompositeAlarmInput(d, meta)
 
 	_, err := conn.PutCompositeAlarmWithContext(ctx, &input)
 	if err != nil {
@@ -178,7 +178,7 @@ func resourceCompositeAlarmUpdate(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).CloudWatchConn
 	name := d.Id()
 
-	input := expandAwsCloudWatchPutCompositeAlarmInput(d, meta)
+	input := expandPutCompositeAlarmInput(d, meta)
 
 	_, err := conn.PutCompositeAlarmWithContext(ctx, &input)
 	if err != nil {
@@ -216,7 +216,7 @@ func resourceCompositeAlarmDelete(ctx context.Context, d *schema.ResourceData, m
 	return nil
 }
 
-func expandAwsCloudWatchPutCompositeAlarmInput(d *schema.ResourceData, meta interface{}) cloudwatch.PutCompositeAlarmInput {
+func expandPutCompositeAlarmInput(d *schema.ResourceData, meta interface{}) cloudwatch.PutCompositeAlarmInput {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 

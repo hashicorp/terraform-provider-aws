@@ -290,7 +290,7 @@ func resourceMetricAlarmCreate(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	params := getAwsCloudWatchPutMetricAlarmInput(d, meta)
+	params := getPutMetricAlarmInput(d, meta)
 
 	log.Printf("[DEBUG] Creating CloudWatch Metric Alarm: %#v", params)
 	_, err = conn.PutMetricAlarm(&params)
@@ -330,7 +330,7 @@ func resourceMetricAlarmRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", arn)
 	d.Set("comparison_operator", resp.ComparisonOperator)
 	d.Set("datapoints_to_alarm", resp.DatapointsToAlarm)
-	if err := d.Set("dimensions", flattenAwsCloudWatchMetricAlarmDimensions(resp.Dimensions)); err != nil {
+	if err := d.Set("dimensions", flattenMetricAlarmDimensions(resp.Dimensions)); err != nil {
 		return fmt.Errorf("error setting dimensions: %w", err)
 	}
 	d.Set("evaluation_periods", resp.EvaluationPeriods)
@@ -342,7 +342,7 @@ func resourceMetricAlarmRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("namespace", resp.Namespace)
 
 	if resp.Metrics != nil && len(resp.Metrics) > 0 {
-		if err := d.Set("metric_query", flattenAwsCloudWatchMetricAlarmMetrics(resp.Metrics)); err != nil {
+		if err := d.Set("metric_query", flattenMetricAlarmMetrics(resp.Metrics)); err != nil {
 			return fmt.Errorf("error setting metric_query: %w", err)
 		}
 	}
@@ -382,7 +382,7 @@ func resourceMetricAlarmRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceMetricAlarmUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchConn
-	params := getAwsCloudWatchPutMetricAlarmInput(d, meta)
+	params := getPutMetricAlarmInput(d, meta)
 
 	log.Printf("[DEBUG] Updating CloudWatch Metric Alarm: %#v", params)
 	_, err := conn.PutMetricAlarm(&params)
@@ -422,7 +422,7 @@ func resourceMetricAlarmDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func getAwsCloudWatchPutMetricAlarmInput(d *schema.ResourceData, meta interface{}) cloudwatch.PutMetricAlarmInput {
+func getPutMetricAlarmInput(d *schema.ResourceData, meta interface{}) cloudwatch.PutMetricAlarmInput {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -496,13 +496,13 @@ func getAwsCloudWatchPutMetricAlarmInput(d *schema.ResourceData, meta interface{
 	}
 
 	if v, ok := d.GetOk("dimensions"); ok {
-		params.Dimensions = expandAwsCloudWatchMetricAlarmDimensions(v.(map[string]interface{}))
+		params.Dimensions = expandMetricAlarmDimensions(v.(map[string]interface{}))
 	}
 
 	return params
 }
 
-func flattenAwsCloudWatchMetricAlarmDimensions(dims []*cloudwatch.Dimension) map[string]interface{} {
+func flattenMetricAlarmDimensions(dims []*cloudwatch.Dimension) map[string]interface{} {
 	flatDims := make(map[string]interface{})
 	for _, d := range dims {
 		flatDims[aws.StringValue(d.Name)] = aws.StringValue(d.Value)
@@ -510,7 +510,7 @@ func flattenAwsCloudWatchMetricAlarmDimensions(dims []*cloudwatch.Dimension) map
 	return flatDims
 }
 
-func flattenAwsCloudWatchMetricAlarmMetrics(metrics []*cloudwatch.MetricDataQuery) []map[string]interface{} {
+func flattenMetricAlarmMetrics(metrics []*cloudwatch.MetricDataQuery) []map[string]interface{} {
 	metricQueries := make([]map[string]interface{}, 0)
 	for _, mq := range metrics {
 		metricQuery := map[string]interface{}{
@@ -521,7 +521,7 @@ func flattenAwsCloudWatchMetricAlarmMetrics(metrics []*cloudwatch.MetricDataQuer
 			"return_data": aws.BoolValue(mq.ReturnData),
 		}
 		if mq.MetricStat != nil {
-			metric := flattenAwsCloudWatchMetricAlarmMetricsMetricStat(mq.MetricStat)
+			metric := flattenMetricAlarmMetricsMetricStat(mq.MetricStat)
 			metricQuery["metric"] = []interface{}{metric}
 		}
 		metricQueries = append(metricQueries, metricQuery)
@@ -530,7 +530,7 @@ func flattenAwsCloudWatchMetricAlarmMetrics(metrics []*cloudwatch.MetricDataQuer
 	return metricQueries
 }
 
-func flattenAwsCloudWatchMetricAlarmMetricsMetricStat(ms *cloudwatch.MetricStat) map[string]interface{} {
+func flattenMetricAlarmMetricsMetricStat(ms *cloudwatch.MetricStat) map[string]interface{} {
 	msm := ms.Metric
 	metric := map[string]interface{}{
 		"metric_name": aws.StringValue(msm.MetricName),
@@ -538,7 +538,7 @@ func flattenAwsCloudWatchMetricAlarmMetricsMetricStat(ms *cloudwatch.MetricStat)
 		"period":      int(aws.Int64Value(ms.Period)),
 		"stat":        aws.StringValue(ms.Stat),
 		"unit":        aws.StringValue(ms.Unit),
-		"dimensions":  flattenAwsCloudWatchMetricAlarmDimensions(msm.Dimensions),
+		"dimensions":  flattenMetricAlarmDimensions(msm.Dimensions),
 	}
 
 	return metric
@@ -595,13 +595,13 @@ func expandCloudWatchMetricAlarmMetricsMetric(v []interface{}) *cloudwatch.Metri
 		metricStat.Unit = aws.String(v.(string))
 	}
 	if v, ok := metricResource["dimensions"]; ok {
-		metric.Dimensions = expandAwsCloudWatchMetricAlarmDimensions(v.(map[string]interface{}))
+		metric.Dimensions = expandMetricAlarmDimensions(v.(map[string]interface{}))
 	}
 
 	return &metricStat
 }
 
-func expandAwsCloudWatchMetricAlarmDimensions(dims map[string]interface{}) []*cloudwatch.Dimension {
+func expandMetricAlarmDimensions(dims map[string]interface{}) []*cloudwatch.Dimension {
 	var dimensions []*cloudwatch.Dimension
 	for k, v := range dims {
 		dimensions = append(dimensions, &cloudwatch.Dimension{

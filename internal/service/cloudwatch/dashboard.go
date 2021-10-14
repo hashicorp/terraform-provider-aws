@@ -16,9 +16,9 @@ import (
 
 func ResourceDashboard() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCloudWatchDashboardPut,
+		Create: resourceDashboardPut,
 		Read:   resourceDashboardRead,
-		Update: resourceAwsCloudWatchDashboardPut,
+		Update: resourceDashboardPut,
 		Delete: resourceDashboardDelete,
 
 		Importer: &schema.ResourceImporter{
@@ -79,7 +79,7 @@ func resourceDashboardRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsCloudWatchDashboardPut(d *schema.ResourceData, meta interface{}) error {
+func resourceDashboardPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchConn
 	params := cloudwatch.PutDashboardInput{
 		DashboardBody: aws.String(d.Get("dashboard_body").(string)),
