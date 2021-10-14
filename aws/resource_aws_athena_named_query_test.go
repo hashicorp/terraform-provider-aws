@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSAthenaNamedQuery_basic(t *testing.T) {
@@ -61,7 +62,7 @@ func TestAccAWSAthenaNamedQuery_withWorkGroup(t *testing.T) {
 }
 
 func testAccCheckAWSAthenaNamedQueryDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).athenaconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AthenaConn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_athena_named_query" {
 			continue
@@ -92,7 +93,7 @@ func testAccCheckAWSAthenaNamedQueryExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).athenaconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AthenaConn
 
 		input := &athena.GetNamedQueryInput{
 			NamedQueryId: aws.String(rs.Primary.ID),
