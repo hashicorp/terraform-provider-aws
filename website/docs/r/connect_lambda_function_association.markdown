@@ -3,7 +3,7 @@ subcategory: "Connect"
 layout: "aws"
 page_title: "AWS: aws_connect_lambda_function_association"
 description: |-
-Provides details about a specific Connect Lambda Function Association.
+  Provides details about a specific Connect Lambda Function Association.
 ---
 
 # Resource: aws_connect_lambda_function_association
