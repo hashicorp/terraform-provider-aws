@@ -82,7 +82,7 @@ func sweepProvisionedProducts(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func TestAccAWSServiceCatalogProvisionedProduct_basic(t *testing.T) {
+func TestAccServiceCatalogProvisionedProduct_basic(t *testing.T) {
 	resourceName := "aws_servicecatalog_provisioned_product.test"
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -127,7 +127,7 @@ func TestAccAWSServiceCatalogProvisionedProduct_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSServiceCatalogProvisionedProduct_disappears(t *testing.T) {
+func TestAccServiceCatalogProvisionedProduct_disappears(t *testing.T) {
 	resourceName := "aws_servicecatalog_provisioned_product.test"
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -151,7 +151,7 @@ func TestAccAWSServiceCatalogProvisionedProduct_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSServiceCatalogProvisionedProduct_tags(t *testing.T) {
+func TestAccServiceCatalogProvisionedProduct_tags(t *testing.T) {
 	resourceName := "aws_servicecatalog_provisioned_product.test"
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

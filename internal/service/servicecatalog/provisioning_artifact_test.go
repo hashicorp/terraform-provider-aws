@@ -108,7 +108,7 @@ func sweepProvisioningArtifacts(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func TestAccAWSServiceCatalogProvisioningArtifact_basic(t *testing.T) {
+func TestAccServiceCatalogProvisioningArtifact_basic(t *testing.T) {
 	resourceName := "aws_servicecatalog_provisioning_artifact.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -150,7 +150,7 @@ func TestAccAWSServiceCatalogProvisioningArtifact_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSServiceCatalogProvisioningArtifact_disappears(t *testing.T) {
+func TestAccServiceCatalogProvisioningArtifact_disappears(t *testing.T) {
 	resourceName := "aws_servicecatalog_provisioning_artifact.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -174,7 +174,7 @@ func TestAccAWSServiceCatalogProvisioningArtifact_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSServiceCatalogProvisioningArtifact_update(t *testing.T) {
+func TestAccServiceCatalogProvisioningArtifact_update(t *testing.T) {
 	resourceName := "aws_servicecatalog_provisioning_artifact.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -221,7 +221,7 @@ func TestAccAWSServiceCatalogProvisioningArtifact_update(t *testing.T) {
 	})
 }
 
-func TestAccAWSServiceCatalogProvisioningArtifact_physicalID(t *testing.T) {
+func TestAccServiceCatalogProvisioningArtifact_physicalID(t *testing.T) {
 	resourceName := "aws_servicecatalog_provisioning_artifact.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 

@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSServiceCatalogLaunchPathsDataSource_basic(t *testing.T) {
+func TestAccServiceCatalogLaunchPathsDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_servicecatalog_launch_paths.test"
 	resourceNameProduct := "aws_servicecatalog_product.test"
 	resourceNamePortfolio := "aws_servicecatalog_portfolio.test"

@@ -96,7 +96,7 @@ func sweepConstraints(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func TestAccAWSServiceCatalogConstraint_basic(t *testing.T) {
+func TestAccServiceCatalogConstraint_basic(t *testing.T) {
 	resourceName := "aws_servicecatalog_constraint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -129,7 +129,7 @@ func TestAccAWSServiceCatalogConstraint_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSServiceCatalogConstraint_disappears(t *testing.T) {
+func TestAccServiceCatalogConstraint_disappears(t *testing.T) {
 	resourceName := "aws_servicecatalog_constraint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -151,7 +151,7 @@ func TestAccAWSServiceCatalogConstraint_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSServiceCatalogConstraint_update(t *testing.T) {
+func TestAccServiceCatalogConstraint_update(t *testing.T) {
 	resourceName := "aws_servicecatalog_constraint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

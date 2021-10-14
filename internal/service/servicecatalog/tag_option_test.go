@@ -78,7 +78,7 @@ func sweepTagOptions(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func TestAccAWSServiceCatalogTagOption_basic(t *testing.T) {
+func TestAccServiceCatalogTagOption_basic(t *testing.T) {
 	resourceName := "aws_servicecatalog_tag_option.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -107,7 +107,7 @@ func TestAccAWSServiceCatalogTagOption_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSServiceCatalogTagOption_disappears(t *testing.T) {
+func TestAccServiceCatalogTagOption_disappears(t *testing.T) {
 	resourceName := "aws_servicecatalog_tag_option.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -129,7 +129,7 @@ func TestAccAWSServiceCatalogTagOption_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSServiceCatalogTagOption_update(t *testing.T) {
+func TestAccServiceCatalogTagOption_update(t *testing.T) {
 	resourceName := "aws_servicecatalog_tag_option.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -192,7 +192,7 @@ func TestAccAWSServiceCatalogTagOption_update(t *testing.T) {
 	})
 }
 
-func TestAccAWSServiceCatalogTagOption_notActive(t *testing.T) {
+func TestAccServiceCatalogTagOption_notActive(t *testing.T) {
 	resourceName := "aws_servicecatalog_tag_option.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 

@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSServiceCatalogPortfolio_basic(t *testing.T) {
+func TestAccServiceCatalogPortfolio_basic(t *testing.T) {
 	resourceName := "aws_servicecatalog_portfolio.test"
 	name := sdkacctest.RandString(5)
 	var dpo servicecatalog.DescribePortfolioOutput
@@ -46,7 +46,7 @@ func TestAccAWSServiceCatalogPortfolio_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSServiceCatalogPortfolio_Disappears(t *testing.T) {
+func TestAccServiceCatalogPortfolio_disappears(t *testing.T) {
 	name := sdkacctest.RandString(5)
 	resourceName := "aws_servicecatalog_portfolio.test"
 	var dpo servicecatalog.DescribePortfolioOutput
@@ -69,7 +69,7 @@ func TestAccAWSServiceCatalogPortfolio_Disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSServiceCatalogPortfolio_Tags(t *testing.T) {
+func TestAccServiceCatalogPortfolio_tags(t *testing.T) {
 	resourceName := "aws_servicecatalog_portfolio.test"
 	name := sdkacctest.RandString(5)
 	var dpo servicecatalog.DescribePortfolioOutput

@@ -94,7 +94,7 @@ func sweepTagOptionResourceAssociations(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func TestAccAWSServiceCatalogTagOptionResourceAssociation_basic(t *testing.T) {
+func TestAccServiceCatalogTagOptionResourceAssociation_basic(t *testing.T) {
 	resourceName := "aws_servicecatalog_tag_option_resource_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -121,7 +121,7 @@ func TestAccAWSServiceCatalogTagOptionResourceAssociation_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSServiceCatalogTagOptionResourceAssociation_disappears(t *testing.T) {
+func TestAccServiceCatalogTagOptionResourceAssociation_disappears(t *testing.T) {
 	resourceName := "aws_servicecatalog_tag_option_resource_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
