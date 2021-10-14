@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicediscovery/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -146,7 +147,7 @@ func TestAccAWSServiceDiscoveryPublicDnsNamespace_disappears(t *testing.T) {
 				Config: testAccServiceDiscoveryPublicDnsNamespaceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceDiscoveryPublicDnsNamespaceExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsServiceDiscoveryPublicDnsNamespace(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourcePublicDNSNamespace(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

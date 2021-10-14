@@ -18,12 +18,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsServiceDiscoveryService() *schema.Resource {
+func ResourceService() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsServiceDiscoveryServiceCreate,
-		Read:   resourceAwsServiceDiscoveryServiceRead,
-		Update: resourceAwsServiceDiscoveryServiceUpdate,
-		Delete: resourceAwsServiceDiscoveryServiceDelete,
+		Create: resourceServiceCreate,
+		Read:   resourceServiceRead,
+		Update: resourceServiceUpdate,
+		Delete: resourceServiceDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -139,7 +139,7 @@ func resourceAwsServiceDiscoveryService() *schema.Resource {
 	}
 }
 
-func resourceAwsServiceDiscoveryServiceCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -183,10 +183,10 @@ func resourceAwsServiceDiscoveryServiceCreate(d *schema.ResourceData, meta inter
 
 	d.SetId(aws.StringValue(output.Service.Id))
 
-	return resourceAwsServiceDiscoveryServiceRead(d, meta)
+	return resourceServiceRead(d, meta)
 }
 
-func resourceAwsServiceDiscoveryServiceRead(d *schema.ResourceData, meta interface{}) error {
+func resourceServiceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -238,7 +238,7 @@ func resourceAwsServiceDiscoveryServiceRead(d *schema.ResourceData, meta interfa
 	return nil
 }
 
-func resourceAwsServiceDiscoveryServiceUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -277,10 +277,10 @@ func resourceAwsServiceDiscoveryServiceUpdate(d *schema.ResourceData, meta inter
 		}
 	}
 
-	return resourceAwsServiceDiscoveryServiceRead(d, meta)
+	return resourceServiceRead(d, meta)
 }
 
-func resourceAwsServiceDiscoveryServiceDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceServiceDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn
 
 	if d.Get("force_destroy").(bool) {

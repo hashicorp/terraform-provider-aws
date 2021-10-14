@@ -12,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsServiceDiscoveryHttpNamespace() *schema.Resource {
+func ResourceHTTPNamespace() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsServiceDiscoveryHttpNamespaceCreate,
-		Read:   resourceAwsServiceDiscoveryHttpNamespaceRead,
-		Update: resourceAwsServiceDiscoveryHttpNamespaceUpdate,
-		Delete: resourceAwsServiceDiscoveryHttpNamespaceDelete,
+		Create: resourceHTTPNamespaceCreate,
+		Read:   resourceHTTPNamespaceRead,
+		Update: resourceHTTPNamespaceUpdate,
+		Delete: resourceHTTPNamespaceDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -47,7 +47,7 @@ func resourceAwsServiceDiscoveryHttpNamespace() *schema.Resource {
 	}
 }
 
-func resourceAwsServiceDiscoveryHttpNamespaceCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceHTTPNamespaceCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -90,10 +90,10 @@ func resourceAwsServiceDiscoveryHttpNamespaceCreate(d *schema.ResourceData, meta
 
 	d.SetId(aws.StringValue(namespaceID))
 
-	return resourceAwsServiceDiscoveryHttpNamespaceRead(d, meta)
+	return resourceHTTPNamespaceRead(d, meta)
 }
 
-func resourceAwsServiceDiscoveryHttpNamespaceRead(d *schema.ResourceData, meta interface{}) error {
+func resourceHTTPNamespaceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -136,7 +136,7 @@ func resourceAwsServiceDiscoveryHttpNamespaceRead(d *schema.ResourceData, meta i
 	return nil
 }
 
-func resourceAwsServiceDiscoveryHttpNamespaceUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceHTTPNamespaceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn
 
 	if d.HasChange("tags_all") {
@@ -146,10 +146,10 @@ func resourceAwsServiceDiscoveryHttpNamespaceUpdate(d *schema.ResourceData, meta
 		}
 	}
 
-	return resourceAwsServiceDiscoveryHttpNamespaceRead(d, meta)
+	return resourceHTTPNamespaceRead(d, meta)
 }
 
-func resourceAwsServiceDiscoveryHttpNamespaceDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceHTTPNamespaceDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn
 
 	input := &servicediscovery.DeleteNamespaceInput{

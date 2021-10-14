@@ -18,12 +18,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsServiceDiscoveryInstance() *schema.Resource {
+func ResourceInstance() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsServiceDiscoveryInstancePut,
-		Read:   resourceAwsServiceDiscoveryInstanceRead,
+		Read:   resourceInstanceRead,
 		Update: resourceAwsServiceDiscoveryInstancePut,
-		Delete: resourceAwsServiceDiscoveryInstanceDelete,
+		Delete: resourceInstanceDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceAwsServiceDiscoveryInstanceImport,
@@ -86,10 +86,10 @@ func resourceAwsServiceDiscoveryInstancePut(d *schema.ResourceData, meta interfa
 		}
 	}
 
-	return resourceAwsServiceDiscoveryInstanceRead(d, meta)
+	return resourceInstanceRead(d, meta)
 }
 
-func resourceAwsServiceDiscoveryInstanceRead(d *schema.ResourceData, meta interface{}) error {
+func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn
 
 	instance, err := finder.InstanceByServiceIDAndInstanceID(conn, d.Get("service_id").(string), d.Get("instance_id").(string))
@@ -117,7 +117,7 @@ func resourceAwsServiceDiscoveryInstanceRead(d *schema.ResourceData, meta interf
 	return nil
 }
 
-func resourceAwsServiceDiscoveryInstanceDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn
 
 	err := deregisterServiceDiscoveryInstance(conn, d.Get("service_id").(string), d.Get("instance_id").(string))
