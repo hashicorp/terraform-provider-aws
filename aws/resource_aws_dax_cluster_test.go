@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -26,7 +27,7 @@ func testSweepDAXClusters(region string) error {
 	if err != nil {
 		return fmt.Errorf("Error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).daxconn
+	conn := client.(*conns.AWSClient).DAXConn
 
 	resp, err := conn.DescribeClusters(&dax.DescribeClustersInput{})
 	if err != nil {
@@ -227,7 +228,7 @@ func TestAccAWSDAXCluster_encryption_enabled(t *testing.T) {
 }
 
 func testAccCheckAWSDAXClusterDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).daxconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DAXConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_dax_cluster" {
@@ -261,7 +262,7 @@ func testAccCheckAWSDAXClusterExists(n string, v *dax.Cluster) resource.TestChec
 			return fmt.Errorf("No DAX cluster ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).daxconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DAXConn
 		resp, err := conn.DescribeClusters(&dax.DescribeClustersInput{
 			ClusterNames: []*string{aws.String(rs.Primary.ID)},
 		})
@@ -280,7 +281,7 @@ func testAccCheckAWSDAXClusterExists(n string, v *dax.Cluster) resource.TestChec
 }
 
 func testAccPreCheckAWSDax(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).daxconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DAXConn
 
 	input := &dax.DescribeClustersInput{}
 

@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsDaxCluster() *schema.Resource {
@@ -176,8 +177,8 @@ func resourceAwsDaxCluster() *schema.Resource {
 }
 
 func resourceAwsDaxClusterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).daxconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).DAXConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	clusterName := d.Get("cluster_name").(string)
@@ -274,9 +275,9 @@ func resourceAwsDaxClusterCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsDaxClusterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).daxconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).DAXConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	req := &dax.DescribeClustersInput{
 		ClusterNames: []*string{aws.String(d.Id())},
@@ -357,7 +358,7 @@ func resourceAwsDaxClusterRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsDaxClusterUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).daxconn
+	conn := meta.(*conns.AWSClient).DAXConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -495,7 +496,7 @@ func (b byNodeId) Less(i, j int) bool {
 }
 
 func resourceAwsDaxClusterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).daxconn
+	conn := meta.(*conns.AWSClient).DAXConn
 
 	req := &dax.DeleteClusterInput{
 		ClusterName: aws.String(d.Id()),
