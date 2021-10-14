@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func BrokerStatus(conn *mq.MQ, id string) resource.StateRefreshFunc {
+func StatusBroker(conn *mq.MQ, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := conn.DescribeBroker(&mq.DescribeBrokerInput{
 			BrokerId: aws.String(id),
