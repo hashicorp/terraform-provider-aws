@@ -177,7 +177,7 @@ func testAccCheckLicenseManagerLicenseConfigurationDestroy(s *terraform.State) e
 		})
 
 		if err != nil {
-			if isAWSErr(err, licensemanager.ErrCodeInvalidParameterValueException, "") {
+			if tfawserr.ErrMessageContains(err, licensemanager.ErrCodeInvalidParameterValueException, "") {
 				continue
 			}
 			return err
