@@ -365,7 +365,7 @@ func testAccCheckAWSWafv2IPSetDestroy(s *terraform.State) error {
 		}
 
 		// Return nil if the IPSet is already destroyed
-		if isAWSErr(err, wafv2.ErrCodeWAFNonexistentItemException, "") {
+		if tfawserr.ErrMessageContains(err, wafv2.ErrCodeWAFNonexistentItemException, "") {
 			return nil
 		}
 
