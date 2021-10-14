@@ -8,7 +8,7 @@ import (
 	tfkinesis "github.com/hashicorp/terraform-provider-aws/internal/service/kinesis"
 )
 
-func testResourceAwsKinesisStreamStateDataV0() map[string]interface{} {
+func testResourceStreamStateDataV0() map[string]interface{} {
 	return map[string]interface{}{
 		"arn":                 "arn:aws:test:us-east-1:123456789012:test", //lintignore:AWSAT003,AWSAT005
 		"encryption_type":     "NONE",
@@ -21,8 +21,8 @@ func testResourceAwsKinesisStreamStateDataV0() map[string]interface{} {
 	}
 }
 
-func testResourceAwsKinesisStreamStateDataV1() map[string]interface{} {
-	v0 := testResourceAwsKinesisStreamStateDataV0()
+func testResourceStreamStateDataV1() map[string]interface{} {
+	v0 := testResourceStreamStateDataV0()
 	return map[string]interface{}{
 		"arn":                       v0["arn"],
 		"encryption_type":           v0["encryption_type"],
@@ -36,9 +36,9 @@ func testResourceAwsKinesisStreamStateDataV1() map[string]interface{} {
 	}
 }
 
-func TestResourceAwsKinesisStreamStateUpgradeV0(t *testing.T) {
-	expected := testResourceAwsKinesisStreamStateDataV1()
-	actual, err := tfkinesis.StreamStateUpgradeV0(context.Background(), testResourceAwsKinesisStreamStateDataV0(), nil)
+func TestStreamStateUpgradeV0(t *testing.T) {
+	expected := testResourceStreamStateDataV1()
+	actual, err := tfkinesis.StreamStateUpgradeV0(context.Background(), testResourceStreamStateDataV0(), nil)
 	if err != nil {
 		t.Fatalf("error migrating state: %s", err)
 	}

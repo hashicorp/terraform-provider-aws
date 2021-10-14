@@ -18,7 +18,7 @@ func TestAccAWSKinesisStreamDataSource_basic(t *testing.T) {
 	var stream kinesis.StreamDescription
 
 	sn := fmt.Sprintf("terraform-kinesis-test-%d", sdkacctest.RandInt())
-	config := fmt.Sprintf(testAccCheckAwsKinesisStreamDataSourceConfig, sn)
+	config := fmt.Sprintf(testAccCheckStreamDataSourceConfig, sn)
 
 	updateShardCount := func() {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisConn
@@ -76,7 +76,7 @@ func TestAccAWSKinesisStreamDataSource_basic(t *testing.T) {
 	})
 }
 
-var testAccCheckAwsKinesisStreamDataSourceConfig = `
+var testAccCheckStreamDataSourceConfig = `
 resource "aws_kinesis_stream" "test_stream" {
   name             = "%s"
   shard_count      = 2

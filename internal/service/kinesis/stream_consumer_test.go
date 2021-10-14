@@ -24,12 +24,12 @@ func TestAccAWSKinesisStreamConsumer_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesis.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSKinesisStreamConsumerDestroy,
+		CheckDestroy: testAccCheckStreamConsumerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSKinesisStreamConsumerConfig_basic(rName),
+				Config: testAccStreamConsumerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccAWSKinesisStreamConsumerExists(resourceName),
+					testAccStreamConsumerExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kinesis", regexp.MustCompile(fmt.Sprintf("stream/%[1]s/consumer/%[1]s", rName))),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "stream_arn", streamName, "arn"),
@@ -56,9 +56,9 @@ func TestAccAWSKinesisStreamConsumer_disappears(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSKinesisStreamConsumerConfig_basic(rName),
+				Config: testAccStreamConsumerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccAWSKinesisStreamConsumerExists(resourceName),
+					testAccStreamConsumerExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfkinesis.ResourceStreamConsumer(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -75,17 +75,17 @@ func TestAccAWSKinesisStreamConsumer_MaxConcurrentConsumers(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesis.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSKinesisStreamConsumerDestroy,
+		CheckDestroy: testAccCheckStreamConsumerDestroy,
 		Steps: []resource.TestStep{
 			{
 				// Test creation of max number (5 according to AWS API docs) of concurrent consumers for a single stream
-				Config: testAccAWSKinesisStreamConsumerConfig_multiple(rName, 5),
+				Config: testAccStreamConsumerConfig_multiple(rName, 5),
 				Check: resource.ComposeTestCheckFunc(
-					testAccAWSKinesisStreamConsumerExists(fmt.Sprintf("%s.0", resourceName)),
-					testAccAWSKinesisStreamConsumerExists(fmt.Sprintf("%s.1", resourceName)),
-					testAccAWSKinesisStreamConsumerExists(fmt.Sprintf("%s.2", resourceName)),
-					testAccAWSKinesisStreamConsumerExists(fmt.Sprintf("%s.3", resourceName)),
-					testAccAWSKinesisStreamConsumerExists(fmt.Sprintf("%s.4", resourceName)),
+					testAccStreamConsumerExists(fmt.Sprintf("%s.0", resourceName)),
+					testAccStreamConsumerExists(fmt.Sprintf("%s.1", resourceName)),
+					testAccStreamConsumerExists(fmt.Sprintf("%s.2", resourceName)),
+					testAccStreamConsumerExists(fmt.Sprintf("%s.3", resourceName)),
+					testAccStreamConsumerExists(fmt.Sprintf("%s.4", resourceName)),
 				),
 			},
 		},
@@ -100,29 +100,29 @@ func TestAccAWSKinesisStreamConsumer_ExceedMaxConcurrentConsumers(t *testing.T) 
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesis.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSKinesisStreamConsumerDestroy,
+		CheckDestroy: testAccCheckStreamConsumerDestroy,
 		Steps: []resource.TestStep{
 			{
 				// Test creation of more than the max number (5 according to AWS API docs) of concurrent consumers for a single stream
-				Config: testAccAWSKinesisStreamConsumerConfig_multiple(rName, 10),
+				Config: testAccStreamConsumerConfig_multiple(rName, 10),
 				Check: resource.ComposeTestCheckFunc(
-					testAccAWSKinesisStreamConsumerExists(fmt.Sprintf("%s.0", resourceName)),
-					testAccAWSKinesisStreamConsumerExists(fmt.Sprintf("%s.1", resourceName)),
-					testAccAWSKinesisStreamConsumerExists(fmt.Sprintf("%s.2", resourceName)),
-					testAccAWSKinesisStreamConsumerExists(fmt.Sprintf("%s.3", resourceName)),
-					testAccAWSKinesisStreamConsumerExists(fmt.Sprintf("%s.4", resourceName)),
-					testAccAWSKinesisStreamConsumerExists(fmt.Sprintf("%s.5", resourceName)),
-					testAccAWSKinesisStreamConsumerExists(fmt.Sprintf("%s.6", resourceName)),
-					testAccAWSKinesisStreamConsumerExists(fmt.Sprintf("%s.7", resourceName)),
-					testAccAWSKinesisStreamConsumerExists(fmt.Sprintf("%s.8", resourceName)),
-					testAccAWSKinesisStreamConsumerExists(fmt.Sprintf("%s.9", resourceName)),
+					testAccStreamConsumerExists(fmt.Sprintf("%s.0", resourceName)),
+					testAccStreamConsumerExists(fmt.Sprintf("%s.1", resourceName)),
+					testAccStreamConsumerExists(fmt.Sprintf("%s.2", resourceName)),
+					testAccStreamConsumerExists(fmt.Sprintf("%s.3", resourceName)),
+					testAccStreamConsumerExists(fmt.Sprintf("%s.4", resourceName)),
+					testAccStreamConsumerExists(fmt.Sprintf("%s.5", resourceName)),
+					testAccStreamConsumerExists(fmt.Sprintf("%s.6", resourceName)),
+					testAccStreamConsumerExists(fmt.Sprintf("%s.7", resourceName)),
+					testAccStreamConsumerExists(fmt.Sprintf("%s.8", resourceName)),
+					testAccStreamConsumerExists(fmt.Sprintf("%s.9", resourceName)),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckAWSKinesisStreamConsumerDestroy(s *terraform.State) error {
+func testAccCheckStreamConsumerDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -148,7 +148,7 @@ func testAccCheckAWSKinesisStreamConsumerDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSKinesisStreamConsumerExists(resourceName string) resource.TestCheckFunc {
+func testAccStreamConsumerExists(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 
@@ -176,7 +176,7 @@ func testAccAWSKinesisStreamConsumerExists(resourceName string) resource.TestChe
 	}
 }
 
-func testAccAWSKinesisStreamConsumerBaseConfig(rName string) string {
+func testAccStreamConsumerBaseConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_stream" "test" {
   name        = %q
@@ -185,9 +185,9 @@ resource "aws_kinesis_stream" "test" {
 `, rName)
 }
 
-func testAccAWSKinesisStreamConsumerConfig_basic(rName string) string {
+func testAccStreamConsumerConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
-		testAccAWSKinesisStreamConsumerBaseConfig(rName),
+		testAccStreamConsumerBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_kinesis_stream_consumer" "test" {
   name       = %q
@@ -196,9 +196,9 @@ resource "aws_kinesis_stream_consumer" "test" {
 `, rName))
 }
 
-func testAccAWSKinesisStreamConsumerConfig_multiple(rName string, count int) string {
+func testAccStreamConsumerConfig_multiple(rName string, count int) string {
 	return acctest.ConfigCompose(
-		testAccAWSKinesisStreamConsumerBaseConfig(rName),
+		testAccStreamConsumerBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_kinesis_stream_consumer" "test" {
   count      = %d

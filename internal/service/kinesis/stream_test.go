@@ -23,11 +23,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_kinesis_stream", &resource.Sweeper{
 		Name: "aws_kinesis_stream",
-		F:    testSweepKinesisStreams,
+		F:    sweepStreams,
 	})
 }
 
-func testSweepKinesisStreams(region string) error {
+func sweepStreams(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -87,7 +87,7 @@ func TestAccAWSKinesisStream_basic(t *testing.T) {
 				Config: testAccKinesisStreamConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisStreamExists(resourceName, &stream),
-					testAccCheckAWSKinesisStreamAttributes(&stream),
+					testAccCheckStreamAttributes(&stream),
 				),
 			},
 			{
@@ -240,7 +240,7 @@ func TestAccAWSKinesisStream_shardCount(t *testing.T) {
 				Config: testAccKinesisStreamConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisStreamExists(resourceName, &stream),
-					testAccCheckAWSKinesisStreamAttributes(&stream),
+					testAccCheckStreamAttributes(&stream),
 					resource.TestCheckResourceAttr(
 						resourceName, "shard_count", "2"),
 				),
@@ -256,7 +256,7 @@ func TestAccAWSKinesisStream_shardCount(t *testing.T) {
 				Config: testAccKinesisStreamConfigUpdateShardCount(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisStreamExists(resourceName, &updatedStream),
-					testAccCheckAWSKinesisStreamAttributes(&updatedStream),
+					testAccCheckStreamAttributes(&updatedStream),
 					testCheckStreamNotDestroyed(),
 					resource.TestCheckResourceAttr(
 						resourceName, "shard_count", "4"),
@@ -282,7 +282,7 @@ func TestAccAWSKinesisStream_retentionPeriod(t *testing.T) {
 				Config: testAccKinesisStreamConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisStreamExists(resourceName, &stream),
-					testAccCheckAWSKinesisStreamAttributes(&stream),
+					testAccCheckStreamAttributes(&stream),
 					resource.TestCheckResourceAttr(
 						resourceName, "retention_period", "24"),
 				),
@@ -298,7 +298,7 @@ func TestAccAWSKinesisStream_retentionPeriod(t *testing.T) {
 				Config: testAccKinesisStreamConfigUpdateRetentionPeriod(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisStreamExists(resourceName, &stream),
-					testAccCheckAWSKinesisStreamAttributes(&stream),
+					testAccCheckStreamAttributes(&stream),
 					resource.TestCheckResourceAttr(
 						resourceName, "retention_period", "8760"),
 				),
@@ -308,7 +308,7 @@ func TestAccAWSKinesisStream_retentionPeriod(t *testing.T) {
 				Config: testAccKinesisStreamConfigDecreaseRetentionPeriod(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisStreamExists(resourceName, &stream),
-					testAccCheckAWSKinesisStreamAttributes(&stream),
+					testAccCheckStreamAttributes(&stream),
 					resource.TestCheckResourceAttr(
 						resourceName, "retention_period", "28"),
 				),
@@ -333,7 +333,7 @@ func TestAccAWSKinesisStream_shardLevelMetrics(t *testing.T) {
 				Config: testAccKinesisStreamConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisStreamExists(resourceName, &stream),
-					testAccCheckAWSKinesisStreamAttributes(&stream),
+					testAccCheckStreamAttributes(&stream),
 					resource.TestCheckNoResourceAttr(
 						resourceName, "shard_level_metrics"),
 				),
@@ -349,7 +349,7 @@ func TestAccAWSKinesisStream_shardLevelMetrics(t *testing.T) {
 				Config: testAccKinesisStreamConfigAllShardLevelMetrics(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisStreamExists(resourceName, &stream),
-					testAccCheckAWSKinesisStreamAttributes(&stream),
+					testAccCheckStreamAttributes(&stream),
 					resource.TestCheckResourceAttr(
 						resourceName, "shard_level_metrics.#", "7"),
 				),
@@ -359,7 +359,7 @@ func TestAccAWSKinesisStream_shardLevelMetrics(t *testing.T) {
 				Config: testAccKinesisStreamConfigSingleShardLevelMetric(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisStreamExists(resourceName, &stream),
-					testAccCheckAWSKinesisStreamAttributes(&stream),
+					testAccCheckStreamAttributes(&stream),
 					resource.TestCheckResourceAttr(
 						resourceName, "shard_level_metrics.#", "1"),
 				),
@@ -384,8 +384,8 @@ func TestAccAWSKinesisStream_enforceConsumerDeletion(t *testing.T) {
 				Config: testAccKinesisStreamConfigWithEnforceConsumerDeletion(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisStreamExists(resourceName, &stream),
-					testAccCheckAWSKinesisStreamAttributes(&stream),
-					testAccAWSKinesisStreamRegisterStreamConsumer(&stream, fmt.Sprintf("tf-test-%d", rInt)),
+					testAccCheckStreamAttributes(&stream),
+					testAccStreamRegisterStreamConsumer(&stream, fmt.Sprintf("tf-test-%d", rInt)),
 				),
 			},
 			{
@@ -475,7 +475,7 @@ func testAccCheckKinesisStreamExists(n string, stream *kinesis.StreamDescription
 	}
 }
 
-func testAccCheckAWSKinesisStreamAttributes(stream *kinesis.StreamDescription) resource.TestCheckFunc {
+func testAccCheckStreamAttributes(stream *kinesis.StreamDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if !strings.HasPrefix(*stream.StreamName, "terraform-kinesis-test") {
 			return fmt.Errorf("Bad Stream name: %s", *stream.StreamName)
@@ -519,7 +519,7 @@ func testAccCheckKinesisStreamDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSKinesisStreamRegisterStreamConsumer(stream *kinesis.StreamDescription, rStr string) resource.TestCheckFunc {
+func testAccStreamRegisterStreamConsumer(stream *kinesis.StreamDescription, rStr string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisConn
 
