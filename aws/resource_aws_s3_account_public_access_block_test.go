@@ -49,7 +49,7 @@ func testAccAWSS3AccountPublicAccessBlock_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3AccountPublicAccessBlockDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -79,7 +79,7 @@ func testAccAWSS3AccountPublicAccessBlock_disappears(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3AccountPublicAccessBlockDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -101,7 +101,7 @@ func testAccAWSS3AccountPublicAccessBlock_AccountId(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3AccountPublicAccessBlockDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -127,7 +127,7 @@ func testAccAWSS3AccountPublicAccessBlock_BlockPublicAcls(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3AccountPublicAccessBlockDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -167,7 +167,7 @@ func testAccAWSS3AccountPublicAccessBlock_BlockPublicPolicy(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3AccountPublicAccessBlockDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -207,7 +207,7 @@ func testAccAWSS3AccountPublicAccessBlock_IgnorePublicAcls(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3AccountPublicAccessBlockDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -247,7 +247,7 @@ func testAccAWSS3AccountPublicAccessBlock_RestrictPublicBuckets(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3AccountPublicAccessBlockDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -291,7 +291,7 @@ func testAccCheckAWSS3AccountPublicAccessBlockExists(resourceName string, config
 			return fmt.Errorf("No S3 Account Public Access Block ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).s3controlconn
+		conn := acctest.Provider.Meta().(*AWSClient).s3controlconn
 
 		input := &s3control.GetPublicAccessBlockInput{
 			AccountId: aws.String(rs.Primary.ID),
@@ -329,7 +329,7 @@ func testAccCheckAWSS3AccountPublicAccessBlockExists(resourceName string, config
 }
 
 func testAccCheckAWSS3AccountPublicAccessBlockDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).s3controlconn
+	conn := acctest.Provider.Meta().(*AWSClient).s3controlconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_s3_account_public_access_block" {
@@ -365,8 +365,8 @@ func testAccCheckAWSS3AccountPublicAccessBlockDestroy(s *terraform.State) error 
 
 func testAccCheckAWSS3AccountPublicAccessBlockDisappears() resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).s3controlconn
-		accountID := testAccProvider.Meta().(*AWSClient).accountid
+		conn := acctest.Provider.Meta().(*AWSClient).s3controlconn
+		accountID := acctest.Provider.Meta().(*AWSClient).accountid
 
 		deleteInput := &s3control.DeletePublicAccessBlockInput{
 			AccountId: aws.String(accountID),

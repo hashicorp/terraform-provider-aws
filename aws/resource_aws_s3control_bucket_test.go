@@ -16,13 +16,13 @@ import (
 )
 
 func TestAccAWSS3ControlBucket_basic(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3control_bucket.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3ControlBucketDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -47,20 +47,20 @@ func TestAccAWSS3ControlBucket_basic(t *testing.T) {
 }
 
 func TestAccAWSS3ControlBucket_disappears(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3control_bucket.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3ControlBucketDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSS3ControlBucketConfig_Bucket(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3ControlBucketExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsS3ControlBucket(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsS3ControlBucket(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -71,13 +71,13 @@ func TestAccAWSS3ControlBucket_disappears(t *testing.T) {
 func TestAccAWSS3ControlBucket_Tags(t *testing.T) {
 	acctest.Skip(t, "S3 Control Bucket resource tagging requires additional eventual consistency handling, see also: https://github.com/hashicorp/terraform-provider-aws/issues/15572")
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3control_bucket.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3ControlBucketDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -115,7 +115,7 @@ func TestAccAWSS3ControlBucket_Tags(t *testing.T) {
 }
 
 func testAccCheckAWSS3ControlBucketDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).s3controlconn
+	conn := acctest.Provider.Meta().(*AWSClient).s3controlconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_s3control_bucket" {
@@ -160,7 +160,7 @@ func testAccCheckAWSS3ControlBucketExists(resourceName string) resource.TestChec
 			return fmt.Errorf("no resource ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).s3controlconn
+		conn := acctest.Provider.Meta().(*AWSClient).s3controlconn
 
 		parsedArn, err := arn.Parse(rs.Primary.ID)
 
