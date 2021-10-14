@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/autoscalingplans/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/autoscalingplans/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsAutoScalingPlansScalingPlan() *schema.Resource {
@@ -319,7 +320,7 @@ func resourceAwsAutoScalingPlansScalingPlan() *schema.Resource {
 }
 
 func resourceAwsAutoScalingPlansScalingPlanCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).autoscalingplansconn
+	conn := meta.(*conns.AWSClient).AutoScalingPlansConn
 
 	scalingPlanName := d.Get("name").(string)
 	input := &autoscalingplans.CreateScalingPlanInput{
@@ -349,7 +350,7 @@ func resourceAwsAutoScalingPlansScalingPlanCreate(d *schema.ResourceData, meta i
 }
 
 func resourceAwsAutoScalingPlansScalingPlanRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).autoscalingplansconn
+	conn := meta.(*conns.AWSClient).AutoScalingPlansConn
 
 	scalingPlanName, scalingPlanVersion, err := tfautoscalingplans.ScalingPlanParseResourceID(d.Id())
 
@@ -384,7 +385,7 @@ func resourceAwsAutoScalingPlansScalingPlanRead(d *schema.ResourceData, meta int
 }
 
 func resourceAwsAutoScalingPlansScalingPlanUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).autoscalingplansconn
+	conn := meta.(*conns.AWSClient).AutoScalingPlansConn
 
 	scalingPlanName, scalingPlanVersion, err := tfautoscalingplans.ScalingPlanParseResourceID(d.Id())
 
@@ -416,7 +417,7 @@ func resourceAwsAutoScalingPlansScalingPlanUpdate(d *schema.ResourceData, meta i
 }
 
 func resourceAwsAutoScalingPlansScalingPlanDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).autoscalingplansconn
+	conn := meta.(*conns.AWSClient).AutoScalingPlansConn
 
 	scalingPlanName, scalingPlanVersion, err := tfautoscalingplans.ScalingPlanParseResourceID(d.Id())
 

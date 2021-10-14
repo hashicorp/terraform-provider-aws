@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/autoscalingplans/lister"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -31,7 +32,7 @@ func testSweepAutoScalingPlansScalingPlans(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).autoscalingplansconn
+	conn := client.(*conns.AWSClient).AutoScalingPlansConn
 	input := &autoscalingplans.DescribeScalingPlansInput{}
 	sweepResources := make([]*testSweepResource, 0)
 
@@ -413,7 +414,7 @@ func TestAccAwsAutoScalingPlansScalingPlan_dynamicScaling_CustomizedScalingMetri
 }
 
 func testAccCheckAutoScalingPlansScalingPlanDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).autoscalingplansconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingPlansConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_autoscalingplans_scaling_plan" {
@@ -440,7 +441,7 @@ func testAccCheckAutoScalingPlansScalingPlanDestroy(s *terraform.State) error {
 
 func testAccCheckAutoScalingPlansScalingPlanExists(name string, v *autoscalingplans.ScalingPlan) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).autoscalingplansconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingPlansConn
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
