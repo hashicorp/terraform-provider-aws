@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsLbTargetGroup() *schema.Resource {
@@ -146,8 +147,8 @@ func dataSourceAwsLbTargetGroup() *schema.Resource {
 }
 
 func dataSourceAwsLbTargetGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elbv2conn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).ELBV2Conn
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &elbv2.DescribeTargetGroupsInput{}
 

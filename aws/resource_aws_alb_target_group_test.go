@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestALBTargetGroupCloudwatchSuffixFromARN(t *testing.T) {
@@ -510,7 +511,7 @@ func testAccCheckAWSALBTargetGroupExists(n string, res *elbv2.TargetGroup) resou
 			return errors.New("No Target Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).elbv2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn
 
 		describe, err := conn.DescribeTargetGroups(&elbv2.DescribeTargetGroupsInput{
 			TargetGroupArns: []*string{aws.String(rs.Primary.ID)},
@@ -531,7 +532,7 @@ func testAccCheckAWSALBTargetGroupExists(n string, res *elbv2.TargetGroup) resou
 }
 
 func testAccCheckAWSALBTargetGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).elbv2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_alb_target_group" {

@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	tfelbv2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/elbv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsLbListenerCertificate() *schema.Resource {
@@ -39,7 +40,7 @@ func resourceAwsLbListenerCertificate() *schema.Resource {
 }
 
 func resourceAwsLbListenerCertificateCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elbv2conn
+	conn := meta.(*conns.AWSClient).ELBV2Conn
 
 	listenerArn := d.Get("listener_arn").(string)
 	certificateArn := d.Get("certificate_arn").(string)
@@ -84,7 +85,7 @@ func resourceAwsLbListenerCertificateCreate(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsLbListenerCertificateRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elbv2conn
+	conn := meta.(*conns.AWSClient).ELBV2Conn
 
 	listenerArn, certificateArn, err := tfelbv2.ListenerCertificateParseID(d.Id())
 	if err != nil {
@@ -130,7 +131,7 @@ func resourceAwsLbListenerCertificateRead(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsLbListenerCertificateDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elbv2conn
+	conn := meta.(*conns.AWSClient).ELBV2Conn
 
 	certificateArn := d.Get("certificate_arn").(string)
 	listenerArn := d.Get("listener_arn").(string)

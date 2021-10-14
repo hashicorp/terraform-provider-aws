@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/elbv2/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/elbv2/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsLbListener() *schema.Resource {
@@ -382,8 +383,8 @@ func suppressIfDefaultActionTypeNot(t string) schema.SchemaDiffSuppressFunc {
 }
 
 func resourceAwsLbListenerCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elbv2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).ELBV2Conn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	lbArn := d.Get("load_balancer_arn").(string)
@@ -467,9 +468,9 @@ func resourceAwsLbListenerCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsLbListenerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elbv2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).ELBV2Conn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	var listener *elbv2.Listener
 
@@ -554,7 +555,7 @@ func resourceAwsLbListenerRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsLbListenerUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elbv2conn
+	conn := meta.(*conns.AWSClient).ELBV2Conn
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		params := &elbv2.ModifyListenerInput{
@@ -647,7 +648,7 @@ func resourceAwsLbListenerUpdate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsLbListenerDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elbv2conn
+	conn := meta.(*conns.AWSClient).ELBV2Conn
 
 	_, err := conn.DeleteListener(&elbv2.DeleteListenerInput{
 		ListenerArn: aws.String(d.Id()),

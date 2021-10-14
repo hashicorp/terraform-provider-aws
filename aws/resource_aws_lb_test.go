@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/elbv2/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -44,7 +45,7 @@ func testSweepLBs(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).elbv2conn
+	conn := client.(*conns.AWSClient).ELBV2Conn
 
 	var sweeperErrs *multierror.Error
 	err = conn.DescribeLoadBalancersPages(&elbv2.DescribeLoadBalancersInput{}, func(page *elbv2.DescribeLoadBalancersOutput, lastPage bool) bool {
@@ -1177,7 +1178,7 @@ func testAccCheckAWSLBExists(n string, res *elbv2.LoadBalancer) resource.TestChe
 			return errors.New("No LB ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).elbv2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn
 
 		lb, err := finder.LoadBalancerByARN(conn, rs.Primary.ID)
 
@@ -1205,7 +1206,7 @@ func testAccCheckAWSLBAttribute(n, key, value string) resource.TestCheckFunc {
 			return errors.New("No LB ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).elbv2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn
 		attributesResp, err := conn.DescribeLoadBalancerAttributes(&elbv2.DescribeLoadBalancerAttributesInput{
 			LoadBalancerArn: aws.String(rs.Primary.ID),
 		})
@@ -1226,7 +1227,7 @@ func testAccCheckAWSLBAttribute(n, key, value string) resource.TestCheckFunc {
 }
 
 func testAccCheckAWSLBDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).elbv2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lb" && rs.Type != "aws_alb" {
@@ -1252,7 +1253,7 @@ func testAccCheckAWSLBDestroy(s *terraform.State) error {
 }
 
 func testAccPreCheckElbv2GatewayLoadBalancer(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).elbv2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn
 
 	input := &elbv2.DescribeAccountLimitsInput{}
 
