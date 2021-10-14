@@ -11,9 +11,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 const (
@@ -80,8 +81,8 @@ func ResourceNotificationRule() *schema.Resource {
 				}, false),
 			},
 
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 
 			"target": {
 				Type:     schema.TypeSet,
@@ -108,7 +109,7 @@ func ResourceNotificationRule() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -127,7 +128,7 @@ func expandCodeStarNotificationsNotificationRuleTargets(targetsData []interface{
 func resourceNotificationRuleCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodeStarNotificationsConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	params := &codestarnotifications.CreateNotificationRuleInput{
 		DetailType:   aws.String(d.Get("detail_type").(string)),
@@ -182,7 +183,7 @@ func resourceNotificationRuleRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("name", rule.Name)
 	d.Set("status", rule.Status)
 	d.Set("resource", rule.Resource)
-	tags := keyvaluetags.New(rule.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := tftags.New(rule.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -280,7 +281,7 @@ func resourceNotificationRuleUpdate(d *schema.ResourceData, meta interface{}) er
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := keyvaluetags.CodestarnotificationsUpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := tftags.CodestarnotificationsUpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating codestar notification rule tags: %s", err)
 		}
 	}
