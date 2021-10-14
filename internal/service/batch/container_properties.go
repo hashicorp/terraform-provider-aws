@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"
 	"github.com/aws/aws-sdk-go/service/batch"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 type containerProperties batch.ContainerProperties
