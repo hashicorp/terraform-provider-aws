@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsMacie2CustomDataIdentifier() *schema.Resource {
+func ResourceCustomDataIdentifier() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMacie2CustomDataIdentifierCreate,
 		ReadWithoutTimeout:   resourceMacie2CustomDataIdentifierRead,

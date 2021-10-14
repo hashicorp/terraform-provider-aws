@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsMacie2ClassificationJob() *schema.Resource {
+func ResourceClassificationJob() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMacie2ClassificationJobCreate,
 		ReadWithoutTimeout:   resourceMacie2ClassificationJobRead,

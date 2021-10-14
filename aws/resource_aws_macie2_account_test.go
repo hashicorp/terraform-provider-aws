@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func testAccAwsMacie2Account_basic(t *testing.T) {
@@ -179,7 +180,7 @@ func testAccAwsMacie2Account_disappears(t *testing.T) {
 				Config: testAccAwsMacieAccountConfigBasic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2AccountExists(resourceName, &macie2Output),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsMacie2Account(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceAccount(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

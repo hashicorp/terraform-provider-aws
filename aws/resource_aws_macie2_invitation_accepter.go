@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsMacie2InvitationAccepter() *schema.Resource {
+func ResourceInvitationAccepter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMacie2InvitationAccepterCreate,
 		ReadWithoutTimeout:   resourceMacie2InvitationAccepterRead,

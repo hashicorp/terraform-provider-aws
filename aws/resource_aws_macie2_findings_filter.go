@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 )
 
-func resourceAwsMacie2FindingsFilter() *schema.Resource {
+func ResourceFindingsFilter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMacie2FindingsFilterCreate,
 		ReadWithoutTimeout:   resourceMacie2FindingsFilterRead,
