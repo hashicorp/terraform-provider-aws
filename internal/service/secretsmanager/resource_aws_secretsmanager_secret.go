@@ -21,6 +21,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	tfsecretsmanager "github.com/hashicorp/terraform-provider-aws/internal/service/secretsmanager"
 )
 
 func ResourceSecret() *schema.Resource {
@@ -184,7 +186,7 @@ func resourceSecretCreate(d *schema.ResourceData, meta interface{}) error {
 
 	// Retry for secret recreation after deletion
 	var output *secretsmanager.CreateSecretOutput
-	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(tfsecretsmanager.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		output, err = conn.CreateSecret(input)
 		// Temporarily retry on these errors to support immediate secret recreation:
@@ -213,7 +215,7 @@ func resourceSecretCreate(d *schema.ResourceData, meta interface{}) error {
 			SecretId:       aws.String(d.Id()),
 		}
 
-		err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+		err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 			_, err := conn.PutResourcePolicy(input)
 			if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeMalformedPolicyDocumentException,
 				"This resource policy contains an unsupported principal") {
@@ -273,7 +275,7 @@ func resourceSecretRead(d *schema.ResourceData, meta interface{}) error {
 
 	var output *secretsmanager.DescribeSecretOutput
 
-	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(tfsecretsmanager.PropagationTimeout, func() *resource.RetryError {
 		var err error
 
 		output, err = conn.DescribeSecret(input)
@@ -410,7 +412,7 @@ func resourceSecretUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 
 			log.Printf("[DEBUG] Setting Secrets Manager Secret resource policy; %#v", input)
-			err = resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+			err = resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 				_, err := conn.PutResourcePolicy(input)
 				if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeMalformedPolicyDocumentException,
 					"This resource policy contains an unsupported principal") {

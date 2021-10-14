@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfsecretsmanager "github.com/hashicorp/terraform-provider-aws/internal/service/secretsmanager"
 )
 
 func ResourceSecretRotation() *schema.Resource {
@@ -109,7 +110,7 @@ func resourceSecretRotationRead(d *schema.ResourceData, meta interface{}) error 
 
 	var output *secretsmanager.DescribeSecretOutput
 
-	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(tfsecretsmanager.PropagationTimeout, func() *resource.RetryError {
 		var err error
 
 		output, err = conn.DescribeSecret(input)

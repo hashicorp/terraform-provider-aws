@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfsecretsmanager "github.com/hashicorp/terraform-provider-aws/internal/service/secretsmanager"
 )
 
 func ResourceSecretVersion() *schema.Resource {
@@ -123,7 +124,7 @@ func resourceSecretVersionRead(d *schema.ResourceData, meta interface{}) error {
 
 	var output *secretsmanager.GetSecretValueOutput
 
-	err = resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err = resource.Retry(tfsecretsmanager.PropagationTimeout, func() *resource.RetryError {
 		var err error
 
 		output, err = conn.GetSecretValue(input)
