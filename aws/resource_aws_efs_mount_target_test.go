@@ -8,7 +8,10 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/efs"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	multierror "github.com/hashicorp/go-multierror"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -96,7 +99,7 @@ func TestAccAWSEFSMountTarget_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, efs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckEfsMountTargetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -139,14 +142,14 @@ func TestAccAWSEFSMountTarget_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, efs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckVpnGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSEFSMountTargetConfig(ct),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEfsMountTarget(resourceName, &mount),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsEfsMountTarget(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsEfsMountTarget(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -161,7 +164,7 @@ func TestAccAWSEFSMountTarget_IpAddress(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, efs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckEfsMountTargetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -188,7 +191,7 @@ func TestAccAWSEFSMountTarget_IpAddress_EmptyString(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, efs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckEfsMountTargetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -224,11 +227,10 @@ func TestResourceAWSEFSMountTarget_hasEmptyMountTargets(t *testing.T) {
 	if actual {
 		t.Fatalf("Expected return value to be false, got %t", actual)
 	}
-
 }
 
 func testAccCheckEfsMountTargetDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).efsconn
+	conn := acctest.Provider.Meta().(*AWSClient).efsconn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_efs_mount_target" {
 			continue
@@ -268,7 +270,7 @@ func testAccCheckEfsMountTarget(resourceID string, mount *efs.MountTargetDescrip
 			return fmt.Errorf("Not found: %s", resourceID)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).efsconn
+		conn := acctest.Provider.Meta().(*AWSClient).efsconn
 		mt, err := conn.DescribeMountTargets(&efs.DescribeMountTargetsInput{
 			MountTargetId: aws.String(fs.Primary.ID),
 		})
@@ -432,8 +434,9 @@ resource "aws_efs_mount_target" "test" {
 }
 `, ipAddress)
 }
+
 func testAccCheckVpnGatewayDestroy(s *terraform.State) error {
-	ec2conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	ec2conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_vpn_gateway" {
@@ -475,4 +478,3 @@ func testAccCheckVpnGatewayDestroy(s *terraform.State) error {
 
 	return nil
 }
-

@@ -16,12 +16,12 @@ import (
 func TestAccAWSEFSFileSystemPolicy_basic(t *testing.T) {
 	var desc efs.DescribeFileSystemPolicyOutput
 	resourceName := "aws_efs_file_system_policy.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, efs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckEfsFileSystemPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -51,19 +51,19 @@ func TestAccAWSEFSFileSystemPolicy_basic(t *testing.T) {
 func TestAccAWSEFSFileSystemPolicy_disappears(t *testing.T) {
 	var desc efs.DescribeFileSystemPolicyOutput
 	resourceName := "aws_efs_file_system_policy.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, efs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckEfsFileSystemPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSEFSFileSystemPolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEfsFileSystemPolicyExists(resourceName, &desc),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsEfsFileSystemPolicy(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsEfsFileSystemPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -74,12 +74,12 @@ func TestAccAWSEFSFileSystemPolicy_disappears(t *testing.T) {
 func TestAccAWSEFSFileSystemPolicy_PolicyBypass(t *testing.T) {
 	var desc efs.DescribeFileSystemPolicyOutput
 	resourceName := "aws_efs_file_system_policy.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, efs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckEfsFileSystemPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -107,7 +107,7 @@ func TestAccAWSEFSFileSystemPolicy_PolicyBypass(t *testing.T) {
 }
 
 func testAccCheckEfsFileSystemPolicyDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).efsconn
+	conn := acctest.Provider.Meta().(*AWSClient).efsconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_efs_file_system_policy" {
@@ -141,7 +141,7 @@ func testAccCheckEfsFileSystemPolicyExists(n string, v *efs.DescribeFileSystemPo
 			return fmt.Errorf("No EFS File System Policy ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).efsconn
+		conn := acctest.Provider.Meta().(*AWSClient).efsconn
 
 		output, err := finder.FileSystemPolicyByID(conn, rs.Primary.ID)
 
