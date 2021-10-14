@@ -70,13 +70,13 @@ func testSweepSagemakerDomains(region string) error {
 
 func testAccAWSSagemakerDomain_basic(t *testing.T) {
 	var domain sagemaker.DescribeDomainOutput
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_domain.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerDomainDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -108,13 +108,13 @@ func testAccAWSSagemakerDomain_basic(t *testing.T) {
 
 func testAccAWSSagemakerDomain_kms(t *testing.T) {
 	var domain sagemaker.DescribeDomainOutput
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_domain.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerDomainDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -136,13 +136,13 @@ func testAccAWSSagemakerDomain_kms(t *testing.T) {
 
 func testAccAWSSagemakerDomain_tags(t *testing.T) {
 	var domain sagemaker.DescribeDomainOutput
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_domain.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerDomainDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -182,13 +182,13 @@ func testAccAWSSagemakerDomain_tags(t *testing.T) {
 
 func testAccAWSSagemakerDomain_securityGroup(t *testing.T) {
 	var domain sagemaker.DescribeDomainOutput
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_domain.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerDomainDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -219,13 +219,13 @@ func testAccAWSSagemakerDomain_securityGroup(t *testing.T) {
 
 func testAccAWSSagemakerDomain_sharingSettings(t *testing.T) {
 	var domain sagemaker.DescribeDomainOutput
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_domain.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerDomainDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -251,13 +251,13 @@ func testAccAWSSagemakerDomain_sharingSettings(t *testing.T) {
 
 func testAccAWSSagemakerDomain_tensorboardAppSettings(t *testing.T) {
 	var domain sagemaker.DescribeDomainOutput
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_domain.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerDomainDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -282,13 +282,13 @@ func testAccAWSSagemakerDomain_tensorboardAppSettings(t *testing.T) {
 
 func testAccAWSSagemakerDomain_tensorboardAppSettingsWithImage(t *testing.T) {
 	var domain sagemaker.DescribeDomainOutput
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_domain.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerDomainDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -314,13 +314,13 @@ func testAccAWSSagemakerDomain_tensorboardAppSettingsWithImage(t *testing.T) {
 
 func testAccAWSSagemakerDomain_kernelGatewayAppSettings(t *testing.T) {
 	var domain sagemaker.DescribeDomainOutput
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_domain.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerDomainDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -345,13 +345,13 @@ func testAccAWSSagemakerDomain_kernelGatewayAppSettings(t *testing.T) {
 
 func testAccAWSSagemakerDomain_kernelGatewayAppSettings_lifecycleConfig(t *testing.T) {
 	var domain sagemaker.DescribeDomainOutput
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_domain.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerDomainDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -382,14 +382,14 @@ func testAccAWSSagemakerDomain_kernelGatewayAppSettings_customImage(t *testing.T
 	}
 
 	var domain sagemaker.DescribeDomainOutput
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_domain.test"
 	baseImage := os.Getenv("SAGEMAKER_IMAGE_VERSION_BASE_IMAGE")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerDomainDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -416,13 +416,13 @@ func testAccAWSSagemakerDomain_kernelGatewayAppSettings_customImage(t *testing.T
 
 func testAccAWSSagemakerDomain_jupyterServerAppSettings(t *testing.T) {
 	var domain sagemaker.DescribeDomainOutput
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_domain.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerDomainDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -447,20 +447,20 @@ func testAccAWSSagemakerDomain_jupyterServerAppSettings(t *testing.T) {
 
 func testAccAWSSagemakerDomain_disappears(t *testing.T) {
 	var domain sagemaker.DescribeDomainOutput
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_domain.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerDomainDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSagemakerDomainBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerDomainExists(resourceName, &domain),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSagemakerDomain(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSagemakerDomain(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -469,7 +469,7 @@ func testAccAWSSagemakerDomain_disappears(t *testing.T) {
 }
 
 func testAccCheckAWSSagemakerDomainDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).sagemakerconn
+	conn := acctest.Provider.Meta().(*AWSClient).sagemakerconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_sagemaker_domain" {
@@ -511,7 +511,7 @@ func testAccCheckAWSSagemakerDomainExists(n string, codeRepo *sagemaker.Describe
 			return fmt.Errorf("No sagmaker domain ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).sagemakerconn
+		conn := acctest.Provider.Meta().(*AWSClient).sagemakerconn
 		resp, err := finder.DomainByName(conn, rs.Primary.ID)
 		if err != nil {
 			return err

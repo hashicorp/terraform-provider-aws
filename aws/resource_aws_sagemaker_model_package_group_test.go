@@ -62,13 +62,13 @@ func testSweepSagemakerModelPackageGroups(region string) error {
 
 func TestAccAWSSagemakerModelPackageGroup_basic(t *testing.T) {
 	var mpg sagemaker.DescribeModelPackageGroupOutput
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_model_package_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerModelPackageGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -91,13 +91,13 @@ func TestAccAWSSagemakerModelPackageGroup_basic(t *testing.T) {
 
 func TestAccAWSSagemakerModelPackageGroup_description(t *testing.T) {
 	var mpg sagemaker.DescribeModelPackageGroupOutput
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_model_package_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerModelPackageGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -118,13 +118,13 @@ func TestAccAWSSagemakerModelPackageGroup_description(t *testing.T) {
 
 func TestAccAWSSagemakerModelPackageGroup_tags(t *testing.T) {
 	var mpg sagemaker.DescribeModelPackageGroupOutput
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_model_package_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerModelPackageGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -163,20 +163,20 @@ func TestAccAWSSagemakerModelPackageGroup_tags(t *testing.T) {
 
 func TestAccAWSSagemakerModelPackageGroup_disappears(t *testing.T) {
 	var mpg sagemaker.DescribeModelPackageGroupOutput
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_model_package_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerModelPackageGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSagemakerModelPackageGroupBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerModelPackageGroupExists(resourceName, &mpg),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSagemakerModelPackageGroup(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSagemakerModelPackageGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -185,7 +185,7 @@ func TestAccAWSSagemakerModelPackageGroup_disappears(t *testing.T) {
 }
 
 func testAccCheckAWSSagemakerModelPackageGroupDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).sagemakerconn
+	conn := acctest.Provider.Meta().(*AWSClient).sagemakerconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_sagemaker_model_package_group" {
@@ -221,7 +221,7 @@ func testAccCheckAWSSagemakerModelPackageGroupExists(n string, mpg *sagemaker.De
 			return fmt.Errorf("No sagmaker Model Package Group ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).sagemakerconn
+		conn := acctest.Provider.Meta().(*AWSClient).sagemakerconn
 		resp, err := finder.ModelPackageGroupByName(conn, rs.Primary.ID)
 		if err != nil {
 			return err

@@ -62,13 +62,13 @@ func testSweepSagemakerCodeRepositories(region string) error {
 
 func TestAccAWSSagemakerCodeRepository_basic(t *testing.T) {
 	var notebook sagemaker.DescribeCodeRepositoryOutput
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_code_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerCodeRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -92,13 +92,13 @@ func TestAccAWSSagemakerCodeRepository_basic(t *testing.T) {
 
 func TestAccAWSSagemakerCodeRepository_gitConfig_branch(t *testing.T) {
 	var notebook sagemaker.DescribeCodeRepositoryOutput
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_code_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerCodeRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -123,13 +123,13 @@ func TestAccAWSSagemakerCodeRepository_gitConfig_branch(t *testing.T) {
 
 func TestAccAWSSagemakerCodeRepository_gitConfig_secret(t *testing.T) {
 	var notebook sagemaker.DescribeCodeRepositoryOutput
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_code_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerCodeRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -165,20 +165,20 @@ func TestAccAWSSagemakerCodeRepository_gitConfig_secret(t *testing.T) {
 
 func TestAccAWSSagemakerCodeRepository_disappears(t *testing.T) {
 	var notebook sagemaker.DescribeCodeRepositoryOutput
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_code_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerCodeRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSagemakerCodeRepositoryBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerCodeRepositoryExists(resourceName, &notebook),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSagemakerCodeRepository(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSagemakerCodeRepository(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -187,7 +187,7 @@ func TestAccAWSSagemakerCodeRepository_disappears(t *testing.T) {
 }
 
 func testAccCheckAWSSagemakerCodeRepositoryDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).sagemakerconn
+	conn := acctest.Provider.Meta().(*AWSClient).sagemakerconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_sagemaker_code_repository" {
@@ -223,7 +223,7 @@ func testAccCheckAWSSagemakerCodeRepositoryExists(n string, codeRepo *sagemaker.
 			return fmt.Errorf("No sagmaker Code Repository ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).sagemakerconn
+		conn := acctest.Provider.Meta().(*AWSClient).sagemakerconn
 		resp, err := finder.CodeRepositoryByName(conn, rs.Primary.ID)
 		if err != nil {
 			return err

@@ -61,13 +61,13 @@ func testSweepSagemakerImages(region string) error {
 
 func TestAccAWSSagemakerImage_basic(t *testing.T) {
 	var image sagemaker.DescribeImageOutput
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_image.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerImageDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -91,13 +91,13 @@ func TestAccAWSSagemakerImage_basic(t *testing.T) {
 
 func TestAccAWSSagemakerImage_description(t *testing.T) {
 	var image sagemaker.DescribeImageOutput
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_image.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerImageDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -132,13 +132,13 @@ func TestAccAWSSagemakerImage_description(t *testing.T) {
 
 func TestAccAWSSagemakerImage_displayName(t *testing.T) {
 	var image sagemaker.DescribeImageOutput
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_image.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerImageDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -173,13 +173,13 @@ func TestAccAWSSagemakerImage_displayName(t *testing.T) {
 
 func TestAccAWSSagemakerImage_tags(t *testing.T) {
 	var image sagemaker.DescribeImageOutput
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_image.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerImageDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -218,20 +218,20 @@ func TestAccAWSSagemakerImage_tags(t *testing.T) {
 
 func TestAccAWSSagemakerImage_disappears(t *testing.T) {
 	var image sagemaker.DescribeImageOutput
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_image.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerImageDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSagemakerImageBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerImageExists(resourceName, &image),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSagemakerImage(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSagemakerImage(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -240,7 +240,7 @@ func TestAccAWSSagemakerImage_disappears(t *testing.T) {
 }
 
 func testAccCheckAWSSagemakerImageDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).sagemakerconn
+	conn := acctest.Provider.Meta().(*AWSClient).sagemakerconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_sagemaker_image" {
@@ -276,7 +276,7 @@ func testAccCheckAWSSagemakerImageExists(n string, image *sagemaker.DescribeImag
 			return fmt.Errorf("No sagmaker Image ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).sagemakerconn
+		conn := acctest.Provider.Meta().(*AWSClient).sagemakerconn
 		resp, err := finder.ImageByName(conn, rs.Primary.ID)
 		if err != nil {
 			return err

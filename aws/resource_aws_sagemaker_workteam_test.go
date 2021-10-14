@@ -63,13 +63,13 @@ func testSweepSagemakerWorkteams(region string) error {
 
 func testAccAWSSagemakerWorkteam_cognitoConfig(t *testing.T) {
 	var workteam sagemaker.Workteam
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_workteam.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerWorkteamDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -134,13 +134,13 @@ func testAccAWSSagemakerWorkteam_cognitoConfig(t *testing.T) {
 
 func testAccAWSSagemakerWorkteam_oidcConfig(t *testing.T) {
 	var workteam sagemaker.Workteam
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_workteam.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerWorkteamDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -191,13 +191,13 @@ func testAccAWSSagemakerWorkteam_oidcConfig(t *testing.T) {
 
 func testAccAWSSagemakerWorkteam_tags(t *testing.T) {
 	var workteam sagemaker.Workteam
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_workteam.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerWorkteamDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -237,13 +237,13 @@ func testAccAWSSagemakerWorkteam_tags(t *testing.T) {
 
 func testAccAWSSagemakerWorkteam_notificationConfig(t *testing.T) {
 	var workteam sagemaker.Workteam
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_workteam.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerWorkteamDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -290,20 +290,20 @@ func testAccAWSSagemakerWorkteam_notificationConfig(t *testing.T) {
 
 func testAccAWSSagemakerWorkteam_disappears(t *testing.T) {
 	var workteam sagemaker.Workteam
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_workteam.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerWorkteamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSagemakerWorkteamOidcConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerWorkteamExists(resourceName, &workteam),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSagemakerWorkteam(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSagemakerWorkteam(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -312,7 +312,7 @@ func testAccAWSSagemakerWorkteam_disappears(t *testing.T) {
 }
 
 func testAccCheckAWSSagemakerWorkteamDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).sagemakerconn
+	conn := acctest.Provider.Meta().(*AWSClient).sagemakerconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_sagemaker_workteam" {
@@ -346,7 +346,7 @@ func testAccCheckAWSSagemakerWorkteamExists(n string, workteam *sagemaker.Workte
 			return fmt.Errorf("No SageMaker Workteam ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).sagemakerconn
+		conn := acctest.Provider.Meta().(*AWSClient).sagemakerconn
 
 		output, err := finder.WorkteamByName(conn, rs.Primary.ID)
 
