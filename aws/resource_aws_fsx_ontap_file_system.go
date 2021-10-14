@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/fsx/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/fsx/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsFsxOntapFileSystem() *schema.Resource {
@@ -228,8 +229,8 @@ func resourceAwsFsxOntapFileSystem() *schema.Resource {
 }
 
 func resourceAwsFsxOntapFileSystemCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).fsxconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).FSxConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &fsx.CreateFileSystemInput{
@@ -299,9 +300,9 @@ func resourceAwsFsxOntapFileSystemCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsFsxOntapFileSystemRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).fsxconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).FSxConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	filesystem, err := finder.FileSystemByID(conn, d.Id())
 
@@ -374,7 +375,7 @@ func resourceAwsFsxOntapFileSystemRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsFsxOntapFileSystemUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).fsxconn
+	conn := meta.(*conns.AWSClient).FSxConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -422,7 +423,7 @@ func resourceAwsFsxOntapFileSystemUpdate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsFsxOntapFileSystemDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).fsxconn
+	conn := meta.(*conns.AWSClient).FSxConn
 
 	log.Printf("[DEBUG] Deleting FSx ONTAP File System: %s", d.Id())
 	_, err := conn.DeleteFileSystem(&fsx.DeleteFileSystemInput{

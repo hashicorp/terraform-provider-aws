@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/fsx/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/fsx/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsFsxLustreFileSystem() *schema.Resource {
@@ -222,8 +223,8 @@ func resourceFsxLustreFileSystemSchemaCustomizeDiff(_ context.Context, d *schema
 }
 
 func resourceAwsFsxLustreFileSystemCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).fsxconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).FSxConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &fsx.CreateFileSystemInput{
@@ -347,7 +348,7 @@ func resourceAwsFsxLustreFileSystemCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsFsxLustreFileSystemUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).fsxconn
+	conn := meta.(*conns.AWSClient).FSxConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -402,9 +403,9 @@ func resourceAwsFsxLustreFileSystemUpdate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsFsxLustreFileSystemRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).fsxconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).FSxConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	filesystem, err := finder.FileSystemByID(conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -485,7 +486,7 @@ func resourceAwsFsxLustreFileSystemRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsFsxLustreFileSystemDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).fsxconn
+	conn := meta.(*conns.AWSClient).FSxConn
 
 	request := &fsx.DeleteFileSystemInput{
 		FileSystemId: aws.String(d.Id()),

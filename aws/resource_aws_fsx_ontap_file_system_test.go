@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/fsx/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -31,7 +32,7 @@ func testSweepFSXOntapFileSystems(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*AWSClient).fsxconn
+	conn := client.(*conns.AWSClient).FSxConn
 	sweepResources := make([]*testSweepResource, 0)
 	var errs *multierror.Error
 	input := &fsx.DescribeFileSystemsInput{}
@@ -496,7 +497,7 @@ func testAccCheckFsxOntapFileSystemExists(resourceName string, fs *fsx.FileSyste
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).fsxconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn
 
 		filesystem, err := finder.FileSystemByID(conn, rs.Primary.ID)
 		if err != nil {
@@ -514,7 +515,7 @@ func testAccCheckFsxOntapFileSystemExists(resourceName string, fs *fsx.FileSyste
 }
 
 func testAccCheckFsxOntapFileSystemDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).fsxconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_fsx_ontap_file_system" {
