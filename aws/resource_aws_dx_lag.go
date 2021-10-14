@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceLag() *schema.Resource {
@@ -41,7 +42,7 @@ func ResourceLag() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateDxConnectionBandWidth(),
+				ValidateFunc: validConnectionBandWidth(),
 			},
 			"force_destroy": {
 				Type:     schema.TypeBool,

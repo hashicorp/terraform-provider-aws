@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceHostedConnection() *schema.Resource {
@@ -31,7 +32,7 @@ func ResourceHostedConnection() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateDxConnectionBandWidth(),
+				ValidateFunc: validConnectionBandWidth(),
 			},
 			"connection_id": {
 				Type:     schema.TypeString,
@@ -67,7 +68,7 @@ func ResourceHostedConnection() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateAwsAccountId,
+				ValidateFunc: verify.ValidAccountID,
 			},
 			"partner_name": {
 				Type:     schema.TypeString,

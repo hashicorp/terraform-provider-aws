@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/directconnect/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func resourceAwsDxGatewayAssociationResourceV0() *schema.Resource {
@@ -34,7 +35,7 @@ func resourceAwsDxGatewayAssociationResourceV0() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ValidateFunc:  validateAwsAccountId,
+				ValidateFunc:  verify.ValidAccountID,
 				ConflictsWith: []string{"associated_gateway_id", "vpn_gateway_id"},
 			},
 

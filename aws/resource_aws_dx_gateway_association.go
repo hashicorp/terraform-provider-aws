@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceGatewayAssociation() *schema.Resource {
@@ -60,7 +61,7 @@ func ResourceGatewayAssociation() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ValidateFunc:  validateAwsAccountId,
+				ValidateFunc:  verify.ValidAccountID,
 				ConflictsWith: []string{"associated_gateway_id"},
 				RequiredWith:  []string{"proposal_id"},
 				AtLeastOneOf:  []string{"associated_gateway_id", "associated_gateway_owner_account_id", "proposal_id"},
