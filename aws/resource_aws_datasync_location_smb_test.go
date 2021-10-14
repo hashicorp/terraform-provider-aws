@@ -10,9 +10,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/datasync"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -82,11 +83,11 @@ func TestAccAWSDataSyncLocationSmb_basic(t *testing.T) {
 	var locationSmb1 datasync.DescribeLocationSmbOutput
 
 	resourceName := "aws_datasync_location_smb.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDataSync(t) },
-		ErrorCheck:   testAccErrorCheck(t, datasync.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSDataSync(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, datasync.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDataSyncLocationSmbDestroy,
 		Steps: []resource.TestStep{
@@ -94,7 +95,7 @@ func TestAccAWSDataSyncLocationSmb_basic(t *testing.T) {
 				Config: testAccAWSDataSyncLocationSmbConfig(rName, "/test/"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDataSyncLocationSmbExists(resourceName, &locationSmb1),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexp.MustCompile(`location/loc-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexp.MustCompile(`location/loc-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "mount_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "mount_options.0.version", "AUTOMATIC"),
@@ -113,7 +114,7 @@ func TestAccAWSDataSyncLocationSmb_basic(t *testing.T) {
 				Config: testAccAWSDataSyncLocationSmbConfig(rName, "/test2/"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDataSyncLocationSmbExists(resourceName, &locationSmb1),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexp.MustCompile(`location/loc-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexp.MustCompile(`location/loc-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "mount_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "mount_options.0.version", "AUTOMATIC"),
@@ -129,11 +130,11 @@ func TestAccAWSDataSyncLocationSmb_basic(t *testing.T) {
 func TestAccAWSDataSyncLocationSmb_disappears(t *testing.T) {
 	var locationSmb1 datasync.DescribeLocationSmbOutput
 	resourceName := "aws_datasync_location_smb.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDataSync(t) },
-		ErrorCheck:   testAccErrorCheck(t, datasync.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSDataSync(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, datasync.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDataSyncLocationSmbDestroy,
 		Steps: []resource.TestStep{
@@ -152,11 +153,11 @@ func TestAccAWSDataSyncLocationSmb_disappears(t *testing.T) {
 func TestAccAWSDataSyncLocationSmb_Tags(t *testing.T) {
 	var locationSmb1, locationSmb2, locationSmb3 datasync.DescribeLocationSmbOutput
 	resourceName := "aws_datasync_location_smb.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDataSync(t) },
-		ErrorCheck:   testAccErrorCheck(t, datasync.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSDataSync(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, datasync.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDataSyncLocationSmbDestroy,
 		Steps: []resource.TestStep{
@@ -276,9 +277,9 @@ func testAccCheckAWSDataSyncLocationSmbNotRecreated(i, j *datasync.DescribeLocat
 }
 
 func testAccAWSDataSyncLocationSmbConfigBase(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		// Reference: https://docs.aws.amazon.com/datasync/latest/userguide/agent-requirements.html
-		testAccAvailableEc2InstanceTypeForAvailabilityZone("aws_subnet.test.availability_zone", "m5.2xlarge", "m5.4xlarge"),
+		acctest.AvailableEC2InstanceTypeForAvailabilityZone("aws_subnet.test.availability_zone", "m5.2xlarge", "m5.4xlarge"),
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
