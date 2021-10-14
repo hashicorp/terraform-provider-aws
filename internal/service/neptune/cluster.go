@@ -28,7 +28,7 @@ const (
 	// https://docs.aws.amazon.com/sdk-for-go/api/service/neptune/#pkg-constants
 	CloudwatchLogsExportsAudit = "audit"
 
-	neptuneDefaultPort = 8182
+	DefaultPort = 8182
 )
 
 func ResourceCluster() *schema.Resource {
@@ -207,7 +207,7 @@ func ResourceCluster() *schema.Resource {
 			"port": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				Default:  neptuneDefaultPort,
+				Default:  DefaultPort,
 				ForceNew: true,
 			},
 

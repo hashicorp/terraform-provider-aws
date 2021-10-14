@@ -139,7 +139,7 @@ func ResourceClusterInstance() *schema.Resource {
 			"port": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				Default:  neptuneDefaultPort,
+				Default:  DefaultPort,
 				ForceNew: true,
 			},
 
