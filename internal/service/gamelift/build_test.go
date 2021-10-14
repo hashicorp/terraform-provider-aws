@@ -64,7 +64,7 @@ func sweepBuilds(region string) error {
 	return nil
 }
 
-func TestAccAWSGameliftBuild_basic(t *testing.T) {
+func TestAccGameLiftBuild_basic(t *testing.T) {
 	var conf gamelift.Build
 
 	rString := sdkacctest.RandString(8)
@@ -131,7 +131,7 @@ func TestAccAWSGameliftBuild_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSGameliftBuild_tags(t *testing.T) {
+func TestAccGameLiftBuild_tags(t *testing.T) {
 	var conf gamelift.Build
 
 	rString := sdkacctest.RandString(8)
@@ -193,7 +193,7 @@ func TestAccAWSGameliftBuild_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSGameliftBuild_disappears(t *testing.T) {
+func TestAccGameLiftBuild_disappears(t *testing.T) {
 	var conf gamelift.Build
 
 	rString := sdkacctest.RandString(8)
