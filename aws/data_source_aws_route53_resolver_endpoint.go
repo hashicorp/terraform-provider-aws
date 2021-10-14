@@ -9,9 +9,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsRoute53ResolverEndpoint() *schema.Resource {
+func DataSourceEndpoint() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsRoute53ResolverEndpointRead,
+		Read: dataSourceEndpointRead,
 
 		Schema: map[string]*schema.Schema{
 			"filter": {
@@ -71,7 +71,7 @@ func dataSourceAwsRoute53ResolverEndpoint() *schema.Resource {
 	}
 }
 
-func dataSourceAwsRoute53ResolverEndpointRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceEndpointRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn
 	req := &route53resolver.ListResolverEndpointsInput{}
 

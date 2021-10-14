@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsRoute53ResolverFirewallRule() *schema.Resource {
+func ResourceFirewallRule() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRoute53ResolverFirewallRuleCreate,
-		Read:   resourceAwsRoute53ResolverFirewallRuleRead,
-		Update: resourceAwsRoute53ResolverFirewallRuleUpdate,
-		Delete: resourceAwsRoute53ResolverFirewallRuleDelete,
+		Create: resourceFirewallRuleCreate,
+		Read:   resourceFirewallRuleRead,
+		Update: resourceFirewallRuleUpdate,
+		Delete: resourceFirewallRuleDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -83,7 +83,7 @@ func resourceAwsRoute53ResolverFirewallRule() *schema.Resource {
 	}
 }
 
-func resourceAwsRoute53ResolverFirewallRuleCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceFirewallRuleCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
 	firewallRuleGroupId := d.Get("firewall_rule_group_id").(string)
@@ -121,10 +121,10 @@ func resourceAwsRoute53ResolverFirewallRuleCreate(d *schema.ResourceData, meta i
 
 	d.SetId(tfroute53resolver.FirewallRuleCreateID(firewallRuleGroupId, firewallDomainListId))
 
-	return resourceAwsRoute53ResolverFirewallRuleRead(d, meta)
+	return resourceFirewallRuleRead(d, meta)
 }
 
-func resourceAwsRoute53ResolverFirewallRuleRead(d *schema.ResourceData, meta interface{}) error {
+func resourceFirewallRuleRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
 	rule, err := finder.FirewallRuleByID(conn, d.Id())
@@ -158,7 +158,7 @@ func resourceAwsRoute53ResolverFirewallRuleRead(d *schema.ResourceData, meta int
 	return nil
 }
 
-func resourceAwsRoute53ResolverFirewallRuleUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceFirewallRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
 	input := &route53resolver.UpdateFirewallRuleInput{
@@ -191,10 +191,10 @@ func resourceAwsRoute53ResolverFirewallRuleUpdate(d *schema.ResourceData, meta i
 		return fmt.Errorf("error updating Route 53 Resolver DNS Firewall rule (%s): %w", d.Id(), err)
 	}
 
-	return resourceAwsRoute53ResolverFirewallRuleRead(d, meta)
+	return resourceFirewallRuleRead(d, meta)
 }
 
-func resourceAwsRoute53ResolverFirewallRuleDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceFirewallRuleDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
 	_, err := conn.DeleteFirewallRule(&route53resolver.DeleteFirewallRuleInput{

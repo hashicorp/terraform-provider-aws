@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53resolver/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -43,7 +44,7 @@ func testSweepRoute53ResolverFirewallDomainLists(region string) error {
 			id := aws.StringValue(queryLogConfig.Id)
 
 			log.Printf("[INFO] Deleting Route53 Resolver DNS Firewall domain list: %s", id)
-			r := resourceAwsRoute53ResolverFirewallDomainList()
+			r := ResourceFirewallDomainList()
 			d := r.Data(nil)
 			d.SetId(id)
 			err := r.Delete(d, client)
@@ -160,7 +161,7 @@ func TestAccAWSRoute53ResolverFirewallDomainList_disappears(t *testing.T) {
 				Config: testAccRoute53ResolverFirewallDomainListConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ResolverFirewallDomainListExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsRoute53ResolverFirewallDomainList(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceFirewallDomainList(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

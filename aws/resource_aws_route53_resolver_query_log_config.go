@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsRoute53ResolverQueryLogConfig() *schema.Resource {
+func ResourceQueryLogConfig() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRoute53ResolverQueryLogConfigCreate,
-		Read:   resourceAwsRoute53ResolverQueryLogConfigRead,
-		Update: resourceAwsRoute53ResolverQueryLogConfigUpdate,
-		Delete: resourceAwsRoute53ResolverQueryLogConfigDelete,
+		Create: resourceQueryLogConfigCreate,
+		Read:   resourceQueryLogConfigRead,
+		Update: resourceQueryLogConfigUpdate,
+		Delete: resourceQueryLogConfigDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -62,7 +62,7 @@ func resourceAwsRoute53ResolverQueryLogConfig() *schema.Resource {
 	}
 }
 
-func resourceAwsRoute53ResolverQueryLogConfigCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceQueryLogConfigCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -91,10 +91,10 @@ func resourceAwsRoute53ResolverQueryLogConfigCreate(d *schema.ResourceData, meta
 		return fmt.Errorf("error waiting for Route53 Resolver Query Log Config (%s) to become available: %w", d.Id(), err)
 	}
 
-	return resourceAwsRoute53ResolverQueryLogConfigRead(d, meta)
+	return resourceQueryLogConfigRead(d, meta)
 }
 
-func resourceAwsRoute53ResolverQueryLogConfigRead(d *schema.ResourceData, meta interface{}) error {
+func resourceQueryLogConfigRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -143,7 +143,7 @@ func resourceAwsRoute53ResolverQueryLogConfigRead(d *schema.ResourceData, meta i
 	return nil
 }
 
-func resourceAwsRoute53ResolverQueryLogConfigUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceQueryLogConfigUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
 	if d.HasChange("tags_all") {
@@ -153,10 +153,10 @@ func resourceAwsRoute53ResolverQueryLogConfigUpdate(d *schema.ResourceData, meta
 		}
 	}
 
-	return resourceAwsRoute53ResolverQueryLogConfigRead(d, meta)
+	return resourceQueryLogConfigRead(d, meta)
 }
 
-func resourceAwsRoute53ResolverQueryLogConfigDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceQueryLogConfigDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
 	log.Printf("[DEBUG] Deleting Route53 Resolver Query Log Config (%s)", d.Id())

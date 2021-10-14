@@ -20,12 +20,12 @@ const (
 	route53ResolverEndpointStatusDeleted = "DELETED"
 )
 
-func resourceAwsRoute53ResolverEndpoint() *schema.Resource {
+func ResourceEndpoint() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRoute53ResolverEndpointCreate,
-		Read:   resourceAwsRoute53ResolverEndpointRead,
-		Update: resourceAwsRoute53ResolverEndpointUpdate,
-		Delete: resourceAwsRoute53ResolverEndpointDelete,
+		Create: resourceEndpointCreate,
+		Read:   resourceEndpointRead,
+		Update: resourceEndpointUpdate,
+		Delete: resourceEndpointDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -107,7 +107,7 @@ func resourceAwsRoute53ResolverEndpoint() *schema.Resource {
 	}
 }
 
-func resourceAwsRoute53ResolverEndpointCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -140,10 +140,10 @@ func resourceAwsRoute53ResolverEndpointCreate(d *schema.ResourceData, meta inter
 		return err
 	}
 
-	return resourceAwsRoute53ResolverEndpointRead(d, meta)
+	return resourceEndpointRead(d, meta)
 }
 
-func resourceAwsRoute53ResolverEndpointRead(d *schema.ResourceData, meta interface{}) error {
+func resourceEndpointRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -208,7 +208,7 @@ func resourceAwsRoute53ResolverEndpointRead(d *schema.ResourceData, meta interfa
 	return nil
 }
 
-func resourceAwsRoute53ResolverEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
 	if d.HasChange("name") {
@@ -281,10 +281,10 @@ func resourceAwsRoute53ResolverEndpointUpdate(d *schema.ResourceData, meta inter
 		}
 	}
 
-	return resourceAwsRoute53ResolverEndpointRead(d, meta)
+	return resourceEndpointRead(d, meta)
 }
 
-func resourceAwsRoute53ResolverEndpointDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceEndpointDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
 	log.Printf("[DEBUG] Deleting Route53 Resolver endpoint: %s", d.Id())

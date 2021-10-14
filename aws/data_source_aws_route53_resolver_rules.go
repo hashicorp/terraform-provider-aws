@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsRoute53ResolverRules() *schema.Resource {
+func DataSourceRules() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsRoute53ResolverRulesRead,
+		Read: dataSourceRulesRead,
 
 		Schema: map[string]*schema.Schema{
 			"owner_id": {
@@ -61,7 +61,7 @@ func dataSourceAwsRoute53ResolverRules() *schema.Resource {
 	}
 }
 
-func dataSourceAwsRoute53ResolverRulesRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceRulesRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
 	req := &route53resolver.ListResolverRulesInput{}
