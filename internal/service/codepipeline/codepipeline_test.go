@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfcodepipeline "github.com/hashicorp/terraform-provider-aws/internal/service/codepipeline"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -46,7 +47,7 @@ func testSweepCodepipelinePipelines(region string) error {
 		}
 
 		for _, pipeline := range page.Pipelines {
-			r := ResourceCodePipeline()
+			r := tfcodepipeline.ResourceCodePipeline()
 			d := r.Data(nil)
 
 			d.SetId(aws.StringValue(pipeline.Name))
@@ -198,7 +199,7 @@ func TestAccAWSCodePipeline_disappears(t *testing.T) {
 				Config: testAccAWSCodePipelineConfig_basic(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodePipelineExists(resourceName, &p),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceCodePipeline(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcodepipeline.ResourceCodePipeline(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -1704,7 +1705,7 @@ func TestResourceAWSCodePipelineExpandArtifactStoresValidation(t *testing.T) {
 
 	for _, tc := range cases {
 		tc := tc
-		_, err := expandAwsCodePipelineArtifactStores(tc.Input)
+		_, err := tfcodepipeline.ExpandArtifactStores(tc.Input)
 		if tc.ExpectedError == "" {
 			if err != nil {
 				t.Errorf("%s: Did not expect an error, but got: %w", tc.Name, err)

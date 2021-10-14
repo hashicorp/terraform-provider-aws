@@ -169,7 +169,7 @@ func resourceWebhookCreate(d *schema.ResourceData, meta interface{}) error {
 	return resourceWebhookRead(d, meta)
 }
 
-func getCodePipelineWebhook(conn *codepipeline.CodePipeline, arn string) (*codepipeline.ListWebhookItem, error) {
+func GetWebhook(conn *codepipeline.CodePipeline, arn string) (*codepipeline.ListWebhookItem, error) {
 	var nextToken string
 
 	for {
@@ -240,7 +240,7 @@ func resourceWebhookRead(d *schema.ResourceData, meta interface{}) error {
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	arn := d.Id()
-	webhook, err := getCodePipelineWebhook(conn, arn)
+	webhook, err := GetWebhook(conn, arn)
 
 	if tfresource.NotFound(err) {
 		log.Printf("[WARN] CodePipeline Webhook (%s) not found, removing from state", d.Id())

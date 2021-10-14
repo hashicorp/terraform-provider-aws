@@ -234,7 +234,7 @@ func expandAwsCodePipeline(d *schema.ResourceData) (*codepipeline.PipelineDeclar
 		Stages:  expandAwsCodePipelineStages(d),
 	}
 
-	pipelineArtifactStores, err := expandAwsCodePipelineArtifactStores(d.Get("artifact_store").(*schema.Set).List())
+	pipelineArtifactStores, err := ExpandArtifactStores(d.Get("artifact_store").(*schema.Set).List())
 	if err != nil {
 		return nil, err
 	}
@@ -249,7 +249,7 @@ func expandAwsCodePipeline(d *schema.ResourceData) (*codepipeline.PipelineDeclar
 	return &pipeline, nil
 }
 
-func expandAwsCodePipelineArtifactStores(configs []interface{}) (map[string]*codepipeline.ArtifactStore, error) {
+func ExpandArtifactStores(configs []interface{}) (map[string]*codepipeline.ArtifactStore, error) {
 	if len(configs) == 0 {
 		return nil, nil
 	}
