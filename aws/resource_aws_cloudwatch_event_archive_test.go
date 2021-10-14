@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -28,7 +29,7 @@ func testSweepCloudWatchEventArchives(region string) error {
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).cloudwatcheventsconn
+	conn := client.(*conns.AWSClient).CloudWatchEventsConn
 
 	input := &events.ListArchivesInput{}
 
@@ -156,7 +157,7 @@ func TestAccAWSCloudWatchEventArchive_disappears(t *testing.T) {
 }
 
 func testAccCheckAWSCloudWatchEventArchiveDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).cloudwatcheventsconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchEventsConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudwatch_event_archive" {
@@ -184,7 +185,7 @@ func testAccCheckCloudWatchEventArchiveExists(n string, v *events.DescribeArchiv
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).cloudwatcheventsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchEventsConn
 		params := events.DescribeArchiveInput{
 			ArchiveName: aws.String(rs.Primary.ID),
 		}

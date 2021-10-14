@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	events "github.com/aws/aws-sdk-go/service/cloudwatchevents"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsCloudWatchEventSource() *schema.Resource {
@@ -39,7 +40,7 @@ func dataSourceAwsCloudWatchEventSource() *schema.Resource {
 }
 
 func dataSourceAwsCloudWatchEventSourceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatcheventsconn
+	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 
 	input := &events.ListEventSourcesInput{}
 	if v, ok := d.GetOk("name_prefix"); ok {

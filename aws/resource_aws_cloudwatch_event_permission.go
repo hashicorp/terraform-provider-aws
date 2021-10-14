@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	tfevents "github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudwatchevents"
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsCloudWatchEventPermission() *schema.Resource {
@@ -81,7 +82,7 @@ func resourceAwsCloudWatchEventPermission() *schema.Resource {
 }
 
 func resourceAwsCloudWatchEventPermissionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatcheventsconn
+	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 
 	eventBusName := d.Get("event_bus_name").(string)
 	statementID := d.Get("statement_id").(string)
@@ -108,7 +109,7 @@ func resourceAwsCloudWatchEventPermissionCreate(d *schema.ResourceData, meta int
 
 // See also: https://docs.aws.amazon.com/AmazonCloudWatchEvents/latest/APIReference/API_DescribeEventBus.html
 func resourceAwsCloudWatchEventPermissionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatcheventsconn
+	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 
 	eventBusName, statementID, err := tfevents.PermissionParseResourceID(d.Id())
 	if err != nil {
@@ -205,7 +206,7 @@ func getPolicyStatement(output *events.DescribeEventBusOutput, statementID strin
 }
 
 func resourceAwsCloudWatchEventPermissionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatcheventsconn
+	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 
 	eventBusName, statementID, err := tfevents.PermissionParseResourceID(d.Id())
 	if err != nil {
@@ -234,7 +235,7 @@ func resourceAwsCloudWatchEventPermissionUpdate(d *schema.ResourceData, meta int
 }
 
 func resourceAwsCloudWatchEventPermissionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatcheventsconn
+	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 
 	eventBusName, statementID, err := tfevents.PermissionParseResourceID(d.Id())
 	if err != nil {

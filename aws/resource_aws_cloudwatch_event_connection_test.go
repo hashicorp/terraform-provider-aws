@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudwatchevents/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -30,7 +31,7 @@ func testSweepCloudWatchEventConnection(region string) error {
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).cloudwatcheventsconn
+	conn := client.(*conns.AWSClient).CloudWatchEventsConn
 
 	var sweeperErrs *multierror.Error
 
@@ -618,7 +619,7 @@ func TestAccAWSCloudWatchEventConnection_disappears(t *testing.T) {
 }
 
 func testAccCheckAWSCloudWatchEventConnectionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).cloudwatcheventsconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchEventsConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudwatch_event_connection" {
@@ -648,7 +649,7 @@ func testAccCheckCloudWatchEventConnectionExists(n string, v *events.DescribeCon
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).cloudwatcheventsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchEventsConn
 
 		output, err := finder.ConnectionByName(conn, rs.Primary.ID)
 

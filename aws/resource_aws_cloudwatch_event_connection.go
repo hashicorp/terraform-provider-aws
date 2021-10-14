@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudwatchevents/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudwatchevents/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsCloudWatchEventConnection() *schema.Resource {
@@ -237,7 +238,7 @@ func resourceAwsCloudWatchEventConnection() *schema.Resource {
 }
 
 func resourceAwsCloudWatchEventConnectionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatcheventsconn
+	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 
 	name := d.Get("name").(string)
 	input := &events.CreateConnectionInput{
@@ -270,7 +271,7 @@ func resourceAwsCloudWatchEventConnectionCreate(d *schema.ResourceData, meta int
 }
 
 func resourceAwsCloudWatchEventConnectionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatcheventsconn
+	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 
 	output, err := finder.ConnectionByName(conn, d.Id())
 
@@ -301,7 +302,7 @@ func resourceAwsCloudWatchEventConnectionRead(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsCloudWatchEventConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatcheventsconn
+	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 
 	input := &events.UpdateConnectionInput{
 		Name: aws.String(d.Id()),
@@ -336,7 +337,7 @@ func resourceAwsCloudWatchEventConnectionUpdate(d *schema.ResourceData, meta int
 }
 
 func resourceAwsCloudWatchEventConnectionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatcheventsconn
+	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 
 	log.Printf("[INFO] Deleting CloudWatch Events connection (%s)", d.Id())
 	_, err := conn.DeleteConnection(&events.DeleteConnectionInput{
