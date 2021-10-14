@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSMacieMemberAccountAssociation_basic(t *testing.T) {
+func TestAccMacieMemberAccountAssociation_basic(t *testing.T) {
 	key := "MACIE_MEMBER_ACCOUNT_ID"
 	memberAcctId := os.Getenv(key)
 	if memberAcctId == "" {
@@ -36,7 +36,7 @@ func TestAccAWSMacieMemberAccountAssociation_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSMacieMemberAccountAssociation_self(t *testing.T) {
+func TestAccMacieMemberAccountAssociation_self(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, macie.EndpointsID),
