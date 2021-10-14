@@ -19,7 +19,7 @@ func TestAccAWSCloudTrailServiceAccount_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsCloudTrailServiceAccountConfig,
+				Config: testAccCheckAWSCloudTrailServiceAccountConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "id", expectedAccountID),
 					acctest.CheckResourceAttrGlobalARNAccountID(dataSourceName, "arn", expectedAccountID, "iam", "root"),
@@ -40,7 +40,7 @@ func TestAccAWSCloudTrailServiceAccount_Region(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsCloudTrailServiceAccountConfigRegion,
+				Config: testAccCheckAWSCloudTrailServiceAccountConfigRegion,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "id", expectedAccountID),
 					acctest.CheckResourceAttrGlobalARNAccountID(dataSourceName, "arn", expectedAccountID, "iam", "root"),
@@ -50,11 +50,11 @@ func TestAccAWSCloudTrailServiceAccount_Region(t *testing.T) {
 	})
 }
 
-const testAccCheckAwsCloudTrailServiceAccountConfig = `
+const testAccCheckAWSCloudTrailServiceAccountConfig = `
 data "aws_cloudtrail_service_account" "main" {}
 `
 
-const testAccCheckAwsCloudTrailServiceAccountConfigRegion = `
+const testAccCheckAWSCloudTrailServiceAccountConfigRegion = `
 data "aws_region" "current" {}
 
 data "aws_cloudtrail_service_account" "regional" {
