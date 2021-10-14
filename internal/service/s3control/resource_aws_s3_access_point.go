@@ -15,6 +15,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfs3control "github.com/hashicorp/terraform-provider-aws/internal/service/s3control"
+	tfs3control "github.com/hashicorp/terraform-provider-aws/internal/service/s3control"
 )
 
 func ResourceAccessPoint() *schema.Resource {
@@ -190,7 +192,7 @@ func resourceAccessPointRead(d *schema.ResourceData, meta interface{}) error {
 		Name:      aws.String(name),
 	})
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, tfs3control.ErrCodeNoSuchAccessPoint) {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, tfs3control.errCodeNoSuchAccessPoint) {
 		log.Printf("[WARN] S3 Access Point (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil

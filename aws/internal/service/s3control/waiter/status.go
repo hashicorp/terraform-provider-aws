@@ -8,12 +8,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/s3control/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfs3control "github.com/hashicorp/terraform-provider-aws/internal/service/s3control"
 )
 
-// PublicAccessBlockConfigurationBlockPublicAcls fetches the PublicAccessBlockConfiguration and its BlockPublicAcls
-func PublicAccessBlockConfigurationBlockPublicAcls(conn *s3control.S3Control, accountID string) resource.StateRefreshFunc {
+// statusPublicAccessBlockConfigurationBlockPublicACLs fetches the PublicAccessBlockConfiguration and its BlockPublicAcls
+func statusPublicAccessBlockConfigurationBlockPublicACLs(conn *s3control.S3Control, accountID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		publicAccessBlockConfiguration, err := finder.PublicAccessBlockConfiguration(conn, accountID)
+		publicAccessBlockConfiguration, err := tfs3control.findPublicAccessBlockConfiguration(conn, accountID)
 
 		if err != nil {
 			return nil, "false", err
@@ -27,10 +28,10 @@ func PublicAccessBlockConfigurationBlockPublicAcls(conn *s3control.S3Control, ac
 	}
 }
 
-// PublicAccessBlockConfigurationBlockPublicPolicy fetches the PublicAccessBlockConfiguration and its BlockPublicPolicy
-func PublicAccessBlockConfigurationBlockPublicPolicy(conn *s3control.S3Control, accountID string) resource.StateRefreshFunc {
+// statusPublicAccessBlockConfigurationBlockPublicPolicy fetches the PublicAccessBlockConfiguration and its BlockPublicPolicy
+func statusPublicAccessBlockConfigurationBlockPublicPolicy(conn *s3control.S3Control, accountID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		publicAccessBlockConfiguration, err := finder.PublicAccessBlockConfiguration(conn, accountID)
+		publicAccessBlockConfiguration, err := tfs3control.findPublicAccessBlockConfiguration(conn, accountID)
 
 		if err != nil {
 			return nil, "false", err
@@ -44,10 +45,10 @@ func PublicAccessBlockConfigurationBlockPublicPolicy(conn *s3control.S3Control, 
 	}
 }
 
-// PublicAccessBlockConfigurationIgnorePublicAcls fetches the PublicAccessBlockConfiguration and its IgnorePublicAcls
-func PublicAccessBlockConfigurationIgnorePublicAcls(conn *s3control.S3Control, accountID string) resource.StateRefreshFunc {
+// statusPublicAccessBlockConfigurationIgnorePublicACLs fetches the PublicAccessBlockConfiguration and its IgnorePublicAcls
+func statusPublicAccessBlockConfigurationIgnorePublicACLs(conn *s3control.S3Control, accountID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		publicAccessBlockConfiguration, err := finder.PublicAccessBlockConfiguration(conn, accountID)
+		publicAccessBlockConfiguration, err := tfs3control.findPublicAccessBlockConfiguration(conn, accountID)
 
 		if err != nil {
 			return nil, "false", err
@@ -61,10 +62,10 @@ func PublicAccessBlockConfigurationIgnorePublicAcls(conn *s3control.S3Control, a
 	}
 }
 
-// PublicAccessBlockConfigurationRestrictPublicBuckets fetches the PublicAccessBlockConfiguration and its RestrictPublicBuckets
-func PublicAccessBlockConfigurationRestrictPublicBuckets(conn *s3control.S3Control, accountID string) resource.StateRefreshFunc {
+// statusPublicAccessBlockConfigurationRestrictPublicBuckets fetches the PublicAccessBlockConfiguration and its RestrictPublicBuckets
+func statusPublicAccessBlockConfigurationRestrictPublicBuckets(conn *s3control.S3Control, accountID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		publicAccessBlockConfiguration, err := finder.PublicAccessBlockConfiguration(conn, accountID)
+		publicAccessBlockConfiguration, err := tfs3control.findPublicAccessBlockConfiguration(conn, accountID)
 
 		if err != nil {
 			return nil, "false", err

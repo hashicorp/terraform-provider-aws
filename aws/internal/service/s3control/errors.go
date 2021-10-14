@@ -4,6 +4,6 @@ package s3control
 // https://docs.aws.amazon.com/sdk-for-go/api/service/s3control/#pkg-constants
 
 const (
-	ErrCodeNoSuchAccessPoint       = "NoSuchAccessPoint"
-	ErrCodeNoSuchAccessPointPolicy = "NoSuchAccessPointPolicy"
+	errCodeNoSuchAccessPoint       = "NoSuchAccessPoint"
+	errCodeNoSuchAccessPointPolicy = "NoSuchAccessPointPolicy"
 )

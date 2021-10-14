@@ -11,22 +11,22 @@ import (
 
 const (
 	// Minimum amount of times to verify change propagation
-	PropagationContinuousTargetOccurence = 2
+	propagationContinuousTargetOccurence = 2
 
 	// Minimum amount of time to wait between S3control change polls
-	PropagationMinTimeout = 5 * time.Second
+	propagationMinTimeout = 5 * time.Second
 
 	// Maximum amount of time to wait for S3control changes to propagate
-	PropagationTimeout = 1 * time.Minute
+	propagationTimeout = 1 * time.Minute
 )
 
-func PublicAccessBlockConfigurationBlockPublicAclsUpdated(conn *s3control.S3Control, accountID string, expectedValue bool) (*s3control.PublicAccessBlockConfiguration, error) {
+func waitPublicAccessBlockConfigurationBlockPublicACLsUpdated(conn *s3control.S3Control, accountID string, expectedValue bool) (*s3control.PublicAccessBlockConfiguration, error) {
 	stateConf := &resource.StateChangeConf{
 		Target:                    []string{strconv.FormatBool(expectedValue)},
-		Refresh:                   PublicAccessBlockConfigurationBlockPublicAcls(conn, accountID),
-		Timeout:                   PropagationTimeout,
-		MinTimeout:                PropagationMinTimeout,
-		ContinuousTargetOccurence: PropagationContinuousTargetOccurence,
+		Refresh:                   statusPublicAccessBlockConfigurationBlockPublicACLs(conn, accountID),
+		Timeout:                   propagationTimeout,
+		MinTimeout:                propagationMinTimeout,
+		ContinuousTargetOccurence: propagationContinuousTargetOccurence,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -38,13 +38,13 @@ func PublicAccessBlockConfigurationBlockPublicAclsUpdated(conn *s3control.S3Cont
 	return nil, err
 }
 
-func PublicAccessBlockConfigurationBlockPublicPolicyUpdated(conn *s3control.S3Control, accountID string, expectedValue bool) (*s3control.PublicAccessBlockConfiguration, error) {
+func waitPublicAccessBlockConfigurationBlockPublicPolicyUpdated(conn *s3control.S3Control, accountID string, expectedValue bool) (*s3control.PublicAccessBlockConfiguration, error) {
 	stateConf := &resource.StateChangeConf{
 		Target:                    []string{strconv.FormatBool(expectedValue)},
-		Refresh:                   PublicAccessBlockConfigurationBlockPublicPolicy(conn, accountID),
-		Timeout:                   PropagationTimeout,
-		MinTimeout:                PropagationMinTimeout,
-		ContinuousTargetOccurence: PropagationContinuousTargetOccurence,
+		Refresh:                   statusPublicAccessBlockConfigurationBlockPublicPolicy(conn, accountID),
+		Timeout:                   propagationTimeout,
+		MinTimeout:                propagationMinTimeout,
+		ContinuousTargetOccurence: propagationContinuousTargetOccurence,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -56,13 +56,13 @@ func PublicAccessBlockConfigurationBlockPublicPolicyUpdated(conn *s3control.S3Co
 	return nil, err
 }
 
-func PublicAccessBlockConfigurationIgnorePublicAclsUpdated(conn *s3control.S3Control, accountID string, expectedValue bool) (*s3control.PublicAccessBlockConfiguration, error) {
+func waitPublicAccessBlockConfigurationIgnorePublicACLsUpdated(conn *s3control.S3Control, accountID string, expectedValue bool) (*s3control.PublicAccessBlockConfiguration, error) {
 	stateConf := &resource.StateChangeConf{
 		Target:                    []string{strconv.FormatBool(expectedValue)},
-		Refresh:                   PublicAccessBlockConfigurationIgnorePublicAcls(conn, accountID),
-		Timeout:                   PropagationTimeout,
-		MinTimeout:                PropagationMinTimeout,
-		ContinuousTargetOccurence: PropagationContinuousTargetOccurence,
+		Refresh:                   statusPublicAccessBlockConfigurationIgnorePublicACLs(conn, accountID),
+		Timeout:                   propagationTimeout,
+		MinTimeout:                propagationMinTimeout,
+		ContinuousTargetOccurence: propagationContinuousTargetOccurence,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -74,13 +74,13 @@ func PublicAccessBlockConfigurationIgnorePublicAclsUpdated(conn *s3control.S3Con
 	return nil, err
 }
 
-func PublicAccessBlockConfigurationRestrictPublicBucketsUpdated(conn *s3control.S3Control, accountID string, expectedValue bool) (*s3control.PublicAccessBlockConfiguration, error) {
+func waitPublicAccessBlockConfigurationRestrictPublicBucketsUpdated(conn *s3control.S3Control, accountID string, expectedValue bool) (*s3control.PublicAccessBlockConfiguration, error) {
 	stateConf := &resource.StateChangeConf{
 		Target:                    []string{strconv.FormatBool(expectedValue)},
-		Refresh:                   PublicAccessBlockConfigurationRestrictPublicBuckets(conn, accountID),
-		Timeout:                   PropagationTimeout,
-		MinTimeout:                PropagationMinTimeout,
-		ContinuousTargetOccurence: PropagationContinuousTargetOccurence,
+		Refresh:                   statusPublicAccessBlockConfigurationRestrictPublicBuckets(conn, accountID),
+		Timeout:                   propagationTimeout,
+		MinTimeout:                propagationMinTimeout,
+		ContinuousTargetOccurence: propagationContinuousTargetOccurence,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
