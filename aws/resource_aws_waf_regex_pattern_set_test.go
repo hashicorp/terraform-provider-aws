@@ -10,10 +10,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/waf/lister"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -122,12 +123,12 @@ func TestAccAWSWafRegexPatternSet_serial(t *testing.T) {
 
 func testAccAWSWafRegexPatternSet_basic(t *testing.T) {
 	var v waf.RegexPatternSet
-	patternSetName := fmt.Sprintf("tfacc-%s", acctest.RandString(5))
+	patternSetName := fmt.Sprintf("tfacc-%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_regex_pattern_set.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
-		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, waf.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegexPatternSetDestroy,
 		Steps: []resource.TestStep{
@@ -135,7 +136,7 @@ func testAccAWSWafRegexPatternSet_basic(t *testing.T) {
 				Config: testAccAWSWafRegexPatternSetConfig(patternSetName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafRegexPatternSetExists(resourceName, &v),
-					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "waf", regexp.MustCompile(`regexpatternset/.+`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "waf", regexp.MustCompile(`regexpatternset/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", patternSetName),
 					resource.TestCheckResourceAttr(resourceName, "regex_pattern_strings.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "regex_pattern_strings.*", "one"),
@@ -153,12 +154,12 @@ func testAccAWSWafRegexPatternSet_basic(t *testing.T) {
 
 func testAccAWSWafRegexPatternSet_changePatterns(t *testing.T) {
 	var before, after waf.RegexPatternSet
-	patternSetName := fmt.Sprintf("tfacc-%s", acctest.RandString(5))
+	patternSetName := fmt.Sprintf("tfacc-%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_regex_pattern_set.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
-		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, waf.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegexPatternSetDestroy,
 		Steps: []resource.TestStep{
@@ -194,12 +195,12 @@ func testAccAWSWafRegexPatternSet_changePatterns(t *testing.T) {
 
 func testAccAWSWafRegexPatternSet_noPatterns(t *testing.T) {
 	var patternSet waf.RegexPatternSet
-	patternSetName := fmt.Sprintf("tfacc-%s", acctest.RandString(5))
+	patternSetName := fmt.Sprintf("tfacc-%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_regex_pattern_set.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
-		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, waf.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegexPatternSetDestroy,
 		Steps: []resource.TestStep{
@@ -222,12 +223,12 @@ func testAccAWSWafRegexPatternSet_noPatterns(t *testing.T) {
 
 func testAccAWSWafRegexPatternSet_disappears(t *testing.T) {
 	var v waf.RegexPatternSet
-	patternSetName := fmt.Sprintf("tfacc-%s", acctest.RandString(5))
+	patternSetName := fmt.Sprintf("tfacc-%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_regex_pattern_set.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
-		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, waf.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegexPatternSetDestroy,
 		Steps: []resource.TestStep{

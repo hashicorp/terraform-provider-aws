@@ -11,10 +11,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/waf/lister"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -104,12 +105,12 @@ func testSweepWafWebAcls(region string) error {
 
 func TestAccAWSWafWebAcl_basic(t *testing.T) {
 	var webACL waf.WebACL
-	rName := fmt.Sprintf("wafacl%s", acctest.RandString(5))
+	rName := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
-		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, waf.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafWebAclDestroy,
 		Steps: []resource.TestStep{
@@ -123,7 +124,7 @@ func TestAccAWSWafWebAcl_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "rules.#", "0"),
-					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "waf", regexp.MustCompile(`webacl/.+`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "waf", regexp.MustCompile(`webacl/.+`)),
 				),
 			},
 			{
@@ -137,13 +138,13 @@ func TestAccAWSWafWebAcl_basic(t *testing.T) {
 
 func TestAccAWSWafWebAcl_changeNameForceNew(t *testing.T) {
 	var webACL waf.WebACL
-	rName1 := fmt.Sprintf("wafacl%s", acctest.RandString(5))
-	rName2 := fmt.Sprintf("wafacl%s", acctest.RandString(5))
+	rName1 := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
+	rName2 := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
-		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, waf.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafWebAclDestroy,
 		Steps: []resource.TestStep{
@@ -182,12 +183,12 @@ func TestAccAWSWafWebAcl_changeNameForceNew(t *testing.T) {
 
 func TestAccAWSWafWebAcl_DefaultAction(t *testing.T) {
 	var webACL waf.WebACL
-	rName := fmt.Sprintf("wafacl%s", acctest.RandString(5))
+	rName := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
-		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, waf.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafWebAclDestroy,
 		Steps: []resource.TestStep{
@@ -218,12 +219,12 @@ func TestAccAWSWafWebAcl_DefaultAction(t *testing.T) {
 
 func TestAccAWSWafWebAcl_Rules(t *testing.T) {
 	var webACL waf.WebACL
-	rName := fmt.Sprintf("wafacl%s", acctest.RandString(5))
+	rName := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
-		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, waf.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafWebAclDestroy,
 		Steps: []resource.TestStep{
@@ -263,16 +264,16 @@ func TestAccAWSWafWebAcl_Rules(t *testing.T) {
 
 func TestAccAWSWafWebAcl_LoggingConfiguration(t *testing.T) {
 	var webACL waf.WebACL
-	rName := fmt.Sprintf("wafacl%s", acctest.RandString(5))
+	rName := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			acctest.PreCheck(t)
 			testAccPreCheckAWSWaf(t)
 			testAccPreCheckWafLoggingConfiguration(t)
 		},
-		ErrorCheck:        testAccErrorCheck(t, waf.EndpointsID),
+		ErrorCheck:        acctest.ErrorCheck(t, waf.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAWSWafWebAclDestroy,
 		Steps: []resource.TestStep{
@@ -315,12 +316,12 @@ func TestAccAWSWafWebAcl_LoggingConfiguration(t *testing.T) {
 
 func TestAccAWSWafWebAcl_disappears(t *testing.T) {
 	var webACL waf.WebACL
-	rName := fmt.Sprintf("wafacl%s", acctest.RandString(5))
+	rName := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
-		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, waf.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafWebAclDestroy,
 		Steps: []resource.TestStep{
@@ -328,7 +329,7 @@ func TestAccAWSWafWebAcl_disappears(t *testing.T) {
 				Config: testAccAWSWafWebAclConfig_Required(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafWebAclExists(resourceName, &webACL),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsWafWebAcl(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsWafWebAcl(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -338,12 +339,12 @@ func TestAccAWSWafWebAcl_disappears(t *testing.T) {
 
 func TestAccAWSWafWebAcl_Tags(t *testing.T) {
 	var webACL waf.WebACL
-	rName := fmt.Sprintf("wafacl%s", acctest.RandString(5))
+	rName := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
-		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, waf.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafWebAclDestroy,
 		Steps: []resource.TestStep{
@@ -607,7 +608,7 @@ resource "aws_waf_web_acl" "test" {
 }
 
 func testAccAWSWafWebAclConfig_Logging(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccWafLoggingConfigurationRegionProviderConfig(),
 		fmt.Sprintf(`
 resource "aws_waf_web_acl" "test" {
@@ -674,7 +675,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 }
 
 func testAccAWSWafWebAclConfig_LoggingRemoved(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccWafLoggingConfigurationRegionProviderConfig(),
 		fmt.Sprintf(`
 resource "aws_waf_web_acl" "test" {
@@ -689,7 +690,7 @@ resource "aws_waf_web_acl" "test" {
 }
 
 func testAccAWSWafWebAclConfig_LoggingUpdate(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccWafLoggingConfigurationRegionProviderConfig(),
 		fmt.Sprintf(`
 resource "aws_waf_web_acl" "test" {
