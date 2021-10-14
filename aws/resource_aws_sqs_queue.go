@@ -16,13 +16,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/attrmap"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfsqs "github.com/hashicorp/terraform-provider-aws/aws/internal/service/sqs"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sqs/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sqs/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 var (
@@ -144,8 +145,8 @@ var (
 			ValidateFunc: validation.IntBetween(0, 43_200),
 		},
 
-		"tags":     tagsSchema(),
-		"tags_all": tagsSchemaComputed(),
+		"tags":     tftags.TagsSchema(),
+		"tags_all": tftags.TagsSchemaComputed(),
 	}
 
 	sqsQueueAttributeMap = attrmap.New(map[string]string{
@@ -180,7 +181,7 @@ func ResourceQueue() *schema.Resource {
 		},
 		CustomizeDiff: customdiff.Sequence(
 			resourceAwsSqsQueueCustomizeDiff,
-			SetTagsDiff,
+			verify.SetTagsDiff,
 		),
 
 		Schema: sqsQueueSchema,
@@ -190,7 +191,7 @@ func ResourceQueue() *schema.Resource {
 func resourceQueueCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SQSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	var name string
 	fifoQueue := d.Get("fifo_queue").(bool)
@@ -254,7 +255,7 @@ func resourceQueueCreate(d *schema.ResourceData, meta interface{}) error {
 
 	// Tag-on-create is currently only supported in AWS Commercial
 	if len(tags) > 0 && meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID {
-		if err := keyvaluetags.SqsUpdateTags(conn, d.Id(), nil, tags); err != nil {
+		if err := tftags.SqsUpdateTags(conn, d.Id(), nil, tags); err != nil {
 			return fmt.Errorf("error updating SQS Queue (%s) tags: %w", d.Id(), err)
 		}
 	}
@@ -304,7 +305,7 @@ func resourceQueueRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("url", d.Id())
 
-	tags, err := keyvaluetags.SqsListTags(conn, d.Id())
+	tags, err := tftags.SqsListTags(conn, d.Id())
 
 	if err != nil {
 		// Non-standard partitions (e.g. US Gov) and some local development
@@ -360,7 +361,7 @@ func resourceQueueUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := keyvaluetags.SqsUpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := tftags.SqsUpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating SQS Queue (%s) tags: %w", d.Id(), err)
 		}
 	}
