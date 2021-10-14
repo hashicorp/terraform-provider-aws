@@ -19,7 +19,7 @@ func TestAccAWSOpsworksUserProfile_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsOpsworksUserProfileDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -74,7 +74,7 @@ func testAccCheckAWSOpsworksUserProfileExists(
 			return fmt.Errorf("User Profile user arn is missing, should be set.")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).opsworksconn
+		conn := acctest.Provider.Meta().(*AWSClient).opsworksconn
 
 		params := &opsworks.DescribeUserProfilesInput{
 			IamUserArns: []*string{aws.String(rs.Primary.Attributes["user_arn"])},
@@ -105,7 +105,7 @@ func testAccCheckAWSOpsworksUserProfileExists(
 }
 
 func testAccCheckAwsOpsworksUserProfileDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*AWSClient).opsworksconn
+	client := acctest.Provider.Meta().(*AWSClient).opsworksconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_opsworks_user_profile" {

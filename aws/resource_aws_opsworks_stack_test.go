@@ -29,7 +29,7 @@ func TestAccAWSOpsworksStack_noVpcBasic(t *testing.T) {
 			testAccPreCheckAWSOpsWorksStacks(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsOpsworksStackDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -60,7 +60,7 @@ func TestAccAWSOpsworksStack_noVpcChangeServiceRoleForceNew(t *testing.T) {
 			testAccPreCheckAWSOpsWorksStacks(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsOpsworksStackDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -97,7 +97,7 @@ func TestAccAWSOpsworksStack_vpc(t *testing.T) {
 			testAccPreCheckAWSOpsWorksStacks(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsOpsworksStackDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -146,7 +146,7 @@ func TestAccAWSOpsworksStack_noVpcCreateTags(t *testing.T) {
 			testAccPreCheckAWSOpsWorksStacks(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsOpsworksStackDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -190,7 +190,7 @@ func TestAccAWSOpsworksStack_CustomCookbooks_SetPrivateProperties(t *testing.T) 
 			testAccPreCheckAWSOpsWorksStacks(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsOpsworksStackDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -229,7 +229,7 @@ func TestAccAWSOpsworksStack_classicEndpoints(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckRegion(t, "us-west-2") }, //lintignore:AWSAT003
 		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsOpsworksStackDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -263,7 +263,7 @@ func testAccCheckAWSOpsworksStackRecreated(t *testing.T, before, after *opsworks
 }
 
 func testAccPreCheckAWSOpsWorksStacks(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).opsworksconn
+	conn := acctest.Provider.Meta().(*AWSClient).opsworksconn
 
 	input := &opsworks.DescribeStacksInput{}
 
@@ -481,7 +481,7 @@ func testAccCheckAWSOpsworksStackExists(
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).opsworksconn
+		conn := acctest.Provider.Meta().(*AWSClient).opsworksconn
 
 		params := &opsworks.DescribeStacksInput{
 			StackIds: []*string{aws.String(rs.Primary.ID)},
@@ -512,7 +512,7 @@ func testAccCheckAWSOpsworksStackExists(
 }
 
 func testAccCheckAwsOpsworksStackDestroy(s *terraform.State) error {
-	opsworksconn := testAccProvider.Meta().(*AWSClient).opsworksconn
+	opsworksconn := acctest.Provider.Meta().(*AWSClient).opsworksconn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_opsworks_stack" {
 			continue
