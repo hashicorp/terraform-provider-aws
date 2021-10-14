@@ -17,10 +17,10 @@ func TestAccAWSPartition_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsPartitionConfig_basic,
+				Config: testAccCheckAWSPartitionConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsPartition("data.aws_partition.current"),
-					testAccCheckAwsDnsSuffix("data.aws_partition.current"),
+					testAccCheckPartition("data.aws_partition.current"),
+					testAccCheckDNSSuffix("data.aws_partition.current"),
 					resource.TestCheckResourceAttr("data.aws_partition.current", "reverse_dns_prefix", acctest.PartitionReverseDNSPrefix()),
 				),
 			},
@@ -28,7 +28,7 @@ func TestAccAWSPartition_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsPartition(n string) resource.TestCheckFunc {
+func testAccCheckPartition(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -44,7 +44,7 @@ func testAccCheckAwsPartition(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckAwsDnsSuffix(n string) resource.TestCheckFunc {
+func testAccCheckDNSSuffix(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -64,6 +64,6 @@ func testAccCheckAwsDnsSuffix(n string) resource.TestCheckFunc {
 	}
 }
 
-const testAccCheckAwsPartitionConfig_basic = `
+const testAccCheckAWSPartitionConfig_basic = `
 data "aws_partition" "current" {}
 `

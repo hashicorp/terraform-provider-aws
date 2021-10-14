@@ -28,9 +28,9 @@ func TestAccDataSourceAwsArn_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsArnConfig(testARN.String()),
+				Config: testAccARNDataSourceConfig(testARN.String()),
 				Check: resource.ComposeTestCheckFunc(
-					testAccDataSourceAwsArn(resourceName),
+					testAccARNDataSource(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "account", testARN.AccountID),
 					resource.TestCheckResourceAttr(resourceName, "partition", testARN.Partition),
 					resource.TestCheckResourceAttr(resourceName, "region", testARN.Region),
@@ -42,7 +42,7 @@ func TestAccDataSourceAwsArn_basic(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAwsArn(name string) resource.TestCheckFunc {
+func testAccARNDataSource(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		_, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -53,7 +53,7 @@ func testAccDataSourceAwsArn(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccDataSourceAwsArnConfig(arn string) string {
+func testAccARNDataSourceConfig(arn string) string {
 	return fmt.Sprintf(`
 data "aws_arn" "test" {
   arn = %q

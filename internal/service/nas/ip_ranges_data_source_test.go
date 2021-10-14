@@ -21,11 +21,11 @@ func TestAccAWSIPRanges_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSIPRangesConfig,
+				Config: testAccIPRangesConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccAWSIPRangesCheckAttributes("data.aws_ip_ranges.some"),
-					testAccAWSIPRangesCheckCidrBlocksAttribute("data.aws_ip_ranges.some", "cidr_blocks"),
-					testAccAWSIPRangesCheckCidrBlocksAttribute("data.aws_ip_ranges.some", "ipv6_cidr_blocks"),
+					testAccIPRangesCheckAttributes("data.aws_ip_ranges.some"),
+					testAccIPRangesCheckCIDRBlocksAttribute("data.aws_ip_ranges.some", "cidr_blocks"),
+					testAccIPRangesCheckCIDRBlocksAttribute("data.aws_ip_ranges.some", "ipv6_cidr_blocks"),
 				),
 			},
 		},
@@ -39,18 +39,18 @@ func TestAccAWSIPRanges_Url(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSIPRangesConfigUrl,
+				Config: testAccIPRangesURLConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccAWSIPRangesCheckAttributes("data.aws_ip_ranges.some"),
-					testAccAWSIPRangesCheckCidrBlocksAttribute("data.aws_ip_ranges.some", "cidr_blocks"),
-					testAccAWSIPRangesCheckCidrBlocksAttribute("data.aws_ip_ranges.some", "ipv6_cidr_blocks"),
+					testAccIPRangesCheckAttributes("data.aws_ip_ranges.some"),
+					testAccIPRangesCheckCIDRBlocksAttribute("data.aws_ip_ranges.some", "cidr_blocks"),
+					testAccIPRangesCheckCIDRBlocksAttribute("data.aws_ip_ranges.some", "ipv6_cidr_blocks"),
 				),
 			},
 		},
 	})
 }
 
-func testAccAWSIPRangesCheckAttributes(n string) resource.TestCheckFunc {
+func testAccIPRangesCheckAttributes(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 
 		r := s.RootModule().Resources[n]
@@ -116,7 +116,7 @@ func testAccAWSIPRangesCheckAttributes(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccAWSIPRangesCheckCidrBlocksAttribute(name, attribute string) resource.TestCheckFunc {
+func testAccIPRangesCheckCIDRBlocksAttribute(name, attribute string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		r := s.RootModule().Resources[name]
 		a := r.Primary.Attributes
@@ -157,7 +157,7 @@ func testAccAWSIPRangesCheckCidrBlocksAttribute(name, attribute string) resource
 }
 
 // lintignore:AWSAT003
-const testAccAWSIPRangesConfig = `
+const testAccIPRangesConfig = `
 data "aws_ip_ranges" "some" {
   regions  = ["eu-west-1", "eu-central-1"]
   services = ["ec2"]
@@ -165,7 +165,7 @@ data "aws_ip_ranges" "some" {
 `
 
 // lintignore:AWSAT003
-const testAccAWSIPRangesConfigUrl = `
+const testAccIPRangesURLConfig = `
 data "aws_ip_ranges" "some" {
   regions  = ["eu-west-1", "eu-central-1"]
   services = ["ec2"]

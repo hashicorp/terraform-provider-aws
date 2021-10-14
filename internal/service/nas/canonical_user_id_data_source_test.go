@@ -17,16 +17,16 @@ func TestAccDataSourceAwsCanonicalUserId_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsCanonicalUserIdConfig,
+				Config: testAccCanonicalUserIdDataSourceConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccDataSourceAwsCanonicalUserIdCheckExists("data.aws_canonical_user_id.current"),
+					testAccCanonicalUserIdCheckExistsDataSource("data.aws_canonical_user_id.current"),
 				),
 			},
 		},
 	})
 }
 
-func testAccDataSourceAwsCanonicalUserIdCheckExists(name string) resource.TestCheckFunc {
+func testAccCanonicalUserIdCheckExistsDataSource(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -44,6 +44,6 @@ func testAccDataSourceAwsCanonicalUserIdCheckExists(name string) resource.TestCh
 	}
 }
 
-const testAccDataSourceAwsCanonicalUserIdConfig = `
+const testAccCanonicalUserIdDataSourceConfig = `
 data "aws_canonical_user_id" "current" {}
 `

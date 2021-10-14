@@ -15,7 +15,7 @@ func TestAccAWSCallerIdentity_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsCallerIdentityConfig_basic,
+				Config: testAccCheckAWSCallerIdentityConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckCallerIdentityAccountID("data.aws_caller_identity.current"),
 				),
@@ -24,6 +24,6 @@ func TestAccAWSCallerIdentity_basic(t *testing.T) {
 	})
 }
 
-const testAccCheckAwsCallerIdentityConfig_basic = `
+const testAccCheckAWSCallerIdentityConfig_basic = `
 data "aws_caller_identity" "current" {}
 `
