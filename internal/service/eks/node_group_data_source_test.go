@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSEksNodegroupDataSource_basic(t *testing.T) {
+func TestAccEKSNodeGroupDataSource_basic(t *testing.T) {
 	var nodeGroup eks.Nodegroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceResourceName := "data.aws_eks_node_group.test"

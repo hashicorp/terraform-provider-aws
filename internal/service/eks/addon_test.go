@@ -96,7 +96,7 @@ func sweepAddon(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSEksAddon_basic(t *testing.T) {
+func TestAccEKSAddon_basic(t *testing.T) {
 	var addon eks.Addon
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	clusterResourceName := "aws_eks_cluster.test"
@@ -130,7 +130,7 @@ func TestAccAWSEksAddon_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSEksAddon_disappears(t *testing.T) {
+func TestAccEKSAddon_disappears(t *testing.T) {
 	var addon eks.Addon
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_addon.test"
@@ -155,7 +155,7 @@ func TestAccAWSEksAddon_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSEksAddon_disappears_Cluster(t *testing.T) {
+func TestAccEKSAddon_Disappears_cluster(t *testing.T) {
 	var addon eks.Addon
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_addon.test"
@@ -181,7 +181,7 @@ func TestAccAWSEksAddon_disappears_Cluster(t *testing.T) {
 	})
 }
 
-func TestAccAWSEksAddon_AddonVersion(t *testing.T) {
+func TestAccEKSAddon_addonVersion(t *testing.T) {
 	var addon1, addon2 eks.Addon
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_addon.test"
@@ -220,7 +220,7 @@ func TestAccAWSEksAddon_AddonVersion(t *testing.T) {
 	})
 }
 
-func TestAccAWSEksAddon_ResolveConflicts(t *testing.T) {
+func TestAccEKSAddon_resolveConflicts(t *testing.T) {
 	var addon1, addon2 eks.Addon
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_addon.test"
@@ -257,7 +257,7 @@ func TestAccAWSEksAddon_ResolveConflicts(t *testing.T) {
 	})
 }
 
-func TestAccAWSEksAddon_ServiceAccountRoleArn(t *testing.T) {
+func TestAccEKSAddon_serviceAccountRoleARN(t *testing.T) {
 	var addon eks.Addon
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_addon.test"
@@ -287,7 +287,7 @@ func TestAccAWSEksAddon_ServiceAccountRoleArn(t *testing.T) {
 	})
 }
 
-func TestAccAWSEksAddon_Tags(t *testing.T) {
+func TestAccEKSAddon_tags(t *testing.T) {
 	var addon1, addon2, addon3 eks.Addon
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_addon.test"
@@ -334,7 +334,7 @@ func TestAccAWSEksAddon_Tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSEksAddon_defaultTags_providerOnly(t *testing.T) {
+func TestAccEKSAddon_DefaultTags_providerOnly(t *testing.T) {
 	var providers []*schema.Provider
 	var addon eks.Addon
 
@@ -395,7 +395,7 @@ func TestAccAWSEksAddon_defaultTags_providerOnly(t *testing.T) {
 	})
 }
 
-func TestAccAWSEksAddon_defaultTags_updateToProviderOnly(t *testing.T) {
+func TestAccEKSAddon_DefaultTags_updateToProviderOnly(t *testing.T) {
 	var providers []*schema.Provider
 	var addon eks.Addon
 
@@ -441,7 +441,7 @@ func TestAccAWSEksAddon_defaultTags_updateToProviderOnly(t *testing.T) {
 	})
 }
 
-func TestAccAWSEksAddon_defaultTags_updateToResourceOnly(t *testing.T) {
+func TestAccEKSAddon_DefaultTags_updateToResourceOnly(t *testing.T) {
 	var providers []*schema.Provider
 	var addon eks.Addon
 
@@ -487,7 +487,7 @@ func TestAccAWSEksAddon_defaultTags_updateToResourceOnly(t *testing.T) {
 	})
 }
 
-func TestAccAWSEksAddon_defaultTags_providerAndResource_nonOverlappingTag(t *testing.T) {
+func TestAccEKSAddon_DefaultTagsProviderAndResource_nonOverlappingTag(t *testing.T) {
 	var providers []*schema.Provider
 	var addon eks.Addon
 
@@ -555,7 +555,7 @@ func TestAccAWSEksAddon_defaultTags_providerAndResource_nonOverlappingTag(t *tes
 	})
 }
 
-func TestAccAWSEksAddon_defaultTags_providerAndResource_overlappingTag(t *testing.T) {
+func TestAccEKSAddon_DefaultTagsProviderAndResource_overlappingTag(t *testing.T) {
 	var providers []*schema.Provider
 	var addon eks.Addon
 
@@ -619,7 +619,7 @@ func TestAccAWSEksAddon_defaultTags_providerAndResource_overlappingTag(t *testin
 	})
 }
 
-func TestAccAWSEksAddon_defaultTags_providerAndResource_duplicateTag(t *testing.T) {
+func TestAccEKSAddon_DefaultTagsProviderAndResource_duplicateTag(t *testing.T) {
 	var providers []*schema.Provider
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -643,7 +643,7 @@ func TestAccAWSEksAddon_defaultTags_providerAndResource_duplicateTag(t *testing.
 	})
 }
 
-func TestAccAWSEksAddon_defaultAndIgnoreTags(t *testing.T) {
+func TestAccEKSAddon_defaultAndIgnoreTags(t *testing.T) {
 	var providers []*schema.Provider
 	var addon eks.Addon
 
@@ -684,7 +684,7 @@ func TestAccAWSEksAddon_defaultAndIgnoreTags(t *testing.T) {
 	})
 }
 
-func TestAccAWSEksAddon_ignoreTags(t *testing.T) {
+func TestAccEKSAddon_ignoreTags(t *testing.T) {
 	var providers []*schema.Provider
 	var addon eks.Addon
 
