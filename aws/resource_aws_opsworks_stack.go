@@ -17,12 +17,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsOpsworksStack() *schema.Resource {
+func ResourceStack() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsOpsworksStackCreate,
-		Read:   resourceAwsOpsworksStackRead,
-		Update: resourceAwsOpsworksStackUpdate,
-		Delete: resourceAwsOpsworksStackDelete,
+		Create: resourceStackCreate,
+		Read:   resourceStackRead,
+		Update: resourceStackUpdate,
+		Delete: resourceStackDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -274,7 +274,7 @@ func resourceAwsOpsworksSetStackCustomCookbooksSource(d *schema.ResourceData, v 
 	return nil
 }
 
-func resourceAwsOpsworksStackRead(d *schema.ResourceData, meta interface{}) error {
+func resourceStackRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*conns.AWSClient).OpsWorksConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -430,7 +430,7 @@ func opsworksConnForRegion(region string, meta interface{}) (*opsworks.OpsWorks,
 	return conn, nil
 }
 
-func resourceAwsOpsworksStackCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceStackCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*conns.AWSClient).OpsWorksConn
 
 	err := resourceAwsOpsworksStackValidate(d)
@@ -509,10 +509,10 @@ func resourceAwsOpsworksStackCreate(d *schema.ResourceData, meta interface{}) er
 		time.Sleep(30 * time.Second)
 	}
 
-	return resourceAwsOpsworksStackUpdate(d, meta)
+	return resourceStackUpdate(d, meta)
 }
 
-func resourceAwsOpsworksStackUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceStackUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*conns.AWSClient).OpsWorksConn
 	var conErr error
 	if v := d.Get("stack_endpoint").(string); v != "" {
@@ -591,10 +591,10 @@ func resourceAwsOpsworksStackUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
-	return resourceAwsOpsworksStackRead(d, meta)
+	return resourceStackRead(d, meta)
 }
 
-func resourceAwsOpsworksStackDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceStackDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*conns.AWSClient).OpsWorksConn
 	var conErr error
 	if v := d.Get("stack_endpoint").(string); v != "" {

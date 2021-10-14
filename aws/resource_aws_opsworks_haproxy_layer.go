@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsOpsworksHaproxyLayer() *schema.Resource {
+func ResourceHAProxyLayer() *schema.Resource {
 	layerType := &opsworksLayerType{
 		TypeName:         opsworks.LayerTypeLb,
 		DefaultLayerName: "HAProxy",

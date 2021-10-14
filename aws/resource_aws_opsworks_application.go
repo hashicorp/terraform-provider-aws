@@ -12,13 +12,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsOpsworksApplication() *schema.Resource {
+func ResourceApplication() *schema.Resource {
 	return &schema.Resource{
 
-		Create: resourceAwsOpsworksApplicationCreate,
-		Read:   resourceAwsOpsworksApplicationRead,
-		Update: resourceAwsOpsworksApplicationUpdate,
-		Delete: resourceAwsOpsworksApplicationDelete,
+		Create: resourceApplicationCreate,
+		Read:   resourceApplicationRead,
+		Update: resourceApplicationUpdate,
+		Delete: resourceApplicationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -250,7 +250,7 @@ func resourceAwsOpsworksApplicationValidate(d *schema.ResourceData) error {
 	return nil
 }
 
-func resourceAwsOpsworksApplicationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*conns.AWSClient).OpsWorksConn
 
 	req := &opsworks.DescribeAppsInput{
@@ -295,7 +295,7 @@ func resourceAwsOpsworksApplicationRead(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceAwsOpsworksApplicationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*conns.AWSClient).OpsWorksConn
 
 	err := resourceAwsOpsworksApplicationValidate(d)
@@ -326,10 +326,10 @@ func resourceAwsOpsworksApplicationCreate(d *schema.ResourceData, meta interface
 	appID := *resp.AppId
 	d.SetId(appID)
 
-	return resourceAwsOpsworksApplicationRead(d, meta)
+	return resourceApplicationRead(d, meta)
 }
 
-func resourceAwsOpsworksApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*conns.AWSClient).OpsWorksConn
 
 	err := resourceAwsOpsworksApplicationValidate(d)
@@ -358,10 +358,10 @@ func resourceAwsOpsworksApplicationUpdate(d *schema.ResourceData, meta interface
 		return fmt.Errorf("Error updating OpsWorks app: %s", err)
 	}
 
-	return resourceAwsOpsworksApplicationRead(d, meta)
+	return resourceApplicationRead(d, meta)
 }
 
-func resourceAwsOpsworksApplicationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceApplicationDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*conns.AWSClient).OpsWorksConn
 
 	req := &opsworks.DeleteAppInput{

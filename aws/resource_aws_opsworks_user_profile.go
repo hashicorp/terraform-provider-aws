@@ -10,12 +10,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsOpsworksUserProfile() *schema.Resource {
+func ResourceUserProfile() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsOpsworksUserProfileCreate,
-		Read:   resourceAwsOpsworksUserProfileRead,
-		Update: resourceAwsOpsworksUserProfileUpdate,
-		Delete: resourceAwsOpsworksUserProfileDelete,
+		Create: resourceUserProfileCreate,
+		Read:   resourceUserProfileRead,
+		Update: resourceUserProfileUpdate,
+		Delete: resourceUserProfileDelete,
 
 		Schema: map[string]*schema.Schema{
 			"user_arn": {
@@ -43,7 +43,7 @@ func resourceAwsOpsworksUserProfile() *schema.Resource {
 	}
 }
 
-func resourceAwsOpsworksUserProfileRead(d *schema.ResourceData, meta interface{}) error {
+func resourceUserProfileRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*conns.AWSClient).OpsWorksConn
 
 	req := &opsworks.DescribeUserProfilesInput{
@@ -77,7 +77,7 @@ func resourceAwsOpsworksUserProfileRead(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceAwsOpsworksUserProfileCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceUserProfileCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*conns.AWSClient).OpsWorksConn
 
 	req := &opsworks.CreateUserProfileInput{
@@ -94,10 +94,10 @@ func resourceAwsOpsworksUserProfileCreate(d *schema.ResourceData, meta interface
 
 	d.SetId(aws.StringValue(resp.IamUserArn))
 
-	return resourceAwsOpsworksUserProfileUpdate(d, meta)
+	return resourceUserProfileUpdate(d, meta)
 }
 
-func resourceAwsOpsworksUserProfileUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceUserProfileUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*conns.AWSClient).OpsWorksConn
 
 	req := &opsworks.UpdateUserProfileInput{
@@ -114,10 +114,10 @@ func resourceAwsOpsworksUserProfileUpdate(d *schema.ResourceData, meta interface
 		return err
 	}
 
-	return resourceAwsOpsworksUserProfileRead(d, meta)
+	return resourceUserProfileRead(d, meta)
 }
 
-func resourceAwsOpsworksUserProfileDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceUserProfileDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*conns.AWSClient).OpsWorksConn
 
 	req := &opsworks.DeleteUserProfileInput{
