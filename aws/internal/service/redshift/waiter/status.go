@@ -7,11 +7,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/redshift/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
+	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
 )
 
-func ClusterStatus(conn *redshift.Redshift, id string) resource.StateRefreshFunc {
+func statusCluster(conn *redshift.Redshift, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.ClusterByID(conn, id)
+		output, err := tfredshift.FindClusterByID(conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

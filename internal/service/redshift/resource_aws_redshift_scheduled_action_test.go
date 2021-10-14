@@ -19,6 +19,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
+	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
 )
 
 func init() {
@@ -344,7 +346,7 @@ func testAccCheckAWSRedshiftScheduledActionDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.ScheduledActionByName(conn, rs.Primary.ID)
+		_, err := tfredshift.FindScheduledActionByName(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -373,7 +375,7 @@ func testAccCheckAWSRedshiftScheduledActionExists(n string, v *redshift.Schedule
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
 
-		output, err := finder.ScheduledActionByName(conn, rs.Primary.ID)
+		output, err := tfredshift.FindScheduledActionByName(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

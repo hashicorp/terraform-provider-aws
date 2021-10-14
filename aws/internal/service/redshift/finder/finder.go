@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ClusterByID(conn *redshift.Redshift, id string) (*redshift.Cluster, error) {
+func FindClusterByID(conn *redshift.Redshift, id string) (*redshift.Cluster, error) {
 	input := &redshift.DescribeClustersInput{
 		ClusterIdentifier: aws.String(id),
 	}
@@ -38,7 +38,7 @@ func ClusterByID(conn *redshift.Redshift, id string) (*redshift.Cluster, error) 
 	return output.Clusters[0], nil
 }
 
-func ScheduledActionByName(conn *redshift.Redshift, name string) (*redshift.ScheduledAction, error) {
+func FindScheduledActionByName(conn *redshift.Redshift, name string) (*redshift.ScheduledAction, error) {
 	input := &redshift.DescribeScheduledActionsInput{
 		ScheduledActionName: aws.String(name),
 	}

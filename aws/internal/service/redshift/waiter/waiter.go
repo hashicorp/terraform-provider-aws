@@ -7,25 +7,49 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	tfredshift "github.com/hashicorp/terraform-provider-aws/aws/internal/service/redshift"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
+	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
+	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
+	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
+	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
+	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
+	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
+	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
+	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
+	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
+	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
+	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
+	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
+	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
+	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
+	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
+	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
+	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
+	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
+	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
+	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
+	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
+	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
+	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
 )
 
 const (
-	ClusterInvalidClusterStateFaultTimeout = 15 * time.Minute
+	clusterInvalidClusterStateFaultTimeout = 15 * time.Minute
 )
 
-func ClusterDeleted(conn *redshift.Redshift, id string, timeout time.Duration) (*redshift.Cluster, error) {
+func waitClusterDeleted(conn *redshift.Redshift, id string, timeout time.Duration) (*redshift.Cluster, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
-			tfredshift.ClusterStatusAvailable,
-			tfredshift.ClusterStatusCreating,
-			tfredshift.ClusterStatusDeleting,
-			tfredshift.ClusterStatusFinalSnapshot,
-			tfredshift.ClusterStatusRebooting,
-			tfredshift.ClusterStatusRenaming,
-			tfredshift.ClusterStatusResizing,
+			tfredshift.clusterStatusAvailable,
+			tfredshift.clusterStatusCreating,
+			tfredshift.clusterStatusDeleting,
+			tfredshift.clusterStatusFinalSnapshot,
+			tfredshift.clusterStatusRebooting,
+			tfredshift.clusterStatusRenaming,
+			tfredshift.clusterStatusResizing,
 		},
 		Target:  []string{},
-		Refresh: ClusterStatus(conn, id),
+		Refresh: statusCluster(conn, id),
 		Timeout: timeout,
 	}
 
