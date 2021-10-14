@@ -1,4 +1,4 @@
-package aws
+package directconnect
 
 import (
 	"fmt"
@@ -8,43 +8,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/directconnect/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/directconnect/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
 )
 
 func ResourceConnectionAssociation() *schema.Resource {
@@ -94,7 +61,7 @@ func resourceConnectionAssociationRead(d *schema.ResourceData, meta interface{})
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	lagID := d.Get("lag_id").(string)
-	err := tfdirectconnect.FindConnectionAssociationExists(conn, d.Id(), lagID)
+	err := FindConnectionAssociationExists(conn, d.Id(), lagID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Direct Connect Connection (%s) LAG (%s) Association not found, removing from state", d.Id(), lagID)
@@ -122,7 +89,7 @@ func deleteDirectConnectConnectionLAGAssociation(conn *directconnect.DirectConne
 	}
 
 	_, err := tfresource.RetryWhen(
-		tfdirectconnect.connectionDisassociatedTimeout,
+		connectionDisassociatedTimeout,
 		func() (interface{}, error) {
 			return conn.DisassociateConnectionFromLag(input)
 		},

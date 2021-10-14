@@ -1,4 +1,4 @@
-package aws
+package directconnect
 
 import (
 	"context"
@@ -6,22 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/directconnect/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
 )
 
 func resourceAwsDxGatewayAssociationResourceV0() *schema.Resource {
@@ -96,7 +83,7 @@ func resourceAwsDxGatewayAssociationStateUpgradeV0(_ context.Context, rawState m
 
 	// dx_gateway_association_id was introduced in v2.8.0. Handle the case where it's not yet present.
 	if v, ok := rawState["dx_gateway_association_id"]; !ok || v == nil {
-		output, err := tfdirectconnect.FindGatewayAssociationByDirectConnectGatewayIDAndVirtualGatewayID(conn, rawState["dx_gateway_id"].(string), rawState["vpn_gateway_id"].(string))
+		output, err := FindGatewayAssociationByDirectConnectGatewayIDAndVirtualGatewayID(conn, rawState["dx_gateway_id"].(string), rawState["vpn_gateway_id"].(string))
 
 		if err != nil {
 			return nil, err

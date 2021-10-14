@@ -1,4 +1,4 @@
-package aws
+package directconnect
 
 import (
 	"fmt"
@@ -7,43 +7,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/directconnect/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/directconnect/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
 )
 
 func ResourceConnectionConfirmation() *schema.Resource {
@@ -79,7 +46,7 @@ func resourceConnectionConfirmationCreate(d *schema.ResourceData, meta interface
 
 	d.SetId(connectionID)
 
-	if _, err := tfdirectconnect.waitConnectionConfirmed(conn, d.Id()); err != nil {
+	if _, err := waitConnectionConfirmed(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for Direct Connection Connection (%s) confirm: %w", d.Id(), err)
 	}
 
@@ -89,7 +56,7 @@ func resourceConnectionConfirmationCreate(d *schema.ResourceData, meta interface
 func resourceConnectionConfirmationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 
-	_, err := tfdirectconnect.FindConnectionByID(conn, d.Id())
+	_, err := FindConnectionByID(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Direct Connect Connection (%s) not found, removing from state", d.Id())
