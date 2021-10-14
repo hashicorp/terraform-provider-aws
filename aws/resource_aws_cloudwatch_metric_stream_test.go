@@ -7,29 +7,30 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudwatch/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
-	RegisterServiceErrorCheckFunc(cloudwatch.EndpointsID, testAccErrorCheckSkipCloudwatch)
+	acctest.RegisterServiceErrorCheckFunc(cloudwatch.EndpointsID, testAccErrorCheckSkipCloudwatch)
 }
 
 func testAccErrorCheckSkipCloudwatch(t *testing.T) resource.ErrorCheckFunc {
-	return testAccErrorCheckSkipMessagesContaining(t,
+	return acctest.ErrorCheckSkipMessagesContaining(t,
 		"context deadline exceeded", // tests never fail in GovCloud, they just timeout
 	)
 }
 
 func TestAccAWSCloudWatchMetricStream_basic(t *testing.T) {
 	resourceName := "aws_cloudwatch_metric_stream.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, cloudwatch.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudwatch.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAWSCloudWatchMetricStreamDestroy,
 		Steps: []resource.TestStep{
@@ -41,9 +42,9 @@ func TestAccAWSCloudWatchMetricStream_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "output_format", "json"),
 					resource.TestCheckResourceAttr(resourceName, "state", waiter.StateRunning),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.metric_stream_to_firehose", "arn"),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "cloudwatch", fmt.Sprintf("metric-stream/%s", rName)),
-					testAccCheckResourceAttrRfc3339(resourceName, "creation_date"),
-					testAccCheckResourceAttrRfc3339(resourceName, "last_update_date"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "cloudwatch", fmt.Sprintf("metric-stream/%s", rName)),
+					acctest.CheckResourceAttrRFC3339(resourceName, "creation_date"),
+					acctest.CheckResourceAttrRFC3339(resourceName, "last_update_date"),
 				),
 			},
 			{
@@ -59,8 +60,8 @@ func TestAccAWSCloudWatchMetricStream_noName(t *testing.T) {
 	resourceName := "aws_cloudwatch_metric_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, cloudwatch.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudwatch.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAWSCloudWatchMetricStreamDestroy,
 		Steps: []resource.TestStep{
@@ -81,11 +82,11 @@ func TestAccAWSCloudWatchMetricStream_noName(t *testing.T) {
 
 func TestAccAWSCloudWatchMetricStream_namePrefix(t *testing.T) {
 	resourceName := "aws_cloudwatch_metric_stream.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudwatch.EndpointsID, t) },
-		ErrorCheck:        testAccErrorCheck(t, cloudwatch.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudwatch.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudwatch.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAWSCloudWatchMetricStreamDestroy,
 		Steps: []resource.TestStep{
@@ -107,11 +108,11 @@ func TestAccAWSCloudWatchMetricStream_namePrefix(t *testing.T) {
 
 func TestAccAWSCloudWatchMetricStream_includeFilters(t *testing.T) {
 	resourceName := "aws_cloudwatch_metric_stream.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, cloudwatch.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudwatch.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAWSCloudWatchMetricStreamDestroy,
 		Steps: []resource.TestStep{
@@ -135,11 +136,11 @@ func TestAccAWSCloudWatchMetricStream_includeFilters(t *testing.T) {
 
 func TestAccAWSCloudWatchMetricStream_excludeFilters(t *testing.T) {
 	resourceName := "aws_cloudwatch_metric_stream.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, cloudwatch.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudwatch.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAWSCloudWatchMetricStreamDestroy,
 		Steps: []resource.TestStep{
@@ -163,11 +164,11 @@ func TestAccAWSCloudWatchMetricStream_excludeFilters(t *testing.T) {
 
 func TestAccAWSCloudWatchMetricStream_update(t *testing.T) {
 	resourceName := "aws_cloudwatch_metric_stream.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, cloudwatch.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudwatch.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAWSCloudWatchMetricStreamDestroy,
 		Steps: []resource.TestStep{
@@ -198,12 +199,12 @@ func TestAccAWSCloudWatchMetricStream_update(t *testing.T) {
 
 func TestAccAWSCloudWatchMetricStream_updateName(t *testing.T) {
 	resourceName := "aws_cloudwatch_metric_stream.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	rName2 := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName2 := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, cloudwatch.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudwatch.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAWSCloudWatchMetricStreamDestroy,
 		Steps: []resource.TestStep{
@@ -228,11 +229,11 @@ func TestAccAWSCloudWatchMetricStream_updateName(t *testing.T) {
 
 func TestAccAWSCloudWatchMetricStream_tags(t *testing.T) {
 	resourceName := "aws_cloudwatch_metric_stream.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, cloudwatch.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudwatch.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAWSCloudWatchMetricStreamDestroy,
 		Steps: []resource.TestStep{
