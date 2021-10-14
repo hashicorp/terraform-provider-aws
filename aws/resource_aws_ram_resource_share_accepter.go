@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ram/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ram/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsRamResourceShareAccepter() *schema.Resource {
@@ -80,7 +81,7 @@ func resourceAwsRamResourceShareAccepter() *schema.Resource {
 }
 
 func resourceAwsRamResourceShareAccepterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ramconn
+	conn := meta.(*conns.AWSClient).RAMConn
 
 	shareARN := d.Get("share_arn").(string)
 
@@ -125,8 +126,8 @@ func resourceAwsRamResourceShareAccepterCreate(d *schema.ResourceData, meta inte
 }
 
 func resourceAwsRamResourceShareAccepterRead(d *schema.ResourceData, meta interface{}) error {
-	accountID := meta.(*AWSClient).accountid
-	conn := meta.(*AWSClient).ramconn
+	accountID := meta.(*conns.AWSClient).AccountID
+	conn := meta.(*conns.AWSClient).RAMConn
 
 	invitation, err := finder.ResourceShareInvitationByResourceShareArnAndStatus(conn, d.Id(), ram.ResourceShareInvitationStatusAccepted)
 
@@ -190,7 +191,7 @@ func resourceAwsRamResourceShareAccepterRead(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsRamResourceShareAccepterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ramconn
+	conn := meta.(*conns.AWSClient).RAMConn
 
 	receiverAccountID := d.Get("receiver_account_id").(string)
 

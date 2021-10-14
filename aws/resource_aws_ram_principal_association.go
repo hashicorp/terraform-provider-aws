@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ram/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ram/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsRamPrincipalAssociation() *schema.Resource {
@@ -48,7 +49,7 @@ func resourceAwsRamPrincipalAssociation() *schema.Resource {
 }
 
 func resourceAwsRamPrincipalAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ramconn
+	conn := meta.(*conns.AWSClient).RAMConn
 
 	resourceShareArn := d.Get("resource_share_arn").(string)
 	principal := d.Get("principal").(string)
@@ -80,7 +81,7 @@ func resourceAwsRamPrincipalAssociationCreate(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsRamPrincipalAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ramconn
+	conn := meta.(*conns.AWSClient).RAMConn
 
 	resourceShareArn, principal, err := resourceAwsRamPrincipalAssociationParseId(d.Id())
 	if err != nil {
@@ -123,7 +124,7 @@ func resourceAwsRamPrincipalAssociationRead(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsRamPrincipalAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ramconn
+	conn := meta.(*conns.AWSClient).RAMConn
 
 	resourceShareArn, principal, err := resourceAwsRamPrincipalAssociationParseId(d.Id())
 	if err != nil {

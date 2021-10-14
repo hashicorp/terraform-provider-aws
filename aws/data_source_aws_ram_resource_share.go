@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsRamResourceShare() *schema.Resource {
@@ -68,8 +69,8 @@ func dataSourceAwsRamResourceShare() *schema.Resource {
 }
 
 func dataSourceAwsRamResourceShareRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ramconn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).RAMConn
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get("name").(string)
 	owner := d.Get("resource_owner").(string)

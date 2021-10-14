@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ram/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsRamResourceShare() *schema.Resource {
@@ -54,8 +55,8 @@ func resourceAwsRamResourceShare() *schema.Resource {
 }
 
 func resourceAwsRamResourceShareCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ramconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).RAMConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	request := &ram.CreateResourceShareInput{
@@ -84,9 +85,9 @@ func resourceAwsRamResourceShareCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsRamResourceShareRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ramconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).RAMConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	request := &ram.GetResourceSharesInput{
 		ResourceShareArns: []*string{aws.String(d.Id())},
@@ -136,7 +137,7 @@ func resourceAwsRamResourceShareRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsRamResourceShareUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ramconn
+	conn := meta.(*conns.AWSClient).RAMConn
 
 	if d.HasChanges("name", "allow_external_principals") {
 		request := &ram.UpdateResourceShareInput{
@@ -169,7 +170,7 @@ func resourceAwsRamResourceShareUpdate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsRamResourceShareDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ramconn
+	conn := meta.(*conns.AWSClient).RAMConn
 
 	deleteResourceShareInput := &ram.DeleteResourceShareInput{
 		ResourceShareArn: aws.String(d.Id()),

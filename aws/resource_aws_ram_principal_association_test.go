@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ram/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ram/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAwsRamPrincipalAssociation_basic(t *testing.T) {
@@ -66,7 +67,7 @@ func TestAccAwsRamPrincipalAssociation_disappears(t *testing.T) {
 
 func testAccCheckAwsRamPrincipalAssociationExists(resourceName string, resourceShare *ram.ResourceShareAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).ramconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RAMConn
 
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -111,7 +112,7 @@ func testAccCheckAwsRamPrincipalAssociationExists(resourceName string, resourceS
 }
 
 func testAccCheckAwsRamPrincipalAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).ramconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RAMConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ram_principal_association" {

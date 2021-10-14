@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ram"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsRamResourceAssociation() *schema.Resource {
@@ -39,7 +40,7 @@ func resourceAwsRamResourceAssociation() *schema.Resource {
 }
 
 func resourceAwsRamResourceAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ramconn
+	conn := meta.(*conns.AWSClient).RAMConn
 	resourceARN := d.Get("resource_arn").(string)
 	resourceShareARN := d.Get("resource_share_arn").(string)
 
@@ -65,7 +66,7 @@ func resourceAwsRamResourceAssociationCreate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsRamResourceAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ramconn
+	conn := meta.(*conns.AWSClient).RAMConn
 
 	resourceShareARN, resourceARN, err := decodeRamResourceAssociationID(d.Id())
 	if err != nil {
@@ -97,7 +98,7 @@ func resourceAwsRamResourceAssociationRead(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsRamResourceAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ramconn
+	conn := meta.(*conns.AWSClient).RAMConn
 
 	resourceShareARN, resourceARN, err := decodeRamResourceAssociationID(d.Id())
 	if err != nil {

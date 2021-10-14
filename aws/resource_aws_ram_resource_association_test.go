@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAwsRamResourceAssociation_basic(t *testing.T) {
@@ -63,7 +64,7 @@ func TestAccAwsRamResourceAssociation_disappears(t *testing.T) {
 
 func testAccCheckAwsRamResourceAssociationDisappears(resourceShareAssociation *ram.ResourceShareAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).ramconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RAMConn
 
 		input := &ram.DisassociateResourceShareInput{
 			ResourceArns:     []*string{resourceShareAssociation.AssociatedEntity},
@@ -81,7 +82,7 @@ func testAccCheckAwsRamResourceAssociationDisappears(resourceShareAssociation *r
 
 func testAccCheckAwsRamResourceAssociationExists(resourceName string, association *ram.ResourceShareAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).ramconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RAMConn
 
 		rs, ok := s.RootModule().Resources[resourceName]
 
@@ -116,7 +117,7 @@ func testAccCheckAwsRamResourceAssociationExists(resourceName string, associatio
 }
 
 func testAccCheckAwsRamResourceAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).ramconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RAMConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ram_resource_association" {
