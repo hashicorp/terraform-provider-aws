@@ -1,4 +1,4 @@
-package aws
+package resourcegroupstagging_test
 
 import (
 	"fmt"
