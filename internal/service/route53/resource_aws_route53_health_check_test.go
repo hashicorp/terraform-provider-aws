@@ -25,6 +25,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
+	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
+	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
+	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
 )
 
 func init() {
@@ -469,7 +473,7 @@ func testAccCheckRoute53HealthCheckDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.HealthCheckByID(conn, rs.Primary.ID)
+		_, err := tfroute53.FindHealthCheckByID(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -498,7 +502,7 @@ func testAccCheckRoute53HealthCheckExists(n string, v *route53.HealthCheck) reso
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn
 
-		output, err := finder.HealthCheckByID(conn, rs.Primary.ID)
+		output, err := tfroute53.FindHealthCheckByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

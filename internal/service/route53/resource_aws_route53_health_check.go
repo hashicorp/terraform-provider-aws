@@ -20,6 +20,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
+	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
+	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
+	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
 )
 
 func ResourceHealthCheck() *schema.Resource {
@@ -309,7 +313,7 @@ func resourceHealthCheckRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	output, err := finder.HealthCheckByID(conn, d.Id())
+	output, err := tfroute53.FindHealthCheckByID(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Route53 Health Check (%s) not found, removing from state", d.Id())

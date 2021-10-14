@@ -13,16 +13,16 @@ import (
 )
 
 const (
-	ChangeTimeout      = 30 * time.Minute
-	ChangeMinTimeout   = 5 * time.Second
-	ChangePollInterval = 15 * time.Second
+	changeTimeout      = 30 * time.Minute
+	changeMinTimeout   = 5 * time.Second
+	changePollInterval = 15 * time.Second
 
-	HostedZoneDnssecStatusTimeout = 5 * time.Minute
+	hostedZoneDNSSECStatusTimeout = 5 * time.Minute
 
-	KeySigningKeyStatusTimeout = 5 * time.Minute
+	keySigningKeyStatusTimeout = 5 * time.Minute
 )
 
-func ChangeInfoStatusInsync(conn *route53.Route53, changeID string) (*route53.ChangeInfo, error) {
+func waitChangeInfoStatusInsync(conn *route53.Route53, changeID string) (*route53.ChangeInfo, error) {
 	rand.Seed(time.Now().UTC().UnixNano())
 
 	// Route53 is vulnerable to throttling so longer delays, poll intervals helps significantly to avoid
@@ -31,10 +31,10 @@ func ChangeInfoStatusInsync(conn *route53.Route53, changeID string) (*route53.Ch
 		Pending:      []string{route53.ChangeStatusPending},
 		Target:       []string{route53.ChangeStatusInsync},
 		Delay:        time.Duration(rand.Int63n(20)+10) * time.Second, //nolint:gomnd
-		MinTimeout:   ChangeMinTimeout,
-		PollInterval: ChangePollInterval,
-		Refresh:      ChangeInfoStatus(conn, changeID),
-		Timeout:      ChangeTimeout,
+		MinTimeout:   changeMinTimeout,
+		PollInterval: changePollInterval,
+		Refresh:      statusChangeInfo(conn, changeID),
+		Timeout:      changeTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -46,12 +46,12 @@ func ChangeInfoStatusInsync(conn *route53.Route53, changeID string) (*route53.Ch
 	return nil, err
 }
 
-func HostedZoneDnssecStatusUpdated(conn *route53.Route53, hostedZoneID string, status string) (*route53.DNSSECStatus, error) {
+func waitHostedZoneDNSSECStatusUpdated(conn *route53.Route53, hostedZoneID string, status string) (*route53.DNSSECStatus, error) {
 	stateConf := &resource.StateChangeConf{
 		Target:     []string{status},
-		Refresh:    HostedZoneDnssecStatus(conn, hostedZoneID),
+		Refresh:    statusHostedZoneDNSSEC(conn, hostedZoneID),
 		MinTimeout: 5 * time.Second,
-		Timeout:    HostedZoneDnssecStatusTimeout,
+		Timeout:    hostedZoneDNSSECStatusTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -78,12 +78,12 @@ func HostedZoneDnssecStatusUpdated(conn *route53.Route53, hostedZoneID string, s
 	return nil, err
 }
 
-func KeySigningKeyStatusUpdated(conn *route53.Route53, hostedZoneID string, name string, status string) (*route53.KeySigningKey, error) {
+func waitKeySigningKeyStatusUpdated(conn *route53.Route53, hostedZoneID string, name string, status string) (*route53.KeySigningKey, error) {
 	stateConf := &resource.StateChangeConf{
 		Target:     []string{status},
-		Refresh:    KeySigningKeyStatus(conn, hostedZoneID, name),
+		Refresh:    statusKeySigningKey(conn, hostedZoneID, name),
 		MinTimeout: 5 * time.Second,
-		Timeout:    KeySigningKeyStatusTimeout,
+		Timeout:    keySigningKeyStatusTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()

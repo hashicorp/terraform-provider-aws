@@ -15,6 +15,34 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
+	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
+	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
+	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
+	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
+	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
+	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
+	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
+	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
+	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
+	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
+	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
+	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
+	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
+	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
+	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
+	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
+	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
+	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
+	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
+	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
+	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
+	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
+	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
+	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
+	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
+	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
+	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
 )
 
 func ResourceHostedZoneDNSSEC() *schema.Resource {
@@ -68,7 +96,7 @@ func resourceHostedZoneDNSSECCreate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
-	if _, err := waiter.HostedZoneDnssecStatusUpdated(conn, d.Id(), signingStatus); err != nil {
+	if _, err := tfroute53.waitHostedZoneDNSSECStatusUpdated(conn, d.Id(), signingStatus); err != nil {
 		return fmt.Errorf("error waiting for Route 53 Hosted Zone DNSSEC (%s) signing status (%s): %w", d.Id(), signingStatus, err)
 	}
 
@@ -78,7 +106,7 @@ func resourceHostedZoneDNSSECCreate(d *schema.ResourceData, meta interface{}) er
 func resourceHostedZoneDNSSECRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53Conn
 
-	hostedZoneDnssec, err := finder.HostedZoneDnssec(conn, d.Id())
+	hostedZoneDnssec, err := tfroute53.FindHostedZoneDNSSEC(conn, d.Id())
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, route53.ErrCodeDNSSECNotFound) {
 		log.Printf("[WARN] Route 53 Hosted Zone DNSSEC (%s) not found, removing from state", d.Id())
@@ -134,7 +162,7 @@ func resourceHostedZoneDNSSECUpdate(d *schema.ResourceData, meta interface{}) er
 			}
 		}
 
-		if _, err := waiter.HostedZoneDnssecStatusUpdated(conn, d.Id(), signingStatus); err != nil {
+		if _, err := tfroute53.waitHostedZoneDNSSECStatusUpdated(conn, d.Id(), signingStatus); err != nil {
 			return fmt.Errorf("error waiting for Route 53 Hosted Zone DNSSEC (%s) signing status (%s): %w", d.Id(), signingStatus, err)
 		}
 	}
@@ -164,7 +192,7 @@ func resourceHostedZoneDNSSECDelete(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if output != nil && output.ChangeInfo != nil {
-		if _, err := waiter.ChangeInfoStatusInsync(conn, aws.StringValue(output.ChangeInfo.Id)); err != nil {
+		if _, err := tfroute53.waitChangeInfoStatusInsync(conn, aws.StringValue(output.ChangeInfo.Id)); err != nil {
 			return fmt.Errorf("error waiting for Route 53 Hosted Zone DNSSEC (%s) disable: %w", d.Id(), err)
 		}
 	}
@@ -184,7 +212,7 @@ func route53HostedZoneDnssecDisable(conn *route53.Route53, hostedZoneID string) 
 	}
 
 	if output != nil && output.ChangeInfo != nil {
-		if _, err := waiter.ChangeInfoStatusInsync(conn, aws.StringValue(output.ChangeInfo.Id)); err != nil {
+		if _, err := tfroute53.waitChangeInfoStatusInsync(conn, aws.StringValue(output.ChangeInfo.Id)); err != nil {
 			return fmt.Errorf("error waiting for update: %w", err)
 		}
 	}
@@ -204,7 +232,7 @@ func route53HostedZoneDnssecEnable(conn *route53.Route53, hostedZoneID string) e
 	}
 
 	if output != nil && output.ChangeInfo != nil {
-		if _, err := waiter.ChangeInfoStatusInsync(conn, aws.StringValue(output.ChangeInfo.Id)); err != nil {
+		if _, err := tfroute53.waitChangeInfoStatusInsync(conn, aws.StringValue(output.ChangeInfo.Id)); err != nil {
 			return fmt.Errorf("error waiting for update: %w", err)
 		}
 	}
