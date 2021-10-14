@@ -8,17 +8,18 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSLBTargetGroupAttachment_basic(t *testing.T) {
-	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandString(10))
+	targetGroupName := fmt.Sprintf("test-target-group-%s", sdkacctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBTargetGroupAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -33,10 +34,10 @@ func TestAccAWSLBTargetGroupAttachment_basic(t *testing.T) {
 }
 
 func TestAccAWSLBTargetGroupAttachment_disappears(t *testing.T) {
-	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandString(10))
+	targetGroupName := fmt.Sprintf("test-target-group-%s", sdkacctest.RandString(10))
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBTargetGroupAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -53,11 +54,11 @@ func TestAccAWSLBTargetGroupAttachment_disappears(t *testing.T) {
 }
 
 func TestAccAWSLBTargetGroupAttachment_BackwardsCompatibility(t *testing.T) {
-	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandString(10))
+	targetGroupName := fmt.Sprintf("test-target-group-%s", sdkacctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBTargetGroupAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -72,11 +73,11 @@ func TestAccAWSLBTargetGroupAttachment_BackwardsCompatibility(t *testing.T) {
 }
 
 func TestAccAWSLBTargetGroupAttachment_Port(t *testing.T) {
-	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandString(10))
+	targetGroupName := fmt.Sprintf("test-target-group-%s", sdkacctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBTargetGroupAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -91,11 +92,11 @@ func TestAccAWSLBTargetGroupAttachment_Port(t *testing.T) {
 }
 
 func TestAccAWSLBTargetGroupAttachment_ipAddress(t *testing.T) {
-	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandString(10))
+	targetGroupName := fmt.Sprintf("test-target-group-%s", sdkacctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBTargetGroupAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -110,11 +111,11 @@ func TestAccAWSLBTargetGroupAttachment_ipAddress(t *testing.T) {
 }
 
 func TestAccAWSLBTargetGroupAttachment_lambda(t *testing.T) {
-	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandString(10))
+	targetGroupName := fmt.Sprintf("test-target-group-%s", sdkacctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBTargetGroupAttachmentDestroy,
 		Steps: []resource.TestStep{
