@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/efs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsEfsAccessPoint() *schema.Resource {
@@ -96,8 +97,8 @@ func dataSourceAwsEfsAccessPoint() *schema.Resource {
 }
 
 func dataSourceAwsEfsAccessPointRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).efsconn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EFSConn
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	resp, err := conn.DescribeAccessPoints(&efs.DescribeAccessPointsInput{
 		AccessPointId: aws.String(d.Get("access_point_id").(string)),
@@ -116,9 +117,9 @@ func dataSourceAwsEfsAccessPointRead(d *schema.ResourceData, meta interface{}) e
 	d.SetId(aws.StringValue(ap.AccessPointId))
 
 	fsARN := arn.ARN{
-		AccountID: meta.(*AWSClient).accountid,
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
+		Partition: meta.(*conns.AWSClient).Partition,
+		Region:    meta.(*conns.AWSClient).Region,
 		Resource:  fmt.Sprintf("file-system/%s", aws.StringValue(ap.FileSystemId)),
 		Service:   "elasticfilesystem",
 	}.String()

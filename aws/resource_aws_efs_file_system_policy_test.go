@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/efs/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSEFSFileSystemPolicy_basic(t *testing.T) {
@@ -107,7 +108,7 @@ func TestAccAWSEFSFileSystemPolicy_PolicyBypass(t *testing.T) {
 }
 
 func testAccCheckEfsFileSystemPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).efsconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_efs_file_system_policy" {
@@ -141,7 +142,7 @@ func testAccCheckEfsFileSystemPolicyExists(n string, v *efs.DescribeFileSystemPo
 			return fmt.Errorf("No EFS File System Policy ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).efsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn
 
 		output, err := finder.FileSystemPolicyByID(conn, rs.Primary.ID)
 

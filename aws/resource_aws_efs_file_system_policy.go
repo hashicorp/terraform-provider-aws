@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/efs/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsEfsFileSystemPolicy() *schema.Resource {
@@ -45,7 +46,7 @@ func resourceAwsEfsFileSystemPolicy() *schema.Resource {
 }
 
 func resourceAwsEfsFileSystemPolicyPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).efsconn
+	conn := meta.(*conns.AWSClient).EFSConn
 
 	fsID := d.Get("file_system_id").(string)
 	input := &efs.PutFileSystemPolicyInput{
@@ -67,7 +68,7 @@ func resourceAwsEfsFileSystemPolicyPut(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsEfsFileSystemPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).efsconn
+	conn := meta.(*conns.AWSClient).EFSConn
 
 	output, err := finder.FileSystemPolicyByID(conn, d.Id())
 
@@ -88,7 +89,7 @@ func resourceAwsEfsFileSystemPolicyRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsEfsFileSystemPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).efsconn
+	conn := meta.(*conns.AWSClient).EFSConn
 
 	log.Printf("[DEBUG] Deleting EFS File System Policy: %s", d.Id())
 	_, err := conn.DeleteFileSystemPolicy(&efs.DeleteFileSystemPolicyInput{

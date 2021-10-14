@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsEfsFileSystem() *schema.Resource {
@@ -90,8 +91,8 @@ func dataSourceAwsEfsFileSystem() *schema.Resource {
 }
 
 func dataSourceAwsEfsFileSystemRead(d *schema.ResourceData, meta interface{}) error {
-	efsconn := meta.(*AWSClient).efsconn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EFSConn
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	tagsToMatch := keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
@@ -106,7 +107,7 @@ func dataSourceAwsEfsFileSystemRead(d *schema.ResourceData, meta interface{}) er
 	}
 
 	log.Printf("[DEBUG] Reading EFS File System: %s", describeEfsOpts)
-	describeResp, err := efsconn.DescribeFileSystems(describeEfsOpts)
+	describeResp, err := conn.DescribeFileSystems(describeEfsOpts)
 	if err != nil {
 		return fmt.Errorf("error reading EFS FileSystem: %w", err)
 	}
@@ -162,7 +163,7 @@ func dataSourceAwsEfsFileSystemRead(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 
-	res, err := efsconn.DescribeLifecycleConfiguration(&efs.DescribeLifecycleConfigurationInput{
+	res, err := conn.DescribeLifecycleConfiguration(&efs.DescribeLifecycleConfigurationInput{
 		FileSystemId: fs.FileSystemId,
 	})
 	if err != nil {
@@ -174,7 +175,7 @@ func dataSourceAwsEfsFileSystemRead(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("error setting lifecycle_policy: %w", err)
 	}
 
-	d.Set("dns_name", meta.(*AWSClient).RegionalHostname(fmt.Sprintf("%s.efs", aws.StringValue(fs.FileSystemId))))
+	d.Set("dns_name", meta.(*conns.AWSClient).RegionalHostname(fmt.Sprintf("%s.efs", aws.StringValue(fs.FileSystemId))))
 
 	return nil
 }

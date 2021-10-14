@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -31,7 +32,7 @@ func testSweepEfsMountTargets(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).efsconn
+	conn := client.(*conns.AWSClient).EFSConn
 
 	var errors error
 	input := &efs.DescribeFileSystemsInput{}
@@ -230,7 +231,7 @@ func TestResourceAWSEFSMountTarget_hasEmptyMountTargets(t *testing.T) {
 }
 
 func testAccCheckEfsMountTargetDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).efsconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_efs_mount_target" {
 			continue
@@ -270,7 +271,7 @@ func testAccCheckEfsMountTarget(resourceID string, mount *efs.MountTargetDescrip
 			return fmt.Errorf("Not found: %s", resourceID)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).efsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn
 		mt, err := conn.DescribeMountTargets(&efs.DescribeMountTargetsInput{
 			MountTargetId: aws.String(fs.Primary.ID),
 		})
@@ -436,7 +437,7 @@ resource "aws_efs_mount_target" "test" {
 }
 
 func testAccCheckVpnGatewayDestroy(s *terraform.State) error {
-	ec2conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_vpn_gateway" {
@@ -444,7 +445,7 @@ func testAccCheckVpnGatewayDestroy(s *terraform.State) error {
 		}
 
 		// Try to find the resource
-		resp, err := ec2conn.DescribeVpnGateways(&ec2.DescribeVpnGatewaysInput{
+		resp, err := conn.DescribeVpnGateways(&ec2.DescribeVpnGatewaysInput{
 			VpnGatewayIds: []*string{aws.String(rs.Primary.ID)},
 		})
 		if err == nil {

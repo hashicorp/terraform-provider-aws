@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -27,7 +28,7 @@ func testSweepEfsAccessPoints(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).efsconn
+	conn := client.(*conns.AWSClient).EFSConn
 	var sweeperErrs *multierror.Error
 
 	var errors error
@@ -307,7 +308,7 @@ func TestAccAWSEFSAccessPoint_disappears(t *testing.T) {
 }
 
 func testAccCheckEfsAccessPointDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).efsconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_efs_access_point" {
 			continue
@@ -346,7 +347,7 @@ func testAccCheckEfsAccessPointExists(resourceID string, mount *efs.AccessPointD
 			return fmt.Errorf("Not found: %s", resourceID)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).efsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn
 		mt, err := conn.DescribeAccessPoints(&efs.DescribeAccessPointsInput{
 			AccessPointId: aws.String(fs.Primary.ID),
 		})
