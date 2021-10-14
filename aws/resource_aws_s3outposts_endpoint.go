@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/s3outposts/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/s3outposts/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceEndpoint() *schema.Resource {
