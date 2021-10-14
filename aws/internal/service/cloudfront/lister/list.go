@@ -3,6 +3,7 @@ package lister
 import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Custom Cloudfront listing functions using similar formatting as other service generated code.

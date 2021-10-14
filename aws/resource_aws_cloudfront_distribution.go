@@ -14,6 +14,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceDistribution() *schema.Resource {
@@ -187,7 +188,7 @@ func ResourceDistribution() *schema.Resource {
 						"realtime_log_config_arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 						"smooth_streaming": {
 							Type:     schema.TypeBool,
@@ -383,7 +384,7 @@ func ResourceDistribution() *schema.Resource {
 						"realtime_log_config_arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 						"smooth_streaming": {
 							Type:     schema.TypeBool,
@@ -589,7 +590,7 @@ func ResourceDistribution() *schema.Resource {
 									"origin_shield_region": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validation.StringMatch(awsRegionRegexp, "must be a valid AWS Region Code"),
+										ValidateFunc: validation.StringMatch(regionRegexp, "must be a valid AWS Region Code"),
 									},
 								},
 							},

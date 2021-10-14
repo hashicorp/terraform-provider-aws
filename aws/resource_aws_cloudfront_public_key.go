@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourcePublicKey() *schema.Resource {
@@ -46,7 +47,7 @@ func ResourcePublicKey() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc:  validateCloudFrontPublicKeyName,
+				ValidateFunc:  validPublicKeyName,
 			},
 			"name_prefix": {
 				Type:          schema.TypeString,
@@ -54,7 +55,7 @@ func ResourcePublicKey() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
-				ValidateFunc:  validateCloudFrontPublicKeyNamePrefix,
+				ValidateFunc:  validPublicKeyNamePrefix,
 			},
 		},
 	}
