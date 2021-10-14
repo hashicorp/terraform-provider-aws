@@ -16,7 +16,7 @@ import (
 
 func TestAccAWSDeviceFarmProject_basic(t *testing.T) {
 	var proj devicefarm.Project
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rNameUpdated := sdkacctest.RandomWithPrefix("tf-acc-test-updated")
 	resourceName := "aws_devicefarm_project.test"
 
@@ -29,7 +29,7 @@ func TestAccAWSDeviceFarmProject_basic(t *testing.T) {
 			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, devicefarm.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDeviceFarmProjectDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -60,7 +60,7 @@ func TestAccAWSDeviceFarmProject_basic(t *testing.T) {
 
 func TestAccAWSDeviceFarmProject_timeout(t *testing.T) {
 	var proj devicefarm.Project
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_devicefarm_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -72,7 +72,7 @@ func TestAccAWSDeviceFarmProject_timeout(t *testing.T) {
 			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, devicefarm.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDeviceFarmProjectDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -102,7 +102,7 @@ func TestAccAWSDeviceFarmProject_timeout(t *testing.T) {
 
 func TestAccAWSDeviceFarmProject_tags(t *testing.T) {
 	var proj devicefarm.Project
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_devicefarm_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -114,7 +114,7 @@ func TestAccAWSDeviceFarmProject_tags(t *testing.T) {
 			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, devicefarm.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDeviceFarmProjectDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -153,7 +153,7 @@ func TestAccAWSDeviceFarmProject_tags(t *testing.T) {
 
 func TestAccAWSDeviceFarmProject_disappears(t *testing.T) {
 	var proj devicefarm.Project
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_devicefarm_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -165,14 +165,14 @@ func TestAccAWSDeviceFarmProject_disappears(t *testing.T) {
 			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, devicefarm.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDeviceFarmProjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeviceFarmProjectConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeviceFarmProjectExists(resourceName, &proj),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsDevicefarmProject(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsDevicefarmProject(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -191,7 +191,7 @@ func testAccCheckDeviceFarmProjectExists(n string, v *devicefarm.Project) resour
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).devicefarmconn
+		conn := acctest.Provider.Meta().(*AWSClient).devicefarmconn
 		resp, err := conn.GetProject(
 			&devicefarm.GetProjectInput{Arn: aws.String(rs.Primary.ID)})
 		if err != nil {
@@ -208,7 +208,7 @@ func testAccCheckDeviceFarmProjectExists(n string, v *devicefarm.Project) resour
 }
 
 func testAccCheckDeviceFarmProjectDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).devicefarmconn
+	conn := acctest.Provider.Meta().(*AWSClient).devicefarmconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_devicefarm_project" {
