@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfbackup "github.com/hashicorp/terraform-provider-aws/internal/service/backup"
 )
 
 func TestAccAwsBackupPlan_basic(t *testing.T) {
@@ -636,7 +637,7 @@ func TestAccAwsBackupPlan_disappears(t *testing.T) {
 				Config: testAccAwsBackupPlanConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBackupPlanExists(resourceName, &plan),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourcePlan(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfbackup.ResourcePlan(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

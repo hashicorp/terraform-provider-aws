@@ -42,7 +42,7 @@ func testSweepBackupVaultPolicies(region string) error {
 		}
 
 		for _, vault := range page.BackupVaultList {
-			r := ResourceVaultPolicy()
+			r := tfbackup.ResourceVaultPolicy()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(vault.BackupVaultName))
 
@@ -117,7 +117,7 @@ func TestAccAwsBackupVaultPolicy_disappears(t *testing.T) {
 				Config: testAccBackupVaultPolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBackupVaultPolicyExists(resourceName, &vault),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceVaultPolicy(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfbackup.ResourceVaultPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -141,7 +141,7 @@ func TestAccAwsBackupVaultPolicy_disappears_vault(t *testing.T) {
 				Config: testAccBackupVaultPolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBackupVaultPolicyExists(resourceName, &vault),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceVault(), vaultResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfbackup.ResourceVault(), vaultResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
