@@ -14,6 +14,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfkinesis "github.com/hashicorp/terraform-provider-aws/internal/service/kinesis"
+	tfkinesis "github.com/hashicorp/terraform-provider-aws/internal/service/kinesis"
+	tfkinesis "github.com/hashicorp/terraform-provider-aws/internal/service/kinesis"
+	tfkinesis "github.com/hashicorp/terraform-provider-aws/internal/service/kinesis"
+	tfkinesis "github.com/hashicorp/terraform-provider-aws/internal/service/kinesis"
+	tfkinesis "github.com/hashicorp/terraform-provider-aws/internal/service/kinesis"
+	tfkinesis "github.com/hashicorp/terraform-provider-aws/internal/service/kinesis"
+	tfkinesis "github.com/hashicorp/terraform-provider-aws/internal/service/kinesis"
 )
 
 func ResourceStreamConsumer() *schema.Resource {
@@ -75,7 +83,7 @@ func resourceStreamConsumerCreate(d *schema.ResourceData, meta interface{}) erro
 
 	d.SetId(aws.StringValue(output.Consumer.ConsumerARN))
 
-	if _, err := waiter.StreamConsumerCreated(conn, d.Id()); err != nil {
+	if _, err := tfkinesis.waitStreamConsumerCreated(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for Kinesis Stream Consumer (%s) creation: %w", d.Id(), err)
 	}
 
@@ -85,7 +93,7 @@ func resourceStreamConsumerCreate(d *schema.ResourceData, meta interface{}) erro
 func resourceStreamConsumerRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KinesisConn
 
-	consumer, err := finder.StreamConsumerByARN(conn, d.Id())
+	consumer, err := tfkinesis.FindStreamConsumerByARN(conn, d.Id())
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, kinesis.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Kinesis Stream Consumer (%s) not found, removing from state", d.Id())
@@ -130,7 +138,7 @@ func resourceStreamConsumerDelete(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error deleting Kinesis Stream Consumer (%s): %w", d.Id(), err)
 	}
 
-	if _, err := waiter.StreamConsumerDeleted(conn, d.Id()); err != nil {
+	if _, err := tfkinesis.waitStreamConsumerDeleted(conn, d.Id()); err != nil {
 		if tfawserr.ErrCodeEquals(err, kinesis.ErrCodeResourceNotFoundException) {
 			return nil
 		}

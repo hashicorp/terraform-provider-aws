@@ -6,24 +6,25 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/kinesis/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfkinesis "github.com/hashicorp/terraform-provider-aws/internal/service/kinesis"
 )
 
 const (
-	StreamConsumerStatusNotFound = "NotFound"
-	StreamConsumerStatusUnknown  = "Unknown"
+	streamConsumerStatusNotFound = "NotFound"
+	streamConsumerStatusUnknown  = "Unknown"
 )
 
-// StreamConsumerStatus fetches the StreamConsumer and its Status
-func StreamConsumerStatus(conn *kinesis.Kinesis, arn string) resource.StateRefreshFunc {
+// statusStreamConsumer fetches the StreamConsumer and its Status
+func statusStreamConsumer(conn *kinesis.Kinesis, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		consumer, err := finder.StreamConsumerByARN(conn, arn)
+		consumer, err := tfkinesis.FindStreamConsumerByARN(conn, arn)
 
 		if err != nil {
-			return nil, StreamConsumerStatusUnknown, err
+			return nil, streamConsumerStatusUnknown, err
 		}
 
 		if consumer == nil {
-			return nil, StreamConsumerStatusNotFound, nil
+			return nil, streamConsumerStatusNotFound, nil
 		}
 
 		return consumer, aws.StringValue(consumer.ConsumerStatus), nil

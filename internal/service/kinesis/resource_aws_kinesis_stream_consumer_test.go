@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfkinesis "github.com/hashicorp/terraform-provider-aws/internal/service/kinesis"
 )
 
 func TestAccAWSKinesisStreamConsumer_basic(t *testing.T) {
@@ -133,7 +134,7 @@ func testAccCheckAWSKinesisStreamConsumerDestroy(s *terraform.State) error {
 			continue
 		}
 
-		consumer, err := finder.StreamConsumerByARN(conn, rs.Primary.ID)
+		consumer, err := tfkinesis.FindStreamConsumerByARN(conn, rs.Primary.ID)
 
 		if tfawserr.ErrCodeEquals(err, kinesis.ErrCodeResourceNotFoundException) {
 			continue
@@ -165,7 +166,7 @@ func testAccAWSKinesisStreamConsumerExists(resourceName string) resource.TestChe
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisConn
 
-		consumer, err := finder.StreamConsumerByARN(conn, rs.Primary.ID)
+		consumer, err := tfkinesis.FindStreamConsumerByARN(conn, rs.Primary.ID)
 
 		if err != nil {
 			return fmt.Errorf("error reading Kinesis Stream Consumer (%s): %w", rs.Primary.ID, err)
