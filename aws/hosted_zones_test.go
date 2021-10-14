@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestHostedZoneIDForRegion(t *testing.T) {

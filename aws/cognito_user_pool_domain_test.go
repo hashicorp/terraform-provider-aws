@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 // Cognito User Pool Custom Domains can only be created with ACM Certificates in specific regions.
@@ -32,7 +33,7 @@ var testAccProviderCognitoUserPoolCustomDomainConfigure sync.Once
 
 // testAccPreCheckCognitoUserPoolCustomDomain verifies AWS credentials and that Cognito User Pool Custom Domains is supported
 func testAccPreCheckCognitoUserPoolCustomDomain(t *testing.T) {
-	testAccPartitionHasServicePreCheck(cognitoidentityprovider.EndpointsID, t)
+	acctest.PreCheckPartitionHasService(cognitoidentityprovider.EndpointsID, t)
 
 	region := testAccGetCognitoUserPoolCustomDomainRegion()
 
@@ -66,7 +67,7 @@ func testAccPreCheckCognitoUserPoolCustomDomain(t *testing.T) {
 // Testing Cognito User Pool Custom Domains assumes no other provider configurations
 // are necessary and overwrites the "aws" provider configuration.
 func testAccCognitoUserPoolCustomDomainRegionProviderConfig() string {
-	return testAccRegionalProviderConfig(testAccGetCognitoUserPoolCustomDomainRegion())
+	return acctest.ConfigRegionalProvider(testAccGetCognitoUserPoolCustomDomainRegion())
 }
 
 // testAccGetCognitoUserPoolCustomDomainRegion returns the Cognito User Pool Custom Domains region for testing
@@ -78,7 +79,7 @@ func testAccGetCognitoUserPoolCustomDomainRegion() string {
 	// AWS Commercial: https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-pools-add-custom-domain.html
 	// AWS GovCloud (US) - not supported: https://docs.aws.amazon.com/govcloud-us/latest/UserGuide/govcloud-cog.html
 	// AWS China - not supported: https://docs.amazonaws.cn/en_us/aws/latest/userguide/cognito.html
-	switch testAccGetPartition() {
+	switch acctest.Partition() {
 	case endpoints.AwsPartitionID:
 		testAccCognitoUserPoolCustomDomainRegion = endpoints.UsEast1RegionID
 	}

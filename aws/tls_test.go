@@ -3,6 +3,7 @@ package aws
 import (
 	"strings"
 	"testing"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestTlsRsaPrivateKeyPem(t *testing.T) {

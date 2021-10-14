@@ -7,12 +7,12 @@ import "github.com/aws/aws-sdk-go/aws/endpoints"
 // Testing CloudFront assumes no other provider configurations
 // are necessary and overwrites the "aws" provider configuration.
 func testAccCloudfrontRegionProviderConfig() string {
-	switch testAccGetPartition() {
+	switch acctest.Partition() {
 	case endpoints.AwsPartitionID:
-		return testAccRegionalProviderConfig(endpoints.UsEast1RegionID)
+		return acctest.ConfigRegionalProvider(endpoints.UsEast1RegionID)
 	case endpoints.AwsCnPartitionID:
-		return testAccRegionalProviderConfig(endpoints.CnNorthwest1RegionID)
+		return acctest.ConfigRegionalProvider(endpoints.CnNorthwest1RegionID)
 	default:
-		return testAccRegionalProviderConfig(testAccGetRegion())
+		return acctest.ConfigRegionalProvider(acctest.Region())
 	}
 }

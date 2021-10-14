@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	awspolicy "github.com/jen20/awspolicyequivalence"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func testAccCheckAwsPolicyMatch(resource, attr, expectedPolicy string) resource.TestCheckFunc {

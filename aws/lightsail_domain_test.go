@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 // Lightsail Domains can only be created in specific regions.
@@ -30,14 +31,14 @@ var testAccProviderLightsailDomain *schema.Provider
 // testAccProviderLightsailDomainConfigure ensures the provider is only configured once
 var testAccProviderLightsailDomainConfigure sync.Once
 
-// Prevent panic with testAccCheckResourceDisappears
+// Prevent panic with acctest.CheckResourceDisappears
 func init() {
 	testAccProviderLightsailDomain = Provider()
 }
 
 // testAccPreCheckLightsailDomain verifies AWS credentials and that Lightsail Domains is supported
 func testAccPreCheckLightsailDomain(t *testing.T) {
-	testAccPartitionHasServicePreCheck(lightsail.EndpointsID, t)
+	acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
 
 	region := testAccGetLightsailDomainRegion()
 
@@ -69,7 +70,7 @@ func testAccPreCheckLightsailDomain(t *testing.T) {
 // Testing Lightsail Domains assumes no other provider configurations
 // are necessary and overwrites the "aws" provider configuration.
 func testAccLightsailDomainRegionProviderConfig() string {
-	return testAccRegionalProviderConfig(testAccGetLightsailDomainRegion())
+	return acctest.ConfigRegionalProvider(testAccGetLightsailDomainRegion())
 }
 
 // testAccGetLightsailDomainRegion returns the Lightsail Domains region for testing
@@ -81,7 +82,7 @@ func testAccGetLightsailDomainRegion() string {
 	// AWS Commercial: https://lightsail.aws.amazon.com/ls/docs/en_us/articles/lightsail-how-to-create-dns-entry
 	// AWS GovCloud (US) - service not supported: https://docs.aws.amazon.com/govcloud-us/latest/UserGuide/using-services.html
 	// AWS China - service not supported: https://www.amazonaws.cn/en/about-aws/regional-product-services/
-	switch testAccGetPartition() {
+	switch acctest.Partition() {
 	case endpoints.AwsPartitionID:
 		testAccLightsailDomainRegion = endpoints.UsEast1RegionID
 	}

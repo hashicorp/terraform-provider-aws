@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 // Route 53 Query Logging can only be enabled with CloudWatch Log Groups in specific regions,
@@ -32,7 +33,7 @@ var testAccProviderRoute53QueryLogConfigure sync.Once
 
 // testAccPreCheckRoute53QueryLog verifies AWS credentials and that Route 53 Query Logging is supported
 func testAccPreCheckRoute53QueryLog(t *testing.T) {
-	testAccPartitionHasServicePreCheck(route53.EndpointsID, t)
+	acctest.PreCheckPartitionHasService(route53.EndpointsID, t)
 
 	region := testAccGetRoute53QueryLogRegion()
 
@@ -66,7 +67,7 @@ func testAccPreCheckRoute53QueryLog(t *testing.T) {
 // Testing Route 53 Query Logging assumes no other provider configurations
 // are necessary and overwrites the "aws" provider configuration.
 func testAccRoute53QueryLogRegionProviderConfig() string {
-	return testAccRegionalProviderConfig(testAccGetRoute53QueryLogRegion())
+	return acctest.ConfigRegionalProvider(testAccGetRoute53QueryLogRegion())
 }
 
 // testAccGetRoute53QueryLogRegion returns the Route 53 Query Logging region for testing
@@ -78,7 +79,7 @@ func testAccGetRoute53QueryLogRegion() string {
 	// AWS Commercial: https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/query-logs.html
 	// AWS GovCloud (US) - only private DNS: https://docs.aws.amazon.com/govcloud-us/latest/UserGuide/govcloud-r53.html
 	// AWS China - not available yet: https://docs.amazonaws.cn/en_us/aws/latest/userguide/route53.html
-	switch testAccGetPartition() {
+	switch acctest.Partition() {
 	case endpoints.AwsPartitionID:
 		testAccRoute53QueryLogRegion = endpoints.UsEast1RegionID
 	}

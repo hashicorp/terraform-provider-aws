@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 // API Gateway Edge-Optimized Domain Name can only be created with ACM Certificates in specific regions.
@@ -35,7 +36,7 @@ var testAccProviderApigatewayEdgeDomainNameConfigure sync.Once
 
 // testAccPreCheckApigatewayEdgeDomainName verifies AWS credentials and that API Gateway Domain Name is supported
 func testAccPreCheckApigatewayEdgeDomainName(t *testing.T) {
-	testAccPartitionHasServicePreCheck(apigateway.EndpointsID, t)
+	acctest.PreCheckPartitionHasService(apigateway.EndpointsID, t)
 
 	region := testAccGetApigatewayEdgeDomainNameRegion()
 
@@ -69,7 +70,7 @@ func testAccPreCheckApigatewayEdgeDomainName(t *testing.T) {
 // Testing API Gateway Domain Name assumes no other provider configurations
 // are necessary and overwrites the "aws" provider configuration.
 func testAccApigatewayEdgeDomainNameRegionProviderConfig() string {
-	return testAccRegionalProviderConfig(testAccGetApigatewayEdgeDomainNameRegion())
+	return acctest.ConfigRegionalProvider(testAccGetApigatewayEdgeDomainNameRegion())
 }
 
 // testAccGetApigatewayEdgeDomainNameRegion returns the API Gateway Domain Name region for testing
@@ -81,7 +82,7 @@ func testAccGetApigatewayEdgeDomainNameRegion() string {
 	// AWS Commercial: https://docs.aws.amazon.com/apigateway/latest/developerguide/how-to-custom-domains.html
 	// AWS GovCloud (US) - edge custom domain names not supported: https://docs.aws.amazon.com/govcloud-us/latest/UserGuide/govcloud-abp.html
 	// AWS China - edge custom domain names not supported: https://docs.amazonaws.cn/en_us/aws/latest/userguide/api-gateway.html
-	switch testAccGetPartition() {
+	switch acctest.Partition() {
 	case endpoints.AwsPartitionID:
 		testAccApigatewayEdgeDomainNameRegion = endpoints.UsEast1RegionID
 	}
@@ -93,7 +94,7 @@ func testAccGetApigatewayEdgeDomainNameRegion() string {
 func testAccCheckResourceAttrRegionalARNApigatewayEdgeDomainName(resourceName, attributeName, arnService string, domain string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		attributeValue := arn.ARN{
-			Partition: testAccGetPartition(),
+			Partition: acctest.Partition(),
 			Region:    testAccGetApigatewayEdgeDomainNameRegion(),
 			Resource:  fmt.Sprintf("/domainnames/%s", domain),
 			Service:   arnService,
@@ -107,8 +108,8 @@ func testAccCheckResourceAttrRegionalARNApigatewayEdgeDomainName(resourceName, a
 func testAccCheckResourceAttrRegionalARNApigatewayRegionalDomainName(resourceName, attributeName, arnService string, domain string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		attributeValue := arn.ARN{
-			Partition: testAccGetPartition(),
-			Region:    testAccGetRegion(),
+			Partition: acctest.Partition(),
+			Region:    acctest.Region(),
 			Resource:  fmt.Sprintf("/domainnames/%s", domain),
 			Service:   arnService,
 		}.String()

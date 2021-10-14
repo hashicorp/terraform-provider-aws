@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/envvar"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 const (
@@ -115,7 +116,7 @@ func testSweepResourceOrchestratorContext(ctx context.Context, sweepResources []
 
 		g.Go(func() error {
 			err := tfresource.RetryConfigContext(ctx, delay, delayRand, minTimeout, pollInterval, timeout, func() *resource.RetryError {
-				err := testAccDeleteResource(sweepResource.resource, sweepResource.d, sweepResource.meta)
+				err := acctest.DeleteResource(sweepResource.resource, sweepResource.d, sweepResource.meta)
 
 				if err != nil {
 					if strings.Contains(err.Error(), "Throttling") {
@@ -130,7 +131,7 @@ func testSweepResourceOrchestratorContext(ctx context.Context, sweepResources []
 			})
 
 			if tfresource.TimedOut(err) {
-				err = testAccDeleteResource(sweepResource.resource, sweepResource.d, sweepResource.meta)
+				err = acctest.DeleteResource(sweepResource.resource, sweepResource.d, sweepResource.meta)
 			}
 
 			return err

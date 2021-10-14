@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 const (
@@ -23,21 +24,21 @@ const (
 // This Provider can be used in testing code for API calls without requiring
 // the use of saving and referencing specific ProviderFactories instances.
 //
-// testAccEC2ClassicPreCheck(t) must be called before using this provider instance.
+// PreCheckEC2Classic(t) must be called before using this provider instance.
 var testAccProviderEc2Classic *schema.Provider
 
 // testAccProviderEc2ClassicConfigure ensures the provider is only configured once
 var testAccProviderEc2ClassicConfigure sync.Once
 
-// testAccEC2ClassicPreCheck verifies AWS credentials and that EC2-Classic is supported
-func testAccEC2ClassicPreCheck(t *testing.T) {
+// PreCheckEC2Classic verifies AWS credentials and that EC2-Classic is supported
+func PreCheckEC2Classic(t *testing.T) {
 	// Since we are outside the scope of the Terraform configuration we must
 	// call Configure() to properly initialize the provider configuration.
 	testAccProviderEc2ClassicConfigure.Do(func() {
 		testAccProviderEc2Classic = Provider()
 
 		config := map[string]interface{}{
-			"region": testAccGetEc2ClassicRegion(),
+			"region": EC2ClassicRegion(),
 		}
 
 		err := testAccProviderEc2Classic.Configure(context.Background(), terraform.NewResourceConfigRaw(config))
@@ -55,36 +56,36 @@ func testAccEC2ClassicPreCheck(t *testing.T) {
 	}
 }
 
-// testAccEc2ClassicRegionProviderConfig is the Terraform provider configuration for EC2-Classic region testing
+// ConfigEC2ClassicRegionProvider is the Terraform provider configuration for EC2-Classic region testing
 //
 // Testing EC2-Classic assumes no other provider configurations are necessary
 // and overwrites the "aws" provider configuration.
-func testAccEc2ClassicRegionProviderConfig() string {
-	return testAccRegionalProviderConfig(testAccGetEc2ClassicRegion())
+func ConfigEC2ClassicRegionProvider() string {
+	return ConfigRegionalProvider(EC2ClassicRegion())
 }
 
-// testAccGetEc2ClassicRegion returns the EC2-Classic region for testing
-func testAccGetEc2ClassicRegion() string {
+// EC2ClassicRegion returns the EC2-Classic region for testing
+func EC2ClassicRegion() string {
 	v := os.Getenv(Ec2ClassicRegionEnvVar)
 
 	if v != "" {
 		return v
 	}
 
-	if testAccGetPartition() == endpoints.AwsPartitionID {
+	if Partition() == endpoints.AwsPartitionID {
 		return endpoints.UsEast1RegionID
 	}
 
-	return testAccGetRegion()
+	return Region()
 }
 
-// testAccCheckResourceAttrRegionalARNEc2Classic ensures the Terraform state exactly matches a formatted ARN with EC2-Classic region
-func testAccCheckResourceAttrRegionalARNEc2Classic(resourceName, attributeName, arnService, arnResource string) resource.TestCheckFunc {
+// CheckResourceAttrRegionalARNEC2Classic ensures the Terraform state exactly matches a formatted ARN with EC2-Classic region
+func CheckResourceAttrRegionalARNEC2Classic(resourceName, attributeName, arnService, arnResource string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		attributeValue := arn.ARN{
-			AccountID: testAccGetAccountID(),
-			Partition: testAccGetPartition(),
-			Region:    testAccGetEc2ClassicRegion(),
+			AccountID: AccountID(),
+			Partition: Partition(),
+			Region:    EC2ClassicRegion(),
 			Resource:  arnResource,
 			Service:   arnService,
 		}.String()
