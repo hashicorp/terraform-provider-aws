@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/kinesis/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSKinesisStreamConsumer_basic(t *testing.T) {
@@ -59,7 +60,7 @@ func TestAccAWSKinesisStreamConsumer_disappears(t *testing.T) {
 				Config: testAccAWSKinesisStreamConsumerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccAWSKinesisStreamConsumerExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsKinesisStreamConsumer(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceStreamConsumer(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

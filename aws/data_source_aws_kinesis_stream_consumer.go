@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsKinesisStreamConsumer() *schema.Resource {
+func DataSourceStreamConsumer() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsKinesisStreamConsumerRead,
+		Read: dataSourceStreamConsumerRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -47,7 +47,7 @@ func dataSourceAwsKinesisStreamConsumer() *schema.Resource {
 	}
 }
 
-func dataSourceAwsKinesisStreamConsumerRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceStreamConsumerRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KinesisConn
 
 	streamArn := d.Get("stream_arn").(string)
