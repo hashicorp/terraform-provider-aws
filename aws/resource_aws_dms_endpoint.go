@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceEndpoint() *schema.Resource {
@@ -40,7 +41,7 @@ func ResourceEndpoint() *schema.Resource {
 				Type:         schema.TypeString,
 				Computed:     true,
 				Optional:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"database_name": {
 				Type:     schema.TypeString,
@@ -50,7 +51,7 @@ func ResourceEndpoint() *schema.Resource {
 				Type:             schema.TypeList,
 				Optional:         true,
 				MaxItems:         1,
-				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"endpoint_uri": {
@@ -81,7 +82,7 @@ func ResourceEndpoint() *schema.Resource {
 						"service_access_role_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 							// API returns this error with ModifyEndpoint:
 							// InvalidParameterCombinationException: Elasticsearch endpoint cant be modified.
 							ForceNew: true,
@@ -97,7 +98,7 @@ func ResourceEndpoint() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateDmsEndpointId,
+				ValidateFunc: validEndpointID,
 			},
 			"endpoint_type": {
 				Type:         schema.TypeString,
@@ -119,7 +120,7 @@ func ResourceEndpoint() *schema.Resource {
 				Type:             schema.TypeList,
 				Optional:         true,
 				MaxItems:         1,
-				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"broker": {
@@ -189,17 +190,17 @@ func ResourceEndpoint() *schema.Resource {
 						"ssl_ca_certificate_arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 						"ssl_client_certificate_arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 						"ssl_client_key_arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 						"ssl_client_key_password": {
 							Type:      schema.TypeString,
@@ -218,7 +219,7 @@ func ResourceEndpoint() *schema.Resource {
 				Type:             schema.TypeList,
 				Optional:         true,
 				MaxItems:         1,
-				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"message_format": {
@@ -230,12 +231,12 @@ func ResourceEndpoint() *schema.Resource {
 						"service_access_role_arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 						"stream_arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 					},
 				},
@@ -245,13 +246,13 @@ func ResourceEndpoint() *schema.Resource {
 				Computed:     true,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"mongodb_settings": {
 				Type:             schema.TypeList,
 				Optional:         true,
 				MaxItems:         1,
-				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"auth_type": {
@@ -303,14 +304,14 @@ func ResourceEndpoint() *schema.Resource {
 				Type:             schema.TypeList,
 				Optional:         true,
 				MaxItems:         1,
-				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"service_access_role_arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Default:      "",
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 						"external_table_definition": {
 							Type:     schema.TypeString,

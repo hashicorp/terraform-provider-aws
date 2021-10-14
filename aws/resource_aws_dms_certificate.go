@@ -14,6 +14,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceCertificate() *schema.Resource {
@@ -206,7 +207,7 @@ func resourceAwsDmsCertificateSetState(d *schema.ResourceData, cert *dms.Certifi
 		d.Set("certificate_pem", cert.CertificatePem)
 	}
 	if cert.CertificateWallet != nil && len(cert.CertificateWallet) != 0 {
-		d.Set("certificate_wallet", base64Encode(cert.CertificateWallet))
+		d.Set("certificate_wallet", verify.Base64Encode(cert.CertificateWallet))
 	}
 
 	return nil
