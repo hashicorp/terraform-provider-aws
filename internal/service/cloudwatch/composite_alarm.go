@@ -155,7 +155,7 @@ func resourceCompositeAlarmRead(ctx context.Context, d *schema.ResourceData, met
 		return diag.Errorf("error setting ok_actions: %s", err)
 	}
 
-	tags, err := tftags.CloudwatchListTags(conn, aws.StringValue(alarm.AlarmArn))
+	tags, err := ListTags(conn, aws.StringValue(alarm.AlarmArn))
 	if err != nil {
 		return diag.Errorf("error listing tags of alarm: %s", err)
 	}
@@ -189,7 +189,7 @@ func resourceCompositeAlarmUpdate(ctx context.Context, d *schema.ResourceData, m
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.CloudwatchUpdateTags(conn, arn, o, n); err != nil {
+		if err := UpdateTags(conn, arn, o, n); err != nil {
 			return diag.Errorf("error updating tags: %s", err)
 		}
 	}
@@ -249,7 +249,7 @@ func expandAwsCloudWatchPutCompositeAlarmInput(d *schema.ResourceData, meta inte
 	}
 
 	if len(tags) > 0 {
-		out.Tags = tags.IgnoreAws().CloudwatchTags()
+		out.Tags = Tags(tags.IgnoreAws())
 	}
 
 	return out

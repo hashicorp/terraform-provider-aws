@@ -360,7 +360,7 @@ func resourceMetricAlarmRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("treat_missing_data", resp.TreatMissingData)
 	d.Set("evaluate_low_sample_count_percentiles", resp.EvaluateLowSampleCountPercentile)
 
-	tags, err := tftags.CloudwatchListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for CloudWatch Metric Alarm (%s): %w", arn, err)
@@ -395,7 +395,7 @@ func resourceMetricAlarmUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.CloudwatchUpdateTags(conn, arn, o, n); err != nil {
+		if err := UpdateTags(conn, arn, o, n); err != nil {
 			return fmt.Errorf("error updating CloudWatch Metric Alarm (%s) tags: %w", arn, err)
 		}
 	}
@@ -431,7 +431,7 @@ func getAwsCloudWatchPutMetricAlarmInput(d *schema.ResourceData, meta interface{
 		ComparisonOperator: aws.String(d.Get("comparison_operator").(string)),
 		EvaluationPeriods:  aws.Int64(int64(d.Get("evaluation_periods").(int))),
 		TreatMissingData:   aws.String(d.Get("treat_missing_data").(string)),
-		Tags:               tags.IgnoreAws().CloudwatchTags(),
+		Tags:               Tags(tags.IgnoreAws()),
 	}
 
 	if v := d.Get("actions_enabled"); v != nil {
