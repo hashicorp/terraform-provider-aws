@@ -19,70 +19,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_appconfig_deployment_strategy", &resource.Sweeper{
-		Name: "aws_appconfig_deployment_strategy",
-		F:    sweepDeploymentStrategies,
-	})
-}
 
-func sweepDeploymentStrategies(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
 
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
 
-	conn := client.(*conns.AWSClient).AppConfigConn
-	sweepResources := make([]*sweep.SweepResource, 0)
-	var errs *multierror.Error
-
-	input := &appconfig.ListDeploymentStrategiesInput{}
-
-	err = conn.ListDeploymentStrategiesPages(input, func(page *appconfig.ListDeploymentStrategiesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, item := range page.Items {
-			if item == nil {
-				continue
-			}
-
-			id := aws.StringValue(item.Id)
-
-			// Deleting AppConfig Predefined Strategies is not supported; returns BadRequestException
-			if regexp.MustCompile(`^AppConfig\.[A-Za-z0-9]{9,40}$`).MatchString(id) {
-				log.Printf("[DEBUG] Skipping AppConfig Deployment Strategy (%s): predefined strategy cannot be deleted", id)
-				continue
-			}
-
-			log.Printf("[INFO] Deleting AppConfig Deployment Strategy (%s)", id)
-			r := tfappconfig.ResourceDeploymentStrategy()
-			d := r.Data(nil)
-			d.SetId(id)
-
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error listing AppConfig Deployment Strategies: %w", err))
-	}
-
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping AppConfig Deployment Strategies for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping AppConfig Deployment Strategies sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
-}
 
 func TestAccAppConfigDeploymentStrategy_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
