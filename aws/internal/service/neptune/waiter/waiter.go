@@ -19,12 +19,12 @@ const (
 	DBClusterEndpointDeletedTimeout = 10 * time.Minute
 )
 
-// EventSubscriptionDeleted waits for a EventSubscription to return Deleted
-func EventSubscriptionDeleted(conn *neptune.Neptune, subscriptionName string) (*neptune.EventSubscription, error) {
+// WaitEventSubscriptionDeleted waits for a EventSubscription to return Deleted
+func WaitEventSubscriptionDeleted(conn *neptune.Neptune, subscriptionName string) (*neptune.EventSubscription, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"deleting"},
 		Target:  []string{EventSubscriptionStatusNotFound},
-		Refresh: EventSubscriptionStatus(conn, subscriptionName),
+		Refresh: StatusEventSubscription(conn, subscriptionName),
 		Timeout: EventSubscriptionDeletedTimeout,
 	}
 
@@ -37,8 +37,8 @@ func EventSubscriptionDeleted(conn *neptune.Neptune, subscriptionName string) (*
 	return nil, err
 }
 
-// DBClusterDeleted waits for a Cluster to return Deleted
-func DBClusterDeleted(conn *neptune.Neptune, id string, timeout time.Duration) (*neptune.DBCluster, error) {
+// WaitDBClusterDeleted waits for a Cluster to return Deleted
+func WaitDBClusterDeleted(conn *neptune.Neptune, id string, timeout time.Duration) (*neptune.DBCluster, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			"available",
@@ -47,7 +47,7 @@ func DBClusterDeleted(conn *neptune.Neptune, id string, timeout time.Duration) (
 			"modifying",
 		},
 		Target:     []string{ClusterStatusNotFound},
-		Refresh:    ClusterStatus(conn, id),
+		Refresh:    StatusCluster(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -62,8 +62,8 @@ func DBClusterDeleted(conn *neptune.Neptune, id string, timeout time.Duration) (
 	return nil, err
 }
 
-// DBClusterAvailable waits for a Cluster to return Available
-func DBClusterAvailable(conn *neptune.Neptune, id string, timeout time.Duration) (*neptune.DBCluster, error) {
+// WaitDBClusterAvailable waits for a Cluster to return Available
+func WaitDBClusterAvailable(conn *neptune.Neptune, id string, timeout time.Duration) (*neptune.DBCluster, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			"creating",
@@ -74,7 +74,7 @@ func DBClusterAvailable(conn *neptune.Neptune, id string, timeout time.Duration)
 			"configuring-iam-database-auth",
 		},
 		Target:     []string{"available"},
-		Refresh:    ClusterStatus(conn, id),
+		Refresh:    StatusCluster(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -89,12 +89,12 @@ func DBClusterAvailable(conn *neptune.Neptune, id string, timeout time.Duration)
 	return nil, err
 }
 
-// DBClusterEndpointAvailable waits for a DBClusterEndpoint to return Available
-func DBClusterEndpointAvailable(conn *neptune.Neptune, id string) (*neptune.DBClusterEndpoint, error) {
+// WaitDBClusterEndpointAvailable waits for a DBClusterEndpoint to return Available
+func WaitDBClusterEndpointAvailable(conn *neptune.Neptune, id string) (*neptune.DBClusterEndpoint, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"creating", "modifying"},
 		Target:  []string{"available"},
-		Refresh: DBClusterEndpointStatus(conn, id),
+		Refresh: StatusDBClusterEndpoint(conn, id),
 		Timeout: DBClusterEndpointAvailableTimeout,
 	}
 
@@ -107,12 +107,12 @@ func DBClusterEndpointAvailable(conn *neptune.Neptune, id string) (*neptune.DBCl
 	return nil, err
 }
 
-// DBClusterEndpointDeleted waits for a DBClusterEndpoint to return Deleted
-func DBClusterEndpointDeleted(conn *neptune.Neptune, id string) (*neptune.DBClusterEndpoint, error) {
+// WaitDBClusterEndpointDeleted waits for a DBClusterEndpoint to return Deleted
+func WaitDBClusterEndpointDeleted(conn *neptune.Neptune, id string) (*neptune.DBClusterEndpoint, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"deleting"},
 		Target:  []string{},
-		Refresh: DBClusterEndpointStatus(conn, id),
+		Refresh: StatusDBClusterEndpoint(conn, id),
 		Timeout: DBClusterEndpointDeletedTimeout,
 	}
 

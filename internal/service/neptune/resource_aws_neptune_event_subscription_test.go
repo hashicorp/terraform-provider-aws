@@ -19,6 +19,22 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfneptune "github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
+	tfneptune "github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
+	tfneptune "github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
+	tfneptune "github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
+	tfneptune "github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
+	tfneptune "github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
+	tfneptune "github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
+	tfneptune "github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
+	tfneptune "github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
+	tfneptune "github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
+	tfneptune "github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
+	tfneptune "github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
+	tfneptune "github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
+	tfneptune "github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
+	tfneptune "github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
+	tfneptune "github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
 )
 
 func init() {
@@ -58,7 +74,7 @@ func testSweepNeptuneEventSubscriptions(region string) error {
 				continue
 			}
 
-			_, err = waiter.EventSubscriptionDeleted(conn, name)
+			_, err = tfneptune.WaitEventSubscriptionDeleted(conn, name)
 			if tfawserr.ErrMessageContains(err, neptune.ErrCodeSubscriptionNotFoundFault, "") {
 				continue
 			}

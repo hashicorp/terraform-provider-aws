@@ -18,6 +18,23 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	tfneptune "github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
+	tfneptune "github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
+	tfneptune "github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
+	tfneptune "github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
+	tfneptune "github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
+	tfneptune "github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
+	tfneptune "github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
+	tfneptune "github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
+	tfneptune "github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
+	tfneptune "github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
+	tfneptune "github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
+	tfneptune "github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
+	tfneptune "github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
+	tfneptune "github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
+	tfneptune "github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
+	tfneptune "github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
 )
 
 const (
@@ -388,7 +405,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] Neptune Cluster create options: %s", createDbClusterInput)
 	}
 
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		if restoreDBClusterFromSnapshot {
 			_, err = conn.RestoreDBClusterFromSnapshot(restoreDBClusterFromSnapshotInput)
@@ -419,7 +436,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[INFO] Neptune Cluster ID: %s", d.Id())
 	log.Println("[INFO] Waiting for Neptune Cluster to be available")
 
-	_, err = waiter.DBClusterAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
+	_, err = tfneptune.WaitDBClusterAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 	if err != nil {
 		return fmt.Errorf("error waiting for Neptune Cluster (%q) to be Available: %w", d.Id(), err)
 	}
@@ -650,7 +667,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("Failed to modify Neptune Cluster (%s): %w", d.Id(), err)
 		}
 
-		_, err = waiter.DBClusterAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+		_, err = tfneptune.WaitDBClusterAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 		if err != nil {
 			return fmt.Errorf("error waiting for Neptune Cluster (%q) to be Available: %w", d.Id(), err)
 		}
@@ -738,7 +755,7 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Neptune Cluster cannot be deleted: %w", err)
 	}
 
-	_, err = waiter.DBClusterDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
+	_, err = tfneptune.WaitDBClusterDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
 	if err != nil {
 		if tfawserr.ErrMessageContains(err, neptune.ErrCodeDBClusterNotFoundFault, "") {
 			return nil
