@@ -1,4 +1,4 @@
-package aws
+package transfer_test
 
 import (
 	"fmt"
