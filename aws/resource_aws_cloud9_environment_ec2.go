@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsCloud9EnvironmentEc2() *schema.Resource {
+func ResourceEnvironmentEC2() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCloud9EnvironmentEc2Create,
-		Read:   resourceAwsCloud9EnvironmentEc2Read,
-		Update: resourceAwsCloud9EnvironmentEc2Update,
-		Delete: resourceAwsCloud9EnvironmentEc2Delete,
+		Create: resourceEnvironmentEC2Create,
+		Read:   resourceEnvironmentEC2Read,
+		Update: resourceEnvironmentEC2Update,
+		Delete: resourceEnvironmentEC2Delete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -72,7 +72,7 @@ func resourceAwsCloud9EnvironmentEc2() *schema.Resource {
 	}
 }
 
-func resourceAwsCloud9EnvironmentEc2Create(d *schema.ResourceData, meta interface{}) error {
+func resourceEnvironmentEC2Create(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Cloud9Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -150,10 +150,10 @@ func resourceAwsCloud9EnvironmentEc2Create(d *schema.ResourceData, meta interfac
 		return err
 	}
 
-	return resourceAwsCloud9EnvironmentEc2Read(d, meta)
+	return resourceEnvironmentEC2Read(d, meta)
 }
 
-func resourceAwsCloud9EnvironmentEc2Read(d *schema.ResourceData, meta interface{}) error {
+func resourceEnvironmentEC2Read(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Cloud9Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -207,7 +207,7 @@ func resourceAwsCloud9EnvironmentEc2Read(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func resourceAwsCloud9EnvironmentEc2Update(d *schema.ResourceData, meta interface{}) error {
+func resourceEnvironmentEC2Update(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Cloud9Conn
 
 	input := cloud9.UpdateEnvironmentInput{
@@ -234,10 +234,10 @@ func resourceAwsCloud9EnvironmentEc2Update(d *schema.ResourceData, meta interfac
 		}
 	}
 
-	return resourceAwsCloud9EnvironmentEc2Read(d, meta)
+	return resourceEnvironmentEC2Read(d, meta)
 }
 
-func resourceAwsCloud9EnvironmentEc2Delete(d *schema.ResourceData, meta interface{}) error {
+func resourceEnvironmentEC2Delete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Cloud9Conn
 
 	_, err := conn.DeleteEnvironment(&cloud9.DeleteEnvironmentInput{
