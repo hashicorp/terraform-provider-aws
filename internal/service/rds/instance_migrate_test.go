@@ -2,9 +2,10 @@ package rds_test
 
 import (
 	"context"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 	"reflect"
 	"testing"
+
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 )
 
 func TestResourceAwsDbInstanceStateUpgradeV0(t *testing.T) {
