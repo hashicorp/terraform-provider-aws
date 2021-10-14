@@ -162,7 +162,7 @@ func testAccCheckSesTemplateDestroy(s *terraform.State) error {
 
 			gto, err := conn.GetTemplate(&input)
 			if err != nil {
-				if isAWSErr(err, ses.ErrCodeTemplateDoesNotExistException, "") {
+				if tfawserr.ErrMessageContains(err, ses.ErrCodeTemplateDoesNotExistException, "") {
 					return nil
 				}
 				return resource.NonRetryableError(err)

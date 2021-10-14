@@ -217,7 +217,7 @@ func resourceAwsSesEventDestinationRead(d *schema.ResourceData, meta interface{}
 	}
 
 	output, err := conn.DescribeConfigurationSet(input)
-	if isAWSErr(err, ses.ErrCodeConfigurationSetDoesNotExistException, "") {
+	if tfawserr.ErrMessageContains(err, ses.ErrCodeConfigurationSetDoesNotExistException, "") {
 		log.Printf("[WARN] SES Configuration Set (%s) not found, removing from state", configurationSetName)
 		d.SetId("")
 		return nil

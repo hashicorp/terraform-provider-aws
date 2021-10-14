@@ -58,7 +58,7 @@ func resourceAwsSesActiveReceiptRuleSetRead(d *schema.ResourceData, meta interfa
 
 	response, err := conn.DescribeActiveReceiptRuleSet(describeOpts)
 	if err != nil {
-		if isAWSErr(err, ses.ErrCodeRuleSetDoesNotExistException, "") {
+		if tfawserr.ErrMessageContains(err, ses.ErrCodeRuleSetDoesNotExistException, "") {
 			log.Printf("[WARN] SES Receipt Rule Set (%s) belonging to SES Active Receipt Rule Set not found, removing from state", d.Id())
 			d.SetId("")
 			return nil

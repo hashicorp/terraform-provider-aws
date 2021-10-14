@@ -60,7 +60,7 @@ func testSweepSesReceiptRuleSets(region string) error {
 			_, err := conn.DeleteReceiptRuleSet(&ses.DeleteReceiptRuleSetInput{
 				RuleSetName: aws.String(name),
 			})
-			if isAWSErr(err, ses.ErrCodeRuleSetDoesNotExistException, "") {
+			if tfawserr.ErrMessageContains(err, ses.ErrCodeRuleSetDoesNotExistException, "") {
 				continue
 			}
 			if err != nil {
@@ -143,7 +143,7 @@ func testAccCheckSESReceiptRuleSetDestroy(s *terraform.State) error {
 
 		_, err := conn.DescribeReceiptRuleSet(params)
 
-		if isAWSErr(err, ses.ErrCodeRuleSetDoesNotExistException, "") {
+		if tfawserr.ErrMessageContains(err, ses.ErrCodeRuleSetDoesNotExistException, "") {
 			continue
 		}
 

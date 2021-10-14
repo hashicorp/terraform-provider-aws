@@ -438,7 +438,7 @@ func testAccPreCheckSESReceiptRule(t *testing.T) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
-	if isAWSErr(err, "RuleSetDoesNotExist", "") {
+	if tfawserr.ErrMessageContains(err, "RuleSetDoesNotExist", "") {
 		return
 	}
 

@@ -94,7 +94,7 @@ func resourceAwsSesTemplateRead(d *schema.ResourceData, meta interface{}) error 
 	log.Printf("[DEBUG] Reading SES template: %#v", input)
 	gto, err := conn.GetTemplate(&input)
 	if err != nil {
-		if isAWSErr(err, ses.ErrCodeTemplateDoesNotExistException, "") {
+		if tfawserr.ErrMessageContains(err, ses.ErrCodeTemplateDoesNotExistException, "") {
 			log.Printf("[WARN] SES template %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil

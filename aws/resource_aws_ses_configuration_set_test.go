@@ -47,7 +47,7 @@ func testSweepSesConfigurationSets(region string) error {
 			_, err := conn.DeleteConfigurationSet(&ses.DeleteConfigurationSetInput{
 				ConfigurationSetName: aws.String(name),
 			})
-			if isAWSErr(err, ses.ErrCodeConfigurationSetDoesNotExistException, "") {
+			if tfawserr.ErrMessageContains(err, ses.ErrCodeConfigurationSetDoesNotExistException, "") {
 				continue
 			}
 			if err != nil {
@@ -422,7 +422,7 @@ func testAccCheckSESConfigurationSetDestroy(s *terraform.State) error {
 		})
 
 		if err != nil {
-			if isAWSErr(err, ses.ErrCodeConfigurationSetDoesNotExistException, "") {
+			if tfawserr.ErrMessageContains(err, ses.ErrCodeConfigurationSetDoesNotExistException, "") {
 				return nil
 			}
 			return err
