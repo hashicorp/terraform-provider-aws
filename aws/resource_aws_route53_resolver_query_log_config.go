@@ -100,7 +100,7 @@ func resourceAwsRoute53ResolverQueryLogConfigRead(d *schema.ResourceData, meta i
 
 	queryLogConfig, err := finder.ResolverQueryLogConfigByID(conn, d.Id())
 
-	if isAWSErr(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] Route53 Resolver Query Log Config (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -163,7 +163,7 @@ func resourceAwsRoute53ResolverQueryLogConfigDelete(d *schema.ResourceData, meta
 		ResolverQueryLogConfigId: aws.String(d.Id()),
 	})
 
-	if isAWSErr(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
 		return nil
 	}
 

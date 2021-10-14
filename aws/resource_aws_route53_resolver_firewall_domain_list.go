@@ -86,7 +86,7 @@ func resourceAwsRoute53ResolverFirewallDomainListRead(d *schema.ResourceData, me
 
 	firewallDomainList, err := finder.FirewallDomainListByID(conn, d.Id())
 
-	if isAWSErr(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] Route53 Resolver DNS Firewall domain list (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -198,7 +198,7 @@ func resourceAwsRoute53ResolverFirewallDomainListDelete(d *schema.ResourceData, 
 		FirewallDomainListId: aws.String(d.Id()),
 	})
 
-	if isAWSErr(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
 		return nil
 	}
 

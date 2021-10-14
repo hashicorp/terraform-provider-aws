@@ -50,7 +50,7 @@ func testSweepRoute53ResolverRules(region string) error {
 			_, err := conn.DeleteResolverRule(&route53resolver.DeleteResolverRuleInput{
 				ResolverRuleId: aws.String(id),
 			})
-			if isAWSErr(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
 				continue
 			}
 			if err != nil {
@@ -416,7 +416,7 @@ func testAccCheckRoute53ResolverRuleDestroy(s *terraform.State) error {
 			ResolverRuleId: aws.String(rs.Primary.ID),
 		})
 		// Verify the error is what we want
-		if isAWSErr(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
 			continue
 		}
 		if err != nil {
