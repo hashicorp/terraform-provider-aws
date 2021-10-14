@@ -9,12 +9,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsMediaStoreContainerPolicy() *schema.Resource {
+func ResourceContainerPolicy() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsMediaStoreContainerPolicyPut,
-		Read:   resourceAwsMediaStoreContainerPolicyRead,
+		Read:   resourceContainerPolicyRead,
 		Update: resourceAwsMediaStoreContainerPolicyPut,
-		Delete: resourceAwsMediaStoreContainerPolicyDelete,
+		Delete: resourceContainerPolicyDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -49,10 +49,10 @@ func resourceAwsMediaStoreContainerPolicyPut(d *schema.ResourceData, meta interf
 	}
 
 	d.SetId(d.Get("container_name").(string))
-	return resourceAwsMediaStoreContainerPolicyRead(d, meta)
+	return resourceContainerPolicyRead(d, meta)
 }
 
-func resourceAwsMediaStoreContainerPolicyRead(d *schema.ResourceData, meta interface{}) error {
+func resourceContainerPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).MediaStoreConn
 
 	input := &mediastore.GetContainerPolicyInput{
@@ -79,7 +79,7 @@ func resourceAwsMediaStoreContainerPolicyRead(d *schema.ResourceData, meta inter
 	return nil
 }
 
-func resourceAwsMediaStoreContainerPolicyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceContainerPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).MediaStoreConn
 
 	input := &mediastore.DeleteContainerPolicyInput{
