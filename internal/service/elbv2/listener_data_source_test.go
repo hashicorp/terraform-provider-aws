@@ -21,7 +21,7 @@ func TestAccDataSourceAWSLBListener_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAWSLBListenerConfigBasic(rName),
+				Config: testAcclbListenerBasicDataSourceConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "load_balancer_arn"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "arn"),
@@ -56,7 +56,7 @@ func TestAccDataSourceAWSLBListener_BackwardsCompatibility(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAWSLBListenerConfigBackwardsCompatibility(rName),
+				Config: testAcclbListenerBackwardsCompatibilityDataSourceConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "load_balancer_arn"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "arn"),
@@ -91,7 +91,7 @@ func TestAccDataSourceAWSLBListener_https(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAWSLBListenerConfigHTTPS(rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)),
+				Config: testAcclbListenerHTTPSDataSourceConfig(rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "load_balancer_arn"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "arn"),
@@ -128,7 +128,7 @@ func TestAccDataSourceAWSLBListener_DefaultAction_Forward(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAWSLBListenerConfigDefaultActionForward(rName),
+				Config: testAcclbListenerDefaultActionForwardDataSourceConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "default_action.#", resourceName, "default_action.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "default_action.0.forward.#", resourceName, "default_action.0.forward.#"),
@@ -138,8 +138,8 @@ func TestAccDataSourceAWSLBListener_DefaultAction_Forward(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAWSLBListenerConfigBasic(rName string) string {
-	return acctest.ConfigCompose(testAccAWSLBListenerConfigBase(rName), fmt.Sprintf(`
+func testAcclbListenerBasicDataSourceConfig(rName string) string {
+	return acctest.ConfigCompose(testAccListenerBaseConfig(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
   load_balancer_arn = aws_lb.test.id
   protocol          = "HTTP"
@@ -194,8 +194,8 @@ data "aws_lb_listener" "from_lb_and_port" {
 `, rName))
 }
 
-func testAccDataSourceAWSLBListenerConfigBackwardsCompatibility(rName string) string {
-	return acctest.ConfigCompose(testAccAWSLBListenerConfigBase(rName), fmt.Sprintf(`
+func testAcclbListenerBackwardsCompatibilityDataSourceConfig(rName string) string {
+	return acctest.ConfigCompose(testAccListenerBaseConfig(rName), fmt.Sprintf(`
 resource "aws_alb_listener" "test" {
   load_balancer_arn = aws_alb.test.id
   protocol          = "HTTP"
@@ -250,8 +250,8 @@ data "aws_alb_listener" "from_lb_and_port" {
 `, rName))
 }
 
-func testAccDataSourceAWSLBListenerConfigHTTPS(rName, certificate, key string) string {
-	return acctest.ConfigCompose(testAccAWSLBListenerConfigBase(rName), fmt.Sprintf(`
+func testAcclbListenerHTTPSDataSourceConfig(rName, certificate, key string) string {
+	return acctest.ConfigCompose(testAccListenerBaseConfig(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
   load_balancer_arn = aws_lb.test.id
   protocol          = "HTTPS"
@@ -325,7 +325,7 @@ data "aws_lb_listener" "from_lb_and_port" {
 `, rName, certificate, key))
 }
 
-func testAccDataSourceAWSLBListenerConfigDefaultActionForward(rName string) string {
+func testAcclbListenerDefaultActionForwardDataSourceConfig(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`

@@ -26,12 +26,12 @@ func TestAccAWSLBListener_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSLBListenerDestroy,
+		CheckDestroy: testAccCheckListenerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLBListenerConfig_basic(rName),
+				Config: testAccListenerConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSLBListenerExists(resourceName, &conf),
+					testAccCheckListenerExists(resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", "arn"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile("listener/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTP"),
@@ -63,12 +63,12 @@ func TestAccAWSLBListener_tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSLBListenerDestroy,
+		CheckDestroy: testAccCheckListenerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLBListenerTagsConfig1(rName, "key1", "value1"),
+				Config: testAccListenerTags1Config(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSLBListenerExists(resourceName, &conf),
+					testAccCheckListenerExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -79,18 +79,18 @@ func TestAccAWSLBListener_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSLBListenerTagsConfig2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccListenerTags2Config(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSLBListenerExists(resourceName, &conf),
+					testAccCheckListenerExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccAWSLBListenerTagsConfig1(rName, "key2", "value2"),
+				Config: testAccListenerTags1Config(rName, "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSLBListenerExists(resourceName, &conf),
+					testAccCheckListenerExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -109,12 +109,12 @@ func TestAccAWSLBListener_forwardWeighted(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSLBListenerDestroy,
+		CheckDestroy: testAccCheckListenerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLBListenerConfig_forwardWeighted(rName, rName2),
+				Config: testAccListenerConfig_forwardWeighted(rName, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSLBListenerExists(resourceName, &conf),
+					testAccCheckListenerExists(resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", "arn"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile("listener/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTP"),
@@ -136,9 +136,9 @@ func TestAccAWSLBListener_forwardWeighted(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSLBListenerConfig_changeForwardWeightedStickiness(rName, rName2),
+				Config: testAccListenerConfig_changeForwardWeightedStickiness(rName, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSLBListenerExists(resourceName, &conf),
+					testAccCheckListenerExists(resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", "arn"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile("listener/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTP"),
@@ -160,9 +160,9 @@ func TestAccAWSLBListener_forwardWeighted(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSLBListenerConfig_changeForwardWeightedToBasic(rName, rName2),
+				Config: testAccListenerConfig_changeForwardWeightedToBasic(rName, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSLBListenerExists(resourceName, &conf),
+					testAccCheckListenerExists(resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", "arn"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile("listener/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTP"),
@@ -188,12 +188,12 @@ func TestAccAWSLBListener_basicUdp(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSLBListenerDestroy,
+		CheckDestroy: testAccCheckListenerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLBListenerConfig_basicUdp(rName),
+				Config: testAccListenerConfig_basicUdp(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSLBListenerExists(resourceName, &conf),
+					testAccCheckListenerExists(resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", "arn"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile("listener/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "UDP"),
@@ -224,12 +224,12 @@ func TestAccAWSLBListener_BackwardsCompatibility(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSLBListenerDestroy,
+		CheckDestroy: testAccCheckListenerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLBListenerConfigBackwardsCompatibility(rName),
+				Config: testAccListenerBackwardsCompatibilityConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSLBListenerExists(resourceName, &conf),
+					testAccCheckListenerExists(resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_alb.test", "arn"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile("listener/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTP"),
@@ -262,12 +262,12 @@ func TestAccAWSLBListener_https(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSLBListenerDestroy,
+		CheckDestroy: testAccCheckListenerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLBListenerConfig_https(rName, key, certificate),
+				Config: testAccListenerConfig_https(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSLBListenerExists(resourceName, &conf),
+					testAccCheckListenerExists(resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", "arn"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile("listener/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTPS"),
@@ -301,12 +301,12 @@ func TestAccAWSLBListener_LoadBalancerArn_GatewayLoadBalancer(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   testAccErrorCheckSkipELBV2(t),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSLBListenerDestroy,
+		CheckDestroy: testAccCheckListenerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLBListenerConfig_LoadBalancerArn_GatewayLoadBalancer(rName),
+				Config: testAccListenerConfig_LoadBalancerARN_GatewayLoadBalancer(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSLBListenerExists(resourceName, &conf),
+					testAccCheckListenerExists(resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", lbResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "protocol", ""),
 					resource.TestCheckResourceAttr(resourceName, "port", "0"),
@@ -327,12 +327,12 @@ func TestAccAWSLBListener_Protocol_Tls(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSLBListenerDestroy,
+		CheckDestroy: testAccCheckListenerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLBListenerConfig_Protocol_Tls(rName, key, certificate),
+				Config: testAccListenerConfig_Protocol_TLS(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSLBListenerExists(resourceName, &listener1),
+					testAccCheckListenerExists(resourceName, &listener1),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "TLS"),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", "aws_acm_certificate.test", "arn"),
 				),
@@ -355,12 +355,12 @@ func TestAccAWSLBListener_redirect(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSLBListenerDestroy,
+		CheckDestroy: testAccCheckListenerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLBListenerConfig_redirect(rName),
+				Config: testAccListenerConfig_redirect(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSLBListenerExists(resourceName, &conf),
+					testAccCheckListenerExists(resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", "arn"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile("listener/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTP"),
@@ -397,12 +397,12 @@ func TestAccAWSLBListener_fixedResponse(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSLBListenerDestroy,
+		CheckDestroy: testAccCheckListenerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLBListenerConfig_fixedResponse(rName),
+				Config: testAccListenerConfig_fixedResponse(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSLBListenerExists(resourceName, &conf),
+					testAccCheckListenerExists(resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", "arn"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile("listener/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTP"),
@@ -438,12 +438,12 @@ func TestAccAWSLBListener_cognito(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   testAccErrorCheckSkipELBV2(t),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSLBListenerDestroy,
+		CheckDestroy: testAccCheckListenerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLBListenerConfig_cognito(rName, key, certificate),
+				Config: testAccListenerConfig_cognito(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSLBListenerExists(resourceName, &conf),
+					testAccCheckListenerExists(resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", "arn"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile("listener/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTPS"),
@@ -482,12 +482,12 @@ func TestAccAWSLBListener_oidc(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSLBListenerDestroy,
+		CheckDestroy: testAccCheckListenerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLBListenerConfig_oidc(rName, key, certificate),
+				Config: testAccListenerConfig_oidc(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSLBListenerExists(resourceName, &conf),
+					testAccCheckListenerExists(resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", "arn"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile("listener/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTPS"),
@@ -530,12 +530,12 @@ func TestAccAWSLBListener_DefaultAction_Order(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSLBListenerDestroy,
+		CheckDestroy: testAccCheckListenerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLBListenerConfig_DefaultAction_Order(rName, key, certificate),
+				Config: testAccListenerConfig_DefaultAction_Order(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSLBListenerExists(resourceName, &listener),
+					testAccCheckListenerExists(resourceName, &listener),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.order", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.1.order", "2"),
@@ -563,16 +563,16 @@ func TestAccAWSLBListener_DefaultAction_Order_Recreates(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSLBListenerDestroy,
+		CheckDestroy: testAccCheckListenerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLBListenerConfig_DefaultAction_Order(rName, key, certificate),
+				Config: testAccListenerConfig_DefaultAction_Order(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSLBListenerExists(resourceName, &listener),
+					testAccCheckListenerExists(resourceName, &listener),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.order", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.1.order", "2"),
-					testAccCheckAWSLBListenerDefaultActionOrderDisappears(&listener, 1),
+					testAccCheckListenerDefaultActionOrderDisappears(&listener, 1),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -588,7 +588,7 @@ func testAccErrorCheckSkipELBV2(t *testing.T) resource.ErrorCheckFunc {
 	)
 }
 
-func testAccCheckAWSLBListenerDefaultActionOrderDisappears(listener *elbv2.Listener, actionOrderToDelete int) resource.TestCheckFunc {
+func testAccCheckListenerDefaultActionOrderDisappears(listener *elbv2.Listener, actionOrderToDelete int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		var newDefaultActions []*elbv2.Action
 
@@ -616,7 +616,7 @@ func testAccCheckAWSLBListenerDefaultActionOrderDisappears(listener *elbv2.Liste
 	}
 }
 
-func testAccCheckAWSLBListenerExists(n string, res *elbv2.Listener) resource.TestCheckFunc {
+func testAccCheckListenerExists(n string, res *elbv2.Listener) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -644,7 +644,7 @@ func testAccCheckAWSLBListenerExists(n string, res *elbv2.Listener) resource.Tes
 	}
 }
 
-func testAccCheckAWSLBListenerDestroy(s *terraform.State) error {
+func testAccCheckListenerDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn
 
 	for _, rs := range s.RootModule().Resources {
@@ -672,7 +672,7 @@ func testAccCheckAWSLBListenerDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSLBListenerConfigBase(rName string) string {
+func testAccListenerBaseConfig(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -720,8 +720,8 @@ resource "aws_security_group" "test" {
 `, rName))
 }
 
-func testAccAWSLBListenerConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccAWSLBListenerConfigBase(rName), fmt.Sprintf(`
+func testAccListenerConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccListenerBaseConfig(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
   load_balancer_arn = aws_lb.test.id
   protocol          = "HTTP"
@@ -771,8 +771,8 @@ resource "aws_lb_target_group" "test" {
 `, rName))
 }
 
-func testAccAWSLBListenerConfig_forwardWeighted(rName, rName2 string) string {
-	return acctest.ConfigCompose(testAccAWSLBListenerConfigBase(rName), fmt.Sprintf(`
+func testAccListenerConfig_forwardWeighted(rName, rName2 string) string {
+	return acctest.ConfigCompose(testAccListenerBaseConfig(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
   load_balancer_arn = aws_lb.test.id
   protocol          = "HTTP"
@@ -855,8 +855,8 @@ resource "aws_lb_target_group" "test2" {
 `, rName, rName2))
 }
 
-func testAccAWSLBListenerConfig_changeForwardWeightedStickiness(rName, rName2 string) string {
-	return acctest.ConfigCompose(testAccAWSLBListenerConfigBase(rName), fmt.Sprintf(`
+func testAccListenerConfig_changeForwardWeightedStickiness(rName, rName2 string) string {
+	return acctest.ConfigCompose(testAccListenerBaseConfig(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
   load_balancer_arn = aws_lb.test.id
   protocol          = "HTTP"
@@ -944,8 +944,8 @@ resource "aws_lb_target_group" "test2" {
 `, rName, rName2))
 }
 
-func testAccAWSLBListenerConfig_changeForwardWeightedToBasic(rName, rName2 string) string {
-	return acctest.ConfigCompose(testAccAWSLBListenerConfigBase(rName), fmt.Sprintf(`
+func testAccListenerConfig_changeForwardWeightedToBasic(rName, rName2 string) string {
+	return acctest.ConfigCompose(testAccListenerBaseConfig(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
   load_balancer_arn = aws_lb.test.id
   protocol          = "HTTP"
@@ -1017,8 +1017,8 @@ resource "aws_lb_target_group" "test2" {
 `, rName, rName2))
 }
 
-func testAccAWSLBListenerConfig_basicUdp(rName string) string {
-	return acctest.ConfigCompose(testAccAWSLBListenerConfigBase(rName), fmt.Sprintf(`
+func testAccListenerConfig_basicUdp(rName string) string {
+	return acctest.ConfigCompose(testAccListenerBaseConfig(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
   load_balancer_arn = aws_lb.test.id
   protocol          = "UDP"
@@ -1070,8 +1070,8 @@ resource "aws_internet_gateway" "test" {
 `, rName))
 }
 
-func testAccAWSLBListenerConfigBackwardsCompatibility(rName string) string {
-	return acctest.ConfigCompose(testAccAWSLBListenerConfigBase(rName), fmt.Sprintf(`
+func testAccListenerBackwardsCompatibilityConfig(rName string) string {
+	return acctest.ConfigCompose(testAccListenerBaseConfig(rName), fmt.Sprintf(`
 resource "aws_alb_listener" "test" {
   load_balancer_arn = aws_alb.test.id
   protocol          = "HTTP"
@@ -1121,8 +1121,8 @@ resource "aws_alb_target_group" "test" {
 `, rName))
 }
 
-func testAccAWSLBListenerConfig_https(rName, key, certificate string) string {
-	return acctest.ConfigCompose(testAccAWSLBListenerConfigBase(rName), fmt.Sprintf(`
+func testAccListenerConfig_https(rName, key, certificate string) string {
+	return acctest.ConfigCompose(testAccListenerBaseConfig(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
   load_balancer_arn = aws_lb.test.id
   protocol          = "HTTPS"
@@ -1188,7 +1188,7 @@ resource "aws_internet_gateway" "test" {
 `, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)))
 }
 
-func testAccAWSLBListenerConfig_LoadBalancerArn_GatewayLoadBalancer(rName string) string {
+func testAccListenerConfig_LoadBalancerARN_GatewayLoadBalancer(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
@@ -1242,8 +1242,8 @@ resource "aws_lb_listener" "test" {
 `, rName))
 }
 
-func testAccAWSLBListenerConfig_Protocol_Tls(rName, key, certificate string) string {
-	return acctest.ConfigCompose(testAccAWSLBListenerConfigBase(rName), fmt.Sprintf(`
+func testAccListenerConfig_Protocol_TLS(rName, key, certificate string) string {
+	return acctest.ConfigCompose(testAccListenerBaseConfig(rName), fmt.Sprintf(`
 resource "aws_acm_certificate" "test" {
   certificate_body = "%[2]s"
   private_key      = "%[3]s"
@@ -1299,8 +1299,8 @@ resource "aws_lb_listener" "test" {
 `, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)))
 }
 
-func testAccAWSLBListenerConfig_redirect(rName string) string {
-	return acctest.ConfigCompose(testAccAWSLBListenerConfigBase(rName), fmt.Sprintf(`
+func testAccListenerConfig_redirect(rName string) string {
+	return acctest.ConfigCompose(testAccListenerBaseConfig(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
   load_balancer_arn = aws_lb.test.id
   protocol          = "HTTP"
@@ -1333,8 +1333,8 @@ resource "aws_lb" "test" {
 `, rName))
 }
 
-func testAccAWSLBListenerConfig_fixedResponse(rName string) string {
-	return acctest.ConfigCompose(testAccAWSLBListenerConfigBase(rName), fmt.Sprintf(`
+func testAccListenerConfig_fixedResponse(rName string) string {
+	return acctest.ConfigCompose(testAccListenerBaseConfig(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
   load_balancer_arn = aws_lb.test.id
   protocol          = "HTTP"
@@ -1367,8 +1367,8 @@ resource "aws_lb" "test" {
 `, rName))
 }
 
-func testAccAWSLBListenerConfig_cognito(rName, key, certificate string) string {
-	return acctest.ConfigCompose(testAccAWSLBListenerConfigBase(rName), fmt.Sprintf(`
+func testAccListenerConfig_cognito(rName, key, certificate string) string {
+	return acctest.ConfigCompose(testAccListenerBaseConfig(rName), fmt.Sprintf(`
 resource "aws_lb" "test" {
   name                       = %[1]q
   internal                   = false
@@ -1471,8 +1471,8 @@ resource "aws_lb_listener" "test" {
 `, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)))
 }
 
-func testAccAWSLBListenerConfig_oidc(rName, key, certificate string) string {
-	return acctest.ConfigCompose(testAccAWSLBListenerConfigBase(rName), fmt.Sprintf(`
+func testAccListenerConfig_oidc(rName, key, certificate string) string {
+	return acctest.ConfigCompose(testAccListenerBaseConfig(rName), fmt.Sprintf(`
 resource "aws_lb" "test" {
   name                       = %[1]q
   internal                   = false
@@ -1553,8 +1553,8 @@ resource "aws_lb_listener" "test" {
 `, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)))
 }
 
-func testAccAWSLBListenerConfig_DefaultAction_Order(rName, key, certificate string) string {
-	return acctest.ConfigCompose(testAccAWSLBListenerConfigBase(rName), fmt.Sprintf(`
+func testAccListenerConfig_DefaultAction_Order(rName, key, certificate string) string {
+	return acctest.ConfigCompose(testAccListenerBaseConfig(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
   load_balancer_arn = aws_lb.test.id
   protocol          = "HTTPS"
@@ -1628,8 +1628,8 @@ resource "aws_lb_target_group" "test" {
 `, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)))
 }
 
-func testAccAWSLBListenerTagsConfig1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccAWSLBListenerConfigBase(rName), fmt.Sprintf(`
+func testAccListenerTags1Config(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccListenerBaseConfig(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
   load_balancer_arn = aws_lb.test.id
   protocol          = "HTTP"
@@ -1683,8 +1683,8 @@ resource "aws_lb_target_group" "test" {
 `, rName, tagKey1, tagValue1))
 }
 
-func testAccAWSLBListenerTagsConfig2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccAWSLBListenerConfigBase(rName), fmt.Sprintf(`
+func testAccListenerTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccListenerBaseConfig(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
   load_balancer_arn = aws_lb.test.id
   protocol          = "HTTP"

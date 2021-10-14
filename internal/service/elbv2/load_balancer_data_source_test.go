@@ -23,7 +23,7 @@ func TestAccDataSourceAWSLB_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAWSLBConfigBasic(rName),
+				Config: testAcclbBasicDataSourceConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "internal", resourceName, "internal"),
@@ -87,7 +87,7 @@ func TestAccDataSourceAWSLB_outpost(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAWSLBConfigOutpost(rName),
+				Config: testAcclbOutpostDataSourceConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "internal", resourceName, "internal"),
@@ -124,7 +124,7 @@ func TestAccDataSourceAWSLB_BackwardsCompatibility(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAWSLBConfigBackwardsCompatibility(rName),
+				Config: testAcclbBackwardsCompatibilityDataSourceConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName1, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(dataSourceName1, "internal", resourceName, "internal"),
@@ -186,7 +186,7 @@ func TestAccDataSourceAWSLB_BackwardsCompatibility(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAWSLBConfigBasic(rName string) string {
+func testAcclbBasicDataSourceConfig(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_lb" "test" {
   name            = %[1]q
@@ -266,7 +266,7 @@ data "aws_lb" "alb_test_with_tags" {
 `, rName))
 }
 
-func testAccDataSourceAWSLBConfigOutpost(rName string) string {
+func testAcclbOutpostDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_outposts_outposts" "test" {}
 
@@ -338,7 +338,7 @@ data "aws_lb" "alb_test_with_arn" {
 `, rName)
 }
 
-func testAccDataSourceAWSLBConfigBackwardsCompatibility(rName string) string {
+func testAcclbBackwardsCompatibilityDataSourceConfig(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_alb" "test" {
   name            = %[1]q
