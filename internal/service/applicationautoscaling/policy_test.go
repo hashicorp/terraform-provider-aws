@@ -80,7 +80,7 @@ func TestValidateAppautoscalingPolicyImportInput(t *testing.T) {
 	}
 }
 
-func TestAccAWSAppautoScalingPolicy_basic(t *testing.T) {
+func TestAccApplicationAutoScalingPolicy_basic(t *testing.T) {
 	var policy applicationautoscaling.ScalingPolicy
 	appAutoscalingTargetResourceName := "aws_appautoscaling_target.test"
 	resourceName := "aws_appautoscaling_policy.test"
@@ -121,7 +121,7 @@ func TestAccAWSAppautoScalingPolicy_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAppautoScalingPolicy_disappears(t *testing.T) {
+func TestAccApplicationAutoScalingPolicy_disappears(t *testing.T) {
 	var policy applicationautoscaling.ScalingPolicy
 	resourceName := "aws_appautoscaling_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -144,7 +144,7 @@ func TestAccAWSAppautoScalingPolicy_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSAppautoScalingPolicy_scaleOutAndIn(t *testing.T) {
+func TestAccApplicationAutoScalingPolicy_scaleOutAndIn(t *testing.T) {
 	var policy applicationautoscaling.ScalingPolicy
 
 	randClusterName := fmt.Sprintf("cluster%s", sdkacctest.RandString(10))
@@ -225,7 +225,7 @@ func TestAccAWSAppautoScalingPolicy_scaleOutAndIn(t *testing.T) {
 	})
 }
 
-func TestAccAWSAppautoScalingPolicy_spotFleetRequest(t *testing.T) {
+func TestAccApplicationAutoScalingPolicy_spotFleetRequest(t *testing.T) {
 	var policy applicationautoscaling.ScalingPolicy
 
 	randPolicyName := fmt.Sprintf("test-appautoscaling-policy-%s", sdkacctest.RandString(5))
@@ -258,7 +258,7 @@ func TestAccAWSAppautoScalingPolicy_spotFleetRequest(t *testing.T) {
 
 // TODO: Add test for CustomizedMetricSpecification
 // The field doesn't seem to be accessible for common AWS customers (yet?)
-func TestAccAWSAppautoScalingPolicy_dynamodb_table(t *testing.T) {
+func TestAccApplicationAutoScalingPolicy_DynamoDB_table(t *testing.T) {
 	var policy applicationautoscaling.ScalingPolicy
 
 	randPolicyName := fmt.Sprintf("test-appautoscaling-policy-%s", sdkacctest.RandString(5))
@@ -289,7 +289,7 @@ func TestAccAWSAppautoScalingPolicy_dynamodb_table(t *testing.T) {
 	})
 }
 
-func TestAccAWSAppautoScalingPolicy_dynamodb_index(t *testing.T) {
+func TestAccApplicationAutoScalingPolicy_DynamoDB_index(t *testing.T) {
 	var policy applicationautoscaling.ScalingPolicy
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	appautoscalingTargetResourceName := "aws_appautoscaling_target.test"
@@ -321,7 +321,7 @@ func TestAccAWSAppautoScalingPolicy_dynamodb_index(t *testing.T) {
 	})
 }
 
-func TestAccAWSAppautoScalingPolicy_multiplePoliciesSameName(t *testing.T) {
+func TestAccApplicationAutoScalingPolicy_multiplePoliciesSameName(t *testing.T) {
 	var readPolicy1 applicationautoscaling.ScalingPolicy
 	var readPolicy2 applicationautoscaling.ScalingPolicy
 
@@ -355,7 +355,7 @@ func TestAccAWSAppautoScalingPolicy_multiplePoliciesSameName(t *testing.T) {
 	})
 }
 
-func TestAccAWSAppautoScalingPolicy_multiplePoliciesSameResource(t *testing.T) {
+func TestAccApplicationAutoScalingPolicy_multiplePoliciesSameResource(t *testing.T) {
 	var readPolicy applicationautoscaling.ScalingPolicy
 	var writePolicy applicationautoscaling.ScalingPolicy
 
@@ -401,7 +401,7 @@ func TestAccAWSAppautoScalingPolicy_multiplePoliciesSameResource(t *testing.T) {
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/7963
-func TestAccAWSAppautoScalingPolicy_ResourceId_ForceNew(t *testing.T) {
+func TestAccApplicationAutoScalingPolicy_ResourceID_forceNew(t *testing.T) {
 	var policy applicationautoscaling.ScalingPolicy
 	appAutoscalingTargetResourceName := "aws_appautoscaling_target.test"
 	resourceName := "aws_appautoscaling_policy.test"
