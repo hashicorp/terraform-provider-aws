@@ -2,7 +2,6 @@ package cloudfront_test
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"regexp"
 	"testing"
@@ -17,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
