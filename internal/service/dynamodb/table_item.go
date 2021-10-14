@@ -47,7 +47,7 @@ func ResourceTableItem() *schema.Resource {
 }
 
 func validateDynamoDbTableItem(v interface{}, k string) (ws []string, errors []error) {
-	_, err := expandTableItemAttributes(v.(string))
+	_, err := ExpandTableItemAttributes(v.(string))
 	if err != nil {
 		errors = append(errors, fmt.Errorf("Invalid format of %q: %s", k, err))
 	}
@@ -60,7 +60,7 @@ func resourceTableItemCreate(d *schema.ResourceData, meta interface{}) error {
 	tableName := d.Get("table_name").(string)
 	hashKey := d.Get("hash_key").(string)
 	item := d.Get("item").(string)
-	attributes, err := expandTableItemAttributes(item)
+	attributes, err := ExpandTableItemAttributes(item)
 	if err != nil {
 		return err
 	}
@@ -100,11 +100,11 @@ func resourceTableItemUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		oldItem, newItem := d.GetChange("item")
 
-		attributes, err := expandTableItemAttributes(newItem.(string))
+		attributes, err := ExpandTableItemAttributes(newItem.(string))
 		if err != nil {
 			return err
 		}
-		newQueryKey := buildDynamoDbTableItemQueryKey(attributes, hashKey, rangeKey)
+		newQueryKey := BuildTableItemqueryKey(attributes, hashKey, rangeKey)
 
 		updates := map[string]*dynamodb.AttributeValueUpdate{}
 		for key, value := range attributes {
@@ -129,14 +129,14 @@ func resourceTableItemUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		oItem := oldItem.(string)
-		oldAttributes, err := expandTableItemAttributes(oItem)
+		oldAttributes, err := ExpandTableItemAttributes(oItem)
 		if err != nil {
 			return err
 		}
 
 		// New record is created via UpdateItem in case we're changing hash key
 		// so we need to get rid of the old one
-		oldQueryKey := buildDynamoDbTableItemQueryKey(oldAttributes, hashKey, rangeKey)
+		oldQueryKey := BuildTableItemqueryKey(oldAttributes, hashKey, rangeKey)
 		if !reflect.DeepEqual(oldQueryKey, newQueryKey) {
 			log.Printf("[DEBUG] Deleting old record: %#v", oldQueryKey)
 			_, err := conn.DeleteItem(&dynamodb.DeleteItemInput{
@@ -163,7 +163,7 @@ func resourceTableItemRead(d *schema.ResourceData, meta interface{}) error {
 	tableName := d.Get("table_name").(string)
 	hashKey := d.Get("hash_key").(string)
 	rangeKey := d.Get("range_key").(string)
-	attributes, err := expandTableItemAttributes(d.Get("item").(string))
+	attributes, err := ExpandTableItemAttributes(d.Get("item").(string))
 	if err != nil {
 		return err
 	}
@@ -171,9 +171,9 @@ func resourceTableItemRead(d *schema.ResourceData, meta interface{}) error {
 	result, err := conn.GetItem(&dynamodb.GetItemInput{
 		TableName:                aws.String(tableName),
 		ConsistentRead:           aws.Bool(true),
-		Key:                      buildDynamoDbTableItemQueryKey(attributes, hashKey, rangeKey),
-		ProjectionExpression:     buildDynamoDbProjectionExpression(attributes),
-		ExpressionAttributeNames: buildDynamoDbExpressionAttributeNames(attributes),
+		Key:                      BuildTableItemqueryKey(attributes, hashKey, rangeKey),
+		ProjectionExpression:     BuildProjectionExpression(attributes),
+		ExpressionAttributeNames: BuildExpressionAttributeNames(attributes),
 	})
 	if err != nil {
 		if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeResourceNotFoundException, "") {
@@ -208,13 +208,13 @@ func resourceTableItemRead(d *schema.ResourceData, meta interface{}) error {
 func resourceTableItemDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DynamoDBConn
 
-	attributes, err := expandTableItemAttributes(d.Get("item").(string))
+	attributes, err := ExpandTableItemAttributes(d.Get("item").(string))
 	if err != nil {
 		return err
 	}
 	hashKey := d.Get("hash_key").(string)
 	rangeKey := d.Get("range_key").(string)
-	queryKey := buildDynamoDbTableItemQueryKey(attributes, hashKey, rangeKey)
+	queryKey := BuildTableItemqueryKey(attributes, hashKey, rangeKey)
 
 	_, err = conn.DeleteItem(&dynamodb.DeleteItemInput{
 		Key:       queryKey,
@@ -225,7 +225,7 @@ func resourceTableItemDelete(d *schema.ResourceData, meta interface{}) error {
 
 // Helpers
 
-func buildDynamoDbExpressionAttributeNames(attrs map[string]*dynamodb.AttributeValue) map[string]*string {
+func BuildExpressionAttributeNames(attrs map[string]*dynamodb.AttributeValue) map[string]*string {
 	names := map[string]*string{}
 	for key := range attrs {
 		names["#a_"+key] = aws.String(key)
@@ -234,7 +234,7 @@ func buildDynamoDbExpressionAttributeNames(attrs map[string]*dynamodb.AttributeV
 	return names
 }
 
-func buildDynamoDbProjectionExpression(attrs map[string]*dynamodb.AttributeValue) *string {
+func BuildProjectionExpression(attrs map[string]*dynamodb.AttributeValue) *string {
 	keys := []string{}
 	for key := range attrs {
 		keys = append(keys, key)
@@ -258,7 +258,7 @@ func buildDynamoDbTableItemId(tableName string, hashKey string, rangeKey string,
 	return strings.Join(id, "|")
 }
 
-func buildDynamoDbTableItemQueryKey(attrs map[string]*dynamodb.AttributeValue, hashKey string, rangeKey string) map[string]*dynamodb.AttributeValue {
+func BuildTableItemqueryKey(attrs map[string]*dynamodb.AttributeValue, hashKey string, rangeKey string) map[string]*dynamodb.AttributeValue {
 	queryKey := map[string]*dynamodb.AttributeValue{
 		hashKey: attrs[hashKey],
 	}

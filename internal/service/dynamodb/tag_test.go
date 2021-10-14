@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfdynamodb "github.com/hashicorp/terraform-provider-aws/internal/service/dynamodb"
 )
 
 func TestAccAWSDynamodbTag_basic(t *testing.T) {
@@ -52,7 +53,7 @@ func TestAccAWSDynamodbTag_disappears(t *testing.T) {
 				Config: testAccDynamodbTagConfig(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDynamodbTagExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceTag(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfdynamodb.ResourceTag(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

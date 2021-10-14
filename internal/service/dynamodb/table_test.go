@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfdynamodb "github.com/hashicorp/terraform-provider-aws/internal/service/dynamodb"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -46,7 +47,7 @@ func testSweepDynamoDbTables(region string) error {
 		}
 
 		for _, tableName := range page.TableNames {
-			r := ResourceTable()
+			r := tfdynamodb.ResourceTable()
 			d := r.Data(nil)
 
 			id := aws.StringValue(tableName)
@@ -373,7 +374,7 @@ func TestUpdateDynamoDbDiffGSI(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
-		ops, err := updateDynamoDbDiffGSI(tc.Old, tc.New, dynamodb.BillingModeProvisioned)
+		ops, err := tfdynamodb.UpdateDiffGSI(tc.Old, tc.New, dynamodb.BillingModeProvisioned)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -439,7 +440,7 @@ func TestAccAWSDynamoDbTable_disappears(t *testing.T) {
 				Config: testAccAWSDynamoDbConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &table1),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceTable(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfdynamodb.ResourceTable(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -462,7 +463,7 @@ func TestAccAWSDynamoDbTable_disappears_payPerRequestWithGSI(t *testing.T) {
 				Config: testAccAWSDynamoDbBilling_payPerRequestWithGSI(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &table1),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceTable(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfdynamodb.ResourceTable(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
