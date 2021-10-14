@@ -14,9 +14,9 @@ import (
 
 func ResourceGatewayResponse() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsApiGatewayGatewayResponsePut,
+		Create: resourceGatewayResponsePut,
 		Read:   resourceGatewayResponseRead,
-		Update: resourceAwsApiGatewayGatewayResponsePut,
+		Update: resourceGatewayResponsePut,
 		Delete: resourceGatewayResponseDelete,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
@@ -66,7 +66,7 @@ func ResourceGatewayResponse() *schema.Resource {
 	}
 }
 
-func resourceAwsApiGatewayGatewayResponsePut(d *schema.ResourceData, meta interface{}) error {
+func resourceGatewayResponsePut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 
 	templates := make(map[string]string)

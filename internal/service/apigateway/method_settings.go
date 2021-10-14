@@ -21,7 +21,7 @@ func ResourceMethodSettings() *schema.Resource {
 		Delete: resourceMethodSettingsDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsApiGatewayMethodSettingsImport,
+			State: resourceMethodSettingsImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -113,7 +113,7 @@ func ResourceMethodSettings() *schema.Resource {
 	}
 }
 
-func flattenAwsApiGatewayMethodSettings(settings *apigateway.MethodSetting) []interface{} {
+func flattenMethodSettings(settings *apigateway.MethodSetting) []interface{} {
 	if settings == nil {
 		return nil
 	}
@@ -163,7 +163,7 @@ func resourceMethodSettingsRead(d *schema.ResourceData, meta interface{}) error 
 		return nil
 	}
 
-	if err := d.Set("settings", flattenAwsApiGatewayMethodSettings(settings)); err != nil {
+	if err := d.Set("settings", flattenMethodSettings(settings)); err != nil {
 		return fmt.Errorf("error setting settings: %w", err)
 	}
 
@@ -303,7 +303,7 @@ func resourceMethodSettingsDelete(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func resourceAwsApiGatewayMethodSettingsImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceMethodSettingsImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	idParts := strings.SplitN(d.Id(), "/", 3)
 	if len(idParts) != 3 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" {
 		return nil, fmt.Errorf("Unexpected format of ID (%q), expected REST-API-ID/STAGE-NAME/METHOD-PATH", d.Id())

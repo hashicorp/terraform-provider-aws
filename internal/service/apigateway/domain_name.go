@@ -299,7 +299,7 @@ func resourceDomainNameRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsApiGatewayDomainNameUpdateOperations(d *schema.ResourceData) []*apigateway.PatchOperation {
+func resourceDomainNameUpdateOperations(d *schema.ResourceData) []*apigateway.PatchOperation {
 	operations := make([]*apigateway.PatchOperation, 0)
 
 	if d.HasChange("certificate_name") {
@@ -391,7 +391,7 @@ func resourceDomainNameUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := conn.UpdateDomainName(&apigateway.UpdateDomainNameInput{
 		DomainName:      aws.String(d.Id()),
-		PatchOperations: resourceAwsApiGatewayDomainNameUpdateOperations(d),
+		PatchOperations: resourceDomainNameUpdateOperations(d),
 	})
 
 	if err != nil {

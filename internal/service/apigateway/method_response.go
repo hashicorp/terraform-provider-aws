@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-var resourceAwsApiGatewayMethodResponseMutex = &sync.Mutex{}
+var resourceMethodResponseMutex = &sync.Mutex{}
 
 func ResourceMethodResponse() *schema.Resource {
 	return &schema.Resource{
@@ -101,8 +101,8 @@ func resourceMethodResponseCreate(d *schema.ResourceData, meta interface{}) erro
 		}
 	}
 
-	resourceAwsApiGatewayMethodResponseMutex.Lock()
-	defer resourceAwsApiGatewayMethodResponseMutex.Unlock()
+	resourceMethodResponseMutex.Lock()
+	defer resourceMethodResponseMutex.Unlock()
 
 	_, err := verify.RetryOnAWSCode(apigateway.ErrCodeConflictException, func() (interface{}, error) {
 		return conn.PutMethodResponse(&apigateway.PutMethodResponseInput{

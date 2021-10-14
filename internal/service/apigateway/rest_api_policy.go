@@ -17,9 +17,9 @@ import (
 
 func ResourceRestAPIPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsApiGatewayRestApiPolicyPut,
+		Create: resourceRestAPIPolicyPut,
 		Read:   resourceRestAPIPolicyRead,
-		Update: resourceAwsApiGatewayRestApiPolicyPut,
+		Update: resourceRestAPIPolicyPut,
 		Delete: resourceRestAPIPolicyDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -42,7 +42,7 @@ func ResourceRestAPIPolicy() *schema.Resource {
 	}
 }
 
-func resourceAwsApiGatewayRestApiPolicyPut(d *schema.ResourceData, meta interface{}) error {
+func resourceRestAPIPolicyPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 
 	restApiId := d.Get("rest_api_id").(string)

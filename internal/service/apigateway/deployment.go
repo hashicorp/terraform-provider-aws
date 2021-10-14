@@ -144,7 +144,7 @@ func resourceDeploymentRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsApiGatewayDeploymentUpdateOperations(d *schema.ResourceData) []*apigateway.PatchOperation {
+func resourceDeploymentUpdateOperations(d *schema.ResourceData) []*apigateway.PatchOperation {
 	operations := make([]*apigateway.PatchOperation, 0)
 
 	if d.HasChange("description") {
@@ -166,7 +166,7 @@ func resourceDeploymentUpdate(d *schema.ResourceData, meta interface{}) error {
 	_, err := conn.UpdateDeployment(&apigateway.UpdateDeploymentInput{
 		DeploymentId:    aws.String(d.Id()),
 		RestApiId:       aws.String(d.Get("rest_api_id").(string)),
-		PatchOperations: resourceAwsApiGatewayDeploymentUpdateOperations(d),
+		PatchOperations: resourceDeploymentUpdateOperations(d),
 	})
 	if err != nil {
 		return err

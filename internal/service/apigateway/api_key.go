@@ -153,7 +153,7 @@ func resourceAPIKeyRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsApiGatewayApiKeyUpdateOperations(d *schema.ResourceData) []*apigateway.PatchOperation {
+func resourceAPIKeyUpdateOperations(d *schema.ResourceData) []*apigateway.PatchOperation {
 	operations := make([]*apigateway.PatchOperation, 0)
 	if d.HasChange("enabled") {
 		isEnabled := "false"
@@ -192,7 +192,7 @@ func resourceAPIKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := conn.UpdateApiKey(&apigateway.UpdateApiKeyInput{
 		ApiKey:          aws.String(d.Id()),
-		PatchOperations: resourceAwsApiGatewayApiKeyUpdateOperations(d),
+		PatchOperations: resourceAPIKeyUpdateOperations(d),
 	})
 	if err != nil {
 		return err

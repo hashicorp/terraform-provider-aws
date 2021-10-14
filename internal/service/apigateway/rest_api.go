@@ -430,7 +430,7 @@ func resourceRestAPIRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsApiGatewayRestApiUpdateOperations(d *schema.ResourceData) []*apigateway.PatchOperation {
+func resourceRestAPIUpdateOperations(d *schema.ResourceData) []*apigateway.PatchOperation {
 	operations := make([]*apigateway.PatchOperation, 0)
 
 	if d.HasChange("name") {
@@ -697,7 +697,7 @@ func resourceRestAPIUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := conn.UpdateRestApi(&apigateway.UpdateRestApiInput{
 		RestApiId:       aws.String(d.Id()),
-		PatchOperations: resourceAwsApiGatewayRestApiUpdateOperations(d),
+		PatchOperations: resourceRestAPIUpdateOperations(d),
 	})
 
 	if err != nil {

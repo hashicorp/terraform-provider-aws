@@ -24,7 +24,7 @@ func ResourceAuthorizer() *schema.Resource {
 		Read:          resourceAuthorizerRead,
 		Update:        resourceAuthorizerUpdate,
 		Delete:        resourceAuthorizerDelete,
-		CustomizeDiff: resourceAwsApiGatewayAuthorizerCustomizeDiff,
+		CustomizeDiff: resourceAuthorizerCustomizeDiff,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
@@ -311,7 +311,7 @@ func resourceAuthorizerDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsApiGatewayAuthorizerCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+func resourceAuthorizerCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 	// switch type between COGNITO_USER_POOLS and TOKEN/REQUEST will create new resource.
 	if diff.HasChange("type") {
 		o, n := diff.GetChange("type")

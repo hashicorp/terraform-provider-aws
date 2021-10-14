@@ -102,7 +102,7 @@ func resourceResourceRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsApiGatewayResourceUpdateOperations(d *schema.ResourceData) []*apigateway.PatchOperation {
+func resourceResourceUpdateOperations(d *schema.ResourceData) []*apigateway.PatchOperation {
 	operations := make([]*apigateway.PatchOperation, 0)
 	if d.HasChange("path_part") {
 		operations = append(operations, &apigateway.PatchOperation{
@@ -129,7 +129,7 @@ func resourceResourceUpdate(d *schema.ResourceData, meta interface{}) error {
 	_, err := conn.UpdateResource(&apigateway.UpdateResourceInput{
 		ResourceId:      aws.String(d.Id()),
 		RestApiId:       aws.String(d.Get("rest_api_id").(string)),
-		PatchOperations: resourceAwsApiGatewayResourceUpdateOperations(d),
+		PatchOperations: resourceResourceUpdateOperations(d),
 	})
 
 	if err != nil {
