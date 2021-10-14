@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceClusterInstance() *schema.Resource {
@@ -49,14 +50,14 @@ func ResourceClusterInstance() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"identifier_prefix"},
-				ValidateFunc:  validateRdsIdentifier,
+				ValidateFunc:  validIdentifier,
 			},
 			"identifier_prefix": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ValidateFunc: validateRdsIdentifierPrefix,
+				ValidateFunc: validIdentifierPrefix,
 			},
 
 			"db_subnet_group_name": {
@@ -103,7 +104,7 @@ func ResourceClusterInstance() *schema.Resource {
 				Optional:     true,
 				ForceNew:     true,
 				Default:      "aurora",
-				ValidateFunc: validateRdsEngine(),
+				ValidateFunc: validEngine(),
 			},
 
 			"engine_version": {
@@ -170,14 +171,14 @@ func ResourceClusterInstance() *schema.Resource {
 					}
 					return ""
 				},
-				ValidateFunc: validateOnceAWeekWindowFormat,
+				ValidateFunc: verify.ValidOnceAWeekWindowFormat,
 			},
 
 			"preferred_backup_window": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validateOnceADayWindowFormat,
+				ValidateFunc: verify.ValidOnceADayWindowFormat,
 			},
 
 			"monitoring_interval": {
@@ -209,7 +210,7 @@ func ResourceClusterInstance() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 
 			"performance_insights_retention_period": {

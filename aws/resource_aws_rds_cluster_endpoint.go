@@ -13,6 +13,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (
@@ -40,13 +41,13 @@ func ResourceClusterEndpoint() *schema.Resource {
 				Type:         schema.TypeString,
 				ForceNew:     true,
 				Required:     true,
-				ValidateFunc: validateRdsIdentifier,
+				ValidateFunc: validIdentifier,
 			},
 			"cluster_identifier": {
 				Type:         schema.TypeString,
 				ForceNew:     true,
 				Required:     true,
-				ValidateFunc: validateRdsIdentifier,
+				ValidateFunc: validIdentifier,
 			},
 			"custom_endpoint_type": {
 				Type:     schema.TypeString,

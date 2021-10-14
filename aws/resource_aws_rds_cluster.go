@@ -18,6 +18,7 @@ import (
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (
@@ -74,7 +75,7 @@ func ResourceCluster() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"cluster_identifier_prefix"},
-				ValidateFunc:  validateRdsIdentifier,
+				ValidateFunc:  validIdentifier,
 			},
 			"cluster_identifier_prefix": {
 				Type:          schema.TypeString,
@@ -82,7 +83,7 @@ func ResourceCluster() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"cluster_identifier"},
-				ValidateFunc:  validateRdsIdentifierPrefix,
+				ValidateFunc:  validIdentifierPrefix,
 			},
 
 			"cluster_members": {
@@ -160,7 +161,7 @@ func ResourceCluster() *schema.Resource {
 				Optional:     true,
 				Default:      "aurora",
 				ForceNew:     true,
-				ValidateFunc: validateRdsEngine(),
+				ValidateFunc: validEngine(),
 			},
 
 			"engine_mode": {
@@ -192,7 +193,7 @@ func ResourceCluster() *schema.Resource {
 				Type:             schema.TypeList,
 				Optional:         true,
 				MaxItems:         1,
-				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"auto_pause": {
@@ -252,8 +253,8 @@ func ResourceCluster() *schema.Resource {
 							Required: true,
 							ForceNew: true,
 							ValidateFunc: validation.Any(
-								validateArn,
-								validateRdsIdentifier,
+								verify.ValidARN,
+								validIdentifier,
 							),
 						},
 
@@ -278,7 +279,7 @@ func ResourceCluster() *schema.Resource {
 							Type:          schema.TypeString,
 							Optional:      true,
 							ForceNew:      true,
-							ValidateFunc:  validateUTCTimestamp,
+							ValidateFunc:  verify.ValidUTCTimestamp,
 							ConflictsWith: []string{"restore_to_point_in_time.0.use_latest_restorable_time"},
 						},
 					},
@@ -394,7 +395,7 @@ func ResourceCluster() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validateOnceADayWindowFormat,
+				ValidateFunc: verify.ValidOnceADayWindowFormat,
 			},
 
 			"preferred_maintenance_window": {
@@ -407,7 +408,7 @@ func ResourceCluster() *schema.Resource {
 					}
 					return strings.ToLower(val.(string))
 				},
-				ValidateFunc: validateOnceAWeekWindowFormat,
+				ValidateFunc: verify.ValidOnceAWeekWindowFormat,
 			},
 
 			"backup_retention_period": {
@@ -422,7 +423,7 @@ func ResourceCluster() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 
 			"replication_source_identifier": {

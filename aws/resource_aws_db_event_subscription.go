@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceEventSubscription() *schema.Resource {
@@ -61,7 +62,7 @@ func ResourceEventSubscription() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc:  validateDbEventSubscriptionName,
+				ValidateFunc:  validEventSubscriptionName,
 			},
 			"name_prefix": {
 				Type:          schema.TypeString,
@@ -69,12 +70,12 @@ func ResourceEventSubscription() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
-				ValidateFunc:  validateDbEventSubscriptionName,
+				ValidateFunc:  validEventSubscriptionName,
 			},
 			"sns_topic": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"source_ids": {
 				Type:     schema.TypeSet,

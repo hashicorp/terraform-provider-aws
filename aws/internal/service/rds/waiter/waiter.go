@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	tfrds "github.com/hashicorp/terraform-provider-aws/aws/internal/service/rds"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (

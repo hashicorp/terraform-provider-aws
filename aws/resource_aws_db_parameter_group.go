@@ -15,6 +15,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceParameterGroup() *schema.Resource {
@@ -38,7 +39,7 @@ func ResourceParameterGroup() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc:  validateDbParamGroupName,
+				ValidateFunc:  validParamGroupName,
 			},
 			"name_prefix": {
 				Type:          schema.TypeString,
@@ -46,7 +47,7 @@ func ResourceParameterGroup() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
-				ValidateFunc:  validateDbParamGroupNamePrefix,
+				ValidateFunc:  validParamGroupNamePrefix,
 			},
 			"family": {
 				Type:     schema.TypeString,

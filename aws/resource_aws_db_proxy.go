@@ -13,6 +13,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceProxy() *schema.Resource {
@@ -39,7 +40,7 @@ func ResourceProxy() *schema.Resource {
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateRdsIdentifier,
+				ValidateFunc: validIdentifier,
 			},
 			"debug_logging": {
 				Type:     schema.TypeBool,
@@ -63,7 +64,7 @@ func ResourceProxy() *schema.Resource {
 			"role_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"vpc_security_group_ids": {
 				Type:     schema.TypeSet,
@@ -101,7 +102,7 @@ func ResourceProxy() *schema.Resource {
 						"secret_arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 					},
 				},
