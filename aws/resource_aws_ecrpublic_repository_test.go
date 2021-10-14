@@ -68,13 +68,13 @@ func testSweepEcrPublicRepositories(region string) error {
 
 func TestAccAWSEcrPublicRepository_basic(t *testing.T) {
 	var v ecrpublic.Repository
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecrpublic_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAwsEcrPublic(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecrpublic.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEcrPublicRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -97,13 +97,13 @@ func TestAccAWSEcrPublicRepository_basic(t *testing.T) {
 
 func TestAccAWSEcrPublicRepository_catalogdata_abouttext(t *testing.T) {
 	var v ecrpublic.Repository
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecrpublic_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAwsEcrPublic(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecrpublic.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEcrPublicRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -133,13 +133,13 @@ func TestAccAWSEcrPublicRepository_catalogdata_abouttext(t *testing.T) {
 
 func TestAccAWSEcrPublicRepository_catalogdata_architectures(t *testing.T) {
 	var v ecrpublic.Repository
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecrpublic_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAwsEcrPublic(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecrpublic.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEcrPublicRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -169,13 +169,13 @@ func TestAccAWSEcrPublicRepository_catalogdata_architectures(t *testing.T) {
 
 func TestAccAWSEcrPublicRepository_catalogdata_description(t *testing.T) {
 	var v ecrpublic.Repository
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecrpublic_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAwsEcrPublic(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecrpublic.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEcrPublicRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -205,13 +205,13 @@ func TestAccAWSEcrPublicRepository_catalogdata_description(t *testing.T) {
 
 func TestAccAWSEcrPublicRepository_catalogdata_operatingsystems(t *testing.T) {
 	var v ecrpublic.Repository
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecrpublic_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAwsEcrPublic(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecrpublic.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEcrPublicRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -241,13 +241,13 @@ func TestAccAWSEcrPublicRepository_catalogdata_operatingsystems(t *testing.T) {
 
 func TestAccAWSEcrPublicRepository_catalogdata_usagetext(t *testing.T) {
 	var v ecrpublic.Repository
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecrpublic_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAwsEcrPublic(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecrpublic.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEcrPublicRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -277,13 +277,13 @@ func TestAccAWSEcrPublicRepository_catalogdata_usagetext(t *testing.T) {
 
 func TestAccAWSEcrPublicRepository_catalogdata_logoimageblob(t *testing.T) {
 	var v ecrpublic.Repository
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecrpublic_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAwsEcrPublic(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecrpublic.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEcrPublicRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -306,13 +306,13 @@ func TestAccAWSEcrPublicRepository_catalogdata_logoimageblob(t *testing.T) {
 
 func TestAccAWSEcrPublicRepository_basic_forcedestroy(t *testing.T) {
 	var v ecrpublic.Repository
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecrpublic_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAwsEcrPublic(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecrpublic.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEcrPublicRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -336,20 +336,20 @@ func TestAccAWSEcrPublicRepository_basic_forcedestroy(t *testing.T) {
 
 func TestAccAWSEcrPublicRepository_disappears(t *testing.T) {
 	var v ecrpublic.Repository
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecrpublic_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAwsEcrPublic(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecrpublic.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEcrPublicRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSEcrPublicRepositoryConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcrPublicRepositoryExists(resourceName, &v),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsEcrPublicRepository(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsEcrPublicRepository(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -368,7 +368,7 @@ func testAccCheckAWSEcrPublicRepositoryExists(name string, res *ecrpublic.Reposi
 			return fmt.Errorf("No ECR Public repository ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ecrpublicconn
+		conn := acctest.Provider.Meta().(*AWSClient).ecrpublicconn
 
 		output, err := conn.DescribeRepositories(&ecrpublic.DescribeRepositoriesInput{
 			RepositoryNames: aws.StringSlice([]string{rs.Primary.ID}),
@@ -387,7 +387,7 @@ func testAccCheckAWSEcrPublicRepositoryExists(name string, res *ecrpublic.Reposi
 }
 
 func testAccCheckAWSEcrPublicRepositoryDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ecrpublicconn
+	conn := acctest.Provider.Meta().(*AWSClient).ecrpublicconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ecrpublic_repository" {
@@ -506,11 +506,11 @@ func testAccPreCheckAwsEcrPublic(t *testing.T) {
 	// an InternalFailure when the region is not supported i.e. not us-east-1.
 	// TODO: Remove when ECRPublic is supported across other known regions
 	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/18047
-	if region := testAccProvider.Meta().(*AWSClient).region; region != endpoints.UsEast1RegionID {
+	if region := acctest.Provider.Meta().(*AWSClient).region; region != endpoints.UsEast1RegionID {
 		t.Skipf("skipping acceptance testing: region (%s) does not support ECR Public repositories", region)
 	}
 
-	conn := testAccProvider.Meta().(*AWSClient).ecrpublicconn
+	conn := acctest.Provider.Meta().(*AWSClient).ecrpublicconn
 	input := &ecrpublic.DescribeRepositoriesInput{}
 	_, err := conn.DescribeRepositories(input)
 	if acctest.PreCheckSkipError(err) {
