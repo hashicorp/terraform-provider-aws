@@ -3,6 +3,7 @@ package finder
 import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudhsmv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func Cluster(conn *cloudhsmv2.CloudHSMV2, id string) (*cloudhsmv2.Cluster, error) {
