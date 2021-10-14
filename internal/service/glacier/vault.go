@@ -111,7 +111,7 @@ func resourceVaultCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(d.Get("name").(string))
 
 	if len(tags) > 0 {
-		if err := tftags.GlacierUpdateTags(conn, d.Id(), nil, tags.Map()); err != nil {
+		if err := UpdateTags(conn, d.Id(), nil, tags.Map()); err != nil {
 			return fmt.Errorf("error updating Glacier Vault (%s) tags: %w", d.Id(), err)
 		}
 	}
@@ -136,7 +136,7 @@ func resourceVaultUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.GlacierUpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating Glacier Vault (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -185,7 +185,7 @@ func resourceVaultRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("location", location)
 
-	tags, err := tftags.GlacierListTags(conn, d.Id())
+	tags, err := ListTags(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Glacier Vault (%s): %w", d.Id(), err)
