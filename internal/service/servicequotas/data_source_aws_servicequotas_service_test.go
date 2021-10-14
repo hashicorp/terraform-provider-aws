@@ -1,4 +1,4 @@
-package aws
+package servicequotas_test
 
 import (
 	"fmt"
