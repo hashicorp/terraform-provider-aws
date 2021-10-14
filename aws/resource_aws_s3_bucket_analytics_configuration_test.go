@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSS3BucketAnalyticsConfiguration_basic(t *testing.T) {
@@ -454,7 +455,7 @@ func TestAccAWSS3BucketAnalyticsConfiguration_WithStorageClassAnalysis_Full(t *t
 }
 
 func testAccCheckAWSS3BucketAnalyticsConfigurationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).s3conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_s3_bucket_analytics_configuration" {
@@ -479,7 +480,7 @@ func testAccCheckAWSS3BucketAnalyticsConfigurationExists(n string, ac *s3.Analyt
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).s3conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
 		output, err := conn.GetBucketAnalyticsConfiguration(&s3.GetBucketAnalyticsConfigurationInput{
 			Bucket: aws.String(rs.Primary.Attributes["bucket"]),
 			Id:     aws.String(rs.Primary.Attributes["name"]),
@@ -501,7 +502,7 @@ func testAccCheckAWSS3BucketAnalyticsConfigurationExists(n string, ac *s3.Analyt
 
 func testAccCheckAWSS3BucketAnalyticsConfigurationRemoved(name, bucket string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).s3conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
 		return waitForDeleteS3BucketAnalyticsConfiguration(conn, bucket, name, 1*time.Minute)
 	}
 }

@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSS3BucketNotification_LambdaFunction(t *testing.T) {
@@ -267,7 +268,7 @@ func TestAccAWSS3BucketNotification_update(t *testing.T) {
 }
 
 func testAccCheckAWSS3BucketNotificationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).s3conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_s3_bucket_notification" {
@@ -307,7 +308,7 @@ func testAccCheckAWSS3BucketTopicNotification(n, i, t string, events []string, f
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
 		topicArn := s.RootModule().Resources[t].Primary.ID
-		conn := acctest.Provider.Meta().(*AWSClient).s3conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
 
 		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 			out, err := conn.GetBucketNotificationConfiguration(&s3.GetBucketNotificationConfigurationRequest{
@@ -364,7 +365,7 @@ func testAccCheckAWSS3BucketQueueNotification(n, i, t string, events []string, f
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
 		queueArn := s.RootModule().Resources[t].Primary.Attributes["arn"]
-		conn := acctest.Provider.Meta().(*AWSClient).s3conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
 
 		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 			out, err := conn.GetBucketNotificationConfiguration(&s3.GetBucketNotificationConfigurationRequest{
@@ -421,7 +422,7 @@ func testAccCheckAWSS3BucketLambdaFunctionConfiguration(n, i, t string, events [
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
 		funcArn := s.RootModule().Resources[t].Primary.Attributes["arn"]
-		conn := acctest.Provider.Meta().(*AWSClient).s3conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
 
 		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 			out, err := conn.GetBucketNotificationConfiguration(&s3.GetBucketNotificationConfigurationRequest{

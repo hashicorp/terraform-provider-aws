@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	awspolicy "github.com/jen20/awspolicyequivalence"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSS3BucketPolicy_basic(t *testing.T) {
@@ -143,7 +144,7 @@ func testAccCheckAWSS3BucketHasPolicy(n string, expectedPolicyText string) resou
 			return fmt.Errorf("No S3 Bucket ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).s3conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
 
 		policy, err := conn.GetBucketPolicy(&s3.GetBucketPolicyInput{
 			Bucket: aws.String(rs.Primary.ID),

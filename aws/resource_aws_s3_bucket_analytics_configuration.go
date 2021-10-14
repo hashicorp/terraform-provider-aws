@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	tfs3 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/s3"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsS3BucketAnalyticsConfiguration() *schema.Resource {
@@ -127,7 +128,7 @@ func resourceAwsS3BucketAnalyticsConfiguration() *schema.Resource {
 var filterAtLeastOneOfKeys = []string{"filter.0.prefix", "filter.0.tags"}
 
 func resourceAwsS3BucketAnalyticsConfigurationPut(d *schema.ResourceData, meta interface{}) error {
-	s3conn := meta.(*AWSClient).s3conn
+	conn := meta.(*conns.AWSClient).S3Conn
 
 	bucket := d.Get("bucket").(string)
 	name := d.Get("name").(string)
@@ -147,7 +148,7 @@ func resourceAwsS3BucketAnalyticsConfigurationPut(d *schema.ResourceData, meta i
 	}
 
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-		_, err := s3conn.PutBucketAnalyticsConfiguration(input)
+		_, err := conn.PutBucketAnalyticsConfiguration(input)
 
 		if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
 			return resource.RetryableError(err)
@@ -160,7 +161,7 @@ func resourceAwsS3BucketAnalyticsConfigurationPut(d *schema.ResourceData, meta i
 	})
 
 	if tfresource.TimedOut(err) {
-		_, err = s3conn.PutBucketAnalyticsConfiguration(input)
+		_, err = conn.PutBucketAnalyticsConfiguration(input)
 	}
 
 	if err != nil {
@@ -173,7 +174,7 @@ func resourceAwsS3BucketAnalyticsConfigurationPut(d *schema.ResourceData, meta i
 }
 
 func resourceAwsS3BucketAnalyticsConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).s3conn
+	conn := meta.(*conns.AWSClient).S3Conn
 
 	bucket, name, err := resourceAwsS3BucketAnalyticsConfigurationParseID(d.Id())
 	if err != nil {
@@ -223,7 +224,7 @@ func resourceAwsS3BucketAnalyticsConfigurationRead(d *schema.ResourceData, meta 
 }
 
 func resourceAwsS3BucketAnalyticsConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).s3conn
+	conn := meta.(*conns.AWSClient).S3Conn
 
 	bucket, name, err := resourceAwsS3BucketAnalyticsConfigurationParseID(d.Id())
 	if err != nil {

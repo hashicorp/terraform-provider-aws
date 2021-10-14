@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsS3ObjectCopy() *schema.Resource {
@@ -293,14 +294,14 @@ func resourceAwsS3ObjectCopyCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsS3ObjectCopyRead(d *schema.ResourceData, meta interface{}) error {
-	s3conn := meta.(*AWSClient).s3conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).S3Conn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	bucket := d.Get("bucket").(string)
 	key := d.Get("key").(string)
 
-	resp, err := s3conn.HeadObject(
+	resp, err := conn.HeadObject(
 		&s3.HeadObjectInput{
 			Bucket: aws.String(bucket),
 			Key:    aws.String(key),
@@ -362,7 +363,7 @@ func resourceAwsS3ObjectCopyRead(d *schema.ResourceData, meta interface{}) error
 
 	// Retry due to S3 eventual consistency
 	tagsRaw, err := retryOnAwsCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
-		return keyvaluetags.S3ObjectListTags(s3conn, bucket, key)
+		return keyvaluetags.S3ObjectListTags(conn, bucket, key)
 	})
 
 	if err != nil {
@@ -446,7 +447,7 @@ func resourceAwsS3ObjectCopyUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsS3ObjectCopyDelete(d *schema.ResourceData, meta interface{}) error {
-	s3conn := meta.(*AWSClient).s3conn
+	conn := meta.(*conns.AWSClient).S3Conn
 
 	bucket := d.Get("bucket").(string)
 	key := d.Get("key").(string)
@@ -457,9 +458,9 @@ func resourceAwsS3ObjectCopyDelete(d *schema.ResourceData, meta interface{}) err
 
 	var err error
 	if _, ok := d.GetOk("version_id"); ok {
-		err = deleteAllS3ObjectVersions(s3conn, bucket, key, d.Get("force_destroy").(bool), false)
+		err = deleteAllS3ObjectVersions(conn, bucket, key, d.Get("force_destroy").(bool), false)
 	} else {
-		err = deleteS3ObjectVersion(s3conn, bucket, key, "", false)
+		err = deleteS3ObjectVersion(conn, bucket, key, "", false)
 	}
 
 	if err != nil {
@@ -469,8 +470,8 @@ func resourceAwsS3ObjectCopyDelete(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsS3ObjectCopyDoCopy(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).s3conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).S3Conn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &s3.CopyObjectInput{

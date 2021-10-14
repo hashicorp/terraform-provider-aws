@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSS3BucketInventory_basic(t *testing.T) {
@@ -133,7 +134,7 @@ func testAccCheckAWSS3BucketInventoryConfigExists(n string, res *s3.InventoryCon
 			return fmt.Errorf("No S3 bucket inventory configuration ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).s3conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
 		bucket, name, err := resourceAwsS3BucketInventoryParseID(rs.Primary.ID)
 		if err != nil {
 			return err
@@ -156,7 +157,7 @@ func testAccCheckAWSS3BucketInventoryConfigExists(n string, res *s3.InventoryCon
 }
 
 func testAccCheckAWSS3BucketInventoryDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).s3conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_s3_bucket_inventory" {

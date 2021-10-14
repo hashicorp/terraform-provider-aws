@@ -28,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudformation/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -47,7 +48,7 @@ func testSweepS3Buckets(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*AWSClient).s3conn
+	conn := client.(*conns.AWSClient).S3Conn
 	input := &s3.ListBucketsInput{}
 
 	output, err := conn.ListBuckets(input)
@@ -97,7 +98,7 @@ func testSweepS3Buckets(region string) error {
 		}
 
 		if bucketRegion != region {
-			log.Printf("[INFO] Skipping S3 Bucket (%s) in different region: %s", name, bucketRegion)
+			log.Printf("[INFO] Skipping S3 Bucket (%s) in different Region: %s", name, bucketRegion)
 			continue
 		}
 
@@ -301,7 +302,7 @@ func TestAccAWSS3Bucket_Tags_withSystemTags(t *testing.T) {
 			testAccCheckAWSS3BucketDestroy,
 			func(s *terraform.State) error {
 				// Tear down CF stack.
-				conn := acctest.Provider.Meta().(*AWSClient).cfconn
+				conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn
 
 				requestToken := resource.UniqueId()
 				req := &cloudformation.DeleteStackInput{
@@ -1114,7 +1115,7 @@ func TestAccAWSS3Bucket_Security_corsUpdate(t *testing.T) {
 				return fmt.Errorf("Not found: %s", n)
 			}
 
-			conn := acctest.Provider.Meta().(*AWSClient).s3conn
+			conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
 			_, err := conn.PutBucketCors(&s3.PutBucketCorsInput{
 				Bucket: aws.String(rs.Primary.ID),
 				CORSConfiguration: &s3.CORSConfiguration{
@@ -1199,7 +1200,7 @@ func TestAccAWSS3Bucket_Security_corsDelete(t *testing.T) {
 				return fmt.Errorf("Not found: %s", n)
 			}
 
-			conn := acctest.Provider.Meta().(*AWSClient).s3conn
+			conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
 			_, err := conn.DeleteBucketCors(&s3.DeleteBucketCorsInput{
 				Bucket: aws.String(rs.Primary.ID),
 			})
@@ -2578,150 +2579,150 @@ func TestBucketRegionalDomainName(t *testing.T) {
 func TestWebsiteEndpoint(t *testing.T) {
 	// https://docs.aws.amazon.com/AmazonS3/latest/dev/WebsiteEndpoints.html
 	testCases := []struct {
-		AWSClient          *AWSClient
+		TestingClient          *conns.AWSClient
 		LocationConstraint string
 		Expected           string
 	}{
 		{
-			AWSClient: &AWSClient{
-				dnsSuffix: "amazonaws.com",
-				region:    endpoints.UsEast1RegionID,
+			TestingClient: &conns.AWSClient{
+				DNSSuffix: "amazonaws.com",
+				Region:    endpoints.UsEast1RegionID,
 			},
 			LocationConstraint: "",
 			Expected:           fmt.Sprintf("bucket-name.s3-website-%s.%s", endpoints.UsEast1RegionID, acctest.PartitionDNSSuffix()),
 		},
 		{
-			AWSClient: &AWSClient{
-				dnsSuffix: "amazonaws.com",
-				region:    endpoints.UsWest2RegionID,
+			TestingClient: &conns.AWSClient{
+				DNSSuffix: "amazonaws.com",
+				Region:    endpoints.UsWest2RegionID,
 			},
 			LocationConstraint: endpoints.UsWest2RegionID,
 			Expected:           fmt.Sprintf("bucket-name.s3-website-%s.%s", endpoints.UsWest2RegionID, acctest.PartitionDNSSuffix()),
 		},
 		{
-			AWSClient: &AWSClient{
-				dnsSuffix: "amazonaws.com",
-				region:    endpoints.UsWest1RegionID,
+			TestingClient: &conns.AWSClient{
+				DNSSuffix: "amazonaws.com",
+				Region:    endpoints.UsWest1RegionID,
 			},
 			LocationConstraint: endpoints.UsWest1RegionID,
 			Expected:           fmt.Sprintf("bucket-name.s3-website-%s.%s", endpoints.UsWest1RegionID, acctest.PartitionDNSSuffix()),
 		},
 		{
-			AWSClient: &AWSClient{
-				dnsSuffix: "amazonaws.com",
-				region:    endpoints.EuWest1RegionID,
+			TestingClient: &conns.AWSClient{
+				DNSSuffix: "amazonaws.com",
+				Region:    endpoints.EuWest1RegionID,
 			},
 			LocationConstraint: endpoints.EuWest1RegionID,
 			Expected:           fmt.Sprintf("bucket-name.s3-website-%s.%s", endpoints.EuWest1RegionID, acctest.PartitionDNSSuffix()),
 		},
 		{
-			AWSClient: &AWSClient{
-				dnsSuffix: "amazonaws.com",
-				region:    endpoints.EuWest3RegionID,
+			TestingClient: &conns.AWSClient{
+				DNSSuffix: "amazonaws.com",
+				Region:    endpoints.EuWest3RegionID,
 			},
 			LocationConstraint: endpoints.EuWest3RegionID,
 			Expected:           fmt.Sprintf("bucket-name.s3-website.%s.%s", endpoints.EuWest3RegionID, acctest.PartitionDNSSuffix()),
 		},
 		{
-			AWSClient: &AWSClient{
-				dnsSuffix: "amazonaws.com",
-				region:    endpoints.EuCentral1RegionID,
+			TestingClient: &conns.AWSClient{
+				DNSSuffix: "amazonaws.com",
+				Region:    endpoints.EuCentral1RegionID,
 			},
 			LocationConstraint: endpoints.EuCentral1RegionID,
 			Expected:           fmt.Sprintf("bucket-name.s3-website.%s.%s", endpoints.EuCentral1RegionID, acctest.PartitionDNSSuffix()),
 		},
 		{
-			AWSClient: &AWSClient{
-				dnsSuffix: "amazonaws.com",
-				region:    endpoints.ApSouth1RegionID,
+			TestingClient: &conns.AWSClient{
+				DNSSuffix: "amazonaws.com",
+				Region:    endpoints.ApSouth1RegionID,
 			},
 			LocationConstraint: endpoints.ApSouth1RegionID,
 			Expected:           fmt.Sprintf("bucket-name.s3-website.%s.%s", endpoints.ApSouth1RegionID, acctest.PartitionDNSSuffix()),
 		},
 		{
-			AWSClient: &AWSClient{
-				dnsSuffix: "amazonaws.com",
-				region:    endpoints.ApSoutheast1RegionID,
+			TestingClient: &conns.AWSClient{
+				DNSSuffix: "amazonaws.com",
+				Region:    endpoints.ApSoutheast1RegionID,
 			},
 			LocationConstraint: endpoints.ApSoutheast1RegionID,
 			Expected:           fmt.Sprintf("bucket-name.s3-website-%s.%s", endpoints.ApSoutheast1RegionID, acctest.PartitionDNSSuffix()),
 		},
 		{
-			AWSClient: &AWSClient{
-				dnsSuffix: "amazonaws.com",
-				region:    endpoints.ApNortheast1RegionID,
+			TestingClient: &conns.AWSClient{
+				DNSSuffix: "amazonaws.com",
+				Region:    endpoints.ApNortheast1RegionID,
 			},
 			LocationConstraint: endpoints.ApNortheast1RegionID,
 			Expected:           fmt.Sprintf("bucket-name.s3-website-%s.%s", endpoints.ApNortheast1RegionID, acctest.PartitionDNSSuffix()),
 		},
 		{
-			AWSClient: &AWSClient{
-				dnsSuffix: "amazonaws.com",
-				region:    endpoints.ApSoutheast2RegionID,
+			TestingClient: &conns.AWSClient{
+				DNSSuffix: "amazonaws.com",
+				Region:    endpoints.ApSoutheast2RegionID,
 			},
 			LocationConstraint: endpoints.ApSoutheast2RegionID,
 			Expected:           fmt.Sprintf("bucket-name.s3-website-%s.%s", endpoints.ApSoutheast2RegionID, acctest.PartitionDNSSuffix()),
 		},
 		{
-			AWSClient: &AWSClient{
-				dnsSuffix: "amazonaws.com",
-				region:    endpoints.ApNortheast2RegionID,
+			TestingClient: &conns.AWSClient{
+				DNSSuffix: "amazonaws.com",
+				Region:    endpoints.ApNortheast2RegionID,
 			},
 			LocationConstraint: endpoints.ApNortheast2RegionID,
 			Expected:           fmt.Sprintf("bucket-name.s3-website.%s.%s", endpoints.ApNortheast2RegionID, acctest.PartitionDNSSuffix()),
 		},
 		{
-			AWSClient: &AWSClient{
-				dnsSuffix: "amazonaws.com",
-				region:    endpoints.SaEast1RegionID,
+			TestingClient: &conns.AWSClient{
+				DNSSuffix: "amazonaws.com",
+				Region:    endpoints.SaEast1RegionID,
 			},
 			LocationConstraint: endpoints.SaEast1RegionID,
 			Expected:           fmt.Sprintf("bucket-name.s3-website-%s.%s", endpoints.SaEast1RegionID, acctest.PartitionDNSSuffix()),
 		},
 		{
-			AWSClient: &AWSClient{
-				dnsSuffix: "amazonaws.com",
-				region:    endpoints.UsGovEast1RegionID,
+			TestingClient: &conns.AWSClient{
+				DNSSuffix: "amazonaws.com",
+				Region:    endpoints.UsGovEast1RegionID,
 			},
 			LocationConstraint: endpoints.UsGovEast1RegionID,
 			Expected:           fmt.Sprintf("bucket-name.s3-website.%s.%s", endpoints.UsGovEast1RegionID, acctest.PartitionDNSSuffix()),
 		},
 		{
-			AWSClient: &AWSClient{
-				dnsSuffix: "amazonaws.com",
-				region:    endpoints.UsGovWest1RegionID,
+			TestingClient: &conns.AWSClient{
+				DNSSuffix: "amazonaws.com",
+				Region:    endpoints.UsGovWest1RegionID,
 			},
 			LocationConstraint: endpoints.UsGovWest1RegionID,
 			Expected:           fmt.Sprintf("bucket-name.s3-website-%s.%s", endpoints.UsGovWest1RegionID, acctest.PartitionDNSSuffix()),
 		},
 		{
-			AWSClient: &AWSClient{
-				dnsSuffix: "c2s.ic.gov",
-				region:    endpoints.UsIsoEast1RegionID,
+			TestingClient: &conns.AWSClient{
+				DNSSuffix: "c2s.ic.gov",
+				Region:    endpoints.UsIsoEast1RegionID,
 			},
 			LocationConstraint: endpoints.UsIsoEast1RegionID,
 			Expected:           fmt.Sprintf("bucket-name.s3-website.%s.c2s.ic.gov", endpoints.UsIsoEast1RegionID),
 		},
 		{
-			AWSClient: &AWSClient{
-				dnsSuffix: "sc2s.sgov.gov",
-				region:    endpoints.UsIsobEast1RegionID,
+			TestingClient: &conns.AWSClient{
+				DNSSuffix: "sc2s.sgov.gov",
+				Region:    endpoints.UsIsobEast1RegionID,
 			},
 			LocationConstraint: endpoints.UsIsobEast1RegionID,
 			Expected:           fmt.Sprintf("bucket-name.s3-website.%s.sc2s.sgov.gov", endpoints.UsIsobEast1RegionID),
 		},
 		{
-			AWSClient: &AWSClient{
-				dnsSuffix: "amazonaws.com.cn",
-				region:    endpoints.CnNorthwest1RegionID,
+			TestingClient: &conns.AWSClient{
+				DNSSuffix: "amazonaws.com.cn",
+				Region:    endpoints.CnNorthwest1RegionID,
 			},
 			LocationConstraint: endpoints.CnNorthwest1RegionID,
 			Expected:           fmt.Sprintf("bucket-name.s3-website.%s.amazonaws.com.cn", endpoints.CnNorthwest1RegionID),
 		},
 		{
-			AWSClient: &AWSClient{
-				dnsSuffix: "amazonaws.com.cn",
-				region:    endpoints.CnNorth1RegionID,
+			TestingClient: &conns.AWSClient{
+				DNSSuffix: "amazonaws.com.cn",
+				Region:    endpoints.CnNorth1RegionID,
 			},
 			LocationConstraint: endpoints.CnNorth1RegionID,
 			Expected:           fmt.Sprintf("bucket-name.s3-website.%s.amazonaws.com.cn", endpoints.CnNorth1RegionID),
@@ -2729,7 +2730,7 @@ func TestWebsiteEndpoint(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		got := WebsiteEndpoint(testCase.AWSClient, "bucket-name", testCase.LocationConstraint)
+		got := WebsiteEndpoint(testCase.TestingClient, "bucket-name", testCase.LocationConstraint)
 		if got.Endpoint != testCase.Expected {
 			t.Errorf("WebsiteEndpointUrl(\"bucket-name\", %q) => %q, want %q", testCase.LocationConstraint, got.Endpoint, testCase.Expected)
 		}
@@ -2748,7 +2749,7 @@ func testAccCheckAWSS3BucketDestroy(s *terraform.State) error {
 }
 
 func testAccCheckAWSS3BucketDestroyWithProvider(s *terraform.State, provider *schema.Provider) error {
-	conn := provider.Meta().(*AWSClient).s3conn
+	conn := provider.Meta().(*conns.AWSClient).S3Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_s3_bucket" {
@@ -2802,7 +2803,7 @@ func testAccCheckAWSS3BucketExistsWithProvider(n string, providerF func() *schem
 
 		provider := providerF()
 
-		conn := provider.Meta().(*AWSClient).s3conn
+		conn := provider.Meta().(*conns.AWSClient).S3Conn
 		_, err := conn.HeadBucket(&s3.HeadBucketInput{
 			Bucket: aws.String(rs.Primary.ID),
 		})
@@ -2829,7 +2830,7 @@ func testAccCheckAWSS3DestroyBucket(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No S3 Bucket ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).s3conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
 		_, err := conn.DeleteBucket(&s3.DeleteBucketInput{
 			Bucket: aws.String(rs.Primary.ID),
 		})
@@ -2844,7 +2845,7 @@ func testAccCheckAWSS3DestroyBucket(n string) resource.TestCheckFunc {
 func testAccCheckAWSS3BucketAddObjects(n string, keys ...string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
-		conn := acctest.Provider.Meta().(*AWSClient).s3connUriCleaningDisabled
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ConnURICleaningDisabled
 
 		for _, key := range keys {
 			_, err := conn.PutObject(&s3.PutObjectInput{
@@ -2864,7 +2865,7 @@ func testAccCheckAWSS3BucketAddObjects(n string, keys ...string) resource.TestCh
 func testAccCheckAWSS3BucketAddObjectsWithLegalHold(n string, keys ...string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
-		conn := acctest.Provider.Meta().(*AWSClient).s3conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
 
 		for _, key := range keys {
 			_, err := conn.PutObject(&s3.PutObjectInput{
@@ -2885,7 +2886,7 @@ func testAccCheckAWSS3BucketAddObjectsWithLegalHold(n string, keys ...string) re
 // Create an S3 bucket via a CF stack so that it has system tags.
 func testAccCheckAWSS3BucketCreateViaCloudFormation(n string, stackID *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).cfconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn
 		stackName := sdkacctest.RandomWithPrefix("tf-acc-test-s3tags")
 		templateBody := fmt.Sprintf(`{
   "Resources": {
@@ -2928,7 +2929,7 @@ func testAccCheckAWSS3BucketCreateViaCloudFormation(n string, stackID *string) r
 func testAccCheckAWSS3BucketTagKeys(n string, keys ...string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
-		conn := acctest.Provider.Meta().(*AWSClient).s3conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
 
 		got, err := keyvaluetags.S3BucketListTags(conn, rs.Primary.Attributes["bucket"])
 		if err != nil {
@@ -2955,7 +2956,7 @@ func testAccCheckAWSS3BucketTagKeys(n string, keys ...string) resource.TestCheck
 func testAccCheckAWSS3BucketPolicy(n string, policy string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
-		conn := acctest.Provider.Meta().(*AWSClient).s3conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
 
 		out, err := conn.GetBucketPolicy(&s3.GetBucketPolicyInput{
 			Bucket: aws.String(rs.Primary.ID),
@@ -3002,7 +3003,7 @@ func testAccCheckAWSS3BucketPolicy(n string, policy string) resource.TestCheckFu
 func testAccCheckAWSS3BucketWebsite(n string, indexDoc string, errorDoc string, redirectProtocol string, redirectTo string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
-		conn := acctest.Provider.Meta().(*AWSClient).s3conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
 
 		out, err := conn.GetBucketWebsite(&s3.GetBucketWebsiteInput{
 			Bucket: aws.String(rs.Primary.ID),
@@ -3058,7 +3059,7 @@ func testAccCheckAWSS3BucketWebsite(n string, indexDoc string, errorDoc string, 
 func testAccCheckAWSS3BucketWebsiteRoutingRules(n string, routingRules []*s3.RoutingRule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
-		conn := acctest.Provider.Meta().(*AWSClient).s3conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
 
 		out, err := conn.GetBucketWebsite(&s3.GetBucketWebsiteInput{
 			Bucket: aws.String(rs.Primary.ID),
@@ -3082,7 +3083,7 @@ func testAccCheckAWSS3BucketWebsiteRoutingRules(n string, routingRules []*s3.Rou
 func testAccCheckAWSS3BucketVersioning(n string, versioningStatus string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
-		conn := acctest.Provider.Meta().(*AWSClient).s3conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
 
 		out, err := conn.GetBucketVersioning(&s3.GetBucketVersioningInput{
 			Bucket: aws.String(rs.Primary.ID),
@@ -3109,7 +3110,7 @@ func testAccCheckAWSS3BucketVersioning(n string, versioningStatus string) resour
 func testAccCheckAWSS3BucketCors(n string, corsRules []*s3.CORSRule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
-		conn := acctest.Provider.Meta().(*AWSClient).s3conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
 
 		out, err := conn.GetBucketCors(&s3.GetBucketCorsInput{
 			Bucket: aws.String(rs.Primary.ID),
@@ -3132,7 +3133,7 @@ func testAccCheckAWSS3BucketCors(n string, corsRules []*s3.CORSRule) resource.Te
 func testAccCheckAWSS3RequestPayer(n, expectedPayer string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
-		conn := acctest.Provider.Meta().(*AWSClient).s3conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
 
 		out, err := conn.GetBucketRequestPayment(&s3.GetBucketRequestPaymentInput{
 			Bucket: aws.String(rs.Primary.ID),
@@ -3154,7 +3155,7 @@ func testAccCheckAWSS3RequestPayer(n, expectedPayer string) resource.TestCheckFu
 func testAccCheckAWSS3BucketLogging(n, b, p string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
-		conn := acctest.Provider.Meta().(*AWSClient).s3conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
 
 		out, err := conn.GetBucketLogging(&s3.GetBucketLoggingInput{
 			Bucket: aws.String(rs.Primary.ID),
@@ -3225,7 +3226,7 @@ func testAccCheckAWSS3BucketReplicationRules(n string, rules []*s3.ReplicationRu
 			}
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).s3conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
 		out, err := conn.GetBucketReplication(&s3.GetBucketReplicationInput{
 			Bucket: aws.String(rs.Primary.ID),
 		})
@@ -3259,7 +3260,7 @@ func testAccCheckAWSS3BucketReplicationRules(n string, rules []*s3.ReplicationRu
 
 func testAccCheckS3BucketDomainName(resourceName string, attributeName string, bucketName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		expectedValue := acctest.Provider.Meta().(*AWSClient).PartitionHostname(fmt.Sprintf("%s.s3", bucketName))
+		expectedValue := acctest.Provider.Meta().(*conns.AWSClient).PartitionHostname(fmt.Sprintf("%s.s3", bucketName))
 
 		return resource.TestCheckResourceAttr(resourceName, attributeName, expectedValue)(s)
 	}
@@ -3275,7 +3276,7 @@ func testAccBucketRegionalDomainName(bucket, region string) string {
 
 func testAccCheckS3BucketWebsiteEndpoint(resourceName string, attributeName string, bucketName string, region string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		website := WebsiteEndpoint(acctest.Provider.Meta().(*AWSClient), bucketName, region)
+		website := WebsiteEndpoint(acctest.Provider.Meta().(*conns.AWSClient), bucketName, region)
 		expectedValue := website.Endpoint
 
 		return resource.TestCheckResourceAttr(resourceName, attributeName, expectedValue)(s)
@@ -3285,7 +3286,7 @@ func testAccCheckS3BucketWebsiteEndpoint(resourceName string, attributeName stri
 func testAccCheckAWSS3BucketUpdateTags(n string, oldTags, newTags map[string]string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
-		conn := acctest.Provider.Meta().(*AWSClient).s3conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
 
 		return keyvaluetags.S3BucketUpdateTags(conn, rs.Primary.Attributes["bucket"], oldTags, newTags)
 	}
@@ -3294,7 +3295,7 @@ func testAccCheckAWSS3BucketUpdateTags(n string, oldTags, newTags map[string]str
 func testAccCheckAWSS3BucketCheckTags(n string, expectedTags map[string]string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
-		conn := acctest.Provider.Meta().(*AWSClient).s3conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
 
 		got, err := keyvaluetags.S3BucketListTags(conn, rs.Primary.Attributes["bucket"])
 		if err != nil {

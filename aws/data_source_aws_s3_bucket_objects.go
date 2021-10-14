@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 const keyRequestPageSize = 1000
@@ -64,7 +65,7 @@ func dataSourceAwsS3BucketObjects() *schema.Resource {
 }
 
 func dataSourceAwsS3BucketObjectsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).s3conn
+	conn := meta.(*conns.AWSClient).S3Conn
 
 	bucket := d.Get("bucket").(string)
 	prefix := d.Get("prefix").(string)
