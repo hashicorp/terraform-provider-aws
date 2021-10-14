@@ -327,7 +327,7 @@ func expandEcrPublicRepositoryCatalogData(tfMap map[string]interface{}) *ecrpubl
 	}
 
 	if v, ok := tfMap["architectures"].(*schema.Set); ok {
-		repositoryCatalogDataInput.Architectures = expandStringSet(v)
+		repositoryCatalogDataInput.Architectures = flex.ExpandStringSet(v)
 	}
 
 	if v, ok := tfMap["description"].(string); ok && v != "" {
@@ -340,7 +340,7 @@ func expandEcrPublicRepositoryCatalogData(tfMap map[string]interface{}) *ecrpubl
 	}
 
 	if v, ok := tfMap["operating_systems"].(*schema.Set); ok {
-		repositoryCatalogDataInput.OperatingSystems = expandStringSet(v)
+		repositoryCatalogDataInput.OperatingSystems = flex.ExpandStringSet(v)
 	}
 
 	if v, ok := tfMap["usage_text"].(string); ok && v != "" {
