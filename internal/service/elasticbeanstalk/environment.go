@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func resourceAwsElasticBeanstalkOptionSetting() *schema.Resource {
+func resourceOptionSetting() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
 			"namespace": {
@@ -118,13 +118,13 @@ func ResourceEnvironment() *schema.Resource {
 			"setting": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				Elem:     resourceAwsElasticBeanstalkOptionSetting(),
+				Elem:     resourceOptionSetting(),
 				Set:      optionSettingValueHash,
 			},
 			"all_settings": {
 				Type:     schema.TypeSet,
 				Computed: true,
-				Elem:     resourceAwsElasticBeanstalkOptionSetting(),
+				Elem:     resourceOptionSetting(),
 				Set:      optionSettingValueHash,
 			},
 			"solution_stack_name": {
@@ -638,10 +638,10 @@ func resourceEnvironmentRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
-	return resourceAwsElasticBeanstalkEnvironmentSettingsRead(d, meta)
+	return resourceEnvironmentSettingsRead(d, meta)
 }
 
-func fetchAwsElasticBeanstalkEnvironmentSettings(d *schema.ResourceData, meta interface{}) (*schema.Set, error) {
+func fetchEnvironmentSettings(d *schema.ResourceData, meta interface{}) (*schema.Set, error) {
 	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn
 
 	app := d.Get("application").(string)
@@ -697,10 +697,10 @@ func fetchAwsElasticBeanstalkEnvironmentSettings(d *schema.ResourceData, meta in
 	return settings, nil
 }
 
-func resourceAwsElasticBeanstalkEnvironmentSettingsRead(d *schema.ResourceData, meta interface{}) error {
+func resourceEnvironmentSettingsRead(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Elastic Beanstalk environment settings read %s: id %s", d.Get("name").(string), d.Id())
 
-	allSettings, err := fetchAwsElasticBeanstalkEnvironmentSettings(d, meta)
+	allSettings, err := fetchEnvironmentSettings(d, meta)
 	if err != nil {
 		return err
 	}

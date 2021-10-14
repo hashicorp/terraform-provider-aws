@@ -151,7 +151,7 @@ func resourceApplicationVersionUpdate(d *schema.ResourceData, meta interface{}) 
 	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn
 
 	if d.HasChange("description") {
-		if err := resourceAwsElasticBeanstalkApplicationVersionDescriptionUpdate(conn, d); err != nil {
+		if err := resourceApplicationVersionDescriptionUpdate(conn, d); err != nil {
 			return err
 		}
 	}
@@ -204,7 +204,7 @@ func resourceApplicationVersionDelete(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func resourceAwsElasticBeanstalkApplicationVersionDescriptionUpdate(conn *elasticbeanstalk.ElasticBeanstalk, d *schema.ResourceData) error {
+func resourceApplicationVersionDescriptionUpdate(conn *elasticbeanstalk.ElasticBeanstalk, d *schema.ResourceData) error {
 	application := d.Get("application").(string)
 	description := d.Get("description").(string)
 	name := d.Get("name").(string)

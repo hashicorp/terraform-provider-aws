@@ -98,7 +98,7 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(name)
 
-	if err = resourceAwsElasticBeanstalkApplicationAppversionLifecycleUpdate(beanstalkConn, d, app.Application); err != nil {
+	if err = resourceApplicationAppversionLifecycleUpdate(beanstalkConn, d, app.Application); err != nil {
 		return err
 	}
 
@@ -109,13 +109,13 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn
 
 	if d.HasChange("description") {
-		if err := resourceAwsElasticBeanstalkApplicationDescriptionUpdate(conn, d); err != nil {
+		if err := resourceApplicationDescriptionUpdate(conn, d); err != nil {
 			return err
 		}
 	}
 
 	if d.HasChange("appversion_lifecycle") {
-		if err := resourceAwsElasticBeanstalkApplicationAppversionLifecycleUpdate(conn, d, nil); err != nil {
+		if err := resourceApplicationAppversionLifecycleUpdate(conn, d, nil); err != nil {
 			return err
 		}
 	}
@@ -132,7 +132,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 	return resourceApplicationRead(d, meta)
 }
 
-func resourceAwsElasticBeanstalkApplicationDescriptionUpdate(beanstalkConn *elasticbeanstalk.ElasticBeanstalk, d *schema.ResourceData) error {
+func resourceApplicationDescriptionUpdate(beanstalkConn *elasticbeanstalk.ElasticBeanstalk, d *schema.ResourceData) error {
 	name := d.Get("name").(string)
 	description := d.Get("description").(string)
 
@@ -146,7 +146,7 @@ func resourceAwsElasticBeanstalkApplicationDescriptionUpdate(beanstalkConn *elas
 	return err
 }
 
-func resourceAwsElasticBeanstalkApplicationAppversionLifecycleUpdate(beanstalkConn *elasticbeanstalk.ElasticBeanstalk, d *schema.ResourceData, app *elasticbeanstalk.ApplicationDescription) error {
+func resourceApplicationAppversionLifecycleUpdate(beanstalkConn *elasticbeanstalk.ElasticBeanstalk, d *schema.ResourceData, app *elasticbeanstalk.ApplicationDescription) error {
 	name := d.Get("name").(string)
 	appversion_lifecycles := d.Get("appversion_lifecycle").([]interface{})
 	var appversion_lifecycle map[string]interface{} = nil

@@ -43,7 +43,7 @@ func ResourceConfigurationTemplate() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
-				Elem:     resourceAwsElasticBeanstalkOptionSetting(),
+				Elem:     resourceOptionSetting(),
 				Set:      optionSettingValueHash,
 			},
 			"solution_stack_name": {
@@ -132,13 +132,13 @@ func resourceConfigurationTemplateUpdate(d *schema.ResourceData, meta interface{
 	log.Printf("[DEBUG] Elastic Beanstalk configuration template update: %s", d.Get("name").(string))
 
 	if d.HasChange("description") {
-		if err := resourceAwsElasticBeanstalkConfigurationTemplateDescriptionUpdate(conn, d); err != nil {
+		if err := resourceConfigurationTemplateDescriptionUpdate(conn, d); err != nil {
 			return err
 		}
 	}
 
 	if d.HasChange("setting") {
-		if err := resourceAwsElasticBeanstalkConfigurationTemplateOptionSettingsUpdate(conn, d); err != nil {
+		if err := resourceConfigurationTemplateOptionSettingsUpdate(conn, d); err != nil {
 			return err
 		}
 	}
@@ -146,7 +146,7 @@ func resourceConfigurationTemplateUpdate(d *schema.ResourceData, meta interface{
 	return resourceConfigurationTemplateRead(d, meta)
 }
 
-func resourceAwsElasticBeanstalkConfigurationTemplateDescriptionUpdate(conn *elasticbeanstalk.ElasticBeanstalk, d *schema.ResourceData) error {
+func resourceConfigurationTemplateDescriptionUpdate(conn *elasticbeanstalk.ElasticBeanstalk, d *schema.ResourceData) error {
 	_, err := conn.UpdateConfigurationTemplate(&elasticbeanstalk.UpdateConfigurationTemplateInput{
 		ApplicationName: aws.String(d.Get("application").(string)),
 		TemplateName:    aws.String(d.Get("name").(string)),
@@ -156,7 +156,7 @@ func resourceAwsElasticBeanstalkConfigurationTemplateDescriptionUpdate(conn *ela
 	return err
 }
 
-func resourceAwsElasticBeanstalkConfigurationTemplateOptionSettingsUpdate(conn *elasticbeanstalk.ElasticBeanstalk, d *schema.ResourceData) error {
+func resourceConfigurationTemplateOptionSettingsUpdate(conn *elasticbeanstalk.ElasticBeanstalk, d *schema.ResourceData) error {
 	if d.HasChange("setting") {
 		_, err := conn.ValidateConfigurationSettings(&elasticbeanstalk.ValidateConfigurationSettingsInput{
 			ApplicationName: aws.String(d.Get("application").(string)),
