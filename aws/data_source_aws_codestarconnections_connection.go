@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/codestarconnections/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsCodeStarConnectionsConnection() *schema.Resource {
@@ -45,8 +46,8 @@ func dataSourceAwsCodeStarConnectionsConnection() *schema.Resource {
 }
 
 func dataSourceAwsCodeStarConnectionsConnectionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codestarconnectionsconn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	arn := d.Get("arn").(string)
 

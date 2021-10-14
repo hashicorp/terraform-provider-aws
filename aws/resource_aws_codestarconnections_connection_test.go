@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSCodeStarConnectionsConnection_Basic(t *testing.T) {
@@ -156,7 +157,7 @@ func testAccCheckAWSCodeStarConnectionsConnectionExists(n string, v *codestarcon
 			return errors.New("No CodeStar connection ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).codestarconnectionsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeStarConnectionsConn
 
 		resp, err := conn.GetConnection(&codestarconnections.GetConnectionInput{
 			ConnectionArn: aws.String(rs.Primary.ID),
@@ -172,7 +173,7 @@ func testAccCheckAWSCodeStarConnectionsConnectionExists(n string, v *codestarcon
 }
 
 func testAccCheckAWSCodeStarConnectionsConnectionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).codestarconnectionsconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeStarConnectionsConn
 
 	for _, rs := range s.RootModule().Resources {
 		switch rs.Type {
