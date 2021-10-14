@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAWSSSOAdminPermissionSet_arn(t *testing.T) {
+func TestAccSSOAdminPermissionSetDataSource_arn(t *testing.T) {
 	dataSourceName := "data.aws_ssoadmin_permission_set.test"
 	resourceName := "aws_ssoadmin_permission_set.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -36,7 +36,7 @@ func TestAccDataSourceAWSSSOAdminPermissionSet_arn(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAWSSSOAdminPermissionSet_name(t *testing.T) {
+func TestAccSSOAdminPermissionSetDataSource_name(t *testing.T) {
 	dataSourceName := "data.aws_ssoadmin_permission_set.test"
 	resourceName := "aws_ssoadmin_permission_set.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -61,7 +61,7 @@ func TestAccDataSourceAWSSSOAdminPermissionSet_name(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAWSSSOAdminPermissionSet_nonExistent(t *testing.T) {
+func TestAccSSOAdminPermissionSetDataSource_nonExistent(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },

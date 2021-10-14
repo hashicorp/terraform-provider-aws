@@ -37,7 +37,7 @@ func testAccPreCheckInstances(t *testing.T) {
 	}
 }
 
-func TestAccDataSourceAWSSSOAdminInstances_basic(t *testing.T) {
+func TestAccSSOAdminInstancesDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_ssoadmin_instances.test"
 
 	resource.ParallelTest(t, resource.TestCase{
