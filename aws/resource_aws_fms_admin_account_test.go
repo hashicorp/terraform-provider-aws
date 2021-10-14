@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/fms"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func testAccAwsFmsAdminAccount_basic(t *testing.T) {
@@ -15,18 +16,18 @@ func testAccAwsFmsAdminAccount_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			acctest.PreCheck(t)
 			testAccPreCheckFmsAdmin(t)
-			testAccOrganizationsAccountPreCheck(t)
+			acctest.PreCheckOrganizationsAccount(t)
 		},
-		ErrorCheck:        testAccErrorCheck(t, fms.EndpointsID),
+		ErrorCheck:        acctest.ErrorCheck(t, fms.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckFmsAdminAccountDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFmsAdminAccountConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceAttrAccountID(resourceName, "account_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
 				),
 			},
 		},
@@ -62,7 +63,7 @@ func testAccCheckFmsAdminAccountDestroy(s *terraform.State) error {
 }
 
 func testAccFmsAdminAccountConfig_basic() string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccFmsAdminRegionProviderConfig(),
 		`
 data "aws_partition" "current" {}
