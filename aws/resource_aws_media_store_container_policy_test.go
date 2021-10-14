@@ -6,23 +6,24 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mediastore"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSMediaStoreContainerPolicy_basic(t *testing.T) {
-	rname := acctest.RandString(5)
+	rname := sdkacctest.RandString(5)
 	resourceName := "aws_media_store_container_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMediaStore(t) },
-		ErrorCheck:   testAccErrorCheck(t, mediastore.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSMediaStore(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, mediastore.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMediaStoreContainerPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMediaStoreContainerPolicyConfig(rname, acctest.RandString(5)),
+				Config: testAccMediaStoreContainerPolicyConfig(rname, sdkacctest.RandString(5)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMediaStoreContainerPolicyExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "container_name"),
@@ -35,7 +36,7 @@ func TestAccAWSMediaStoreContainerPolicy_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccMediaStoreContainerPolicyConfig(rname, acctest.RandString(5)),
+				Config: testAccMediaStoreContainerPolicyConfig(rname, sdkacctest.RandString(5)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMediaStoreContainerPolicyExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "container_name"),

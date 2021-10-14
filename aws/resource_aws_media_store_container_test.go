@@ -6,22 +6,23 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mediastore"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSMediaStoreContainer_basic(t *testing.T) {
 	resourceName := "aws_media_store_container.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMediaStore(t) },
-		ErrorCheck:   testAccErrorCheck(t, mediastore.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSMediaStore(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, mediastore.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMediaStoreContainerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMediaStoreContainerConfig(acctest.RandString(5)),
+				Config: testAccMediaStoreContainerConfig(sdkacctest.RandString(5)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMediaStoreContainerExists(resourceName),
 				),
@@ -36,12 +37,12 @@ func TestAccAWSMediaStoreContainer_basic(t *testing.T) {
 }
 
 func TestAccAWSMediaStoreContainer_tags(t *testing.T) {
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 	resourceName := "aws_media_store_container.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMediaStore(t) },
-		ErrorCheck:   testAccErrorCheck(t, mediastore.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSMediaStore(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, mediastore.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMediaStoreContainerDestroy,
 		Steps: []resource.TestStep{
@@ -134,7 +135,7 @@ func testAccPreCheckAWSMediaStore(t *testing.T) {
 
 	_, err := conn.ListContainers(input)
 
-	if testAccPreCheckSkipError(err) {
+	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
