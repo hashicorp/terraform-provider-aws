@@ -76,14 +76,14 @@ func testSweepBudgetsBudgetActionss(region string) error {
 }
 
 func TestAccAWSBudgetsBudgetAction_basic(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_budgets_budget_action.test"
 	var conf budgets.Action
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, budgets.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccAWSBudgetsBudgetActionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -116,21 +116,21 @@ func TestAccAWSBudgetsBudgetAction_basic(t *testing.T) {
 }
 
 func TestAccAWSBudgetsBudgetAction_disappears(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_budgets_budget_action.test"
 	var conf budgets.Action
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, budgets.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccAWSBudgetsBudgetActionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSBudgetsBudgetActionConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccAWSBudgetsBudgetActionExists(resourceName, &conf),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsBudgetsBudgetAction(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsBudgetsBudgetAction(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -149,7 +149,7 @@ func testAccAWSBudgetsBudgetActionExists(resourceName string, config *budgets.Ac
 			return fmt.Errorf("No Budget Action ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).budgetconn
+		conn := acctest.Provider.Meta().(*AWSClient).budgetconn
 
 		accountID, actionID, budgetName, err := tfbudgets.BudgetActionParseResourceID(rs.Primary.ID)
 
@@ -170,7 +170,7 @@ func testAccAWSBudgetsBudgetActionExists(resourceName string, config *budgets.Ac
 }
 
 func testAccAWSBudgetsBudgetActionDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).budgetconn
+	conn := acctest.Provider.Meta().(*AWSClient).budgetconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_budgets_budget_action" {

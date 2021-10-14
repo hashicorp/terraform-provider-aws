@@ -80,13 +80,13 @@ func testSweepBudgetsBudgets(region string) error {
 
 func TestAccAWSBudgetsBudget_basic(t *testing.T) {
 	var budget budgets.Budget
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_budgets_budget.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, budgets.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccAWSBudgetsBudgetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -129,7 +129,7 @@ func TestAccAWSBudgetsBudget_Name_Generated(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, budgets.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccAWSBudgetsBudgetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -171,7 +171,7 @@ func TestAccAWSBudgetsBudget_NamePrefix(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, budgets.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccAWSBudgetsBudgetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -202,20 +202,20 @@ func TestAccAWSBudgetsBudget_NamePrefix(t *testing.T) {
 
 func TestAccAWSBudgetsBudget_disappears(t *testing.T) {
 	var budget budgets.Budget
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_budgets_budget.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, budgets.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccAWSBudgetsBudgetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSBudgetsBudgetConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccAWSBudgetsBudgetExists(resourceName, &budget),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsBudgetsBudget(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsBudgetsBudget(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -225,7 +225,7 @@ func TestAccAWSBudgetsBudget_disappears(t *testing.T) {
 
 func TestAccAWSBudgetsBudget_CostTypes(t *testing.T) {
 	var budget budgets.Budget
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_budgets_budget.test"
 
 	now := time.Now().UTC()
@@ -241,7 +241,7 @@ func TestAccAWSBudgetsBudget_CostTypes(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, budgets.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccAWSBudgetsBudgetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -325,7 +325,7 @@ func TestAccAWSBudgetsBudget_CostTypes(t *testing.T) {
 
 func TestAccAWSBudgetsBudget_Notifications(t *testing.T) {
 	var budget budgets.Budget
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_budgets_budget.test"
 	snsTopicResourceName := "aws_sns_topic.test"
 
@@ -337,7 +337,7 @@ func TestAccAWSBudgetsBudget_Notifications(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, budgets.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccAWSBudgetsBudgetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -416,7 +416,7 @@ func testAccAWSBudgetsBudgetExists(resourceName string, v *budgets.Budget) resou
 			return fmt.Errorf("No Budget ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).budgetconn
+		conn := acctest.Provider.Meta().(*AWSClient).budgetconn
 
 		accountID, budgetName, err := tfbudgets.BudgetParseResourceID(rs.Primary.ID)
 
@@ -437,7 +437,7 @@ func testAccAWSBudgetsBudgetExists(resourceName string, v *budgets.Budget) resou
 }
 
 func testAccAWSBudgetsBudgetDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).budgetconn
+	conn := acctest.Provider.Meta().(*AWSClient).budgetconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_budgets_budget" {
