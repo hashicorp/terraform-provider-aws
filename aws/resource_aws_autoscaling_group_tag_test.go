@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSAutoscalingGroupTag_basic(t *testing.T) {
@@ -54,7 +55,7 @@ func TestAccAWSAutoscalingGroupTag_disappears(t *testing.T) {
 				Config: testAccAutoscalingGroupTagConfig("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAutoscalingGroupTagExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsAutoscalingGroupTag(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceGroupTag(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

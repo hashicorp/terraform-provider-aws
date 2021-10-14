@@ -15,12 +15,12 @@ import (
 
 const awsAutoscalingScheduleTimeLayout = "2006-01-02T15:04:05Z"
 
-func resourceAwsAutoscalingSchedule() *schema.Resource {
+func ResourceSchedule() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAutoscalingScheduleCreate,
-		Read:   resourceAwsAutoscalingScheduleRead,
-		Update: resourceAwsAutoscalingScheduleCreate,
-		Delete: resourceAwsAutoscalingScheduleDelete,
+		Create: resourceScheduleCreate,
+		Read:   resourceScheduleRead,
+		Update: resourceScheduleCreate,
+		Delete: resourceScheduleDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsAutoscalingScheduleImport,
 		},
@@ -102,7 +102,7 @@ func resourceAwsAutoscalingScheduleImport(d *schema.ResourceData, meta interface
 	return []*schema.ResourceData{d}, nil
 }
 
-func resourceAwsAutoscalingScheduleCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceScheduleCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AutoScalingConn
 	params := &autoscaling.PutScheduledUpdateGroupActionInput{
 		AutoScalingGroupName: aws.String(d.Get("autoscaling_group_name").(string)),
@@ -160,10 +160,10 @@ func resourceAwsAutoscalingScheduleCreate(d *schema.ResourceData, meta interface
 
 	d.SetId(d.Get("scheduled_action_name").(string))
 
-	return resourceAwsAutoscalingScheduleRead(d, meta)
+	return resourceScheduleRead(d, meta)
 }
 
-func resourceAwsAutoscalingScheduleRead(d *schema.ResourceData, meta interface{}) error {
+func resourceScheduleRead(d *schema.ResourceData, meta interface{}) error {
 	sa, exists, err := resourceAwsASGScheduledActionRetrieve(d, meta)
 	if err != nil {
 		return err
@@ -211,7 +211,7 @@ func resourceAwsAutoscalingScheduleRead(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceAwsAutoscalingScheduleDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceScheduleDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AutoScalingConn
 
 	params := &autoscaling.DeleteScheduledActionInput{

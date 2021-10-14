@@ -17,12 +17,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsAutoscalingPolicy() *schema.Resource {
+func ResourcePolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAutoscalingPolicyCreate,
-		Read:   resourceAwsAutoscalingPolicyRead,
-		Update: resourceAwsAutoscalingPolicyUpdate,
-		Delete: resourceAwsAutoscalingPolicyDelete,
+		Create: resourcePolicyCreate,
+		Read:   resourcePolicyRead,
+		Update: resourcePolicyUpdate,
+		Delete: resourcePolicyDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsAutoscalingPolicyImport,
 		},
@@ -303,7 +303,7 @@ func resourceAwsAutoscalingPolicy() *schema.Resource {
 	}
 }
 
-func resourceAwsAutoscalingPolicyCreate(d *schema.ResourceData, meta interface{}) error {
+func resourcePolicyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AutoScalingConn
 
 	params, err := getAwsAutoscalingPutScalingPolicyInput(d)
@@ -321,10 +321,10 @@ func resourceAwsAutoscalingPolicyCreate(d *schema.ResourceData, meta interface{}
 	d.SetId(d.Get("name").(string))
 	log.Printf("[INFO] AutoScaling Scaling PolicyARN: %s", d.Get("arn").(string))
 
-	return resourceAwsAutoscalingPolicyRead(d, meta)
+	return resourcePolicyRead(d, meta)
 }
 
-func resourceAwsAutoscalingPolicyRead(d *schema.ResourceData, meta interface{}) error {
+func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	p, err := getAwsAutoscalingPolicy(d, meta)
 	if err != nil {
 		return err
@@ -362,7 +362,7 @@ func resourceAwsAutoscalingPolicyRead(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func resourceAwsAutoscalingPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourcePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AutoScalingConn
 
 	params, inputErr := getAwsAutoscalingPutScalingPolicyInput(d)
@@ -376,10 +376,10 @@ func resourceAwsAutoscalingPolicyUpdate(d *schema.ResourceData, meta interface{}
 		return err
 	}
 
-	return resourceAwsAutoscalingPolicyRead(d, meta)
+	return resourcePolicyRead(d, meta)
 }
 
-func resourceAwsAutoscalingPolicyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourcePolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AutoScalingConn
 	p, err := getAwsAutoscalingPolicy(d, meta)
 	if err != nil {

@@ -32,12 +32,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsAutoscalingGroup() *schema.Resource {
+func ResourceGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAutoscalingGroupCreate,
-		Read:   resourceAwsAutoscalingGroupRead,
-		Update: resourceAwsAutoscalingGroupUpdate,
-		Delete: resourceAwsAutoscalingGroupDelete,
+		Create: resourceGroupCreate,
+		Read:   resourceGroupRead,
+		Update: resourceGroupUpdate,
+		Delete: resourceGroupDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -641,7 +641,7 @@ func generatePutLifecycleHookInputs(asgName string, cfgs []interface{}) []autosc
 	return res
 }
 
-func resourceAwsAutoscalingGroupCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AutoScalingConn
 
 	asgName := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
@@ -814,11 +814,11 @@ func resourceAwsAutoscalingGroupCreate(d *schema.ResourceData, meta interface{})
 
 	}
 
-	return resourceAwsAutoscalingGroupRead(d, meta)
+	return resourceGroupRead(d, meta)
 }
 
 // TODO: wrap all top-level error returns
-func resourceAwsAutoscalingGroupRead(d *schema.ResourceData, meta interface{}) error {
+func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AutoScalingConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -1010,7 +1010,7 @@ func waitUntilAutoscalingGroupLoadBalancerTargetGroupsAdded(conn *autoscaling.Au
 	return nil
 }
 
-func resourceAwsAutoscalingGroupUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AutoScalingConn
 	shouldWaitForCapacity := false
 	shouldRefreshInstances := false
@@ -1342,10 +1342,10 @@ func resourceAwsAutoscalingGroupUpdate(d *schema.ResourceData, meta interface{})
 		}
 	}
 
-	return resourceAwsAutoscalingGroupRead(d, meta)
+	return resourceGroupRead(d, meta)
 }
 
-func resourceAwsAutoscalingGroupDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AutoScalingConn
 
 	// Read the Auto Scaling Group first. If it doesn't exist, we're done.
@@ -2277,7 +2277,7 @@ func validateAutoScalingGroupInstanceRefreshTriggerFields(i interface{}, path ct
 		}
 	}
 
-	schema := resourceAwsAutoscalingGroup().Schema
+	schema := ResourceGroup().Schema
 	for attr, attrSchema := range schema {
 		if v == attr {
 			if attrSchema.Computed && !attrSchema.Optional {

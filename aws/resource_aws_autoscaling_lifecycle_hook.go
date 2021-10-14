@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsAutoscalingLifecycleHook() *schema.Resource {
+func ResourceLifecycleHook() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsAutoscalingLifecycleHookPut,
-		Read:   resourceAwsAutoscalingLifecycleHookRead,
+		Read:   resourceLifecycleHookRead,
 		Update: resourceAwsAutoscalingLifecycleHookPut,
-		Delete: resourceAwsAutoscalingLifecycleHookDelete,
+		Delete: resourceLifecycleHookDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsAutoscalingLifecycleHookImport,
@@ -98,10 +98,10 @@ func resourceAwsAutoscalingLifecycleHookPut(d *schema.ResourceData, meta interfa
 
 	d.SetId(d.Get("name").(string))
 
-	return resourceAwsAutoscalingLifecycleHookRead(d, meta)
+	return resourceLifecycleHookRead(d, meta)
 }
 
-func resourceAwsAutoscalingLifecycleHookRead(d *schema.ResourceData, meta interface{}) error {
+func resourceLifecycleHookRead(d *schema.ResourceData, meta interface{}) error {
 	p, err := getAwsAutoscalingLifecycleHook(d, meta)
 	if err != nil {
 		return err
@@ -125,7 +125,7 @@ func resourceAwsAutoscalingLifecycleHookRead(d *schema.ResourceData, meta interf
 	return nil
 }
 
-func resourceAwsAutoscalingLifecycleHookDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceLifecycleHookDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AutoScalingConn
 	p, err := getAwsAutoscalingLifecycleHook(d, meta)
 	if err != nil {

@@ -11,11 +11,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsAutoscalingAttachment() *schema.Resource {
+func ResourceAttachment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAutoscalingAttachmentCreate,
-		Read:   resourceAwsAutoscalingAttachmentRead,
-		Delete: resourceAwsAutoscalingAttachmentDelete,
+		Create: resourceAttachmentCreate,
+		Read:   resourceAttachmentRead,
+		Delete: resourceAttachmentDelete,
 
 		Schema: map[string]*schema.Schema{
 			"autoscaling_group_name": {
@@ -39,7 +39,7 @@ func resourceAwsAutoscalingAttachment() *schema.Resource {
 	}
 }
 
-func resourceAwsAutoscalingAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AutoScalingConn
 	asgName := d.Get("autoscaling_group_name").(string)
 
@@ -72,10 +72,10 @@ func resourceAwsAutoscalingAttachmentCreate(d *schema.ResourceData, meta interfa
 	//lintignore:R016 // Allow legacy unstable ID usage in managed resource
 	d.SetId(resource.PrefixedUniqueId(fmt.Sprintf("%s-", asgName)))
 
-	return resourceAwsAutoscalingAttachmentRead(d, meta)
+	return resourceAttachmentRead(d, meta)
 }
 
-func resourceAwsAutoscalingAttachmentRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAttachmentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AutoScalingConn
 	asgName := d.Get("autoscaling_group_name").(string)
 
@@ -126,7 +126,7 @@ func resourceAwsAutoscalingAttachmentRead(d *schema.ResourceData, meta interface
 	return nil
 }
 
-func resourceAwsAutoscalingAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AutoScalingConn
 	asgName := d.Get("autoscaling_group_name").(string)
 
