@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -29,7 +30,7 @@ func testSweepKinesisStreams(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).kinesisconn
+	conn := client.(*conns.AWSClient).KinesisConn
 	input := &kinesis.ListStreamsInput{}
 	var sweeperErrs *multierror.Error
 
@@ -457,7 +458,7 @@ func testAccCheckKinesisStreamExists(n string, stream *kinesis.StreamDescription
 			return fmt.Errorf("No Kinesis ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).kinesisconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisConn
 		describeOpts := &kinesis.DescribeStreamInput{
 			StreamName: aws.String(rs.Primary.Attributes["name"]),
 		}
@@ -498,7 +499,7 @@ func testAccCheckKinesisStreamDestroy(s *terraform.State) error {
 		if rs.Type != "aws_kinesis_stream" {
 			continue
 		}
-		conn := acctest.Provider.Meta().(*AWSClient).kinesisconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisConn
 		describeOpts := &kinesis.DescribeStreamInput{
 			StreamName: aws.String(rs.Primary.Attributes["name"]),
 		}
@@ -518,7 +519,7 @@ func testAccCheckKinesisStreamDestroy(s *terraform.State) error {
 
 func testAccAWSKinesisStreamRegisterStreamConsumer(stream *kinesis.StreamDescription, rStr string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).kinesisconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisConn
 
 		if _, err := conn.RegisterStreamConsumer(&kinesis.RegisterStreamConsumerInput{
 			ConsumerName: aws.String(rStr),

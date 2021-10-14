@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/kinesis/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/kinesis/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsKinesisStreamConsumer() *schema.Resource {
@@ -51,7 +52,7 @@ func resourceAwsKinesisStreamConsumer() *schema.Resource {
 }
 
 func resourceAwsKinesisStreamConsumerCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kinesisconn
+	conn := meta.(*conns.AWSClient).KinesisConn
 
 	name := d.Get("name").(string)
 	streamArn := d.Get("stream_arn").(string)
@@ -80,7 +81,7 @@ func resourceAwsKinesisStreamConsumerCreate(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsKinesisStreamConsumerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kinesisconn
+	conn := meta.(*conns.AWSClient).KinesisConn
 
 	consumer, err := finder.StreamConsumerByARN(conn, d.Id())
 
@@ -112,7 +113,7 @@ func resourceAwsKinesisStreamConsumerRead(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsKinesisStreamConsumerDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kinesisconn
+	conn := meta.(*conns.AWSClient).KinesisConn
 
 	input := &kinesis.DeregisterStreamConsumerInput{
 		ConsumerARN: aws.String(d.Id()),

@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kinesis"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsKinesisStreamConsumer() *schema.Resource {
@@ -47,7 +48,7 @@ func dataSourceAwsKinesisStreamConsumer() *schema.Resource {
 }
 
 func dataSourceAwsKinesisStreamConsumerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kinesisconn
+	conn := meta.(*conns.AWSClient).KinesisConn
 
 	streamArn := d.Get("stream_arn").(string)
 

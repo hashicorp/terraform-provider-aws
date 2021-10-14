@@ -10,6 +10,7 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSKinesisStreamDataSource_basic(t *testing.T) {
@@ -19,7 +20,7 @@ func TestAccAWSKinesisStreamDataSource_basic(t *testing.T) {
 	config := fmt.Sprintf(testAccCheckAwsKinesisStreamDataSourceConfig, sn)
 
 	updateShardCount := func() {
-		conn := acctest.Provider.Meta().(*AWSClient).kinesisconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisConn
 		_, err := conn.UpdateShardCount(&kinesis.UpdateShardCountInput{
 			ScalingType:      aws.String(kinesis.ScalingTypeUniformScaling),
 			StreamName:       aws.String(sn),
