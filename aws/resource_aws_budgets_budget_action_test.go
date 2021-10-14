@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/budgets/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -30,8 +31,8 @@ func testSweepBudgetsBudgetActionss(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).budgetconn
-	accountID := client.(*AWSClient).accountid
+	conn := client.(*conns.AWSClient).BudgetsConn
+	accountID := client.(*conns.AWSClient).AccountID
 	input := &budgets.DescribeBudgetActionsForAccountInput{
 		AccountId: aws.String(accountID),
 	}
@@ -149,7 +150,7 @@ func testAccAWSBudgetsBudgetActionExists(resourceName string, config *budgets.Ac
 			return fmt.Errorf("No Budget Action ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).budgetconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BudgetsConn
 
 		accountID, actionID, budgetName, err := tfbudgets.BudgetActionParseResourceID(rs.Primary.ID)
 
@@ -170,7 +171,7 @@ func testAccAWSBudgetsBudgetActionExists(resourceName string, config *budgets.Ac
 }
 
 func testAccAWSBudgetsBudgetActionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).budgetconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).BudgetsConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_budgets_budget_action" {
