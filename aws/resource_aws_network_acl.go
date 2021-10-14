@@ -423,7 +423,7 @@ func resourceAwsNetworkAclUpdate(d *schema.ResourceData, meta interface{}) error
 			for _, r := range remove {
 				association, err := findNetworkAclAssociation(r.(string), conn)
 				if err != nil {
-					if isResourceNotFoundError(err) {
+					if tfresource.NotFound(err) {
 						// Subnet has been deleted.
 						continue
 					}
@@ -435,7 +435,7 @@ func resourceAwsNetworkAclUpdate(d *schema.ResourceData, meta interface{}) error
 					NetworkAclId:  defaultAcl.NetworkAclId,
 				})
 				if err != nil {
-					if isAWSErr(err, "InvalidAssociationID.NotFound", "") {
+					if tfawserr.ErrMessageContains(err, "InvalidAssociationID.NotFound", "") {
 						continue
 					}
 					return fmt.Errorf("Error Replacing Default Network Acl Association: %s", err)
@@ -588,10 +588,10 @@ func resourceAwsNetworkAclDelete(d *schema.ResourceData, meta interface{}) error
 	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteNetworkAcl(input)
 		if err != nil {
-			if isAWSErr(err, "InvalidNetworkAclID.NotFound", "") {
+			if tfawserr.ErrMessageContains(err, "InvalidNetworkAclID.NotFound", "") {
 				return nil
 			}
-			if isAWSErr(err, "DependencyViolation", "") {
+			if tfawserr.ErrMessageContains(err, "DependencyViolation", "") {
 				err = cleanUpDependencyViolations(d, conn)
 				if err != nil {
 					return resource.NonRetryableError(err)
@@ -605,16 +605,16 @@ func resourceAwsNetworkAclDelete(d *schema.ResourceData, meta interface{}) error
 		log.Printf("[Info] Deleted network ACL %s successfully", d.Id())
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.DeleteNetworkAcl(input)
-		if err != nil && isAWSErr(err, "InvalidNetworkAclID.NotFound", "") {
+		if err != nil && tfawserr.ErrMessageContains(err, "InvalidNetworkAclID.NotFound", "") {
 			return nil
 		}
 		err = cleanUpDependencyViolations(d, conn)
 		if err != nil {
 			// This seems excessive but is probably the best way to make sure it's actually deleted
 			_, err = conn.DeleteNetworkAcl(input)
-			if err != nil && isAWSErr(err, "InvalidNetworkAclID.NotFound", "") {
+			if err != nil && tfawserr.ErrMessageContains(err, "InvalidNetworkAclID.NotFound", "") {
 				return nil
 			}
 		}
@@ -634,7 +634,7 @@ func cleanUpDependencyViolations(d *schema.ResourceData, conn *ec2.EC2) error {
 		for _, i := range ids {
 			a, err := findNetworkAclAssociation(i.(string), conn)
 			if err != nil {
-				if isResourceNotFoundError(err) {
+				if tfresource.NotFound(err) {
 					continue
 				}
 				return fmt.Errorf("Error finding network ACL association: %s", err)
@@ -668,7 +668,7 @@ func cleanUpDependencyViolations(d *schema.ResourceData, conn *ec2.EC2) error {
 			// this call will fail. Here we trap that error and fail
 			// gracefully; the association we tried to replace gone, we trust
 			// someone else has taken ownership.
-			if isAWSErr(replaceErr, "InvalidAssociationID.NotFound", "") {
+			if tfawserr.ErrMessageContains(replaceErr, "InvalidAssociationID.NotFound", "") {
 				log.Printf("[WARN] Network Association (%s) no longer found; Network Association likely updated or removed externally, removing from state", aws.StringValue(a.NetworkAclAssociationId))
 				continue
 			}

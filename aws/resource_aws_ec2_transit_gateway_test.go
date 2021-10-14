@@ -63,19 +63,19 @@ func testSweepEc2TransitGateways(region string) error {
 			err := resource.Retry(2*time.Minute, func() *resource.RetryError {
 				_, err := conn.DeleteTransitGateway(input)
 
-				if isAWSErr(err, "IncorrectState", "has non-deleted Transit Gateway Attachments") {
+				if tfawserr.ErrMessageContains(err, "IncorrectState", "has non-deleted Transit Gateway Attachments") {
 					return resource.RetryableError(err)
 				}
 
-				if isAWSErr(err, "IncorrectState", "has non-deleted DirectConnect Gateway Attachments") {
+				if tfawserr.ErrMessageContains(err, "IncorrectState", "has non-deleted DirectConnect Gateway Attachments") {
 					return resource.RetryableError(err)
 				}
 
-				if isAWSErr(err, "IncorrectState", "has non-deleted VPN Attachments") {
+				if tfawserr.ErrMessageContains(err, "IncorrectState", "has non-deleted VPN Attachments") {
 					return resource.RetryableError(err)
 				}
 
-				if isAWSErr(err, "InvalidTransitGatewayID.NotFound", "") {
+				if tfawserr.ErrMessageContains(err, "InvalidTransitGatewayID.NotFound", "") {
 					return nil
 				}
 
@@ -86,7 +86,7 @@ func testSweepEc2TransitGateways(region string) error {
 				return nil
 			})
 
-			if isResourceTimeoutError(err) {
+			if tfresource.TimedOut(err) {
 				_, err = conn.DeleteTransitGateway(input)
 			}
 
@@ -622,7 +622,7 @@ func testAccCheckAWSEc2TransitGatewayDestroy(s *terraform.State) error {
 
 		transitGateway, err := ec2DescribeTransitGateway(conn, rs.Primary.ID)
 
-		if isAWSErr(err, "InvalidTransitGatewayID.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidTransitGatewayID.NotFound", "") {
 			continue
 		}
 
@@ -751,7 +751,7 @@ func testAccPreCheckAWSEc2TransitGateway(t *testing.T) {
 
 	_, err := conn.DescribeTransitGateways(input)
 
-	if testAccPreCheckSkipError(err) || isAWSErr(err, "InvalidAction", "") {
+	if testAccPreCheckSkipError(err) || tfawserr.ErrMessageContains(err, "InvalidAction", "") {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 

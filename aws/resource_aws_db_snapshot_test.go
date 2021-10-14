@@ -59,7 +59,7 @@ func testSweepDbSnapshots(region string) error {
 			log.Printf("[INFO] Deleting RDS DB Snapshot: %s", id)
 			_, err := conn.DeleteDBSnapshot(input)
 
-			if isAWSErr(err, rds.ErrCodeDBSnapshotNotFoundFault, "") {
+			if tfawserr.ErrMessageContains(err, rds.ErrCodeDBSnapshotNotFoundFault, "") {
 				continue
 			}
 
@@ -194,7 +194,7 @@ func testAccCheckDbSnapshotDestroy(s *terraform.State) error {
 
 		resp, err := conn.DescribeDBSnapshots(request)
 
-		if isAWSErr(err, rds.ErrCodeDBSnapshotNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, rds.ErrCodeDBSnapshotNotFoundFault, "") {
 			continue
 		}
 

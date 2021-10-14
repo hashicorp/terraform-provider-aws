@@ -411,7 +411,7 @@ func resourceAwsEc2FleetRead(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Reading EC2 Fleet (%s): %s", d.Id(), input)
 	output, err := conn.DescribeFleets(input)
 
-	if isAWSErr(err, "InvalidFleetId.NotFound", "") {
+	if tfawserr.ErrMessageContains(err, "InvalidFleetId.NotFound", "") {
 		log.Printf("[WARN] EC2 Fleet (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -553,7 +553,7 @@ func resourceAwsEc2FleetDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Deleting EC2 Fleet (%s): %s", d.Id(), input)
 	_, err := conn.DeleteFleets(input)
 
-	if isAWSErr(err, "InvalidFleetId.NotFound", "") {
+	if tfawserr.ErrMessageContains(err, "InvalidFleetId.NotFound", "") {
 		return nil
 	}
 
@@ -598,7 +598,7 @@ func ec2FleetRefreshFunc(conn *ec2.EC2, fleetID string) resource.StateRefreshFun
 		log.Printf("[DEBUG] Reading EC2 Fleet (%s): %s", fleetID, input)
 		output, err := conn.DescribeFleets(input)
 
-		if isAWSErr(err, "InvalidFleetId.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidFleetId.NotFound", "") {
 			return nil, ec2.FleetStateCodeDeleted, nil
 		}
 

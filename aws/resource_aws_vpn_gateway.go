@@ -106,7 +106,7 @@ func resourceAwsVpnGatewayRead(d *schema.ResourceData, meta interface{}) error {
 		VpnGatewayIds: []*string{aws.String(d.Id())},
 	})
 	if err != nil {
-		if isAWSErr(err, "InvalidVpnGatewayID.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidVpnGatewayID.NotFound", "") {
 			log.Printf("[WARN] VPC Gateway (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -204,18 +204,18 @@ func resourceAwsVpnGatewayDelete(d *schema.ResourceData, meta interface{}) error
 			return nil
 		}
 
-		if isAWSErr(err, "InvalidVpnGatewayID.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidVpnGatewayID.NotFound", "") {
 			return nil
 		}
-		if isAWSErr(err, "IncorrectState", "") {
+		if tfawserr.ErrMessageContains(err, "IncorrectState", "") {
 			return resource.RetryableError(err)
 		}
 
 		return resource.NonRetryableError(err)
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.DeleteVpnGateway(input)
-		if isAWSErr(err, "InvalidVpnGatewayID.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidVpnGatewayID.NotFound", "") {
 			return nil
 		}
 	}
@@ -249,14 +249,14 @@ func resourceAwsVpnGatewayAttach(d *schema.ResourceData, meta interface{}) error
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 		_, err := conn.AttachVpnGateway(req)
 		if err != nil {
-			if isAWSErr(err, tfec2.InvalidVpnGatewayIDNotFound, "") {
+			if tfawserr.ErrMessageContains(err, tfec2.InvalidVpnGatewayIDNotFound, "") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.AttachVpnGateway(req)
 	}
 
@@ -299,7 +299,7 @@ func resourceAwsVpnGatewayDetach(d *schema.ResourceData, meta interface{}) error
 		VpcId:        aws.String(vpcId),
 	})
 
-	if isAWSErr(err, tfec2.InvalidVpnGatewayAttachmentNotFound, "") || isAWSErr(err, tfec2.InvalidVpnGatewayIDNotFound, "") {
+	if tfawserr.ErrMessageContains(err, tfec2.InvalidVpnGatewayAttachmentNotFound, "") || tfawserr.ErrMessageContains(err, tfec2.InvalidVpnGatewayIDNotFound, "") {
 		return nil
 	}
 

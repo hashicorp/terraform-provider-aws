@@ -151,7 +151,7 @@ func resourceAwsElasticacheSecurityGroupDelete(d *schema.ResourceData, meta inte
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.DeleteCacheSecurityGroup(&elasticache.DeleteCacheSecurityGroupInput{
 			CacheSecurityGroupName: aws.String(d.Id()),
 		})

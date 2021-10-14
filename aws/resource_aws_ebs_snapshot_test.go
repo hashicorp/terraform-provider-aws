@@ -205,7 +205,7 @@ func testAccCheckAWSEbsSnapshotDestroy(s *terraform.State) error {
 
 		output, err := conn.DescribeSnapshots(input)
 		if err != nil {
-			if isAWSErr(err, "InvalidSnapshot.NotFound", "") {
+			if tfawserr.ErrMessageContains(err, "InvalidSnapshot.NotFound", "") {
 				continue
 			}
 			return err

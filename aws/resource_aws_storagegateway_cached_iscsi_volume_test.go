@@ -331,10 +331,10 @@ func testAccCheckAWSStorageGatewayCachedIscsiVolumeDestroy(s *terraform.State) e
 			if isAWSErrStorageGatewayGatewayNotFound(err) {
 				return nil
 			}
-			if isAWSErr(err, storagegateway.ErrorCodeVolumeNotFound, "") {
+			if tfawserr.ErrMessageContains(err, storagegateway.ErrorCodeVolumeNotFound, "") {
 				return nil
 			}
-			if isAWSErr(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified volume was not found") {
+			if tfawserr.ErrMessageContains(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified volume was not found") {
 				return nil
 			}
 			return err

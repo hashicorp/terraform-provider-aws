@@ -234,7 +234,7 @@ func resourceAwsNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) e
 	describeResp, err := conn.DescribeNetworkInterfaces(describe_network_interfaces_request)
 
 	if err != nil {
-		if isAWSErr(err, "InvalidNetworkInterfaceID.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidNetworkInterfaceID.NotFound", "") {
 			// The ENI is gone now, so just remove it from the state
 			log.Printf("[WARN] EC2 Network Interface (%s) not found, removing from state", d.Id())
 			d.SetId("")
@@ -329,7 +329,7 @@ func resourceAwsNetworkInterfaceDetach(oa *schema.Set, meta interface{}, eniId s
 		conn := meta.(*AWSClient).ec2conn
 		_, detach_err := conn.DetachNetworkInterface(detach_request)
 		if detach_err != nil {
-			if !isAWSErr(detach_err, "InvalidAttachmentID.NotFound", "") {
+			if !tfawserr.ErrMessageContains(detach_err, "InvalidAttachmentID.NotFound", "") {
 				return fmt.Errorf("Error detaching ENI: %s", detach_err)
 			}
 		}
@@ -608,7 +608,7 @@ func deleteNetworkInterface(conn *ec2.EC2, eniId string) error {
 		NetworkInterfaceId: aws.String(eniId),
 	})
 
-	if isAWSErr(err, "InvalidNetworkInterfaceID.NotFound", "") {
+	if tfawserr.ErrMessageContains(err, "InvalidNetworkInterfaceID.NotFound", "") {
 		return nil
 	}
 
@@ -635,7 +635,7 @@ func detachNetworkInterface(conn *ec2.EC2, eni *ec2.NetworkInterface, timeout ti
 		Force:        aws.Bool(true),
 	})
 
-	if isAWSErr(err, "InvalidAttachmentID.NotFound", "") {
+	if tfawserr.ErrMessageContains(err, "InvalidAttachmentID.NotFound", "") {
 		return nil
 	}
 
@@ -662,7 +662,7 @@ func detachNetworkInterface(conn *ec2.EC2, eni *ec2.NetworkInterface, timeout ti
 	log.Printf("[DEBUG] Waiting for ENI (%s) to become detached", eniId)
 	_, err = stateConf.WaitForState()
 
-	if isResourceNotFoundError(err) {
+	if tfresource.NotFound(err) {
 		return nil
 	}
 
@@ -679,7 +679,7 @@ func networkInterfaceAttachmentStateRefresh(conn *ec2.EC2, eniId string) resourc
 			NetworkInterfaceIds: aws.StringSlice([]string{eniId}),
 		})
 
-		if isAWSErr(err, "InvalidNetworkInterfaceID.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidNetworkInterfaceID.NotFound", "") {
 			return nil, ec2.AttachmentStatusDetached, nil
 		}
 
@@ -711,7 +711,7 @@ func networkInterfaceStateRefresh(conn *ec2.EC2, eniId string) resource.StateRef
 			NetworkInterfaceIds: aws.StringSlice([]string{eniId}),
 		})
 
-		if isAWSErr(err, "InvalidNetworkInterfaceID.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidNetworkInterfaceID.NotFound", "") {
 			return nil, "", nil
 		}
 

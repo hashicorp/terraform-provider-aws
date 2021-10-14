@@ -131,7 +131,7 @@ func resourceAwsVpcIpv4CidrBlockAssociationDelete(d *schema.ResourceData, meta i
 		AssociationId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if isAWSErr(err, "InvalidVpcID.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidVpcID.NotFound", "") {
 			return nil
 		}
 		return fmt.Errorf("Error deleting VPC IPv4 CIDR block association: %s", err)

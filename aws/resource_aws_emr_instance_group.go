@@ -199,7 +199,7 @@ func resourceAwsEMRInstanceGroupRead(d *schema.ResourceData, meta interface{}) e
 
 	ig, err := fetchEMRInstanceGroup(conn, d.Get("cluster_id").(string), d.Id())
 
-	if isResourceNotFoundError(err) {
+	if tfresource.NotFound(err) {
 		log.Printf("[DEBUG] EMR Instance Group (%s) not found, removing", d.Id())
 		d.SetId("")
 		return nil

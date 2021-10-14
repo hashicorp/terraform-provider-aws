@@ -158,7 +158,7 @@ func resourceAwsNetworkInterfaceSGAttachmentDelete(d *schema.ResourceData, meta 
 
 	iface, err := finder.NetworkInterfaceByID(conn, interfaceID)
 
-	if isAWSErr(err, "InvalidNetworkInterfaceID.NotFound", "") {
+	if tfawserr.ErrMessageContains(err, "InvalidNetworkInterfaceID.NotFound", "") {
 		return nil
 	}
 
@@ -190,7 +190,7 @@ func delSGFromENI(conn *ec2.EC2, sgID string, iface *ec2.NetworkInterface) error
 
 	_, err := conn.ModifyNetworkInterfaceAttribute(params)
 
-	if isAWSErr(err, "InvalidNetworkInterfaceID.NotFound", "") {
+	if tfawserr.ErrMessageContains(err, "InvalidNetworkInterfaceID.NotFound", "") {
 		return nil
 	}
 

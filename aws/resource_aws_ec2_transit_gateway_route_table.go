@@ -81,7 +81,7 @@ func resourceAwsEc2TransitGatewayRouteTableRead(d *schema.ResourceData, meta int
 
 	transitGatewayRouteTable, err := ec2DescribeTransitGatewayRouteTable(conn, d.Id())
 
-	if isAWSErr(err, "InvalidRouteTableID.NotFound", "") {
+	if tfawserr.ErrMessageContains(err, "InvalidRouteTableID.NotFound", "") {
 		log.Printf("[WARN] EC2 Transit Gateway Route Table (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -156,7 +156,7 @@ func resourceAwsEc2TransitGatewayRouteTableDelete(d *schema.ResourceData, meta i
 	log.Printf("[DEBUG] Deleting EC2 Transit Gateway Route Table (%s): %s", d.Id(), input)
 	_, err := conn.DeleteTransitGatewayRouteTable(input)
 
-	if isAWSErr(err, "InvalidRouteTableID.NotFound", "") {
+	if tfawserr.ErrMessageContains(err, "InvalidRouteTableID.NotFound", "") {
 		return nil
 	}
 

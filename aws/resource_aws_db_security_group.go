@@ -268,7 +268,7 @@ func resourceAwsDbSecurityGroupDelete(d *schema.ResourceData, meta interface{}) 
 	_, err := conn.DeleteDBSecurityGroup(&opts)
 
 	if err != nil {
-		if isAWSErr(err, "InvalidDBSecurityGroup.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidDBSecurityGroup.NotFound", "") {
 			return nil
 		}
 		return err

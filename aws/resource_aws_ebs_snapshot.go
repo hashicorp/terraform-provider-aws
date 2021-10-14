@@ -93,7 +93,7 @@ func resourceAwsEbsSnapshotCreate(d *schema.ResourceData, meta interface{}) erro
 		var err error
 		res, err = conn.CreateSnapshot(request)
 
-		if isAWSErr(err, "SnapshotCreationPerVolumeRateExceeded", "The maximum per volume CreateSnapshot request rate has been exceeded") {
+		if tfawserr.ErrMessageContains(err, "SnapshotCreationPerVolumeRateExceeded", "The maximum per volume CreateSnapshot request rate has been exceeded") {
 			return resource.RetryableError(err)
 		}
 
@@ -103,7 +103,7 @@ func resourceAwsEbsSnapshotCreate(d *schema.ResourceData, meta interface{}) erro
 
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		res, err = conn.CreateSnapshot(request)
 	}
 	if err != nil {
@@ -130,7 +130,7 @@ func resourceAwsEbsSnapshotRead(d *schema.ResourceData, meta interface{}) error 
 	}
 	res, err := conn.DescribeSnapshots(req)
 	if err != nil {
-		if isAWSErr(err, "InvalidSnapshot.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidSnapshot.NotFound", "") {
 			log.Printf("[WARN] EBS Snapshot %q Not found - removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -201,12 +201,12 @@ func resourceAwsEbsSnapshotDelete(d *schema.ResourceData, meta interface{}) erro
 		if err == nil {
 			return nil
 		}
-		if isAWSErr(err, "SnapshotInUse", "") {
+		if tfawserr.ErrMessageContains(err, "SnapshotInUse", "") {
 			return resource.RetryableError(fmt.Errorf("EBS SnapshotInUse - trying again while it detaches"))
 		}
 		return resource.NonRetryableError(err)
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.DeleteSnapshot(input)
 	}
 	if err != nil {
@@ -225,12 +225,12 @@ func resourceAwsEbsSnapshotWaitForAvailable(d *schema.ResourceData, conn *ec2.EC
 		if err == nil {
 			return nil
 		}
-		if isAWSErr(err, "ResourceNotReady", "") {
+		if tfawserr.ErrMessageContains(err, "ResourceNotReady", "") {
 			return resource.RetryableError(fmt.Errorf("EBS CreatingSnapshot - waiting for snapshot to become available"))
 		}
 		return resource.NonRetryableError(err)
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		err = conn.WaitUntilSnapshotCompleted(input)
 	}
 	if err != nil {

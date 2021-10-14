@@ -65,7 +65,7 @@ func testAccCheckNeptuneClusterSnapshotDestroy(s *terraform.State) error {
 
 		output, err := conn.DescribeDBClusterSnapshots(input)
 		if err != nil {
-			if isAWSErr(err, neptune.ErrCodeDBClusterSnapshotNotFoundFault, "") {
+			if tfawserr.ErrMessageContains(err, neptune.ErrCodeDBClusterSnapshotNotFoundFault, "") {
 				continue
 			}
 			return err

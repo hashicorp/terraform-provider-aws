@@ -175,7 +175,7 @@ func testAccCheckEbsSnapshotCopyDestroy(s *terraform.State) error {
 			SnapshotIds: []*string{aws.String(rs.Primary.ID)},
 		})
 
-		if isAWSErr(err, "InvalidSnapshot.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidSnapshot.NotFound", "") {
 			continue
 		}
 

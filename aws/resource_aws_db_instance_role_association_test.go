@@ -120,7 +120,7 @@ func testAccCheckAWSDbInstanceRoleAssociationDestroy(s *terraform.State) error {
 
 		dbInstanceRole, err := rdsDescribeDbInstanceRole(conn, dbInstanceIdentifier, roleArn)
 
-		if isAWSErr(err, rds.ErrCodeDBInstanceNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, rds.ErrCodeDBInstanceNotFoundFault, "") {
 			continue
 		}
 

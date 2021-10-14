@@ -140,7 +140,7 @@ func resourceAwsEc2LocalGatewayRouteTableVpcAssociationDelete(d *schema.Resource
 
 	_, err := conn.DeleteLocalGatewayRouteTableVpcAssociation(input)
 
-	if isAWSErr(err, "InvalidLocalGatewayRouteTableVpcAssociationID.NotFound", "") {
+	if tfawserr.ErrMessageContains(err, "InvalidLocalGatewayRouteTableVpcAssociationID.NotFound", "") {
 		return nil
 	}
 

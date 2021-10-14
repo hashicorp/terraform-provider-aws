@@ -93,17 +93,17 @@ func resourceAwsEc2LocalGatewayRouteRead(d *schema.ResourceData, meta interface{
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		localGatewayRoute, err = getEc2LocalGatewayRoute(conn, localGatewayRouteTableID, destination)
 	}
 
-	if isAWSErr(err, "InvalidRouteTableID.NotFound", "") {
+	if tfawserr.ErrMessageContains(err, "InvalidRouteTableID.NotFound", "") {
 		log.Printf("[WARN] EC2 Local Gateway Route Table (%s) not found, removing from state", localGatewayRouteTableID)
 		d.SetId("")
 		return nil
 	}
 
-	if !d.IsNewResource() && isResourceNotFoundError(err) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Local Gateway Route (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -149,7 +149,7 @@ func resourceAwsEc2LocalGatewayRouteDelete(d *schema.ResourceData, meta interfac
 	log.Printf("[DEBUG] Deleting EC2 Local Gateway Route (%s): %s", d.Id(), input)
 	_, err = conn.DeleteLocalGatewayRoute(input)
 
-	if isAWSErr(err, "InvalidRoute.NotFound", "") || isAWSErr(err, "InvalidRouteTableID.NotFound", "") {
+	if tfawserr.ErrMessageContains(err, "InvalidRoute.NotFound", "") || tfawserr.ErrMessageContains(err, "InvalidRouteTableID.NotFound", "") {
 		return nil
 	}
 

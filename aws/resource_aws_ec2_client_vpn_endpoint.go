@@ -219,7 +219,7 @@ func resourceAwsEc2ClientVpnEndpointRead(d *schema.ResourceData, meta interface{
 		ClientVpnEndpointIds: []*string{aws.String(d.Id())},
 	})
 
-	if isAWSErr(err, tfec2.ErrCodeClientVpnAssociationIdNotFound, "") || isAWSErr(err, tfec2.ErrCodeClientVpnEndpointIdNotFound, "") {
+	if tfawserr.ErrMessageContains(err, tfec2.ErrCodeClientVpnAssociationIdNotFound, "") || tfawserr.ErrMessageContains(err, tfec2.ErrCodeClientVpnEndpointIdNotFound, "") {
 		log.Printf("[WARN] EC2 Client VPN Endpoint (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -447,7 +447,7 @@ func deleteClientVpnEndpoint(conn *ec2.EC2, endpointID string) error {
 	_, err := conn.DeleteClientVpnEndpoint(&ec2.DeleteClientVpnEndpointInput{
 		ClientVpnEndpointId: aws.String(endpointID),
 	})
-	if isAWSErr(err, tfec2.ErrCodeClientVpnEndpointIdNotFound, "") {
+	if tfawserr.ErrMessageContains(err, tfec2.ErrCodeClientVpnEndpointIdNotFound, "") {
 		return nil
 	}
 	if err != nil {

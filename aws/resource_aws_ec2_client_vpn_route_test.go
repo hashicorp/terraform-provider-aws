@@ -115,7 +115,7 @@ func testAccCheckAwsEc2ClientVpnRouteDestroy(s *terraform.State) error {
 		if err == nil {
 			return fmt.Errorf("Client VPN route (%s) still exists", rs.Primary.ID)
 		}
-		if isAWSErr(err, tfec2.ErrCodeClientVpnRouteNotFound, "") {
+		if tfawserr.ErrMessageContains(err, tfec2.ErrCodeClientVpnRouteNotFound, "") {
 			continue
 		}
 	}

@@ -211,7 +211,7 @@ func resourceAwsEbsSnapshotImportCreate(d *schema.ResourceData, meta interface{}
 		var resp *ec2.ImportSnapshotOutput
 		resp, err := conn.ImportSnapshot(request)
 
-		if isAWSErr(err, "InvalidParameter", "provided does not exist or does not have sufficient permissions") {
+		if tfawserr.ErrMessageContains(err, "InvalidParameter", "provided does not exist or does not have sufficient permissions") {
 			return resource.RetryableError(err)
 		}
 
@@ -259,7 +259,7 @@ func resourceAwsEbsSnapshotImportRead(d *schema.ResourceData, meta interface{}) 
 	}
 	res, err := conn.DescribeSnapshots(req)
 	if err != nil {
-		if isAWSErr(err, "InvalidSnapshot.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidSnapshot.NotFound", "") {
 			log.Printf("[WARN] EBS Snapshot %q Not found - removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -328,12 +328,12 @@ func resourceAwsEbsSnapshotImportDelete(d *schema.ResourceData, meta interface{}
 		if err == nil {
 			return nil
 		}
-		if isAWSErr(err, "SnapshotInUse", "") {
+		if tfawserr.ErrMessageContains(err, "SnapshotInUse", "") {
 			return resource.RetryableError(fmt.Errorf("EBS SnapshotInUse - trying again while it detaches"))
 		}
 		return resource.NonRetryableError(err)
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.DeleteSnapshot(input)
 	}
 	if err != nil {

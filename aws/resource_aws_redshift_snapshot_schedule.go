@@ -168,7 +168,7 @@ func resourceAwsRedshiftSnapshotScheduleUpdate(d *schema.ResourceData, meta inte
 			ScheduleDefinitions: expandStringSet(d.Get("definitions").(*schema.Set)),
 		}
 		_, err := conn.ModifySnapshotSchedule(modifyOpts)
-		if isAWSErr(err, redshift.ErrCodeSnapshotScheduleNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, redshift.ErrCodeSnapshotScheduleNotFoundFault, "") {
 			log.Printf("[WARN] Redshift Snapshot Schedule (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -193,7 +193,7 @@ func resourceAwsRedshiftSnapshotScheduleDelete(d *schema.ResourceData, meta inte
 	_, err := conn.DeleteSnapshotSchedule(&redshift.DeleteSnapshotScheduleInput{
 		ScheduleIdentifier: aws.String(d.Id()),
 	})
-	if isAWSErr(err, redshift.ErrCodeSnapshotScheduleNotFoundFault, "") {
+	if tfawserr.ErrMessageContains(err, redshift.ErrCodeSnapshotScheduleNotFoundFault, "") {
 		return nil
 	}
 	if err != nil {
@@ -208,7 +208,7 @@ func resourceAwsRedshiftSnapshotScheduleDeleteAllAssociatedClusters(conn *redshi
 	resp, err := conn.DescribeSnapshotSchedules(&redshift.DescribeSnapshotSchedulesInput{
 		ScheduleIdentifier: aws.String(scheduleIdentifier),
 	})
-	if isAWSErr(err, redshift.ErrCodeSnapshotScheduleNotFoundFault, "") {
+	if tfawserr.ErrMessageContains(err, redshift.ErrCodeSnapshotScheduleNotFoundFault, "") {
 		return nil
 	}
 	if err != nil {
@@ -228,11 +228,11 @@ func resourceAwsRedshiftSnapshotScheduleDeleteAllAssociatedClusters(conn *redshi
 			DisassociateSchedule: aws.Bool(true),
 		})
 
-		if isAWSErr(err, redshift.ErrCodeClusterNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, redshift.ErrCodeClusterNotFoundFault, "") {
 			log.Printf("[WARN] Redshift Snapshot Cluster (%s) not found, removing from state", aws.StringValue(associatedCluster.ClusterIdentifier))
 			continue
 		}
-		if isAWSErr(err, redshift.ErrCodeSnapshotScheduleNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, redshift.ErrCodeSnapshotScheduleNotFoundFault, "") {
 			log.Printf("[WARN] Redshift Snapshot Schedule (%s) not found, removing from state", scheduleIdentifier)
 			continue
 		}

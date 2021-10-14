@@ -476,9 +476,9 @@ func resourceAwsSecurityGroupDelete(d *schema.ResourceData, meta interface{}) er
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.DeleteSecurityGroup(input)
-		if isAWSErr(err, "InvalidGroup.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidGroup.NotFound", "") {
 			return nil
 		}
 	}
@@ -1388,7 +1388,7 @@ func deleteLingeringLambdaENIs(conn *ec2.EC2, filterName, resourceId string, tim
 
 			eniRaw, err := stateConf.WaitForState()
 
-			if isResourceNotFoundError(err) {
+			if tfresource.NotFound(err) {
 				continue
 			}
 

@@ -257,7 +257,7 @@ func testAccCheckAWSKeyPairDestroy(s *terraform.State) error {
 			return nil
 		}
 
-		if !isAWSErr(err, "InvalidKeyPair.NotFound", "") {
+		if !tfawserr.ErrMessageContains(err, "InvalidKeyPair.NotFound", "") {
 			return err
 		}
 	}

@@ -277,7 +277,7 @@ func resourceAwsVpcDhcpOptionsDelete(d *schema.ResourceData, meta interface{}) e
 		}
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.DeleteDhcpOptions(&ec2.DeleteDhcpOptionsInput{
 			DhcpOptionsId: aws.String(d.Id()),
 		})
@@ -299,7 +299,7 @@ func findVPCsByDHCPOptionsID(conn *ec2.EC2, id string) ([]*ec2.Vpc, error) {
 
 	resp, err := conn.DescribeVpcs(req)
 	if err != nil {
-		if isAWSErr(err, "InvalidVpcID.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidVpcID.NotFound", "") {
 			return nil, nil
 		}
 		return nil, err
@@ -338,5 +338,5 @@ func resourceDHCPOptionsStateRefreshFunc(conn *ec2.EC2, id string) resource.Stat
 }
 
 func isNoSuchDhcpOptionIDErr(err error) bool {
-	return isAWSErr(err, "InvalidDhcpOptionID.NotFound", "") || isAWSErr(err, "InvalidDhcpOptionsID.NotFound", "")
+	return tfawserr.ErrMessageContains(err, "InvalidDhcpOptionID.NotFound", "") || tfawserr.ErrMessageContains(err, "InvalidDhcpOptionsID.NotFound", "")
 }

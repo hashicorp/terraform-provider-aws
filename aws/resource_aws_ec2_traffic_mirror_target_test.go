@@ -356,7 +356,7 @@ func testAccCheckAWSEc2TrafficMirrorTargetDestroy(s *terraform.State) error {
 			},
 		})
 
-		if isAWSErr(err, "InvalidTrafficMirrorTargetId.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidTrafficMirrorTargetId.NotFound", "") {
 			continue
 		}
 

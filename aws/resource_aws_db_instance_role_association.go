@@ -89,7 +89,7 @@ func resourceAwsDbInstanceRoleAssociationRead(d *schema.ResourceData, meta inter
 
 	dbInstanceRole, err := rdsDescribeDbInstanceRole(conn, dbInstanceIdentifier, roleArn)
 
-	if isAWSErr(err, rds.ErrCodeDBInstanceNotFoundFault, "") {
+	if tfawserr.ErrMessageContains(err, rds.ErrCodeDBInstanceNotFoundFault, "") {
 		log.Printf("[WARN] RDS DB Instance (%s) not found, removing from state", dbInstanceIdentifier)
 		d.SetId("")
 		return nil
@@ -130,11 +130,11 @@ func resourceAwsDbInstanceRoleAssociationDelete(d *schema.ResourceData, meta int
 	log.Printf("[DEBUG] RDS DB Instance (%s) IAM Role disassociating: %s", dbInstanceIdentifier, roleArn)
 	_, err = conn.RemoveRoleFromDBInstance(input)
 
-	if isAWSErr(err, rds.ErrCodeDBInstanceNotFoundFault, "") {
+	if tfawserr.ErrMessageContains(err, rds.ErrCodeDBInstanceNotFoundFault, "") {
 		return nil
 	}
 
-	if isAWSErr(err, rds.ErrCodeDBInstanceRoleNotFoundFault, "") {
+	if tfawserr.ErrMessageContains(err, rds.ErrCodeDBInstanceRoleNotFoundFault, "") {
 		return nil
 	}
 
@@ -233,7 +233,7 @@ func waitForRdsDbInstanceRoleDisassociation(conn *rds.RDS, dbInstanceIdentifier,
 		Refresh: func() (interface{}, string, error) {
 			dbInstanceRole, err := rdsDescribeDbInstanceRole(conn, dbInstanceIdentifier, roleArn)
 
-			if isAWSErr(err, rds.ErrCodeDBInstanceNotFoundFault, "") {
+			if tfawserr.ErrMessageContains(err, rds.ErrCodeDBInstanceNotFoundFault, "") {
 				return &rds.DBInstanceRole{}, rdsDbInstanceRoleStatusDeleted, nil
 			}
 

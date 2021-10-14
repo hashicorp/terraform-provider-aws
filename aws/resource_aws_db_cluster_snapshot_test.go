@@ -54,7 +54,7 @@ func testSweepDbClusterSnapshots(region string) error {
 			_, err := conn.DeleteDBClusterSnapshot(&rds.DeleteDBClusterSnapshotInput{
 				DBClusterSnapshotIdentifier: aws.String(id),
 			})
-			if isAWSErr(err, rds.ErrCodeDBClusterSnapshotNotFoundFault, "") {
+			if tfawserr.ErrMessageContains(err, rds.ErrCodeDBClusterSnapshotNotFoundFault, "") {
 				continue
 			}
 			if err != nil {
@@ -180,7 +180,7 @@ func testAccCheckDbClusterSnapshotDestroy(s *terraform.State) error {
 
 		output, err := conn.DescribeDBClusterSnapshots(input)
 		if err != nil {
-			if isAWSErr(err, rds.ErrCodeDBClusterSnapshotNotFoundFault, "") {
+			if tfawserr.ErrMessageContains(err, rds.ErrCodeDBClusterSnapshotNotFoundFault, "") {
 				continue
 			}
 			return err

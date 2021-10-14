@@ -127,12 +127,12 @@ func resourceAwsRedshiftSnapshotScheduleAssociationDelete(d *schema.ResourceData
 		DisassociateSchedule: aws.Bool(true),
 	})
 
-	if isAWSErr(err, redshift.ErrCodeClusterNotFoundFault, "") {
+	if tfawserr.ErrMessageContains(err, redshift.ErrCodeClusterNotFoundFault, "") {
 		log.Printf("[WARN] Redshift Snapshot Cluster (%s) not found, removing from state", clusterIdentifier)
 		d.SetId("")
 		return nil
 	}
-	if isAWSErr(err, redshift.ErrCodeSnapshotScheduleNotFoundFault, "") {
+	if tfawserr.ErrMessageContains(err, redshift.ErrCodeSnapshotScheduleNotFoundFault, "") {
 		log.Printf("[WARN] Redshift Snapshot Schedule (%s) not found, removing from state", scheduleIdentifier)
 		d.SetId("")
 		return nil
@@ -167,10 +167,10 @@ func resourceAwsRedshiftSnapshotScheduleAssociationStateRefreshFunc(clusterIdent
 			ClusterIdentifier:  aws.String(clusterIdentifier),
 			ScheduleIdentifier: aws.String(scheduleIdentifier),
 		})
-		if isAWSErr(err, redshift.ErrCodeClusterNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, redshift.ErrCodeClusterNotFoundFault, "") {
 			return 42, "destroyed", nil
 		}
-		if isAWSErr(err, redshift.ErrCodeSnapshotScheduleNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, redshift.ErrCodeSnapshotScheduleNotFoundFault, "") {
 			return 42, "destroyed", nil
 		}
 		if err != nil {

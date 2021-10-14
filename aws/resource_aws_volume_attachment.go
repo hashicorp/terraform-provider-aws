@@ -173,7 +173,7 @@ func resourceAwsVolumeAttachmentRead(d *schema.ResourceData, meta interface{}) e
 
 	vols, err := conn.DescribeVolumes(request)
 	if err != nil {
-		if isAWSErr(err, "InvalidVolume.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidVolume.NotFound", "") {
 			d.SetId("")
 			return nil
 		}

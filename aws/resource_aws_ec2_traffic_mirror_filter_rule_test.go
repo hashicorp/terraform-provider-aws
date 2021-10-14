@@ -251,7 +251,7 @@ func testAccCheckAWSEc2TrafficMirrorFilterRuleDestroy(s *terraform.State) error 
 			},
 		})
 
-		if isAWSErr(err, "InvalidTrafficMirrorFilterId.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidTrafficMirrorFilterId.NotFound", "") {
 			continue
 		}
 

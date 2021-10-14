@@ -58,7 +58,7 @@ func testSweepEc2VpcPeeringConnections(region string) error {
 
 			_, err := conn.DeleteVpcPeeringConnection(input)
 
-			if isAWSErr(err, "InvalidVpcPeeringConnectionID.NotFound", "") {
+			if tfawserr.ErrMessageContains(err, "InvalidVpcPeeringConnectionID.NotFound", "") {
 				continue
 			}
 

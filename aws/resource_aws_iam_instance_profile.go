@@ -131,7 +131,7 @@ func instanceProfileAddRole(conn *iam.IAM, profileName, roleName string) error {
 		// IAM unfortunately does not provide a better error code or message for eventual consistency
 		// InvalidParameterValue: Value (XXX) for parameter iamInstanceProfile.name is invalid. Invalid IAM Instance Profile name
 		// NoSuchEntity: The request was rejected because it referenced an entity that does not exist. The error message describes the entity. HTTP Status Code: 404
-		if isAWSErr(err, "InvalidParameterValue", "Invalid IAM Instance Profile name") || isAWSErr(err, iam.ErrCodeNoSuchEntityException, "The role with name") {
+		if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "Invalid IAM Instance Profile name") || tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "The role with name") {
 			return resource.RetryableError(err)
 		}
 		if err != nil {
@@ -139,7 +139,7 @@ func instanceProfileAddRole(conn *iam.IAM, profileName, roleName string) error {
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.AddRoleToInstanceProfile(request)
 	}
 	if err != nil {
@@ -156,7 +156,7 @@ func instanceProfileRemoveRole(conn *iam.IAM, profileName, roleName string) erro
 	}
 
 	_, err := conn.RemoveRoleFromInstanceProfile(request)
-	if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+	if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 		return nil
 	}
 	return err
@@ -213,7 +213,7 @@ func resourceAwsIamInstanceProfileRead(d *schema.ResourceData, meta interface{})
 	}
 
 	result, err := conn.GetInstanceProfile(request)
-	if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+	if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 		log.Printf("[WARN] IAM Instance Profile %s is already gone", d.Id())
 		d.SetId("")
 		return nil
@@ -231,7 +231,7 @@ func resourceAwsIamInstanceProfileRead(d *schema.ResourceData, meta interface{})
 
 		_, err := conn.GetRole(input)
 		if err != nil {
-			if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+			if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 				err := instanceProfileRemoveRole(conn, d.Id(), roleName)
 				if err != nil {
 					return fmt.Errorf("removing role %s to IAM instance profile %s: %w", roleName, d.Id(), err)
@@ -256,7 +256,7 @@ func resourceAwsIamInstanceProfileDelete(d *schema.ResourceData, meta interface{
 	}
 	_, err := conn.DeleteInstanceProfile(request)
 	if err != nil {
-		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 			return nil
 		}
 		return fmt.Errorf("deleting IAM instance profile %s: %w", d.Id(), err)

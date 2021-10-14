@@ -94,7 +94,7 @@ func resourceAwsEc2ClientVpnRouteRead(d *schema.ResourceData, meta interface{}) 
 		d.Get("destination_cidr_block").(string),
 	)
 
-	if isAWSErr(err, tfec2.ErrCodeClientVpnRouteNotFound, "") {
+	if tfawserr.ErrMessageContains(err, tfec2.ErrCodeClientVpnRouteNotFound, "") {
 		log.Printf("[WARN] EC2 Client VPN Route (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -148,7 +148,7 @@ func deleteClientVpnRoute(conn *ec2.EC2, input *ec2.DeleteClientVpnRouteInput) e
 	)
 
 	_, err := conn.DeleteClientVpnRoute(input)
-	if isAWSErr(err, tfec2.ErrCodeClientVpnRouteNotFound, "") {
+	if tfawserr.ErrMessageContains(err, tfec2.ErrCodeClientVpnRouteNotFound, "") {
 		return nil
 	}
 	if err != nil {

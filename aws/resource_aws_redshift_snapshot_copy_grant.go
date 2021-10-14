@@ -83,7 +83,7 @@ func resourceAwsRedshiftSnapshotCopyGrantCreate(d *schema.ResourceData, meta int
 		var err error
 		var grant *redshift.SnapshotCopyGrant
 		grant, err = findAwsRedshiftSnapshotCopyGrant(conn, grantName)
-		if isAWSErr(err, redshift.ErrCodeSnapshotCopyGrantNotFoundFault, "") || grant == nil {
+		if tfawserr.ErrMessageContains(err, redshift.ErrCodeSnapshotCopyGrantNotFoundFault, "") || grant == nil {
 			return resource.RetryableError(err)
 		}
 		if err != nil {
@@ -92,7 +92,7 @@ func resourceAwsRedshiftSnapshotCopyGrantCreate(d *schema.ResourceData, meta int
 
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = findAwsRedshiftSnapshotCopyGrant(conn, grantName)
 		if err != nil {
 			return err
@@ -111,7 +111,7 @@ func resourceAwsRedshiftSnapshotCopyGrantRead(d *schema.ResourceData, meta inter
 	log.Printf("[DEBUG] Looking for grant: %s", grantName)
 
 	grant, err := findAwsRedshiftSnapshotCopyGrant(conn, grantName)
-	if isAWSErr(err, redshift.ErrCodeSnapshotCopyGrantNotFoundFault, "") || grant == nil {
+	if tfawserr.ErrMessageContains(err, redshift.ErrCodeSnapshotCopyGrantNotFoundFault, "") || grant == nil {
 		log.Printf("[WARN] snapshot copy grant (%s) not found, removing from state", grantName)
 		d.SetId("")
 		return nil
@@ -174,7 +174,7 @@ func resourceAwsRedshiftSnapshotCopyGrantDelete(d *schema.ResourceData, meta int
 	_, err := conn.DeleteSnapshotCopyGrant(&deleteInput)
 
 	if err != nil {
-		if isAWSErr(err, redshift.ErrCodeSnapshotCopyGrantNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, redshift.ErrCodeSnapshotCopyGrantNotFoundFault, "") {
 			return nil
 		}
 		return err
@@ -192,7 +192,7 @@ func waitForAwsRedshiftSnapshotCopyGrantToBeDeleted(conn *redshift.Redshift, gra
 		var err error
 		var grant *redshift.SnapshotCopyGrant
 		grant, err = findAwsRedshiftSnapshotCopyGrant(conn, grantName)
-		if isAWSErr(err, redshift.ErrCodeSnapshotCopyGrantNotFoundFault, "") || grant == nil {
+		if tfawserr.ErrMessageContains(err, redshift.ErrCodeSnapshotCopyGrantNotFoundFault, "") || grant == nil {
 			return nil
 		}
 		if err != nil {
@@ -201,10 +201,10 @@ func waitForAwsRedshiftSnapshotCopyGrantToBeDeleted(conn *redshift.Redshift, gra
 
 		return resource.RetryableError(fmt.Errorf("[DEBUG] Grant still exists while expected to be deleted: %s", grantName))
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		var grant *redshift.SnapshotCopyGrant
 		grant, err = findAwsRedshiftSnapshotCopyGrant(conn, grantName)
-		if isAWSErr(err, redshift.ErrCodeSnapshotCopyGrantNotFoundFault, "") || grant == nil {
+		if tfawserr.ErrMessageContains(err, redshift.ErrCodeSnapshotCopyGrantNotFoundFault, "") || grant == nil {
 			return nil
 		}
 	}

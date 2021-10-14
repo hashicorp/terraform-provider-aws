@@ -276,12 +276,12 @@ func resourceAwsVPCPeeringDelete(d *schema.ResourceData, meta interface{}) error
 
 	_, err := conn.DeleteVpcPeeringConnection(req)
 
-	if isAWSErr(err, "InvalidVpcPeeringConnectionID.NotFound", "") {
+	if tfawserr.ErrMessageContains(err, "InvalidVpcPeeringConnectionID.NotFound", "") {
 		return nil
 	}
 
 	// "InvalidStateTransition: Invalid state transition for pcx-0000000000000000, attempted to transition from failed to deleting"
-	if isAWSErr(err, "InvalidStateTransition", "to deleting") {
+	if tfawserr.ErrMessageContains(err, "InvalidStateTransition", "to deleting") {
 		return nil
 	}
 
@@ -315,7 +315,7 @@ func vpcPeeringConnectionRefreshState(conn *ec2.EC2, id string) resource.StateRe
 			VpcPeeringConnectionIds: aws.StringSlice([]string{id}),
 		})
 		if err != nil {
-			if isAWSErr(err, "InvalidVpcPeeringConnectionID.NotFound", "") {
+			if tfawserr.ErrMessageContains(err, "InvalidVpcPeeringConnectionID.NotFound", "") {
 				return nil, ec2.VpcPeeringConnectionStateReasonCodeDeleted, nil
 			}
 

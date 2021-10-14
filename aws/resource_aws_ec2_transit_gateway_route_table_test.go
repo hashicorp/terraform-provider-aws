@@ -179,7 +179,7 @@ func testAccCheckAWSEc2TransitGatewayRouteTableDestroy(s *terraform.State) error
 
 		routeTable, err := ec2DescribeTransitGatewayRouteTable(conn, rs.Primary.ID)
 
-		if isAWSErr(err, "InvalidRouteTableID.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidRouteTableID.NotFound", "") {
 			continue
 		}
 

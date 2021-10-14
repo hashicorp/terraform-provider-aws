@@ -293,7 +293,7 @@ func testAccCheckInternetGatewayDestroy(s *terraform.State) error {
 		}
 
 		// Verify the error is what we want
-		if !isAWSErr(err, "InvalidInternetGatewayID.NotFound", "") {
+		if !tfawserr.ErrMessageContains(err, "InvalidInternetGatewayID.NotFound", "") {
 			return err
 		}
 	}

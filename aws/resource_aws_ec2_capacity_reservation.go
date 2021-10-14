@@ -189,7 +189,7 @@ func resourceAwsEc2CapacityReservationRead(d *schema.ResourceData, meta interfac
 	})
 
 	if err != nil {
-		if isAWSErr(err, "InvalidCapacityReservationId.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidCapacityReservationId.NotFound", "") {
 			log.Printf("[WARN] EC2 Capacity Reservation (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil

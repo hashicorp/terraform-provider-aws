@@ -572,7 +572,7 @@ func testAccCheckAWSENIDestroy(s *terraform.State) error {
 		_, err := conn.DescribeNetworkInterfaces(input)
 
 		if err != nil {
-			if isAWSErr(err, "InvalidNetworkInterfaceID.NotFound", "") {
+			if tfawserr.ErrMessageContains(err, "InvalidNetworkInterfaceID.NotFound", "") {
 				return nil
 			}
 

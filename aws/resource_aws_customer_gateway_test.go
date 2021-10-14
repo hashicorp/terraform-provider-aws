@@ -219,7 +219,7 @@ func testAccCheckCustomerGatewayDestroy(s *terraform.State) error {
 			Filters: []*ec2.Filter{gatewayFilter},
 		})
 
-		if isAWSErr(err, "InvalidCustomerGatewayID.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidCustomerGatewayID.NotFound", "") {
 			continue
 		}
 

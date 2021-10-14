@@ -374,7 +374,7 @@ func testAccCheckAmiDestroy(s *terraform.State) error {
 		}
 		resp, err := conn.DescribeImages(DescribeAmiOpts)
 		if err != nil {
-			if isAWSErr(err, "InvalidAMIID", "NotFound") {
+			if tfawserr.ErrMessageContains(err, "InvalidAMIID", "NotFound") {
 				log.Printf("[DEBUG] AMI not found, passing")
 				return nil
 			}
@@ -412,7 +412,7 @@ func testAccCheckAmiExists(n string, ami *ec2.Image) resource.TestCheckFunc {
 			resp, err = conn.DescribeImages(opts)
 			if err != nil {
 				// This can be just eventual consistency
-				if isAWSErr(err, "InvalidAMIID.NotFound", "") {
+				if tfawserr.ErrMessageContains(err, "InvalidAMIID.NotFound", "") {
 					return resource.RetryableError(err)
 				}
 

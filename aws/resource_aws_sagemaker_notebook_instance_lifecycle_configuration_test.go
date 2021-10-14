@@ -176,7 +176,7 @@ func testAccCheckAWSSagemakerNotebookInstanceLifecycleConfigurationDestroy(s *te
 		})
 
 		if err != nil {
-			if isAWSErr(err, "ValidationException", "") {
+			if tfawserr.ErrMessageContains(err, "ValidationException", "") {
 				continue
 			}
 			return err

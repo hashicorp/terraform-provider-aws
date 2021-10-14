@@ -60,7 +60,7 @@ func testSweepEc2TransitGatewayVpcAttachments(region string) error {
 			log.Printf("[INFO] Deleting EC2 Transit Gateway VPC Attachment: %s", id)
 			_, err := conn.DeleteTransitGatewayVpcAttachment(input)
 
-			if isAWSErr(err, "InvalidTransitGatewayAttachmentID.NotFound", "") {
+			if tfawserr.ErrMessageContains(err, "InvalidTransitGatewayAttachmentID.NotFound", "") {
 				continue
 			}
 
@@ -547,7 +547,7 @@ func testAccCheckAWSEc2TransitGatewayVpcAttachmentDestroy(s *terraform.State) er
 
 		vpcAttachment, err := ec2DescribeTransitGatewayVpcAttachment(conn, rs.Primary.ID)
 
-		if isAWSErr(err, "InvalidTransitGatewayAttachmentID.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidTransitGatewayAttachmentID.NotFound", "") {
 			continue
 		}
 
