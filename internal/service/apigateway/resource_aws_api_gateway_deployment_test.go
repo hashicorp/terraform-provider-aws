@@ -1,4 +1,4 @@
-package aws
+package apigateway_test
 
 import (
 	"fmt"
