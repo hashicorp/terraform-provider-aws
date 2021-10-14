@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -26,7 +27,7 @@ func testSweepCodeArtifactRepositories(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).codeartifactconn
+	conn := client.(*conns.AWSClient).CodeArtifactConn
 	input := &codeartifact.ListRepositoriesInput{}
 	var sweeperErrs *multierror.Error
 
@@ -336,7 +337,7 @@ func testAccCheckAWSCodeArtifactRepositoryExists(n string) resource.TestCheckFun
 			return fmt.Errorf("no CodeArtifact repository set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).codeartifactconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeArtifactConn
 		owner, domain, repo, err := decodeCodeArtifactRepositoryID(rs.Primary.ID)
 		if err != nil {
 			return err
@@ -361,7 +362,7 @@ func testAccCheckAWSCodeArtifactRepositoryDestroy(s *terraform.State) error {
 		if err != nil {
 			return err
 		}
-		conn := acctest.Provider.Meta().(*AWSClient).codeartifactconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeArtifactConn
 		resp, err := conn.DescribeRepository(&codeartifact.DescribeRepositoryInput{
 			Repository:  aws.String(repo),
 			Domain:      aws.String(domain),

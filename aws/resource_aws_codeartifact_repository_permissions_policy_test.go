@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSCodeArtifactRepositoryPermissionsPolicy_basic(t *testing.T) {
@@ -137,7 +138,7 @@ func testAccCheckAWSCodeArtifactRepositoryPermissionsExists(n string) resource.T
 			return fmt.Errorf("no CodeArtifact domain set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).codeartifactconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeArtifactConn
 
 		domainOwner, domainName, repoName, err := decodeCodeArtifactRepositoryID(rs.Primary.ID)
 		if err != nil {
@@ -160,7 +161,7 @@ func testAccCheckAWSCodeArtifactRepositoryPermissionsDestroy(s *terraform.State)
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).codeartifactconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeArtifactConn
 
 		domainOwner, domainName, repoName, err := decodeCodeArtifactRepositoryID(rs.Primary.ID)
 		if err != nil {
