@@ -9,17 +9,17 @@ import (
 )
 
 const (
-	ConnectionCreatedTimeout = 2 * time.Minute
-	ConnectionDeletedTimeout = 2 * time.Minute
-	ConnectionUpdatedTimeout = 2 * time.Minute
+	connectionCreatedTimeout = 2 * time.Minute
+	connectionDeletedTimeout = 2 * time.Minute
+	connectionUpdatedTimeout = 2 * time.Minute
 )
 
-func ConnectionCreated(conn *events.CloudWatchEvents, id string) (*events.DescribeConnectionOutput, error) {
+func waitConnectionCreated(conn *events.CloudWatchEvents, id string) (*events.DescribeConnectionOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{events.ConnectionStateCreating, events.ConnectionStateAuthorizing},
 		Target:  []string{events.ConnectionStateAuthorized, events.ConnectionStateDeauthorized},
-		Refresh: ConnectionState(conn, id),
-		Timeout: ConnectionCreatedTimeout,
+		Refresh: statusConnectionState(conn, id),
+		Timeout: connectionCreatedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -31,12 +31,12 @@ func ConnectionCreated(conn *events.CloudWatchEvents, id string) (*events.Descri
 	return nil, err
 }
 
-func ConnectionDeleted(conn *events.CloudWatchEvents, id string) (*events.DescribeConnectionOutput, error) {
+func waitConnectionDeleted(conn *events.CloudWatchEvents, id string) (*events.DescribeConnectionOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{events.ConnectionStateDeleting},
 		Target:  []string{},
-		Refresh: ConnectionState(conn, id),
-		Timeout: ConnectionDeletedTimeout,
+		Refresh: statusConnectionState(conn, id),
+		Timeout: connectionDeletedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -48,12 +48,12 @@ func ConnectionDeleted(conn *events.CloudWatchEvents, id string) (*events.Descri
 	return nil, err
 }
 
-func ConnectionUpdated(conn *events.CloudWatchEvents, id string) (*events.DescribeConnectionOutput, error) {
+func waitConnectionUpdated(conn *events.CloudWatchEvents, id string) (*events.DescribeConnectionOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{events.ConnectionStateUpdating, events.ConnectionStateAuthorizing, events.ConnectionStateDeauthorizing},
 		Target:  []string{events.ConnectionStateAuthorized, events.ConnectionStateDeauthorized},
-		Refresh: ConnectionState(conn, id),
-		Timeout: ConnectionUpdatedTimeout,
+		Refresh: statusConnectionState(conn, id),
+		Timeout: connectionUpdatedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()

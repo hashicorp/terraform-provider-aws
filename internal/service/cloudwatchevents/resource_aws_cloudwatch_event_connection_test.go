@@ -21,6 +21,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
+	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
+	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
+	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
 )
 
 func init() {
@@ -630,7 +634,7 @@ func testAccCheckAWSCloudWatchEventConnectionDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.ConnectionByName(conn, rs.Primary.ID)
+		_, err := tfcloudwatchevents.FindConnectionByName(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -655,7 +659,7 @@ func testAccCheckCloudWatchEventConnectionExists(n string, v *events.DescribeCon
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchEventsConn
 
-		output, err := finder.ConnectionByName(conn, rs.Primary.ID)
+		output, err := tfcloudwatchevents.FindConnectionByName(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

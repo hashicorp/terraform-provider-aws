@@ -14,6 +14,17 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
+	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
+	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
+	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
+	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
+	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
+	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
+	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
+	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
+	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 func ResourceBusPolicy() *schema.Resource {
@@ -35,7 +46,7 @@ func ResourceBusPolicy() *schema.Resource {
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validBusNameOrARN,
-				Default:      tfevents.DefaultEventBusName,
+				Default:      tfcloudwatchevents.DefaultEventBusName,
 			},
 			"policy": {
 				Type:             schema.TypeString,
@@ -83,7 +94,7 @@ func resourceBusPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	var policy *string
 
 	// Especially with concurrent PutPermission calls there can be a slight delay
-	err = resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err = resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 		log.Printf("[DEBUG] Reading CloudWatch Events bus: %s", input)
 		output, err = conn.DescribeEventBus(&input)
 		if err != nil {
@@ -115,7 +126,7 @@ func resourceBusPolicyRead(d *schema.ResourceData, meta interface{}) error {
 
 	busName := aws.StringValue(output.Name)
 	if busName == "" {
-		busName = tfevents.DefaultEventBusName
+		busName = tfcloudwatchevents.DefaultEventBusName
 	}
 	d.Set("event_bus_name", busName)
 

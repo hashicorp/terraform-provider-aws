@@ -18,6 +18,17 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
+	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
+	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
+	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
+	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
+	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
+	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
+	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
+	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
+	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 func ResourcePermission() *schema.Resource {
@@ -66,7 +77,7 @@ func ResourcePermission() *schema.Resource {
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validBusNameOrARN,
-				Default:      tfevents.DefaultEventBusName,
+				Default:      tfcloudwatchevents.DefaultEventBusName,
 			},
 			"principal": {
 				Type:         schema.TypeString,
@@ -103,7 +114,7 @@ func resourcePermissionCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Creating CloudWatch Events permission failed: %w", err)
 	}
 
-	id := tfevents.PermissionCreateResourceID(eventBusName, statementID)
+	id := tfcloudwatchevents.PermissionCreateResourceID(eventBusName, statementID)
 	d.SetId(id)
 
 	return resourcePermissionRead(d, meta)
@@ -113,7 +124,7 @@ func resourcePermissionCreate(d *schema.ResourceData, meta interface{}) error {
 func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 
-	eventBusName, statementID, err := tfevents.PermissionParseResourceID(d.Id())
+	eventBusName, statementID, err := tfcloudwatchevents.PermissionParseResourceID(d.Id())
 	if err != nil {
 		return fmt.Errorf("error reading CloudWatch Events permission (%s): %w", d.Id(), err)
 	}
@@ -124,7 +135,7 @@ func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
 	var policyStatement *CloudWatchEventPermissionPolicyStatement
 
 	// Especially with concurrent PutPermission calls there can be a slight delay
-	err = resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err = resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 		log.Printf("[DEBUG] Reading CloudWatch Events bus: %s", input)
 		output, err = conn.DescribeEventBus(&input)
 		if err != nil {
@@ -157,7 +168,7 @@ func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("action", policyStatement.Action)
 	busName := aws.StringValue(output.Name)
 	if busName == "" {
-		busName = tfevents.DefaultEventBusName
+		busName = tfcloudwatchevents.DefaultEventBusName
 	}
 	d.Set("event_bus_name", busName)
 
@@ -210,7 +221,7 @@ func getPolicyStatement(output *events.DescribeEventBusOutput, statementID strin
 func resourcePermissionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 
-	eventBusName, statementID, err := tfevents.PermissionParseResourceID(d.Id())
+	eventBusName, statementID, err := tfcloudwatchevents.PermissionParseResourceID(d.Id())
 	if err != nil {
 		return fmt.Errorf("error updating CloudWatch Events permission (%s): %w", d.Id(), err)
 	}
@@ -239,7 +250,7 @@ func resourcePermissionUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourcePermissionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 
-	eventBusName, statementID, err := tfevents.PermissionParseResourceID(d.Id())
+	eventBusName, statementID, err := tfcloudwatchevents.PermissionParseResourceID(d.Id())
 	if err != nil {
 		return fmt.Errorf("error deleting CloudWatch Events permission (%s): %w", d.Id(), err)
 	}

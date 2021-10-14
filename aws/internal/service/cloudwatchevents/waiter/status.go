@@ -7,11 +7,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudwatchevents/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
+	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
+	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
+	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
 )
 
-func ConnectionState(conn *events.CloudWatchEvents, name string) resource.StateRefreshFunc {
+func statusConnectionState(conn *events.CloudWatchEvents, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.ConnectionByName(conn, name)
+		output, err := tfcloudwatchevents.FindConnectionByName(conn, name)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

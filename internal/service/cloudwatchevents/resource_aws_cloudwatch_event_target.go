@@ -18,6 +18,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
+	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
+	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
+	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
+	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
+	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
+	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
+	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
+	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
+	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
+	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
+	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
+	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
+	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
 )
 
 func ResourceTarget() *schema.Resource {
@@ -46,7 +60,7 @@ func ResourceTarget() *schema.Resource {
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validBusNameOrARN,
-				Default:      tfevents.DefaultEventBusName,
+				Default:      tfcloudwatchevents.DefaultEventBusName,
 			},
 
 			"rule": {
@@ -416,7 +430,7 @@ func resourceTargetCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Creating CloudWatch Events Target failed: %s", out.FailedEntries)
 	}
 
-	id := tfevents.TargetCreateResourceID(busName, rule, targetID)
+	id := tfcloudwatchevents.TargetCreateResourceID(busName, rule, targetID)
 	d.SetId(id)
 
 	log.Printf("[INFO] CloudWatch Events Target (%s) created", d.Id())
@@ -429,7 +443,7 @@ func resourceTargetRead(d *schema.ResourceData, meta interface{}) error {
 
 	busName := d.Get("event_bus_name").(string)
 
-	t, err := finder.Target(conn, busName, d.Get("rule").(string), d.Get("target_id").(string))
+	t, err := tfcloudwatchevents.FindTarget(conn, busName, d.Get("rule").(string), d.Get("target_id").(string))
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, "ValidationException") ||
 			tfawserr.ErrCodeEquals(err, events.ErrCodeResourceNotFoundException) ||
@@ -1062,12 +1076,12 @@ func flattenAwsCloudWatchEventTargetPlacementConstraints(pcs []*events.Placement
 }
 
 func resourceAwsCloudWatchEventTargetImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	busName, ruleName, targetID, err := tfevents.TargetParseImportID(d.Id())
+	busName, ruleName, targetID, err := tfcloudwatchevents.TargetParseImportID(d.Id())
 	if err != nil {
 		return []*schema.ResourceData{}, err
 	}
 
-	id := tfevents.TargetCreateResourceID(busName, ruleName, targetID)
+	id := tfcloudwatchevents.TargetCreateResourceID(busName, ruleName, targetID)
 	d.SetId(id)
 	d.Set("target_id", targetID)
 	d.Set("rule", ruleName)

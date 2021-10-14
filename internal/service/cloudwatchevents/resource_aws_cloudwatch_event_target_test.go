@@ -25,6 +25,17 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
+	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
+	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
+	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
+	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
+	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
+	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
+	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
+	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
+	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
+	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
 )
 
 func init() {
@@ -46,7 +57,7 @@ func testSweepCloudWatchEventTargets(region string) error {
 
 	rulesInput := &events.ListRulesInput{}
 
-	err = lister.ListRulesPages(conn, rulesInput, func(rulesPage *events.ListRulesOutput, lastPage bool) bool {
+	err = tfcloudwatchevents.ListRulesPages(conn, rulesInput, func(rulesPage *events.ListRulesOutput, lastPage bool) bool {
 		if rulesPage == nil {
 			return !lastPage
 		}
@@ -61,7 +72,7 @@ func testSweepCloudWatchEventTargets(region string) error {
 				Limit: aws.Int64(100), // Set limit to allowed maximum to prevent API throttling
 			}
 
-			err := lister.ListTargetsByRulePages(conn, targetsInput, func(targetsPage *events.ListTargetsByRuleOutput, lastPage bool) bool {
+			err := tfcloudwatchevents.ListTargetsByRulePages(conn, targetsInput, func(targetsPage *events.ListTargetsByRuleOutput, lastPage bool) bool {
 				if targetsPage == nil {
 					return !lastPage
 				}
@@ -870,7 +881,7 @@ func testAccCheckCloudWatchEventTargetExists(n string, rule *events.Target) reso
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchEventsConn
-		t, err := finder.Target(conn, rs.Primary.Attributes["event_bus_name"], rs.Primary.Attributes["rule"], rs.Primary.Attributes["target_id"])
+		t, err := tfcloudwatchevents.FindTarget(conn, rs.Primary.Attributes["event_bus_name"], rs.Primary.Attributes["rule"], rs.Primary.Attributes["target_id"])
 		if err != nil {
 			return fmt.Errorf("Event Target not found: %w", err)
 		}
@@ -889,7 +900,7 @@ func testAccCheckAWSCloudWatchEventTargetDestroy(s *terraform.State) error {
 			continue
 		}
 
-		t, err := finder.Target(conn, rs.Primary.Attributes["event_bus_name"], rs.Primary.Attributes["rule"], rs.Primary.Attributes["target_id"])
+		t, err := tfcloudwatchevents.FindTarget(conn, rs.Primary.Attributes["event_bus_name"], rs.Primary.Attributes["rule"], rs.Primary.Attributes["target_id"])
 		if err == nil {
 			return fmt.Errorf("CloudWatch Events Target %q still exists: %s",
 				rs.Primary.ID, t)
