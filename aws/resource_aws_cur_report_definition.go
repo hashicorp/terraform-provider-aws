@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/costandusagereportservice/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsCurReportDefinition() *schema.Resource {
@@ -100,7 +101,7 @@ func resourceAwsCurReportDefinition() *schema.Resource {
 }
 
 func resourceAwsCurReportDefinitionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).costandusagereportconn
+	conn := meta.(*conns.AWSClient).CURConn
 
 	additionalArtifacts := expandStringSet(d.Get("additional_artifacts").(*schema.Set))
 	compression := d.Get("compression").(string)
@@ -158,7 +159,7 @@ func resourceAwsCurReportDefinitionCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsCurReportDefinitionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).costandusagereportconn
+	conn := meta.(*conns.AWSClient).CURConn
 
 	reportDefinition, err := finder.ReportDefinitionByName(conn, d.Id())
 
@@ -177,10 +178,10 @@ func resourceAwsCurReportDefinitionRead(d *schema.ResourceData, meta interface{}
 
 	reportName := aws.StringValue(reportDefinition.ReportName)
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "cur",
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("definition/%s", reportName),
 	}.String()
 
@@ -203,7 +204,7 @@ func resourceAwsCurReportDefinitionRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsCurReportDefinitionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).costandusagereportconn
+	conn := meta.(*conns.AWSClient).CURConn
 
 	additionalArtifacts := expandStringSet(d.Get("additional_artifacts").(*schema.Set))
 	compression := d.Get("compression").(string)
@@ -263,7 +264,7 @@ func resourceAwsCurReportDefinitionUpdate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsCurReportDefinitionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).costandusagereportconn
+	conn := meta.(*conns.AWSClient).CURConn
 
 	log.Printf("[DEBUG] Deleting Cost And Usage Report Definition (%s)", d.Id())
 	_, err := conn.DeleteReportDefinition(&cur.DeleteReportDefinitionInput{
