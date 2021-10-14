@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
 )
 
 //Serialized acceptance tests due to Connect account limits (max 2 parallel tests)
@@ -149,7 +150,7 @@ func testAccAwsConnectContactFlow_disappears_ConnectInstance(t *testing.T) {
 				Config: testAccAwsConnectContactFlowConfigBasic(rName, rName2, "Disappear"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsConnectContactFlowExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceInstance(), instanceResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfconnect.ResourceInstance(), instanceResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -167,7 +168,7 @@ func testAccCheckAwsConnectContactFlowExists(resourceName string, function *conn
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("Connect Contact Flow ID not set")
 		}
-		instanceID, contactFlowID, err := resourceAwsConnectContactFlowParseID(rs.Primary.ID)
+		instanceID, contactFlowID, err := tfconnect.ContactFlowParseID(rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -199,7 +200,7 @@ func testAccCheckAwsConnectContactFlowDestroy(s *terraform.State) error {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
 
-		instanceID, contactFlowID, err := resourceAwsConnectContactFlowParseID(rs.Primary.ID)
+		instanceID, contactFlowID, err := tfconnect.ContactFlowParseID(rs.Primary.ID)
 
 		if err != nil {
 			return err

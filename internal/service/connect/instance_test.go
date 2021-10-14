@@ -54,7 +54,7 @@ func testSweepConnectInstance(region string) error {
 			id := aws.StringValue(instanceSummary.Id)
 
 			log.Printf("[INFO] Deleting Connect Instance (%s)", id)
-			r := ResourceInstance()
+			r := tfconnect.ResourceInstance()
 			d := r.Data(nil)
 			d.SetId(id)
 
