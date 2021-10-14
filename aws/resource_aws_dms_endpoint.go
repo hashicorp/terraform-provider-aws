@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/dms/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/dms/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsDmsEndpoint() *schema.Resource {
@@ -406,8 +407,8 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 }
 
 func resourceAwsDmsEndpointCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dmsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).DMSConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	request := &dms.CreateEndpointInput{
@@ -531,9 +532,9 @@ func resourceAwsDmsEndpointCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsDmsEndpointRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dmsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).DMSConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	endpoint, err := finder.EndpointByID(conn, d.Id())
 
@@ -574,7 +575,7 @@ func resourceAwsDmsEndpointRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceAwsDmsEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dmsconn
+	conn := meta.(*conns.AWSClient).DMSConn
 
 	request := &dms.ModifyEndpointInput{
 		EndpointArn: aws.String(d.Get("endpoint_arn").(string)),
@@ -767,7 +768,7 @@ func resourceAwsDmsEndpointUpdate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsDmsEndpointDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dmsconn
+	conn := meta.(*conns.AWSClient).DMSConn
 
 	log.Printf("[DEBUG] Deleting DMS Endpoint: (%s)", d.Id())
 	_, err := conn.DeleteEndpoint(&dms.DeleteEndpointInput{

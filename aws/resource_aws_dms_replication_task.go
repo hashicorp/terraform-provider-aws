@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsDmsReplicationTask() *schema.Resource {
@@ -97,8 +98,8 @@ func resourceAwsDmsReplicationTask() *schema.Resource {
 }
 
 func resourceAwsDmsReplicationTaskCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dmsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).DMSConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	request := &dms.CreateReplicationTaskInput{
@@ -156,9 +157,9 @@ func resourceAwsDmsReplicationTaskCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsDmsReplicationTaskRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dmsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).DMSConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	response, err := conn.DescribeReplicationTasks(&dms.DescribeReplicationTasksInput{
 		Filters: []*dms.Filter{
@@ -203,7 +204,7 @@ func resourceAwsDmsReplicationTaskRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsDmsReplicationTaskUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dmsconn
+	conn := meta.(*conns.AWSClient).DMSConn
 
 	request := &dms.ModifyReplicationTaskInput{
 		ReplicationTaskArn: aws.String(d.Get("replication_task_arn").(string)),
@@ -278,7 +279,7 @@ func resourceAwsDmsReplicationTaskUpdate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsDmsReplicationTaskDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dmsconn
+	conn := meta.(*conns.AWSClient).DMSConn
 
 	request := &dms.DeleteReplicationTaskInput{
 		ReplicationTaskArn: aws.String(d.Get("replication_task_arn").(string)),
@@ -334,7 +335,7 @@ func resourceAwsDmsReplicationTaskSetState(d *schema.ResourceData, task *dms.Rep
 func resourceAwsDmsReplicationTaskStateRefreshFunc(
 	d *schema.ResourceData, meta interface{}) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		conn := meta.(*AWSClient).dmsconn
+		conn := meta.(*conns.AWSClient).DMSConn
 
 		v, err := conn.DescribeReplicationTasks(&dms.DescribeReplicationTasksInput{
 			Filters: []*dms.Filter{

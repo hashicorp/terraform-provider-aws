@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsDmsEventSubscription() *schema.Resource {
@@ -83,8 +84,8 @@ func resourceAwsDmsEventSubscription() *schema.Resource {
 }
 
 func resourceAwsDmsEventSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dmsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).DMSConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	request := &dms.CreateEventSubscriptionInput{
@@ -129,7 +130,7 @@ func resourceAwsDmsEventSubscriptionCreate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsDmsEventSubscriptionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dmsconn
+	conn := meta.(*conns.AWSClient).DMSConn
 
 	if d.HasChanges("enabled", "event_categories", "sns_topic_arn", "source_type") {
 		request := &dms.ModifyEventSubscriptionInput{
@@ -176,9 +177,9 @@ func resourceAwsDmsEventSubscriptionUpdate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsDmsEventSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dmsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).DMSConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	request := &dms.DescribeEventSubscriptionsInput{
 		SubscriptionName: aws.String(d.Id()),
@@ -205,10 +206,10 @@ func resourceAwsDmsEventSubscriptionRead(d *schema.ResourceData, meta interface{
 	subscription := response.EventSubscriptionsList[0]
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "dms",
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("es:%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)
@@ -241,7 +242,7 @@ func resourceAwsDmsEventSubscriptionRead(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsDmsEventSubscriptionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dmsconn
+	conn := meta.(*conns.AWSClient).DMSConn
 
 	request := &dms.DeleteEventSubscriptionInput{
 		SubscriptionName: aws.String(d.Id()),

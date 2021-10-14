@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSDmsEventSubscription_basic(t *testing.T) {
@@ -202,7 +203,7 @@ func testAccCheckDmsEventSubscriptionDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).dmsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn
 
 		resp, err := conn.DescribeEventSubscriptions(&dms.DescribeEventSubscriptionsInput{
 			SubscriptionName: aws.String(rs.Primary.ID),
@@ -252,7 +253,7 @@ func testAccCheckDmsEventSubscriptionExists(n string, eventSubscription *dms.Eve
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).dmsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn
 		resp, err := conn.DescribeEventSubscriptions(&dms.DescribeEventSubscriptionsInput{
 			SubscriptionName: aws.String(rs.Primary.ID),
 		})
@@ -393,7 +394,7 @@ resource "aws_dms_event_subscription" "test" {
 }
 
 func testAccPreCheckAWSEks(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).eksconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn
 
 	input := &eks.ListClustersInput{}
 

@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -30,7 +31,7 @@ func testSweepDmsReplicationInstances(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*AWSClient).dmsconn
+	conn := client.(*conns.AWSClient).DMSConn
 	sweepResources := make([]*testSweepResource, 0)
 	var errs *multierror.Error
 
@@ -536,7 +537,7 @@ func testAccCheckAWSDmsReplicationInstanceExists(n string) resource.TestCheckFun
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("No ID is set")
 		}
-		conn := acctest.Provider.Meta().(*AWSClient).dmsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn
 		resp, err := conn.DescribeReplicationInstances(&dms.DescribeReplicationInstancesInput{
 			Filters: []*dms.Filter{
 				{
@@ -563,7 +564,7 @@ func testAccCheckAWSDmsReplicationInstanceDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).dmsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn
 
 		resp, err := conn.DescribeReplicationInstances(&dms.DescribeReplicationInstancesInput{
 			Filters: []*dms.Filter{
@@ -596,7 +597,7 @@ func testAccCheckAWSDmsReplicationInstanceDestroy(s *terraform.State) error {
 
 // Ensure at least two engine versions of the replication instance class are available
 func testAccAWSDmsReplicationInstanceEngineVersionsPreCheck(t *testing.T) []string {
-	conn := acctest.Provider.Meta().(*AWSClient).dmsconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn
 
 	// Gather all orderable DMS replication instances of the instance class
 	// used in the acceptance testing. Not currently available as an input

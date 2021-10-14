@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsDmsReplicationInstance() *schema.Resource {
@@ -133,8 +134,8 @@ func resourceAwsDmsReplicationInstance() *schema.Resource {
 }
 
 func resourceAwsDmsReplicationInstanceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dmsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).DMSConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	request := &dms.CreateReplicationInstanceInput{
@@ -200,9 +201,9 @@ func resourceAwsDmsReplicationInstanceCreate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsDmsReplicationInstanceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dmsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).DMSConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	response, err := conn.DescribeReplicationInstances(&dms.DescribeReplicationInstancesInput{
 		Filters: []*dms.Filter{
@@ -283,7 +284,7 @@ func resourceAwsDmsReplicationInstanceRead(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsDmsReplicationInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dmsconn
+	conn := meta.(*conns.AWSClient).DMSConn
 
 	request := &dms.ModifyReplicationInstanceInput{
 		ApplyImmediately:       aws.Bool(d.Get("apply_immediately").(bool)),
@@ -375,7 +376,7 @@ func resourceAwsDmsReplicationInstanceUpdate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsDmsReplicationInstanceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dmsconn
+	conn := meta.(*conns.AWSClient).DMSConn
 
 	request := &dms.DeleteReplicationInstanceInput{
 		ReplicationInstanceArn: aws.String(d.Get("replication_instance_arn").(string)),

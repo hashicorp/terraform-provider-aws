@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/dms/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAwsDmsEndpoint_basic(t *testing.T) {
@@ -567,7 +568,7 @@ func TestAccAwsDmsEndpoint_Db2(t *testing.T) {
 }
 
 func testAccCheckAWSDmsEndpointDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).dmsconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_dms_endpoint" {
@@ -601,7 +602,7 @@ func testAccCheckAWSDmsEndpointExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No DMS Endpoint ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).dmsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn
 
 		_, err := finder.EndpointByID(conn, rs.Primary.ID)
 

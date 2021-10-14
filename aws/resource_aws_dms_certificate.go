@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsDmsCertificate() *schema.Resource {
@@ -62,8 +63,8 @@ func resourceAwsDmsCertificate() *schema.Resource {
 }
 
 func resourceAwsDmsCertificateCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dmsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).DMSConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 	certificateID := d.Get("certificate_id").(string)
 
@@ -103,9 +104,9 @@ func resourceAwsDmsCertificateCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsDmsCertificateRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dmsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).DMSConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	response, err := conn.DescribeCertificates(&dms.DescribeCertificatesInput{
 		Filters: []*dms.Filter{
@@ -161,7 +162,7 @@ func resourceAwsDmsCertificateRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsDmsCertificateUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dmsconn
+	conn := meta.(*conns.AWSClient).DMSConn
 
 	if d.HasChange("tags_all") {
 		arn := d.Get("certificate_arn").(string)
@@ -176,7 +177,7 @@ func resourceAwsDmsCertificateUpdate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsDmsCertificateDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dmsconn
+	conn := meta.(*conns.AWSClient).DMSConn
 
 	request := &dms.DeleteCertificateInput{
 		CertificateArn: aws.String(d.Get("certificate_arn").(string)),
