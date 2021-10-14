@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSesIdentityPolicy() *schema.Resource {
+func ResourceIdentityPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSesIdentityPolicyCreate,
-		Read:   resourceAwsSesIdentityPolicyRead,
-		Update: resourceAwsSesIdentityPolicyUpdate,
-		Delete: resourceAwsSesIdentityPolicyDelete,
+		Create: resourceIdentityPolicyCreate,
+		Read:   resourceIdentityPolicyRead,
+		Update: resourceIdentityPolicyUpdate,
+		Delete: resourceIdentityPolicyDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -48,7 +48,7 @@ func resourceAwsSesIdentityPolicy() *schema.Resource {
 	}
 }
 
-func resourceAwsSesIdentityPolicyCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceIdentityPolicyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SESConn
 
 	identity := d.Get("identity").(string)
@@ -67,10 +67,10 @@ func resourceAwsSesIdentityPolicyCreate(d *schema.ResourceData, meta interface{}
 
 	d.SetId(fmt.Sprintf("%s|%s", identity, policyName))
 
-	return resourceAwsSesIdentityPolicyRead(d, meta)
+	return resourceIdentityPolicyRead(d, meta)
 }
 
-func resourceAwsSesIdentityPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceIdentityPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SESConn
 
 	identity, policyName, err := resourceAwsSesIdentityPolicyParseID(d.Id())
@@ -89,10 +89,10 @@ func resourceAwsSesIdentityPolicyUpdate(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("error updating SES Identity (%s) Policy (%s): %s", identity, policyName, err)
 	}
 
-	return resourceAwsSesIdentityPolicyRead(d, meta)
+	return resourceIdentityPolicyRead(d, meta)
 }
 
-func resourceAwsSesIdentityPolicyRead(d *schema.ResourceData, meta interface{}) error {
+func resourceIdentityPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SESConn
 
 	identity, policyName, err := resourceAwsSesIdentityPolicyParseID(d.Id())
@@ -135,7 +135,7 @@ func resourceAwsSesIdentityPolicyRead(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func resourceAwsSesIdentityPolicyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceIdentityPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SESConn
 
 	identity, policyName, err := resourceAwsSesIdentityPolicyParseID(d.Id())

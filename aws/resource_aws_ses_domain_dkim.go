@@ -10,11 +10,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSesDomainDkim() *schema.Resource {
+func ResourceDomainDKIM() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSesDomainDkimCreate,
-		Read:   resourceAwsSesDomainDkimRead,
-		Delete: resourceAwsSesDomainDkimDelete,
+		Create: resourceDomainDKIMCreate,
+		Read:   resourceDomainDKIMRead,
+		Delete: resourceDomainDKIMDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -34,7 +34,7 @@ func resourceAwsSesDomainDkim() *schema.Resource {
 	}
 }
 
-func resourceAwsSesDomainDkimCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceDomainDKIMCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SESConn
 
 	domainName := d.Get("domain").(string)
@@ -50,10 +50,10 @@ func resourceAwsSesDomainDkimCreate(d *schema.ResourceData, meta interface{}) er
 
 	d.SetId(domainName)
 
-	return resourceAwsSesDomainDkimRead(d, meta)
+	return resourceDomainDKIMRead(d, meta)
 }
 
-func resourceAwsSesDomainDkimRead(d *schema.ResourceData, meta interface{}) error {
+func resourceDomainDKIMRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SESConn
 
 	domainName := d.Id()
@@ -82,7 +82,7 @@ func resourceAwsSesDomainDkimRead(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func resourceAwsSesDomainDkimDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDomainDKIMDelete(d *schema.ResourceData, meta interface{}) error {
 
 	return nil
 }

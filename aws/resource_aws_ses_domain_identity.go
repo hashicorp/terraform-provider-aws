@@ -13,11 +13,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSesDomainIdentity() *schema.Resource {
+func ResourceDomainIdentity() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSesDomainIdentityCreate,
-		Read:   resourceAwsSesDomainIdentityRead,
-		Delete: resourceAwsSesDomainIdentityDelete,
+		Create: resourceDomainIdentityCreate,
+		Read:   resourceDomainIdentityRead,
+		Delete: resourceDomainIdentityDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -41,7 +41,7 @@ func resourceAwsSesDomainIdentity() *schema.Resource {
 	}
 }
 
-func resourceAwsSesDomainIdentityCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceDomainIdentityCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SESConn
 
 	domainName := d.Get("domain").(string)
@@ -57,10 +57,10 @@ func resourceAwsSesDomainIdentityCreate(d *schema.ResourceData, meta interface{}
 
 	d.SetId(domainName)
 
-	return resourceAwsSesDomainIdentityRead(d, meta)
+	return resourceDomainIdentityRead(d, meta)
 }
 
-func resourceAwsSesDomainIdentityRead(d *schema.ResourceData, meta interface{}) error {
+func resourceDomainIdentityRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SESConn
 
 	domainName := d.Id()
@@ -97,7 +97,7 @@ func resourceAwsSesDomainIdentityRead(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func resourceAwsSesDomainIdentityDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDomainIdentityDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SESConn
 
 	domainName := d.Get("domain").(string)

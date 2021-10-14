@@ -12,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSesNotificationTopic() *schema.Resource {
+func ResourceIdentityNotificationTopic() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsSesNotificationTopicSet,
-		Read:   resourceAwsSesNotificationTopicRead,
+		Read:   resourceIdentityNotificationTopicRead,
 		Update: resourceAwsSesNotificationTopicSet,
-		Delete: resourceAwsSesNotificationTopicDelete,
+		Delete: resourceIdentityNotificationTopicDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -90,10 +90,10 @@ func resourceAwsSesNotificationTopicSet(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("Error setting SES Identity Notification Topic Headers Forwarding: %s", err)
 	}
 
-	return resourceAwsSesNotificationTopicRead(d, meta)
+	return resourceIdentityNotificationTopicRead(d, meta)
 }
 
-func resourceAwsSesNotificationTopicRead(d *schema.ResourceData, meta interface{}) error {
+func resourceIdentityNotificationTopicRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SESConn
 
 	identity, notificationType, err := decodeSesIdentityNotificationTopicId(d.Id())
@@ -141,7 +141,7 @@ func resourceAwsSesNotificationTopicRead(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func resourceAwsSesNotificationTopicDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceIdentityNotificationTopicDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SESConn
 
 	identity, notificationType, err := decodeSesIdentityNotificationTopicId(d.Id())
@@ -161,7 +161,7 @@ func resourceAwsSesNotificationTopicDelete(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("Error deleting SES Identity Notification Topic: %s", err)
 	}
 
-	return resourceAwsSesNotificationTopicRead(d, meta)
+	return resourceIdentityNotificationTopicRead(d, meta)
 }
 
 func decodeSesIdentityNotificationTopicId(id string) (string, string, error) {

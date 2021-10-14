@@ -12,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSesActiveReceiptRuleSet() *schema.Resource {
+func ResourceActiveReceiptRuleSet() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSesActiveReceiptRuleSetUpdate,
-		Update: resourceAwsSesActiveReceiptRuleSetUpdate,
-		Read:   resourceAwsSesActiveReceiptRuleSetRead,
-		Delete: resourceAwsSesActiveReceiptRuleSetDelete,
+		Create: resourceActiveReceiptRuleSetUpdate,
+		Update: resourceActiveReceiptRuleSetUpdate,
+		Read:   resourceActiveReceiptRuleSetRead,
+		Delete: resourceActiveReceiptRuleSetDelete,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -33,7 +33,7 @@ func resourceAwsSesActiveReceiptRuleSet() *schema.Resource {
 	}
 }
 
-func resourceAwsSesActiveReceiptRuleSetUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceActiveReceiptRuleSetUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SESConn
 
 	ruleSetName := d.Get("rule_set_name").(string)
@@ -49,10 +49,10 @@ func resourceAwsSesActiveReceiptRuleSetUpdate(d *schema.ResourceData, meta inter
 
 	d.SetId(ruleSetName)
 
-	return resourceAwsSesActiveReceiptRuleSetRead(d, meta)
+	return resourceActiveReceiptRuleSetRead(d, meta)
 }
 
-func resourceAwsSesActiveReceiptRuleSetRead(d *schema.ResourceData, meta interface{}) error {
+func resourceActiveReceiptRuleSetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SESConn
 
 	describeOpts := &ses.DescribeActiveReceiptRuleSetInput{}
@@ -87,7 +87,7 @@ func resourceAwsSesActiveReceiptRuleSetRead(d *schema.ResourceData, meta interfa
 	return nil
 }
 
-func resourceAwsSesActiveReceiptRuleSetDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceActiveReceiptRuleSetDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SESConn
 
 	deleteOpts := &ses.SetActiveReceiptRuleSetInput{

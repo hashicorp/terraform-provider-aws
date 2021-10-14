@@ -12,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSesTemplate() *schema.Resource {
+func ResourceTemplate() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSesTemplateCreate,
-		Read:   resourceAwsSesTemplateRead,
-		Update: resourceAwsSesTemplateUpdate,
-		Delete: resourceAwsSesTemplateDelete,
+		Create: resourceTemplateCreate,
+		Read:   resourceTemplateRead,
+		Update: resourceTemplateUpdate,
+		Delete: resourceTemplateDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -51,7 +51,7 @@ func resourceAwsSesTemplate() *schema.Resource {
 		},
 	}
 }
-func resourceAwsSesTemplateCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceTemplateCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SESConn
 
 	templateName := d.Get("name").(string)
@@ -83,10 +83,10 @@ func resourceAwsSesTemplateCreate(d *schema.ResourceData, meta interface{}) erro
 	}
 	d.SetId(templateName)
 
-	return resourceAwsSesTemplateRead(d, meta)
+	return resourceTemplateRead(d, meta)
 }
 
-func resourceAwsSesTemplateRead(d *schema.ResourceData, meta interface{}) error {
+func resourceTemplateRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SESConn
 	input := ses.GetTemplateInput{
 		TemplateName: aws.String(d.Id()),
@@ -120,7 +120,7 @@ func resourceAwsSesTemplateRead(d *schema.ResourceData, meta interface{}) error 
 	return nil
 }
 
-func resourceAwsSesTemplateUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceTemplateUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SESConn
 
 	templateName := d.Id()
@@ -151,10 +151,10 @@ func resourceAwsSesTemplateUpdate(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("Updating SES template '%s' failed: %s", templateName, err.Error())
 	}
 
-	return resourceAwsSesTemplateRead(d, meta)
+	return resourceTemplateRead(d, meta)
 }
 
-func resourceAwsSesTemplateDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceTemplateDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SESConn
 	input := ses.DeleteTemplateInput{
 		TemplateName: aws.String(d.Id()),
