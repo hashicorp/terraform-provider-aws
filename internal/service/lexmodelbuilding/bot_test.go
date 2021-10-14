@@ -21,58 +21,10 @@ import (
 func init() {
 	acctest.RegisterServiceErrorCheckFunc(lexmodelbuildingservice.EndpointsID, testAccErrorCheckSkipLex)
 
-	resource.AddTestSweepers("aws_lex_bot", &resource.Sweeper{
-		Name:         "aws_lex_bot",
-		F:            sweepBots,
-		Dependencies: []string{"aws_lex_bot_alias"},
-	})
+
 }
 
-func sweepBots(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
 
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-
-	conn := client.(*conns.AWSClient).LexModelBuildingConn
-	sweepResources := make([]*sweep.SweepResource, 0)
-	var errs *multierror.Error
-
-	input := &lexmodelbuildingservice.GetBotsInput{}
-
-	err = conn.GetBotsPages(input, func(page *lexmodelbuildingservice.GetBotsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, bot := range page.Bots {
-			r := tflexmodelbuilding.ResourceBot()
-			d := r.Data(nil)
-
-			d.SetId(aws.StringValue(bot.Name))
-
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error listing Lex Bot for %s: %w", region, err))
-	}
-
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping Lex Bot for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping Lex Bot sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
-}
 
 func testAccErrorCheckSkipLex(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,

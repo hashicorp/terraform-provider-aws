@@ -20,59 +20,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_lex_intent", &resource.Sweeper{
-		Name:         "aws_lex_intent",
-		F:            sweepIntents,
-		Dependencies: []string{"aws_lex_bot"},
-	})
-}
 
-func sweepIntents(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
 
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
 
-	conn := client.(*conns.AWSClient).LexModelBuildingConn
-	sweepResources := make([]*sweep.SweepResource, 0)
-	var errs *multierror.Error
-
-	input := &lexmodelbuildingservice.GetIntentsInput{}
-
-	err = conn.GetIntentsPages(input, func(page *lexmodelbuildingservice.GetIntentsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, intent := range page.Intents {
-			r := tflexmodelbuilding.ResourceIntent()
-			d := r.Data(nil)
-
-			d.SetId(aws.StringValue(intent.Name))
-
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error listing Lex Intent for %s: %w", region, err))
-	}
-
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping Lex Intent for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping Lex Intent sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
-}
 
 func TestAccLexModelBuildingIntent_basic(t *testing.T) {
 	var v lexmodelbuildingservice.GetIntentOutput

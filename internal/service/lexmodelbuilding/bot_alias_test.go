@@ -19,85 +19,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_lex_bot_alias", &resource.Sweeper{
-		Name: "aws_lex_bot_alias",
-		F:    sweepBotAliases,
-	})
-}
 
-func sweepBotAliases(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
 
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
 
-	conn := client.(*conns.AWSClient).LexModelBuildingConn
-	sweepResources := make([]*sweep.SweepResource, 0)
-	var errs *multierror.Error
-
-	input := &lexmodelbuildingservice.GetBotsInput{}
-
-	err = conn.GetBotsPages(input, func(page *lexmodelbuildingservice.GetBotsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, bot := range page.Bots {
-			input := &lexmodelbuildingservice.GetBotAliasesInput{
-				BotName: bot.Name,
-			}
-
-			err := conn.GetBotAliasesPages(input, func(page *lexmodelbuildingservice.GetBotAliasesOutput, lastPage bool) bool {
-				if page == nil {
-					return !lastPage
-				}
-
-				for _, botAlias := range page.BotAliases {
-					r := tflexmodelbuilding.ResourceBotAlias()
-					d := r.Data(nil)
-
-					d.SetId(fmt.Sprintf("%s:%s", aws.StringValue(bot.Name), aws.StringValue(botAlias.Name)))
-					d.Set("bot_name", bot.Name)
-					d.Set("name", botAlias.Name)
-
-					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-				}
-
-				return !lastPage
-			})
-
-			if err != nil {
-				errs = multierror.Append(errs, fmt.Errorf("error listing Lex Bot Alias for %s: %w", region, err))
-			}
-
-			r := tflexmodelbuilding.ResourceBotAlias()
-			d := r.Data(nil)
-
-			d.SetId(aws.StringValue(bot.Name))
-
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error listing Lex Bot Alias for %s: %w", region, err))
-	}
-
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping Lex Bot Alias for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping Lex Bot Alias sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
-}
 
 func TestAccLexModelBuildingBotAlias_basic(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotAliasOutput
