@@ -22,9 +22,9 @@ func TestAccDataSourceAwsSqsQueue_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsSqsQueueConfig(rName),
+				Config: testAccQueueDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccDataSourceAwsSqsQueueCheck(datasourceName, resourceName),
+					testAccQueueCheckDataSource(datasourceName, resourceName),
 					resource.TestCheckResourceAttr(datasourceName, "tags.%", "0"),
 				),
 			},
@@ -43,9 +43,9 @@ func TestAccDataSourceAwsSqsQueue_tags(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsSqsQueueConfigTags(rName),
+				Config: testAccQueueTagsDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccDataSourceAwsSqsQueueCheck(datasourceName, resourceName),
+					testAccQueueCheckDataSource(datasourceName, resourceName),
 					resource.TestCheckResourceAttr(datasourceName, "tags.%", "3"),
 					resource.TestCheckResourceAttr(datasourceName, "tags.Environment", "Production"),
 					resource.TestCheckResourceAttr(datasourceName, "tags.Foo", "Bar"),
@@ -56,7 +56,7 @@ func TestAccDataSourceAwsSqsQueue_tags(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAwsSqsQueueCheck(datasourceName, resourceName string) resource.TestCheckFunc {
+func testAccQueueCheckDataSource(datasourceName, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[datasourceName]
 		if !ok {
@@ -88,7 +88,7 @@ func testAccDataSourceAwsSqsQueueCheck(datasourceName, resourceName string) reso
 	}
 }
 
-func testAccDataSourceAwsSqsQueueConfig(rName string) string {
+func testAccQueueDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sqs_queue" "wrong" {
   name = "%[1]s_wrong"
@@ -104,7 +104,7 @@ data "aws_sqs_queue" "by_name" {
 `, rName)
 }
 
-func testAccDataSourceAwsSqsQueueConfigTags(rName string) string {
+func testAccQueueTagsDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sqs_queue" "test" {
   name = "%[1]s"

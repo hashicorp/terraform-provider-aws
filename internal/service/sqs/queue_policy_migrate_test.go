@@ -7,7 +7,7 @@ import (
 	tfsqs "github.com/hashicorp/terraform-provider-aws/internal/service/sqs"
 )
 
-func TestAWSSqsQueuePolicyMigrateState(t *testing.T) {
+func TestQueuePolicyMigrateState(t *testing.T) {
 
 	cases := map[string]struct {
 		StateVersion int

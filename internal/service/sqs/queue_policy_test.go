@@ -21,12 +21,12 @@ func TestAccAWSSQSQueuePolicy_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sqs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
+		CheckDestroy: testAccCheckQueueDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSQSQueuePolicyConfig(rName),
+				Config: testAccQueuePolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSQSQueueExists(queueResourceName, &queueAttributes),
+					testAccCheckQueueExists(queueResourceName, &queueAttributes),
 					resource.TestCheckResourceAttrSet(resourceName, "policy"),
 				),
 			},
@@ -36,7 +36,7 @@ func TestAccAWSSQSQueuePolicy_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:   testAccAWSSQSQueuePolicyConfig(rName),
+				Config:   testAccQueuePolicyConfig(rName),
 				PlanOnly: true,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "policy", queueResourceName, "policy"),
@@ -56,12 +56,12 @@ func TestAccAWSSQSQueuePolicy_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sqs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
+		CheckDestroy: testAccCheckQueueDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSQSQueuePolicyConfig(rName),
+				Config: testAccQueuePolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSQSQueueExists(queueResourceName, &queueAttributes),
+					testAccCheckQueueExists(queueResourceName, &queueAttributes),
 					acctest.CheckResourceDisappears(acctest.Provider, tfsqs.ResourceQueuePolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -79,12 +79,12 @@ func TestAccAWSSQSQueuePolicy_disappears_queue(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sqs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
+		CheckDestroy: testAccCheckQueueDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSQSQueuePolicyConfig(rName),
+				Config: testAccQueuePolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSQSQueueExists(queueResourceName, &queueAttributes),
+					testAccCheckQueueExists(queueResourceName, &queueAttributes),
 					acctest.CheckResourceDisappears(acctest.Provider, tfsqs.ResourceQueue(), queueResourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -103,12 +103,12 @@ func TestAccAWSSQSQueuePolicy_Update(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sqs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
+		CheckDestroy: testAccCheckQueueDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSQSQueuePolicyConfig(rName),
+				Config: testAccQueuePolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSQSQueueExists(queueResourceName, &queueAttributes),
+					testAccCheckQueueExists(queueResourceName, &queueAttributes),
 					resource.TestCheckResourceAttrSet(resourceName, "policy"),
 				),
 			},
@@ -118,7 +118,7 @@ func TestAccAWSSQSQueuePolicy_Update(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSSQSPolicyConfigUpdated(rName),
+				Config: testAccPolicyUpdatedConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceName, "policy"),
 				),
@@ -127,7 +127,7 @@ func TestAccAWSSQSQueuePolicy_Update(t *testing.T) {
 	})
 }
 
-func testAccAWSSQSQueuePolicyConfig(rName string) string {
+func testAccQueuePolicyConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sqs_queue" "test" {
   name = %[1]q
@@ -156,7 +156,7 @@ POLICY
 `, rName)
 }
 
-func testAccAWSSQSPolicyConfigUpdated(rName string) string {
+func testAccPolicyUpdatedConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sqs_queue" "test" {
   name = %[1]q
