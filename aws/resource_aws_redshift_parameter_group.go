@@ -13,8 +13,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceParameterGroup() *schema.Resource {
@@ -78,18 +79,18 @@ func ResourceParameterGroup() *schema.Resource {
 				Set: resourceAwsRedshiftParameterHash,
 			},
 
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceParameterGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RedshiftConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	createOpts := redshift.CreateClusterParameterGroupInput{
 		ParameterGroupName:   aws.String(d.Get("name").(string)),
@@ -155,7 +156,7 @@ func resourceParameterGroupRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("name", describeResp.ParameterGroups[0].ParameterGroupName)
 	d.Set("family", describeResp.ParameterGroups[0].ParameterGroupFamily)
 	d.Set("description", describeResp.ParameterGroups[0].Description)
-	tags := keyvaluetags.RedshiftKeyValueTags(describeResp.ParameterGroups[0].Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := tftags.RedshiftKeyValueTags(describeResp.ParameterGroups[0].Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -215,7 +216,7 @@ func resourceParameterGroupUpdate(d *schema.ResourceData, meta interface{}) erro
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := keyvaluetags.RedshiftUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := tftags.RedshiftUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating Redshift Parameter Group (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
