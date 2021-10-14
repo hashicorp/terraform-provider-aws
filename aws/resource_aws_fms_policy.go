@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourcePolicy() *schema.Resource {
@@ -119,7 +120,7 @@ func ResourcePolicy() *schema.Resource {
 				Computed: true,
 			},
 
-			"resource_tags": tagsSchema(),
+			"resource_tags": tftags.TagsSchema(),
 
 			"security_service_policy_data": {
 				Type:     schema.TypeList,
