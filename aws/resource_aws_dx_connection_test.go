@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
 func init() {
@@ -27,7 +28,7 @@ func init() {
 }
 
 func testSweepDxConnections(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -42,7 +43,7 @@ func testSweepDxConnections(region string) error {
 	// DescribeConnections has no pagination support
 	output, err := conn.DescribeConnections(input)
 
-	if testSweepSkipSweepError(err) {
+	if sweep.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Direct Connect Connection sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil()
 	}

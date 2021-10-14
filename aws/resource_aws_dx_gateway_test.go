@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
 func init() {
@@ -30,14 +31,14 @@ func init() {
 }
 
 func testSweepDirectConnectGateways(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 	conn := client.(*conns.AWSClient).DirectConnectConn
 	input := &directconnect.DescribeDirectConnectGatewaysInput{}
 	var sweeperErrs *multierror.Error
-	sweepResources := make([]*testSweepResource, 0)
+	sweepResources := make([]*sweep.SweepResource, 0)
 
 	err = lister.DescribeDirectConnectGatewaysPages(conn, input, func(page *directconnect.DescribeDirectConnectGatewaysOutput, lastPage bool) bool {
 		if page == nil {
@@ -89,13 +90,13 @@ func testSweepDirectConnectGateways(region string) error {
 			d := r.Data(nil)
 			d.SetId(directConnectGatewayID)
 
-			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
+	if sweep.SkipSweepError(err) {
 		log.Print(fmt.Errorf("[WARN] Skipping Direct Connect Gateway sweep for %s: %w", region, err))
 		return sweeperErrs // In case we have completed some pages, but had errors
 	}
@@ -104,7 +105,7 @@ func testSweepDirectConnectGateways(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Direct Connect Gateways (%s): %w", region, err))
 	}
 
-	err = testSweepResourceOrchestrator(sweepResources)
+	err = sweep.SweepOrchestrator(sweepResources)
 
 	if err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Direct Connect Gateways (%s): %w", region, err))
