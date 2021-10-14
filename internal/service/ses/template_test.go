@@ -22,13 +22,13 @@ func TestAccAWSSesTemplate_basic(t *testing.T) {
 	var template ses.Template
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSES(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSesTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsSesTemplateResourceConfigBasic1(rName),
+				Config: testAccCheckTemplateResourceBasic1Config(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSesTemplateExists(resourceName, &template),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -53,13 +53,13 @@ func TestAccAWSSesTemplate_Update(t *testing.T) {
 	var template ses.Template
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSES(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSesTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsSesTemplateResourceConfigBasic1(rName),
+				Config: testAccCheckTemplateResourceBasic1Config(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSesTemplateExists(resourceName, &template),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "ses", fmt.Sprintf("template/%s", rName)),
@@ -75,7 +75,7 @@ func TestAccAWSSesTemplate_Update(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCheckAwsSesTemplateResourceConfigBasic2(rName),
+				Config: testAccCheckTemplateResourceBasic2Config(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSesTemplateExists(resourceName, &template),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -85,7 +85,7 @@ func TestAccAWSSesTemplate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCheckAwsSesTemplateResourceConfigBasic3(rName),
+				Config: testAccCheckTemplateResourceBasic3Config(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSesTemplateExists(resourceName, &template),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -104,13 +104,13 @@ func TestAccAWSSesTemplate_disappears(t *testing.T) {
 	var template ses.Template
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSES(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSesTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsSesTemplateResourceConfigBasic1(rName),
+				Config: testAccCheckTemplateResourceBasic1Config(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSesTemplateExists(resourceName, &template),
 					acctest.CheckResourceDisappears(acctest.Provider, tfses.ResourceTemplate(), resourceName),
@@ -186,7 +186,7 @@ func testAccCheckSesTemplateDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAwsSesTemplateResourceConfigBasic1(name string) string {
+func testAccCheckTemplateResourceBasic1Config(name string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_template" "test" {
   name    = "%s"
@@ -196,7 +196,7 @@ resource "aws_ses_template" "test" {
 `, name)
 }
 
-func testAccCheckAwsSesTemplateResourceConfigBasic2(name string) string {
+func testAccCheckTemplateResourceBasic2Config(name string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_template" "test" {
   name    = "%s"
@@ -207,7 +207,7 @@ resource "aws_ses_template" "test" {
 `, name)
 }
 
-func testAccCheckAwsSesTemplateResourceConfigBasic3(name string) string {
+func testAccCheckTemplateResourceBasic3Config(name string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_template" "test" {
   name    = "%s"

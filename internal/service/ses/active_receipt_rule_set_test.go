@@ -18,8 +18,8 @@ import (
 // locally and in TeamCity.
 func TestAccAWSSESActiveReceiptRuleSet_serial(t *testing.T) {
 	testFuncs := map[string]func(t *testing.T){
-		"basic":      testAccAWSSESActiveReceiptRuleSet_basic,
-		"disappears": testAccAWSSESActiveReceiptRuleSet_disappears,
+		"basic":      testAccActiveReceiptRuleSet_basic,
+		"disappears": testAccActiveReceiptRuleSet_disappears,
 	}
 
 	for name, testFunc := range testFuncs {
@@ -31,14 +31,14 @@ func TestAccAWSSESActiveReceiptRuleSet_serial(t *testing.T) {
 	}
 }
 
-func testAccAWSSESActiveReceiptRuleSet_basic(t *testing.T) {
+func testAccActiveReceiptRuleSet_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ses_active_receipt_rule_set.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckAWSSES(t)
+			testAccPreCheck(t)
 			testAccPreCheckSESReceiptRule(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
@@ -46,9 +46,9 @@ func testAccAWSSESActiveReceiptRuleSet_basic(t *testing.T) {
 		CheckDestroy: testAccCheckSESActiveReceiptRuleSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSESActiveReceiptRuleSetConfig(rName),
+				Config: testAccActiveReceiptRuleSetConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSESActiveReceiptRuleSetExists(resourceName),
+					testAccCheckActiveReceiptRuleSetExists(resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "ses", fmt.Sprintf("receipt-rule-set/%s", rName)),
 				),
 			},
@@ -56,14 +56,14 @@ func testAccAWSSESActiveReceiptRuleSet_basic(t *testing.T) {
 	})
 }
 
-func testAccAWSSESActiveReceiptRuleSet_disappears(t *testing.T) {
+func testAccActiveReceiptRuleSet_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ses_active_receipt_rule_set.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckAWSSES(t)
+			testAccPreCheck(t)
 			testAccPreCheckSESReceiptRule(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
@@ -71,9 +71,9 @@ func testAccAWSSESActiveReceiptRuleSet_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckSESActiveReceiptRuleSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSESActiveReceiptRuleSetConfig(rName),
+				Config: testAccActiveReceiptRuleSetConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSESActiveReceiptRuleSetExists(resourceName),
+					testAccCheckActiveReceiptRuleSetExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfses.ResourceActiveReceiptRuleSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -105,7 +105,7 @@ func testAccCheckSESActiveReceiptRuleSetDestroy(s *terraform.State) error {
 
 }
 
-func testAccCheckAwsSESActiveReceiptRuleSetExists(n string) resource.TestCheckFunc {
+func testAccCheckActiveReceiptRuleSetExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -131,7 +131,7 @@ func testAccCheckAwsSESActiveReceiptRuleSetExists(n string) resource.TestCheckFu
 	}
 }
 
-func testAccAWSSESActiveReceiptRuleSetConfig(name string) string {
+func testAccActiveReceiptRuleSetConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_receipt_rule_set" "test" {
   rule_set_name = %[1]q

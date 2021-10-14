@@ -19,15 +19,15 @@ func TestAccAWSSESReceiptFilter_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSES(t); testAccPreCheckSESReceiptRule(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t); testAccPreCheckSESReceiptRule(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSESReceiptFilterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSESReceiptFilterConfig(rName),
+				Config: testAccReceiptFilterConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSESReceiptFilterExists(resourceName),
+					testAccCheckReceiptFilterExists(resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "ses", fmt.Sprintf("receipt-filter/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cidr", "10.10.10.10"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -48,15 +48,15 @@ func TestAccAWSSESReceiptFilter_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSES(t); testAccPreCheckSESReceiptRule(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t); testAccPreCheckSESReceiptRule(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSESReceiptFilterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSESReceiptFilterConfig(rName),
+				Config: testAccReceiptFilterConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSESReceiptFilterExists(resourceName),
+					testAccCheckReceiptFilterExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfses.ResourceReceiptFilter(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -89,7 +89,7 @@ func testAccCheckSESReceiptFilterDestroy(s *terraform.State) error {
 
 }
 
-func testAccCheckAwsSESReceiptFilterExists(n string) resource.TestCheckFunc {
+func testAccCheckReceiptFilterExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -117,7 +117,7 @@ func testAccCheckAwsSESReceiptFilterExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccAWSSESReceiptFilterConfig(rName string) string {
+func testAccReceiptFilterConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_receipt_filter" "test" {
   cidr   = "10.10.10.10"

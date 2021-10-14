@@ -22,12 +22,12 @@ func TestAccAWSSESIdentityPolicy_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsSESIdentityPolicyDestroy,
+		CheckDestroy: testAccCheckIdentityPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSESIdentityPolicyConfigIdentityDomain(domain),
+				Config: testAccIdentityPolicyIdentityDomainConfig(domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSESIdentityPolicyExists(resourceName),
+					testAccCheckIdentityPolicyExists(resourceName),
 				),
 			},
 			{
@@ -48,12 +48,12 @@ func TestAccAWSSESIdentityPolicy_Identity_Email(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsSESIdentityPolicyDestroy,
+		CheckDestroy: testAccCheckIdentityPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSESIdentityPolicyConfigIdentityEmail(email),
+				Config: testAccIdentityPolicyIdentityEmailConfig(email),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSESIdentityPolicyExists(resourceName),
+					testAccCheckIdentityPolicyExists(resourceName),
 				),
 			},
 			{
@@ -73,18 +73,18 @@ func TestAccAWSSESIdentityPolicy_Policy(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsSESIdentityPolicyDestroy,
+		CheckDestroy: testAccCheckIdentityPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSESIdentityPolicyConfigPolicy1(domain),
+				Config: testAccIdentityPolicyPolicy1Config(domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSESIdentityPolicyExists(resourceName),
+					testAccCheckIdentityPolicyExists(resourceName),
 				),
 			},
 			{
-				Config: testAccAWSSESIdentityPolicyConfigPolicy2(domain),
+				Config: testAccIdentityPolicyPolicy2Config(domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSESIdentityPolicyExists(resourceName),
+					testAccCheckIdentityPolicyExists(resourceName),
 				),
 			},
 			{
@@ -96,7 +96,7 @@ func TestAccAWSSESIdentityPolicy_Policy(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsSESIdentityPolicyDestroy(s *terraform.State) error {
+func testAccCheckIdentityPolicyDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -128,7 +128,7 @@ func testAccCheckAwsSESIdentityPolicyDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAwsSESIdentityPolicyExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckIdentityPolicyExists(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -165,7 +165,7 @@ func testAccCheckAwsSESIdentityPolicyExists(resourceName string) resource.TestCh
 	}
 }
 
-func testAccAWSSESIdentityPolicyConfigIdentityDomain(domain string) string {
+func testAccIdentityPolicyIdentityDomainConfig(domain string) string {
 	return fmt.Sprintf(`
 data "aws_iam_policy_document" "test" {
   statement {
@@ -191,7 +191,7 @@ resource "aws_ses_identity_policy" "test" {
 `, domain)
 }
 
-func testAccAWSSESIdentityPolicyConfigIdentityEmail(email string) string {
+func testAccIdentityPolicyIdentityEmailConfig(email string) string {
 	return fmt.Sprintf(`
 data "aws_iam_policy_document" "test" {
   statement {
@@ -217,7 +217,7 @@ resource "aws_ses_identity_policy" "test" {
 `, email)
 }
 
-func testAccAWSSESIdentityPolicyConfigPolicy1(domain string) string {
+func testAccIdentityPolicyPolicy1Config(domain string) string {
 	return fmt.Sprintf(`
 data "aws_iam_policy_document" "test" {
   statement {
@@ -243,7 +243,7 @@ resource "aws_ses_identity_policy" "test" {
 `, domain)
 }
 
-func testAccAWSSESIdentityPolicyConfigPolicy2(domain string) string {
+func testAccIdentityPolicyPolicy2Config(domain string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 

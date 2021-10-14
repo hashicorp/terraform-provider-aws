@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func testAccAwsSesDomainIdentityDomainFromEnv(t *testing.T) string {
+func testAccDomainIdentityDomainFromEnv(t *testing.T) string {
 	rootDomain := os.Getenv("SES_DOMAIN_IDENTITY_ROOT_DOMAIN")
 	if rootDomain == "" {
 		t.Skip(
@@ -28,18 +28,18 @@ func testAccAwsSesDomainIdentityDomainFromEnv(t *testing.T) string {
 }
 
 func TestAccAwsSesDomainIdentityVerification_basic(t *testing.T) {
-	rootDomain := testAccAwsSesDomainIdentityDomainFromEnv(t)
+	rootDomain := testAccDomainIdentityDomainFromEnv(t)
 	domain := fmt.Sprintf("tf-acc-%d.%s", sdkacctest.RandInt(), rootDomain)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSES(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsSESDomainIdentityDestroy,
+		CheckDestroy: testAccCheckDomainIdentityDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsSesDomainIdentityVerification_basic(rootDomain, domain),
-				Check:  testAccCheckAwsSesDomainIdentityVerificationPassed("aws_ses_domain_identity_verification.test"),
+				Config: testAccDomainIdentityVerification_basic(rootDomain, domain),
+				Check:  testAccCheckDomainIdentityVerificationPassed("aws_ses_domain_identity_verification.test"),
 			},
 		},
 	})
@@ -49,13 +49,13 @@ func TestAccAwsSesDomainIdentityVerification_timeout(t *testing.T) {
 	domain := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSES(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsSESDomainIdentityDestroy,
+		CheckDestroy: testAccCheckDomainIdentityDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAwsSesDomainIdentityVerification_timeout(domain),
+				Config:      testAccDomainIdentityVerification_timeout(domain),
 				ExpectError: regexp.MustCompile("Expected domain verification Success, but was in state Pending"),
 			},
 		},
@@ -66,20 +66,20 @@ func TestAccAwsSesDomainIdentityVerification_nonexistent(t *testing.T) {
 	domain := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSES(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsSESDomainIdentityDestroy,
+		CheckDestroy: testAccCheckDomainIdentityDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAwsSesDomainIdentityVerification_nonexistent(domain),
+				Config:      testAccDomainIdentityVerification_nonexistent(domain),
 				ExpectError: regexp.MustCompile(fmt.Sprintf("SES Domain Identity %s not found in AWS", domain)),
 			},
 		},
 	})
 }
 
-func testAccCheckAwsSesDomainIdentityVerificationPassed(n string) resource.TestCheckFunc {
+func testAccCheckDomainIdentityVerificationPassed(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -128,7 +128,7 @@ func testAccCheckAwsSesDomainIdentityVerificationPassed(n string) resource.TestC
 	}
 }
 
-func testAccAwsSesDomainIdentityVerification_basic(rootDomain string, domain string) string {
+func testAccDomainIdentityVerification_basic(rootDomain string, domain string) string {
 	return fmt.Sprintf(`
 data "aws_route53_zone" "test" {
   name         = "%s."
@@ -155,7 +155,7 @@ resource "aws_ses_domain_identity_verification" "test" {
 `, rootDomain, domain)
 }
 
-func testAccAwsSesDomainIdentityVerification_timeout(domain string) string {
+func testAccDomainIdentityVerification_timeout(domain string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_domain_identity" "test" {
   domain = "%s"
@@ -171,7 +171,7 @@ resource "aws_ses_domain_identity_verification" "test" {
 `, domain)
 }
 
-func testAccAwsSesDomainIdentityVerification_nonexistent(domain string) string {
+func testAccDomainIdentityVerification_nonexistent(domain string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_domain_identity_verification" "test" {
   domain = "%s"

@@ -17,7 +17,7 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_ses_email_identity", &resource.Sweeper{
 		Name: "aws_ses_email_identity",
-		F:    func(region string) error { return testSweepSesIdentities(region, ses.IdentityTypeEmailAddress) },
+		F:    func(region string) error { return sweepIdentities(region, ses.IdentityTypeEmailAddress) },
 	})
 }
 
@@ -26,15 +26,15 @@ func TestAccAWSSESEmailIdentity_basic(t *testing.T) {
 	resourceName := "aws_ses_email_identity.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSES(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsSESEmailIdentityDestroy,
+		CheckDestroy: testAccCheckEmailIdentityDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsSESEmailIdentityConfig(email),
+				Config: testAccEmailIdentityConfig(email),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSESEmailIdentityExists(resourceName),
+					testAccCheckEmailIdentityExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ses", regexp.MustCompile(fmt.Sprintf("identity/%s$", regexp.QuoteMeta(email)))),
 				),
 			},
@@ -52,15 +52,15 @@ func TestAccAWSSESEmailIdentity_trailingPeriod(t *testing.T) {
 	resourceName := "aws_ses_email_identity.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSES(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsSESEmailIdentityDestroy,
+		CheckDestroy: testAccCheckEmailIdentityDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsSESEmailIdentityConfig(email),
+				Config: testAccEmailIdentityConfig(email),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSESEmailIdentityExists(resourceName),
+					testAccCheckEmailIdentityExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ses", regexp.MustCompile(fmt.Sprintf("identity/%s$", regexp.QuoteMeta(strings.TrimSuffix(email, "."))))),
 				),
 			},
@@ -73,7 +73,7 @@ func TestAccAWSSESEmailIdentity_trailingPeriod(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsSESEmailIdentityDestroy(s *terraform.State) error {
+func testAccCheckEmailIdentityDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -101,7 +101,7 @@ func testAccCheckAwsSESEmailIdentityDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAwsSESEmailIdentityExists(n string) resource.TestCheckFunc {
+func testAccCheckEmailIdentityExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -134,7 +134,7 @@ func testAccCheckAwsSESEmailIdentityExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccAwsSESEmailIdentityConfig(email string) string {
+func testAccEmailIdentityConfig(email string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_email_identity" "test" {
   email = %q

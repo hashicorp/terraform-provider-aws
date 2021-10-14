@@ -23,28 +23,28 @@ func TestAccAwsSESIdentityNotificationTopic_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckAWSSES(t)
+			testAccPreCheck(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsSESIdentityNotificationTopicDestroy,
+		CheckDestroy: testAccCheckIdentityNotificationTopicDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: fmt.Sprintf(testAccAwsSESIdentityNotificationTopicConfig_basic, domain),
+				Config: fmt.Sprintf(testAccIdentityNotificationTopicConfig_basic, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSESIdentityNotificationTopicExists(resourceName),
+					testAccCheckIdentityNotificationTopicExists(resourceName),
 				),
 			},
 			{
-				Config: fmt.Sprintf(testAccAwsSESIdentityNotificationTopicConfig_update, domain, topicName),
+				Config: fmt.Sprintf(testAccIdentityNotificationTopicConfig_update, domain, topicName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSESIdentityNotificationTopicExists(resourceName),
+					testAccCheckIdentityNotificationTopicExists(resourceName),
 				),
 			},
 			{
-				Config: fmt.Sprintf(testAccAwsSESIdentityNotificationTopicConfig_headers, domain, topicName),
+				Config: fmt.Sprintf(testAccIdentityNotificationTopicConfig_headers, domain, topicName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSESIdentityNotificationTopicExists(resourceName),
+					testAccCheckIdentityNotificationTopicExists(resourceName),
 				),
 			},
 			{
@@ -56,7 +56,7 @@ func TestAccAwsSESIdentityNotificationTopic_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsSESIdentityNotificationTopicDestroy(s *terraform.State) error {
+func testAccCheckIdentityNotificationTopicDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -84,7 +84,7 @@ func testAccCheckAwsSESIdentityNotificationTopicDestroy(s *terraform.State) erro
 	return nil
 }
 
-func testAccCheckAwsSESIdentityNotificationTopicExists(n string) resource.TestCheckFunc {
+func testAccCheckIdentityNotificationTopicExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -134,7 +134,7 @@ func testAccCheckAwsSESIdentityNotificationTopicExists(n string) resource.TestCh
 	}
 }
 
-const testAccAwsSESIdentityNotificationTopicConfig_basic = `
+const testAccIdentityNotificationTopicConfig_basic = `
 resource "aws_ses_identity_notification_topic" "test" {
   identity          = aws_ses_domain_identity.test.arn
   notification_type = "Complaint"
@@ -145,7 +145,7 @@ resource "aws_ses_domain_identity" "test" {
 }
 `
 
-const testAccAwsSESIdentityNotificationTopicConfig_update = `
+const testAccIdentityNotificationTopicConfig_update = `
 resource "aws_ses_identity_notification_topic" "test" {
   topic_arn         = aws_sns_topic.test.arn
   identity          = aws_ses_domain_identity.test.arn
@@ -161,7 +161,7 @@ resource "aws_sns_topic" "test" {
 }
 `
 
-const testAccAwsSESIdentityNotificationTopicConfig_headers = `
+const testAccIdentityNotificationTopicConfig_headers = `
 resource "aws_ses_identity_notification_topic" "test" {
   topic_arn                = aws_sns_topic.test.arn
   identity                 = aws_ses_domain_identity.test.arn

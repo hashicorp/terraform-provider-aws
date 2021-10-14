@@ -21,24 +21,24 @@ func TestAccAWSSESDomainDkim_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckAWSSES(t)
+			testAccPreCheck(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsSESDomainDkimDestroy,
+		CheckDestroy: testAccCheckDomainDKIMDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: fmt.Sprintf(testAccAwsSESDomainDkimConfig, domain),
+				Config: fmt.Sprintf(testAccDomainDKIMConfig, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSESDomainDkimExists(resourceName),
-					testAccCheckAwsSESDomainDkimTokens(resourceName),
+					testAccCheckDomainDKIMExists(resourceName),
+					testAccCheckDomainDKIMTokens(resourceName),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckAwsSESDomainDkimDestroy(s *terraform.State) error {
+func testAccCheckDomainDKIMDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -67,7 +67,7 @@ func testAccCheckAwsSESDomainDkimDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAwsSESDomainDkimExists(n string) resource.TestCheckFunc {
+func testAccCheckDomainDKIMExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -100,7 +100,7 @@ func testAccCheckAwsSESDomainDkimExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckAwsSESDomainDkimTokens(n string) resource.TestCheckFunc {
+func testAccCheckDomainDKIMTokens(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
 
@@ -123,7 +123,7 @@ func testAccCheckAwsSESDomainDkimTokens(n string) resource.TestCheckFunc {
 	}
 }
 
-const testAccAwsSESDomainDkimConfig = `
+const testAccDomainDKIMConfig = `
 resource "aws_ses_domain_identity" "test" {
   domain = %[1]q
 }

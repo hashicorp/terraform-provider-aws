@@ -21,11 +21,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_ses_configuration_set", &resource.Sweeper{
 		Name: "aws_ses_configuration_set",
-		F:    testSweepSesConfigurationSets,
+		F:    sweepConfigurationSets,
 	})
 }
 
-func testSweepSesConfigurationSets(region string) error {
+func sweepConfigurationSets(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -79,16 +79,16 @@ func TestAccAWSSESConfigurationSet_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckAWSSES(t)
+			testAccPreCheck(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSESConfigurationSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSESConfigurationSetBasicConfig(rName),
+				Config: testAccConfigurationSetBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSESConfigurationSetExists(resourceName),
+					testAccCheckConfigurationSetExists(resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "ses", fmt.Sprintf("configuration-set/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", "0"),
@@ -113,16 +113,16 @@ func TestAccAWSSESConfigurationSet_sendingEnabled(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckAWSSES(t)
+			testAccPreCheck(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSESConfigurationSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSESConfigurationSetSendingConfig(rName, false),
+				Config: testAccConfigurationSetSendingConfig(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSESConfigurationSetExists(resourceName),
+					testAccCheckConfigurationSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "sending_enabled", "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_fresh_start"),
 				),
@@ -133,17 +133,17 @@ func TestAccAWSSESConfigurationSet_sendingEnabled(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSSESConfigurationSetSendingConfig(rName, true),
+				Config: testAccConfigurationSetSendingConfig(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSESConfigurationSetExists(resourceName),
+					testAccCheckConfigurationSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "sending_enabled", "true"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_fresh_start"),
 				),
 			},
 			{
-				Config: testAccAWSSESConfigurationSetSendingConfig(rName, false),
+				Config: testAccConfigurationSetSendingConfig(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSESConfigurationSetExists(resourceName),
+					testAccCheckConfigurationSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "sending_enabled", "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_fresh_start"),
 				),
@@ -159,16 +159,16 @@ func TestAccAWSSESConfigurationSet_reputationMetricsEnabled(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckAWSSES(t)
+			testAccPreCheck(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSESConfigurationSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSESConfigurationSetReputationMetricsConfig(rName, false),
+				Config: testAccConfigurationSetReputationMetricsConfig(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSESConfigurationSetExists(resourceName),
+					testAccCheckConfigurationSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "reputation_metrics_enabled", "false"),
 				),
 			},
@@ -178,16 +178,16 @@ func TestAccAWSSESConfigurationSet_reputationMetricsEnabled(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSSESConfigurationSetReputationMetricsConfig(rName, true),
+				Config: testAccConfigurationSetReputationMetricsConfig(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSESConfigurationSetExists(resourceName),
+					testAccCheckConfigurationSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "reputation_metrics_enabled", "true"),
 				),
 			},
 			{
-				Config: testAccAWSSESConfigurationSetReputationMetricsConfig(rName, false),
+				Config: testAccConfigurationSetReputationMetricsConfig(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSESConfigurationSetExists(resourceName),
+					testAccCheckConfigurationSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "reputation_metrics_enabled", "false"),
 				),
 			},
@@ -202,16 +202,16 @@ func TestAccAWSSESConfigurationSet_deliveryOptions(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckAWSSES(t)
+			testAccPreCheck(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSESConfigurationSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSESConfigurationSetDeliveryOptionsConfig(rName, ses.TlsPolicyRequire),
+				Config: testAccConfigurationSetDeliveryOptionsConfig(rName, ses.TlsPolicyRequire),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSESConfigurationSetExists(resourceName),
+					testAccCheckConfigurationSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "delivery_options.0.tls_policy", ses.TlsPolicyRequire),
 				),
@@ -232,22 +232,22 @@ func TestAccAWSSESConfigurationSet_update_deliveryOptions(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckAWSSES(t)
+			testAccPreCheck(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSESConfigurationSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSESConfigurationSetBasicConfig(rName),
+				Config: testAccConfigurationSetBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSESConfigurationSetExists(resourceName),
+					testAccCheckConfigurationSetExists(resourceName),
 				),
 			},
 			{
-				Config: testAccAWSSESConfigurationSetDeliveryOptionsConfig(rName, ses.TlsPolicyRequire),
+				Config: testAccConfigurationSetDeliveryOptionsConfig(rName, ses.TlsPolicyRequire),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSESConfigurationSetExists(resourceName),
+					testAccCheckConfigurationSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "delivery_options.0.tls_policy", ses.TlsPolicyRequire),
 				),
@@ -258,17 +258,17 @@ func TestAccAWSSESConfigurationSet_update_deliveryOptions(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSSESConfigurationSetDeliveryOptionsConfig(rName, ses.TlsPolicyOptional),
+				Config: testAccConfigurationSetDeliveryOptionsConfig(rName, ses.TlsPolicyOptional),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSESConfigurationSetExists(resourceName),
+					testAccCheckConfigurationSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "delivery_options.0.tls_policy", ses.TlsPolicyOptional),
 				),
 			},
 			{
-				Config: testAccAWSSESConfigurationSetBasicConfig(rName),
+				Config: testAccConfigurationSetBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSESConfigurationSetExists(resourceName),
+					testAccCheckConfigurationSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", "0"),
 				),
 			},
@@ -288,16 +288,16 @@ func TestAccAWSSESConfigurationSet_emptyDeliveryOptions(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckAWSSES(t)
+			testAccPreCheck(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSESConfigurationSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSESConfigurationSetEmptyDeliveryOptionsConfig(rName),
+				Config: testAccConfigurationSetEmptyDeliveryOptionsConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSESConfigurationSetExists(resourceName),
+					testAccCheckConfigurationSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "delivery_options.0.tls_policy", ses.TlsPolicyOptional),
 				),
@@ -318,23 +318,23 @@ func TestAccAWSSESConfigurationSet_update_emptyDeliveryOptions(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckAWSSES(t)
+			testAccPreCheck(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSESConfigurationSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSESConfigurationSetBasicConfig(rName),
+				Config: testAccConfigurationSetBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSESConfigurationSetExists(resourceName),
+					testAccCheckConfigurationSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", "0"),
 				),
 			},
 			{
-				Config: testAccAWSSESConfigurationSetEmptyDeliveryOptionsConfig(rName),
+				Config: testAccConfigurationSetEmptyDeliveryOptionsConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSESConfigurationSetExists(resourceName),
+					testAccCheckConfigurationSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "delivery_options.0.tls_policy", ses.TlsPolicyOptional),
 				),
@@ -345,9 +345,9 @@ func TestAccAWSSESConfigurationSet_update_emptyDeliveryOptions(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSSESConfigurationSetBasicConfig(rName),
+				Config: testAccConfigurationSetBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSESConfigurationSetExists(resourceName),
+					testAccCheckConfigurationSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", "0"),
 				),
 			},
@@ -367,16 +367,16 @@ func TestAccAWSSESConfigurationSet_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckAWSSES(t)
+			testAccPreCheck(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSESConfigurationSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSESConfigurationSetBasicConfig(rName),
+				Config: testAccConfigurationSetBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSESConfigurationSetExists(resourceName),
+					testAccCheckConfigurationSetExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfses.ResourceConfigurationSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -385,7 +385,7 @@ func TestAccAWSSESConfigurationSet_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsSESConfigurationSetExists(n string) resource.TestCheckFunc {
+func testAccCheckConfigurationSetExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -436,7 +436,7 @@ func testAccCheckSESConfigurationSetDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSSESConfigurationSetBasicConfig(rName string) string {
+func testAccConfigurationSetBasicConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_configuration_set" "test" {
   name = %[1]q
@@ -444,7 +444,7 @@ resource "aws_ses_configuration_set" "test" {
 `, rName)
 }
 
-func testAccAWSSESConfigurationSetSendingConfig(rName string, enabled bool) string {
+func testAccConfigurationSetSendingConfig(rName string, enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_ses_configuration_set" "test" {
   name            = %[1]q
@@ -453,7 +453,7 @@ resource "aws_ses_configuration_set" "test" {
 `, rName, enabled)
 }
 
-func testAccAWSSESConfigurationSetReputationMetricsConfig(rName string, enabled bool) string {
+func testAccConfigurationSetReputationMetricsConfig(rName string, enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_ses_configuration_set" "test" {
   name                       = %[1]q
@@ -462,7 +462,7 @@ resource "aws_ses_configuration_set" "test" {
 `, rName, enabled)
 }
 
-func testAccAWSSESConfigurationSetDeliveryOptionsConfig(rName, tlsPolicy string) string {
+func testAccConfigurationSetDeliveryOptionsConfig(rName, tlsPolicy string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_configuration_set" "test" {
   name = %[1]q
@@ -474,7 +474,7 @@ resource "aws_ses_configuration_set" "test" {
 `, rName, tlsPolicy)
 }
 
-func testAccAWSSESConfigurationSetEmptyDeliveryOptionsConfig(rName string) string {
+func testAccConfigurationSetEmptyDeliveryOptionsConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_configuration_set" "test" {
   name = %[1]q
