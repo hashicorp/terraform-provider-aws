@@ -251,7 +251,7 @@ func ResourceCluster() *schema.Resource {
 										Type:         schema.TypeString,
 										Required:     true,
 										ForceNew:     true,
-										ValidateFunc: validateAwsEMREBSVolumeType(),
+										ValidateFunc: validEBSVolumeType(),
 									},
 									"volumes_per_instance": {
 										Type:     schema.TypeInt,
@@ -261,7 +261,7 @@ func ResourceCluster() *schema.Resource {
 									},
 								},
 							},
-							Set: resourceAwsEMRClusterEBSConfigHash,
+							Set: resourceClusterEBSHashConfig,
 						},
 						"id": {
 							Type:     schema.TypeString,
@@ -320,7 +320,7 @@ func ResourceCluster() *schema.Resource {
 										Type:         schema.TypeString,
 										Required:     true,
 										ForceNew:     true,
-										ValidateFunc: validateAwsEMREBSVolumeType(),
+										ValidateFunc: validEBSVolumeType(),
 									},
 									"volumes_per_instance": {
 										Type:     schema.TypeInt,
@@ -330,7 +330,7 @@ func ResourceCluster() *schema.Resource {
 									},
 								},
 							},
-							Set: resourceAwsEMRClusterEBSConfigHash,
+							Set: resourceClusterEBSHashConfig,
 						},
 						"id": {
 							Type:     schema.TypeString,
@@ -517,7 +517,7 @@ func ResourceCluster() *schema.Resource {
 				Type:         schema.TypeString,
 				ForceNew:     true,
 				Optional:     true,
-				ValidateFunc: validateAwsEMRCustomAMIID,
+				ValidateFunc: validCustomAMIID,
 			},
 			"step_concurrency_level": {
 				Type:         schema.TypeInt,
@@ -594,7 +594,7 @@ func InstanceFleetConfigSchema() *schema.Resource {
 										Type:         schema.TypeString,
 										Required:     true,
 										ForceNew:     true,
-										ValidateFunc: validateAwsEMREBSVolumeType(),
+										ValidateFunc: validEBSVolumeType(),
 									},
 									"volumes_per_instance": {
 										Type:     schema.TypeInt,
@@ -604,7 +604,7 @@ func InstanceFleetConfigSchema() *schema.Resource {
 									},
 								},
 							},
-							Set: resourceAwsEMRClusterEBSConfigHash,
+							Set: resourceClusterEBSHashConfig,
 						},
 						"instance_type": {
 							Type:     schema.TypeString,
@@ -619,7 +619,7 @@ func InstanceFleetConfigSchema() *schema.Resource {
 						},
 					},
 				},
-				Set: resourceAwsEMRInstanceTypeConfigHash,
+				Set: resourceInstanceTypeHashConfig,
 			},
 			"launch_specifications": {
 				Type:     schema.TypeList,
@@ -971,7 +971,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 			emr.ClusterStateRunning,
 			emr.ClusterStateWaiting,
 		},
-		Refresh:    resourceAwsEMRClusterStateRefreshFunc(d, meta),
+		Refresh:    resourceClusterStateRefreshFunc(d, meta),
 		Timeout:    75 * time.Minute,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second, // Wait 30 secs before starting
@@ -1709,14 +1709,14 @@ func flattenEBSConfig(ebsBlockDevices []*emr.EbsBlockDevice) *schema.Set {
 			ebsAttrs["type"] = *ebs.VolumeSpecification.VolumeType
 		}
 		ebsAttrs["volumes_per_instance"] = 1
-		uniqueEBS[resourceAwsEMRClusterEBSConfigHash(ebsAttrs)] += 1
+		uniqueEBS[resourceClusterEBSHashConfig(ebsAttrs)] += 1
 		ebsConfig = append(ebsConfig, ebsAttrs)
 	}
 
 	for _, ebs := range ebsConfig {
-		ebs.(map[string]interface{})["volumes_per_instance"] = uniqueEBS[resourceAwsEMRClusterEBSConfigHash(ebs)]
+		ebs.(map[string]interface{})["volumes_per_instance"] = uniqueEBS[resourceClusterEBSHashConfig(ebs)]
 	}
-	return schema.NewSet(resourceAwsEMRClusterEBSConfigHash, ebsConfig)
+	return schema.NewSet(resourceClusterEBSHashConfig, ebsConfig)
 }
 
 func flattenBootstrapArguments(actions []*emr.Command) []map[string]interface{} {
@@ -1933,7 +1933,7 @@ func readBodyJson(body string, target interface{}) error {
 	return nil
 }
 
-func resourceAwsEMRClusterStateRefreshFunc(d *schema.ResourceData, meta interface{}) resource.StateRefreshFunc {
+func resourceClusterStateRefreshFunc(d *schema.ResourceData, meta interface{}) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		conn := meta.(*conns.AWSClient).EMRConn
 
@@ -1986,7 +1986,7 @@ func findMasterGroup(instanceGroups []*emr.InstanceGroup) *emr.InstanceGroup {
 	return nil
 }
 
-func resourceAwsEMRClusterEBSConfigHash(v interface{}) int {
+func resourceClusterEBSHashConfig(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 	buf.WriteString(fmt.Sprintf("%d-", m["size"].(int)))
@@ -2116,7 +2116,7 @@ func flatteninstanceTypeConfigs(instanceTypeSpecifications []*emr.InstanceTypeSp
 		instanceTypeConfigs = append(instanceTypeConfigs, flattenTypeConfig)
 	}
 
-	return schema.NewSet(resourceAwsEMRInstanceTypeConfigHash, instanceTypeConfigs)
+	return schema.NewSet(resourceInstanceTypeHashConfig, instanceTypeConfigs)
 }
 
 func flattenLaunchSpecifications(launchSpecifications *emr.InstanceFleetProvisioningSpecifications) []interface{} {
@@ -2284,7 +2284,7 @@ func expandConfigurations(configurations []interface{}) []*emr.Configuration {
 	return configsOut
 }
 
-func resourceAwsEMRInstanceTypeConfigHash(v interface{}) int {
+func resourceInstanceTypeHashConfig(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 	buf.WriteString(fmt.Sprintf("%s-", m["instance_type"].(string)))

@@ -96,7 +96,7 @@ func ResourceInstanceGroup() *schema.Resource {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
-							ValidateFunc: validateAwsEMREBSVolumeType(),
+							ValidateFunc: validEBSVolumeType(),
 						},
 						"volumes_per_instance": {
 							Type:     schema.TypeInt,
@@ -106,7 +106,7 @@ func ResourceInstanceGroup() *schema.Resource {
 						},
 					},
 				},
-				Set: resourceAwsEMRClusterEBSConfigHash,
+				Set: resourceClusterEBSHashConfig,
 			},
 			"instance_count": {
 				Type:     schema.TypeInt,

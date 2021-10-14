@@ -15,9 +15,9 @@ import (
 
 func ResourceSecurityConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEmrSecurityConfigurationCreate,
-		Read:   resourceAwsEmrSecurityConfigurationRead,
-		Delete: resourceAwsEmrSecurityConfigurationDelete,
+		Create: resourceSecurityConfigurationCreate,
+		Read:   resourceSecurityConfigurationRead,
+		Delete: resourceSecurityConfigurationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -54,7 +54,7 @@ func ResourceSecurityConfiguration() *schema.Resource {
 	}
 }
 
-func resourceAwsEmrSecurityConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceSecurityConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EMRConn
 
 	var emrSCName string
@@ -78,10 +78,10 @@ func resourceAwsEmrSecurityConfigurationCreate(d *schema.ResourceData, meta inte
 	}
 
 	d.SetId(aws.StringValue(resp.Name))
-	return resourceAwsEmrSecurityConfigurationRead(d, meta)
+	return resourceSecurityConfigurationRead(d, meta)
 }
 
-func resourceAwsEmrSecurityConfigurationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceSecurityConfigurationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EMRConn
 
 	resp, err := conn.DescribeSecurityConfiguration(&emr.DescribeSecurityConfigurationInput{
@@ -103,7 +103,7 @@ func resourceAwsEmrSecurityConfigurationRead(d *schema.ResourceData, meta interf
 	return nil
 }
 
-func resourceAwsEmrSecurityConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceSecurityConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EMRConn
 
 	_, err := conn.DeleteSecurityConfiguration(&emr.DeleteSecurityConfigurationInput{

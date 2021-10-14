@@ -20,7 +20,7 @@ func TestValidCustomAMIID(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		_, errors := validateAwsEMRCustomAMIID(tc.Value, "custom_ami_id")
+		_, errors := validCustomAMIID(tc.Value, "custom_ami_id")
 
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("Expected %d errors, got %d: %s", tc.ErrCount, len(errors), errors)

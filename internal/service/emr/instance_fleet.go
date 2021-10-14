@@ -98,7 +98,7 @@ func ResourceInstanceFleet() *schema.Resource {
 										Type:         schema.TypeString,
 										Required:     true,
 										ForceNew:     true,
-										ValidateFunc: validateAwsEMREBSVolumeType(),
+										ValidateFunc: validEBSVolumeType(),
 									},
 									"volumes_per_instance": {
 										Type:     schema.TypeInt,
@@ -108,7 +108,7 @@ func ResourceInstanceFleet() *schema.Resource {
 									},
 								},
 							},
-							Set: resourceAwsEMRClusterEBSConfigHash,
+							Set: resourceClusterEBSHashConfig,
 						},
 						"instance_type": {
 							Type:     schema.TypeString,
@@ -123,7 +123,7 @@ func ResourceInstanceFleet() *schema.Resource {
 						},
 					},
 				},
-				Set: resourceAwsEMRInstanceTypeConfigHash,
+				Set: resourceInstanceTypeHashConfig,
 			},
 			"launch_specifications": {
 				Type:     schema.TypeList,
