@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecs"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func DescribeCapacityProvidersPages(conn *ecs.ECS, input *ecs.DescribeCapacityProvidersInput, fn func(*ecs.DescribeCapacityProvidersOutput, bool) bool) error {
