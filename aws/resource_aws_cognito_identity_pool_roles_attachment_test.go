@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSCognitoIdentityPoolRolesAttachment_basic(t *testing.T) {
@@ -189,7 +190,7 @@ func testAccCheckAWSCognitoIdentityPoolRolesAttachmentExists(n string) resource.
 			return errors.New("No Cognito Identity Pool Roles Attachment ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).cognitoconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIdentityConn
 
 		_, err := conn.GetIdentityPoolRoles(&cognitoidentity.GetIdentityPoolRolesInput{
 			IdentityPoolId: aws.String(rs.Primary.Attributes["identity_pool_id"]),
@@ -200,7 +201,7 @@ func testAccCheckAWSCognitoIdentityPoolRolesAttachmentExists(n string) resource.
 }
 
 func testAccCheckAWSCognitoIdentityPoolRolesAttachmentDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).cognitoconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIdentityConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cognito_identity_pool_roles_attachment" {
