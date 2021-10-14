@@ -38,7 +38,7 @@ func testSweepDbInstances(region string) error {
 
 	err = conn.DescribeDBInstancesPages(&rds.DescribeDBInstancesInput{}, func(out *rds.DescribeDBInstancesOutput, lastPage bool) bool {
 		for _, dbi := range out.DBInstances {
-			r := ResourceInstance()
+			r := tfrds.ResourceInstance()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(dbi.DBInstanceIdentifier))
 			d.Set("skip_final_snapshot", true)

@@ -61,7 +61,7 @@ func TestAccAWSRDSClusterRoleAssociation_disappears(t *testing.T) {
 				Config: testAccAWSRDSClusterRoleAssociationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRDSClusterRoleAssociationExists(resourceName, &dbClusterRole),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceClusterRoleAssociation(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfrds.ResourceClusterRoleAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -85,7 +85,7 @@ func TestAccAWSRDSClusterRoleAssociation_disappears_cluster(t *testing.T) {
 				Config: testAccAWSRDSClusterRoleAssociationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRDSClusterRoleAssociationExists(resourceName, &dbClusterRole),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceCluster(), clusterResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfrds.ResourceCluster(), clusterResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

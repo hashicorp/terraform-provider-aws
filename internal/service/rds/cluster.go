@@ -524,7 +524,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 			DeletionProtection:   aws.Bool(d.Get("deletion_protection").(bool)),
 			Engine:               aws.String(d.Get("engine").(string)),
 			EngineMode:           aws.String(d.Get("engine_mode").(string)),
-			ScalingConfiguration: expandClusterScalingConfiguration(d.Get("scaling_configuration").([]interface{})),
+			ScalingConfiguration: ExpandClusterScalingConfiguration(d.Get("scaling_configuration").([]interface{})),
 			SnapshotIdentifier:   aws.String(d.Get("snapshot_identifier").(string)),
 			Tags:                 tags.IgnoreAws().RdsTags(),
 		}
@@ -808,7 +808,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 				case "preferred_maintenance_window":
 					modifyDbClusterInput.PreferredMaintenanceWindow = aws.String(val.(string))
 				case "scaling_configuration":
-					modifyDbClusterInput.ScalingConfiguration = expandClusterScalingConfiguration(d.Get("scaling_configuration").([]interface{}))
+					modifyDbClusterInput.ScalingConfiguration = ExpandClusterScalingConfiguration(d.Get("scaling_configuration").([]interface{}))
 				}
 			}
 		}
@@ -830,7 +830,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 			DeletionProtection:   aws.Bool(d.Get("deletion_protection").(bool)),
 			Engine:               aws.String(d.Get("engine").(string)),
 			EngineMode:           aws.String(d.Get("engine_mode").(string)),
-			ScalingConfiguration: expandClusterScalingConfiguration(d.Get("scaling_configuration").([]interface{})),
+			ScalingConfiguration: ExpandClusterScalingConfiguration(d.Get("scaling_configuration").([]interface{})),
 			Tags:                 tags.IgnoreAws().RdsTags(),
 		}
 
@@ -1133,7 +1133,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("global_cluster_identifier", "")
 
 	if aws.StringValue(dbc.EngineMode) == "global" || aws.StringValue(dbc.EngineMode) == "provisioned" {
-		globalCluster, err := rdsDescribeGlobalClusterFromDbClusterARN(conn, aws.StringValue(dbc.DBClusterArn))
+		globalCluster, err := DescribeGlobalClusterFromClusterARN(conn, aws.StringValue(dbc.DBClusterArn))
 
 		// Ignore the following API error for regions/partitions that do not support RDS Global Clusters:
 		// InvalidParameterValue: Access Denied to API Version: APIGlobalDatabases
@@ -1247,7 +1247,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("scaling_configuration") {
-		req.ScalingConfiguration = expandClusterScalingConfiguration(d.Get("scaling_configuration").([]interface{}))
+		req.ScalingConfiguration = ExpandClusterScalingConfiguration(d.Get("scaling_configuration").([]interface{}))
 		requestUpdate = true
 	}
 
@@ -1422,7 +1422,7 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting RDS Cluster (%s): %s", d.Id(), err)
 	}
 
-	if err := waitForRDSClusterDeletion(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if err := WaitForClusterDeletion(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return fmt.Errorf("error waiting for RDS Cluster (%s) deletion: %s", d.Id(), err)
 	}
 
@@ -1519,7 +1519,7 @@ func waitForRDSClusterUpdate(conn *rds.RDS, id string, timeout time.Duration) er
 	return err
 }
 
-func waitForRDSClusterDeletion(conn *rds.RDS, id string, timeout time.Duration) error {
+func WaitForClusterDeletion(conn *rds.RDS, id string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    resourceAwsRdsClusterDeletePendingStates,
 		Target:     []string{"destroyed"},

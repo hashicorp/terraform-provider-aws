@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -54,7 +55,7 @@ func testSweepRdsGlobalClusters(region string) error {
 				continue
 			}
 
-			if err := waitForRdsGlobalClusterDeletion(conn, id); err != nil {
+			if err := tfrds.WaitForGlobalClusterDeletion(conn, id); err != nil {
 				log.Printf("[ERROR] Failure while waiting for RDS Global Cluster (%s) to be deleted: %s", id, err)
 			}
 		}
@@ -483,7 +484,7 @@ func testAccCheckAWSRdsGlobalClusterExists(resourceName string, globalCluster *r
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
-		cluster, err := rdsDescribeGlobalCluster(conn, rs.Primary.ID)
+		cluster, err := tfrds.DescribeGlobalCluster(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -511,7 +512,7 @@ func testAccCheckAWSRdsGlobalClusterDestroy(s *terraform.State) error {
 			continue
 		}
 
-		globalCluster, err := rdsDescribeGlobalCluster(conn, rs.Primary.ID)
+		globalCluster, err := tfrds.DescribeGlobalCluster(conn, rs.Primary.ID)
 
 		if tfawserr.ErrMessageContains(err, rds.ErrCodeGlobalClusterNotFoundFault, "") {
 			continue
@@ -545,7 +546,7 @@ func testAccCheckAWSRdsGlobalClusterDisappears(globalCluster *rds.GlobalCluster)
 			return err
 		}
 
-		return waitForRdsGlobalClusterDeletion(conn, aws.StringValue(globalCluster.GlobalClusterIdentifier))
+		return tfrds.WaitForGlobalClusterDeletion(conn, aws.StringValue(globalCluster.GlobalClusterIdentifier))
 	}
 }
 

@@ -93,7 +93,7 @@ func TestAccAWSDBProxyTarget_disappears(t *testing.T) {
 				Config: testAccAWSDBProxyTargetConfig_Instance(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBProxyTargetExists(resourceName, &dbProxyTarget),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceProxyTarget(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfrds.ResourceProxyTarget(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -109,7 +109,7 @@ func testAccCheckAWSDBProxyTargetDestroy(s *terraform.State) error {
 			continue
 		}
 
-		dbProxyName, targetGroupName, targetType, rdsResourceId, err := resourceAwsDbProxyTargetParseID(rs.Primary.ID)
+		dbProxyName, targetGroupName, targetType, rdsResourceId, err := tfrds.ProxyTargetParseID(rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -154,7 +154,7 @@ func testAccCheckAWSDBProxyTargetExists(n string, v *rds.DBProxyTarget) resource
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
-		dbProxyName, targetGroupName, targetType, rdsResourceId, err := resourceAwsDbProxyTargetParseID(rs.Primary.ID)
+		dbProxyName, targetGroupName, targetType, rdsResourceId, err := tfrds.ProxyTargetParseID(rs.Primary.ID)
 
 		if err != nil {
 			return err

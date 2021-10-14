@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -1029,7 +1030,7 @@ func TestDBParameterModifyChunk(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		mod, rem := resourceDBParameterModifyChunk(tc.Parameters, tc.ChunkSize)
+		mod, rem := tfrds.ResourceParameterModifyChunk(tc.Parameters, tc.ChunkSize)
 		if !reflect.DeepEqual(mod, tc.ExpectedModify) {
 			t.Errorf("Case %q: Modify did not match\n%#v\n\nGot:\n%#v", tc.Name, tc.ExpectedModify, mod)
 		}

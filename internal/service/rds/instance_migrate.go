@@ -380,7 +380,7 @@ func resourceAwsDbInstanceResourceV0() *schema.Resource {
 	}
 }
 
-func resourceAwsDbInstanceStateUpgradeV0(_ context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+func InstanceStateUpgradeV0(_ context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
 	if rawState == nil {
 		return nil, nil
 	}

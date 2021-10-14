@@ -244,7 +244,7 @@ func TestAccAWSRDSClusterInstance_disappears(t *testing.T) {
 				Config: testAccAWSClusterInstanceConfig(sdkacctest.RandInt()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSClusterInstanceExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceClusterInstance(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfrds.ResourceClusterInstance(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

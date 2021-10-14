@@ -16,7 +16,7 @@ func TestExpandParameters(t *testing.T) {
 			"apply_method": "immediate",
 		},
 	}
-	parameters := expandParameters(expanded)
+	parameters := ExpandParameters(expanded)
 
 	expected := &rds.Parameter{
 		ParameterName:  aws.String("character_set_client"),
@@ -70,7 +70,7 @@ func TestFlattenParameters(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		output := flattenParameters(tc.Input)
+		output := FlattenParameters(tc.Input)
 		if !reflect.DeepEqual(output, tc.Output) {
 			t.Fatalf("Got:\n\n%#v\n\nExpected:\n\n%#v", output, tc.Output)
 		}
@@ -121,7 +121,7 @@ func TestExpandClusterScalingConfiguration_basic(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		output := expandClusterScalingConfiguration(tc.Input)
+		output := ExpandClusterScalingConfiguration(tc.Input)
 		if tc.ExpectNil != (output == nil) {
 			t.Errorf("EngineMode %q: Expected nil: %t, Got: %v", tc.EngineMode, tc.ExpectNil, output)
 		}

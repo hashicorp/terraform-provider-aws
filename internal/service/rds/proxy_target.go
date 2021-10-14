@@ -114,7 +114,7 @@ func resourceProxyTargetCreate(d *schema.ResourceData, meta interface{}) error {
 	return resourceProxyTargetRead(d, meta)
 }
 
-func resourceAwsDbProxyTargetParseID(id string) (string, string, string, string, error) {
+func ProxyTargetParseID(id string) (string, string, string, string, error) {
 	idParts := strings.SplitN(id, "/", 4)
 	if len(idParts) != 4 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" || idParts[3] == "" {
 		return "", "", "", "", fmt.Errorf("unexpected format of ID (%s), expected db_proxy_name/target_group_name/type/id", id)
@@ -125,7 +125,7 @@ func resourceAwsDbProxyTargetParseID(id string) (string, string, string, string,
 func resourceProxyTargetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 
-	dbProxyName, targetGroupName, targetType, rdsResourceId, err := resourceAwsDbProxyTargetParseID(d.Id())
+	dbProxyName, targetGroupName, targetType, rdsResourceId, err := ProxyTargetParseID(d.Id())
 	if err != nil {
 		return err
 	}

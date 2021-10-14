@@ -40,7 +40,7 @@ func testSweepDbEventSubscriptions(region string) error {
 		}
 
 		for _, eventSubscription := range page.EventSubscriptionsList {
-			r := ResourceEventSubscription()
+			r := tfrds.ResourceEventSubscription()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(eventSubscription.CustSubscriptionId))
 
@@ -118,7 +118,7 @@ func TestAccAWSDBEventSubscription_disappears(t *testing.T) {
 				Config: testAccAWSDBEventSubscriptionConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBEventSubscriptionExists(resourceName, &eventSubscription),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceEventSubscription(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfrds.ResourceEventSubscription(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
