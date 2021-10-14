@@ -16,12 +16,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsWafv2IPSet() *schema.Resource {
+func ResourceIPSet() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsWafv2IPSetCreate,
-		Read:   resourceAwsWafv2IPSetRead,
-		Update: resourceAwsWafv2IPSetUpdate,
-		Delete: resourceAwsWafv2IPSetDelete,
+		Create: resourceIPSetCreate,
+		Read:   resourceIPSetRead,
+		Update: resourceIPSetUpdate,
+		Delete: resourceIPSetDelete,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
@@ -111,7 +111,7 @@ func resourceAwsWafv2IPSet() *schema.Resource {
 	}
 }
 
-func resourceAwsWafv2IPSetCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceIPSetCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFV2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -146,10 +146,10 @@ func resourceAwsWafv2IPSetCreate(d *schema.ResourceData, meta interface{}) error
 
 	d.SetId(aws.StringValue(resp.Summary.Id))
 
-	return resourceAwsWafv2IPSetRead(d, meta)
+	return resourceIPSetRead(d, meta)
 }
 
-func resourceAwsWafv2IPSetRead(d *schema.ResourceData, meta interface{}) error {
+func resourceIPSetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFV2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -204,7 +204,7 @@ func resourceAwsWafv2IPSetRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsWafv2IPSetUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceIPSetUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFV2Conn
 
 	log.Printf("[INFO] Updating WAFv2 IPSet %s", d.Id())
@@ -238,10 +238,10 @@ func resourceAwsWafv2IPSetUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	return resourceAwsWafv2IPSetRead(d, meta)
+	return resourceIPSetRead(d, meta)
 }
 
-func resourceAwsWafv2IPSetDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceIPSetDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFV2Conn
 
 	log.Printf("[INFO] Deleting WAFv2 IPSet %s", d.Id())

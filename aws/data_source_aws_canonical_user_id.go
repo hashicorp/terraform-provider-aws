@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsCanonicalUserId() *schema.Resource {
+func DataSourceCanonicalUserID() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsCanonicalUserIdRead,
+		Read: dataSourceCanonicalUserIDRead,
 
 		Schema: map[string]*schema.Schema{
 			"display_name": {
@@ -23,7 +23,7 @@ func dataSourceAwsCanonicalUserId() *schema.Resource {
 	}
 }
 
-func dataSourceAwsCanonicalUserIdRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceCanonicalUserIDRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3Conn
 
 	log.Printf("[DEBUG] Reading S3 Buckets")

@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/workspaces/lister"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -38,7 +39,7 @@ func testSweepWorkspacesIpGroups(region string) error {
 		}
 
 		for _, ipGroup := range page.Result {
-			r := resourceAwsWorkspacesIpGroup()
+			r := ResourceIPGroup()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(ipGroup.GroupId))
 
@@ -173,7 +174,7 @@ func testAccAwsWorkspacesIpGroup_disappears(t *testing.T) {
 				Config: testAccAwsWorkspacesIpGroupConfigA(ipGroupName, ipGroupDescription),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsWorkspacesIpGroupExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsWorkspacesIpGroup(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceIPGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

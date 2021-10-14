@@ -33,9 +33,9 @@ type dataSourceAwsIPRangesIpv6Prefix struct {
 	Service    string
 }
 
-func dataSourceAwsIPRanges() *schema.Resource {
+func DataSourceIPRanges() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsIPRangesRead,
+		Read: dataSourceIPRangesRead,
 
 		Schema: map[string]*schema.Schema{
 			"cidr_blocks": {
@@ -75,7 +75,7 @@ func dataSourceAwsIPRanges() *schema.Resource {
 	}
 }
 
-func dataSourceAwsIPRangesRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceIPRangesRead(d *schema.ResourceData, meta interface{}) error {
 
 	conn := cleanhttp.DefaultClient()
 	url := d.Get("url").(string)
