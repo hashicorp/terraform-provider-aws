@@ -1,4 +1,4 @@
-package aws
+package timestreamwrite_test
 
 import (
 	"context"
