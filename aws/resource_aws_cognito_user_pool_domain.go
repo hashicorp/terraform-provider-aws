@@ -103,7 +103,7 @@ func resourceAwsCognitoUserPoolDomainRead(d *schema.ResourceData, meta interface
 		Domain: aws.String(d.Id()),
 	})
 	if err != nil {
-		if isAWSErr(err, cognitoidentityprovider.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeResourceNotFoundException, "") {
 			log.Printf("[WARN] Cognito User Pool Domain %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -146,7 +146,7 @@ func resourceAwsCognitoUserPoolDomainDelete(d *schema.ResourceData, meta interfa
 	}
 
 	if _, err := waiter.UserPoolDomainDeleted(conn, d.Id()); err != nil {
-		if isAWSErr(err, cognitoidentityprovider.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeResourceNotFoundException, "") {
 			return nil
 		}
 		return fmt.Errorf("error waiting for User Pool Domain (%s) deletion: %w", d.Id(), err)

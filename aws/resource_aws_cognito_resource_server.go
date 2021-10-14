@@ -117,7 +117,7 @@ func resourceAwsCognitoResourceServerRead(d *schema.ResourceData, meta interface
 	resp, err := conn.DescribeResourceServer(params)
 
 	if err != nil {
-		if isAWSErr(err, cognitoidentityprovider.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeResourceNotFoundException, "") {
 			log.Printf("[WARN] Cognito Resource Server %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -195,7 +195,7 @@ func resourceAwsCognitoResourceServerDelete(d *schema.ResourceData, meta interfa
 	_, err = conn.DeleteResourceServer(params)
 
 	if err != nil {
-		if isAWSErr(err, cognitoidentityprovider.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeResourceNotFoundException, "") {
 			return nil
 		}
 		return fmt.Errorf("Error deleting Resource Server: %s", err)
