@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsDlmLifecyclePolicy() *schema.Resource {
+func ResourceLifecyclePolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDlmLifecyclePolicyCreate,
-		Read:   resourceAwsDlmLifecyclePolicyRead,
-		Update: resourceAwsDlmLifecyclePolicyUpdate,
-		Delete: resourceAwsDlmLifecyclePolicyDelete,
+		Create: resourceLifecyclePolicyCreate,
+		Read:   resourceLifecyclePolicyRead,
+		Update: resourceLifecyclePolicyUpdate,
+		Delete: resourceLifecyclePolicyDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -146,7 +146,7 @@ func resourceAwsDlmLifecyclePolicy() *schema.Resource {
 	}
 }
 
-func resourceAwsDlmLifecyclePolicyCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceLifecyclePolicyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DLMConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -170,10 +170,10 @@ func resourceAwsDlmLifecyclePolicyCreate(d *schema.ResourceData, meta interface{
 
 	d.SetId(aws.StringValue(out.PolicyId))
 
-	return resourceAwsDlmLifecyclePolicyRead(d, meta)
+	return resourceLifecyclePolicyRead(d, meta)
 }
 
-func resourceAwsDlmLifecyclePolicyRead(d *schema.ResourceData, meta interface{}) error {
+func resourceLifecyclePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DLMConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -215,7 +215,7 @@ func resourceAwsDlmLifecyclePolicyRead(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
-func resourceAwsDlmLifecyclePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceLifecyclePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DLMConn
 
 	input := dlm.UpdateLifecyclePolicyInput{
@@ -255,10 +255,10 @@ func resourceAwsDlmLifecyclePolicyUpdate(d *schema.ResourceData, meta interface{
 		}
 	}
 
-	return resourceAwsDlmLifecyclePolicyRead(d, meta)
+	return resourceLifecyclePolicyRead(d, meta)
 }
 
-func resourceAwsDlmLifecyclePolicyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceLifecyclePolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DLMConn
 
 	log.Printf("[INFO] Deleting DLM lifecycle policy: %s", d.Id())
