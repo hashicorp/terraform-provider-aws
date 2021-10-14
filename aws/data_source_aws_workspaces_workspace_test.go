@@ -5,20 +5,21 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/workspaces"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func testAccDataSourceAwsWorkspacesWorkspace_byWorkspaceID(t *testing.T) {
-	rName := acctest.RandString(8)
-	domain := testAccRandomDomainName()
+	rName := sdkacctest.RandString(8)
+	domain := acctest.RandomDomainName()
 
 	dataSourceName := "data.aws_workspaces_workspace.test"
 	resourceName := "aws_workspaces_workspace.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole") },
-		ErrorCheck: testAccErrorCheck(t, workspaces.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole") },
+		ErrorCheck: acctest.ErrorCheck(t, workspaces.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -45,15 +46,15 @@ func testAccDataSourceAwsWorkspacesWorkspace_byWorkspaceID(t *testing.T) {
 }
 
 func testAccDataSourceAwsWorkspacesWorkspace_byDirectoryID_userName(t *testing.T) {
-	rName := acctest.RandString(8)
-	domain := testAccRandomDomainName()
+	rName := sdkacctest.RandString(8)
+	domain := acctest.RandomDomainName()
 
 	dataSourceName := "data.aws_workspaces_workspace.test"
 	resourceName := "aws_workspaces_workspace.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole") },
-		ErrorCheck: testAccErrorCheck(t, workspaces.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole") },
+		ErrorCheck: acctest.ErrorCheck(t, workspaces.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -81,8 +82,8 @@ func testAccDataSourceAwsWorkspacesWorkspace_byDirectoryID_userName(t *testing.T
 
 func testAccDataSourceAwsWorkspacesWorkspace_workspaceIDAndDirectoryIDConflict(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole") },
-		ErrorCheck: testAccErrorCheck(t, workspaces.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole") },
+		ErrorCheck: acctest.ErrorCheck(t, workspaces.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -94,7 +95,7 @@ func testAccDataSourceAwsWorkspacesWorkspace_workspaceIDAndDirectoryIDConflict(t
 }
 
 func testAccDataSourceWorkspacesWorkspaceConfig_byWorkspaceID(rName, domain string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName, domain),
 		`
 resource "aws_workspaces_workspace" "test" {
@@ -122,7 +123,7 @@ data "aws_workspaces_workspace" "test" {
 }
 
 func testAccDataSourceWorkspacesWorkspaceConfig_byDirectoryID_userName(rName, domain string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName, domain),
 		`
 resource "aws_workspaces_workspace" "test" {

@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/workspaces"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func testAccDataSourceAwsWorkspacesImage_basic(t *testing.T) {
@@ -18,10 +19,10 @@ func testAccDataSourceAwsWorkspacesImage_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			acctest.PreCheck(t)
 			testAccWorkspacesImagePreCheck(t)
 		},
-		ErrorCheck: testAccErrorCheck(t, workspaces.EndpointsID),
+		ErrorCheck: acctest.ErrorCheck(t, workspaces.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{

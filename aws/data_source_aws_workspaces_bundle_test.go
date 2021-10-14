@@ -8,14 +8,15 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/workspaces"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func testAccDataSourceAwsWorkspaceBundle_basic(t *testing.T) {
 	dataSourceName := "data.aws_workspaces_bundle.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, workspaces.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, workspaces.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -41,8 +42,8 @@ func testAccDataSourceAwsWorkspaceBundle_byOwnerName(t *testing.T) {
 	dataSourceName := "data.aws_workspaces_bundle.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, workspaces.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, workspaces.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -66,8 +67,8 @@ func testAccDataSourceAwsWorkspaceBundle_byOwnerName(t *testing.T) {
 
 func testAccDataSourceAwsWorkspaceBundle_bundleIDAndNameConflict(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, workspaces.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, workspaces.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -84,10 +85,10 @@ func testAccDataSourceAwsWorkspaceBundle_privateOwner(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			acctest.PreCheck(t)
 			testAccWorkspacesBundlePreCheck(t)
 		},
-		ErrorCheck: testAccErrorCheck(t, workspaces.EndpointsID),
+		ErrorCheck: acctest.ErrorCheck(t, workspaces.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
