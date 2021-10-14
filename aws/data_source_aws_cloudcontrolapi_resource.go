@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudcontrol/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsCloudControlApiResource() *schema.Resource {
@@ -43,7 +44,7 @@ func dataSourceAwsCloudControlApiResource() *schema.Resource {
 }
 
 func dataSourceAwsCloudControlApiResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).cloudcontrolapiconn
+	conn := meta.(*conns.AWSClient).CloudControlConn
 
 	identifier := d.Get("identifier").(string)
 	resourceDescription, err := finder.ResourceByID(ctx, conn,

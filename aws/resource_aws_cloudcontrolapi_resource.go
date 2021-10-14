@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudcontrol/waiter"
 	cffinder "github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudformation/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsCloudControlApiResource() *schema.Resource {
@@ -78,7 +79,7 @@ func resourceAwsCloudControlApiResource() *schema.Resource {
 }
 
 func resourceAwsCloudControlApiResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).cloudcontrolapiconn
+	conn := meta.(*conns.AWSClient).CloudControlConn
 
 	typeName := d.Get("type_name").(string)
 	input := &cloudcontrolapi.CreateResourceInput{
@@ -123,7 +124,7 @@ func resourceAwsCloudControlApiResourceCreate(ctx context.Context, d *schema.Res
 }
 
 func resourceAwsCloudControlApiResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).cloudcontrolapiconn
+	conn := meta.(*conns.AWSClient).CloudControlConn
 
 	resourceDescription, err := finder.ResourceByID(ctx, conn,
 		d.Id(),
@@ -148,7 +149,7 @@ func resourceAwsCloudControlApiResourceRead(ctx context.Context, d *schema.Resou
 }
 
 func resourceAwsCloudControlApiResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).cloudcontrolapiconn
+	conn := meta.(*conns.AWSClient).CloudControlConn
 
 	if d.HasChange("desired_state") {
 		oldRaw, newRaw := d.GetChange("desired_state")
@@ -199,7 +200,7 @@ func resourceAwsCloudControlApiResourceUpdate(ctx context.Context, d *schema.Res
 }
 
 func resourceAwsCloudControlApiResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).cloudcontrolapiconn
+	conn := meta.(*conns.AWSClient).CloudControlConn
 
 	input := &cloudcontrolapi.DeleteResourceInput{
 		ClientToken: aws.String(resource.UniqueId()),
@@ -239,7 +240,7 @@ func resourceAwsCloudControlApiResourceDelete(ctx context.Context, d *schema.Res
 }
 
 func resourceAwsCloudControlApiResourceCustomizeDiffGetSchema(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
-	conn := meta.(*AWSClient).cfconn
+	conn := meta.(*conns.AWSClient).CloudFormationConn
 
 	resourceSchema := diff.Get("schema").(string)
 

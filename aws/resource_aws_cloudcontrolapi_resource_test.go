@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudcontrol/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -468,7 +469,7 @@ func TestAccAwsCloudControlApiResource_ResourceSchema(t *testing.T) {
 }
 
 func testAccCheckAwsCloudControlApiResourceDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).cloudcontrolapiconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudControlConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudcontrolapi_resource" {
