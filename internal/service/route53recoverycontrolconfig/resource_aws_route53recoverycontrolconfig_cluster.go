@@ -13,6 +13,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfroute53recoverycontrolconfig "github.com/hashicorp/terraform-provider-aws/internal/service/route53recoverycontrolconfig"
+	tfroute53recoverycontrolconfig "github.com/hashicorp/terraform-provider-aws/internal/service/route53recoverycontrolconfig"
+	tfroute53recoverycontrolconfig "github.com/hashicorp/terraform-provider-aws/internal/service/route53recoverycontrolconfig"
+	tfroute53recoverycontrolconfig "github.com/hashicorp/terraform-provider-aws/internal/service/route53recoverycontrolconfig"
+	tfroute53recoverycontrolconfig "github.com/hashicorp/terraform-provider-aws/internal/service/route53recoverycontrolconfig"
+	tfroute53recoverycontrolconfig "github.com/hashicorp/terraform-provider-aws/internal/service/route53recoverycontrolconfig"
+	tfroute53recoverycontrolconfig "github.com/hashicorp/terraform-provider-aws/internal/service/route53recoverycontrolconfig"
+	tfroute53recoverycontrolconfig "github.com/hashicorp/terraform-provider-aws/internal/service/route53recoverycontrolconfig"
+	tfroute53recoverycontrolconfig "github.com/hashicorp/terraform-provider-aws/internal/service/route53recoverycontrolconfig"
+	tfroute53recoverycontrolconfig "github.com/hashicorp/terraform-provider-aws/internal/service/route53recoverycontrolconfig"
+	tfroute53recoverycontrolconfig "github.com/hashicorp/terraform-provider-aws/internal/service/route53recoverycontrolconfig"
+	tfroute53recoverycontrolconfig "github.com/hashicorp/terraform-provider-aws/internal/service/route53recoverycontrolconfig"
+	tfroute53recoverycontrolconfig "github.com/hashicorp/terraform-provider-aws/internal/service/route53recoverycontrolconfig"
+	tfroute53recoverycontrolconfig "github.com/hashicorp/terraform-provider-aws/internal/service/route53recoverycontrolconfig"
 )
 
 func ResourceCluster() *schema.Resource {
@@ -79,7 +93,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	result := output.Cluster
 	d.SetId(aws.StringValue(result.ClusterArn))
 
-	if _, err := waiter.Route53RecoveryControlConfigClusterCreated(conn, d.Id()); err != nil {
+	if _, err := tfroute53recoverycontrolconfig.waitRoute53RecoveryControlConfigClusterCreated(conn, d.Id()); err != nil {
 		return fmt.Errorf("Error waiting for Route53 Recovery Control Config Cluster (%s) to be Deployed: %w", d.Id(), err)
 	}
 
@@ -138,7 +152,7 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting Route53 Recovery Control Config Cluster: %s", err)
 	}
 
-	_, err = waiter.Route53RecoveryControlConfigClusterDeleted(conn, d.Id())
+	_, err = tfroute53recoverycontrolconfig.waitRoute53RecoveryControlConfigClusterDeleted(conn, d.Id())
 
 	if tfawserr.ErrCodeEquals(err, r53rcc.ErrCodeResourceNotFoundException) {
 		return nil

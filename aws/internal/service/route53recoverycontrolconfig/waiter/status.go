@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func Route53RecoveryControlConfigClusterStatus(conn *r53rcc.Route53RecoveryControlConfig, clusterArn string) resource.StateRefreshFunc {
+func statusRoute53RecoveryControlConfigCluster(conn *r53rcc.Route53RecoveryControlConfig, clusterArn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &r53rcc.DescribeClusterInput{
 			ClusterArn: aws.String(clusterArn),
@@ -23,7 +23,7 @@ func Route53RecoveryControlConfigClusterStatus(conn *r53rcc.Route53RecoveryContr
 	}
 }
 
-func Route53RecoveryControlConfigRoutingControlStatus(conn *r53rcc.Route53RecoveryControlConfig, routingControlArn string) resource.StateRefreshFunc {
+func statusRoute53RecoveryControlConfigRoutingControl(conn *r53rcc.Route53RecoveryControlConfig, routingControlArn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &r53rcc.DescribeRoutingControlInput{
 			RoutingControlArn: aws.String(routingControlArn),
@@ -39,7 +39,7 @@ func Route53RecoveryControlConfigRoutingControlStatus(conn *r53rcc.Route53Recove
 	}
 }
 
-func Route53RecoveryControlConfigControlPanelStatus(conn *r53rcc.Route53RecoveryControlConfig, controlPanelArn string) resource.StateRefreshFunc {
+func statusRoute53RecoveryControlConfigControlPanel(conn *r53rcc.Route53RecoveryControlConfig, controlPanelArn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &r53rcc.DescribeControlPanelInput{
 			ControlPanelArn: aws.String(controlPanelArn),
@@ -55,7 +55,7 @@ func Route53RecoveryControlConfigControlPanelStatus(conn *r53rcc.Route53Recovery
 	}
 }
 
-func Route53RecoveryControlConfigSafetyRuleStatus(conn *r53rcc.Route53RecoveryControlConfig, safetyRuleArn string) resource.StateRefreshFunc {
+func statusRoute53RecoveryControlConfigSafetyRule(conn *r53rcc.Route53RecoveryControlConfig, safetyRuleArn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &r53rcc.DescribeSafetyRuleInput{
 			SafetyRuleArn: aws.String(safetyRuleArn),
