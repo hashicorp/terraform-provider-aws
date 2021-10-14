@@ -13,12 +13,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	tfeks "github.com/hashicorp/terraform-provider-aws/aws/internal/service/eks"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/eks/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/eks/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceIdentityProviderConfig() *schema.Resource {
@@ -32,7 +33,7 @@ func ResourceIdentityProviderConfig() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(40 * time.Minute),
@@ -120,8 +121,8 @@ func ResourceIdentityProviderConfig() *schema.Resource {
 				Computed: true,
 			},
 
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -140,7 +141,7 @@ func allDiagFunc(validators ...schema.SchemaValidateDiagFunc) schema.SchemaValid
 func resourceIdentityProviderConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EKSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	clusterName := d.Get("cluster_name").(string)
 	configName, oidc := expandEksOidcIdentityProviderConfigRequest(d.Get("oidc").([]interface{})[0].(map[string]interface{}))
@@ -205,7 +206,7 @@ func resourceIdentityProviderConfigRead(ctx context.Context, d *schema.ResourceD
 
 	d.Set("status", oidc.Status)
 
-	tags := keyvaluetags.EksKeyValueTags(oidc.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := tftags.EksKeyValueTags(oidc.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -224,7 +225,7 @@ func resourceIdentityProviderConfigUpdate(ctx context.Context, d *schema.Resourc
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := keyvaluetags.EksUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := tftags.EksUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("error updating tags: %s", err)
 		}
 	}
