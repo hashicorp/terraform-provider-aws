@@ -173,7 +173,7 @@ func resourceDevEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 	input := &glue.CreateDevEndpointInput{
 		EndpointName: aws.String(name),
 		RoleArn:      aws.String(d.Get("role_arn").(string)),
-		Tags:         tags.IgnoreAws().GlueTags(),
+		Tags:         Tags(tags.IgnoreAws()),
 	}
 
 	if v, ok := d.GetOk("arguments"); ok {
@@ -373,7 +373,7 @@ func resourceDevEndpointRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting worker_type for Glue Dev Endpoint (%s): %w", d.Id(), err)
 	}
 
-	tags, err := tftags.GlueListTags(conn, endpointARN)
+	tags, err := ListTags(conn, endpointARN)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Glue Dev Endpoint (%s): %w", endpointARN, err)
@@ -498,7 +498,7 @@ func resourceAwsDevEndpointUpdate(d *schema.ResourceData, meta interface{}) erro
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.GlueUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %w", err)
 		}
 	}

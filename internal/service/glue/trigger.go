@@ -184,7 +184,7 @@ func resourceTriggerCreate(d *schema.ResourceData, meta interface{}) error {
 	input := &glue.CreateTriggerInput{
 		Actions: expandGlueActions(d.Get("actions").([]interface{})),
 		Name:    aws.String(name),
-		Tags:    tags.IgnoreAws().GlueTags(),
+		Tags:    Tags(tags.IgnoreAws()),
 		Type:    aws.String(triggerType),
 	}
 
@@ -311,7 +311,7 @@ func resourceTriggerRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", trigger.Name)
 	d.Set("schedule", trigger.Schedule)
 
-	tags, err := tftags.GlueListTags(conn, triggerARN)
+	tags, err := ListTags(conn, triggerARN)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Glue Trigger (%s): %w", triggerARN, err)
@@ -398,7 +398,7 @@ func resourceTriggerUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.GlueUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %w", err)
 		}
 	}

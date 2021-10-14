@@ -101,7 +101,7 @@ func resourceSchemaCreate(d *schema.ResourceData, meta interface{}) error {
 		SchemaName:       aws.String(d.Get("schema_name").(string)),
 		SchemaDefinition: aws.String(d.Get("schema_definition").(string)),
 		DataFormat:       aws.String(d.Get("data_format").(string)),
-		Tags:             tags.IgnoreAws().GlueTags(),
+		Tags:             Tags(tags.IgnoreAws()),
 	}
 
 	if v, ok := d.GetOk("registry_arn"); ok {
@@ -164,7 +164,7 @@ func resourceSchemaRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("registry_name", output.RegistryName)
 	d.Set("schema_checkpoint", output.SchemaCheckpoint)
 
-	tags, err := tftags.GlueListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Glue Schema (%s): %w", arn, err)
@@ -227,7 +227,7 @@ func resourceSchemaUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.GlueUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)
 		}
 	}

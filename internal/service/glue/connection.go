@@ -118,7 +118,7 @@ func resourceConnectionCreate(d *schema.ResourceData, meta interface{}) error {
 	input := &glue.CreateConnectionInput{
 		CatalogId:       aws.String(catalogID),
 		ConnectionInput: expandGlueConnectionInput(d),
-		Tags:            tags.IgnoreAws().GlueTags(),
+		Tags:            Tags(tags.IgnoreAws()),
 	}
 
 	log.Printf("[DEBUG] Creating Glue Connection: %s", input)
@@ -176,7 +176,7 @@ func resourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting physical_connection_requirements: %w", err)
 	}
 
-	tags, err := tftags.GlueListTags(conn, connectionArn)
+	tags, err := ListTags(conn, connectionArn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Glue Connection (%s): %w", connectionArn, err)
@@ -220,7 +220,7 @@ func resourceConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.GlueUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %w", err)
 		}
 	}

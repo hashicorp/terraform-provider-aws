@@ -183,7 +183,7 @@ func resourceMLTransformCreate(d *schema.ResourceData, meta interface{}) error {
 	input := &glue.CreateMLTransformInput{
 		Name:              aws.String(d.Get("name").(string)),
 		Role:              aws.String(d.Get("role_arn").(string)),
-		Tags:              tags.IgnoreAws().GlueTags(),
+		Tags:              Tags(tags.IgnoreAws()),
 		Timeout:           aws.Int64(int64(d.Get("timeout").(int))),
 		InputRecordTables: expandGlueMLTransformInputRecordTables(d.Get("input_record_tables").([]interface{})),
 		Parameters:        expandGlueMLTransformParameters(d.Get("parameters").([]interface{})),
@@ -284,7 +284,7 @@ func resourceMLTransformRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting schema: %w", err)
 	}
 
-	tags, err := tftags.GlueListTags(conn, mlTransformArn)
+	tags, err := ListTags(conn, mlTransformArn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Glue ML Transform (%s): %w", mlTransformArn, err)
@@ -353,7 +353,7 @@ func resourceMLTransformUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.GlueUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %w", err)
 		}
 	}

@@ -66,7 +66,7 @@ func resourceWorkflowCreate(d *schema.ResourceData, meta interface{}) error {
 
 	input := &glue.CreateWorkflowInput{
 		Name: aws.String(name),
-		Tags: tags.IgnoreAws().GlueTags(),
+		Tags: Tags(tags.IgnoreAws()),
 	}
 
 	if kv, ok := d.GetOk("default_run_properties"); ok {
@@ -134,7 +134,7 @@ func resourceWorkflowRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("max_concurrent_runs", workflow.MaxConcurrentRuns)
 	d.Set("name", workflow.Name)
 
-	tags, err := tftags.GlueListTags(conn, workFlowArn)
+	tags, err := ListTags(conn, workFlowArn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Glue Workflow (%s): %w", workFlowArn, err)
@@ -183,7 +183,7 @@ func resourceWorkflowUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.GlueUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)
 		}
 	}
