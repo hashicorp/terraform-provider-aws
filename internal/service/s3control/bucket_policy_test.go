@@ -25,12 +25,12 @@ func TestAccAWSS3ControlBucketPolicy_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSS3ControlBucketPolicyDestroy,
+		CheckDestroy: testAccCheckBucketPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3ControlBucketPolicyConfig_Policy(rName, "s3-outposts:*"),
+				Config: testAccBucketPolicyConfig_Policy(rName, "s3-outposts:*"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3ControlBucketPolicyExists(resourceName),
+					testAccCheckBucketPolicyExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3control_bucket.test", "arn"),
 					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`s3-outposts:\*`)),
 				),
@@ -52,12 +52,12 @@ func TestAccAWSS3ControlBucketPolicy_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSS3ControlBucketPolicyDestroy,
+		CheckDestroy: testAccCheckBucketPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3ControlBucketPolicyConfig_Policy(rName, "s3-outposts:*"),
+				Config: testAccBucketPolicyConfig_Policy(rName, "s3-outposts:*"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3ControlBucketPolicyExists(resourceName),
+					testAccCheckBucketPolicyExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfs3control.ResourceBucketPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -74,12 +74,12 @@ func TestAccAWSS3ControlBucketPolicy_Policy(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSS3ControlBucketPolicyDestroy,
+		CheckDestroy: testAccCheckBucketPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3ControlBucketPolicyConfig_Policy(rName, "s3-outposts:GetObject"),
+				Config: testAccBucketPolicyConfig_Policy(rName, "s3-outposts:GetObject"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3ControlBucketPolicyExists(resourceName),
+					testAccCheckBucketPolicyExists(resourceName),
 					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`s3-outposts:GetObject`)),
 				),
 			},
@@ -89,9 +89,9 @@ func TestAccAWSS3ControlBucketPolicy_Policy(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSS3ControlBucketPolicyConfig_Policy(rName, "s3-outposts:PutObject"),
+				Config: testAccBucketPolicyConfig_Policy(rName, "s3-outposts:PutObject"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3ControlBucketPolicyExists(resourceName),
+					testAccCheckBucketPolicyExists(resourceName),
 					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`s3-outposts:PutObject`)),
 				),
 			},
@@ -99,7 +99,7 @@ func TestAccAWSS3ControlBucketPolicy_Policy(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSS3ControlBucketPolicyDestroy(s *terraform.State) error {
+func testAccCheckBucketPolicyDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -142,7 +142,7 @@ func testAccCheckAWSS3ControlBucketPolicyDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSS3ControlBucketPolicyExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckBucketPolicyExists(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -176,7 +176,7 @@ func testAccCheckAWSS3ControlBucketPolicyExists(resourceName string) resource.Te
 	}
 }
 
-func testAccAWSS3ControlBucketPolicyConfig_Policy(rName, action string) string {
+func testAccBucketPolicyConfig_Policy(rName, action string) string {
 	return fmt.Sprintf(`
 data "aws_outposts_outposts" "test" {}
 

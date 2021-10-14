@@ -19,13 +19,13 @@ import (
 func TestAccAWSS3Account_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"PublicAccessBlock": {
-			"basic":                 testAccAWSS3AccountPublicAccessBlock_basic,
-			"disappears":            testAccAWSS3AccountPublicAccessBlock_disappears,
-			"AccountId":             testAccAWSS3AccountPublicAccessBlock_AccountId,
-			"BlockPublicAcls":       testAccAWSS3AccountPublicAccessBlock_BlockPublicAcls,
-			"BlockPublicPolicy":     testAccAWSS3AccountPublicAccessBlock_BlockPublicPolicy,
-			"IgnorePublicAcls":      testAccAWSS3AccountPublicAccessBlock_IgnorePublicAcls,
-			"RestrictPublicBuckets": testAccAWSS3AccountPublicAccessBlock_RestrictPublicBuckets,
+			"basic":                 testAccAccountPublicAccessBlock_basic,
+			"disappears":            testAccAccountPublicAccessBlock_disappears,
+			"AccountId":             testAccAccountPublicAccessBlock_AccountID,
+			"BlockPublicAcls":       testAccAccountPublicAccessBlock_BlockPublicACLs,
+			"BlockPublicPolicy":     testAccAccountPublicAccessBlock_BlockPublicPolicy,
+			"IgnorePublicAcls":      testAccAccountPublicAccessBlock_IgnorePublicACLs,
+			"RestrictPublicBuckets": testAccAccountPublicAccessBlock_RestrictPublicBuckets,
 		},
 	}
 
@@ -44,7 +44,7 @@ func TestAccAWSS3Account_serial(t *testing.T) {
 	}
 }
 
-func testAccAWSS3AccountPublicAccessBlock_basic(t *testing.T) {
+func testAccAccountPublicAccessBlock_basic(t *testing.T) {
 	var configuration1 s3control.PublicAccessBlockConfiguration
 	resourceName := "aws_s3_account_public_access_block.test"
 
@@ -52,12 +52,12 @@ func testAccAWSS3AccountPublicAccessBlock_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSS3AccountPublicAccessBlockDestroy,
+		CheckDestroy: testAccCheckAccountPublicAccessBlockDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3AccountPublicAccessBlockConfig(),
+				Config: testAccAccountPublicAccessBlockConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3AccountPublicAccessBlockExists(resourceName, &configuration1),
+					testAccCheckAccountPublicAccessBlockExists(resourceName, &configuration1),
 					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
 					resource.TestCheckResourceAttr(resourceName, "block_public_acls", "false"),
 					resource.TestCheckResourceAttr(resourceName, "block_public_policy", "false"),
@@ -74,7 +74,7 @@ func testAccAWSS3AccountPublicAccessBlock_basic(t *testing.T) {
 	})
 }
 
-func testAccAWSS3AccountPublicAccessBlock_disappears(t *testing.T) {
+func testAccAccountPublicAccessBlock_disappears(t *testing.T) {
 	var configuration1 s3control.PublicAccessBlockConfiguration
 	resourceName := "aws_s3_account_public_access_block.test"
 
@@ -82,13 +82,13 @@ func testAccAWSS3AccountPublicAccessBlock_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSS3AccountPublicAccessBlockDestroy,
+		CheckDestroy: testAccCheckAccountPublicAccessBlockDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3AccountPublicAccessBlockConfig(),
+				Config: testAccAccountPublicAccessBlockConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3AccountPublicAccessBlockExists(resourceName, &configuration1),
-					testAccCheckAWSS3AccountPublicAccessBlockDisappears(),
+					testAccCheckAccountPublicAccessBlockExists(resourceName, &configuration1),
+					testAccCheckAccountPublicAccessBlockDisappears(),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -96,7 +96,7 @@ func testAccAWSS3AccountPublicAccessBlock_disappears(t *testing.T) {
 	})
 }
 
-func testAccAWSS3AccountPublicAccessBlock_AccountId(t *testing.T) {
+func testAccAccountPublicAccessBlock_AccountID(t *testing.T) {
 	var configuration1 s3control.PublicAccessBlockConfiguration
 	resourceName := "aws_s3_account_public_access_block.test"
 
@@ -104,12 +104,12 @@ func testAccAWSS3AccountPublicAccessBlock_AccountId(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSS3AccountPublicAccessBlockDestroy,
+		CheckDestroy: testAccCheckAccountPublicAccessBlockDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3AccountPublicAccessBlockConfigAccountId(),
+				Config: testAccAccountPublicAccessBlockAccountIDConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3AccountPublicAccessBlockExists(resourceName, &configuration1),
+					testAccCheckAccountPublicAccessBlockExists(resourceName, &configuration1),
 					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
 				),
 			},
@@ -122,7 +122,7 @@ func testAccAWSS3AccountPublicAccessBlock_AccountId(t *testing.T) {
 	})
 }
 
-func testAccAWSS3AccountPublicAccessBlock_BlockPublicAcls(t *testing.T) {
+func testAccAccountPublicAccessBlock_BlockPublicACLs(t *testing.T) {
 	var configuration1, configuration2, configuration3 s3control.PublicAccessBlockConfiguration
 	resourceName := "aws_s3_account_public_access_block.test"
 
@@ -130,12 +130,12 @@ func testAccAWSS3AccountPublicAccessBlock_BlockPublicAcls(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSS3AccountPublicAccessBlockDestroy,
+		CheckDestroy: testAccCheckAccountPublicAccessBlockDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3AccountPublicAccessBlockConfigBlockPublicAcls(true),
+				Config: testAccAccountPublicAccessBlockBlockPublicACLsConfig(true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3AccountPublicAccessBlockExists(resourceName, &configuration1),
+					testAccCheckAccountPublicAccessBlockExists(resourceName, &configuration1),
 					resource.TestCheckResourceAttr(resourceName, "block_public_acls", "true"),
 				),
 			},
@@ -145,16 +145,16 @@ func testAccAWSS3AccountPublicAccessBlock_BlockPublicAcls(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSS3AccountPublicAccessBlockConfigBlockPublicAcls(false),
+				Config: testAccAccountPublicAccessBlockBlockPublicACLsConfig(false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3AccountPublicAccessBlockExists(resourceName, &configuration2),
+					testAccCheckAccountPublicAccessBlockExists(resourceName, &configuration2),
 					resource.TestCheckResourceAttr(resourceName, "block_public_acls", "false"),
 				),
 			},
 			{
-				Config: testAccAWSS3AccountPublicAccessBlockConfigBlockPublicAcls(true),
+				Config: testAccAccountPublicAccessBlockBlockPublicACLsConfig(true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3AccountPublicAccessBlockExists(resourceName, &configuration3),
+					testAccCheckAccountPublicAccessBlockExists(resourceName, &configuration3),
 					resource.TestCheckResourceAttr(resourceName, "block_public_acls", "true"),
 				),
 			},
@@ -162,7 +162,7 @@ func testAccAWSS3AccountPublicAccessBlock_BlockPublicAcls(t *testing.T) {
 	})
 }
 
-func testAccAWSS3AccountPublicAccessBlock_BlockPublicPolicy(t *testing.T) {
+func testAccAccountPublicAccessBlock_BlockPublicPolicy(t *testing.T) {
 	var configuration1, configuration2, configuration3 s3control.PublicAccessBlockConfiguration
 	resourceName := "aws_s3_account_public_access_block.test"
 
@@ -170,12 +170,12 @@ func testAccAWSS3AccountPublicAccessBlock_BlockPublicPolicy(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSS3AccountPublicAccessBlockDestroy,
+		CheckDestroy: testAccCheckAccountPublicAccessBlockDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3AccountPublicAccessBlockConfigBlockPublicPolicy(true),
+				Config: testAccAccountPublicAccessBlockBlockPublicPolicyConfig(true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3AccountPublicAccessBlockExists(resourceName, &configuration1),
+					testAccCheckAccountPublicAccessBlockExists(resourceName, &configuration1),
 					resource.TestCheckResourceAttr(resourceName, "block_public_policy", "true"),
 				),
 			},
@@ -185,16 +185,16 @@ func testAccAWSS3AccountPublicAccessBlock_BlockPublicPolicy(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSS3AccountPublicAccessBlockConfigBlockPublicPolicy(false),
+				Config: testAccAccountPublicAccessBlockBlockPublicPolicyConfig(false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3AccountPublicAccessBlockExists(resourceName, &configuration2),
+					testAccCheckAccountPublicAccessBlockExists(resourceName, &configuration2),
 					resource.TestCheckResourceAttr(resourceName, "block_public_policy", "false"),
 				),
 			},
 			{
-				Config: testAccAWSS3AccountPublicAccessBlockConfigBlockPublicPolicy(true),
+				Config: testAccAccountPublicAccessBlockBlockPublicPolicyConfig(true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3AccountPublicAccessBlockExists(resourceName, &configuration3),
+					testAccCheckAccountPublicAccessBlockExists(resourceName, &configuration3),
 					resource.TestCheckResourceAttr(resourceName, "block_public_policy", "true"),
 				),
 			},
@@ -202,7 +202,7 @@ func testAccAWSS3AccountPublicAccessBlock_BlockPublicPolicy(t *testing.T) {
 	})
 }
 
-func testAccAWSS3AccountPublicAccessBlock_IgnorePublicAcls(t *testing.T) {
+func testAccAccountPublicAccessBlock_IgnorePublicACLs(t *testing.T) {
 	var configuration1, configuration2, configuration3 s3control.PublicAccessBlockConfiguration
 	resourceName := "aws_s3_account_public_access_block.test"
 
@@ -210,12 +210,12 @@ func testAccAWSS3AccountPublicAccessBlock_IgnorePublicAcls(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSS3AccountPublicAccessBlockDestroy,
+		CheckDestroy: testAccCheckAccountPublicAccessBlockDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3AccountPublicAccessBlockConfigIgnorePublicAcls(true),
+				Config: testAccAccountPublicAccessBlockIgnorePublicACLsConfig(true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3AccountPublicAccessBlockExists(resourceName, &configuration1),
+					testAccCheckAccountPublicAccessBlockExists(resourceName, &configuration1),
 					resource.TestCheckResourceAttr(resourceName, "ignore_public_acls", "true"),
 				),
 			},
@@ -225,16 +225,16 @@ func testAccAWSS3AccountPublicAccessBlock_IgnorePublicAcls(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSS3AccountPublicAccessBlockConfigIgnorePublicAcls(false),
+				Config: testAccAccountPublicAccessBlockIgnorePublicACLsConfig(false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3AccountPublicAccessBlockExists(resourceName, &configuration2),
+					testAccCheckAccountPublicAccessBlockExists(resourceName, &configuration2),
 					resource.TestCheckResourceAttr(resourceName, "ignore_public_acls", "false"),
 				),
 			},
 			{
-				Config: testAccAWSS3AccountPublicAccessBlockConfigIgnorePublicAcls(true),
+				Config: testAccAccountPublicAccessBlockIgnorePublicACLsConfig(true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3AccountPublicAccessBlockExists(resourceName, &configuration3),
+					testAccCheckAccountPublicAccessBlockExists(resourceName, &configuration3),
 					resource.TestCheckResourceAttr(resourceName, "ignore_public_acls", "true"),
 				),
 			},
@@ -242,7 +242,7 @@ func testAccAWSS3AccountPublicAccessBlock_IgnorePublicAcls(t *testing.T) {
 	})
 }
 
-func testAccAWSS3AccountPublicAccessBlock_RestrictPublicBuckets(t *testing.T) {
+func testAccAccountPublicAccessBlock_RestrictPublicBuckets(t *testing.T) {
 	var configuration1, configuration2, configuration3 s3control.PublicAccessBlockConfiguration
 	resourceName := "aws_s3_account_public_access_block.test"
 
@@ -250,12 +250,12 @@ func testAccAWSS3AccountPublicAccessBlock_RestrictPublicBuckets(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSS3AccountPublicAccessBlockDestroy,
+		CheckDestroy: testAccCheckAccountPublicAccessBlockDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3AccountPublicAccessBlockConfigRestrictPublicBuckets(true),
+				Config: testAccAccountPublicAccessBlockRestrictPublicBucketsConfig(true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3AccountPublicAccessBlockExists(resourceName, &configuration1),
+					testAccCheckAccountPublicAccessBlockExists(resourceName, &configuration1),
 					resource.TestCheckResourceAttr(resourceName, "restrict_public_buckets", "true"),
 				),
 			},
@@ -265,16 +265,16 @@ func testAccAWSS3AccountPublicAccessBlock_RestrictPublicBuckets(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSS3AccountPublicAccessBlockConfigRestrictPublicBuckets(false),
+				Config: testAccAccountPublicAccessBlockRestrictPublicBucketsConfig(false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3AccountPublicAccessBlockExists(resourceName, &configuration2),
+					testAccCheckAccountPublicAccessBlockExists(resourceName, &configuration2),
 					resource.TestCheckResourceAttr(resourceName, "restrict_public_buckets", "false"),
 				),
 			},
 			{
-				Config: testAccAWSS3AccountPublicAccessBlockConfigRestrictPublicBuckets(true),
+				Config: testAccAccountPublicAccessBlockRestrictPublicBucketsConfig(true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3AccountPublicAccessBlockExists(resourceName, &configuration3),
+					testAccCheckAccountPublicAccessBlockExists(resourceName, &configuration3),
 					resource.TestCheckResourceAttr(resourceName, "restrict_public_buckets", "true"),
 				),
 			},
@@ -282,7 +282,7 @@ func testAccAWSS3AccountPublicAccessBlock_RestrictPublicBuckets(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSS3AccountPublicAccessBlockExists(resourceName string, configuration *s3control.PublicAccessBlockConfiguration) resource.TestCheckFunc {
+func testAccCheckAccountPublicAccessBlockExists(resourceName string, configuration *s3control.PublicAccessBlockConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -330,7 +330,7 @@ func testAccCheckAWSS3AccountPublicAccessBlockExists(resourceName string, config
 	}
 }
 
-func testAccCheckAWSS3AccountPublicAccessBlockDestroy(s *terraform.State) error {
+func testAccCheckAccountPublicAccessBlockDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -365,7 +365,7 @@ func testAccCheckAWSS3AccountPublicAccessBlockDestroy(s *terraform.State) error 
 	return nil
 }
 
-func testAccCheckAWSS3AccountPublicAccessBlockDisappears() resource.TestCheckFunc {
+func testAccCheckAccountPublicAccessBlockDisappears() resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn
 		accountID := acctest.Provider.Meta().(*conns.AWSClient).AccountID
@@ -401,11 +401,11 @@ func testAccCheckAWSS3AccountPublicAccessBlockDisappears() resource.TestCheckFun
 	}
 }
 
-func testAccAWSS3AccountPublicAccessBlockConfig() string {
+func testAccAccountPublicAccessBlockConfig() string {
 	return `resource "aws_s3_account_public_access_block" "test" {}`
 }
 
-func testAccAWSS3AccountPublicAccessBlockConfigAccountId() string {
+func testAccAccountPublicAccessBlockAccountIDConfig() string {
 	return `
 data "aws_caller_identity" "test" {}
 
@@ -415,7 +415,7 @@ resource "aws_s3_account_public_access_block" "test" {
 `
 }
 
-func testAccAWSS3AccountPublicAccessBlockConfigBlockPublicAcls(blockPublicAcls bool) string {
+func testAccAccountPublicAccessBlockBlockPublicACLsConfig(blockPublicAcls bool) string {
 	return fmt.Sprintf(`
 resource "aws_s3_account_public_access_block" "test" {
   block_public_acls = %t
@@ -423,7 +423,7 @@ resource "aws_s3_account_public_access_block" "test" {
 `, blockPublicAcls)
 }
 
-func testAccAWSS3AccountPublicAccessBlockConfigBlockPublicPolicy(blockPublicPolicy bool) string {
+func testAccAccountPublicAccessBlockBlockPublicPolicyConfig(blockPublicPolicy bool) string {
 	return fmt.Sprintf(`
 resource "aws_s3_account_public_access_block" "test" {
   block_public_policy = %t
@@ -431,7 +431,7 @@ resource "aws_s3_account_public_access_block" "test" {
 `, blockPublicPolicy)
 }
 
-func testAccAWSS3AccountPublicAccessBlockConfigIgnorePublicAcls(ignorePublicAcls bool) string {
+func testAccAccountPublicAccessBlockIgnorePublicACLsConfig(ignorePublicAcls bool) string {
 	return fmt.Sprintf(`
 resource "aws_s3_account_public_access_block" "test" {
   ignore_public_acls = %t
@@ -439,7 +439,7 @@ resource "aws_s3_account_public_access_block" "test" {
 `, ignorePublicAcls)
 }
 
-func testAccAWSS3AccountPublicAccessBlockConfigRestrictPublicBuckets(restrictPublicBuckets bool) string {
+func testAccAccountPublicAccessBlockRestrictPublicBucketsConfig(restrictPublicBuckets bool) string {
 	return fmt.Sprintf(`
 resource "aws_s3_account_public_access_block" "test" {
   restrict_public_buckets = %t

@@ -25,12 +25,12 @@ func TestAccAWSS3ControlBucket_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSS3ControlBucketDestroy,
+		CheckDestroy: testAccCheckBucketDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3ControlBucketConfig_Bucket(rName),
+				Config: testAccBucketConfig_Bucket(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3ControlBucketExists(resourceName),
+					testAccCheckBucketExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "s3-outposts", regexp.MustCompile(fmt.Sprintf("outpost/[^/]+/bucket/%s", rName))),
 					resource.TestCheckResourceAttr(resourceName, "bucket", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
@@ -56,12 +56,12 @@ func TestAccAWSS3ControlBucket_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSS3ControlBucketDestroy,
+		CheckDestroy: testAccCheckBucketDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3ControlBucketConfig_Bucket(rName),
+				Config: testAccBucketConfig_Bucket(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3ControlBucketExists(resourceName),
+					testAccCheckBucketExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfs3control.ResourceBucket(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -80,12 +80,12 @@ func TestAccAWSS3ControlBucket_Tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSS3ControlBucketDestroy,
+		CheckDestroy: testAccCheckBucketDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3ControlBucketConfig_Tags1(rName, "key1", "value1"),
+				Config: testAccBucketConfig_Tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3ControlBucketExists(resourceName),
+					testAccCheckBucketExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -96,18 +96,18 @@ func TestAccAWSS3ControlBucket_Tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSS3ControlBucketConfig_Tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccBucketConfig_Tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3ControlBucketExists(resourceName),
+					testAccCheckBucketExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccAWSS3ControlBucketConfig_Tags1(rName, "key2", "value2"),
+				Config: testAccBucketConfig_Tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3ControlBucketExists(resourceName),
+					testAccCheckBucketExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -116,7 +116,7 @@ func TestAccAWSS3ControlBucket_Tags(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSS3ControlBucketDestroy(s *terraform.State) error {
+func testAccCheckBucketDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -151,7 +151,7 @@ func testAccCheckAWSS3ControlBucketDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSS3ControlBucketExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckBucketExists(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -185,7 +185,7 @@ func testAccCheckAWSS3ControlBucketExists(resourceName string) resource.TestChec
 	}
 }
 
-func testAccAWSS3ControlBucketConfig_Bucket(rName string) string {
+func testAccBucketConfig_Bucket(rName string) string {
 	return fmt.Sprintf(`
 data "aws_outposts_outposts" "test" {}
 
@@ -200,7 +200,7 @@ resource "aws_s3control_bucket" "test" {
 `, rName)
 }
 
-func testAccAWSS3ControlBucketConfig_Tags1(rName, tagKey1, tagValue1 string) string {
+func testAccBucketConfig_Tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 data "aws_outposts_outposts" "test" {}
 
@@ -219,7 +219,7 @@ resource "aws_s3control_bucket" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccAWSS3ControlBucketConfig_Tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccBucketConfig_Tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 data "aws_outposts_outposts" "test" {}
 

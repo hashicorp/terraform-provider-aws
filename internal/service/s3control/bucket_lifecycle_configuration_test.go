@@ -25,12 +25,12 @@ func TestAccAWSS3ControlBucketLifecycleConfiguration_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSS3ControlBucketLifecycleConfigurationDestroy,
+		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3ControlBucketLifecycleConfigurationConfig_Rule_Id(rName, "test"),
+				Config: testAccBucketLifecycleConfigurationConfig_Rule_ID(rName, "test"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3ControlBucketLifecycleConfigurationExists(resourceName),
+					testAccCheckBucketLifecycleConfigurationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3control_bucket.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
@@ -58,12 +58,12 @@ func TestAccAWSS3ControlBucketLifecycleConfiguration_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSS3ControlBucketLifecycleConfigurationDestroy,
+		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3ControlBucketLifecycleConfigurationConfig_Rule_Id(rName, "test"),
+				Config: testAccBucketLifecycleConfigurationConfig_Rule_ID(rName, "test"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3ControlBucketLifecycleConfigurationExists(resourceName),
+					testAccCheckBucketLifecycleConfigurationExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfs3control.ResourceBucketLifecycleConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -80,12 +80,12 @@ func TestAccAWSS3ControlBucketLifecycleConfiguration_Rule_AbortIncompleteMultipa
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSS3ControlBucketLifecycleConfigurationDestroy,
+		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3ControlBucketLifecycleConfigurationConfig_Rule_AbortIncompleteMultipartUpload_DaysAfterInitiation(rName, 1),
+				Config: testAccBucketLifecycleConfigurationConfig_Rule_AbortIncompleteMultipartUpload_DaysAfterInitiation(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3ControlBucketLifecycleConfigurationExists(resourceName),
+					testAccCheckBucketLifecycleConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"abort_incomplete_multipart_upload.#":                       "1",
@@ -99,9 +99,9 @@ func TestAccAWSS3ControlBucketLifecycleConfiguration_Rule_AbortIncompleteMultipa
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSS3ControlBucketLifecycleConfigurationConfig_Rule_AbortIncompleteMultipartUpload_DaysAfterInitiation(rName, 2),
+				Config: testAccBucketLifecycleConfigurationConfig_Rule_AbortIncompleteMultipartUpload_DaysAfterInitiation(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3ControlBucketLifecycleConfigurationExists(resourceName),
+					testAccCheckBucketLifecycleConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"abort_incomplete_multipart_upload.#":                       "1",
@@ -123,12 +123,12 @@ func TestAccAWSS3ControlBucketLifecycleConfiguration_Rule_Expiration_Date(t *tes
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSS3ControlBucketLifecycleConfigurationDestroy,
+		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3ControlBucketLifecycleConfigurationConfig_Rule_Expiration_Date(rName, date1),
+				Config: testAccBucketLifecycleConfigurationConfig_Rule_Expiration_Date(rName, date1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3ControlBucketLifecycleConfigurationExists(resourceName),
+					testAccCheckBucketLifecycleConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"expiration.#":      "1",
@@ -142,9 +142,9 @@ func TestAccAWSS3ControlBucketLifecycleConfiguration_Rule_Expiration_Date(t *tes
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSS3ControlBucketLifecycleConfigurationConfig_Rule_Expiration_Date(rName, date2),
+				Config: testAccBucketLifecycleConfigurationConfig_Rule_Expiration_Date(rName, date2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3ControlBucketLifecycleConfigurationExists(resourceName),
+					testAccCheckBucketLifecycleConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"expiration.#":      "1",
@@ -164,12 +164,12 @@ func TestAccAWSS3ControlBucketLifecycleConfiguration_Rule_Expiration_Days(t *tes
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSS3ControlBucketLifecycleConfigurationDestroy,
+		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3ControlBucketLifecycleConfigurationConfig_Rule_Expiration_Days(rName, 7),
+				Config: testAccBucketLifecycleConfigurationConfig_Rule_Expiration_Days(rName, 7),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3ControlBucketLifecycleConfigurationExists(resourceName),
+					testAccCheckBucketLifecycleConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"expiration.#":      "1",
@@ -183,9 +183,9 @@ func TestAccAWSS3ControlBucketLifecycleConfiguration_Rule_Expiration_Days(t *tes
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSS3ControlBucketLifecycleConfigurationConfig_Rule_Expiration_Days(rName, 30),
+				Config: testAccBucketLifecycleConfigurationConfig_Rule_Expiration_Days(rName, 30),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3ControlBucketLifecycleConfigurationExists(resourceName),
+					testAccCheckBucketLifecycleConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"expiration.#":      "1",
@@ -206,12 +206,12 @@ func TestAccAWSS3ControlBucketLifecycleConfiguration_Rule_Expiration_ExpiredObje
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSS3ControlBucketLifecycleConfigurationDestroy,
+		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3ControlBucketLifecycleConfigurationConfig_Rule_Expiration_ExpiredObjectDeleteMarker(rName, true),
+				Config: testAccBucketLifecycleConfigurationConfig_Rule_Expiration_ExpiredObjectDeleteMarker(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3ControlBucketLifecycleConfigurationExists(resourceName),
+					testAccCheckBucketLifecycleConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"expiration.#": "1",
@@ -225,9 +225,9 @@ func TestAccAWSS3ControlBucketLifecycleConfiguration_Rule_Expiration_ExpiredObje
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSS3ControlBucketLifecycleConfigurationConfig_Rule_Expiration_ExpiredObjectDeleteMarker(rName, false),
+				Config: testAccBucketLifecycleConfigurationConfig_Rule_Expiration_ExpiredObjectDeleteMarker(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3ControlBucketLifecycleConfigurationExists(resourceName),
+					testAccCheckBucketLifecycleConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"expiration.#": "1",
@@ -247,12 +247,12 @@ func TestAccAWSS3ControlBucketLifecycleConfiguration_Rule_Filter_Prefix(t *testi
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSS3ControlBucketLifecycleConfigurationDestroy,
+		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3ControlBucketLifecycleConfigurationConfig_Rule_Filter_Prefix(rName, "test1/"),
+				Config: testAccBucketLifecycleConfigurationConfig_Rule_Filter_Prefix(rName, "test1/"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3ControlBucketLifecycleConfigurationExists(resourceName),
+					testAccCheckBucketLifecycleConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"filter.#":        "1",
@@ -266,9 +266,9 @@ func TestAccAWSS3ControlBucketLifecycleConfiguration_Rule_Filter_Prefix(t *testi
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSS3ControlBucketLifecycleConfigurationConfig_Rule_Filter_Prefix(rName, "test2/"),
+				Config: testAccBucketLifecycleConfigurationConfig_Rule_Filter_Prefix(rName, "test2/"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3ControlBucketLifecycleConfigurationExists(resourceName),
+					testAccCheckBucketLifecycleConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"filter.#":        "1",
@@ -288,12 +288,12 @@ func TestAccAWSS3ControlBucketLifecycleConfiguration_Rule_Filter_Tags(t *testing
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSS3ControlBucketLifecycleConfigurationDestroy,
+		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3ControlBucketLifecycleConfigurationConfig_Rule_Filter_Tags1(rName, "key1", "value1"),
+				Config: testAccBucketLifecycleConfigurationConfig_Rule_Filter_Tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3ControlBucketLifecycleConfigurationExists(resourceName),
+					testAccCheckBucketLifecycleConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"filter.#":           "1",
@@ -313,7 +313,7 @@ func TestAccAWSS3ControlBucketLifecycleConfiguration_Rule_Filter_Tags(t *testing
 			// {
 			// 	Config: testAccAWSS3ControlBucketLifecycleConfigurationConfig_Rule_Filter_Tags2(rName, "key1", "value1updated", "key2", "value2"),
 			// 	Check: resource.ComposeTestCheckFunc(
-			// 		testAccCheckAWSS3ControlBucketLifecycleConfigurationExists(resourceName),
+			// 		testAccCheckBucketLifecycleConfigurationExists(resourceName),
 			// 		resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 			// 		resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 			// 			"filter.#":           "1",
@@ -324,9 +324,9 @@ func TestAccAWSS3ControlBucketLifecycleConfiguration_Rule_Filter_Tags(t *testing
 			// 	),
 			// },
 			{
-				Config: testAccAWSS3ControlBucketLifecycleConfigurationConfig_Rule_Filter_Tags1(rName, "key2", "value2"),
+				Config: testAccBucketLifecycleConfigurationConfig_Rule_Filter_Tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3ControlBucketLifecycleConfigurationExists(resourceName),
+					testAccCheckBucketLifecycleConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"filter.#":           "1",
@@ -347,12 +347,12 @@ func TestAccAWSS3ControlBucketLifecycleConfiguration_Rule_Id(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSS3ControlBucketLifecycleConfigurationDestroy,
+		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3ControlBucketLifecycleConfigurationConfig_Rule_Id(rName, "test1"),
+				Config: testAccBucketLifecycleConfigurationConfig_Rule_ID(rName, "test1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3ControlBucketLifecycleConfigurationExists(resourceName),
+					testAccCheckBucketLifecycleConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"id": "test1",
@@ -365,9 +365,9 @@ func TestAccAWSS3ControlBucketLifecycleConfiguration_Rule_Id(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSS3ControlBucketLifecycleConfigurationConfig_Rule_Id(rName, "test2"),
+				Config: testAccBucketLifecycleConfigurationConfig_Rule_ID(rName, "test2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3ControlBucketLifecycleConfigurationExists(resourceName),
+					testAccCheckBucketLifecycleConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"id": "test2",
@@ -386,12 +386,12 @@ func TestAccAWSS3ControlBucketLifecycleConfiguration_Rule_Status(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSS3ControlBucketLifecycleConfigurationDestroy,
+		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3ControlBucketLifecycleConfigurationConfig_Rule_Status(rName, s3control.ExpirationStatusDisabled),
+				Config: testAccBucketLifecycleConfigurationConfig_Rule_Status(rName, s3control.ExpirationStatusDisabled),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3ControlBucketLifecycleConfigurationExists(resourceName),
+					testAccCheckBucketLifecycleConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"status": s3control.ExpirationStatusDisabled,
@@ -404,9 +404,9 @@ func TestAccAWSS3ControlBucketLifecycleConfiguration_Rule_Status(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSS3ControlBucketLifecycleConfigurationConfig_Rule_Status(rName, s3control.ExpirationStatusEnabled),
+				Config: testAccBucketLifecycleConfigurationConfig_Rule_Status(rName, s3control.ExpirationStatusEnabled),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3ControlBucketLifecycleConfigurationExists(resourceName),
+					testAccCheckBucketLifecycleConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"status": s3control.ExpirationStatusEnabled,
@@ -417,7 +417,7 @@ func TestAccAWSS3ControlBucketLifecycleConfiguration_Rule_Status(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSS3ControlBucketLifecycleConfigurationDestroy(s *terraform.State) error {
+func testAccCheckBucketLifecycleConfigurationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -460,7 +460,7 @@ func testAccCheckAWSS3ControlBucketLifecycleConfigurationDestroy(s *terraform.St
 	return nil
 }
 
-func testAccCheckAWSS3ControlBucketLifecycleConfigurationExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckBucketLifecycleConfigurationExists(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -494,7 +494,7 @@ func testAccCheckAWSS3ControlBucketLifecycleConfigurationExists(resourceName str
 	}
 }
 
-func testAccAWSS3ControlBucketLifecycleConfigurationConfig_Rule_AbortIncompleteMultipartUpload_DaysAfterInitiation(rName string, daysAfterInitiation int) string {
+func testAccBucketLifecycleConfigurationConfig_Rule_AbortIncompleteMultipartUpload_DaysAfterInitiation(rName string, daysAfterInitiation int) string {
 	return fmt.Sprintf(`
 data "aws_outposts_outposts" "test" {}
 
@@ -525,7 +525,7 @@ resource "aws_s3control_bucket_lifecycle_configuration" "test" {
 `, rName, daysAfterInitiation)
 }
 
-func testAccAWSS3ControlBucketLifecycleConfigurationConfig_Rule_Expiration_Date(rName string, date string) string {
+func testAccBucketLifecycleConfigurationConfig_Rule_Expiration_Date(rName string, date string) string {
 	return fmt.Sprintf(`
 data "aws_outposts_outposts" "test" {}
 
@@ -552,7 +552,7 @@ resource "aws_s3control_bucket_lifecycle_configuration" "test" {
 `, rName, date)
 }
 
-func testAccAWSS3ControlBucketLifecycleConfigurationConfig_Rule_Expiration_Days(rName string, days int) string {
+func testAccBucketLifecycleConfigurationConfig_Rule_Expiration_Days(rName string, days int) string {
 	return fmt.Sprintf(`
 data "aws_outposts_outposts" "test" {}
 
@@ -579,7 +579,7 @@ resource "aws_s3control_bucket_lifecycle_configuration" "test" {
 `, rName, days)
 }
 
-func testAccAWSS3ControlBucketLifecycleConfigurationConfig_Rule_Expiration_ExpiredObjectDeleteMarker(rName string, expiredObjectDeleteMarker bool) string {
+func testAccBucketLifecycleConfigurationConfig_Rule_Expiration_ExpiredObjectDeleteMarker(rName string, expiredObjectDeleteMarker bool) string {
 	return fmt.Sprintf(`
 data "aws_outposts_outposts" "test" {}
 
@@ -607,7 +607,7 @@ resource "aws_s3control_bucket_lifecycle_configuration" "test" {
 `, rName, expiredObjectDeleteMarker)
 }
 
-func testAccAWSS3ControlBucketLifecycleConfigurationConfig_Rule_Filter_Prefix(rName, prefix string) string {
+func testAccBucketLifecycleConfigurationConfig_Rule_Filter_Prefix(rName, prefix string) string {
 	return fmt.Sprintf(`
 data "aws_outposts_outposts" "test" {}
 
@@ -638,7 +638,7 @@ resource "aws_s3control_bucket_lifecycle_configuration" "test" {
 `, rName, prefix)
 }
 
-func testAccAWSS3ControlBucketLifecycleConfigurationConfig_Rule_Filter_Tags1(rName, tagKey1, tagValue1 string) string {
+func testAccBucketLifecycleConfigurationConfig_Rule_Filter_Tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 data "aws_outposts_outposts" "test" {}
 
@@ -706,7 +706,7 @@ resource "aws_s3control_bucket_lifecycle_configuration" "test" {
 // `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 // }
 
-func testAccAWSS3ControlBucketLifecycleConfigurationConfig_Rule_Id(rName, id string) string {
+func testAccBucketLifecycleConfigurationConfig_Rule_ID(rName, id string) string {
 	return fmt.Sprintf(`
 data "aws_outposts_outposts" "test" {}
 
@@ -733,7 +733,7 @@ resource "aws_s3control_bucket_lifecycle_configuration" "test" {
 `, rName, id)
 }
 
-func testAccAWSS3ControlBucketLifecycleConfigurationConfig_Rule_Status(rName, status string) string {
+func testAccBucketLifecycleConfigurationConfig_Rule_Status(rName, status string) string {
 	return fmt.Sprintf(`
 data "aws_outposts_outposts" "test" {}
 
