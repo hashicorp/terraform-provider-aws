@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // WAF requires UpdateIPSet operations be split into batches of 1000 Updates
@@ -177,7 +178,7 @@ func resourceIPSetDelete(d *schema.ResourceData, meta interface{}) error {
 }
 
 func updateWafIpSetDescriptors(id string, oldD, newD []interface{}, conn *waf.WAF) error {
-	for _, ipSetUpdates := range diffWafIpSetDescriptors(oldD, newD) {
+	for _, ipSetUpdates := range diffIPSetDescriptors(oldD, newD) {
 		wr := newWafRetryer(conn)
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 			req := &waf.UpdateIPSetInput{
@@ -196,7 +197,7 @@ func updateWafIpSetDescriptors(id string, oldD, newD []interface{}, conn *waf.WA
 	return nil
 }
 
-func diffWafIpSetDescriptors(oldD, newD []interface{}) [][]*waf.IPSetUpdate {
+func diffIPSetDescriptors(oldD, newD []interface{}) [][]*waf.IPSetUpdate {
 	updates := make([]*waf.IPSetUpdate, 0, ipSetUpdatesLimit)
 	updatesBatches := make([][]*waf.IPSetUpdate, 0)
 

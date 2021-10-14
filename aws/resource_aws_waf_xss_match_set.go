@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceXSSMatchSet() *schema.Resource {
@@ -181,7 +182,7 @@ func updateXssMatchSetResource(id string, oldT, newT []interface{}, conn *waf.WA
 		req := &waf.UpdateXssMatchSetInput{
 			ChangeToken:   token,
 			XssMatchSetId: aws.String(id),
-			Updates:       diffWafXssMatchSetTuples(oldT, newT),
+			Updates:       diffXSSMatchSetTuples(oldT, newT),
 		}
 
 		log.Printf("[INFO] Updating WAF XSS Match Set tuples: %s", req)
@@ -205,7 +206,7 @@ func flattenXSSMatchTuples(ts []*waf.XssMatchTuple) []interface{} {
 	return out
 }
 
-func diffWafXssMatchSetTuples(oldT, newT []interface{}) []*waf.XssMatchSetUpdate {
+func diffXSSMatchSetTuples(oldT, newT []interface{}) []*waf.XssMatchSetUpdate {
 	updates := make([]*waf.XssMatchSetUpdate, 0)
 
 	for _, od := range oldT {
