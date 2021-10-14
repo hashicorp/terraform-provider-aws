@@ -18,7 +18,7 @@ func TestAccAwsBackupGlobalSettings_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckAWSBackup(t)
+			testAccPreCheck(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
 		Providers:    acctest.Providers,
@@ -27,7 +27,7 @@ func TestAccAwsBackupGlobalSettings_basic(t *testing.T) {
 			{
 				Config: testAccBackupGlobalSettingsConfig("true"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsBackupGlobalSettingsExists(&settings),
+					testAccCheckGlobalSettingsExists(&settings),
 					resource.TestCheckResourceAttr(resourceName, "global_settings.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "global_settings.isCrossAccountBackupEnabled", "true"),
 				),
@@ -40,7 +40,7 @@ func TestAccAwsBackupGlobalSettings_basic(t *testing.T) {
 			{
 				Config: testAccBackupGlobalSettingsConfig("false"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsBackupGlobalSettingsExists(&settings),
+					testAccCheckGlobalSettingsExists(&settings),
 					resource.TestCheckResourceAttr(resourceName, "global_settings.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "global_settings.isCrossAccountBackupEnabled", "false"),
 				),
@@ -48,7 +48,7 @@ func TestAccAwsBackupGlobalSettings_basic(t *testing.T) {
 			{
 				Config: testAccBackupGlobalSettingsConfig("true"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsBackupGlobalSettingsExists(&settings),
+					testAccCheckGlobalSettingsExists(&settings),
 					resource.TestCheckResourceAttr(resourceName, "global_settings.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "global_settings.isCrossAccountBackupEnabled", "true"),
 				),
@@ -57,7 +57,7 @@ func TestAccAwsBackupGlobalSettings_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsBackupGlobalSettingsExists(settings *backup.DescribeGlobalSettingsOutput) resource.TestCheckFunc {
+func testAccCheckGlobalSettingsExists(settings *backup.DescribeGlobalSettingsOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn

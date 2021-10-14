@@ -22,11 +22,11 @@ func TestAccAWSBackupSelectionDataSource_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAwsBackupSelectionDataSourceConfig_nonExistent,
+				Config:      testAccSelectionDataSourceConfig_nonExistent,
 				ExpectError: regexp.MustCompile(`Error getting Backup Selection`),
 			},
 			{
-				Config: testAccAwsBackupSelectionDataSourceConfig_basic(rInt),
+				Config: testAccSelectionDataSourceConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(datasourceName, "iam_role_arn", resourceName, "iam_role_arn"),
@@ -37,14 +37,14 @@ func TestAccAWSBackupSelectionDataSource_basic(t *testing.T) {
 	})
 }
 
-const testAccAwsBackupSelectionDataSourceConfig_nonExistent = `
+const testAccSelectionDataSourceConfig_nonExistent = `
 data "aws_backup_selection" "test" {
   plan_id      = "tf-acc-test-does-not-exist"
   selection_id = "tf-acc-test-dne"
 }
 `
 
-func testAccAwsBackupSelectionDataSourceConfig_basic(rInt int) string {
+func testAccSelectionDataSourceConfig_basic(rInt int) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 

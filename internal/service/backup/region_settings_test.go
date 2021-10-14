@@ -21,7 +21,7 @@ func TestAccAwsBackupRegionSettings_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(fsx.EndpointsID, t)
-			testAccPreCheckAWSBackup(t)
+			testAccPreCheck(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
 		Providers:    acctest.Providers,
@@ -30,7 +30,7 @@ func TestAccAwsBackupRegionSettings_basic(t *testing.T) {
 			{
 				Config: testAccBackupRegionSettingsConfig1(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsBackupRegionSettingsExists(&settings),
+					testAccCheckRegionSettingsExists(&settings),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.%", "8"),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.DynamoDB", "true"),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.Aurora", "true"),
@@ -50,7 +50,7 @@ func TestAccAwsBackupRegionSettings_basic(t *testing.T) {
 			{
 				Config: testAccBackupRegionSettingsConfig2(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsBackupRegionSettingsExists(&settings),
+					testAccCheckRegionSettingsExists(&settings),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.%", "8"),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.DynamoDB", "true"),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.Aurora", "false"),
@@ -65,7 +65,7 @@ func TestAccAwsBackupRegionSettings_basic(t *testing.T) {
 			{
 				Config: testAccBackupRegionSettingsConfig1(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsBackupRegionSettingsExists(&settings),
+					testAccCheckRegionSettingsExists(&settings),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.%", "8"),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.DynamoDB", "true"),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.Aurora", "true"),
@@ -81,7 +81,7 @@ func TestAccAwsBackupRegionSettings_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsBackupRegionSettingsExists(settings *backup.DescribeRegionSettingsOutput) resource.TestCheckFunc {
+func testAccCheckRegionSettingsExists(settings *backup.DescribeRegionSettingsOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn

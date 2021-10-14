@@ -22,11 +22,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_backup_vault_policy", &resource.Sweeper{
 		Name: "aws_backup_vault_policy",
-		F:    testSweepBackupVaultPolicies,
+		F:    sweepVaultPolicies,
 	})
 }
 
-func testSweepBackupVaultPolicies(region string) error {
+func sweepVaultPolicies(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
@@ -74,15 +74,15 @@ func TestAccAwsBackupVaultPolicy_basic(t *testing.T) {
 	resourceName := "aws_backup_vault_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBackup(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsBackupVaultPolicyDestroy,
+		CheckDestroy: testAccCheckVaultPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBackupVaultPolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsBackupVaultPolicyExists(resourceName, &vault),
+					testAccCheckVaultPolicyExists(resourceName, &vault),
 					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile("^{\"Version\":\"2012-10-17\".+"))),
 			},
 			{
@@ -93,7 +93,7 @@ func TestAccAwsBackupVaultPolicy_basic(t *testing.T) {
 			{
 				Config: testAccBackupVaultPolicyConfigUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsBackupVaultPolicyExists(resourceName, &vault),
+					testAccCheckVaultPolicyExists(resourceName, &vault),
 					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile("^{\"Version\":\"2012-10-17\".+")),
 					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile("backup:ListRecoveryPointsByBackupVault")),
 				),
@@ -108,15 +108,15 @@ func TestAccAwsBackupVaultPolicy_disappears(t *testing.T) {
 	resourceName := "aws_backup_vault_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBackup(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsBackupVaultPolicyDestroy,
+		CheckDestroy: testAccCheckVaultPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBackupVaultPolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsBackupVaultPolicyExists(resourceName, &vault),
+					testAccCheckVaultPolicyExists(resourceName, &vault),
 					acctest.CheckResourceDisappears(acctest.Provider, tfbackup.ResourceVaultPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -132,15 +132,15 @@ func TestAccAwsBackupVaultPolicy_disappears_vault(t *testing.T) {
 	vaultResourceName := "aws_backup_vault.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBackup(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsBackupVaultPolicyDestroy,
+		CheckDestroy: testAccCheckVaultPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBackupVaultPolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsBackupVaultPolicyExists(resourceName, &vault),
+					testAccCheckVaultPolicyExists(resourceName, &vault),
 					acctest.CheckResourceDisappears(acctest.Provider, tfbackup.ResourceVault(), vaultResourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -149,7 +149,7 @@ func TestAccAwsBackupVaultPolicy_disappears_vault(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsBackupVaultPolicyDestroy(s *terraform.State) error {
+func testAccCheckVaultPolicyDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -173,7 +173,7 @@ func testAccCheckAwsBackupVaultPolicyDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAwsBackupVaultPolicyExists(name string, vault *backup.GetBackupVaultAccessPolicyOutput) resource.TestCheckFunc {
+func testAccCheckVaultPolicyExists(name string, vault *backup.GetBackupVaultAccessPolicyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {

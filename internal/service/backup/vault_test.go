@@ -20,7 +20,7 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_backup_vault", &resource.Sweeper{
 		Name: "aws_backup_vault",
-		F:    testSweepBackupVaults,
+		F:    sweepVaults,
 		Dependencies: []string{
 			"aws_backup_vault_notifications",
 			"aws_backup_vault_policy",
@@ -28,7 +28,7 @@ func init() {
 	})
 }
 
-func testSweepBackupVaults(region string) error {
+func sweepVaults(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
@@ -123,15 +123,15 @@ func TestAccAwsBackupVault_basic(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_backup_vault.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBackup(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsBackupVaultDestroy,
+		CheckDestroy: testAccCheckVaultDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBackupVaultConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsBackupVaultExists(resourceName, &vault),
+					testAccCheckVaultExists(resourceName, &vault),
 				),
 			},
 			{
@@ -149,15 +149,15 @@ func TestAccAwsBackupVault_withKmsKey(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_backup_vault.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBackup(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsBackupVaultDestroy,
+		CheckDestroy: testAccCheckVaultDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBackupVaultWithKmsKey(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsBackupVaultExists(resourceName, &vault),
+					testAccCheckVaultExists(resourceName, &vault),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key_arn", "aws_kms_key.test", "arn"),
 				),
 			},
@@ -176,15 +176,15 @@ func TestAccAwsBackupVault_withTags(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_backup_vault.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBackup(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsBackupVaultDestroy,
+		CheckDestroy: testAccCheckVaultDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBackupVaultWithTags(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsBackupVaultExists(resourceName, &vault),
+					testAccCheckVaultExists(resourceName, &vault),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.up", "down"),
 					resource.TestCheckResourceAttr(resourceName, "tags.left", "right"),
@@ -198,7 +198,7 @@ func TestAccAwsBackupVault_withTags(t *testing.T) {
 			{
 				Config: testAccBackupVaultWithUpdateTags(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsBackupVaultExists(resourceName, &vault),
+					testAccCheckVaultExists(resourceName, &vault),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "4"),
 					resource.TestCheckResourceAttr(resourceName, "tags.up", "downdown"),
 					resource.TestCheckResourceAttr(resourceName, "tags.left", "rightright"),
@@ -209,7 +209,7 @@ func TestAccAwsBackupVault_withTags(t *testing.T) {
 			{
 				Config: testAccBackupVaultWithRemoveTags(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsBackupVaultExists(resourceName, &vault),
+					testAccCheckVaultExists(resourceName, &vault),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar"),
 					resource.TestCheckResourceAttr(resourceName, "tags.fizz", "buzz"),
@@ -225,15 +225,15 @@ func TestAccAwsBackupVault_disappears(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_backup_vault.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBackup(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsBackupVaultDestroy,
+		CheckDestroy: testAccCheckVaultDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBackupVaultConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsBackupVaultExists(resourceName, &vault),
+					testAccCheckVaultExists(resourceName, &vault),
 					acctest.CheckResourceDisappears(acctest.Provider, tfbackup.ResourceVault(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -242,7 +242,7 @@ func TestAccAwsBackupVault_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsBackupVaultDestroy(s *terraform.State) error {
+func testAccCheckVaultDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_backup_vault" {
@@ -265,7 +265,7 @@ func testAccCheckAwsBackupVaultDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAwsBackupVaultExists(name string, vault *backup.DescribeBackupVaultOutput) resource.TestCheckFunc {
+func testAccCheckVaultExists(name string, vault *backup.DescribeBackupVaultOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -287,7 +287,7 @@ func testAccCheckAwsBackupVaultExists(name string, vault *backup.DescribeBackupV
 	}
 }
 
-func testAccPreCheckAWSBackup(t *testing.T) {
+func testAccPreCheck(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn
 
 	input := &backup.ListBackupVaultsInput{}

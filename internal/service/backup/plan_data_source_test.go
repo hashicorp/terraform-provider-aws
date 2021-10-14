@@ -22,11 +22,11 @@ func TestAccAWSBackupPlanDataSource_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAwsBackupPlanDataSourceConfig_nonExistent,
+				Config:      testAccPlanDataSourceConfig_nonExistent,
 				ExpectError: regexp.MustCompile(`Error getting Backup Plan`),
 			},
 			{
-				Config: testAccAwsBackupPlanDataSourceConfig_basic(rInt),
+				Config: testAccPlanDataSourceConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
@@ -38,13 +38,13 @@ func TestAccAWSBackupPlanDataSource_basic(t *testing.T) {
 	})
 }
 
-const testAccAwsBackupPlanDataSourceConfig_nonExistent = `
+const testAccPlanDataSourceConfig_nonExistent = `
 data "aws_backup_plan" "test" {
   plan_id = "tf-acc-test-does-not-exist"
 }
 `
 
-func testAccAwsBackupPlanDataSourceConfig_basic(rInt int) string {
+func testAccPlanDataSourceConfig_basic(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_backup_vault" "test" {
   name = "tf_acc_test_backup_vault_%[1]d"
