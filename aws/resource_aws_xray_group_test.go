@@ -159,7 +159,7 @@ func testAccCheckAWSXrayGroupDestroy(s *terraform.State) error {
 
 		group, err := conn.GetGroup(input)
 
-		if isAWSErr(err, xray.ErrCodeInvalidRequestException, "Group not found") {
+		if tfawserr.ErrMessageContains(err, xray.ErrCodeInvalidRequestException, "Group not found") {
 			continue
 		}
 
