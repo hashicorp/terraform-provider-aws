@@ -68,7 +68,7 @@ func sweepLayerVersions(region string) error {
 	return nil
 }
 
-func TestAccAWSLambdaLayerVersion_basic(t *testing.T) {
+func TestAccLambdaLayerVersion_basic(t *testing.T) {
 	resourceName := "aws_lambda_layer_version.lambda_layer_test"
 	layerName := fmt.Sprintf("tf_acc_lambda_layer_basic_%s", sdkacctest.RandString(8))
 
@@ -104,7 +104,7 @@ func TestAccAWSLambdaLayerVersion_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaLayerVersion_update(t *testing.T) {
+func TestAccLambdaLayerVersion_update(t *testing.T) {
 	resourceName := "aws_lambda_layer_version.lambda_layer_test"
 	layerName := fmt.Sprintf("tf_acc_lambda_layer_basic_%s", sdkacctest.RandString(8))
 
@@ -134,7 +134,7 @@ func TestAccAWSLambdaLayerVersion_update(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaLayerVersion_s3(t *testing.T) {
+func TestAccLambdaLayerVersion_s3(t *testing.T) {
 	resourceName := "aws_lambda_layer_version.lambda_layer_test"
 	rString := sdkacctest.RandString(8)
 	layerName := fmt.Sprintf("tf_acc_lambda_layer_s3_%s", rString)
@@ -161,7 +161,7 @@ func TestAccAWSLambdaLayerVersion_s3(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaLayerVersion_compatibleRuntimes(t *testing.T) {
+func TestAccLambdaLayerVersion_compatibleRuntimes(t *testing.T) {
 	resourceName := "aws_lambda_layer_version.lambda_layer_test"
 	rString := sdkacctest.RandString(8)
 	layerName := fmt.Sprintf("tf_acc_lambda_layer_runtimes_%s", rString)
@@ -190,7 +190,7 @@ func TestAccAWSLambdaLayerVersion_compatibleRuntimes(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaLayerVersion_compatibleArchitectures(t *testing.T) {
+func TestAccLambdaLayerVersion_compatibleArchitectures(t *testing.T) {
 	resourceName := "aws_lambda_layer_version.lambda_layer_test"
 	rString := sdkacctest.RandString(8)
 	layerName := fmt.Sprintf("tf_acc_lambda_layer_architectures_%s", rString)
@@ -241,7 +241,7 @@ func TestAccAWSLambdaLayerVersion_compatibleArchitectures(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaLayerVersion_description(t *testing.T) {
+func TestAccLambdaLayerVersion_description(t *testing.T) {
 	resourceName := "aws_lambda_layer_version.lambda_layer_test"
 	rString := sdkacctest.RandString(8)
 	layerName := fmt.Sprintf("tf_acc_lambda_layer_description_%s", rString)
@@ -271,7 +271,7 @@ func TestAccAWSLambdaLayerVersion_description(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaLayerVersion_licenseInfo(t *testing.T) {
+func TestAccLambdaLayerVersion_licenseInfo(t *testing.T) {
 	resourceName := "aws_lambda_layer_version.lambda_layer_test"
 	rString := sdkacctest.RandString(8)
 	layerName := fmt.Sprintf("tf_acc_lambda_layer_license_info_%s", rString)

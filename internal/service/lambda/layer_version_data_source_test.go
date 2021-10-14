@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAWSLambdaLayerVersion_basic(t *testing.T) {
+func TestAccLambdaLayerVersionDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lambda_layer_version.test"
 	resourceName := "aws_lambda_layer_version.test"
@@ -41,7 +41,7 @@ func TestAccDataSourceAWSLambdaLayerVersion_basic(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAWSLambdaLayerVersion_version(t *testing.T) {
+func TestAccLambdaLayerVersionDataSource_version(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lambda_layer_version.test"
 	resourceName := "aws_lambda_layer_version.test"
@@ -62,7 +62,7 @@ func TestAccDataSourceAWSLambdaLayerVersion_version(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAWSLambdaLayerVersion_runtime(t *testing.T) {
+func TestAccLambdaLayerVersionDataSource_runtime(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lambda_layer_version.test"
 	resourceName := "aws_lambda_layer_version.test"
@@ -83,7 +83,7 @@ func TestAccDataSourceAWSLambdaLayerVersion_runtime(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAWSLambdaLayerVersion_architectures(t *testing.T) {
+func TestAccLambdaLayerVersionDataSource_architectures(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lambda_layer_version.test"
 	resourceName := "aws_lambda_layer_version.test"

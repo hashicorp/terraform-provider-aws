@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAWSLambdaFunction_basic(t *testing.T) {
+func TestAccLambdaFunctionDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lambda_function.test"
 	resourceName := "aws_lambda_function.test"
@@ -52,7 +52,7 @@ func TestAccDataSourceAWSLambdaFunction_basic(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAWSLambdaFunction_version(t *testing.T) {
+func TestAccLambdaFunctionDataSource_version(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lambda_function.test"
 	resourceName := "aws_lambda_function.test"
@@ -75,7 +75,7 @@ func TestAccDataSourceAWSLambdaFunction_version(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAWSLambdaFunction_alias(t *testing.T) {
+func TestAccLambdaFunctionDataSource_alias(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lambda_function.test"
 	lambdaAliasResourceName := "aws_lambda_alias.test"
@@ -99,7 +99,7 @@ func TestAccDataSourceAWSLambdaFunction_alias(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAWSLambdaFunction_layers(t *testing.T) {
+func TestAccLambdaFunctionDataSource_layers(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lambda_function.test"
 	resourceName := "aws_lambda_function.test"
@@ -120,7 +120,7 @@ func TestAccDataSourceAWSLambdaFunction_layers(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAWSLambdaFunction_vpc(t *testing.T) {
+func TestAccLambdaFunctionDataSource_vpc(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lambda_function.test"
 	resourceName := "aws_lambda_function.test"
@@ -143,7 +143,7 @@ func TestAccDataSourceAWSLambdaFunction_vpc(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAWSLambdaFunction_environment(t *testing.T) {
+func TestAccLambdaFunctionDataSource_environment(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lambda_function.test"
 	resourceName := "aws_lambda_function.test"
@@ -167,7 +167,7 @@ func TestAccDataSourceAWSLambdaFunction_environment(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAWSLambdaFunction_fileSystemConfig(t *testing.T) {
+func TestAccLambdaFunctionDataSource_fileSystem(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lambda_function.test"
 	resourceName := "aws_lambda_function.test"
@@ -190,7 +190,7 @@ func TestAccDataSourceAWSLambdaFunction_fileSystemConfig(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAWSLambdaFunction_imageConfig(t *testing.T) {
+func TestAccLambdaFunctionDataSource_image(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lambda_function.test"
 	resourceName := "aws_lambda_function.test"
@@ -212,7 +212,7 @@ func TestAccDataSourceAWSLambdaFunction_imageConfig(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAWSLambdaFunction_architectures(t *testing.T) {
+func TestAccLambdaFunctionDataSource_architectures(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lambda_function.test"
 	resourceName := "aws_lambda_function.test"
