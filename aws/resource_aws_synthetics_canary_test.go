@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -56,7 +57,7 @@ func testSweepSyntheticsCanaries(region string) error {
 			name := aws.StringValue(canary.Name)
 			log.Printf("[INFO] Deleting Synthetics Canary: %s", name)
 
-			r := resourceAwsSyntheticsCanary()
+			r := ResourceCanary()
 			d := r.Data(nil)
 			d.SetId(name)
 			err := r.Delete(d, client)
@@ -516,7 +517,7 @@ func TestAccAWSSyntheticsCanary_disappears(t *testing.T) {
 				Config: testAccAWSSyntheticsCanaryBasicConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSyntheticsCanary(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceCanary(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

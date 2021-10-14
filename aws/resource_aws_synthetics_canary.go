@@ -26,12 +26,12 @@ import (
 
 const awsMutexCanary = `aws_synthetics_canary`
 
-func resourceAwsSyntheticsCanary() *schema.Resource {
+func ResourceCanary() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSyntheticsCanaryCreate,
-		Read:   resourceAwsSyntheticsCanaryRead,
-		Update: resourceAwsSyntheticsCanaryUpdate,
-		Delete: resourceAwsSyntheticsCanaryDelete,
+		Create: resourceCanaryCreate,
+		Read:   resourceCanaryRead,
+		Update: resourceCanaryUpdate,
+		Delete: resourceCanaryDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -226,7 +226,7 @@ func resourceAwsSyntheticsCanary() *schema.Resource {
 	}
 }
 
-func resourceAwsSyntheticsCanaryCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceCanaryCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SyntheticsConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -312,10 +312,10 @@ func resourceAwsSyntheticsCanaryCreate(d *schema.ResourceData, meta interface{})
 		}
 	}
 
-	return resourceAwsSyntheticsCanaryRead(d, meta)
+	return resourceCanaryRead(d, meta)
 }
 
-func resourceAwsSyntheticsCanaryRead(d *schema.ResourceData, meta interface{}) error {
+func resourceCanaryRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SyntheticsConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -381,7 +381,7 @@ func resourceAwsSyntheticsCanaryRead(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func resourceAwsSyntheticsCanaryUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceCanaryUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SyntheticsConn
 
 	if d.HasChangesExcept("tags", "tags_all", "start_canary") {
@@ -484,10 +484,10 @@ func resourceAwsSyntheticsCanaryUpdate(d *schema.ResourceData, meta interface{})
 		}
 	}
 
-	return resourceAwsSyntheticsCanaryRead(d, meta)
+	return resourceCanaryRead(d, meta)
 }
 
-func resourceAwsSyntheticsCanaryDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceCanaryDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SyntheticsConn
 
 	if status := d.Get("status").(string); status == synthetics.CanaryStateRunning {
@@ -524,8 +524,8 @@ func expandAwsSyntheticsCanaryCode(d *schema.ResourceData) (*synthetics.CanaryCo
 	}
 
 	if v, ok := d.GetOk("zip_file"); ok {
-		awsMutexKV.Lock(awsMutexCanary)
-		defer awsMutexKV.Unlock(awsMutexCanary)
+		conns.GlobalMutexKV.Lock(awsMutexCanary)
+		defer conns.GlobalMutexKV.Unlock(awsMutexCanary)
 		file, err := loadFileContent(v.(string))
 		if err != nil {
 			return nil, fmt.Errorf("unable to load %q: %w", v.(string), err)
