@@ -14,14 +14,14 @@ import (
 
 func TestAccAWSGlacierVaultLock_basic(t *testing.T) {
 	var vaultLock1 glacier.GetVaultLockOutput
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	glacierVaultResourceName := "aws_glacier_vault.test"
 	resourceName := "aws_glacier_vault_lock.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glacier.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckGlacierVaultLockDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -46,14 +46,14 @@ func TestAccAWSGlacierVaultLock_basic(t *testing.T) {
 
 func TestAccAWSGlacierVaultLock_CompleteLock(t *testing.T) {
 	var vaultLock1 glacier.GetVaultLockOutput
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	glacierVaultResourceName := "aws_glacier_vault.test"
 	resourceName := "aws_glacier_vault_lock.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glacier.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckGlacierVaultLockDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -87,7 +87,7 @@ func testAccCheckGlacierVaultLockExists(resourceName string, getVaultLockOutput 
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).glacierconn
+		conn := acctest.Provider.Meta().(*AWSClient).glacierconn
 
 		input := &glacier.GetVaultLockInput{
 			VaultName: aws.String(rs.Primary.ID),
@@ -109,7 +109,7 @@ func testAccCheckGlacierVaultLockExists(resourceName string, getVaultLockOutput 
 }
 
 func testAccCheckGlacierVaultLockDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).glacierconn
+	conn := acctest.Provider.Meta().(*AWSClient).glacierconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_glacier_vault_lock" {
