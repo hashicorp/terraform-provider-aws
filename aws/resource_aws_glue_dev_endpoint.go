@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceDevEndpoint() *schema.Resource {
@@ -99,7 +100,7 @@ func ResourceDevEndpoint() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"security_configuration": {
 				Type:     schema.TypeString,
@@ -417,7 +418,7 @@ func resourceAwsDevEndpointUpdate(d *schema.ResourceData, meta interface{}) erro
 		oldRaw, newRaw := d.GetChange("arguments")
 		old := oldRaw.(map[string]interface{})
 		new := newRaw.(map[string]interface{})
-		add, remove, _ := diffStringMaps(old, new)
+		add, remove, _ := verify.DiffStringMaps(old, new)
 
 		removeKeys := make([]*string, 0)
 		for k := range remove {
