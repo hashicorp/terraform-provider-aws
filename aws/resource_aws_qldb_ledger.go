@@ -126,7 +126,7 @@ func resourceAwsQLDBLedgerRead(d *schema.ResourceData, meta interface{}) error {
 
 	qldbLedger, err := conn.DescribeLedger(input)
 
-	if isAWSErr(err, qldb.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, qldb.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] QLDB Ledger (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -223,7 +223,7 @@ func resourceAwsQLDBLedgerDelete(d *schema.ResourceData, meta interface{}) error
 	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteLedger(deleteLedgerOpts)
 
-		if isAWSErr(err, qldb.ErrCodeResourceInUseException, "") {
+		if tfawserr.ErrMessageContains(err, qldb.ErrCodeResourceInUseException, "") {
 			return resource.RetryableError(err)
 		}
 
@@ -234,11 +234,11 @@ func resourceAwsQLDBLedgerDelete(d *schema.ResourceData, meta interface{}) error
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.DeleteLedger(deleteLedgerOpts)
 	}
 
-	if isAWSErr(err, qldb.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, qldb.ErrCodeResourceNotFoundException, "") {
 		return nil
 	}
 
@@ -279,7 +279,7 @@ func waitForQLDBLedgerDeletion(conn *qldb.QLDB, ledgerName string) error {
 				Name: aws.String(ledgerName),
 			})
 
-			if isAWSErr(err, qldb.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, qldb.ErrCodeResourceNotFoundException, "") {
 				return 1, "", nil
 			}
 
