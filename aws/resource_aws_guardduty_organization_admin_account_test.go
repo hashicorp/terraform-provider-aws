@@ -47,7 +47,7 @@ func testAccCheckAwsGuardDutyOrganizationAdminAccountDestroy(s *terraform.State)
 
 		adminAccount, err := getGuardDutyOrganizationAdminAccount(conn, rs.Primary.ID)
 
-		if isAWSErr(err, guardduty.ErrCodeBadRequestException, "organization is not in use") {
+		if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "organization is not in use") {
 			continue
 		}
 

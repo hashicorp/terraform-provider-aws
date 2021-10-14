@@ -126,7 +126,7 @@ func resourceAwsGuardDutyIpsetRead(d *schema.ResourceData, meta interface{}) err
 
 	resp, err := conn.GetIPSet(input)
 	if err != nil {
-		if isAWSErr(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
+		if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
 			log.Printf("[WARN] GuardDuty IpSet %q not found, removing from state", ipSetId)
 			d.SetId("")
 			return nil

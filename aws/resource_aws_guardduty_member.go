@@ -128,7 +128,7 @@ func resourceAwsGuardDutyMemberRead(d *schema.ResourceData, meta interface{}) er
 	log.Printf("[DEBUG] Reading GuardDuty Member: %s", input)
 	gmo, err := conn.GetMembers(&input)
 	if err != nil {
-		if isAWSErr(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
+		if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
 			log.Printf("[WARN] GuardDuty detector %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -255,7 +255,7 @@ func inviteGuardDutyMemberWaiter(accountID, detectorID string, timeout time.Dura
 
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		out, err = conn.GetMembers(&input)
 
 		if err != nil {

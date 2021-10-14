@@ -97,7 +97,7 @@ func resourceAwsGuardDutyPublishingDestinationRead(d *schema.ResourceData, meta 
 	log.Printf("[DEBUG] Reading GuardDuty publishing destination: %s", input)
 	gdo, err := conn.DescribePublishingDestination(input)
 	if err != nil {
-		if isAWSErr(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the one or more input parameters have invalid values.") {
+		if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the one or more input parameters have invalid values.") {
 			log.Printf("[WARN] GuardDuty publishing destination: %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -156,7 +156,7 @@ func resourceAwsGuardDutyPublishingDestinationDelete(d *schema.ResourceData, met
 	log.Printf("[DEBUG] Delete GuardDuty publishing destination: %s", input)
 	_, err := conn.DeletePublishingDestination(&input)
 
-	if isAWSErr(err, guardduty.ErrCodeBadRequestException, "") {
+	if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "") {
 		return nil
 	}
 

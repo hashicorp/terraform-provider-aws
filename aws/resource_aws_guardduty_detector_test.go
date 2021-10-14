@@ -41,7 +41,7 @@ func testSweepGuarddutyDetectors(region string) error {
 
 			log.Printf("[INFO] Deleting GuardDuty Detector: %s", id)
 			_, err := conn.DeleteDetector(input)
-			if testSweepSkipResourceError(err) {
+			if tfawserr.ErrCodeContains(err, "AccessDenied") {
 				log.Printf("[WARN] Skipping GuardDuty Detector (%s): %s", id, err)
 				continue
 			}
@@ -210,7 +210,7 @@ func testAccCheckAwsGuardDutyDetectorDestroy(s *terraform.State) error {
 
 		_, err := conn.GetDetector(input)
 		if err != nil {
-			if isAWSErr(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
+			if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
 				return nil
 			}
 			return err
