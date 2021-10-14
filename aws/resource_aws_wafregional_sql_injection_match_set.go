@@ -99,7 +99,7 @@ func resourceAwsWafRegionalSqlInjectionMatchSetRead(d *schema.ResourceData, meta
 	}
 
 	resp, err := conn.GetSqlInjectionMatchSet(params)
-	if isAWSErr(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+	if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
 		log.Printf("[WARN] Regional WAF SQL Injection Match Set (%s) not found, error code (404)", d.Id())
 		d.SetId("")
 		return nil
@@ -123,7 +123,7 @@ func resourceAwsWafRegionalSqlInjectionMatchSetUpdate(d *schema.ResourceData, me
 		oldT, newT := o.(*schema.Set).List(), n.(*schema.Set).List()
 
 		err := updateSqlInjectionMatchSetResourceWR(d.Id(), oldT, newT, conn, region)
-		if isAWSErr(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+		if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
 			log.Printf("[WARN] Regional WAF SQL Injection Match Set (%s) not found, error code (404)", d.Id())
 			d.SetId("")
 			return nil
@@ -145,7 +145,7 @@ func resourceAwsWafRegionalSqlInjectionMatchSetDelete(d *schema.ResourceData, me
 	if len(oldTuples) > 0 {
 		noTuples := []interface{}{}
 		err := updateSqlInjectionMatchSetResourceWR(d.Id(), oldTuples, noTuples, conn, region)
-		if isAWSErr(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+		if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
 			return nil
 		}
 		if err != nil {
@@ -162,7 +162,7 @@ func resourceAwsWafRegionalSqlInjectionMatchSetDelete(d *schema.ResourceData, me
 
 		return conn.DeleteSqlInjectionMatchSet(req)
 	})
-	if isAWSErr(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+	if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
 		return nil
 	}
 	if err != nil {

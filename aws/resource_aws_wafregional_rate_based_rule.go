@@ -128,7 +128,7 @@ func resourceAwsWafRegionalRateBasedRuleRead(d *schema.ResourceData, meta interf
 	}
 
 	resp, err := conn.GetRateBasedRule(params)
-	if isAWSErr(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+	if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
 		log.Printf("[WARN] WAF Regional Rate Based Rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -191,7 +191,7 @@ func resourceAwsWafRegionalRateBasedRuleUpdate(d *schema.ResourceData, meta inte
 		rateLimit := d.Get("rate_limit")
 
 		err := updateWafRateBasedRuleResourceWR(d.Id(), oldP, newP, rateLimit, conn, region)
-		if isAWSErr(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+		if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
 			log.Printf("[WARN] WAF Regional Rate Based Rule (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -222,7 +222,7 @@ func resourceAwsWafRegionalRateBasedRuleDelete(d *schema.ResourceData, meta inte
 		rateLimit := d.Get("rate_limit")
 
 		err := updateWafRateBasedRuleResourceWR(d.Id(), oldPredicates, noPredicates, rateLimit, conn, region)
-		if isAWSErr(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+		if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
 			return nil
 		}
 		if err != nil {
@@ -239,7 +239,7 @@ func resourceAwsWafRegionalRateBasedRuleDelete(d *schema.ResourceData, meta inte
 		log.Printf("[INFO] Deleting WAF Regional Rate Based Rule")
 		return conn.DeleteRateBasedRule(req)
 	})
-	if isAWSErr(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+	if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
 		return nil
 	}
 	if err != nil {

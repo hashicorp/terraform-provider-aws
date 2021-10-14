@@ -296,7 +296,7 @@ func testAccCheckAWSWafRegionalSizeConstraintSetDestroy(s *terraform.State) erro
 		}
 
 		// Return nil if the SizeConstraintSet is already destroyed
-		if isAWSErr(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+		if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
 			return nil
 		}
 

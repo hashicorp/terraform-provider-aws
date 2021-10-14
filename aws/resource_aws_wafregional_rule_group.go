@@ -130,7 +130,7 @@ func resourceAwsWafRegionalRuleGroupRead(d *schema.ResourceData, meta interface{
 
 	resp, err := conn.GetRuleGroup(params)
 	if err != nil {
-		if isAWSErr(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+		if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
 			log.Printf("[WARN] WAF Regional Rule Group (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil

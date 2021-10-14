@@ -60,7 +60,7 @@ func resourceAwsWafRegionalSizeConstraintSetRead(d *schema.ResourceData, meta in
 	}
 
 	resp, err := conn.GetSizeConstraintSet(params)
-	if isAWSErr(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+	if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
 		log.Printf("[WARN] WAF Regional SizeConstraintSet (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -83,7 +83,7 @@ func resourceAwsWafRegionalSizeConstraintSetUpdate(d *schema.ResourceData, meta 
 		oldConstraints, newConstraints := o.(*schema.Set).List(), n.(*schema.Set).List()
 
 		err := updateRegionalSizeConstraintSetResource(d.Id(), oldConstraints, newConstraints, client.wafregionalconn, client.region)
-		if isAWSErr(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+		if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
 			log.Printf("[WARN] WAF Regional SizeConstraintSet (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -105,7 +105,7 @@ func resourceAwsWafRegionalSizeConstraintSetDelete(d *schema.ResourceData, meta 
 	if len(oldConstraints) > 0 {
 		noConstraints := []interface{}{}
 		err := updateRegionalSizeConstraintSetResource(d.Id(), oldConstraints, noConstraints, conn, region)
-		if isAWSErr(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+		if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
 			return nil
 		}
 		if err != nil {
@@ -121,7 +121,7 @@ func resourceAwsWafRegionalSizeConstraintSetDelete(d *schema.ResourceData, meta 
 		}
 		return conn.DeleteSizeConstraintSet(req)
 	})
-	if isAWSErr(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+	if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
 		return nil
 	}
 	if err != nil {

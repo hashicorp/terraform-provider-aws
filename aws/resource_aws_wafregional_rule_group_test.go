@@ -377,7 +377,7 @@ func testAccCheckAWSWafRegionalRuleGroupDestroy(s *terraform.State) error {
 			}
 		}
 
-		if isAWSErr(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+		if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
 			return nil
 		}
 
