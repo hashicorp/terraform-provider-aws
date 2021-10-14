@@ -21,7 +21,7 @@ func TestAccAWSCloudFormationStack_dataSource_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsCloudFormationStackDataSourceConfig_basic(stackName),
+				Config: testAccCheckStackDataSourceConfig_basic(stackName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "outputs.%", "1"),
 					resource.TestMatchResourceAttr(resourceName, "outputs.VPCId", regexp.MustCompile("^vpc-[a-z0-9]+")),
@@ -40,7 +40,7 @@ func TestAccAWSCloudFormationStack_dataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsCloudFormationStackDataSourceConfig_basic(stackName string) string {
+func testAccCheckStackDataSourceConfig_basic(stackName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudformation_stack" "cfs" {
   name = "%s"
@@ -107,7 +107,7 @@ func TestAccAWSCloudFormationStack_dataSource_yaml(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsCloudFormationStackDataSourceConfig_yaml(stackName),
+				Config: testAccCheckStackDataSourceConfig_yaml(stackName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "outputs.%", "1"),
 					resource.TestMatchResourceAttr(resourceName, "outputs.VPCId", regexp.MustCompile("^vpc-[a-z0-9]+")),
@@ -126,7 +126,7 @@ func TestAccAWSCloudFormationStack_dataSource_yaml(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsCloudFormationStackDataSourceConfig_yaml(stackName string) string {
+func testAccCheckStackDataSourceConfig_yaml(stackName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudformation_stack" "yaml" {
   name = "%s"

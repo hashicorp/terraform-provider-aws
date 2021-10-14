@@ -20,7 +20,7 @@ func TestAccAWSCloudformationExportDataSource_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config:                    testAccCheckAwsCloudformationExportConfigStaticValue(rName),
+				Config:                    testAccCheckExportStaticValueConfig(rName),
 				PreventPostDestroyRefresh: true,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "value", "waiter"),
@@ -41,7 +41,7 @@ func TestAccAWSCloudformationExportDataSource_ResourceReference(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config:                    testAccCheckAwsCloudformationExportConfigResourceReference(rName),
+				Config:                    testAccCheckExportResourceReferenceConfig(rName),
 				PreventPostDestroyRefresh: true,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "exporting_stack_id", resourceName, "id"),
@@ -52,7 +52,7 @@ func TestAccAWSCloudformationExportDataSource_ResourceReference(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsCloudformationExportConfigStaticValue(rName string) string {
+func testAccCheckExportStaticValueConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudformation_stack" "test" {
   name = %[1]q
@@ -89,7 +89,7 @@ data "aws_cloudformation_export" "test" {
 `, rName)
 }
 
-func testAccCheckAwsCloudformationExportConfigResourceReference(rName string) string {
+func testAccCheckExportResourceReferenceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudformation_stack" "test" {
   name = %[1]q
