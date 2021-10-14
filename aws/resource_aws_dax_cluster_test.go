@@ -68,7 +68,7 @@ func TestAccAWSDAXCluster_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSDax(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dax.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDAXClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -122,7 +122,7 @@ func TestAccAWSDAXCluster_resize(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSDax(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dax.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDAXClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -166,7 +166,7 @@ func TestAccAWSDAXCluster_encryption_disabled(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSDax(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dax.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDAXClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -200,7 +200,7 @@ func TestAccAWSDAXCluster_encryption_enabled(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSDax(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dax.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDAXClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -227,7 +227,7 @@ func TestAccAWSDAXCluster_encryption_enabled(t *testing.T) {
 }
 
 func testAccCheckAWSDAXClusterDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).daxconn
+	conn := acctest.Provider.Meta().(*AWSClient).daxconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_dax_cluster" {
@@ -261,7 +261,7 @@ func testAccCheckAWSDAXClusterExists(n string, v *dax.Cluster) resource.TestChec
 			return fmt.Errorf("No DAX cluster ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).daxconn
+		conn := acctest.Provider.Meta().(*AWSClient).daxconn
 		resp, err := conn.DescribeClusters(&dax.DescribeClustersInput{
 			ClusterNames: []*string{aws.String(rs.Primary.ID)},
 		})
@@ -280,7 +280,7 @@ func testAccCheckAWSDAXClusterExists(n string, v *dax.Cluster) resource.TestChec
 }
 
 func testAccPreCheckAWSDax(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).daxconn
+	conn := acctest.Provider.Meta().(*AWSClient).daxconn
 
 	input := &dax.DescribeClustersInput{}
 
