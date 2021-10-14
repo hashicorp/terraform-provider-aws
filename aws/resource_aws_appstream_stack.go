@@ -247,7 +247,7 @@ func resourceAwsAppStreamStackCreate(ctx context.Context, d *schema.ResourceData
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		output, err = conn.CreateStackWithContext(ctx, input)
 	}
 

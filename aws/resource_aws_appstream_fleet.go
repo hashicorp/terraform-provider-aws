@@ -257,7 +257,7 @@ func resourceAwsAppStreamFleetCreate(ctx context.Context, d *schema.ResourceData
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		output, err = conn.CreateFleetWithContext(ctx, input)
 	}
 	if err != nil {
