@@ -211,10 +211,11 @@ func testAccCheckAWSLakeFormationResourceExists(resourceName string) resource.Te
 }
 
 func isLakeFormationResourceNotFoundErr(err error) bool {
-	return isAWSErr(
+	return tfawserr.ErrMessageContains(
 		err,
 		"EntityNotFoundException",
 		"Entity not found")
+
 }
 
 func testAccAWSLakeFormationResourceConfig_basic(bucket, role string) string {
