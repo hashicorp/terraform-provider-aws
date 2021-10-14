@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
 func init() {
@@ -26,7 +27,7 @@ func init() {
 }
 
 func testSweepSagemakerAppImageConfigs(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -39,7 +40,7 @@ func testSweepSagemakerAppImageConfigs(region string) error {
 	for {
 		output, err := conn.ListAppImageConfigs(input)
 
-		if testSweepSkipSweepError(err) {
+		if sweep.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping SageMaker App Image Config for %s: %s", region, err)
 			return sweeperErrs.ErrorOrNil()
 		}
