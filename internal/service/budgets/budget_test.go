@@ -22,63 +22,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_budgets_budget", &resource.Sweeper{
-		Name: "aws_budgets_budget",
-		F:    sweepBudgets,
-	})
-}
 
-func sweepBudgets(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-	conn := client.(*conns.AWSClient).BudgetsConn
-	accountID := client.(*conns.AWSClient).AccountID
-	input := &budgets.DescribeBudgetsInput{
-		AccountId: aws.String(accountID),
-	}
-	var sweeperErrs *multierror.Error
 
-	for {
-		output, err := conn.DescribeBudgets(input)
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Budgets sweep for %s: %s", region, err)
-			return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-		}
-		if err != nil {
-			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Budgets: %w", err))
-			return sweeperErrs
-		}
 
-		for _, budget := range output.Budgets {
-			name := aws.StringValue(budget.BudgetName)
-
-			log.Printf("[INFO] Deleting Budget: %s", name)
-			_, err := conn.DeleteBudget(&budgets.DeleteBudgetInput{
-				AccountId:  aws.String(accountID),
-				BudgetName: aws.String(name),
-			})
-			if tfawserr.ErrMessageContains(err, budgets.ErrCodeNotFoundException, "") {
-				continue
-			}
-			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting Budget (%s): %w", name, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
-		}
-
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-		input.NextToken = output.NextToken
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func TestAccBudgetsBudget_basic(t *testing.T) {
 	var budget budgets.Budget

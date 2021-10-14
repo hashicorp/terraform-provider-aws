@@ -19,62 +19,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_budgets_budget_action", &resource.Sweeper{
-		Name: "aws_budgets_budget_action",
-		F:    sweepBudgetActionss,
-	})
-}
 
-func sweepBudgetActionss(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-	conn := client.(*conns.AWSClient).BudgetsConn
-	accountID := client.(*conns.AWSClient).AccountID
-	input := &budgets.DescribeBudgetActionsForAccountInput{
-		AccountId: aws.String(accountID),
-	}
-	var sweeperErrs *multierror.Error
 
-	for {
-		output, err := conn.DescribeBudgetActionsForAccount(input)
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Budgets sweep for %s: %s", region, err)
-			return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-		}
-		if err != nil {
-			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Budgets: %w", err))
-			return sweeperErrs
-		}
 
-		for _, action := range output.Actions {
-			name := aws.StringValue(action.BudgetName)
-			log.Printf("[INFO] Deleting Budget Action: %s", name)
-			id := fmt.Sprintf("%s:%s:%s", accountID, aws.StringValue(action.ActionId), name)
-
-			r := tfbudgets.ResourceBudgetAction()
-			d := r.Data(nil)
-			d.SetId(id)
-
-			err := r.Delete(d, client)
-			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting Budget Action (%s): %w", name, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
-		}
-
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-		input.NextToken = output.NextToken
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func TestAccBudgetsBudgetAction_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
