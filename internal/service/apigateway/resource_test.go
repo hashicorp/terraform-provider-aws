@@ -15,7 +15,7 @@ import (
 	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
 )
 
-func TestAccAWSAPIGatewayResource_basic(t *testing.T) {
+func TestAccAPIGatewayResource_basic(t *testing.T) {
 	var conf apigateway.Resource
 	rName := fmt.Sprintf("tf-test-acc-%s", sdkacctest.RandString(8))
 	resourceName := "aws_api_gateway_resource.test"
@@ -47,7 +47,7 @@ func TestAccAWSAPIGatewayResource_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayResource_update(t *testing.T) {
+func TestAccAPIGatewayResource_update(t *testing.T) {
 	var conf apigateway.Resource
 	rName := fmt.Sprintf("tf-test-acc-%s", sdkacctest.RandString(8))
 	resourceName := "aws_api_gateway_resource.test"
@@ -91,7 +91,7 @@ func TestAccAWSAPIGatewayResource_update(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayResource_disappears(t *testing.T) {
+func TestAccAPIGatewayResource_disappears(t *testing.T) {
 	var conf apigateway.Resource
 	rName := fmt.Sprintf("tf-test-acc-%s", sdkacctest.RandString(8))
 	resourceName := "aws_api_gateway_resource.test"

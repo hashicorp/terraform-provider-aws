@@ -15,7 +15,7 @@ import (
 	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
 )
 
-func TestAccAWSAPIGatewayRequestValidator_basic(t *testing.T) {
+func TestAccAPIGatewayRequestValidator_basic(t *testing.T) {
 	var conf apigateway.UpdateRequestValidatorOutput
 	rName := fmt.Sprintf("tf-test-acc-%s", sdkacctest.RandString(8))
 	resourceName := "aws_api_gateway_request_validator.test"
@@ -60,7 +60,7 @@ func TestAccAWSAPIGatewayRequestValidator_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayRequestValidator_disappears(t *testing.T) {
+func TestAccAPIGatewayRequestValidator_disappears(t *testing.T) {
 	var conf apigateway.UpdateRequestValidatorOutput
 	rName := fmt.Sprintf("tf-test-acc-%s", sdkacctest.RandString(8))
 	resourceName := "aws_api_gateway_request_validator.test"

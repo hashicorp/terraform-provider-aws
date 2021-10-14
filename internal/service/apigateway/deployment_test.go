@@ -16,7 +16,7 @@ import (
 	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
 )
 
-func TestAccAWSAPIGatewayDeployment_basic(t *testing.T) {
+func TestAccAPIGatewayDeployment_basic(t *testing.T) {
 	var deployment apigateway.Deployment
 	resourceName := "aws_api_gateway_deployment.test"
 	restApiResourceName := "aws_api_gateway_rest_api.test"
@@ -46,7 +46,7 @@ func TestAccAWSAPIGatewayDeployment_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayDeployment_disappears_RestApi(t *testing.T) {
+func TestAccAPIGatewayDeployment_Disappears_restAPI(t *testing.T) {
 	var deployment apigateway.Deployment
 	var restApi apigateway.RestApi
 	resourceName := "aws_api_gateway_deployment.test"
@@ -72,7 +72,7 @@ func TestAccAWSAPIGatewayDeployment_disappears_RestApi(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayDeployment_Triggers(t *testing.T) {
+func TestAccAPIGatewayDeployment_triggers(t *testing.T) {
 	var deployment1, deployment2, deployment3, deployment4 apigateway.Deployment
 	var stage apigateway.Stage
 	resourceName := "aws_api_gateway_deployment.test"
@@ -129,7 +129,7 @@ func TestAccAWSAPIGatewayDeployment_Triggers(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayDeployment_Description(t *testing.T) {
+func TestAccAPIGatewayDeployment_description(t *testing.T) {
 	var deployment apigateway.Deployment
 	resourceName := "aws_api_gateway_deployment.test"
 
@@ -157,7 +157,7 @@ func TestAccAWSAPIGatewayDeployment_Description(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayDeployment_StageDescription(t *testing.T) {
+func TestAccAPIGatewayDeployment_stageDescription(t *testing.T) {
 	var deployment apigateway.Deployment
 	var stage apigateway.Stage
 	resourceName := "aws_api_gateway_deployment.test"
@@ -180,7 +180,7 @@ func TestAccAWSAPIGatewayDeployment_StageDescription(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayDeployment_StageName(t *testing.T) {
+func TestAccAPIGatewayDeployment_stageName(t *testing.T) {
 	var deployment apigateway.Deployment
 	var stage apigateway.Stage
 	resourceName := "aws_api_gateway_deployment.test"
@@ -209,7 +209,7 @@ func TestAccAWSAPIGatewayDeployment_StageName(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayDeployment_StageName_EmptyString(t *testing.T) {
+func TestAccAPIGatewayDeployment_StageName_emptyString(t *testing.T) {
 	var deployment apigateway.Deployment
 	resourceName := "aws_api_gateway_deployment.test"
 
@@ -230,7 +230,7 @@ func TestAccAWSAPIGatewayDeployment_StageName_EmptyString(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayDeployment_Variables(t *testing.T) {
+func TestAccAPIGatewayDeployment_variables(t *testing.T) {
 	var deployment apigateway.Deployment
 	resourceName := "aws_api_gateway_deployment.test"
 

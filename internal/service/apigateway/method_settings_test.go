@@ -15,7 +15,7 @@ import (
 	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
 )
 
-func TestAccAWSAPIGatewayMethodSettings_basic(t *testing.T) {
+func TestAccAPIGatewayMethodSettings_basic(t *testing.T) {
 	var stage apigateway.Stage
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
@@ -44,7 +44,7 @@ func TestAccAWSAPIGatewayMethodSettings_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayMethodSettings_Settings_CacheDataEncrypted(t *testing.T) {
+func TestAccAPIGatewayMethodSettings_Settings_cacheDataEncrypted(t *testing.T) {
 	var stage1, stage2 apigateway.Stage
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
@@ -81,7 +81,7 @@ func TestAccAWSAPIGatewayMethodSettings_Settings_CacheDataEncrypted(t *testing.T
 	})
 }
 
-func TestAccAWSAPIGatewayMethodSettings_Settings_CacheTtlInSeconds(t *testing.T) {
+func TestAccAPIGatewayMethodSettings_Settings_cacheTTLInSeconds(t *testing.T) {
 	var stage1, stage2 apigateway.Stage
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
@@ -126,7 +126,7 @@ func TestAccAWSAPIGatewayMethodSettings_Settings_CacheTtlInSeconds(t *testing.T)
 	})
 }
 
-func TestAccAWSAPIGatewayMethodSettings_Settings_CachingEnabled(t *testing.T) {
+func TestAccAPIGatewayMethodSettings_Settings_cachingEnabled(t *testing.T) {
 	var stage1, stage2 apigateway.Stage
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
@@ -163,7 +163,7 @@ func TestAccAWSAPIGatewayMethodSettings_Settings_CachingEnabled(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayMethodSettings_Settings_DataTraceEnabled(t *testing.T) {
+func TestAccAPIGatewayMethodSettings_Settings_dataTraceEnabled(t *testing.T) {
 	var stage1, stage2 apigateway.Stage
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
@@ -200,7 +200,7 @@ func TestAccAWSAPIGatewayMethodSettings_Settings_DataTraceEnabled(t *testing.T) 
 	})
 }
 
-func TestAccAWSAPIGatewayMethodSettings_Settings_LoggingLevel(t *testing.T) {
+func TestAccAPIGatewayMethodSettings_Settings_loggingLevel(t *testing.T) {
 	var stage1, stage2 apigateway.Stage
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
@@ -239,7 +239,7 @@ func TestAccAWSAPIGatewayMethodSettings_Settings_LoggingLevel(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayMethodSettings_Settings_MetricsEnabled(t *testing.T) {
+func TestAccAPIGatewayMethodSettings_Settings_metricsEnabled(t *testing.T) {
 	var stage1, stage2 apigateway.Stage
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
@@ -278,7 +278,7 @@ func TestAccAWSAPIGatewayMethodSettings_Settings_MetricsEnabled(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayMethodSettings_Settings_Multiple(t *testing.T) {
+func TestAccAPIGatewayMethodSettings_Settings_multiple(t *testing.T) {
 	var stage1, stage2 apigateway.Stage
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
@@ -321,7 +321,7 @@ func TestAccAWSAPIGatewayMethodSettings_Settings_Multiple(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayMethodSettings_Settings_RequireAuthorizationForCacheControl(t *testing.T) {
+func TestAccAPIGatewayMethodSettings_Settings_requireAuthorizationForCacheControl(t *testing.T) {
 	var stage1, stage2 apigateway.Stage
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
@@ -358,7 +358,7 @@ func TestAccAWSAPIGatewayMethodSettings_Settings_RequireAuthorizationForCacheCon
 	})
 }
 
-func TestAccAWSAPIGatewayMethodSettings_Settings_ThrottlingBurstLimit(t *testing.T) {
+func TestAccAPIGatewayMethodSettings_Settings_throttlingBurstLimit(t *testing.T) {
 	var stage1, stage2 apigateway.Stage
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
@@ -396,7 +396,7 @@ func TestAccAWSAPIGatewayMethodSettings_Settings_ThrottlingBurstLimit(t *testing
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/5690
-func TestAccAWSAPIGatewayMethodSettings_Settings_ThrottlingBurstLimitDisabledByDefault(t *testing.T) {
+func TestAccAPIGatewayMethodSettings_Settings_throttlingBurstLimitDisabledByDefault(t *testing.T) {
 	var stage1, stage2 apigateway.Stage
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
@@ -433,7 +433,7 @@ func TestAccAWSAPIGatewayMethodSettings_Settings_ThrottlingBurstLimitDisabledByD
 	})
 }
 
-func TestAccAWSAPIGatewayMethodSettings_Settings_ThrottlingRateLimit(t *testing.T) {
+func TestAccAPIGatewayMethodSettings_Settings_throttlingRateLimit(t *testing.T) {
 	var stage1, stage2 apigateway.Stage
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
@@ -471,7 +471,7 @@ func TestAccAWSAPIGatewayMethodSettings_Settings_ThrottlingRateLimit(t *testing.
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/5690
-func TestAccAWSAPIGatewayMethodSettings_Settings_ThrottlingRateLimitDisabledByDefault(t *testing.T) {
+func TestAccAPIGatewayMethodSettings_Settings_throttlingRateLimitDisabledByDefault(t *testing.T) {
 	var stage1, stage2 apigateway.Stage
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
@@ -508,7 +508,7 @@ func TestAccAWSAPIGatewayMethodSettings_Settings_ThrottlingRateLimitDisabledByDe
 	})
 }
 
-func TestAccAWSAPIGatewayMethodSettings_Settings_UnauthorizedCacheControlHeaderStrategy(t *testing.T) {
+func TestAccAPIGatewayMethodSettings_Settings_unauthorizedCacheControlHeaderStrategy(t *testing.T) {
 	var stage1, stage2 apigateway.Stage
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
@@ -578,7 +578,7 @@ func testAccCheckMethodSettings_loggingLevel(conf *apigateway.Stage, path string
 	}
 }
 
-func TestAccAWSAPIGatewayMethodSettings_disappears(t *testing.T) {
+func TestAccAPIGatewayMethodSettings_disappears(t *testing.T) {
 	var stage apigateway.Stage
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"

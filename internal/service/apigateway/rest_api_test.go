@@ -68,7 +68,7 @@ func sweepRestAPIs(region string) error {
 	return nil
 }
 
-func TestAccAWSAPIGatewayRestApi_basic(t *testing.T) {
+func TestAccAPIGatewayRestAPI_basic(t *testing.T) {
 	var conf apigateway.RestApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_rest_api.test"
@@ -108,7 +108,7 @@ func TestAccAWSAPIGatewayRestApi_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayRestApi_tags(t *testing.T) {
+func TestAccAPIGatewayRestAPI_tags(t *testing.T) {
 	var conf apigateway.RestApi
 	resourceName := "aws_api_gateway_rest_api.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -158,7 +158,7 @@ func TestAccAWSAPIGatewayRestApi_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayRestApi_disappears(t *testing.T) {
+func TestAccAPIGatewayRestAPI_disappears(t *testing.T) {
 	var restApi apigateway.RestApi
 	resourceName := "aws_api_gateway_rest_api.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -181,7 +181,7 @@ func TestAccAWSAPIGatewayRestApi_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayRestApi_EndpointConfiguration(t *testing.T) {
+func TestAccAPIGatewayRestAPI_endpoint(t *testing.T) {
 	var restApi apigateway.RestApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_rest_api.test"
@@ -257,7 +257,7 @@ func TestAccAWSAPIGatewayRestApi_EndpointConfiguration(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayRestApi_EndpointConfiguration_Private(t *testing.T) {
+func TestAccAPIGatewayRestAPI_Endpoint_private(t *testing.T) {
 	var restApi apigateway.RestApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_rest_api.test"
@@ -311,7 +311,7 @@ func TestAccAWSAPIGatewayRestApi_EndpointConfiguration_Private(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayRestApi_ApiKeySource(t *testing.T) {
+func TestAccAPIGatewayRestAPI_apiKeySource(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_rest_api.test"
 
@@ -348,7 +348,7 @@ func TestAccAWSAPIGatewayRestApi_ApiKeySource(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayRestApi_ApiKeySource_OverrideBody(t *testing.T) {
+func TestAccAPIGatewayRestAPI_APIKeySource_overrideBody(t *testing.T) {
 	var conf apigateway.RestApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_rest_api.test"
@@ -392,7 +392,7 @@ func TestAccAWSAPIGatewayRestApi_ApiKeySource_OverrideBody(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayRestApi_ApiKeySource_SetByBody(t *testing.T) {
+func TestAccAPIGatewayRestAPI_APIKeySource_setByBody(t *testing.T) {
 	var conf apigateway.RestApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_rest_api.test"
@@ -420,7 +420,7 @@ func TestAccAWSAPIGatewayRestApi_ApiKeySource_SetByBody(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayRestApi_BinaryMediaTypes(t *testing.T) {
+func TestAccAPIGatewayRestAPI_binaryMediaTypes(t *testing.T) {
 	var conf apigateway.RestApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_rest_api.test"
@@ -457,7 +457,7 @@ func TestAccAWSAPIGatewayRestApi_BinaryMediaTypes(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayRestApi_BinaryMediaTypes_OverrideBody(t *testing.T) {
+func TestAccAPIGatewayRestAPI_BinaryMediaTypes_overrideBody(t *testing.T) {
 	var conf apigateway.RestApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_rest_api.test"
@@ -504,7 +504,7 @@ func TestAccAWSAPIGatewayRestApi_BinaryMediaTypes_OverrideBody(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayRestApi_BinaryMediaTypes_SetByBody(t *testing.T) {
+func TestAccAPIGatewayRestAPI_BinaryMediaTypes_setByBody(t *testing.T) {
 	var conf apigateway.RestApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_rest_api.test"
@@ -533,7 +533,7 @@ func TestAccAWSAPIGatewayRestApi_BinaryMediaTypes_SetByBody(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayRestApi_Body(t *testing.T) {
+func TestAccAPIGatewayRestAPI_body(t *testing.T) {
 	var conf apigateway.RestApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_rest_api.test"
@@ -577,7 +577,7 @@ func TestAccAWSAPIGatewayRestApi_Body(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayRestApi_Description(t *testing.T) {
+func TestAccAPIGatewayRestAPI_description(t *testing.T) {
 	var conf apigateway.RestApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_rest_api.test"
@@ -612,7 +612,7 @@ func TestAccAWSAPIGatewayRestApi_Description(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayRestApi_Description_OverrideBody(t *testing.T) {
+func TestAccAPIGatewayRestAPI_Description_overrideBody(t *testing.T) {
 	var conf apigateway.RestApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_rest_api.test"
@@ -656,7 +656,7 @@ func TestAccAWSAPIGatewayRestApi_Description_OverrideBody(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayRestApi_Description_SetByBody(t *testing.T) {
+func TestAccAPIGatewayRestAPI_Description_setByBody(t *testing.T) {
 	var conf apigateway.RestApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_rest_api.test"
@@ -684,7 +684,7 @@ func TestAccAWSAPIGatewayRestApi_Description_SetByBody(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayRestApi_DisableExecuteApiEndpoint(t *testing.T) {
+func TestAccAPIGatewayRestAPI_disableExecuteAPIEndpoint(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_rest_api.test"
 
@@ -721,7 +721,7 @@ func TestAccAWSAPIGatewayRestApi_DisableExecuteApiEndpoint(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayRestApi_DisableExecuteApiEndpoint_OverrideBody(t *testing.T) {
+func TestAccAPIGatewayRestAPI_DisableExecuteAPIEndpoint_overrideBody(t *testing.T) {
 	var conf apigateway.RestApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_rest_api.test"
@@ -765,7 +765,7 @@ func TestAccAWSAPIGatewayRestApi_DisableExecuteApiEndpoint_OverrideBody(t *testi
 	})
 }
 
-func TestAccAWSAPIGatewayRestApi_DisableExecuteApiEndpoint_SetByBody(t *testing.T) {
+func TestAccAPIGatewayRestAPI_DisableExecuteAPIEndpoint_setByBody(t *testing.T) {
 	var conf apigateway.RestApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_rest_api.test"
@@ -793,7 +793,7 @@ func TestAccAWSAPIGatewayRestApi_DisableExecuteApiEndpoint_SetByBody(t *testing.
 	})
 }
 
-func TestAccAWSAPIGatewayRestApi_EndpointConfiguration_VpcEndpointIds(t *testing.T) {
+func TestAccAPIGatewayRestAPI_Endpoint_vpcEndpointIDs(t *testing.T) {
 	var restApi apigateway.RestApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_rest_api.test"
@@ -850,7 +850,7 @@ func TestAccAWSAPIGatewayRestApi_EndpointConfiguration_VpcEndpointIds(t *testing
 	})
 }
 
-func TestAccAWSAPIGatewayRestApi_EndpointConfiguration_VpcEndpointIds_OverrideBody(t *testing.T) {
+func TestAccAPIGatewayRestAPI_EndpointVPCEndpointIDs_overrideBody(t *testing.T) {
 	var conf apigateway.RestApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_rest_api.test"
@@ -903,7 +903,7 @@ func TestAccAWSAPIGatewayRestApi_EndpointConfiguration_VpcEndpointIds_OverrideBo
 	})
 }
 
-func TestAccAWSAPIGatewayRestApi_EndpointConfiguration_VpcEndpointIds_SetByBody(t *testing.T) {
+func TestAccAPIGatewayRestAPI_EndpointVPCEndpointIDs_setByBody(t *testing.T) {
 	var conf apigateway.RestApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_rest_api.test"
@@ -934,7 +934,7 @@ func TestAccAWSAPIGatewayRestApi_EndpointConfiguration_VpcEndpointIds_SetByBody(
 	})
 }
 
-func TestAccAWSAPIGatewayRestApi_MinimumCompressionSize(t *testing.T) {
+func TestAccAPIGatewayRestAPI_minimumCompressionSize(t *testing.T) {
 	var conf apigateway.RestApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_rest_api.test"
@@ -976,7 +976,7 @@ func TestAccAWSAPIGatewayRestApi_MinimumCompressionSize(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayRestApi_MinimumCompressionSize_OverrideBody(t *testing.T) {
+func TestAccAPIGatewayRestAPI_MinimumCompressionSize_overrideBody(t *testing.T) {
 	var conf apigateway.RestApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_rest_api.test"
@@ -1020,7 +1020,7 @@ func TestAccAWSAPIGatewayRestApi_MinimumCompressionSize_OverrideBody(t *testing.
 	})
 }
 
-func TestAccAWSAPIGatewayRestApi_MinimumCompressionSize_SetByBody(t *testing.T) {
+func TestAccAPIGatewayRestAPI_MinimumCompressionSize_setByBody(t *testing.T) {
 	var conf apigateway.RestApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_rest_api.test"
@@ -1050,7 +1050,7 @@ func TestAccAWSAPIGatewayRestApi_MinimumCompressionSize_SetByBody(t *testing.T) 
 	})
 }
 
-func TestAccAWSAPIGatewayRestApi_Name_OverrideBody(t *testing.T) {
+func TestAccAPIGatewayRestAPI_Name_overrideBody(t *testing.T) {
 	var conf apigateway.RestApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1095,7 +1095,7 @@ func TestAccAWSAPIGatewayRestApi_Name_OverrideBody(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayRestApi_Parameters(t *testing.T) {
+func TestAccAPIGatewayRestAPI_parameters(t *testing.T) {
 	var conf apigateway.RestApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_rest_api.test"
@@ -1130,7 +1130,7 @@ func TestAccAWSAPIGatewayRestApi_Parameters(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayRestApi_Policy(t *testing.T) {
+func TestAccAPIGatewayRestAPI_policy(t *testing.T) {
 	resourceName := "aws_api_gateway_rest_api.test"
 	expectedPolicyText := `{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"AWS":"*"},"Action":"execute-api:Invoke","Resource":"*","Condition":{"IpAddress":{"aws:SourceIp":"123.123.123.123/32"}}}]}`
 	expectedUpdatePolicyText := `{"Version":"2012-10-17","Statement":[{"Effect":"Deny","Principal":{"AWS":"*"},"Action":"execute-api:Invoke","Resource":"*"}]}`
@@ -1163,7 +1163,7 @@ func TestAccAWSAPIGatewayRestApi_Policy(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayRestApi_Policy_OverrideBody(t *testing.T) {
+func TestAccAPIGatewayRestAPI_Policy_overrideBody(t *testing.T) {
 	var conf apigateway.RestApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_rest_api.test"
@@ -1210,7 +1210,7 @@ func TestAccAWSAPIGatewayRestApi_Policy_OverrideBody(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayRestApi_Policy_SetByBody(t *testing.T) {
+func TestAccAPIGatewayRestAPI_Policy_setByBody(t *testing.T) {
 	var conf apigateway.RestApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_rest_api.test"

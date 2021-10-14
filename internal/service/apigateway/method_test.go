@@ -16,7 +16,7 @@ import (
 	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
 )
 
-func TestAccAWSAPIGatewayMethod_basic(t *testing.T) {
+func TestAccAPIGatewayMethod_basic(t *testing.T) {
 	var conf apigateway.Method
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_api_gateway_method.test"
@@ -55,7 +55,7 @@ func TestAccAWSAPIGatewayMethod_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayMethod_customauthorizer(t *testing.T) {
+func TestAccAPIGatewayMethod_customAuthorizer(t *testing.T) {
 	var conf apigateway.Method
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_api_gateway_method.test"
@@ -97,7 +97,7 @@ func TestAccAWSAPIGatewayMethod_customauthorizer(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayMethod_cognitoauthorizer(t *testing.T) {
+func TestAccAPIGatewayMethod_cognitoAuthorizer(t *testing.T) {
 	var conf apigateway.Method
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_api_gateway_method.test"
@@ -142,7 +142,7 @@ func TestAccAWSAPIGatewayMethod_cognitoauthorizer(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayMethod_customrequestvalidator(t *testing.T) {
+func TestAccAPIGatewayMethod_customRequestValidator(t *testing.T) {
 	var conf apigateway.Method
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_api_gateway_method.test"
@@ -183,7 +183,7 @@ func TestAccAWSAPIGatewayMethod_customrequestvalidator(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayMethod_disappears(t *testing.T) {
+func TestAccAPIGatewayMethod_disappears(t *testing.T) {
 	var conf apigateway.Method
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_api_gateway_method.test"
@@ -206,7 +206,7 @@ func TestAccAWSAPIGatewayMethod_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayMethod_OperationName(t *testing.T) {
+func TestAccAPIGatewayMethod_operationName(t *testing.T) {
 	var conf apigateway.Method
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_api_gateway_method.test"

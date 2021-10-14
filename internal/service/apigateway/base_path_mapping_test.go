@@ -66,7 +66,7 @@ func TestDecodeApiGatewayBasePathMappingId(t *testing.T) {
 	}
 }
 
-func TestAccAWSAPIGatewayBasePathMapping_basic(t *testing.T) {
+func TestAccAPIGatewayBasePathMapping_basic(t *testing.T) {
 	var conf apigateway.BasePathMapping
 
 	name := acctest.RandomSubdomain()
@@ -96,7 +96,7 @@ func TestAccAWSAPIGatewayBasePathMapping_basic(t *testing.T) {
 }
 
 // https://github.com/hashicorp/terraform/issues/9212
-func TestAccAWSAPIGatewayBasePathMapping_BasePath_Empty(t *testing.T) {
+func TestAccAPIGatewayBasePathMapping_BasePath_empty(t *testing.T) {
 	var conf apigateway.BasePathMapping
 
 	name := acctest.RandomSubdomain()
@@ -125,7 +125,7 @@ func TestAccAWSAPIGatewayBasePathMapping_BasePath_Empty(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayBasePathMapping_updates(t *testing.T) {
+func TestAccAPIGatewayBasePathMapping_updates(t *testing.T) {
 	var confFirst, conf apigateway.BasePathMapping
 	resourceName := "aws_api_gateway_base_path_mapping.test"
 	name := acctest.RandomSubdomain()
@@ -175,7 +175,7 @@ func TestAccAWSAPIGatewayBasePathMapping_updates(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayBasePathMapping_disappears(t *testing.T) {
+func TestAccAPIGatewayBasePathMapping_disappears(t *testing.T) {
 	var conf apigateway.BasePathMapping
 
 	name := acctest.RandomSubdomain()

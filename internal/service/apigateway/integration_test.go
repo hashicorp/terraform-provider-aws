@@ -16,7 +16,7 @@ import (
 	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
 )
 
-func TestAccAWSAPIGatewayIntegration_basic(t *testing.T) {
+func TestAccAPIGatewayIntegration_basic(t *testing.T) {
 	var conf apigateway.Integration
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(7))
 	resourceName := "aws_api_gateway_integration.test"
@@ -132,7 +132,7 @@ func TestAccAWSAPIGatewayIntegration_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayIntegration_contentHandling(t *testing.T) {
+func TestAccAPIGatewayIntegration_contentHandling(t *testing.T) {
 	var conf apigateway.Integration
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(7))
 	resourceName := "aws_api_gateway_integration.test"
@@ -208,7 +208,7 @@ func TestAccAWSAPIGatewayIntegration_contentHandling(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayIntegration_cache_key_parameters(t *testing.T) {
+func TestAccAPIGatewayIntegration_CacheKey_parameters(t *testing.T) {
 	var conf apigateway.Integration
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(7))
 	resourceName := "aws_api_gateway_integration.test"
@@ -251,7 +251,7 @@ func TestAccAWSAPIGatewayIntegration_cache_key_parameters(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayIntegration_integrationType(t *testing.T) {
+func TestAccAPIGatewayIntegration_integrationType(t *testing.T) {
 	var conf apigateway.Integration
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(7))
 	resourceName := "aws_api_gateway_integration.test"
@@ -296,7 +296,7 @@ func TestAccAWSAPIGatewayIntegration_integrationType(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayIntegration_TlsConfig_InsecureSkipVerification(t *testing.T) {
+func TestAccAPIGatewayIntegration_TLS_insecureSkipVerification(t *testing.T) {
 	var conf apigateway.Integration
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(7))
 	resourceName := "aws_api_gateway_integration.test"
@@ -333,7 +333,7 @@ func TestAccAWSAPIGatewayIntegration_TlsConfig_InsecureSkipVerification(t *testi
 	})
 }
 
-func TestAccAWSAPIGatewayIntegration_disappears(t *testing.T) {
+func TestAccAPIGatewayIntegration_disappears(t *testing.T) {
 	var conf apigateway.Integration
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(7))
 	resourceName := "aws_api_gateway_integration.test"

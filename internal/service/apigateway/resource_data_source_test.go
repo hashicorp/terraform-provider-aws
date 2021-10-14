@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAwsApiGatewayResource_basic(t *testing.T) {
+func TestAccAPIGatewayResourceDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandString(8)
 	resourceName1 := "aws_api_gateway_resource.example_v1"
 	dataSourceName1 := "data.aws_api_gateway_resource.example_v1"

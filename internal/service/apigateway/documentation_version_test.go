@@ -15,7 +15,7 @@ import (
 	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
 )
 
-func TestAccAWSAPIGatewayDocumentationVersion_basic(t *testing.T) {
+func TestAccAPIGatewayDocumentationVersion_basic(t *testing.T) {
 	var conf apigateway.DocumentationVersion
 
 	rString := sdkacctest.RandString(8)
@@ -47,7 +47,7 @@ func TestAccAWSAPIGatewayDocumentationVersion_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayDocumentationVersion_allFields(t *testing.T) {
+func TestAccAPIGatewayDocumentationVersion_allFields(t *testing.T) {
 	var conf apigateway.DocumentationVersion
 
 	rString := sdkacctest.RandString(8)
@@ -92,7 +92,7 @@ func TestAccAWSAPIGatewayDocumentationVersion_allFields(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayDocumentationVersion_disappears(t *testing.T) {
+func TestAccAPIGatewayDocumentationVersion_disappears(t *testing.T) {
 	var conf apigateway.DocumentationVersion
 
 	rString := sdkacctest.RandString(8)

@@ -15,7 +15,7 @@ import (
 	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
 )
 
-func TestAccAWSAPIGatewayModel_basic(t *testing.T) {
+func TestAccAPIGatewayModel_basic(t *testing.T) {
 	var conf apigateway.Model
 	rInt := sdkacctest.RandString(10)
 	rName := fmt.Sprintf("tf-acc-test-%s", rInt)
@@ -51,7 +51,7 @@ func TestAccAWSAPIGatewayModel_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayModel_disappears(t *testing.T) {
+func TestAccAPIGatewayModel_disappears(t *testing.T) {
 	var conf apigateway.Model
 	rInt := sdkacctest.RandString(10)
 	rName := fmt.Sprintf("tf-acc-test-%s", rInt)

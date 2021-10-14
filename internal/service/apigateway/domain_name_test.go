@@ -17,7 +17,7 @@ import (
 	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
 )
 
-func TestAccAWSAPIGatewayDomainName_CertificateArn(t *testing.T) {
+func TestAccAPIGatewayDomainName_certificateARN(t *testing.T) {
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
 
@@ -51,7 +51,7 @@ func TestAccAWSAPIGatewayDomainName_CertificateArn(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayDomainName_CertificateName(t *testing.T) {
+func TestAccAPIGatewayDomainName_certificateName(t *testing.T) {
 	certificateBody := os.Getenv("AWS_API_GATEWAY_DOMAIN_NAME_CERTIFICATE_BODY")
 	if certificateBody == "" {
 		t.Skip(
@@ -115,7 +115,7 @@ func TestAccAWSAPIGatewayDomainName_CertificateName(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayDomainName_RegionalCertificateArn(t *testing.T) {
+func TestAccAPIGatewayDomainName_regionalCertificateARN(t *testing.T) {
 	var domainName apigateway.DomainName
 	resourceName := "aws_api_gateway_domain_name.test"
 	rName := acctest.RandomSubdomain()
@@ -143,7 +143,7 @@ func TestAccAWSAPIGatewayDomainName_RegionalCertificateArn(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayDomainName_RegionalCertificateName(t *testing.T) {
+func TestAccAPIGatewayDomainName_regionalCertificateName(t *testing.T) {
 	// For now, use an environment variable to limit running this test
 	// BadRequestException: Uploading certificates is not supported for REGIONAL.
 	// See Remarks section of https://docs.aws.amazon.com/apigateway/api-reference/link-relation/domainname-create/
@@ -194,7 +194,7 @@ func TestAccAWSAPIGatewayDomainName_RegionalCertificateName(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayDomainName_SecurityPolicy(t *testing.T) {
+func TestAccAPIGatewayDomainName_securityPolicy(t *testing.T) {
 	var domainName apigateway.DomainName
 	resourceName := "aws_api_gateway_domain_name.test"
 	rName := acctest.RandomSubdomain()
@@ -224,7 +224,7 @@ func TestAccAWSAPIGatewayDomainName_SecurityPolicy(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayDomainName_Tags(t *testing.T) {
+func TestAccAPIGatewayDomainName_tags(t *testing.T) {
 	var domainName apigateway.DomainName
 	resourceName := "aws_api_gateway_domain_name.test"
 	rName := acctest.RandomSubdomain()
@@ -272,7 +272,7 @@ func TestAccAWSAPIGatewayDomainName_Tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayDomainName_disappears(t *testing.T) {
+func TestAccAPIGatewayDomainName_disappears(t *testing.T) {
 	var domainName apigateway.DomainName
 	resourceName := "aws_api_gateway_domain_name.test"
 	rName := acctest.RandomSubdomain()
@@ -298,7 +298,7 @@ func TestAccAWSAPIGatewayDomainName_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayDomainName_MutualTlsAuthentication(t *testing.T) {
+func TestAccAPIGatewayDomainName_mutualTLSAuthentication(t *testing.T) {
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
 
