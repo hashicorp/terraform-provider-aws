@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/datasync"
 	"github.com/aws/aws-sdk-go/service/fsx"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -91,7 +92,7 @@ func TestAccAWSDataSyncLocationFsxWindows_basic(t *testing.T) {
 			testAccPreCheckAWSDataSync(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, datasync.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDataSyncLocationFsxWindowsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -128,14 +129,14 @@ func TestAccAWSDataSyncLocationFsxWindows_disappears(t *testing.T) {
 			testAccPreCheckAWSDataSync(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, datasync.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDataSyncLocationFsxWindowsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSDataSyncLocationFsxWindowsConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDataSyncLocationFsxWindowsExists(resourceName, &locationFsxWindows1),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsDataSyncLocationFsxWindowsFileSystem(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsDataSyncLocationFsxWindowsFileSystem(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -154,7 +155,7 @@ func TestAccAWSDataSyncLocationFsxWindows_subdirectory(t *testing.T) {
 			testAccPreCheckAWSDataSync(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, datasync.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDataSyncLocationFsxWindowsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -186,7 +187,7 @@ func TestAccAWSDataSyncLocationFsxWindows_tags(t *testing.T) {
 			testAccPreCheckAWSDataSync(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, datasync.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDataSyncLocationFsxWindowsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -226,7 +227,7 @@ func TestAccAWSDataSyncLocationFsxWindows_tags(t *testing.T) {
 }
 
 func testAccCheckAWSDataSyncLocationFsxWindowsDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).datasyncconn
+	conn := acctest.Provider.Meta().(*AWSClient).datasyncconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_datasync_location_fsx_windows_file_system" {
@@ -258,7 +259,7 @@ func testAccCheckAWSDataSyncLocationFsxWindowsExists(resourceName string, locati
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).datasyncconn
+		conn := acctest.Provider.Meta().(*AWSClient).datasyncconn
 		input := &datasync.DescribeLocationFsxWindowsInput{
 			LocationArn: aws.String(rs.Primary.ID),
 		}
@@ -343,6 +344,7 @@ resource "aws_datasync_location_fsx_windows_file_system" "test" {
 }
 `, key1, value1, key2, value2)
 }
+
 func testAccAwsFsxWindowsFileSystemConfigBase() string {
 	return `
 data "aws_availability_zones" "available" {
@@ -415,4 +417,3 @@ resource "aws_fsx_windows_file_system" "test" {
 }
 `
 }
-

@@ -88,7 +88,7 @@ func TestAccAWSDataSyncLocationEfs_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSDataSync(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, datasync.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDataSyncLocationEfsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -122,7 +122,7 @@ func TestAccAWSDataSyncLocationEfs_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSDataSync(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, datasync.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDataSyncLocationEfsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -144,7 +144,7 @@ func TestAccAWSDataSyncLocationEfs_Subdirectory(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSDataSync(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, datasync.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDataSyncLocationEfsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -171,7 +171,7 @@ func TestAccAWSDataSyncLocationEfs_Tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSDataSync(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, datasync.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDataSyncLocationEfsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -212,7 +212,7 @@ func TestAccAWSDataSyncLocationEfs_Tags(t *testing.T) {
 }
 
 func testAccCheckAWSDataSyncLocationEfsDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).datasyncconn
+	conn := acctest.Provider.Meta().(*AWSClient).datasyncconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_datasync_location_efs" {
@@ -244,7 +244,7 @@ func testAccCheckAWSDataSyncLocationEfsExists(resourceName string, locationEfs *
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).datasyncconn
+		conn := acctest.Provider.Meta().(*AWSClient).datasyncconn
 		input := &datasync.DescribeLocationEfsInput{
 			LocationArn: aws.String(rs.Primary.ID),
 		}
@@ -267,7 +267,7 @@ func testAccCheckAWSDataSyncLocationEfsExists(resourceName string, locationEfs *
 
 func testAccCheckAWSDataSyncLocationEfsDisappears(location *datasync.DescribeLocationEfsOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).datasyncconn
+		conn := acctest.Provider.Meta().(*AWSClient).datasyncconn
 
 		input := &datasync.DeleteLocationInput{
 			LocationArn: location.LocationArn,
