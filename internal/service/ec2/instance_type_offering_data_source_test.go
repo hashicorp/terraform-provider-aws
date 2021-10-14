@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSEc2InstanceTypeOfferingDataSource_Filter(t *testing.T) {
+func TestAccEC2InstanceTypeOfferingDataSource_filter(t *testing.T) {
 	dataSourceName := "data.aws_ec2_instance_type_offering.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -29,7 +29,7 @@ func TestAccAWSEc2InstanceTypeOfferingDataSource_Filter(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2InstanceTypeOfferingDataSource_LocationType(t *testing.T) {
+func TestAccEC2InstanceTypeOfferingDataSource_locationType(t *testing.T) {
 	dataSourceName := "data.aws_ec2_instance_type_offering.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -48,7 +48,7 @@ func TestAccAWSEc2InstanceTypeOfferingDataSource_LocationType(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2InstanceTypeOfferingDataSource_PreferredInstanceTypes(t *testing.T) {
+func TestAccEC2InstanceTypeOfferingDataSource_preferredInstanceTypes(t *testing.T) {
 	dataSourceName := "data.aws_ec2_instance_type_offering.test"
 
 	resource.ParallelTest(t, resource.TestCase{

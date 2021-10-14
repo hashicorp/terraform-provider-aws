@@ -17,7 +17,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
-func TestAccAWSCustomerGateway_basic(t *testing.T) {
+func TestAccEC2CustomerGateway_basic(t *testing.T) {
 	var gateway ec2.CustomerGateway
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_customer_gateway.test"
@@ -52,7 +52,7 @@ func TestAccAWSCustomerGateway_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCustomerGateway_tags(t *testing.T) {
+func TestAccEC2CustomerGateway_tags(t *testing.T) {
 	var gateway ec2.CustomerGateway
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_customer_gateway.test"
@@ -94,7 +94,7 @@ func TestAccAWSCustomerGateway_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSCustomerGateway_similarAlreadyExists(t *testing.T) {
+func TestAccEC2CustomerGateway_similarAlreadyExists(t *testing.T) {
 	var gateway ec2.CustomerGateway
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_customer_gateway.test"
@@ -124,7 +124,7 @@ func TestAccAWSCustomerGateway_similarAlreadyExists(t *testing.T) {
 	})
 }
 
-func TestAccAWSCustomerGateway_deviceName(t *testing.T) {
+func TestAccEC2CustomerGateway_deviceName(t *testing.T) {
 	var gateway ec2.CustomerGateway
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_customer_gateway.test"
@@ -154,7 +154,7 @@ func TestAccAWSCustomerGateway_deviceName(t *testing.T) {
 	})
 }
 
-func TestAccAWSCustomerGateway_disappears(t *testing.T) {
+func TestAccEC2CustomerGateway_disappears(t *testing.T) {
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	var gateway ec2.CustomerGateway
 	resourceName := "aws_customer_gateway.test"
@@ -177,7 +177,7 @@ func TestAccAWSCustomerGateway_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSCustomerGateway_4ByteAsn(t *testing.T) {
+func TestAccEC2CustomerGateway_4ByteASN(t *testing.T) {
 	var gateway ec2.CustomerGateway
 	rBgpAsn := strconv.FormatInt(int64(sdkacctest.RandIntRange(64512, 65534))*10000, 10)
 	resourceName := "aws_customer_gateway.test"

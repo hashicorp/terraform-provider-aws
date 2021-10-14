@@ -78,7 +78,7 @@ func sweepSpotFleetRequests(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func TestAccAWSSpotFleetRequest_basic(t *testing.T) {
+func TestAccEC2SpotFleetRequest_basic(t *testing.T) {
 	var sfr ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -115,7 +115,7 @@ func TestAccAWSSpotFleetRequest_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSpotFleetRequest_tags(t *testing.T) {
+func TestAccEC2SpotFleetRequest_tags(t *testing.T) {
 	var sfr ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -167,7 +167,7 @@ func TestAccAWSSpotFleetRequest_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSSpotFleetRequest_associatePublicIpAddress(t *testing.T) {
+func TestAccEC2SpotFleetRequest_associatePublicIPAddress(t *testing.T) {
 	var sfr ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -205,7 +205,7 @@ func TestAccAWSSpotFleetRequest_associatePublicIpAddress(t *testing.T) {
 	})
 }
 
-func TestAccAWSSpotFleetRequest_launchTemplate(t *testing.T) {
+func TestAccEC2SpotFleetRequest_launchTemplate(t *testing.T) {
 	var sfr ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -241,7 +241,7 @@ func TestAccAWSSpotFleetRequest_launchTemplate(t *testing.T) {
 	})
 }
 
-func TestAccAWSSpotFleetRequest_launchTemplate_multiple(t *testing.T) {
+func TestAccEC2SpotFleetRequest_LaunchTemplate_multiple(t *testing.T) {
 	var sfr ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -271,7 +271,7 @@ func TestAccAWSSpotFleetRequest_launchTemplate_multiple(t *testing.T) {
 	})
 }
 
-func TestAccAWSSpotFleetRequest_launchTemplateWithOverrides(t *testing.T) {
+func TestAccEC2SpotFleetRequest_launchTemplateWithOverrides(t *testing.T) {
 	var sfr ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -307,7 +307,7 @@ func TestAccAWSSpotFleetRequest_launchTemplateWithOverrides(t *testing.T) {
 	})
 }
 
-func TestAccAWSSpotFleetRequest_launchTemplateToLaunchSpec(t *testing.T) {
+func TestAccEC2SpotFleetRequest_launchTemplateToLaunchSpec(t *testing.T) {
 	var before, after ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -353,7 +353,7 @@ func TestAccAWSSpotFleetRequest_launchTemplateToLaunchSpec(t *testing.T) {
 	})
 }
 
-func TestAccAWSSpotFleetRequest_launchSpecToLaunchTemplate(t *testing.T) {
+func TestAccEC2SpotFleetRequest_launchSpecToLaunchTemplate(t *testing.T) {
 	var before, after ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -393,7 +393,7 @@ func TestAccAWSSpotFleetRequest_launchSpecToLaunchTemplate(t *testing.T) {
 	})
 }
 
-func TestAccAWSSpotFleetRequest_onDemandTargetCapacity(t *testing.T) {
+func TestAccEC2SpotFleetRequest_onDemandTargetCapacity(t *testing.T) {
 	var sfr ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -441,7 +441,7 @@ func TestAccAWSSpotFleetRequest_onDemandTargetCapacity(t *testing.T) {
 	})
 }
 
-func TestAccAWSSpotFleetRequest_onDemandMaxTotalPrice(t *testing.T) {
+func TestAccEC2SpotFleetRequest_onDemandMaxTotalPrice(t *testing.T) {
 	var sfr ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -475,7 +475,7 @@ func TestAccAWSSpotFleetRequest_onDemandMaxTotalPrice(t *testing.T) {
 	})
 }
 
-func TestAccAWSSpotFleetRequest_onDemandAllocationStrategy(t *testing.T) {
+func TestAccEC2SpotFleetRequest_onDemandAllocationStrategy(t *testing.T) {
 	var sfr ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -509,7 +509,7 @@ func TestAccAWSSpotFleetRequest_onDemandAllocationStrategy(t *testing.T) {
 	})
 }
 
-func TestAccAWSSpotFleetRequest_instanceInterruptionBehavior(t *testing.T) {
+func TestAccEC2SpotFleetRequest_instanceInterruptionBehavior(t *testing.T) {
 	var sfr ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -544,7 +544,7 @@ func TestAccAWSSpotFleetRequest_instanceInterruptionBehavior(t *testing.T) {
 	})
 }
 
-func TestAccAWSSpotFleetRequest_fleetType(t *testing.T) {
+func TestAccEC2SpotFleetRequest_fleetType(t *testing.T) {
 	var sfr ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -579,7 +579,7 @@ func TestAccAWSSpotFleetRequest_fleetType(t *testing.T) {
 	})
 }
 
-func TestAccAWSSpotFleetRequest_iamInstanceProfileArn(t *testing.T) {
+func TestAccEC2SpotFleetRequest_iamInstanceProfileARN(t *testing.T) {
 	var sfr ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -614,7 +614,7 @@ func TestAccAWSSpotFleetRequest_iamInstanceProfileArn(t *testing.T) {
 	})
 }
 
-func TestAccAWSSpotFleetRequest_changePriceForcesNewRequest(t *testing.T) {
+func TestAccEC2SpotFleetRequest_changePriceForcesNewRequest(t *testing.T) {
 	var before, after ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -660,7 +660,7 @@ func TestAccAWSSpotFleetRequest_changePriceForcesNewRequest(t *testing.T) {
 	})
 }
 
-func TestAccAWSSpotFleetRequest_updateTargetCapacity(t *testing.T) {
+func TestAccEC2SpotFleetRequest_updateTargetCapacity(t *testing.T) {
 	var before, after ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -710,7 +710,7 @@ func TestAccAWSSpotFleetRequest_updateTargetCapacity(t *testing.T) {
 	})
 }
 
-func TestAccAWSSpotFleetRequest_updateExcessCapacityTerminationPolicy(t *testing.T) {
+func TestAccEC2SpotFleetRequest_updateExcessCapacityTerminationPolicy(t *testing.T) {
 	var before, after ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -752,7 +752,7 @@ func TestAccAWSSpotFleetRequest_updateExcessCapacityTerminationPolicy(t *testing
 	})
 }
 
-func TestAccAWSSpotFleetRequest_lowestPriceAzOrSubnetInRegion(t *testing.T) {
+func TestAccEC2SpotFleetRequest_lowestPriceAzOrSubnetInRegion(t *testing.T) {
 	var sfr ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -787,7 +787,7 @@ func TestAccAWSSpotFleetRequest_lowestPriceAzOrSubnetInRegion(t *testing.T) {
 	})
 }
 
-func TestAccAWSSpotFleetRequest_lowestPriceAzInGivenList(t *testing.T) {
+func TestAccEC2SpotFleetRequest_lowestPriceAzInGivenList(t *testing.T) {
 	var sfr ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -825,7 +825,7 @@ func TestAccAWSSpotFleetRequest_lowestPriceAzInGivenList(t *testing.T) {
 	})
 }
 
-func TestAccAWSSpotFleetRequest_lowestPriceSubnetInGivenList(t *testing.T) {
+func TestAccEC2SpotFleetRequest_lowestPriceSubnetInGivenList(t *testing.T) {
 	var sfr ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -860,7 +860,7 @@ func TestAccAWSSpotFleetRequest_lowestPriceSubnetInGivenList(t *testing.T) {
 	})
 }
 
-func TestAccAWSSpotFleetRequest_multipleInstanceTypesInSameAz(t *testing.T) {
+func TestAccEC2SpotFleetRequest_multipleInstanceTypesInSameAz(t *testing.T) {
 	var sfr ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -902,7 +902,7 @@ func TestAccAWSSpotFleetRequest_multipleInstanceTypesInSameAz(t *testing.T) {
 	})
 }
 
-func TestAccAWSSpotFleetRequest_multipleInstanceTypesInSameSubnet(t *testing.T) {
+func TestAccEC2SpotFleetRequest_multipleInstanceTypesInSameSubnet(t *testing.T) {
 	var sfr ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -937,7 +937,7 @@ func TestAccAWSSpotFleetRequest_multipleInstanceTypesInSameSubnet(t *testing.T) 
 	})
 }
 
-func TestAccAWSSpotFleetRequest_overriddingSpotPrice(t *testing.T) {
+func TestAccEC2SpotFleetRequest_overridingSpotPrice(t *testing.T) {
 	var sfr ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -979,7 +979,7 @@ func TestAccAWSSpotFleetRequest_overriddingSpotPrice(t *testing.T) {
 	})
 }
 
-func TestAccAWSSpotFleetRequest_withoutSpotPrice(t *testing.T) {
+func TestAccEC2SpotFleetRequest_withoutSpotPrice(t *testing.T) {
 	var sfr ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -1014,7 +1014,7 @@ func TestAccAWSSpotFleetRequest_withoutSpotPrice(t *testing.T) {
 	})
 }
 
-func TestAccAWSSpotFleetRequest_diversifiedAllocation(t *testing.T) {
+func TestAccEC2SpotFleetRequest_diversifiedAllocation(t *testing.T) {
 	var sfr ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -1050,7 +1050,7 @@ func TestAccAWSSpotFleetRequest_diversifiedAllocation(t *testing.T) {
 	})
 }
 
-func TestAccAWSSpotFleetRequest_multipleInstancePools(t *testing.T) {
+func TestAccEC2SpotFleetRequest_multipleInstancePools(t *testing.T) {
 	var sfr ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -1087,7 +1087,7 @@ func TestAccAWSSpotFleetRequest_multipleInstancePools(t *testing.T) {
 	})
 }
 
-func TestAccAWSSpotFleetRequest_withWeightedCapacity(t *testing.T) {
+func TestAccEC2SpotFleetRequest_withWeightedCapacity(t *testing.T) {
 	var sfr ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -1106,7 +1106,7 @@ func TestAccAWSSpotFleetRequest_withWeightedCapacity(t *testing.T) {
 		// destroyed
 		// See https://github.com/hashicorp/terraform/pull/8938
 		return func(s *terraform.State) error {
-			log.Print("[DEBUG] Test: Sleep to allow EC2 to actually begin fulfilling TestAccAWSSpotFleetRequest_withWeightedCapacity request")
+			log.Print("[DEBUG] Test: Sleep to allow EC2 to actually begin fulfilling TestAccEC2SpotFleetRequest_withWeightedCapacity request")
 			time.Sleep(1 * time.Minute)
 			return nil
 		}
@@ -1145,7 +1145,7 @@ func TestAccAWSSpotFleetRequest_withWeightedCapacity(t *testing.T) {
 	})
 }
 
-func TestAccAWSSpotFleetRequest_withEBSDisk(t *testing.T) {
+func TestAccEC2SpotFleetRequest_withEBSDisk(t *testing.T) {
 	var config ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -1179,7 +1179,7 @@ func TestAccAWSSpotFleetRequest_withEBSDisk(t *testing.T) {
 	})
 }
 
-func TestAccAWSSpotFleetRequest_LaunchSpecification_EbsBlockDevice_KmsKeyId(t *testing.T) {
+func TestAccEC2SpotFleetRequest_LaunchSpecificationEBSBlockDevice_kmsKeyID(t *testing.T) {
 	var config ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -1212,7 +1212,7 @@ func TestAccAWSSpotFleetRequest_LaunchSpecification_EbsBlockDevice_KmsKeyId(t *t
 	})
 }
 
-func TestAccAWSSpotFleetRequest_LaunchSpecification_RootBlockDevice_KmsKeyId(t *testing.T) {
+func TestAccEC2SpotFleetRequest_LaunchSpecificationRootBlockDevice_kmsKeyID(t *testing.T) {
 	var config ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -1245,7 +1245,7 @@ func TestAccAWSSpotFleetRequest_LaunchSpecification_RootBlockDevice_KmsKeyId(t *
 	})
 }
 
-func TestAccAWSSpotFleetRequest_LaunchSpecification_EbsBlockDeviceGp3(t *testing.T) {
+func TestAccEC2SpotFleetRequest_LaunchSpecification_ebsBlockDeviceGP3(t *testing.T) {
 	var config ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_spot_fleet_request.test"
@@ -1284,7 +1284,7 @@ func TestAccAWSSpotFleetRequest_LaunchSpecification_EbsBlockDeviceGp3(t *testing
 	})
 }
 
-func TestAccAWSSpotFleetRequest_LaunchSpecification_RootBlockDeviceGp3(t *testing.T) {
+func TestAccEC2SpotFleetRequest_LaunchSpecification_rootBlockDeviceGP3(t *testing.T) {
 	var config ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_spot_fleet_request.test"
@@ -1322,7 +1322,7 @@ func TestAccAWSSpotFleetRequest_LaunchSpecification_RootBlockDeviceGp3(t *testin
 	})
 }
 
-func TestAccAWSSpotFleetRequest_withTags(t *testing.T) {
+func TestAccEC2SpotFleetRequest_withTags(t *testing.T) {
 	var config ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -1360,7 +1360,7 @@ func TestAccAWSSpotFleetRequest_withTags(t *testing.T) {
 	})
 }
 
-func TestAccAWSSpotFleetRequest_placementTenancyAndGroup(t *testing.T) {
+func TestAccEC2SpotFleetRequest_placementTenancyAndGroup(t *testing.T) {
 	var sfr ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -1395,7 +1395,7 @@ func TestAccAWSSpotFleetRequest_placementTenancyAndGroup(t *testing.T) {
 	})
 }
 
-func TestAccAWSSpotFleetRequest_WithELBs(t *testing.T) {
+func TestAccEC2SpotFleetRequest_withELBs(t *testing.T) {
 	var sfr ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -1431,7 +1431,7 @@ func TestAccAWSSpotFleetRequest_WithELBs(t *testing.T) {
 	})
 }
 
-func TestAccAWSSpotFleetRequest_WithTargetGroups(t *testing.T) {
+func TestAccEC2SpotFleetRequest_withTargetGroups(t *testing.T) {
 	var sfr ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -1467,7 +1467,7 @@ func TestAccAWSSpotFleetRequest_WithTargetGroups(t *testing.T) {
 	})
 }
 
-func TestAccAWSSpotFleetRequest_zero_capacity(t *testing.T) {
+func TestAccEC2SpotFleetRequest_Zero_capacity(t *testing.T) {
 	var sfr ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -1515,7 +1515,7 @@ func TestAccAWSSpotFleetRequest_zero_capacity(t *testing.T) {
 	})
 }
 
-func TestAccAWSSpotFleetRequest_CapacityRebalance(t *testing.T) {
+func TestAccEC2SpotFleetRequest_capacityRebalance(t *testing.T) {
 	var sfr ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -1549,7 +1549,7 @@ func TestAccAWSSpotFleetRequest_CapacityRebalance(t *testing.T) {
 	})
 }
 
-func TestAccAWSSpotFleetRequest_WithInstanceStoreAmi(t *testing.T) {
+func TestAccEC2SpotFleetRequest_withInstanceStoreAMI(t *testing.T) {
 	acctest.Skip(t, "Test fails due to test harness constraints")
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -1573,7 +1573,7 @@ func TestAccAWSSpotFleetRequest_WithInstanceStoreAmi(t *testing.T) {
 	})
 }
 
-func TestAccAWSSpotFleetRequest_disappears(t *testing.T) {
+func TestAccEC2SpotFleetRequest_disappears(t *testing.T) {
 	var sfr ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)

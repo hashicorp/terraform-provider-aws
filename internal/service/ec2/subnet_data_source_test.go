@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAwsSubnet_basic(t *testing.T) {
+func TestAccEC2SubnetDataSource_basic(t *testing.T) {
 	rInt := sdkacctest.RandIntRange(0, 256)
 	cidr := fmt.Sprintf("172.%d.123.0/24", rInt)
 	tag := "tf-acc-subnet-data-source"
@@ -113,7 +113,7 @@ func TestAccDataSourceAwsSubnet_basic(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsSubnet_ipv6ByIpv6Filter(t *testing.T) {
+func TestAccEC2SubnetDataSource_ipv6ByIPv6Filter(t *testing.T) {
 	rInt := sdkacctest.RandIntRange(0, 256)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
@@ -134,7 +134,7 @@ func TestAccDataSourceAwsSubnet_ipv6ByIpv6Filter(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsSubnet_ipv6ByIpv6CidrBlock(t *testing.T) {
+func TestAccEC2SubnetDataSource_ipv6ByIPv6CIDRBlock(t *testing.T) {
 	rInt := sdkacctest.RandIntRange(0, 256)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },

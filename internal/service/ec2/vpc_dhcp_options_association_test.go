@@ -13,7 +13,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
-func TestAccAWSDHCPOptionsAssociation_basic(t *testing.T) {
+func TestAccEC2VPCDHCPOptionsAssociation_basic(t *testing.T) {
 	var v ec2.Vpc
 	var d ec2.DhcpOptions
 	resourceName := "aws_vpc_dhcp_options_association.test"
@@ -42,7 +42,7 @@ func TestAccAWSDHCPOptionsAssociation_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDHCPOptionsAssociation_disappears_vpc(t *testing.T) {
+func TestAccEC2VPCDHCPOptionsAssociation_Disappears_vpc(t *testing.T) {
 	var v ec2.Vpc
 	var d ec2.DhcpOptions
 	resourceName := "aws_vpc_dhcp_options_association.test"
@@ -67,7 +67,7 @@ func TestAccAWSDHCPOptionsAssociation_disappears_vpc(t *testing.T) {
 	})
 }
 
-func TestAccAWSDHCPOptionsAssociation_disappears_dhcp(t *testing.T) {
+func TestAccEC2VPCDHCPOptionsAssociation_Disappears_dhcp(t *testing.T) {
 	var v ec2.Vpc
 	var d ec2.DhcpOptions
 	resourceName := "aws_vpc_dhcp_options_association.test"
@@ -92,7 +92,7 @@ func TestAccAWSDHCPOptionsAssociation_disappears_dhcp(t *testing.T) {
 	})
 }
 
-func TestAccAWSDHCPOptionsAssociation_disappears(t *testing.T) {
+func TestAccEC2VPCDHCPOptionsAssociation_disappears(t *testing.T) {
 	var v ec2.Vpc
 	var d ec2.DhcpOptions
 	resourceName := "aws_vpc_dhcp_options_association.test"

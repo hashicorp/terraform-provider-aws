@@ -90,7 +90,7 @@ func sweepVPNGateways(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSVpnGateway_basic(t *testing.T) {
+func TestAccEC2VPNGateway_basic(t *testing.T) {
 	var v, v2 ec2.VpnGateway
 	resourceName := "aws_vpn_gateway.test"
 
@@ -141,7 +141,7 @@ func TestAccAWSVpnGateway_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSVpnGateway_withAvailabilityZoneSetToState(t *testing.T) {
+func TestAccEC2VPNGateway_withAvailabilityZoneSetToState(t *testing.T) {
 	var v ec2.VpnGateway
 	resourceName := "aws_vpn_gateway.test"
 	azDataSourceName := "data.aws_availability_zones.available"
@@ -169,7 +169,7 @@ func TestAccAWSVpnGateway_withAvailabilityZoneSetToState(t *testing.T) {
 	})
 }
 
-func TestAccAWSVpnGateway_withAmazonSideAsnSetToState(t *testing.T) {
+func TestAccEC2VPNGateway_withAmazonSideASNSetToState(t *testing.T) {
 	var v ec2.VpnGateway
 	resourceName := "aws_vpn_gateway.test"
 
@@ -196,7 +196,7 @@ func TestAccAWSVpnGateway_withAmazonSideAsnSetToState(t *testing.T) {
 	})
 }
 
-func TestAccAWSVpnGateway_disappears(t *testing.T) {
+func TestAccEC2VPNGateway_disappears(t *testing.T) {
 	var v ec2.VpnGateway
 	resourceName := "aws_vpn_gateway.test"
 
@@ -218,7 +218,7 @@ func TestAccAWSVpnGateway_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSVpnGateway_reattach(t *testing.T) {
+func TestAccEC2VPNGateway_reattach(t *testing.T) {
 	var vpc1, vpc2 ec2.Vpc
 	var vgw1, vgw2 ec2.VpnGateway
 	resourceName := "aws_vpn_gateway.test"
@@ -308,7 +308,7 @@ func TestAccAWSVpnGateway_reattach(t *testing.T) {
 	})
 }
 
-func TestAccAWSVpnGateway_delete(t *testing.T) {
+func TestAccEC2VPNGateway_delete(t *testing.T) {
 	var vpnGateway ec2.VpnGateway
 	resourceName := "aws_vpn_gateway.test"
 
@@ -346,7 +346,7 @@ func TestAccAWSVpnGateway_delete(t *testing.T) {
 	})
 }
 
-func TestAccAWSVpnGateway_tags(t *testing.T) {
+func TestAccEC2VPNGateway_tags(t *testing.T) {
 	var v ec2.VpnGateway
 	resourceName := "aws_vpn_gateway.test"
 

@@ -14,7 +14,7 @@ import (
 	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 )
 
-func TestAccAWSEBSDefaultKmsKey_basic(t *testing.T) {
+func TestAccEC2EBSDefaultKMSKey_basic(t *testing.T) {
 	resourceName := "aws_ebs_default_kms_key.test"
 	resourceNameKey := "aws_kms_key.test"
 
@@ -41,7 +41,7 @@ func TestAccAWSEBSDefaultKmsKey_basic(t *testing.T) {
 }
 
 func testAccCheckEBSDefaultKMSKeyDestroy(s *terraform.State) error {
-	arn, err := testAccEBSDefaultKMSKeyAwsManagedDefaultKey()
+	arn, err := testAccEBSAWSManagedDefaultKey()
 	if err != nil {
 		return err
 	}
@@ -72,7 +72,7 @@ func testAccCheckEbsDefaultKmsKey(name string) resource.TestCheckFunc {
 			return fmt.Errorf("No ID is set")
 		}
 
-		arn, err := testAccEBSDefaultKMSKeyAwsManagedDefaultKey()
+		arn, err := testAccEBSAWSManagedDefaultKey()
 		if err != nil {
 			return err
 		}
@@ -93,8 +93,8 @@ func testAccCheckEbsDefaultKmsKey(name string) resource.TestCheckFunc {
 	}
 }
 
-// testAccEBSDefaultKMSKeyAwsManagedDefaultKey returns' the account's AWS-managed default CMK.
-func testAccEBSDefaultKMSKeyAwsManagedDefaultKey() (*arn.ARN, error) {
+// testAccEBSAWSManagedDefaultKey returns' the account's AWS-managed default CMK.
+func testAccEBSAWSManagedDefaultKey() (*arn.ARN, error) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn
 
 	alias, err := tfkms.FindAliasByName(conn, "alias/aws/ebs")

@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAwsEc2InstanceType_basic(t *testing.T) {
+func TestAccEC2InstanceTypeDataSource_basic(t *testing.T) {
 	resourceBasic := "data.aws_ec2_instance_type.basic"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
@@ -67,7 +67,7 @@ func TestAccDataSourceAwsEc2InstanceType_basic(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsEc2InstanceType_metal(t *testing.T) {
+func TestAccEC2InstanceTypeDataSource_metal(t *testing.T) {
 	resourceMetal := "data.aws_ec2_instance_type.metal"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
@@ -94,7 +94,7 @@ func TestAccDataSourceAwsEc2InstanceType_metal(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsEc2InstanceType_gpu(t *testing.T) {
+func TestAccEC2InstanceTypeDataSource_gpu(t *testing.T) {
 	resourceGpu := "data.aws_ec2_instance_type.gpu"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
@@ -115,7 +115,7 @@ func TestAccDataSourceAwsEc2InstanceType_gpu(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsEc2InstanceType_fpga(t *testing.T) {
+func TestAccEC2InstanceTypeDataSource_fpga(t *testing.T) {
 	resourceFpga := "data.aws_ec2_instance_type.fpga"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },

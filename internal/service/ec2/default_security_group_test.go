@@ -13,7 +13,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
-func TestAccAWSDefaultSecurityGroup_Vpc_basic(t *testing.T) {
+func TestAccEC2DefaultSecurityGroup_VPC_basic(t *testing.T) {
 	var group ec2.SecurityGroup
 	resourceName := "aws_default_security_group.test"
 	vpcResourceName := "aws_vpc.test"
@@ -67,7 +67,7 @@ func TestAccAWSDefaultSecurityGroup_Vpc_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDefaultSecurityGroup_Vpc_empty(t *testing.T) {
+func TestAccEC2DefaultSecurityGroup_VPC_empty(t *testing.T) {
 	var group ec2.SecurityGroup
 	resourceName := "aws_default_security_group.test"
 
@@ -95,7 +95,7 @@ func TestAccAWSDefaultSecurityGroup_Vpc_empty(t *testing.T) {
 	})
 }
 
-func TestAccAWSDefaultSecurityGroup_Classic_basic(t *testing.T) {
+func TestAccEC2DefaultSecurityGroup_Classic_basic(t *testing.T) {
 	var group ec2.SecurityGroup
 	resourceName := "aws_default_security_group.test"
 
@@ -142,7 +142,7 @@ func TestAccAWSDefaultSecurityGroup_Classic_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDefaultSecurityGroup_Classic_empty(t *testing.T) {
+func TestAccEC2DefaultSecurityGroup_Classic_empty(t *testing.T) {
 
 	acctest.Skip(t, "This resource does not currently clear tags when adopting the resource")
 	// Additional references:

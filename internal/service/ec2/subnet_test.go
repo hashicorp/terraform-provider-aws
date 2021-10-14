@@ -116,7 +116,7 @@ func sweepSubnets(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func TestAccAWSSubnet_basic(t *testing.T) {
+func TestAccEC2Subnet_basic(t *testing.T) {
 	var v ec2.Subnet
 	resourceName := "aws_subnet.test"
 
@@ -152,7 +152,7 @@ func TestAccAWSSubnet_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSubnet_tags(t *testing.T) {
+func TestAccEC2Subnet_tags(t *testing.T) {
 	var v ec2.Subnet
 	resourceName := "aws_subnet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -196,7 +196,7 @@ func TestAccAWSSubnet_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSSubnet_defaultTags_providerOnly(t *testing.T) {
+func TestAccEC2Subnet_DefaultTags_providerOnly(t *testing.T) {
 	var providers []*schema.Provider
 	var subnet ec2.Subnet
 	resourceName := "aws_subnet.test"
@@ -253,7 +253,7 @@ func TestAccAWSSubnet_defaultTags_providerOnly(t *testing.T) {
 	})
 }
 
-func TestAccAWSSubnet_defaultTags_updateToProviderOnly(t *testing.T) {
+func TestAccEC2Subnet_DefaultTags_updateToProviderOnly(t *testing.T) {
 	var providers []*schema.Provider
 	var subnet ec2.Subnet
 	resourceName := "aws_subnet.test"
@@ -296,7 +296,7 @@ func TestAccAWSSubnet_defaultTags_updateToProviderOnly(t *testing.T) {
 	})
 }
 
-func TestAccAWSSubnet_defaultTags_updateToResourceOnly(t *testing.T) {
+func TestAccEC2Subnet_DefaultTags_updateToResourceOnly(t *testing.T) {
 	var providers []*schema.Provider
 	var subnet ec2.Subnet
 	resourceName := "aws_subnet.test"
@@ -339,7 +339,7 @@ func TestAccAWSSubnet_defaultTags_updateToResourceOnly(t *testing.T) {
 	})
 }
 
-func TestAccAWSSubnet_defaultTags_providerAndResource_nonOverlappingTag(t *testing.T) {
+func TestAccEC2Subnet_DefaultTagsProviderAndResource_nonOverlappingTag(t *testing.T) {
 	var providers []*schema.Provider
 	var subnet ec2.Subnet
 	resourceName := "aws_subnet.test"
@@ -404,7 +404,7 @@ func TestAccAWSSubnet_defaultTags_providerAndResource_nonOverlappingTag(t *testi
 	})
 }
 
-func TestAccAWSSubnet_defaultTags_providerAndResource_overlappingTag(t *testing.T) {
+func TestAccEC2Subnet_DefaultTagsProviderAndResource_overlappingTag(t *testing.T) {
 	var providers []*schema.Provider
 	var subnet ec2.Subnet
 	resourceName := "aws_subnet.test"
@@ -465,7 +465,7 @@ func TestAccAWSSubnet_defaultTags_providerAndResource_overlappingTag(t *testing.
 	})
 }
 
-func TestAccAWSSubnet_defaultTags_providerAndResource_duplicateTag(t *testing.T) {
+func TestAccEC2Subnet_DefaultTagsProviderAndResource_duplicateTag(t *testing.T) {
 	var providers []*schema.Provider
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -487,7 +487,7 @@ func TestAccAWSSubnet_defaultTags_providerAndResource_duplicateTag(t *testing.T)
 	})
 }
 
-func TestAccAWSSubnet_defaultAndIgnoreTags(t *testing.T) {
+func TestAccEC2Subnet_defaultAndIgnoreTags(t *testing.T) {
 	var providers []*schema.Provider
 	var subnet ec2.Subnet
 	resourceName := "aws_subnet.test"
@@ -525,12 +525,12 @@ func TestAccAWSSubnet_defaultAndIgnoreTags(t *testing.T) {
 	})
 }
 
-// TestAccAWSSubnet_updateTagsKnownAtApply ensures computed "tags_all"
+// TestAccEC2Subnet_updateTagsKnownAtApply ensures computed "tags_all"
 // attributes are correctly determined when the provider-level default_tags block
 // is left unused and resource tags are only known at apply time, thereby
 // eliminating "Inconsistent final plan" errors
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/18366
-func TestAccAWSSubnet_updateTagsKnownAtApply(t *testing.T) {
+func TestAccEC2Subnet_updateTagsKnownAtApply(t *testing.T) {
 	var providers []*schema.Provider
 	var subnet ec2.Subnet
 	resourceName := "aws_subnet.test"
@@ -566,7 +566,7 @@ func TestAccAWSSubnet_updateTagsKnownAtApply(t *testing.T) {
 	})
 }
 
-func TestAccAWSSubnet_ignoreTags(t *testing.T) {
+func TestAccEC2Subnet_ignoreTags(t *testing.T) {
 	var providers []*schema.Provider
 	var subnet ec2.Subnet
 	resourceName := "aws_subnet.test"
@@ -597,7 +597,7 @@ func TestAccAWSSubnet_ignoreTags(t *testing.T) {
 	})
 }
 
-func TestAccAWSSubnet_ipv6(t *testing.T) {
+func TestAccEC2Subnet_ipv6(t *testing.T) {
 	var before, after ec2.Subnet
 	resourceName := "aws_subnet.test"
 
@@ -637,7 +637,7 @@ func TestAccAWSSubnet_ipv6(t *testing.T) {
 	})
 }
 
-func TestAccAWSSubnet_enableIpv6(t *testing.T) {
+func TestAccEC2Subnet_enableIPv6(t *testing.T) {
 	var subnet ec2.Subnet
 	resourceName := "aws_subnet.test"
 
@@ -680,7 +680,7 @@ func TestAccAWSSubnet_enableIpv6(t *testing.T) {
 	})
 }
 
-func TestAccAWSSubnet_availabilityZoneId(t *testing.T) {
+func TestAccEC2Subnet_availabilityZoneID(t *testing.T) {
 	var v ec2.Subnet
 	resourceName := "aws_subnet.test"
 
@@ -707,7 +707,7 @@ func TestAccAWSSubnet_availabilityZoneId(t *testing.T) {
 	})
 }
 
-func TestAccAWSSubnet_disappears(t *testing.T) {
+func TestAccEC2Subnet_disappears(t *testing.T) {
 	var v ec2.Subnet
 	resourceName := "aws_subnet.test"
 
@@ -729,7 +729,7 @@ func TestAccAWSSubnet_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSSubnet_CustomerOwnedIpv4Pool(t *testing.T) {
+func TestAccEC2Subnet_customerOwnedIPv4Pool(t *testing.T) {
 	var subnet ec2.Subnet
 	coipDataSourceName := "data.aws_ec2_coip_pool.test"
 	resourceName := "aws_subnet.test"
@@ -756,7 +756,7 @@ func TestAccAWSSubnet_CustomerOwnedIpv4Pool(t *testing.T) {
 	})
 }
 
-func TestAccAWSSubnet_MapCustomerOwnedIpOnLaunch(t *testing.T) {
+func TestAccEC2Subnet_mapCustomerOwnedIPOnLaunch(t *testing.T) {
 	var subnet ec2.Subnet
 	resourceName := "aws_subnet.test"
 
@@ -782,7 +782,7 @@ func TestAccAWSSubnet_MapCustomerOwnedIpOnLaunch(t *testing.T) {
 	})
 }
 
-func TestAccAWSSubnet_MapPublicIpOnLaunch(t *testing.T) {
+func TestAccEC2Subnet_mapPublicIPOnLaunch(t *testing.T) {
 	var subnet ec2.Subnet
 	resourceName := "aws_subnet.test"
 
@@ -822,7 +822,7 @@ func TestAccAWSSubnet_MapPublicIpOnLaunch(t *testing.T) {
 	})
 }
 
-func TestAccAWSSubnet_outpost(t *testing.T) {
+func TestAccEC2Subnet_outpost(t *testing.T) {
 	var v ec2.Subnet
 	outpostDataSourceName := "data.aws_outposts_outpost.test"
 	resourceName := "aws_subnet.test"

@@ -16,7 +16,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
-func TestAccAWSSpotInstanceRequest_basic(t *testing.T) {
+func TestAccEC2SpotInstanceRequest_basic(t *testing.T) {
 	var sir ec2.SpotInstanceRequest
 	resourceName := "aws_spot_instance_request.test"
 
@@ -48,7 +48,7 @@ func TestAccAWSSpotInstanceRequest_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSpotInstanceRequest_tags(t *testing.T) {
+func TestAccEC2SpotInstanceRequest_tags(t *testing.T) {
 	var sir ec2.SpotInstanceRequest
 	resourceName := "aws_spot_instance_request.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -94,7 +94,7 @@ func TestAccAWSSpotInstanceRequest_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSSpotInstanceRequest_KeyName(t *testing.T) {
+func TestAccEC2SpotInstanceRequest_keyName(t *testing.T) {
 	var sir ec2.SpotInstanceRequest
 	resourceName := "aws_spot_instance_request.test"
 	keyPairResourceName := "aws_key_pair.test"
@@ -128,7 +128,7 @@ func TestAccAWSSpotInstanceRequest_KeyName(t *testing.T) {
 	})
 }
 
-func TestAccAWSSpotInstanceRequest_withLaunchGroup(t *testing.T) {
+func TestAccEC2SpotInstanceRequest_withLaunchGroup(t *testing.T) {
 	var sir ec2.SpotInstanceRequest
 	resourceName := "aws_spot_instance_request.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -159,7 +159,7 @@ func TestAccAWSSpotInstanceRequest_withLaunchGroup(t *testing.T) {
 	})
 }
 
-func TestAccAWSSpotInstanceRequest_withBlockDuration(t *testing.T) {
+func TestAccEC2SpotInstanceRequest_withBlockDuration(t *testing.T) {
 	var sir ec2.SpotInstanceRequest
 	resourceName := "aws_spot_instance_request.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -190,7 +190,7 @@ func TestAccAWSSpotInstanceRequest_withBlockDuration(t *testing.T) {
 	})
 }
 
-func TestAccAWSSpotInstanceRequest_vpc(t *testing.T) {
+func TestAccEC2SpotInstanceRequest_vpc(t *testing.T) {
 	var sir ec2.SpotInstanceRequest
 	resourceName := "aws_spot_instance_request.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -221,7 +221,7 @@ func TestAccAWSSpotInstanceRequest_vpc(t *testing.T) {
 	})
 }
 
-func TestAccAWSSpotInstanceRequest_validUntil(t *testing.T) {
+func TestAccEC2SpotInstanceRequest_validUntil(t *testing.T) {
 	var sir ec2.SpotInstanceRequest
 	resourceName := "aws_spot_instance_request.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -253,7 +253,7 @@ func TestAccAWSSpotInstanceRequest_validUntil(t *testing.T) {
 	})
 }
 
-func TestAccAWSSpotInstanceRequest_withoutSpotPrice(t *testing.T) {
+func TestAccEC2SpotInstanceRequest_withoutSpotPrice(t *testing.T) {
 	var sir ec2.SpotInstanceRequest
 	resourceName := "aws_spot_instance_request.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -283,7 +283,7 @@ func TestAccAWSSpotInstanceRequest_withoutSpotPrice(t *testing.T) {
 	})
 }
 
-func TestAccAWSSpotInstanceRequest_SubnetAndSGAndPublicIpAddress(t *testing.T) {
+func TestAccEC2SpotInstanceRequest_subnetAndSGAndPublicIPAddress(t *testing.T) {
 	var sir ec2.SpotInstanceRequest
 	resourceName := "aws_spot_instance_request.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -312,7 +312,7 @@ func TestAccAWSSpotInstanceRequest_SubnetAndSGAndPublicIpAddress(t *testing.T) {
 	})
 }
 
-func TestAccAWSSpotInstanceRequest_NetworkInterfaceAttributes(t *testing.T) {
+func TestAccEC2SpotInstanceRequest_networkInterfaceAttributes(t *testing.T) {
 	var sir ec2.SpotInstanceRequest
 	resourceName := "aws_spot_instance_request.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -342,7 +342,7 @@ func TestAccAWSSpotInstanceRequest_NetworkInterfaceAttributes(t *testing.T) {
 	})
 }
 
-func TestAccAWSSpotInstanceRequest_getPasswordData(t *testing.T) {
+func TestAccEC2SpotInstanceRequest_getPasswordData(t *testing.T) {
 	var sir ec2.SpotInstanceRequest
 	resourceName := "aws_spot_instance_request.test"
 
@@ -375,7 +375,7 @@ func TestAccAWSSpotInstanceRequest_getPasswordData(t *testing.T) {
 	})
 }
 
-func TestAccAWSSpotInstanceRequest_disappears(t *testing.T) {
+func TestAccEC2SpotInstanceRequest_disappears(t *testing.T) {
 	var sir ec2.SpotInstanceRequest
 	resourceName := "aws_spot_instance_request.test"
 
@@ -599,7 +599,7 @@ func testAccCheckSpotInstanceRequestAttributesVPC(
 	}
 }
 
-func TestAccAWSSpotInstanceRequest_InterruptStop(t *testing.T) {
+func TestAccEC2SpotInstanceRequest_interruptStop(t *testing.T) {
 	var sir ec2.SpotInstanceRequest
 	resourceName := "aws_spot_instance_request.test"
 
@@ -629,7 +629,7 @@ func TestAccAWSSpotInstanceRequest_InterruptStop(t *testing.T) {
 	})
 }
 
-func TestAccAWSSpotInstanceRequest_InterruptHibernate(t *testing.T) {
+func TestAccEC2SpotInstanceRequest_interruptHibernate(t *testing.T) {
 	var sir ec2.SpotInstanceRequest
 	resourceName := "aws_spot_instance_request.test"
 
@@ -659,7 +659,7 @@ func TestAccAWSSpotInstanceRequest_InterruptHibernate(t *testing.T) {
 	})
 }
 
-func TestAccAWSSpotInstanceRequest_InterruptUpdate(t *testing.T) {
+func TestAccEC2SpotInstanceRequest_interruptUpdate(t *testing.T) {
 	var sir1, sir2 ec2.SpotInstanceRequest
 	resourceName := "aws_spot_instance_request.test"
 
@@ -690,7 +690,7 @@ func TestAccAWSSpotInstanceRequest_InterruptUpdate(t *testing.T) {
 	})
 }
 
-func TestAccAWSSpotInstanceRequest_InterruptDeprecated(t *testing.T) {
+func TestAccEC2SpotInstanceRequest_interruptDeprecated(t *testing.T) {
 	var sir ec2.SpotInstanceRequest
 	resourceName := "aws_spot_instance_request.test"
 
@@ -720,7 +720,7 @@ func TestAccAWSSpotInstanceRequest_InterruptDeprecated(t *testing.T) {
 	})
 }
 
-func TestAccAWSSpotInstanceRequest_InterruptFixDeprecated(t *testing.T) {
+func TestAccEC2SpotInstanceRequest_interruptFixDeprecated(t *testing.T) {
 	var sir1, sir2 ec2.SpotInstanceRequest
 	resourceName := "aws_spot_instance_request.test"
 
@@ -751,7 +751,7 @@ func TestAccAWSSpotInstanceRequest_InterruptFixDeprecated(t *testing.T) {
 	})
 }
 
-func TestAccAWSSpotInstanceRequest_InterruptUpdateFromDeprecated(t *testing.T) {
+func TestAccEC2SpotInstanceRequest_interruptUpdateFromDeprecated(t *testing.T) {
 	var sir1, sir2 ec2.SpotInstanceRequest
 	resourceName := "aws_spot_instance_request.test"
 

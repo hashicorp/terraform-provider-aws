@@ -84,7 +84,7 @@ func sweepClientVPNEndpoints(region string) error {
 //   "This place is not a place of honor... no highly esteemed deed is commemorated here... nothing valued is here.
 //   What is here was dangerous and repulsive to us. This message is a warning about danger."
 //   --  https://hyperallergic.com/312318/a-nuclear-warning-designed-to-last-10000-years/
-func TestAccAwsEc2ClientVpn_serial(t *testing.T) {
+func TestAccEC2ClientVPNEndpoint_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Endpoint": {
 			"basic":             testAccClientVPNEndpoint_basic,

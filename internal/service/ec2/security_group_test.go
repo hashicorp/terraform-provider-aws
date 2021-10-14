@@ -579,7 +579,7 @@ func TestSecurityGroupIPPermGather(t *testing.T) {
 	}
 }
 
-func TestAccAWSSecurityGroup_allowAll(t *testing.T) {
+func TestAccEC2SecurityGroup_allowAll(t *testing.T) {
 	var group ec2.SecurityGroup
 	resourceName := "aws_security_group.test"
 
@@ -605,7 +605,7 @@ func TestAccAWSSecurityGroup_allowAll(t *testing.T) {
 	})
 }
 
-func TestAccAWSSecurityGroup_sourceSecurityGroup(t *testing.T) {
+func TestAccEC2SecurityGroup_sourceSecurityGroup(t *testing.T) {
 	var group ec2.SecurityGroup
 	resourceName := "aws_security_group.test"
 
@@ -631,7 +631,7 @@ func TestAccAWSSecurityGroup_sourceSecurityGroup(t *testing.T) {
 	})
 }
 
-func TestAccAWSSecurityGroup_IPRangeAndSecurityGroupWithSameRules(t *testing.T) {
+func TestAccEC2SecurityGroup_ipRangeAndSecurityGroupWithSameRules(t *testing.T) {
 	var group ec2.SecurityGroup
 	resourceName := "aws_security_group.test"
 
@@ -657,7 +657,7 @@ func TestAccAWSSecurityGroup_IPRangeAndSecurityGroupWithSameRules(t *testing.T) 
 	})
 }
 
-func TestAccAWSSecurityGroup_IPRangesWithSameRules(t *testing.T) {
+func TestAccEC2SecurityGroup_ipRangesWithSameRules(t *testing.T) {
 	var group ec2.SecurityGroup
 	resourceName := "aws_security_group.test"
 
@@ -683,7 +683,7 @@ func TestAccAWSSecurityGroup_IPRangesWithSameRules(t *testing.T) {
 	})
 }
 
-func TestAccAWSSecurityGroup_basic(t *testing.T) {
+func TestAccEC2SecurityGroup_basic(t *testing.T) {
 	var group ec2.SecurityGroup
 	resourceName := "aws_security_group.test"
 
@@ -726,7 +726,7 @@ func TestAccAWSSecurityGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSecurityGroup_egressConfigMode(t *testing.T) {
+func TestAccEC2SecurityGroup_egressMode(t *testing.T) {
 	var securityGroup1, securityGroup2, securityGroup3 ec2.SecurityGroup
 	resourceName := "aws_security_group.test"
 
@@ -767,7 +767,7 @@ func TestAccAWSSecurityGroup_egressConfigMode(t *testing.T) {
 	})
 }
 
-func TestAccAWSSecurityGroup_ingressConfigMode(t *testing.T) {
+func TestAccEC2SecurityGroup_ingressMode(t *testing.T) {
 	var securityGroup1, securityGroup2, securityGroup3 ec2.SecurityGroup
 	resourceName := "aws_security_group.test"
 
@@ -808,7 +808,7 @@ func TestAccAWSSecurityGroup_ingressConfigMode(t *testing.T) {
 	})
 }
 
-func TestAccAWSSecurityGroup_ruleGathering(t *testing.T) {
+func TestAccEC2SecurityGroup_ruleGathering(t *testing.T) {
 	var group ec2.SecurityGroup
 	sgName := fmt.Sprintf("tf-acc-security-group-%s", sdkacctest.RandString(7))
 	resourceName := "aws_security_group.test"
@@ -913,7 +913,7 @@ func TestAccAWSSecurityGroup_ruleGathering(t *testing.T) {
 // 'aws_vpc' and 'aws_security_group' that cleans these up, however, the test is
 // written to allow Terraform to clean it up because we do go and revoke the
 // cyclic rules that were added.
-func TestAccAWSSecurityGroup_forceRevokeRulesTrue(t *testing.T) {
+func TestAccEC2SecurityGroup_forceRevokeRulesTrue(t *testing.T) {
 	var primary ec2.SecurityGroup
 	var secondary ec2.SecurityGroup
 	resourceName := "aws_security_group.primary"
@@ -993,7 +993,7 @@ func TestAccAWSSecurityGroup_forceRevokeRulesTrue(t *testing.T) {
 	})
 }
 
-func TestAccAWSSecurityGroup_forceRevokeRulesFalse(t *testing.T) {
+func TestAccEC2SecurityGroup_forceRevokeRulesFalse(t *testing.T) {
 	var primary ec2.SecurityGroup
 	var secondary ec2.SecurityGroup
 	resourceName := "aws_security_group.primary"
@@ -1055,7 +1055,7 @@ func TestAccAWSSecurityGroup_forceRevokeRulesFalse(t *testing.T) {
 	})
 }
 
-func TestAccAWSSecurityGroup_ipv6(t *testing.T) {
+func TestAccEC2SecurityGroup_ipv6(t *testing.T) {
 	var group ec2.SecurityGroup
 	resourceName := "aws_security_group.test"
 
@@ -1107,7 +1107,7 @@ func TestAccAWSSecurityGroup_ipv6(t *testing.T) {
 	})
 }
 
-func TestAccAWSSecurityGroup_Name_Generated(t *testing.T) {
+func TestAccEC2SecurityGroup_Name_generated(t *testing.T) {
 	var group ec2.SecurityGroup
 	resourceName := "aws_security_group.test"
 
@@ -1136,7 +1136,7 @@ func TestAccAWSSecurityGroup_Name_Generated(t *testing.T) {
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/17017
-func TestAccAWSSecurityGroup_Name_TerraformPrefix(t *testing.T) {
+func TestAccEC2SecurityGroup_Name_terraformPrefix(t *testing.T) {
 	var group ec2.SecurityGroup
 	resourceName := "aws_security_group.test"
 
@@ -1164,7 +1164,7 @@ func TestAccAWSSecurityGroup_Name_TerraformPrefix(t *testing.T) {
 	})
 }
 
-func TestAccAWSSecurityGroup_NamePrefix(t *testing.T) {
+func TestAccEC2SecurityGroup_namePrefix(t *testing.T) {
 	var group ec2.SecurityGroup
 	resourceName := "aws_security_group.test"
 
@@ -1193,7 +1193,7 @@ func TestAccAWSSecurityGroup_NamePrefix(t *testing.T) {
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/17017
-func TestAccAWSSecurityGroup_NamePrefix_TerraformPrefix(t *testing.T) {
+func TestAccEC2SecurityGroup_NamePrefix_terraformPrefix(t *testing.T) {
 	var group ec2.SecurityGroup
 	resourceName := "aws_security_group.test"
 
@@ -1221,7 +1221,7 @@ func TestAccAWSSecurityGroup_NamePrefix_TerraformPrefix(t *testing.T) {
 	})
 }
 
-func TestAccAWSSecurityGroup_self(t *testing.T) {
+func TestAccEC2SecurityGroup_self(t *testing.T) {
 	var group ec2.SecurityGroup
 	resourceName := "aws_security_group.test"
 
@@ -1270,7 +1270,7 @@ func TestAccAWSSecurityGroup_self(t *testing.T) {
 	})
 }
 
-func TestAccAWSSecurityGroup_vpc(t *testing.T) {
+func TestAccEC2SecurityGroup_vpc(t *testing.T) {
 	var group ec2.SecurityGroup
 	resourceName := "aws_security_group.test"
 
@@ -1314,7 +1314,7 @@ func TestAccAWSSecurityGroup_vpc(t *testing.T) {
 	})
 }
 
-func TestAccAWSSecurityGroup_vpcNegOneIngress(t *testing.T) {
+func TestAccEC2SecurityGroup_vpcNegOneIngress(t *testing.T) {
 	var group ec2.SecurityGroup
 	resourceName := "aws_security_group.test"
 
@@ -1351,7 +1351,7 @@ func TestAccAWSSecurityGroup_vpcNegOneIngress(t *testing.T) {
 	})
 }
 
-func TestAccAWSSecurityGroup_vpcProtoNumIngress(t *testing.T) {
+func TestAccEC2SecurityGroup_vpcProtoNumIngress(t *testing.T) {
 	var group ec2.SecurityGroup
 	resourceName := "aws_security_group.test"
 
@@ -1387,7 +1387,7 @@ func TestAccAWSSecurityGroup_vpcProtoNumIngress(t *testing.T) {
 	})
 }
 
-func TestAccAWSSecurityGroup_multiIngress(t *testing.T) {
+func TestAccEC2SecurityGroup_multiIngress(t *testing.T) {
 	var group ec2.SecurityGroup
 	resourceName := "aws_security_group.test"
 
@@ -1413,7 +1413,7 @@ func TestAccAWSSecurityGroup_multiIngress(t *testing.T) {
 	})
 }
 
-func TestAccAWSSecurityGroup_change(t *testing.T) {
+func TestAccEC2SecurityGroup_change(t *testing.T) {
 	var group ec2.SecurityGroup
 	resourceName := "aws_security_group.test"
 
@@ -1446,7 +1446,7 @@ func TestAccAWSSecurityGroup_change(t *testing.T) {
 	})
 }
 
-func TestAccAWSSecurityGroup_ruleDescription(t *testing.T) {
+func TestAccEC2SecurityGroup_ruleDescription(t *testing.T) {
 	var group ec2.SecurityGroup
 	resourceName := "aws_security_group.test"
 
@@ -1558,7 +1558,7 @@ func TestAccAWSSecurityGroup_ruleDescription(t *testing.T) {
 	})
 }
 
-func TestAccAWSSecurityGroup_defaultEgressVPC(t *testing.T) {
+func TestAccEC2SecurityGroup_defaultEgressVPC(t *testing.T) {
 	resourceName := "aws_security_group.test"
 
 	// VPC
@@ -1584,7 +1584,7 @@ func TestAccAWSSecurityGroup_defaultEgressVPC(t *testing.T) {
 	})
 }
 
-func TestAccAWSSecurityGroup_defaultEgressClassic(t *testing.T) {
+func TestAccEC2SecurityGroup_defaultEgressClassic(t *testing.T) {
 	var group ec2.SecurityGroup
 	resourceName := "aws_security_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1613,7 +1613,7 @@ func TestAccAWSSecurityGroup_defaultEgressClassic(t *testing.T) {
 }
 
 // Testing drift detection with groups containing the same port and types
-func TestAccAWSSecurityGroup_drift(t *testing.T) {
+func TestAccEC2SecurityGroup_drift(t *testing.T) {
 	resourceName := "aws_security_group.test"
 	var group ec2.SecurityGroup
 
@@ -1667,7 +1667,7 @@ func TestAccAWSSecurityGroup_drift(t *testing.T) {
 	})
 }
 
-func TestAccAWSSecurityGroup_driftComplex(t *testing.T) {
+func TestAccEC2SecurityGroup_driftComplex(t *testing.T) {
 	var group ec2.SecurityGroup
 	resourceName := "aws_security_group.test"
 
@@ -1745,7 +1745,7 @@ func TestAccAWSSecurityGroup_driftComplex(t *testing.T) {
 	})
 }
 
-func TestAccAWSSecurityGroup_invalidCIDRBlock(t *testing.T) {
+func TestAccEC2SecurityGroup_invalidCIDRBlock(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
@@ -1772,7 +1772,7 @@ func TestAccAWSSecurityGroup_invalidCIDRBlock(t *testing.T) {
 	})
 }
 
-func TestAccAWSSecurityGroup_tags(t *testing.T) {
+func TestAccEC2SecurityGroup_tags(t *testing.T) {
 	var group ec2.SecurityGroup
 	resourceName := "aws_security_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1818,7 +1818,7 @@ func TestAccAWSSecurityGroup_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSSecurityGroup_CIDRandGroups(t *testing.T) {
+func TestAccEC2SecurityGroup_cidrAndGroups(t *testing.T) {
 	var group ec2.SecurityGroup
 	resourceName := "aws_security_group.test"
 
@@ -1845,7 +1845,7 @@ func TestAccAWSSecurityGroup_CIDRandGroups(t *testing.T) {
 	})
 }
 
-func TestAccAWSSecurityGroup_ingressWithCidrAndSGsVPC(t *testing.T) {
+func TestAccEC2SecurityGroup_ingressWithCIDRAndSGsVPC(t *testing.T) {
 	var group ec2.SecurityGroup
 	resourceName := "aws_security_group.test"
 
@@ -1897,7 +1897,7 @@ func TestAccAWSSecurityGroup_ingressWithCidrAndSGsVPC(t *testing.T) {
 	})
 }
 
-func TestAccAWSSecurityGroup_ingressWithCidrAndSGsClassic(t *testing.T) {
+func TestAccEC2SecurityGroup_ingressWithCIDRAndSGsClassic(t *testing.T) {
 	var group ec2.SecurityGroup
 	resourceName := "aws_security_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1938,7 +1938,7 @@ func TestAccAWSSecurityGroup_ingressWithCidrAndSGsClassic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSecurityGroup_egressWithPrefixList(t *testing.T) {
+func TestAccEC2SecurityGroup_egressWithPrefixList(t *testing.T) {
 	var group ec2.SecurityGroup
 	resourceName := "aws_security_group.test"
 
@@ -1966,7 +1966,7 @@ func TestAccAWSSecurityGroup_egressWithPrefixList(t *testing.T) {
 	})
 }
 
-func TestAccAWSSecurityGroup_ingressWithPrefixList(t *testing.T) {
+func TestAccEC2SecurityGroup_ingressWithPrefixList(t *testing.T) {
 	var group ec2.SecurityGroup
 	resourceName := "aws_security_group.test"
 
@@ -1994,7 +1994,7 @@ func TestAccAWSSecurityGroup_ingressWithPrefixList(t *testing.T) {
 	})
 }
 
-func TestAccAWSSecurityGroup_ipv4andipv6Egress(t *testing.T) {
+func TestAccEC2SecurityGroup_ipv4AndIPv6Egress(t *testing.T) {
 	var group ec2.SecurityGroup
 	resourceName := "aws_security_group.test"
 
@@ -2515,7 +2515,7 @@ func testAccCheckSecurityGroupExistsWithoutDefault(n string) resource.TestCheckF
 	}
 }
 
-func TestAccAWSSecurityGroup_failWithDiffMismatch(t *testing.T) {
+func TestAccEC2SecurityGroup_failWithDiffMismatch(t *testing.T) {
 	var group ec2.SecurityGroup
 
 	resourceName := "aws_security_group.nat"
@@ -2538,7 +2538,7 @@ func TestAccAWSSecurityGroup_failWithDiffMismatch(t *testing.T) {
 	})
 }
 
-func TestAccAWSSecurityGroup_ruleLimitExceededAppend(t *testing.T) {
+func TestAccEC2SecurityGroup_ruleLimitExceededAppend(t *testing.T) {
 	ruleLimit := testAccSecurityGroupRulesPerGroupLimitFromEnv()
 
 	var group ec2.SecurityGroup
@@ -2585,7 +2585,7 @@ func TestAccAWSSecurityGroup_ruleLimitExceededAppend(t *testing.T) {
 	})
 }
 
-func TestAccAWSSecurityGroup_ruleLimitCidrBlockExceededAppend(t *testing.T) {
+func TestAccEC2SecurityGroup_ruleLimitCIDRBlockExceededAppend(t *testing.T) {
 	ruleLimit := testAccSecurityGroupRulesPerGroupLimitFromEnv()
 
 	var group ec2.SecurityGroup
@@ -2646,7 +2646,7 @@ func TestAccAWSSecurityGroup_ruleLimitCidrBlockExceededAppend(t *testing.T) {
 	})
 }
 
-func TestAccAWSSecurityGroup_ruleLimitExceededPrepend(t *testing.T) {
+func TestAccEC2SecurityGroup_ruleLimitExceededPrepend(t *testing.T) {
 	ruleLimit := testAccSecurityGroupRulesPerGroupLimitFromEnv()
 
 	var group ec2.SecurityGroup
@@ -2691,7 +2691,7 @@ func TestAccAWSSecurityGroup_ruleLimitExceededPrepend(t *testing.T) {
 	})
 }
 
-func TestAccAWSSecurityGroup_ruleLimitExceededAllNew(t *testing.T) {
+func TestAccEC2SecurityGroup_ruleLimitExceededAllNew(t *testing.T) {
 	ruleLimit := testAccSecurityGroupRulesPerGroupLimitFromEnv()
 
 	var group ec2.SecurityGroup
@@ -2736,7 +2736,7 @@ func TestAccAWSSecurityGroup_ruleLimitExceededAllNew(t *testing.T) {
 	})
 }
 
-func TestAccAWSSecurityGroup_rulesDropOnError(t *testing.T) {
+func TestAccEC2SecurityGroup_rulesDropOnError(t *testing.T) {
 	var group ec2.SecurityGroup
 
 	resourceName := "aws_security_group.test"

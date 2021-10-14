@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSLaunchTemplateDataSource_basic(t *testing.T) {
+func TestAccEC2LaunchTemplateDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_launch_template.test"
 	resourceName := "aws_launch_template.test"
@@ -36,7 +36,7 @@ func TestAccAWSLaunchTemplateDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchTemplateDataSource_id_basic(t *testing.T) {
+func TestAccEC2LaunchTemplateDataSource_ID_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_launch_template.test"
 	resourceName := "aws_launch_template.test"
@@ -61,7 +61,7 @@ func TestAccAWSLaunchTemplateDataSource_id_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchTemplateDataSource_filter_basic(t *testing.T) {
+func TestAccEC2LaunchTemplateDataSource_Filter_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_launch_template.test"
 	resourceName := "aws_launch_template.test"
@@ -106,7 +106,7 @@ func TestAccAWSLaunchTemplateDataSource_filter_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchTemplateDataSource_filter_tags(t *testing.T) {
+func TestAccEC2LaunchTemplateDataSource_Filter_tags(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_launch_template.test"
@@ -132,7 +132,7 @@ func TestAccAWSLaunchTemplateDataSource_filter_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchTemplateDataSource_metadataOptions(t *testing.T) {
+func TestAccEC2LaunchTemplateDataSource_metadataOptions(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_launch_template.test"
 	resourceName := "aws_launch_template.test"
@@ -157,7 +157,7 @@ func TestAccAWSLaunchTemplateDataSource_metadataOptions(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchTemplateDataSource_enclaveOptions(t *testing.T) {
+func TestAccEC2LaunchTemplateDataSource_enclaveOptions(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_launch_template.test"
 	resourceName := "aws_launch_template.test"
@@ -179,7 +179,7 @@ func TestAccAWSLaunchTemplateDataSource_enclaveOptions(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchTemplateDataSource_associatePublicIPAddress(t *testing.T) {
+func TestAccEC2LaunchTemplateDataSource_associatePublicIPAddress(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_launch_template.test"
 	resourceName := "aws_launch_template.test"
@@ -215,7 +215,7 @@ func TestAccAWSLaunchTemplateDataSource_associatePublicIPAddress(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchTemplateDataSource_associateCarrierIPAddress(t *testing.T) {
+func TestAccEC2LaunchTemplateDataSource_associateCarrierIPAddress(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_launch_template.test"
 	resourceName := "aws_launch_template.test"
@@ -251,7 +251,7 @@ func TestAccAWSLaunchTemplateDataSource_associateCarrierIPAddress(t *testing.T) 
 	})
 }
 
-func TestAccAWSLaunchTemplateDataSource_networkInterfaces_deleteOnTermination(t *testing.T) {
+func TestAccEC2LaunchTemplateDataSource_NetworkInterfaces_deleteOnTermination(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_launch_template.test"
 	resourceName := "aws_launch_template.test"
@@ -287,7 +287,7 @@ func TestAccAWSLaunchTemplateDataSource_networkInterfaces_deleteOnTermination(t 
 	})
 }
 
-func TestAccAWSLaunchTemplateDataSource_NonExistent(t *testing.T) {
+func TestAccEC2LaunchTemplateDataSource_nonExistent(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),

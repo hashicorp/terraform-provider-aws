@@ -72,7 +72,7 @@ func sweepNetworkInterfaces(region string) error {
 	return nil
 }
 
-func TestAccAWSENI_basic(t *testing.T) {
+func TestAccEC2NetworkInterface_ENI_basic(t *testing.T) {
 	var conf ec2.NetworkInterface
 	resourceName := "aws_network_interface.test"
 	subnetResourceName := "aws_subnet.test"
@@ -113,7 +113,7 @@ func TestAccAWSENI_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSENI_IPv6(t *testing.T) {
+func TestAccEC2NetworkInterface_ENI_ipv6(t *testing.T) {
 	var conf ec2.NetworkInterface
 	resourceName := "aws_network_interface.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -157,7 +157,7 @@ func TestAccAWSENI_IPv6(t *testing.T) {
 	})
 }
 
-func TestAccAWSENI_Tags(t *testing.T) {
+func TestAccEC2NetworkInterface_ENI_tags(t *testing.T) {
 	resourceName := "aws_network_interface.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	var conf ec2.NetworkInterface
@@ -202,7 +202,7 @@ func TestAccAWSENI_Tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSENI_IPv6Count(t *testing.T) {
+func TestAccEC2NetworkInterface_ENI_ipv6Count(t *testing.T) {
 	var conf ec2.NetworkInterface
 	resourceName := "aws_network_interface.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -250,7 +250,7 @@ func TestAccAWSENI_IPv6Count(t *testing.T) {
 	})
 }
 
-func TestAccAWSENI_disappears(t *testing.T) {
+func TestAccEC2NetworkInterface_ENI_disappears(t *testing.T) {
 	var networkInterface ec2.NetworkInterface
 	resourceName := "aws_network_interface.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -273,7 +273,7 @@ func TestAccAWSENI_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSENI_Description(t *testing.T) {
+func TestAccEC2NetworkInterface_ENI_description(t *testing.T) {
 	var conf ec2.NetworkInterface
 	resourceName := "aws_network_interface.test"
 	subnetResourceName := "aws_subnet.test"
@@ -341,7 +341,7 @@ func TestAccAWSENI_Description(t *testing.T) {
 	})
 }
 
-func TestAccAWSENI_Attachment(t *testing.T) {
+func TestAccEC2NetworkInterface_ENI_attachment(t *testing.T) {
 	var conf ec2.NetworkInterface
 	resourceName := "aws_network_interface.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -374,7 +374,7 @@ func TestAccAWSENI_Attachment(t *testing.T) {
 	})
 }
 
-func TestAccAWSENI_IgnoreExternalAttachment(t *testing.T) {
+func TestAccEC2NetworkInterface_ENI_ignoreExternalAttachment(t *testing.T) {
 	var conf ec2.NetworkInterface
 	resourceName := "aws_network_interface.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -401,7 +401,7 @@ func TestAccAWSENI_IgnoreExternalAttachment(t *testing.T) {
 	})
 }
 
-func TestAccAWSENI_SourceDestCheck(t *testing.T) {
+func TestAccEC2NetworkInterface_ENI_sourceDestCheck(t *testing.T) {
 	var conf ec2.NetworkInterface
 	resourceName := "aws_network_interface.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -442,7 +442,7 @@ func TestAccAWSENI_SourceDestCheck(t *testing.T) {
 	})
 }
 
-func TestAccAWSENI_PrivateIpsCount(t *testing.T) {
+func TestAccEC2NetworkInterface_ENI_privateIPsCount(t *testing.T) {
 	var conf ec2.NetworkInterface
 	resourceName := "aws_network_interface.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -505,7 +505,7 @@ func TestAccAWSENI_PrivateIpsCount(t *testing.T) {
 	})
 }
 
-func TestAccAWSENI_InterfaceType_efa(t *testing.T) {
+func TestAccEC2NetworkInterface_ENIInterfaceType_efa(t *testing.T) {
 	var conf ec2.NetworkInterface
 	resourceName := "aws_network_interface.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

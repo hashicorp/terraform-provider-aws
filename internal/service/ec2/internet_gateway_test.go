@@ -124,7 +124,7 @@ func sweepInternetGateways(region string) error {
 	return nil
 }
 
-func TestAccAWSInternetGateway_basic(t *testing.T) {
+func TestAccEC2InternetGateway_basic(t *testing.T) {
 	var v, v2 ec2.InternetGateway
 	resourceName := "aws_internet_gateway.test"
 
@@ -177,7 +177,7 @@ func TestAccAWSInternetGateway_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSInternetGateway_delete(t *testing.T) {
+func TestAccEC2InternetGateway_delete(t *testing.T) {
 	var ig ec2.InternetGateway
 	resourceName := "aws_internet_gateway.test"
 
@@ -210,7 +210,7 @@ func TestAccAWSInternetGateway_delete(t *testing.T) {
 	})
 }
 
-func TestAccAWSInternetGateway_tags(t *testing.T) {
+func TestAccEC2InternetGateway_tags(t *testing.T) {
 	var v ec2.InternetGateway
 	resourceName := "aws_internet_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -255,7 +255,7 @@ func TestAccAWSInternetGateway_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSInternetGateway_disappears(t *testing.T) {
+func TestAccEC2InternetGateway_disappears(t *testing.T) {
 	var v ec2.InternetGateway
 	resourceName := "aws_internet_gateway.test"
 

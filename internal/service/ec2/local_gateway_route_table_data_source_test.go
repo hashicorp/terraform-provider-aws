@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAwsEc2LocalGatewayRouteTable_basic(t *testing.T) {
+func TestAccEC2LocalGatewayRouteTableDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_ec2_local_gateway_route_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -30,7 +30,7 @@ func TestAccDataSourceAwsEc2LocalGatewayRouteTable_basic(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsEc2LocalGatewayRouteTable_Filter(t *testing.T) {
+func TestAccEC2LocalGatewayRouteTableDataSource_filter(t *testing.T) {
 	dataSourceName := "data.aws_ec2_local_gateway_route_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -51,7 +51,7 @@ func TestAccDataSourceAwsEc2LocalGatewayRouteTable_Filter(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsEc2LocalGatewayRouteTable_LocalGatewayId(t *testing.T) {
+func TestAccEC2LocalGatewayRouteTableDataSource_localGatewayID(t *testing.T) {
 	dataSourceName := "data.aws_ec2_local_gateway_route_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -72,7 +72,7 @@ func TestAccDataSourceAwsEc2LocalGatewayRouteTable_LocalGatewayId(t *testing.T) 
 	})
 }
 
-func TestAccDataSourceAwsEc2LocalGatewayRouteTable_OutpostArn(t *testing.T) {
+func TestAccEC2LocalGatewayRouteTableDataSource_outpostARN(t *testing.T) {
 	dataSourceName := "data.aws_ec2_local_gateway_route_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{

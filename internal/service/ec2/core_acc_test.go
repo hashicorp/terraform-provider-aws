@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSVpc_coreMismatchedDiffs(t *testing.T) {
+func TestAccEC2CoreAcc_VPC_coreMismatchedDiffs(t *testing.T) {
 	var vpc ec2.Vpc
 
 	resource.ParallelTest(t, resource.TestCase{

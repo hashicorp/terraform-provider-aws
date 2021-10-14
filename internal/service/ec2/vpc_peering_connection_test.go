@@ -92,7 +92,7 @@ func sweepVPCPeeringConnections(region string) error {
 	return nil
 }
 
-func TestAccAWSVPCPeeringConnection_basic(t *testing.T) {
+func TestAccEC2VPCPeeringConnection_basic(t *testing.T) {
 	var connection ec2.VpcPeeringConnection
 	rName := fmt.Sprintf("tf-testacc-pcx-%s", sdkacctest.RandString(17))
 	resourceName := "aws_vpc_peering_connection.test"
@@ -122,7 +122,7 @@ func TestAccAWSVPCPeeringConnection_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSVPCPeeringConnection_plan(t *testing.T) {
+func TestAccEC2VPCPeeringConnection_plan(t *testing.T) {
 	var connection ec2.VpcPeeringConnection
 	rName := fmt.Sprintf("tf-testacc-pcx-%s", sdkacctest.RandString(17))
 	resourceName := "aws_vpc_peering_connection.test"
@@ -160,7 +160,7 @@ func TestAccAWSVPCPeeringConnection_plan(t *testing.T) {
 	})
 }
 
-func TestAccAWSVPCPeeringConnection_tags(t *testing.T) {
+func TestAccEC2VPCPeeringConnection_tags(t *testing.T) {
 	var connection ec2.VpcPeeringConnection
 	rName := fmt.Sprintf("tf-testacc-pcx-%s", sdkacctest.RandString(17))
 	resourceName := "aws_vpc_peering_connection.test"
@@ -208,7 +208,7 @@ func TestAccAWSVPCPeeringConnection_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSVPCPeeringConnection_options(t *testing.T) {
+func TestAccEC2VPCPeeringConnection_options(t *testing.T) {
 	var connection ec2.VpcPeeringConnection
 	rName := fmt.Sprintf("tf-testacc-pcx-%s", sdkacctest.RandString(17))
 	resourceName := "aws_vpc_peering_connection.test"
@@ -382,7 +382,7 @@ func TestAccAWSVPCPeeringConnection_options(t *testing.T) {
 	})
 }
 
-func TestAccAWSVPCPeeringConnection_failedState(t *testing.T) {
+func TestAccEC2VPCPeeringConnection_failedState(t *testing.T) {
 	rName := fmt.Sprintf("tf-testacc-pcx-%s", sdkacctest.RandString(17))
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -516,7 +516,7 @@ func testAccCheckVPCPeeringConnectionOptionsWithProvider(n, block string, option
 	}
 }
 
-func TestAccAWSVPCPeeringConnection_peerRegionAutoAccept(t *testing.T) {
+func TestAccEC2VPCPeeringConnection_peerRegionAutoAccept(t *testing.T) {
 	var providers []*schema.Provider
 	rName := fmt.Sprintf("tf-testacc-pcx-%s", sdkacctest.RandString(17))
 
@@ -537,7 +537,7 @@ func TestAccAWSVPCPeeringConnection_peerRegionAutoAccept(t *testing.T) {
 	})
 }
 
-func TestAccAWSVPCPeeringConnection_region(t *testing.T) {
+func TestAccEC2VPCPeeringConnection_region(t *testing.T) {
 	var connection ec2.VpcPeeringConnection
 	var providers []*schema.Provider
 	rName := fmt.Sprintf("tf-testacc-pcx-%s", sdkacctest.RandString(17))
@@ -571,7 +571,7 @@ func TestAccAWSVPCPeeringConnection_region(t *testing.T) {
 }
 
 // Tests the peering connection acceptance functionality for same region, same account.
-func TestAccAWSVPCPeeringConnection_accept(t *testing.T) {
+func TestAccEC2VPCPeeringConnection_accept(t *testing.T) {
 	var connection ec2.VpcPeeringConnection
 	rName := fmt.Sprintf("tf-testacc-pcx-%s", sdkacctest.RandString(17))
 	resourceName := "aws_vpc_peering_connection.test"
@@ -638,7 +638,7 @@ func TestAccAWSVPCPeeringConnection_accept(t *testing.T) {
 }
 
 // Tests that VPC peering connection options can't be set on non-active connection.
-func TestAccAWSVPCPeeringConnection_optionsNoAutoAccept(t *testing.T) {
+func TestAccEC2VPCPeeringConnection_optionsNoAutoAccept(t *testing.T) {
 	rName := fmt.Sprintf("tf-testacc-pcx-%s", sdkacctest.RandString(17))
 
 	resource.ParallelTest(t, resource.TestCase{

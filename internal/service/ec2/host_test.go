@@ -71,7 +71,7 @@ func sweepHosts(region string) error {
 	return nil
 }
 
-func TestAccAWSEc2Host_basic(t *testing.T) {
+func TestAccEC2Host_basic(t *testing.T) {
 	var host ec2.Host
 	resourceName := "aws_ec2_host.test"
 
@@ -103,7 +103,7 @@ func TestAccAWSEc2Host_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2Host_disappears(t *testing.T) {
+func TestAccEC2Host_disappears(t *testing.T) {
 	var host ec2.Host
 	resourceName := "aws_ec2_host.test"
 
@@ -125,7 +125,7 @@ func TestAccAWSEc2Host_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2Host_InstanceFamily(t *testing.T) {
+func TestAccEC2Host_instanceFamily(t *testing.T) {
 	var host ec2.Host
 	resourceName := "aws_ec2_host.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -173,7 +173,7 @@ func TestAccAWSEc2Host_InstanceFamily(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2Host_Tags(t *testing.T) {
+func TestAccEC2Host_tags(t *testing.T) {
 	var host ec2.Host
 	resourceName := "aws_ec2_host.test"
 

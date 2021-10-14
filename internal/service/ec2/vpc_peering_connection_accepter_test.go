@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSVPCPeeringConnectionAccepter_sameRegionSameAccount(t *testing.T) {
+func TestAccEC2VPCPeeringConnectionAccepter_sameRegionSameAccount(t *testing.T) {
 	var connection ec2.VpcPeeringConnection
 	resourceNameMainVpc := "aws_vpc.main"                              // Requester
 	resourceNamePeerVpc := "aws_vpc.peer"                              // Accepter
@@ -65,7 +65,7 @@ func TestAccAWSVPCPeeringConnectionAccepter_sameRegionSameAccount(t *testing.T) 
 	})
 }
 
-func TestAccAWSVPCPeeringConnectionAccepter_differentRegionSameAccount(t *testing.T) {
+func TestAccEC2VPCPeeringConnectionAccepter_differentRegionSameAccount(t *testing.T) {
 	var connectionMain, connectionPeer ec2.VpcPeeringConnection
 	var providers []*schema.Provider
 	resourceNameMainVpc := "aws_vpc.main"                              // Requester
@@ -111,7 +111,7 @@ func TestAccAWSVPCPeeringConnectionAccepter_differentRegionSameAccount(t *testin
 	})
 }
 
-func TestAccAWSVPCPeeringConnectionAccepter_sameRegionDifferentAccount(t *testing.T) {
+func TestAccEC2VPCPeeringConnectionAccepter_sameRegionDifferentAccount(t *testing.T) {
 	var connection ec2.VpcPeeringConnection
 	var providers []*schema.Provider
 	resourceNameMainVpc := "aws_vpc.main"                              // Requester
@@ -148,7 +148,7 @@ func TestAccAWSVPCPeeringConnectionAccepter_sameRegionDifferentAccount(t *testin
 	})
 }
 
-func TestAccAWSVPCPeeringConnectionAccepter_differentRegionDifferentAccount(t *testing.T) {
+func TestAccEC2VPCPeeringConnectionAccepter_differentRegionDifferentAccount(t *testing.T) {
 	var connection ec2.VpcPeeringConnection
 	var providers []*schema.Provider
 	resourceNameMainVpc := "aws_vpc.main"                              // Requester

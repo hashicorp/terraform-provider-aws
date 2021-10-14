@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSEc2AvailabilityZoneGroup_OptInStatus(t *testing.T) {
+func TestAccEC2AvailabilityZoneGroup_optInStatus(t *testing.T) {
 	resourceName := "aws_ec2_availability_zone_group.test"
 
 	// Filter to one Availability Zone Group per Region as Local Zones become available

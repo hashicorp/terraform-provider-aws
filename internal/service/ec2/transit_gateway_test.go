@@ -114,7 +114,7 @@ func sweepTransitGateways(region string) error {
 	return nil
 }
 
-func TestAccAWSEc2TransitGateway_serial(t *testing.T) {
+func TestAccEC2TransitGateway_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Gateway": {
 			"basic":                       testAccTransitGateway_basic,

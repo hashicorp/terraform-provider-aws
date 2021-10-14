@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSSpotDatafeedSubscription_serial(t *testing.T) {
+func TestAccEC2SpotDatafeedSubscription_serial(t *testing.T) {
 	cases := map[string]func(t *testing.T){
 		"basic":      testAccSpotDatafeedSubscription_basic,
 		"disappears": testAccSpotDatafeedSubscription_disappears,

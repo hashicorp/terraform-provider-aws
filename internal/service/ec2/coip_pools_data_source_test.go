@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAwsEc2CoipPools_basic(t *testing.T) {
+func TestAccEC2CoIPPoolsDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_ec2_coip_pools.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -26,7 +26,7 @@ func TestAccDataSourceAwsEc2CoipPools_basic(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsEc2CoipPools_Filter(t *testing.T) {
+func TestAccEC2CoIPPoolsDataSource_filter(t *testing.T) {
 	dataSourceName := "data.aws_ec2_coip_pools.test"
 
 	resource.ParallelTest(t, resource.TestCase{

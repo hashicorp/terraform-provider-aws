@@ -96,7 +96,7 @@ func sweepVPCs(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func TestAccAWSVpc_basic(t *testing.T) {
+func TestAccEC2VPC_basic(t *testing.T) {
 	var vpc ec2.Vpc
 	resourceName := "aws_vpc.test"
 
@@ -133,7 +133,7 @@ func TestAccAWSVpc_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSVpc_disappears(t *testing.T) {
+func TestAccEC2VPC_disappears(t *testing.T) {
 	var vpc ec2.Vpc
 	resourceName := "aws_vpc.test"
 
@@ -155,7 +155,7 @@ func TestAccAWSVpc_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSVpc_defaultTags_providerOnly(t *testing.T) {
+func TestAccEC2VPC_DefaultTags_providerOnly(t *testing.T) {
 	var providers []*schema.Provider
 	var vpc ec2.Vpc
 	resourceName := "aws_vpc.test"
@@ -212,7 +212,7 @@ func TestAccAWSVpc_defaultTags_providerOnly(t *testing.T) {
 	})
 }
 
-func TestAccAWSVpc_defaultTags_updateToProviderOnly(t *testing.T) {
+func TestAccEC2VPC_DefaultTags_updateToProviderOnly(t *testing.T) {
 	var providers []*schema.Provider
 	var vpc ec2.Vpc
 	resourceName := "aws_vpc.test"
@@ -254,7 +254,7 @@ func TestAccAWSVpc_defaultTags_updateToProviderOnly(t *testing.T) {
 	})
 }
 
-func TestAccAWSVpc_defaultTags_updateToResourceOnly(t *testing.T) {
+func TestAccEC2VPC_DefaultTags_updateToResourceOnly(t *testing.T) {
 	var providers []*schema.Provider
 	var vpc ec2.Vpc
 	resourceName := "aws_vpc.test"
@@ -296,7 +296,7 @@ func TestAccAWSVpc_defaultTags_updateToResourceOnly(t *testing.T) {
 	})
 }
 
-func TestAccAWSVpc_defaultTags_providerAndResource_nonOverlappingTag(t *testing.T) {
+func TestAccEC2VPC_DefaultTagsProviderAndResource_nonOverlappingTag(t *testing.T) {
 	var providers []*schema.Provider
 	var vpc ec2.Vpc
 	resourceName := "aws_vpc.test"
@@ -360,7 +360,7 @@ func TestAccAWSVpc_defaultTags_providerAndResource_nonOverlappingTag(t *testing.
 	})
 }
 
-func TestAccAWSVpc_defaultTags_providerAndResource_overlappingTag(t *testing.T) {
+func TestAccEC2VPC_DefaultTagsProviderAndResource_overlappingTag(t *testing.T) {
 	var providers []*schema.Provider
 	var vpc ec2.Vpc
 	resourceName := "aws_vpc.test"
@@ -420,7 +420,7 @@ func TestAccAWSVpc_defaultTags_providerAndResource_overlappingTag(t *testing.T) 
 	})
 }
 
-func TestAccAWSVpc_defaultTags_providerAndResource_duplicateTag(t *testing.T) {
+func TestAccEC2VPC_DefaultTagsProviderAndResource_duplicateTag(t *testing.T) {
 	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -441,12 +441,12 @@ func TestAccAWSVpc_defaultTags_providerAndResource_duplicateTag(t *testing.T) {
 	})
 }
 
-// TestAccAWSVpc_DynamicResourceTagsMergedWithLocals_IgnoreChanges ensures computed "tags_all"
+// TestAccEC2VPC_DynamicResourceTagsMergedWithLocals_ignoreChanges ensures computed "tags_all"
 // attributes are correctly determined when the provider-level default_tags block
 // is left unused and resource tags (merged with local.tags) are only known at apply time,
 // with additional lifecycle ignore_changes attributes, thereby eliminating "Inconsistent final plan" errors
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/18366
-func TestAccAWSVpc_DynamicResourceTagsMergedWithLocals_IgnoreChanges(t *testing.T) {
+func TestAccEC2VPC_DynamicResourceTagsMergedWithLocals_ignoreChanges(t *testing.T) {
 	var providers []*schema.Provider
 	var vpc ec2.Vpc
 
@@ -497,12 +497,12 @@ func TestAccAWSVpc_DynamicResourceTagsMergedWithLocals_IgnoreChanges(t *testing.
 	})
 }
 
-// TestAccAWSVpc_DynamicResourceTags_IgnoreChanges ensures computed "tags_all"
+// TestAccEC2VPC_DynamicResourceTags_ignoreChanges ensures computed "tags_all"
 // attributes are correctly determined when the provider-level default_tags block
 // is left unused and resource tags are only known at apply time,
 // with additional lifecycle ignore_changes attributes, thereby eliminating "Inconsistent final plan" errors
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/18366
-func TestAccAWSVpc_DynamicResourceTags_IgnoreChanges(t *testing.T) {
+func TestAccEC2VPC_DynamicResourceTags_ignoreChanges(t *testing.T) {
 	var providers []*schema.Provider
 	var vpc ec2.Vpc
 
@@ -549,7 +549,7 @@ func TestAccAWSVpc_DynamicResourceTags_IgnoreChanges(t *testing.T) {
 	})
 }
 
-func TestAccAWSVpc_defaultAndIgnoreTags(t *testing.T) {
+func TestAccEC2VPC_defaultAndIgnoreTags(t *testing.T) {
 	var providers []*schema.Provider
 	var vpc ec2.Vpc
 	resourceName := "aws_vpc.test"
@@ -586,7 +586,7 @@ func TestAccAWSVpc_defaultAndIgnoreTags(t *testing.T) {
 	})
 }
 
-func TestAccAWSVpc_ignoreTags(t *testing.T) {
+func TestAccEC2VPC_ignoreTags(t *testing.T) {
 	var providers []*schema.Provider
 	var vpc ec2.Vpc
 	resourceName := "aws_vpc.test"
@@ -617,7 +617,7 @@ func TestAccAWSVpc_ignoreTags(t *testing.T) {
 	})
 }
 
-func TestAccAWSVpc_AssignGeneratedIpv6CidrBlock(t *testing.T) {
+func TestAccEC2VPC_assignGeneratedIPv6CIDRBlock(t *testing.T) {
 	var vpc ec2.Vpc
 	resourceName := "aws_vpc.test"
 
@@ -669,7 +669,7 @@ func TestAccAWSVpc_AssignGeneratedIpv6CidrBlock(t *testing.T) {
 	})
 }
 
-func TestAccAWSVpc_Tenancy(t *testing.T) {
+func TestAccEC2VPC_tenancy(t *testing.T) {
 	var vpcDedicated ec2.Vpc
 	var vpcDefault ec2.Vpc
 	resourceName := "aws_vpc.test"
@@ -712,7 +712,7 @@ func TestAccAWSVpc_Tenancy(t *testing.T) {
 	})
 }
 
-func TestAccAWSVpc_tags(t *testing.T) {
+func TestAccEC2VPC_tags(t *testing.T) {
 	var vpc ec2.Vpc
 	resourceName := "aws_vpc.test"
 
@@ -756,7 +756,7 @@ func TestAccAWSVpc_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSVpc_update(t *testing.T) {
+func TestAccEC2VPC_update(t *testing.T) {
 	var vpc ec2.Vpc
 	resourceName := "aws_vpc.test"
 
@@ -872,7 +872,7 @@ func testAccCheckVpcDisappears(vpc *ec2.Vpc) resource.TestCheckFunc {
 }
 
 // https://github.com/hashicorp/terraform/issues/1301
-func TestAccAWSVpc_bothDnsOptionsSet(t *testing.T) {
+func TestAccEC2VPC_bothDNSOptionsSet(t *testing.T) {
 	var vpc ec2.Vpc
 	resourceName := "aws_vpc.test"
 
@@ -900,7 +900,7 @@ func TestAccAWSVpc_bothDnsOptionsSet(t *testing.T) {
 }
 
 // https://github.com/hashicorp/terraform/issues/10168
-func TestAccAWSVpc_DisabledDnsSupport(t *testing.T) {
+func TestAccEC2VPC_disabledDNSSupport(t *testing.T) {
 	var vpc ec2.Vpc
 	resourceName := "aws_vpc.test"
 
@@ -926,7 +926,7 @@ func TestAccAWSVpc_DisabledDnsSupport(t *testing.T) {
 	})
 }
 
-func TestAccAWSVpc_classiclinkOptionSet(t *testing.T) {
+func TestAccEC2VPC_classicLinkOptionSet(t *testing.T) {
 	var vpc ec2.Vpc
 	resourceName := "aws_vpc.test"
 
@@ -952,7 +952,7 @@ func TestAccAWSVpc_classiclinkOptionSet(t *testing.T) {
 	})
 }
 
-func TestAccAWSVpc_classiclinkDnsSupportOptionSet(t *testing.T) {
+func TestAccEC2VPC_classicLinkDNSSupportOptionSet(t *testing.T) {
 	var vpc ec2.Vpc
 	resourceName := "aws_vpc.test"
 

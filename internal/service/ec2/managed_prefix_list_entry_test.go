@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccAwsEc2ManagedPrefixListEntry_ipv4(t *testing.T) {
+func TestAccEC2ManagedPrefixListEntry_ipv4(t *testing.T) {
 	var entry ec2.PrefixListEntry
 	resourceName := "aws_ec2_managed_prefix_list_entry.test"
 	plResourceName := "aws_ec2_managed_prefix_list.test"
@@ -46,7 +46,7 @@ func TestAccAwsEc2ManagedPrefixListEntry_ipv4(t *testing.T) {
 	})
 }
 
-func TestAccAwsEc2ManagedPrefixListEntry_ipv6(t *testing.T) {
+func TestAccEC2ManagedPrefixListEntry_ipv6(t *testing.T) {
 	var entry ec2.PrefixListEntry
 	resourceName := "aws_ec2_managed_prefix_list_entry.test"
 	plResourceName := "aws_ec2_managed_prefix_list.test"
@@ -77,7 +77,7 @@ func TestAccAwsEc2ManagedPrefixListEntry_ipv6(t *testing.T) {
 	})
 }
 
-func TestAccAwsEc2ManagedPrefixListEntry_expectInvalidTypeError(t *testing.T) {
+func TestAccEC2ManagedPrefixListEntry_expectInvalidTypeError(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -94,7 +94,7 @@ func TestAccAwsEc2ManagedPrefixListEntry_expectInvalidTypeError(t *testing.T) {
 	})
 }
 
-func TestAccAwsEc2ManagedPrefixListEntry_expectInvalidCIDR(t *testing.T) {
+func TestAccEC2ManagedPrefixListEntry_expectInvalidCIDR(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -115,7 +115,7 @@ func TestAccAwsEc2ManagedPrefixListEntry_expectInvalidCIDR(t *testing.T) {
 	})
 }
 
-func TestAccAwsEc2ManagedPrefixListEntry_description(t *testing.T) {
+func TestAccEC2ManagedPrefixListEntry_description(t *testing.T) {
 	var entry ec2.PrefixListEntry
 	resourceName := "aws_ec2_managed_prefix_list_entry.test"
 	plResourceName := "aws_ec2_managed_prefix_list.test"
@@ -146,7 +146,7 @@ func TestAccAwsEc2ManagedPrefixListEntry_description(t *testing.T) {
 	})
 }
 
-func TestAccAwsEc2ManagedPrefixListEntry_disappears(t *testing.T) {
+func TestAccEC2ManagedPrefixListEntry_disappears(t *testing.T) {
 	var entry ec2.PrefixListEntry
 	resourceName := "aws_ec2_managed_prefix_list_entry.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

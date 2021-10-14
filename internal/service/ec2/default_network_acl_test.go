@@ -28,7 +28,7 @@ var ipv6IngressAcl = &ec2.NetworkAclEntry{
 	RuleNumber:    aws.Int64(101),
 }
 
-func TestAccAWSDefaultNetworkAcl_basic(t *testing.T) {
+func TestAccEC2DefaultNetworkACL_basic(t *testing.T) {
 	var networkAcl ec2.NetworkAcl
 	resourceName := "aws_default_network_acl.default"
 
@@ -56,7 +56,7 @@ func TestAccAWSDefaultNetworkAcl_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDefaultNetworkAcl_basicIpv6Vpc(t *testing.T) {
+func TestAccEC2DefaultNetworkACL_basicIPv6VPC(t *testing.T) {
 	var networkAcl ec2.NetworkAcl
 	resourceName := "aws_default_network_acl.default"
 
@@ -82,8 +82,8 @@ func TestAccAWSDefaultNetworkAcl_basicIpv6Vpc(t *testing.T) {
 	})
 }
 
-func TestAccAWSDefaultNetworkAcl_deny_ingress(t *testing.T) {
-	// TestAccAWSDefaultNetworkAcl_deny_ingress will deny all Ingress rules, but
+func TestAccEC2DefaultNetworkACL_Deny_ingress(t *testing.T) {
+	// TestAccEC2DefaultNetworkACL_Deny_ingress will deny all Ingress rules, but
 	// not Egress. We then expect there to be 3 rules, 2 AWS defaults and 1
 	// additional Egress.
 	var networkAcl ec2.NetworkAcl
@@ -111,7 +111,7 @@ func TestAccAWSDefaultNetworkAcl_deny_ingress(t *testing.T) {
 	})
 }
 
-func TestAccAWSDefaultNetworkAcl_withIpv6Ingress(t *testing.T) {
+func TestAccEC2DefaultNetworkACL_withIPv6Ingress(t *testing.T) {
 	var networkAcl ec2.NetworkAcl
 	resourceName := "aws_default_network_acl.default"
 
@@ -137,7 +137,7 @@ func TestAccAWSDefaultNetworkAcl_withIpv6Ingress(t *testing.T) {
 	})
 }
 
-func TestAccAWSDefaultNetworkAcl_SubnetRemoval(t *testing.T) {
+func TestAccEC2DefaultNetworkACL_subnetRemoval(t *testing.T) {
 	var networkAcl ec2.NetworkAcl
 	resourceName := "aws_default_network_acl.default"
 
@@ -180,7 +180,7 @@ func TestAccAWSDefaultNetworkAcl_SubnetRemoval(t *testing.T) {
 	})
 }
 
-func TestAccAWSDefaultNetworkAcl_SubnetReassign(t *testing.T) {
+func TestAccEC2DefaultNetworkACL_subnetReassign(t *testing.T) {
 	var networkAcl ec2.NetworkAcl
 	resourceName := "aws_default_network_acl.default"
 

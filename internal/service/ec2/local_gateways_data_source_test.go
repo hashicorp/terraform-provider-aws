@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAwsEc2LocalGateways_basic(t *testing.T) {
+func TestAccEC2LocalGatewaysDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_ec2_local_gateways.test"
 
 	resource.ParallelTest(t, resource.TestCase{

@@ -67,7 +67,7 @@ func sweepPlacementGroups(region string) error {
 	return nil
 }
 
-func TestAccAWSPlacementGroup_basic(t *testing.T) {
+func TestAccEC2PlacementGroup_basic(t *testing.T) {
 	var pg ec2.PlacementGroup
 	resourceName := "aws_placement_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -96,7 +96,7 @@ func TestAccAWSPlacementGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSPlacementGroup_disappears(t *testing.T) {
+func TestAccEC2PlacementGroup_disappears(t *testing.T) {
 	var pg ec2.PlacementGroup
 	resourceName := "aws_placement_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -119,7 +119,7 @@ func TestAccAWSPlacementGroup_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSPlacementGroup_Tags(t *testing.T) {
+func TestAccEC2PlacementGroup_tags(t *testing.T) {
 	var pg ec2.PlacementGroup
 	resourceName := "aws_placement_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -163,7 +163,7 @@ func TestAccAWSPlacementGroup_Tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSPlacementGroup_PartitionCount(t *testing.T) {
+func TestAccEC2PlacementGroup_partitionCount(t *testing.T) {
 	var pg ec2.PlacementGroup
 	resourceName := "aws_placement_group.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-partition")

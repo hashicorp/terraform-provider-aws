@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAwsEbsVolumes_basic(t *testing.T) {
+func TestAccEC2EBSVolumesDataSource_basic(t *testing.T) {
 	rInt := sdkacctest.RandIntRange(0, 256)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },

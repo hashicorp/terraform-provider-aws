@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAwsVpcs_basic(t *testing.T) {
+func TestAccEC2VPCsDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
@@ -27,7 +27,7 @@ func TestAccDataSourceAwsVpcs_basic(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsVpcs_tags(t *testing.T) {
+func TestAccEC2VPCsDataSource_tags(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
@@ -45,7 +45,7 @@ func TestAccDataSourceAwsVpcs_tags(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsVpcs_filters(t *testing.T) {
+func TestAccEC2VPCsDataSource_filters(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },

@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSEc2TransitGatewayDataSource_serial(t *testing.T) {
+func TestAccEC2TransitGatewayDataSource_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"DxGatewayAttachment": {
 			"Filter":                         testAccTransitGatewayDxGatewayAttachmentDataSource_filter,

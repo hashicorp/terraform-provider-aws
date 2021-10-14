@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAwsVpc_basic(t *testing.T) {
+func TestAccEC2VPCDataSource_basic(t *testing.T) {
 	rand.Seed(time.Now().UTC().UnixNano())
 	rInt := rand.Intn(254)
 	cidr := fmt.Sprintf("10.%d.0.0/16", rInt+1) // Prevent common 10.0.0.0/16 cidr_block matches
@@ -80,7 +80,7 @@ func TestAccDataSourceAwsVpc_basic(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsVpc_ipv6Associated(t *testing.T) {
+func TestAccEC2VPCDataSource_ipv6Associated(t *testing.T) {
 	rand.Seed(time.Now().UTC().UnixNano())
 	rInt := rand.Intn(255)
 	cidr := fmt.Sprintf("10.%d.0.0/16", rInt)
@@ -115,7 +115,7 @@ func TestAccDataSourceAwsVpc_ipv6Associated(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsVpc_CidrBlockAssociations_Multiple(t *testing.T) {
+func TestAccEC2VPCDataSource_CIDRBlockAssociations_multiple(t *testing.T) {
 	dataSourceName := "data.aws_vpc.test"
 
 	resource.ParallelTest(t, resource.TestCase{

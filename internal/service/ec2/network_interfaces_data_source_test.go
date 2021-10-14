@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAwsNetworkInterfaces_Filter(t *testing.T) {
+func TestAccEC2NetworkInterfacesDataSource_filter(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -28,7 +28,7 @@ func TestAccDataSourceAwsNetworkInterfaces_Filter(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsNetworkInterfaces_Tags(t *testing.T) {
+func TestAccEC2NetworkInterfacesDataSource_tags(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },

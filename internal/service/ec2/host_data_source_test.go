@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSEc2HostDataSource_basic(t *testing.T) {
+func TestAccEC2HostDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_ec2_host.test"
 	resourceName := "aws_ec2_host.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -41,7 +41,7 @@ func TestAccAWSEc2HostDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2HostDataSource_Filter(t *testing.T) {
+func TestAccEC2HostDataSource_filter(t *testing.T) {
 	dataSourceName := "data.aws_ec2_host.test"
 	resourceName := "aws_ec2_host.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

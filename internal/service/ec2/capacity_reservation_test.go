@@ -68,7 +68,7 @@ func sweepCapacityReservations(region string) error {
 	return nil
 }
 
-func TestAccAWSEc2CapacityReservation_basic(t *testing.T) {
+func TestAccEC2CapacityReservation_basic(t *testing.T) {
 	var cr ec2.CapacityReservation
 	availabilityZonesDataSourceName := "data.aws_availability_zones.available"
 	resourceName := "aws_ec2_capacity_reservation.test"
@@ -108,7 +108,7 @@ func TestAccAWSEc2CapacityReservation_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2CapacityReservation_ebsOptimized(t *testing.T) {
+func TestAccEC2CapacityReservation_ebsOptimized(t *testing.T) {
 	var cr ec2.CapacityReservation
 	resourceName := "aws_ec2_capacity_reservation.test"
 
@@ -134,7 +134,7 @@ func TestAccAWSEc2CapacityReservation_ebsOptimized(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2CapacityReservation_endDate(t *testing.T) {
+func TestAccEC2CapacityReservation_endDate(t *testing.T) {
 	var cr ec2.CapacityReservation
 	endDate1 := time.Now().UTC().Add(1 * time.Hour).Format(time.RFC3339)
 	endDate2 := time.Now().UTC().Add(2 * time.Hour).Format(time.RFC3339)
@@ -171,7 +171,7 @@ func TestAccAWSEc2CapacityReservation_endDate(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2CapacityReservation_endDateType(t *testing.T) {
+func TestAccEC2CapacityReservation_endDateType(t *testing.T) {
 	var cr ec2.CapacityReservation
 	endDate := time.Now().UTC().Add(12 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_ec2_capacity_reservation.test"
@@ -213,7 +213,7 @@ func TestAccAWSEc2CapacityReservation_endDateType(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2CapacityReservation_ephemeralStorage(t *testing.T) {
+func TestAccEC2CapacityReservation_ephemeralStorage(t *testing.T) {
 	var cr ec2.CapacityReservation
 	resourceName := "aws_ec2_capacity_reservation.test"
 
@@ -239,7 +239,7 @@ func TestAccAWSEc2CapacityReservation_ephemeralStorage(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2CapacityReservation_instanceCount(t *testing.T) {
+func TestAccEC2CapacityReservation_instanceCount(t *testing.T) {
 	var cr ec2.CapacityReservation
 	resourceName := "aws_ec2_capacity_reservation.test"
 
@@ -272,7 +272,7 @@ func TestAccAWSEc2CapacityReservation_instanceCount(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2CapacityReservation_instanceMatchCriteria(t *testing.T) {
+func TestAccEC2CapacityReservation_instanceMatchCriteria(t *testing.T) {
 	var cr ec2.CapacityReservation
 	resourceName := "aws_ec2_capacity_reservation.test"
 
@@ -298,7 +298,7 @@ func TestAccAWSEc2CapacityReservation_instanceMatchCriteria(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2CapacityReservation_instanceType(t *testing.T) {
+func TestAccEC2CapacityReservation_instanceType(t *testing.T) {
 	var cr ec2.CapacityReservation
 	resourceName := "aws_ec2_capacity_reservation.test"
 
@@ -331,7 +331,7 @@ func TestAccAWSEc2CapacityReservation_instanceType(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2CapacityReservation_tags(t *testing.T) {
+func TestAccEC2CapacityReservation_tags(t *testing.T) {
 	var cr ec2.CapacityReservation
 	resourceName := "aws_ec2_capacity_reservation.test"
 
@@ -375,7 +375,7 @@ func TestAccAWSEc2CapacityReservation_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2CapacityReservation_disappears(t *testing.T) {
+func TestAccEC2CapacityReservation_disappears(t *testing.T) {
 	var cr ec2.CapacityReservation
 	resourceName := "aws_ec2_capacity_reservation.test"
 
@@ -397,7 +397,7 @@ func TestAccAWSEc2CapacityReservation_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2CapacityReservation_tenancy(t *testing.T) {
+func TestAccEC2CapacityReservation_tenancy(t *testing.T) {
 	// Error creating EC2 Capacity Reservation: Unsupported: The requested configuration is currently not supported. Please check the documentation for supported configurations.
 	acctest.Skip(t, "EC2 Capacity Reservations do not currently support dedicated tenancy.")
 	var cr ec2.CapacityReservation

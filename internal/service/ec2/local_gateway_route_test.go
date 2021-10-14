@@ -14,7 +14,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
-func TestAccAWSEc2LocalGatewayRoute_basic(t *testing.T) {
+func TestAccEC2LocalGatewayRoute_basic(t *testing.T) {
 	rInt := sdkacctest.RandIntRange(0, 255)
 	destinationCidrBlock := fmt.Sprintf("172.16.%d.0/24", rInt)
 	localGatewayRouteTableDataSourceName := "data.aws_ec2_local_gateway_route_table.test"
@@ -45,7 +45,7 @@ func TestAccAWSEc2LocalGatewayRoute_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2LocalGatewayRoute_disappears(t *testing.T) {
+func TestAccEC2LocalGatewayRoute_disappears(t *testing.T) {
 	rInt := sdkacctest.RandIntRange(0, 255)
 	destinationCidrBlock := fmt.Sprintf("172.16.%d.0/24", rInt)
 	resourceName := "aws_ec2_local_gateway_route.test"
