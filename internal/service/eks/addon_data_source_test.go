@@ -21,15 +21,15 @@ func TestAccAWSEksAddonDataSource_basic(t *testing.T) {
 	ctx := context.TODO()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t); testAccPreCheckAWSEksAddon(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t); testAccPreCheckAddon(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAWSEksAddonDestroy,
+		CheckDestroy:      testAccCheckAddonDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEksAddonDataSourceConfig_Basic(rName, addonName),
+				Config: testAccAddonDataSourceConfig_Basic(rName, addonName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksAddonExists(ctx, dataSourceResourceName, &addon),
+					testAccCheckAddonExists(ctx, dataSourceResourceName, &addon),
 					acctest.MatchResourceAttrRegionalARN(dataSourceResourceName, "arn", "eks", regexp.MustCompile(fmt.Sprintf("addon/%s/%s/.+$", rName, addonName))),
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "addon_version", dataSourceResourceName, "addon_version"),
@@ -43,8 +43,8 @@ func TestAccAWSEksAddonDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccAWSEksAddonDataSourceConfig_Basic(rName, addonName string) string {
-	return acctest.ConfigCompose(testAccAWSEksAddonConfig_Base(rName), fmt.Sprintf(`
+func testAccAddonDataSourceConfig_Basic(rName, addonName string) string {
+	return acctest.ConfigCompose(testAccAddonConfig_Base(rName), fmt.Sprintf(`
 resource "aws_eks_addon" "test" {
   addon_name   = %[2]q
   cluster_name = aws_eks_cluster.test.name

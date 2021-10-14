@@ -25,11 +25,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_eks_addon", &resource.Sweeper{
 		Name: "aws_eks_addon",
-		F:    testSweepEksAddon,
+		F:    sweepAddon,
 	})
 }
 
-func testSweepEksAddon(region string) error {
+func sweepAddon(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -105,15 +105,15 @@ func TestAccAWSEksAddon_basic(t *testing.T) {
 	ctx := context.TODO()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t); testAccPreCheckAWSEksAddon(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t); testAccPreCheckAddon(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAWSEksAddonDestroy,
+		CheckDestroy:      testAccCheckAddonDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEksAddon_Basic(rName, addonName),
+				Config: testAccAddon_Basic(rName, addonName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksAddonExists(ctx, addonResourceName, &addon),
+					testAccCheckAddonExists(ctx, addonResourceName, &addon),
 					acctest.MatchResourceAttrRegionalARN(addonResourceName, "arn", "eks", regexp.MustCompile(fmt.Sprintf("addon/%s/%s/.+$", rName, addonName))),
 					resource.TestCheckResourceAttrPair(addonResourceName, "cluster_name", clusterResourceName, "name"),
 					resource.TestCheckResourceAttr(addonResourceName, "addon_name", addonName),
@@ -138,15 +138,15 @@ func TestAccAWSEksAddon_disappears(t *testing.T) {
 	ctx := context.TODO()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t); testAccPreCheckAWSEksAddon(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t); testAccPreCheckAddon(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAWSEksAddonDestroy,
+		CheckDestroy:      testAccCheckAddonDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEksAddon_Basic(rName, addonName),
+				Config: testAccAddon_Basic(rName, addonName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksAddonExists(ctx, resourceName, &addon),
+					testAccCheckAddonExists(ctx, resourceName, &addon),
 					acctest.CheckResourceDisappears(acctest.Provider, tfeks.ResourceAddon(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -164,15 +164,15 @@ func TestAccAWSEksAddon_disappears_Cluster(t *testing.T) {
 	ctx := context.TODO()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t); testAccPreCheckAWSEksAddon(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t); testAccPreCheckAddon(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAWSEksAddonDestroy,
+		CheckDestroy:      testAccCheckAddonDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEksAddon_Basic(rName, addonName),
+				Config: testAccAddon_Basic(rName, addonName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksAddonExists(ctx, resourceName, &addon),
+					testAccCheckAddonExists(ctx, resourceName, &addon),
 					acctest.CheckResourceDisappears(acctest.Provider, tfeks.ResourceCluster(), clusterResourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -191,15 +191,15 @@ func TestAccAWSEksAddon_AddonVersion(t *testing.T) {
 	ctx := context.TODO()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t); testAccPreCheckAWSEksAddon(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t); testAccPreCheckAddon(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAWSEksAddonDestroy,
+		CheckDestroy:      testAccCheckAddonDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEksAddonConfigAddonVersion(rName, addonName, addonVersion1),
+				Config: testAccAddonAddonVersionConfig(rName, addonName, addonVersion1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksAddonExists(ctx, resourceName, &addon1),
+					testAccCheckAddonExists(ctx, resourceName, &addon1),
 					resource.TestCheckResourceAttr(resourceName, "addon_version", addonVersion1),
 				),
 			},
@@ -210,9 +210,9 @@ func TestAccAWSEksAddon_AddonVersion(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"resolve_conflicts"},
 			},
 			{
-				Config: testAccAWSEksAddonConfigAddonVersion(rName, addonName, addonVersion2),
+				Config: testAccAddonAddonVersionConfig(rName, addonName, addonVersion2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksAddonExists(ctx, resourceName, &addon2),
+					testAccCheckAddonExists(ctx, resourceName, &addon2),
 					resource.TestCheckResourceAttr(resourceName, "addon_version", addonVersion2),
 				),
 			},
@@ -228,15 +228,15 @@ func TestAccAWSEksAddon_ResolveConflicts(t *testing.T) {
 	ctx := context.TODO()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t); testAccPreCheckAWSEksAddon(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t); testAccPreCheckAddon(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAWSEksAddonDestroy,
+		CheckDestroy:      testAccCheckAddonDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEksAddonConfigResolveConflicts(rName, addonName, eks.ResolveConflictsNone),
+				Config: testAccAddonResolveConflictsConfig(rName, addonName, eks.ResolveConflictsNone),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksAddonExists(ctx, resourceName, &addon1),
+					testAccCheckAddonExists(ctx, resourceName, &addon1),
 					resource.TestCheckResourceAttr(resourceName, "resolve_conflicts", eks.ResolveConflictsNone),
 				),
 			},
@@ -247,9 +247,9 @@ func TestAccAWSEksAddon_ResolveConflicts(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"resolve_conflicts"},
 			},
 			{
-				Config: testAccAWSEksAddonConfigResolveConflicts(rName, addonName, eks.ResolveConflictsOverwrite),
+				Config: testAccAddonResolveConflictsConfig(rName, addonName, eks.ResolveConflictsOverwrite),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksAddonExists(ctx, resourceName, &addon2),
+					testAccCheckAddonExists(ctx, resourceName, &addon2),
 					resource.TestCheckResourceAttr(resourceName, "resolve_conflicts", eks.ResolveConflictsOverwrite),
 				),
 			},
@@ -266,15 +266,15 @@ func TestAccAWSEksAddon_ServiceAccountRoleArn(t *testing.T) {
 	ctx := context.TODO()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t); testAccPreCheckAWSEksAddon(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t); testAccPreCheckAddon(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAWSEksAddonDestroy,
+		CheckDestroy:      testAccCheckAddonDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEksAddonConfigServiceAccountRoleArn(rName, addonName),
+				Config: testAccAddonServiceAccountRoleARNConfig(rName, addonName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksAddonExists(ctx, resourceName, &addon),
+					testAccCheckAddonExists(ctx, resourceName, &addon),
 					resource.TestCheckResourceAttrPair(resourceName, "service_account_role_arn", serviceRoleResourceName, "arn"),
 				),
 			},
@@ -295,15 +295,15 @@ func TestAccAWSEksAddon_Tags(t *testing.T) {
 	ctx := context.TODO()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t); testAccPreCheckAWSEksAddon(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t); testAccPreCheckAddon(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAWSEksAddonDestroy,
+		CheckDestroy:      testAccCheckAddonDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEksAddonConfigTags1(rName, addonName, "key1", "value1"),
+				Config: testAccAddonTags1Config(rName, addonName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksAddonExists(ctx, resourceName, &addon1),
+					testAccCheckAddonExists(ctx, resourceName, &addon1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -314,18 +314,18 @@ func TestAccAWSEksAddon_Tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSEksAddonConfigTags2(rName, addonName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccAddonTags2Config(rName, addonName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksAddonExists(ctx, resourceName, &addon2),
+					testAccCheckAddonExists(ctx, resourceName, &addon2),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccAWSEksAddonConfigTags1(rName, addonName, "key2", "value2"),
+				Config: testAccAddonTags1Config(rName, addonName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksAddonExists(ctx, resourceName, &addon3),
+					testAccCheckAddonExists(ctx, resourceName, &addon3),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -347,15 +347,15 @@ func TestAccAWSEksAddon_defaultTags_providerOnly(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
 		ProviderFactories: acctest.FactoriesInternal(&providers),
-		CheckDestroy:      testAccCheckAWSEksAddonDestroy,
+		CheckDestroy:      testAccCheckAddonDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultTags_Tags1("providerkey1", "providervalue1"),
-					testAccAWSEksAddon_Basic(rName, addonName),
+					testAccAddon_Basic(rName, addonName),
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksAddonExists(ctx, resourceName, &addon),
+					testAccCheckAddonExists(ctx, resourceName, &addon),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", "providervalue1"),
@@ -369,10 +369,10 @@ func TestAccAWSEksAddon_defaultTags_providerOnly(t *testing.T) {
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultTags_Tags2("providerkey1", "providervalue1", "providerkey2", "providervalue2"),
-					testAccAWSEksAddon_Basic(rName, addonName),
+					testAccAddon_Basic(rName, addonName),
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksAddonExists(ctx, resourceName, &addon),
+					testAccCheckAddonExists(ctx, resourceName, &addon),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", "providervalue1"),
@@ -382,10 +382,10 @@ func TestAccAWSEksAddon_defaultTags_providerOnly(t *testing.T) {
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultTags_Tags1("providerkey1", "value1"),
-					testAccAWSEksAddon_Basic(rName, addonName),
+					testAccAddon_Basic(rName, addonName),
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksAddonExists(ctx, resourceName, &addon),
+					testAccCheckAddonExists(ctx, resourceName, &addon),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", "value1"),
@@ -408,12 +408,12 @@ func TestAccAWSEksAddon_defaultTags_updateToProviderOnly(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
 		ProviderFactories: acctest.FactoriesInternal(&providers),
-		CheckDestroy:      testAccCheckAWSEksAddonDestroy,
+		CheckDestroy:      testAccCheckAddonDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEksAddonConfigTags1(rName, addonName, "key1", "value1"),
+				Config: testAccAddonTags1Config(rName, addonName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksAddonExists(ctx, resourceName, &addon),
+					testAccCheckAddonExists(ctx, resourceName, &addon),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
@@ -423,10 +423,10 @@ func TestAccAWSEksAddon_defaultTags_updateToProviderOnly(t *testing.T) {
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultTags_Tags1("key1", "value1"),
-					testAccAWSEksAddon_Basic(rName, addonName),
+					testAccAddon_Basic(rName, addonName),
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksAddonExists(ctx, resourceName, &addon),
+					testAccCheckAddonExists(ctx, resourceName, &addon),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1"),
@@ -454,24 +454,24 @@ func TestAccAWSEksAddon_defaultTags_updateToResourceOnly(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
 		ProviderFactories: acctest.FactoriesInternal(&providers),
-		CheckDestroy:      testAccCheckAWSEksAddonDestroy,
+		CheckDestroy:      testAccCheckAddonDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultTags_Tags1("key1", "value1"),
-					testAccAWSEksAddon_Basic(rName, addonName),
+					testAccAddon_Basic(rName, addonName),
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksAddonExists(ctx, resourceName, &addon),
+					testAccCheckAddonExists(ctx, resourceName, &addon),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1"),
 				),
 			},
 			{
-				Config: testAccAWSEksAddonConfigTags1(rName, addonName, "key1", "value1"),
+				Config: testAccAddonTags1Config(rName, addonName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksAddonExists(ctx, resourceName, &addon),
+					testAccCheckAddonExists(ctx, resourceName, &addon),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
@@ -500,15 +500,15 @@ func TestAccAWSEksAddon_defaultTags_providerAndResource_nonOverlappingTag(t *tes
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
 		ProviderFactories: acctest.FactoriesInternal(&providers),
-		CheckDestroy:      testAccCheckAWSEksAddonDestroy,
+		CheckDestroy:      testAccCheckAddonDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultTags_Tags1("providerkey1", "providervalue1"),
-					testAccAWSEksAddonConfigTags1(rName, addonName, "resourcekey1", "resourcevalue1"),
+					testAccAddonTags1Config(rName, addonName, "resourcekey1", "resourcevalue1"),
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksAddonExists(ctx, resourceName, &addon),
+					testAccCheckAddonExists(ctx, resourceName, &addon),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.resourcekey1", "resourcevalue1"),
@@ -524,10 +524,10 @@ func TestAccAWSEksAddon_defaultTags_providerAndResource_nonOverlappingTag(t *tes
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultTags_Tags1("providerkey1", "providervalue1"),
-					testAccAWSEksAddonConfigTags2(rName, addonName, "resourcekey1", "resourcevalue1", "resourcekey2", "resourcevalue2"),
+					testAccAddonTags2Config(rName, addonName, "resourcekey1", "resourcevalue1", "resourcekey2", "resourcevalue2"),
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksAddonExists(ctx, resourceName, &addon),
+					testAccCheckAddonExists(ctx, resourceName, &addon),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.resourcekey1", "resourcevalue1"),
@@ -540,10 +540,10 @@ func TestAccAWSEksAddon_defaultTags_providerAndResource_nonOverlappingTag(t *tes
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultTags_Tags1("providerkey2", "providervalue2"),
-					testAccAWSEksAddonConfigTags1(rName, addonName, "resourcekey3", "resourcevalue3"),
+					testAccAddonTags1Config(rName, addonName, "resourcekey3", "resourcevalue3"),
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksAddonExists(ctx, resourceName, &addon),
+					testAccCheckAddonExists(ctx, resourceName, &addon),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.resourcekey3", "resourcevalue3"),
@@ -568,15 +568,15 @@ func TestAccAWSEksAddon_defaultTags_providerAndResource_overlappingTag(t *testin
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
 		ProviderFactories: acctest.FactoriesInternal(&providers),
-		CheckDestroy:      testAccCheckAWSEksAddonDestroy,
+		CheckDestroy:      testAccCheckAddonDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultTags_Tags1("overlapkey1", "providervalue1"),
-					testAccAWSEksAddonConfigTags1(rName, addonName, "overlapkey1", "resourcevalue1"),
+					testAccAddonTags1Config(rName, addonName, "overlapkey1", "resourcevalue1"),
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksAddonExists(ctx, resourceName, &addon),
+					testAccCheckAddonExists(ctx, resourceName, &addon),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.overlapkey1", "resourcevalue1"),
@@ -590,10 +590,10 @@ func TestAccAWSEksAddon_defaultTags_providerAndResource_overlappingTag(t *testin
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultTags_Tags2("overlapkey1", "providervalue1", "overlapkey2", "providervalue2"),
-					testAccAWSEksAddonConfigTags2(rName, addonName, "overlapkey1", "resourcevalue1", "overlapkey2", "resourcevalue2"),
+					testAccAddonTags2Config(rName, addonName, "overlapkey1", "resourcevalue1", "overlapkey2", "resourcevalue2"),
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksAddonExists(ctx, resourceName, &addon),
+					testAccCheckAddonExists(ctx, resourceName, &addon),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.overlapkey1", "resourcevalue1"),
@@ -605,10 +605,10 @@ func TestAccAWSEksAddon_defaultTags_providerAndResource_overlappingTag(t *testin
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultTags_Tags1("overlapkey1", "providervalue1"),
-					testAccAWSEksAddonConfigTags1(rName, addonName, "overlapkey1", "resourcevalue2"),
+					testAccAddonTags1Config(rName, addonName, "overlapkey1", "resourcevalue2"),
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksAddonExists(ctx, resourceName, &addon),
+					testAccCheckAddonExists(ctx, resourceName, &addon),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.overlapkey1", "resourcevalue2"),
@@ -634,7 +634,7 @@ func TestAccAWSEksAddon_defaultTags_providerAndResource_duplicateTag(t *testing.
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultTags_Tags1("overlapkey", "overlapvalue"),
-					testAccAWSEksAddonConfigTags1(rName, addonName, "overlapkey", "overlapvalue"),
+					testAccAddonTags1Config(rName, addonName, "overlapkey", "overlapvalue"),
 				),
 				PlanOnly:    true,
 				ExpectError: regexp.MustCompile(`"tags" are identical to those in the "default_tags" configuration block`),
@@ -656,12 +656,12 @@ func TestAccAWSEksAddon_defaultAndIgnoreTags(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
 		ProviderFactories: acctest.FactoriesInternal(&providers),
-		CheckDestroy:      testAccCheckAWSEksAddonDestroy,
+		CheckDestroy:      testAccCheckAddonDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEksAddonConfigTags1(rName, addonName, "key1", "value1"),
+				Config: testAccAddonTags1Config(rName, addonName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksAddonExists(ctx, resourceName, &addon),
+					testAccCheckAddonExists(ctx, resourceName, &addon),
 					testAccCheckEksAddonUpdateTags(&addon, nil, map[string]string{"defaultkey1": "defaultvalue1"}),
 				),
 				ExpectNonEmptyPlan: true,
@@ -669,14 +669,14 @@ func TestAccAWSEksAddon_defaultAndIgnoreTags(t *testing.T) {
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultAndIgnoreTagsKeyPrefixes1("defaultkey1", "defaultvalue1", "defaultkey"),
-					testAccAWSEksAddonConfigTags1(rName, addonName, "key1", "value1"),
+					testAccAddonTags1Config(rName, addonName, "key1", "value1"),
 				),
 				PlanOnly: true,
 			},
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultAndIgnoreTagsKeys1("defaultkey1", "defaultvalue1"),
-					testAccAWSEksAddonConfigTags1(rName, addonName, "key1", "value1"),
+					testAccAddonTags1Config(rName, addonName, "key1", "value1"),
 				),
 				PlanOnly: true,
 			},
@@ -697,12 +697,12 @@ func TestAccAWSEksAddon_ignoreTags(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
 		ProviderFactories: acctest.FactoriesInternal(&providers),
-		CheckDestroy:      testAccCheckAWSEksAddonDestroy,
+		CheckDestroy:      testAccCheckAddonDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEksAddonConfigTags1(rName, addonName, "key1", "value1"),
+				Config: testAccAddonTags1Config(rName, addonName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksAddonExists(ctx, resourceName, &addon),
+					testAccCheckAddonExists(ctx, resourceName, &addon),
 					testAccCheckEksAddonUpdateTags(&addon, nil, map[string]string{"ignorekey1": "ignorevalue1"}),
 				),
 				ExpectNonEmptyPlan: true,
@@ -710,14 +710,14 @@ func TestAccAWSEksAddon_ignoreTags(t *testing.T) {
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigIgnoreTagsKeyPrefixes1("ignorekey"),
-					testAccAWSEksAddonConfigTags1(rName, addonName, "key1", "value1"),
+					testAccAddonTags1Config(rName, addonName, "key1", "value1"),
 				),
 				PlanOnly: true,
 			},
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigIgnoreTagsKeys("ignorekey1"),
-					testAccAWSEksAddonConfigTags1(rName, addonName, "key1", "value1"),
+					testAccAddonTags1Config(rName, addonName, "key1", "value1"),
 				),
 				PlanOnly: true,
 			},
@@ -725,7 +725,7 @@ func TestAccAWSEksAddon_ignoreTags(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSEksAddonExists(ctx context.Context, resourceName string, addon *eks.Addon) resource.TestCheckFunc {
+func testAccCheckAddonExists(ctx context.Context, resourceName string, addon *eks.Addon) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -756,7 +756,7 @@ func testAccCheckAWSEksAddonExists(ctx context.Context, resourceName string, add
 	}
 }
 
-func testAccCheckAWSEksAddonDestroy(s *terraform.State) error {
+func testAccCheckAddonDestroy(s *terraform.State) error {
 	ctx := context.TODO()
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn
 
@@ -787,7 +787,7 @@ func testAccCheckAWSEksAddonDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccPreCheckAWSEksAddon(t *testing.T) {
+func testAccPreCheckAddon(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn
 
 	input := &eks.DescribeAddonVersionsInput{}
@@ -811,7 +811,7 @@ func testAccCheckEksAddonUpdateTags(addon *eks.Addon, oldTags, newTags map[strin
 	}
 }
 
-func testAccAWSEksAddonConfig_Base(rName string) string {
+func testAccAddonConfig_Base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -883,8 +883,8 @@ resource "aws_eks_cluster" "test" {
 `, rName)
 }
 
-func testAccAWSEksAddon_Basic(rName, addonName string) string {
-	return acctest.ConfigCompose(testAccAWSEksAddonConfig_Base(rName), fmt.Sprintf(`
+func testAccAddon_Basic(rName, addonName string) string {
+	return acctest.ConfigCompose(testAccAddonConfig_Base(rName), fmt.Sprintf(`
 resource "aws_eks_addon" "test" {
   cluster_name = aws_eks_cluster.test.name
   addon_name   = %[2]q
@@ -892,8 +892,8 @@ resource "aws_eks_addon" "test" {
 `, rName, addonName))
 }
 
-func testAccAWSEksAddonConfigAddonVersion(rName, addonName, addonVersion string) string {
-	return acctest.ConfigCompose(testAccAWSEksAddonConfig_Base(rName), fmt.Sprintf(`
+func testAccAddonAddonVersionConfig(rName, addonName, addonVersion string) string {
+	return acctest.ConfigCompose(testAccAddonConfig_Base(rName), fmt.Sprintf(`
 resource "aws_eks_addon" "test" {
   cluster_name      = aws_eks_cluster.test.name
   addon_name        = %[2]q
@@ -903,8 +903,8 @@ resource "aws_eks_addon" "test" {
 `, rName, addonName, addonVersion))
 }
 
-func testAccAWSEksAddonConfigResolveConflicts(rName, addonName, resolveConflicts string) string {
-	return acctest.ConfigCompose(testAccAWSEksAddonConfig_Base(rName), fmt.Sprintf(`
+func testAccAddonResolveConflictsConfig(rName, addonName, resolveConflicts string) string {
+	return acctest.ConfigCompose(testAccAddonConfig_Base(rName), fmt.Sprintf(`
 resource "aws_eks_addon" "test" {
   cluster_name      = aws_eks_cluster.test.name
   addon_name        = %[2]q
@@ -913,8 +913,8 @@ resource "aws_eks_addon" "test" {
 `, rName, addonName, resolveConflicts))
 }
 
-func testAccAWSEksAddonConfigServiceAccountRoleArn(rName, addonName string) string {
-	return acctest.ConfigCompose(testAccAWSEksAddonConfig_Base(rName), fmt.Sprintf(`
+func testAccAddonServiceAccountRoleARNConfig(rName, addonName string) string {
+	return acctest.ConfigCompose(testAccAddonConfig_Base(rName), fmt.Sprintf(`
 resource "aws_iam_role" "test-service-role" {
   name               = "test-service-role"
   assume_role_policy = <<EOF
@@ -942,8 +942,8 @@ resource "aws_eks_addon" "test" {
 `, rName, addonName))
 }
 
-func testAccAWSEksAddonConfigTags1(rName, addonName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccAWSEksAddonConfig_Base(rName), fmt.Sprintf(`
+func testAccAddonTags1Config(rName, addonName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccAddonConfig_Base(rName), fmt.Sprintf(`
 resource "aws_eks_addon" "test" {
   cluster_name = aws_eks_cluster.test.name
   addon_name   = %[2]q
@@ -955,8 +955,8 @@ resource "aws_eks_addon" "test" {
 `, rName, addonName, tagKey1, tagValue1))
 }
 
-func testAccAWSEksAddonConfigTags2(rName, addonName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccAWSEksAddonConfig_Base(rName), fmt.Sprintf(`
+func testAccAddonTags2Config(rName, addonName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccAddonConfig_Base(rName), fmt.Sprintf(`
 resource "aws_eks_addon" "test" {
   cluster_name = aws_eks_cluster.test.name
   addon_name   = %[2]q

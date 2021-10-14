@@ -20,18 +20,18 @@ func TestAccAWSEksClusterAuthDataSource_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsEksClusterAuthConfig_basic,
+				Config: testAccCheckAWSEksClusterAuthConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceResourceName, "name", "foobar"),
 					resource.TestCheckResourceAttrSet(dataSourceResourceName, "token"),
-					testAccCheckAwsEksClusterAuthToken(dataSourceResourceName),
+					testAccCheckClusterAuthToken(dataSourceResourceName),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckAwsEksClusterAuthToken(n string) resource.TestCheckFunc {
+func testAccCheckClusterAuthToken(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -57,7 +57,7 @@ func testAccCheckAwsEksClusterAuthToken(n string) resource.TestCheckFunc {
 	}
 }
 
-const testAccCheckAwsEksClusterAuthConfig_basic = `
+const testAccCheckAWSEksClusterAuthConfig_basic = `
 data "aws_eks_cluster_auth" "test" {
   name = "foobar"
 }

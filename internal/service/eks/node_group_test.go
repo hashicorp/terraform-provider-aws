@@ -25,11 +25,11 @@ func init() {
 
 	resource.AddTestSweepers("aws_eks_node_group", &resource.Sweeper{
 		Name: "aws_eks_node_group",
-		F:    testSweepEksNodeGroups,
+		F:    sweepNodeGroups,
 	})
 }
 
-func testSweepEksNodeGroups(region string) error {
+func sweepNodeGroups(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -103,15 +103,15 @@ func TestAccAWSEksNodeGroup_basic(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
+		CheckDestroy: testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEksNodeGroupConfigNodeGroupName(rName),
+				Config: testAccNodeGroupNodeGroupNameConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup),
+					testAccCheckNodeGroupExists(resourceName, &nodeGroup),
 					resource.TestCheckResourceAttr(resourceName, "ami_type", eks.AMITypesAl2X8664),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "eks", regexp.MustCompile(fmt.Sprintf("nodegroup/%[1]s/%[1]s/.+", rName))),
 					resource.TestCheckResourceAttrPair(resourceName, "cluster_name", eksClusterResourceName, "name"),
@@ -153,15 +153,15 @@ func TestAccAWSEksNodeGroup_Name_Generated(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
+		CheckDestroy: testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEksNodeGroupConfigNodeGroupNameGenerated(rName),
+				Config: testAccNodeGroupNodeGroupNameGeneratedConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup),
+					testAccCheckNodeGroupExists(resourceName, &nodeGroup),
 					create.TestCheckResourceAttrNameGenerated(resourceName, "node_group_name"),
 					resource.TestCheckResourceAttr(resourceName, "node_group_name_prefix", "terraform-"),
 				),
@@ -181,15 +181,15 @@ func TestAccAWSEksNodeGroup_NamePrefix(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
+		CheckDestroy: testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEksNodeGroupConfigNodeGroupNamePrefix(rName, "tf-acc-test-prefix-"),
+				Config: testAccNodeGroupNodeGroupNamePrefixConfig(rName, "tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup),
+					testAccCheckNodeGroupExists(resourceName, &nodeGroup),
 					create.TestCheckResourceAttrNameFromPrefix(resourceName, "node_group_name", "tf-acc-test-prefix-"),
 					resource.TestCheckResourceAttr(resourceName, "node_group_name_prefix", "tf-acc-test-prefix-"),
 				),
@@ -209,15 +209,15 @@ func TestAccAWSEksNodeGroup_disappears(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
+		CheckDestroy: testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEksNodeGroupConfigNodeGroupName(rName),
+				Config: testAccNodeGroupNodeGroupNameConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup),
+					testAccCheckNodeGroupExists(resourceName, &nodeGroup),
 					acctest.CheckResourceDisappears(acctest.Provider, tfeks.ResourceNodeGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -232,15 +232,15 @@ func TestAccAWSEksNodeGroup_AmiType(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
+		CheckDestroy: testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEksNodeGroupConfigAmiType(rName, eks.AMITypesAl2X8664Gpu),
+				Config: testAccNodeGroupAMITypeConfig(rName, eks.AMITypesAl2X8664Gpu),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup1),
+					testAccCheckNodeGroupExists(resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttr(resourceName, "ami_type", eks.AMITypesAl2X8664Gpu),
 				),
 			},
@@ -250,9 +250,9 @@ func TestAccAWSEksNodeGroup_AmiType(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSEksNodeGroupConfigAmiType(rName, eks.AMITypesAl2Arm64),
+				Config: testAccNodeGroupAMITypeConfig(rName, eks.AMITypesAl2Arm64),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup2),
+					testAccCheckNodeGroupExists(resourceName, &nodeGroup2),
 					resource.TestCheckResourceAttr(resourceName, "ami_type", eks.AMITypesAl2Arm64),
 				),
 			},
@@ -266,15 +266,15 @@ func TestAccAWSEksNodeGroup_CapacityType_Spot(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
+		CheckDestroy: testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEksNodeGroupConfigCapacityType(rName, eks.CapacityTypesSpot),
+				Config: testAccNodeGroupCapacityTypeConfig(rName, eks.CapacityTypesSpot),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup1),
+					testAccCheckNodeGroupExists(resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttr(resourceName, "capacity_type", eks.CapacityTypesSpot),
 				),
 			},
@@ -293,15 +293,15 @@ func TestAccAWSEksNodeGroup_DiskSize(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
+		CheckDestroy: testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEksNodeGroupConfigDiskSize(rName, 21),
+				Config: testAccNodeGroupDiskSizeConfig(rName, 21),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup1),
+					testAccCheckNodeGroupExists(resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttr(resourceName, "disk_size", "21"),
 				),
 			},
@@ -320,15 +320,15 @@ func TestAccAWSEksNodeGroup_ForceUpdateVersion(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
+		CheckDestroy: testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEksNodeGroupConfigForceUpdateVersion(rName, "1.19"),
+				Config: testAccNodeGroupForceUpdateVersionConfig(rName, "1.19"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup1),
+					testAccCheckNodeGroupExists(resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttr(resourceName, "version", "1.19"),
 				),
 			},
@@ -339,9 +339,9 @@ func TestAccAWSEksNodeGroup_ForceUpdateVersion(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"force_update_version"},
 			},
 			{
-				Config: testAccAWSEksNodeGroupConfigForceUpdateVersion(rName, "1.20"),
+				Config: testAccNodeGroupForceUpdateVersionConfig(rName, "1.20"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup1),
+					testAccCheckNodeGroupExists(resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttr(resourceName, "version", "1.20"),
 				),
 			},
@@ -356,15 +356,15 @@ func TestAccAWSEksNodeGroup_InstanceTypes_Multiple(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
+		CheckDestroy: testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEksNodeGroupConfigInstanceTypesMultiple(rName),
+				Config: testAccNodeGroupInstanceTypesMultipleConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup1),
+					testAccCheckNodeGroupExists(resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_types.#", ec2InstanceTypeOfferingsDataSourceName, "instance_types.#"),
 				),
 			},
@@ -383,15 +383,15 @@ func TestAccAWSEksNodeGroup_InstanceTypes_Single(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
+		CheckDestroy: testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEksNodeGroupConfigInstanceTypesSingle(rName),
+				Config: testAccNodeGroupInstanceTypesSingleConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup1),
+					testAccCheckNodeGroupExists(resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttr(resourceName, "instance_types.#", "1"),
 				),
 			},
@@ -410,15 +410,15 @@ func TestAccAWSEksNodeGroup_Labels(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
+		CheckDestroy: testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEksNodeGroupConfigLabels1(rName, "key1", "value1"),
+				Config: testAccNodeGroupLabels1Config(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup1),
+					testAccCheckNodeGroupExists(resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttr(resourceName, "labels.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "labels.key1", "value1"),
 				),
@@ -429,18 +429,18 @@ func TestAccAWSEksNodeGroup_Labels(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSEksNodeGroupConfigLabels2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccNodeGroupLabels2Config(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup2),
+					testAccCheckNodeGroupExists(resourceName, &nodeGroup2),
 					resource.TestCheckResourceAttr(resourceName, "labels.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "labels.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "labels.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccAWSEksNodeGroupConfigLabels1(rName, "key2", "value2"),
+				Config: testAccNodeGroupLabels1Config(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup3),
+					testAccCheckNodeGroupExists(resourceName, &nodeGroup3),
 					resource.TestCheckResourceAttr(resourceName, "labels.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "labels.key2", "value2"),
 				),
@@ -457,15 +457,15 @@ func TestAccAWSEksNodeGroup_LaunchTemplate_Id(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
+		CheckDestroy: testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEksNodeGroupConfigLaunchTemplateId1(rName),
+				Config: testAccNodeGroupLaunchTemplateId1Config(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup1),
+					testAccCheckNodeGroupExists(resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttr(resourceName, "launch_template.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", launchTemplateResourceName1, "id"),
 				),
@@ -476,10 +476,10 @@ func TestAccAWSEksNodeGroup_LaunchTemplate_Id(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSEksNodeGroupConfigLaunchTemplateId2(rName),
+				Config: testAccNodeGroupLaunchTemplateId2Config(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup2),
-					testAccCheckAWSEksNodeGroupRecreated(&nodeGroup1, &nodeGroup2),
+					testAccCheckNodeGroupExists(resourceName, &nodeGroup2),
+					testAccCheckNodeGroupRecreated(&nodeGroup1, &nodeGroup2),
 					resource.TestCheckResourceAttr(resourceName, "launch_template.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", launchTemplateResourceName2, "id"),
 				),
@@ -496,15 +496,15 @@ func TestAccAWSEksNodeGroup_LaunchTemplate_Name(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
+		CheckDestroy: testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEksNodeGroupConfigLaunchTemplateName1(rName),
+				Config: testAccNodeGroupLaunchTemplateName1Config(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup1),
+					testAccCheckNodeGroupExists(resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttr(resourceName, "launch_template.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.name", launchTemplateResourceName1, "name"),
 				),
@@ -515,10 +515,10 @@ func TestAccAWSEksNodeGroup_LaunchTemplate_Name(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSEksNodeGroupConfigLaunchTemplateName2(rName),
+				Config: testAccNodeGroupLaunchTemplateName2Config(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup2),
-					testAccCheckAWSEksNodeGroupRecreated(&nodeGroup1, &nodeGroup2),
+					testAccCheckNodeGroupExists(resourceName, &nodeGroup2),
+					testAccCheckNodeGroupRecreated(&nodeGroup1, &nodeGroup2),
 					resource.TestCheckResourceAttr(resourceName, "launch_template.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.name", launchTemplateResourceName2, "name"),
 				),
@@ -534,15 +534,15 @@ func TestAccAWSEksNodeGroup_LaunchTemplate_Version(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
+		CheckDestroy: testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEksNodeGroupConfigLaunchTemplateVersion1(rName),
+				Config: testAccNodeGroupLaunchTemplateVersion1Config(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup1),
+					testAccCheckNodeGroupExists(resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttr(resourceName, "launch_template.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.version", launchTemplateResourceName, "default_version"),
 				),
@@ -553,10 +553,10 @@ func TestAccAWSEksNodeGroup_LaunchTemplate_Version(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSEksNodeGroupConfigLaunchTemplateVersion2(rName),
+				Config: testAccNodeGroupLaunchTemplateVersion2Config(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup2),
-					testAccCheckAWSEksNodeGroupNotRecreated(&nodeGroup1, &nodeGroup2),
+					testAccCheckNodeGroupExists(resourceName, &nodeGroup2),
+					testAccCheckNodeGroupNotRecreated(&nodeGroup1, &nodeGroup2),
 					resource.TestCheckResourceAttr(resourceName, "launch_template.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.version", launchTemplateResourceName, "default_version"),
 				),
@@ -572,15 +572,15 @@ func TestAccAWSEksNodeGroup_ReleaseVersion(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
+		CheckDestroy: testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEksNodeGroupConfigReleaseVersion(rName, "1.17"),
+				Config: testAccNodeGroupReleaseVersionConfig(rName, "1.17"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup1),
+					testAccCheckNodeGroupExists(resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttrPair(resourceName, "release_version", ssmParameterDataSourceName, "value"),
 				),
 			},
@@ -590,10 +590,10 @@ func TestAccAWSEksNodeGroup_ReleaseVersion(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSEksNodeGroupConfigReleaseVersion(rName, "1.18"),
+				Config: testAccNodeGroupReleaseVersionConfig(rName, "1.18"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup2),
-					testAccCheckAWSEksNodeGroupNotRecreated(&nodeGroup1, &nodeGroup2),
+					testAccCheckNodeGroupExists(resourceName, &nodeGroup2),
+					testAccCheckNodeGroupNotRecreated(&nodeGroup1, &nodeGroup2),
 					resource.TestCheckResourceAttrPair(resourceName, "release_version", ssmParameterDataSourceName, "value"),
 				),
 			},
@@ -612,15 +612,15 @@ func TestAccAWSEksNodeGroup_RemoteAccess_Ec2SshKey(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
+		CheckDestroy: testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEksNodeGroupConfigRemoteAccessEc2SshKey(rName, publicKey),
+				Config: testAccNodeGroupRemoteAccessEC2SSHKeyConfig(rName, publicKey),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup1),
+					testAccCheckNodeGroupExists(resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttr(resourceName, "remote_access.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "remote_access.0.ec2_ssh_key", rName),
 				),
@@ -645,15 +645,15 @@ func TestAccAWSEksNodeGroup_RemoteAccess_SourceSecurityGroupIds(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
+		CheckDestroy: testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEksNodeGroupConfigRemoteAccessSourceSecurityGroupIds1(rName, publicKey),
+				Config: testAccNodeGroupRemoteAccessSourceSecurityGroupIds1Config(rName, publicKey),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup1),
+					testAccCheckNodeGroupExists(resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttr(resourceName, "remote_access.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "remote_access.0.source_security_group_ids.#", "1"),
 				),
@@ -673,15 +673,15 @@ func TestAccAWSEksNodeGroup_ScalingConfig_DesiredSize(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
+		CheckDestroy: testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEksNodeGroupConfigScalingConfigSizes(rName, 2, 2, 1),
+				Config: testAccNodeGroupScalingSizesConfig(rName, 2, 2, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup1),
+					testAccCheckNodeGroupExists(resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttr(resourceName, "scaling_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.desired_size", "2"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.max_size", "2"),
@@ -694,10 +694,10 @@ func TestAccAWSEksNodeGroup_ScalingConfig_DesiredSize(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSEksNodeGroupConfigScalingConfigSizes(rName, 1, 2, 1),
+				Config: testAccNodeGroupScalingSizesConfig(rName, 1, 2, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup2),
-					testAccCheckAWSEksNodeGroupNotRecreated(&nodeGroup1, &nodeGroup2),
+					testAccCheckNodeGroupExists(resourceName, &nodeGroup2),
+					testAccCheckNodeGroupNotRecreated(&nodeGroup1, &nodeGroup2),
 					resource.TestCheckResourceAttr(resourceName, "scaling_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.desired_size", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.max_size", "2"),
@@ -714,15 +714,15 @@ func TestAccAWSEksNodeGroup_ScalingConfig_MaxSize(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
+		CheckDestroy: testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEksNodeGroupConfigScalingConfigSizes(rName, 1, 2, 1),
+				Config: testAccNodeGroupScalingSizesConfig(rName, 1, 2, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup1),
+					testAccCheckNodeGroupExists(resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttr(resourceName, "scaling_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.desired_size", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.max_size", "2"),
@@ -735,10 +735,10 @@ func TestAccAWSEksNodeGroup_ScalingConfig_MaxSize(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSEksNodeGroupConfigScalingConfigSizes(rName, 1, 1, 1),
+				Config: testAccNodeGroupScalingSizesConfig(rName, 1, 1, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup2),
-					testAccCheckAWSEksNodeGroupNotRecreated(&nodeGroup1, &nodeGroup2),
+					testAccCheckNodeGroupExists(resourceName, &nodeGroup2),
+					testAccCheckNodeGroupNotRecreated(&nodeGroup1, &nodeGroup2),
 					resource.TestCheckResourceAttr(resourceName, "scaling_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.desired_size", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.max_size", "1"),
@@ -755,15 +755,15 @@ func TestAccAWSEksNodeGroup_ScalingConfig_MinSize(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
+		CheckDestroy: testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEksNodeGroupConfigScalingConfigSizes(rName, 2, 2, 2),
+				Config: testAccNodeGroupScalingSizesConfig(rName, 2, 2, 2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup1),
+					testAccCheckNodeGroupExists(resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttr(resourceName, "scaling_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.desired_size", "2"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.max_size", "2"),
@@ -776,10 +776,10 @@ func TestAccAWSEksNodeGroup_ScalingConfig_MinSize(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSEksNodeGroupConfigScalingConfigSizes(rName, 2, 2, 1),
+				Config: testAccNodeGroupScalingSizesConfig(rName, 2, 2, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup2),
-					testAccCheckAWSEksNodeGroupNotRecreated(&nodeGroup1, &nodeGroup2),
+					testAccCheckNodeGroupExists(resourceName, &nodeGroup2),
+					testAccCheckNodeGroupNotRecreated(&nodeGroup1, &nodeGroup2),
 					resource.TestCheckResourceAttr(resourceName, "scaling_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.desired_size", "2"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.max_size", "2"),
@@ -796,15 +796,15 @@ func TestAccAWSEksNodeGroup_ScalingConfig_Zero_DesiredSize_MinSize(t *testing.T)
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
+		CheckDestroy: testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEksNodeGroupConfigScalingConfigSizes(rName, 0, 1, 0),
+				Config: testAccNodeGroupScalingSizesConfig(rName, 0, 1, 0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup1),
+					testAccCheckNodeGroupExists(resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttr(resourceName, "scaling_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.desired_size", "0"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.max_size", "1"),
@@ -817,10 +817,10 @@ func TestAccAWSEksNodeGroup_ScalingConfig_Zero_DesiredSize_MinSize(t *testing.T)
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSEksNodeGroupConfigScalingConfigSizes(rName, 1, 2, 1),
+				Config: testAccNodeGroupScalingSizesConfig(rName, 1, 2, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup2),
-					testAccCheckAWSEksNodeGroupNotRecreated(&nodeGroup1, &nodeGroup2),
+					testAccCheckNodeGroupExists(resourceName, &nodeGroup2),
+					testAccCheckNodeGroupNotRecreated(&nodeGroup1, &nodeGroup2),
 					resource.TestCheckResourceAttr(resourceName, "scaling_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.desired_size", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.max_size", "2"),
@@ -828,9 +828,9 @@ func TestAccAWSEksNodeGroup_ScalingConfig_Zero_DesiredSize_MinSize(t *testing.T)
 				),
 			},
 			{
-				Config: testAccAWSEksNodeGroupConfigScalingConfigSizes(rName, 0, 1, 0),
+				Config: testAccNodeGroupScalingSizesConfig(rName, 0, 1, 0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup1),
+					testAccCheckNodeGroupExists(resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttr(resourceName, "scaling_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.desired_size", "0"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.max_size", "1"),
@@ -847,15 +847,15 @@ func TestAccAWSEksNodeGroup_Tags(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
+		CheckDestroy: testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEksNodeGroupConfigTags1(rName, "key1", "value1"),
+				Config: testAccNodeGroupTags1Config(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup1),
+					testAccCheckNodeGroupExists(resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -866,20 +866,20 @@ func TestAccAWSEksNodeGroup_Tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSEksNodeGroupConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccNodeGroupTags2Config(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup2),
-					testAccCheckAWSEksNodeGroupNotRecreated(&nodeGroup1, &nodeGroup2),
+					testAccCheckNodeGroupExists(resourceName, &nodeGroup2),
+					testAccCheckNodeGroupNotRecreated(&nodeGroup1, &nodeGroup2),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccAWSEksNodeGroupConfigTags1(rName, "key2", "value2"),
+				Config: testAccNodeGroupTags1Config(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup3),
-					testAccCheckAWSEksNodeGroupNotRecreated(&nodeGroup2, &nodeGroup3),
+					testAccCheckNodeGroupExists(resourceName, &nodeGroup3),
+					testAccCheckNodeGroupNotRecreated(&nodeGroup2, &nodeGroup3),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -894,15 +894,15 @@ func TestAccAWSEksNodeGroup_Taints(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
+		CheckDestroy: testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEksNodeGroupConfigTaints1(rName, "key1", "value1", "NO_SCHEDULE"),
+				Config: testAccNodeGroupTaints1Config(rName, "key1", "value1", "NO_SCHEDULE"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup1),
+					testAccCheckNodeGroupExists(resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttr(resourceName, "taint.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "taint.*", map[string]string{
 						"key":    "key1",
@@ -917,11 +917,11 @@ func TestAccAWSEksNodeGroup_Taints(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSEksNodeGroupConfigTaints2(rName,
+				Config: testAccNodeGroupTaints2Config(rName,
 					"key1", "value1updated", "NO_EXECUTE",
 					"key2", "value2", "NO_SCHEDULE"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup1),
+					testAccCheckNodeGroupExists(resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttr(resourceName, "taint.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "taint.*", map[string]string{
 						"key":    "key1",
@@ -936,9 +936,9 @@ func TestAccAWSEksNodeGroup_Taints(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSEksNodeGroupConfigTaints1(rName, "key2", "value2", "NO_SCHEDULE"),
+				Config: testAccNodeGroupTaints1Config(rName, "key2", "value2", "NO_SCHEDULE"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup1),
+					testAccCheckNodeGroupExists(resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttr(resourceName, "taint.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "taint.*", map[string]string{
 						"key":    "key2",
@@ -957,15 +957,15 @@ func TestAccAWSEksNodeGroup_UpdateConfig(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
+		CheckDestroy: testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEksNodeGroupConfigUpdateConfig1(rName),
+				Config: testAccNodeGroupUpdate1Config(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup1),
+					testAccCheckNodeGroupExists(resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttr(resourceName, "update_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "update_config.0.max_unavailable", "1"),
 					resource.TestCheckResourceAttr(resourceName, "update_config.0.max_unavailable_percentage", "0"),
@@ -977,9 +977,9 @@ func TestAccAWSEksNodeGroup_UpdateConfig(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSEksNodeGroupConfigUpdateConfig2(rName),
+				Config: testAccNodeGroupUpdate2Config(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup1),
+					testAccCheckNodeGroupExists(resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttr(resourceName, "update_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "update_config.0.max_unavailable", "0"),
 					resource.TestCheckResourceAttr(resourceName, "update_config.0.max_unavailable_percentage", "40"),
@@ -995,15 +995,15 @@ func TestAccAWSEksNodeGroup_Version(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
+		CheckDestroy: testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEksNodeGroupConfigVersion(rName, "1.19"),
+				Config: testAccNodeGroupVersionConfig(rName, "1.19"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup1),
+					testAccCheckNodeGroupExists(resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttr(resourceName, "version", "1.19"),
 				),
 			},
@@ -1013,10 +1013,10 @@ func TestAccAWSEksNodeGroup_Version(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSEksNodeGroupConfigVersion(rName, "1.20"),
+				Config: testAccNodeGroupVersionConfig(rName, "1.20"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup2),
-					testAccCheckAWSEksNodeGroupNotRecreated(&nodeGroup1, &nodeGroup2),
+					testAccCheckNodeGroupExists(resourceName, &nodeGroup2),
+					testAccCheckNodeGroupNotRecreated(&nodeGroup1, &nodeGroup2),
 					resource.TestCheckResourceAttr(resourceName, "version", "1.20"),
 				),
 			},
@@ -1030,7 +1030,7 @@ func testAccErrorCheckSkipEKS(t *testing.T) resource.ErrorCheckFunc {
 	)
 }
 
-func testAccCheckAWSEksNodeGroupExists(resourceName string, nodeGroup *eks.Nodegroup) resource.TestCheckFunc {
+func testAccCheckNodeGroupExists(resourceName string, nodeGroup *eks.Nodegroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -1061,7 +1061,7 @@ func testAccCheckAWSEksNodeGroupExists(resourceName string, nodeGroup *eks.Nodeg
 	}
 }
 
-func testAccCheckAWSEksNodeGroupDestroy(s *terraform.State) error {
+func testAccCheckNodeGroupDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -1091,7 +1091,7 @@ func testAccCheckAWSEksNodeGroupDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSEksNodeGroupNotRecreated(i, j *eks.Nodegroup) resource.TestCheckFunc {
+func testAccCheckNodeGroupNotRecreated(i, j *eks.Nodegroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if !aws.TimeValue(i.CreatedAt).Equal(aws.TimeValue(j.CreatedAt)) {
 			return fmt.Errorf("EKS Node Group (%s) was recreated", aws.StringValue(j.NodegroupName))
@@ -1101,7 +1101,7 @@ func testAccCheckAWSEksNodeGroupNotRecreated(i, j *eks.Nodegroup) resource.TestC
 	}
 }
 
-func testAccCheckAWSEksNodeGroupRecreated(i, j *eks.Nodegroup) resource.TestCheckFunc {
+func testAccCheckNodeGroupRecreated(i, j *eks.Nodegroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.TimeValue(i.CreatedAt).Equal(aws.TimeValue(j.CreatedAt)) {
 			return fmt.Errorf("EKS Node Group (%s) was not recreated", aws.StringValue(j.NodegroupName))
@@ -1111,7 +1111,7 @@ func testAccCheckAWSEksNodeGroupRecreated(i, j *eks.Nodegroup) resource.TestChec
 	}
 }
 
-func testAccAWSEksNodeGroupConfigBaseIamAndVpc(rName string) string {
+func testAccNodeGroupBaseIAMAndVPCConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -1253,9 +1253,9 @@ resource "aws_subnet" "test" {
 `, rName)
 }
 
-func testAccAWSEksNodeGroupConfigBase(rName string) string {
+func testAccNodeGroupBaseConfig(rName string) string {
 	return acctest.ConfigCompose(
-		testAccAWSEksNodeGroupConfigBaseIamAndVpc(rName),
+		testAccNodeGroupBaseIAMAndVPCConfig(rName),
 		fmt.Sprintf(`
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
@@ -1273,9 +1273,9 @@ resource "aws_eks_cluster" "test" {
 `, rName))
 }
 
-func testAccAWSEksNodeGroupConfigBaseVersion(rName string, version string) string {
+func testAccNodeGroupBaseVersionConfig(rName string, version string) string {
 	return acctest.ConfigCompose(
-		testAccAWSEksNodeGroupConfigBaseIamAndVpc(rName),
+		testAccNodeGroupBaseIAMAndVPCConfig(rName),
 		fmt.Sprintf(`
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
@@ -1294,8 +1294,8 @@ resource "aws_eks_cluster" "test" {
 `, rName, version))
 }
 
-func testAccAWSEksNodeGroupConfigNodeGroupName(rName string) string {
-	return acctest.ConfigCompose(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
+func testAccNodeGroupNodeGroupNameConfig(rName string) string {
+	return acctest.ConfigCompose(testAccNodeGroupBaseConfig(rName), fmt.Sprintf(`
 resource "aws_eks_node_group" "test" {
   cluster_name    = aws_eks_cluster.test.name
   node_group_name = %[1]q
@@ -1317,8 +1317,8 @@ resource "aws_eks_node_group" "test" {
 `, rName))
 }
 
-func testAccAWSEksNodeGroupConfigNodeGroupNameGenerated(rName string) string {
-	return acctest.ConfigCompose(testAccAWSEksNodeGroupConfigBase(rName), `
+func testAccNodeGroupNodeGroupNameGeneratedConfig(rName string) string {
+	return acctest.ConfigCompose(testAccNodeGroupBaseConfig(rName), `
 resource "aws_eks_node_group" "test" {
   cluster_name  = aws_eks_cluster.test.name
   node_role_arn = aws_iam_role.node.arn
@@ -1339,8 +1339,8 @@ resource "aws_eks_node_group" "test" {
 `)
 }
 
-func testAccAWSEksNodeGroupConfigNodeGroupNamePrefix(rName, namePrefix string) string {
-	return acctest.ConfigCompose(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
+func testAccNodeGroupNodeGroupNamePrefixConfig(rName, namePrefix string) string {
+	return acctest.ConfigCompose(testAccNodeGroupBaseConfig(rName), fmt.Sprintf(`
 resource "aws_eks_node_group" "test" {
   cluster_name           = aws_eks_cluster.test.name
   node_group_name_prefix = %[1]q
@@ -1362,8 +1362,8 @@ resource "aws_eks_node_group" "test" {
 `, namePrefix))
 }
 
-func testAccAWSEksNodeGroupConfigAmiType(rName, amiType string) string {
-	return acctest.ConfigCompose(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
+func testAccNodeGroupAMITypeConfig(rName, amiType string) string {
+	return acctest.ConfigCompose(testAccNodeGroupBaseConfig(rName), fmt.Sprintf(`
 resource "aws_eks_node_group" "test" {
   ami_type        = %[2]q
   cluster_name    = aws_eks_cluster.test.name
@@ -1386,8 +1386,8 @@ resource "aws_eks_node_group" "test" {
 `, rName, amiType))
 }
 
-func testAccAWSEksNodeGroupConfigCapacityType(rName, capacityType string) string {
-	return acctest.ConfigCompose(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
+func testAccNodeGroupCapacityTypeConfig(rName, capacityType string) string {
+	return acctest.ConfigCompose(testAccNodeGroupBaseConfig(rName), fmt.Sprintf(`
 resource "aws_eks_node_group" "test" {
   capacity_type   = %[2]q
   cluster_name    = aws_eks_cluster.test.name
@@ -1410,8 +1410,8 @@ resource "aws_eks_node_group" "test" {
 `, rName, capacityType))
 }
 
-func testAccAWSEksNodeGroupConfigDiskSize(rName string, diskSize int) string {
-	return acctest.ConfigCompose(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
+func testAccNodeGroupDiskSizeConfig(rName string, diskSize int) string {
+	return acctest.ConfigCompose(testAccNodeGroupBaseConfig(rName), fmt.Sprintf(`
 resource "aws_eks_node_group" "test" {
   cluster_name    = aws_eks_cluster.test.name
   disk_size       = %[2]d
@@ -1434,8 +1434,8 @@ resource "aws_eks_node_group" "test" {
 `, rName, diskSize))
 }
 
-func testAccAWSEksNodeGroupConfigForceUpdateVersion(rName, version string) string {
-	return acctest.ConfigCompose(testAccAWSEksNodeGroupConfigBaseVersion(rName, version), fmt.Sprintf(`
+func testAccNodeGroupForceUpdateVersionConfig(rName, version string) string {
+	return acctest.ConfigCompose(testAccNodeGroupBaseVersionConfig(rName, version), fmt.Sprintf(`
 resource "aws_eks_node_group" "test" {
   cluster_name         = aws_eks_cluster.test.name
   force_update_version = true
@@ -1459,9 +1459,9 @@ resource "aws_eks_node_group" "test" {
 `, rName))
 }
 
-func testAccAWSEksNodeGroupConfigInstanceTypesMultiple(rName string) string {
+func testAccNodeGroupInstanceTypesMultipleConfig(rName string) string {
 	return acctest.ConfigCompose(
-		testAccAWSEksNodeGroupConfigBase(rName),
+		testAccNodeGroupBaseConfig(rName),
 		fmt.Sprintf(`
 data "aws_ec2_instance_type_offerings" "available" {
   filter {
@@ -1492,9 +1492,9 @@ resource "aws_eks_node_group" "test" {
 `, rName))
 }
 
-func testAccAWSEksNodeGroupConfigInstanceTypesSingle(rName string) string {
+func testAccNodeGroupInstanceTypesSingleConfig(rName string) string {
 	return acctest.ConfigCompose(
-		testAccAWSEksNodeGroupConfigBase(rName),
+		testAccNodeGroupBaseConfig(rName),
 		fmt.Sprintf(`
 data "aws_ec2_instance_type_offering" "available" {
   filter {
@@ -1527,8 +1527,8 @@ resource "aws_eks_node_group" "test" {
 `, rName))
 }
 
-func testAccAWSEksNodeGroupConfigLabels1(rName, labelKey1, labelValue1 string) string {
-	return acctest.ConfigCompose(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
+func testAccNodeGroupLabels1Config(rName, labelKey1, labelValue1 string) string {
+	return acctest.ConfigCompose(testAccNodeGroupBaseConfig(rName), fmt.Sprintf(`
 resource "aws_eks_node_group" "test" {
   cluster_name    = aws_eks_cluster.test.name
   node_group_name = %[1]q
@@ -1554,8 +1554,8 @@ resource "aws_eks_node_group" "test" {
 `, rName, labelKey1, labelValue1))
 }
 
-func testAccAWSEksNodeGroupConfigLabels2(rName, labelKey1, labelValue1, labelKey2, labelValue2 string) string {
-	return acctest.ConfigCompose(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
+func testAccNodeGroupLabels2Config(rName, labelKey1, labelValue1, labelKey2, labelValue2 string) string {
+	return acctest.ConfigCompose(testAccNodeGroupBaseConfig(rName), fmt.Sprintf(`
 resource "aws_eks_node_group" "test" {
   cluster_name    = aws_eks_cluster.test.name
   node_group_name = %[1]q
@@ -1582,9 +1582,9 @@ resource "aws_eks_node_group" "test" {
 `, rName, labelKey1, labelValue1, labelKey2, labelValue2))
 }
 
-func testAccAWSEksNodeGroupConfigLaunchTemplateId1(rName string) string {
+func testAccNodeGroupLaunchTemplateId1Config(rName string) string {
 	return acctest.ConfigCompose(
-		testAccAWSEksNodeGroupConfigBase(rName),
+		testAccNodeGroupBaseConfig(rName),
 		fmt.Sprintf(`
 data "aws_ssm_parameter" "test" {
   name = "/aws/service/eks/optimized-ami/${aws_eks_cluster.test.version}/amazon-linux-2/recommended/image_id"
@@ -1630,9 +1630,9 @@ resource "aws_eks_node_group" "test" {
 `, rName))
 }
 
-func testAccAWSEksNodeGroupConfigLaunchTemplateId2(rName string) string {
+func testAccNodeGroupLaunchTemplateId2Config(rName string) string {
 	return acctest.ConfigCompose(
-		testAccAWSEksNodeGroupConfigBase(rName),
+		testAccNodeGroupBaseConfig(rName),
 		fmt.Sprintf(`
 data "aws_ssm_parameter" "test" {
   name = "/aws/service/eks/optimized-ami/${aws_eks_cluster.test.version}/amazon-linux-2/recommended/image_id"
@@ -1678,9 +1678,9 @@ resource "aws_eks_node_group" "test" {
 `, rName))
 }
 
-func testAccAWSEksNodeGroupConfigLaunchTemplateName1(rName string) string {
+func testAccNodeGroupLaunchTemplateName1Config(rName string) string {
 	return acctest.ConfigCompose(
-		testAccAWSEksNodeGroupConfigBase(rName),
+		testAccNodeGroupBaseConfig(rName),
 		fmt.Sprintf(`
 data "aws_ssm_parameter" "test" {
   name = "/aws/service/eks/optimized-ami/${aws_eks_cluster.test.version}/amazon-linux-2/recommended/image_id"
@@ -1726,9 +1726,9 @@ resource "aws_eks_node_group" "test" {
 `, rName))
 }
 
-func testAccAWSEksNodeGroupConfigLaunchTemplateName2(rName string) string {
+func testAccNodeGroupLaunchTemplateName2Config(rName string) string {
 	return acctest.ConfigCompose(
-		testAccAWSEksNodeGroupConfigBase(rName),
+		testAccNodeGroupBaseConfig(rName),
 		fmt.Sprintf(`
 data "aws_ssm_parameter" "test" {
   name = "/aws/service/eks/optimized-ami/${aws_eks_cluster.test.version}/amazon-linux-2/recommended/image_id"
@@ -1774,9 +1774,9 @@ resource "aws_eks_node_group" "test" {
 `, rName))
 }
 
-func testAccAWSEksNodeGroupConfigLaunchTemplateVersion1(rName string) string {
+func testAccNodeGroupLaunchTemplateVersion1Config(rName string) string {
 	return acctest.ConfigCompose(
-		testAccAWSEksNodeGroupConfigBase(rName),
+		testAccNodeGroupBaseConfig(rName),
 		fmt.Sprintf(`
 data "aws_ssm_parameter" "test" {
   name = "/aws/service/eks/optimized-ami/${aws_eks_cluster.test.version}/amazon-linux-2/recommended/image_id"
@@ -1816,9 +1816,9 @@ resource "aws_eks_node_group" "test" {
 `, rName))
 }
 
-func testAccAWSEksNodeGroupConfigLaunchTemplateVersion2(rName string) string {
+func testAccNodeGroupLaunchTemplateVersion2Config(rName string) string {
 	return acctest.ConfigCompose(
-		testAccAWSEksNodeGroupConfigBase(rName),
+		testAccNodeGroupBaseConfig(rName),
 		fmt.Sprintf(`
 data "aws_ssm_parameter" "test" {
   name = "/aws/service/eks/optimized-ami/${aws_eks_cluster.test.version}/amazon-linux-2/recommended/image_id"
@@ -1858,8 +1858,8 @@ resource "aws_eks_node_group" "test" {
 `, rName))
 }
 
-func testAccAWSEksNodeGroupConfigReleaseVersion(rName string, version string) string {
-	return acctest.ConfigCompose(testAccAWSEksNodeGroupConfigBaseVersion(rName, version), fmt.Sprintf(`
+func testAccNodeGroupReleaseVersionConfig(rName string, version string) string {
+	return acctest.ConfigCompose(testAccNodeGroupBaseVersionConfig(rName, version), fmt.Sprintf(`
 data "aws_ssm_parameter" "test" {
   name = "/aws/service/eks/optimized-ami/${aws_eks_cluster.test.version}/amazon-linux-2/recommended/release_version"
 }
@@ -1887,8 +1887,8 @@ resource "aws_eks_node_group" "test" {
 `, rName))
 }
 
-func testAccAWSEksNodeGroupConfigRemoteAccessEc2SshKey(rName, publicKey string) string {
-	return acctest.ConfigCompose(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
+func testAccNodeGroupRemoteAccessEC2SSHKeyConfig(rName, publicKey string) string {
+	return acctest.ConfigCompose(testAccNodeGroupBaseConfig(rName), fmt.Sprintf(`
 resource "aws_key_pair" "test" {
   key_name   = %[1]q
   public_key = %[2]q
@@ -1919,8 +1919,8 @@ resource "aws_eks_node_group" "test" {
 `, rName, publicKey))
 }
 
-func testAccAWSEksNodeGroupConfigRemoteAccessSourceSecurityGroupIds1(rName, publicKey string) string {
-	return acctest.ConfigCompose(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
+func testAccNodeGroupRemoteAccessSourceSecurityGroupIds1Config(rName, publicKey string) string {
+	return acctest.ConfigCompose(testAccNodeGroupBaseConfig(rName), fmt.Sprintf(`
 resource "aws_key_pair" "test" {
   key_name   = %[1]q
   public_key = %[2]q
@@ -1952,8 +1952,8 @@ resource "aws_eks_node_group" "test" {
 `, rName, publicKey))
 }
 
-func testAccAWSEksNodeGroupConfigScalingConfigSizes(rName string, desiredSize, maxSize, minSize int) string {
-	return acctest.ConfigCompose(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
+func testAccNodeGroupScalingSizesConfig(rName string, desiredSize, maxSize, minSize int) string {
+	return acctest.ConfigCompose(testAccNodeGroupBaseConfig(rName), fmt.Sprintf(`
 resource "aws_eks_node_group" "test" {
   cluster_name    = aws_eks_cluster.test.name
   node_group_name = %[1]q
@@ -1975,8 +1975,8 @@ resource "aws_eks_node_group" "test" {
 `, rName, desiredSize, maxSize, minSize))
 }
 
-func testAccAWSEksNodeGroupConfigTags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
+func testAccNodeGroupTags1Config(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccNodeGroupBaseConfig(rName), fmt.Sprintf(`
 resource "aws_eks_node_group" "test" {
   cluster_name    = aws_eks_cluster.test.name
   node_group_name = %[1]q
@@ -2002,8 +2002,8 @@ resource "aws_eks_node_group" "test" {
 `, rName, tagKey1, tagValue1))
 }
 
-func testAccAWSEksNodeGroupConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
+func testAccNodeGroupTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccNodeGroupBaseConfig(rName), fmt.Sprintf(`
 resource "aws_eks_node_group" "test" {
   cluster_name    = aws_eks_cluster.test.name
   node_group_name = %[1]q
@@ -2030,8 +2030,8 @@ resource "aws_eks_node_group" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
-func testAccAWSEksNodeGroupConfigTaints1(rName, taintKey1, taintValue1, taintEffect1 string) string {
-	return acctest.ConfigCompose(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
+func testAccNodeGroupTaints1Config(rName, taintKey1, taintValue1, taintEffect1 string) string {
+	return acctest.ConfigCompose(testAccNodeGroupBaseConfig(rName), fmt.Sprintf(`
 resource "aws_eks_node_group" "test" {
   cluster_name    = aws_eks_cluster.test.name
   node_group_name = %[1]q
@@ -2059,8 +2059,8 @@ resource "aws_eks_node_group" "test" {
 `, rName, taintKey1, taintValue1, taintEffect1))
 }
 
-func testAccAWSEksNodeGroupConfigTaints2(rName, taintKey1, taintValue1, taintEffect1, taintKey2, taintValue2, taintEffect2 string) string {
-	return acctest.ConfigCompose(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
+func testAccNodeGroupTaints2Config(rName, taintKey1, taintValue1, taintEffect1, taintKey2, taintValue2, taintEffect2 string) string {
+	return acctest.ConfigCompose(testAccNodeGroupBaseConfig(rName), fmt.Sprintf(`
 resource "aws_eks_node_group" "test" {
   cluster_name    = aws_eks_cluster.test.name
   node_group_name = %[1]q
@@ -2094,8 +2094,8 @@ resource "aws_eks_node_group" "test" {
 `, rName, taintKey1, taintValue1, taintEffect1, taintKey2, taintValue2, taintEffect2))
 }
 
-func testAccAWSEksNodeGroupConfigUpdateConfig1(rName string) string {
-	return acctest.ConfigCompose(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
+func testAccNodeGroupUpdate1Config(rName string) string {
+	return acctest.ConfigCompose(testAccNodeGroupBaseConfig(rName), fmt.Sprintf(`
 resource "aws_eks_node_group" "test" {
   cluster_name    = aws_eks_cluster.test.name
   node_group_name = %[1]q
@@ -2121,8 +2121,8 @@ resource "aws_eks_node_group" "test" {
 `, rName))
 }
 
-func testAccAWSEksNodeGroupConfigUpdateConfig2(rName string) string {
-	return acctest.ConfigCompose(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
+func testAccNodeGroupUpdate2Config(rName string) string {
+	return acctest.ConfigCompose(testAccNodeGroupBaseConfig(rName), fmt.Sprintf(`
 resource "aws_eks_node_group" "test" {
   cluster_name    = aws_eks_cluster.test.name
   node_group_name = %[1]q
@@ -2148,8 +2148,8 @@ resource "aws_eks_node_group" "test" {
 `, rName))
 }
 
-func testAccAWSEksNodeGroupConfigVersion(rName, version string) string {
-	return acctest.ConfigCompose(testAccAWSEksNodeGroupConfigBaseVersion(rName, version), fmt.Sprintf(`
+func testAccNodeGroupVersionConfig(rName, version string) string {
+	return acctest.ConfigCompose(testAccNodeGroupBaseVersionConfig(rName, version), fmt.Sprintf(`
 resource "aws_eks_node_group" "test" {
   cluster_name    = aws_eks_cluster.test.name
   node_group_name = %[1]q
