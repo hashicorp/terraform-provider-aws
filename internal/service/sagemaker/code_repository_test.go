@@ -179,7 +179,7 @@ func TestAccAWSSagemakerCodeRepository_disappears(t *testing.T) {
 				Config: testAccAWSSagemakerCodeRepositoryBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerCodeRepositoryExists(resourceName, &notebook),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceCodeRepository(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceCodeRepository(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -52,7 +52,7 @@ func testSweepSagemakerAppImageConfigs(region string) error {
 		for _, config := range output.AppImageConfigs {
 
 			name := aws.StringValue(config.AppImageConfigName)
-			r := ResourceAppImageConfig()
+			r := tfsagemaker.ResourceAppImageConfig()
 			d := r.Data(nil)
 			d.SetId(name)
 			err = r.Delete(d, client)
@@ -253,7 +253,7 @@ func TestAccAWSSagemakerAppImageConfig_disappears(t *testing.T) {
 				Config: testAccAWSSagemakerAppImageConfigBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerAppImageConfigExists(resourceName, &config),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceAppImageConfig(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceAppImageConfig(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -56,8 +56,8 @@ func TestAccAWSSagemakerModelPackageGroupPolicy_disappears(t *testing.T) {
 				Config: testAccAWSSagemakerModelPackageGroupPolicyBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerModelPackageGroupPolicyExists(resourceName, &mpg),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceModelPackageGroupPolicy(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceModelPackageGroupPolicy(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceModelPackageGroupPolicy(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceModelPackageGroupPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -80,8 +80,8 @@ func TestAccAWSSagemakerModelPackageGroupPolicy_disappears_modelPackageGroup(t *
 				Config: testAccAWSSagemakerModelPackageGroupPolicyBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerModelPackageGroupPolicyExists(resourceName, &mpg),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceModelPackageGroup(), "aws_sagemaker_model_package_group.test"),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceModelPackageGroupPolicy(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceModelPackageGroup(), "aws_sagemaker_model_package_group.test"),
+					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceModelPackageGroupPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

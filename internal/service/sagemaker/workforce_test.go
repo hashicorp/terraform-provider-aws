@@ -40,7 +40,7 @@ func testSweepSagemakerWorkforces(region string) error {
 	err = conn.ListWorkforcesPages(&sagemaker.ListWorkforcesInput{}, func(page *sagemaker.ListWorkforcesOutput, lastPage bool) bool {
 		for _, workforce := range page.Workforces {
 
-			r := ResourceWorkforce()
+			r := tfsagemaker.ResourceWorkforce()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(workforce.WorkforceName))
 			err := r.Delete(d, client)
@@ -227,7 +227,7 @@ func testAccAWSSagemakerWorkforce_disappears(t *testing.T) {
 				Config: testAccAWSSagemakerWorkforceCognitoConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerWorkforceExists(resourceName, &workforce),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceWorkforce(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceWorkforce(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

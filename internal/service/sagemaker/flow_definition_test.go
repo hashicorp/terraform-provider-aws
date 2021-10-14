@@ -36,7 +36,7 @@ func testSweepSagemakerFlowDefinitions(region string) error {
 	err = conn.ListFlowDefinitionsPages(&sagemaker.ListFlowDefinitionsInput{}, func(page *sagemaker.ListFlowDefinitionsOutput, lastPage bool) bool {
 		for _, flowDefinition := range page.FlowDefinitionSummaries {
 
-			r := ResourceFlowDefinition()
+			r := tfsagemaker.ResourceFlowDefinition()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(flowDefinition.FlowDefinitionName))
 			err := r.Delete(d, client)
@@ -228,8 +228,8 @@ func testAccAWSSagemakerFlowDefinition_disappears(t *testing.T) {
 				Config: testAccAWSSagemakerFlowDefinitionBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerFlowDefinitionExists(resourceName, &flowDefinition),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceFlowDefinition(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceFlowDefinition(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceFlowDefinition(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceFlowDefinition(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

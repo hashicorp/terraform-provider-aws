@@ -39,7 +39,7 @@ func testSweepSagemakerStudioLifecycleConfigs(region string) error {
 	err = conn.ListStudioLifecycleConfigsPages(&sagemaker.ListStudioLifecycleConfigsInput{}, func(page *sagemaker.ListStudioLifecycleConfigsOutput, lastPage bool) bool {
 		for _, config := range page.StudioLifecycleConfigs {
 
-			r := ResourceStudioLifecycleConfig()
+			r := tfsagemaker.ResourceStudioLifecycleConfig()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(config.StudioLifecycleConfigName))
 			err := r.Delete(d, client)
@@ -156,8 +156,8 @@ func TestAccAWSSagemakerStudioLifecycleConfig_disappears(t *testing.T) {
 				Config: testAccAWSSagemakerStudioLifecycleConfigBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerStudioLifecycleConfigExists(resourceName, &config),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceStudioLifecycleConfig(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceStudioLifecycleConfig(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceStudioLifecycleConfig(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceStudioLifecycleConfig(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

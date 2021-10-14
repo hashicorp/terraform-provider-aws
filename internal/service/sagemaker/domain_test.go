@@ -43,7 +43,7 @@ func testSweepSagemakerDomains(region string) error {
 	err = conn.ListDomainsPages(&sagemaker.ListDomainsInput{}, func(page *sagemaker.ListDomainsOutput, lastPage bool) bool {
 		for _, domain := range page.Domains {
 
-			r := ResourceDomain()
+			r := tfsagemaker.ResourceDomain()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(domain.DomainId))
 			d.Set("retention_policy.0.home_efs_file_system", "Delete")
@@ -462,7 +462,7 @@ func testAccAWSSagemakerDomain_disappears(t *testing.T) {
 				Config: testAccAWSSagemakerDomainBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerDomainExists(resourceName, &domain),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceDomain(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceDomain(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -489,7 +489,7 @@ func testAccCheckAWSSagemakerDomainDestroy(s *terraform.State) error {
 		}
 
 		domainArn := aws.StringValue(domain.DomainArn)
-		domainID, err := decodeSagemakerDomainID(domainArn)
+		domainID, err := tfsagemaker.DecodeDomainID(domainArn)
 		if err != nil {
 			return err
 		}

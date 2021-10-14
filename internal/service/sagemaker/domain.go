@@ -307,7 +307,7 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	domainArn := aws.StringValue(output.DomainArn)
-	domainID, err := decodeSagemakerDomainID(domainArn)
+	domainID, err := DecodeDomainID(domainArn)
 	if err != nil {
 		return err
 	}
@@ -751,7 +751,7 @@ func flattenSagemakerDomainCustomImages(config []*sagemaker.CustomImage) []map[s
 	return images
 }
 
-func decodeSagemakerDomainID(id string) (string, error) {
+func DecodeDomainID(id string) (string, error) {
 	domainArn, err := arn.Parse(id)
 	if err != nil {
 		return "", err

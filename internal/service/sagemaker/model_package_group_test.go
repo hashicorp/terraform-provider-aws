@@ -177,7 +177,7 @@ func TestAccAWSSagemakerModelPackageGroup_disappears(t *testing.T) {
 				Config: testAccAWSSagemakerModelPackageGroupBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerModelPackageGroupExists(resourceName, &mpg),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceModelPackageGroup(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceModelPackageGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

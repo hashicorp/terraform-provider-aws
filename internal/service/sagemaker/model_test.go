@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -35,7 +36,7 @@ func testSweepSagemakerModels(region string) error {
 	err = conn.ListModelsPages(&sagemaker.ListModelsInput{}, func(page *sagemaker.ListModelsOutput, lastPage bool) bool {
 		for _, model := range page.Models {
 
-			r := ResourceModel()
+			r := tfsagemaker.ResourceModel()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(model.ModelName))
 			err = r.Delete(d, client)
@@ -394,7 +395,7 @@ func TestAccAWSSagemakerModel_disappears(t *testing.T) {
 				Config: testAccSagemakerModelConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSagemakerModelExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceModel(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceModel(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

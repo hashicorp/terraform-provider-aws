@@ -44,7 +44,7 @@ func testSweepSagemakerNotebookInstances(region string) error {
 
 			log.Printf("[INFO] Stopping SageMaker Notebook Instance: %s", name)
 			if status != sagemaker.NotebookInstanceStatusFailed && status != sagemaker.NotebookInstanceStatusStopped {
-				if err := stopSagemakerNotebookInstance(conn, name); err != nil {
+				if err := tfsagemaker.StopNotebookInstance(conn, name); err != nil {
 					log.Printf("[ERROR] Error stopping SageMaker Notebook Instance (%s): %s", name, err)
 					continue
 				}
@@ -321,7 +321,7 @@ func TestAccAWSSagemakerNotebookInstance_disappears(t *testing.T) {
 				Config: testAccAWSSagemakerNotebookInstanceBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerNotebookInstanceExists(resourceName, &notebook),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceNotebookInstance(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceNotebookInstance(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

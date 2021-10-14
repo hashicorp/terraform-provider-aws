@@ -382,7 +382,7 @@ func resourceNotebookInstanceUpdate(d *schema.ResourceData, meta interface{}) er
 		// Stop notebook
 		_, previousStatus, _ := sagemakerNotebookInstanceStateRefreshFunc(conn, d.Id())()
 		if previousStatus != sagemaker.NotebookInstanceStatusStopped {
-			if err := stopSagemakerNotebookInstance(conn, d.Id()); err != nil {
+			if err := StopNotebookInstance(conn, d.Id()); err != nil {
 				return fmt.Errorf("error stopping sagemaker notebook instance prior to updating: %s", err)
 			}
 		}
@@ -460,7 +460,7 @@ func resourceNotebookInstanceDelete(d *schema.ResourceData, meta interface{}) er
 
 	if aws.StringValue(notebook.NotebookInstanceStatus) != sagemaker.NotebookInstanceStatusFailed &&
 		aws.StringValue(notebook.NotebookInstanceStatus) != sagemaker.NotebookInstanceStatusStopped {
-		if err := stopSagemakerNotebookInstance(conn, d.Id()); err != nil {
+		if err := StopNotebookInstance(conn, d.Id()); err != nil {
 			return err
 		}
 	}
@@ -483,7 +483,7 @@ func resourceNotebookInstanceDelete(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func stopSagemakerNotebookInstance(conn *sagemaker.SageMaker, id string) error {
+func StopNotebookInstance(conn *sagemaker.SageMaker, id string) error {
 	describeNotebookInput := &sagemaker.DescribeNotebookInstanceInput{
 		NotebookInstanceName: aws.String(id),
 	}

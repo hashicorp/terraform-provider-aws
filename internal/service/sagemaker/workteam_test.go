@@ -37,7 +37,7 @@ func testSweepSagemakerWorkteams(region string) error {
 	err = conn.ListWorkteamsPages(&sagemaker.ListWorkteamsInput{}, func(page *sagemaker.ListWorkteamsOutput, lastPage bool) bool {
 		for _, workteam := range page.Workteams {
 
-			r := ResourceWorkteam()
+			r := tfsagemaker.ResourceWorkteam()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(workteam.WorkteamName))
 			err := r.Delete(d, client)
@@ -305,7 +305,7 @@ func testAccAWSSagemakerWorkteam_disappears(t *testing.T) {
 				Config: testAccAWSSagemakerWorkteamOidcConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerWorkteamExists(resourceName, &workteam),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceWorkteam(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceWorkteam(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

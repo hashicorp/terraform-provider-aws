@@ -376,7 +376,7 @@ func TestAccAWSSagemakerFeatureGroup_disappears(t *testing.T) {
 				Config: testAccAWSSagemakerFeatureGroupBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerFeatureGroupExists(resourceName, &featureGroup),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceFeatureGroup(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceFeatureGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

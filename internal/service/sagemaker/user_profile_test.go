@@ -40,7 +40,7 @@ func testSweepSagemakerUserProfiles(region string) error {
 	err = conn.ListUserProfilesPages(&sagemaker.ListUserProfilesInput{}, func(page *sagemaker.ListUserProfilesOutput, lastPage bool) bool {
 		for _, userProfile := range page.UserProfiles {
 
-			r := ResourceUserProfile()
+			r := tfsagemaker.ResourceUserProfile()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(userProfile.UserProfileName))
 			d.Set("user_profile_name", userProfile.UserProfileName)
@@ -313,7 +313,7 @@ func testAccAWSSagemakerUserProfile_disappears(t *testing.T) {
 				Config: testAccAWSSagemakerUserProfileBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerUserProfileExists(resourceName, &domain),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceUserProfile(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceUserProfile(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
