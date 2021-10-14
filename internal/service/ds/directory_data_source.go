@@ -192,7 +192,7 @@ func dataSourceDirectoryRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("security_group_id", securityGroupId)
 
-	tags, err := tftags.DirectoryserviceListTags(conn, d.Id())
+	tags, err := ListTags(conn, d.Id())
 	if err != nil {
 		return fmt.Errorf("error listing tags for Directory Service Directory (%s): %w", d.Id(), err)
 	}
