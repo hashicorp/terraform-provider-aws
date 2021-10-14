@@ -392,7 +392,7 @@ func testAccCheckAWSPinpointAppDestroy(s *terraform.State) error {
 		}
 		_, err := conn.GetApp(params)
 		if err != nil {
-			if isAWSErr(err, pinpoint.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, pinpoint.ErrCodeNotFoundException, "") {
 				continue
 			}
 			return err

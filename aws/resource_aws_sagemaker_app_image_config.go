@@ -137,7 +137,7 @@ func resourceAwsSagemakerAppImageConfigRead(d *schema.ResourceData, meta interfa
 
 	image, err := finder.AppImageConfigByName(conn, d.Id())
 	if err != nil {
-		if isAWSErr(err, sagemaker.ErrCodeResourceNotFound, "does not exist") {
+		if tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "does not exist") {
 			d.SetId("")
 			log.Printf("[WARN] Unable to find SageMaker App Image Config (%s); removing from state", d.Id())
 			return nil
@@ -214,7 +214,7 @@ func resourceAwsSagemakerAppImageConfigDelete(d *schema.ResourceData, meta inter
 	}
 
 	if _, err := conn.DeleteAppImageConfig(input); err != nil {
-		if isAWSErr(err, sagemaker.ErrCodeResourceNotFound, "does not exist") {
+		if tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "does not exist") {
 			return nil
 		}
 		return fmt.Errorf("error deleting SageMaker App Image Config (%s): %w", d.Id(), err)

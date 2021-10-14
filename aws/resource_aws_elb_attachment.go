@@ -49,7 +49,7 @@ func resourceAwsElbAttachmentCreate(d *schema.ResourceData, meta interface{}) er
 	err := resource.Retry(10*time.Minute, func() *resource.RetryError {
 		_, err := elbconn.RegisterInstancesWithLoadBalancer(&registerInstancesOpts)
 
-		if isAWSErr(err, "InvalidTarget", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidTarget", "") {
 			return resource.RetryableError(fmt.Errorf("Error attaching instance to ELB, retrying: %s", err))
 		}
 
@@ -59,7 +59,7 @@ func resourceAwsElbAttachmentCreate(d *schema.ResourceData, meta interface{}) er
 
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = elbconn.RegisterInstancesWithLoadBalancer(&registerInstancesOpts)
 	}
 	if err != nil {

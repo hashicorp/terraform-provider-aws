@@ -102,13 +102,13 @@ func resourceAwsLoadBalancerPolicyRead(d *schema.ResourceData, meta interface{})
 
 	getResp, err := elbconn.DescribeLoadBalancerPolicies(request)
 
-	if isAWSErr(err, "LoadBalancerNotFound", "") {
+	if tfawserr.ErrMessageContains(err, "LoadBalancerNotFound", "") {
 		log.Printf("[WARN] Load Balancer Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	if isAWSErr(err, elb.ErrCodePolicyNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, elb.ErrCodePolicyNotFoundException, "") {
 		log.Printf("[WARN] Load Balancer Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
