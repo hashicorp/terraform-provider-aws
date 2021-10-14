@@ -704,7 +704,7 @@ func testAccPreCheckAWSCloudFormationStackSet(t *testing.T) {
 	input := &cloudformation.ListStackSetsInput{}
 	_, err := conn.ListStackSets(input)
 
-	if testAccPreCheckSkipError(err) || isAWSErr(err, "ValidationError", "AWS CloudFormation StackSets is not supported") {
+	if testAccPreCheckSkipError(err) || tfawserr.ErrMessageContains(err, "ValidationError", "AWS CloudFormation StackSets is not supported") {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
