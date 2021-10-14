@@ -13,9 +13,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsCloudControlApiResource() *schema.Resource {
+func DataSourceResource() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceAwsCloudControlApiResourceRead,
+		ReadContext: dataSourceResourceRead,
 
 		Schema: map[string]*schema.Schema{
 			"identifier": {
@@ -43,7 +43,7 @@ func dataSourceAwsCloudControlApiResource() *schema.Resource {
 	}
 }
 
-func dataSourceAwsCloudControlApiResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CloudControlConn
 
 	identifier := d.Get("identifier").(string)

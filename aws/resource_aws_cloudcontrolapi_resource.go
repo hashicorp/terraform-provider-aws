@@ -24,12 +24,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsCloudControlApiResource() *schema.Resource {
+func ResourceResource() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceAwsCloudControlApiResourceCreate,
-		DeleteContext: resourceAwsCloudControlApiResourceDelete,
-		ReadContext:   resourceAwsCloudControlApiResourceRead,
-		UpdateContext: resourceAwsCloudControlApiResourceUpdate,
+		CreateContext: resourceResourceCreate,
+		DeleteContext: resourceResourceDelete,
+		ReadContext:   resourceResourceRead,
+		UpdateContext: resourceResourceUpdate,
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(2 * time.Hour),
@@ -78,7 +78,7 @@ func resourceAwsCloudControlApiResource() *schema.Resource {
 	}
 }
 
-func resourceAwsCloudControlApiResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CloudControlConn
 
 	typeName := d.Get("type_name").(string)
@@ -120,10 +120,10 @@ func resourceAwsCloudControlApiResourceCreate(ctx context.Context, d *schema.Res
 		d.SetId(aws.StringValue(output.ProgressEvent.Identifier))
 	}
 
-	return resourceAwsCloudControlApiResourceRead(ctx, d, meta)
+	return resourceResourceRead(ctx, d, meta)
 }
 
-func resourceAwsCloudControlApiResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CloudControlConn
 
 	resourceDescription, err := finder.ResourceByID(ctx, conn,
@@ -148,7 +148,7 @@ func resourceAwsCloudControlApiResourceRead(ctx context.Context, d *schema.Resou
 	return nil
 }
 
-func resourceAwsCloudControlApiResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CloudControlConn
 
 	if d.HasChange("desired_state") {
@@ -196,10 +196,10 @@ func resourceAwsCloudControlApiResourceUpdate(ctx context.Context, d *schema.Res
 		}
 	}
 
-	return resourceAwsCloudControlApiResourceRead(ctx, d, meta)
+	return resourceResourceRead(ctx, d, meta)
 }
 
-func resourceAwsCloudControlApiResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CloudControlConn
 
 	input := &cloudcontrolapi.DeleteResourceInput{
