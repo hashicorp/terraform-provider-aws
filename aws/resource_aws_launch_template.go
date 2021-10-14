@@ -15,10 +15,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceLaunchTemplate() *schema.Resource {
@@ -601,7 +602,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.StringInSlice(ec2.ResourceType_Values(), false),
 						},
-						"tags": tagsSchema(),
+						"tags": tftags.TagsSchema(),
 					},
 				},
 			},
@@ -610,8 +611,8 @@ func ResourceLaunchTemplate() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 			"hibernation_options": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -652,7 +653,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 				}
 				return false
 			}),
-			SetTagsDiff,
+			verify.SetTagsDiff,
 		),
 	}
 }
@@ -660,7 +661,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 func resourceLaunchTemplateCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	ltName := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 
@@ -739,7 +740,7 @@ func resourceLaunchTemplateRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(lt.LaunchTemplateName)))
 	d.Set("latest_version", lt.LatestVersionNumber)
 	d.Set("default_version", lt.DefaultVersionNumber)
-	tags := keyvaluetags.Ec2KeyValueTags(lt.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := tftags.Ec2KeyValueTags(lt.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -913,7 +914,7 @@ func resourceLaunchTemplateUpdate(d *schema.ResourceData, meta interface{}) erro
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := tftags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)
 		}
 	}
@@ -1293,7 +1294,7 @@ func getTagSpecifications(t []*ec2.LaunchTemplateTagSpecification) []interface{}
 	for _, v := range t {
 		s = append(s, map[string]interface{}{
 			"resource_type": aws.StringValue(v.ResourceType),
-			"tags":          keyvaluetags.Ec2KeyValueTags(v.Tags).IgnoreAws().Map(),
+			"tags":          tftags.Ec2KeyValueTags(v.Tags).IgnoreAws().Map(),
 		})
 	}
 	return s
@@ -1504,7 +1505,7 @@ func buildLaunchTemplateData(d *schema.ResourceData) (*ec2.RequestLaunchTemplate
 			tsData := ts.(map[string]interface{})
 			tagSpecification := &ec2.LaunchTemplateTagSpecificationRequest{
 				ResourceType: aws.String(tsData["resource_type"].(string)),
-				Tags:         keyvaluetags.New(tsData["tags"].(map[string]interface{})).IgnoreAws().Ec2Tags(),
+				Tags:         tftags.New(tsData["tags"].(map[string]interface{})).IgnoreAws().Ec2Tags(),
 			}
 			tagSpecifications = append(tagSpecifications, tagSpecification)
 		}

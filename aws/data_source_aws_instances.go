@@ -8,8 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceInstances() *schema.Resource {
@@ -18,7 +19,7 @@ func DataSourceInstances() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"filter":        dataSourceFiltersSchema(),
-			"instance_tags": tagsSchemaComputed(),
+			"instance_tags": tftags.TagsSchemaComputed(),
 			"instance_state_names": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -83,7 +84,7 @@ func dataSourceInstancesRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	if tagsOk {
 		params.Filters = append(params.Filters, buildEC2TagFilterList(
-			keyvaluetags.New(tags.(map[string]interface{})).Ec2Tags(),
+			tftags.New(tags.(map[string]interface{})).Ec2Tags(),
 		)...)
 	}
 

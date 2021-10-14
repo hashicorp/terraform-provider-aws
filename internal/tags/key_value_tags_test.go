@@ -1,4 +1,4 @@
-package keyvaluetags
+package tags
 
 import (
 	"testing"

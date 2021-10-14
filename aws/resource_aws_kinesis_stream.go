@@ -12,8 +12,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 const (
@@ -30,7 +31,7 @@ func ResourceStream() *schema.Resource {
 			State: resourceAwsKinesisStreamImport,
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 
 		SchemaVersion: 1,
 		StateUpgraders: []schema.StateUpgrader{
@@ -102,8 +103,8 @@ func ResourceStream() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -159,7 +160,7 @@ func resourceStreamUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := keyvaluetags.KinesisUpdateTags(conn, sn, o, n); err != nil {
+		if err := tftags.KinesisUpdateTags(conn, sn, o, n); err != nil {
 			return fmt.Errorf("error updating Kinesis Stream (%s) tags: %s", sn, err)
 		}
 	}
@@ -212,7 +213,7 @@ func resourceStreamRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("shard_level_metrics", state.shardLevelMetrics)
 	}
 
-	tags, err := keyvaluetags.KinesisListTags(conn, sn)
+	tags, err := tftags.KinesisListTags(conn, sn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Kinesis Stream (%s): %s", sn, err)

@@ -11,8 +11,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // OpsWorks has a single concept of "layer" which represents several different
@@ -214,8 +215,8 @@ func (lt *opsworksLayerType) SchemaResource() *schema.Resource {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		"tags":     tagsSchema(),
-		"tags_all": tagsSchemaComputed(),
+		"tags":     tftags.TagsSchema(),
+		"tags_all": tftags.TagsSchemaComputed(),
 	}
 
 	if lt.CustomShortName {
@@ -266,7 +267,7 @@ func (lt *opsworksLayerType) SchemaResource() *schema.Resource {
 
 		Schema: resourceSchema,
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -349,7 +350,7 @@ func (lt *opsworksLayerType) Read(d *schema.ResourceData, meta interface{}) erro
 
 	arn := aws.StringValue(layer.Arn)
 	d.Set("arn", arn)
-	tags, err := keyvaluetags.OpsworksListTags(conn, arn)
+	tags, err := tftags.OpsworksListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Opsworks Layer (%s): %s", arn, err)
@@ -372,7 +373,7 @@ func (lt *opsworksLayerType) Read(d *schema.ResourceData, meta interface{}) erro
 func (lt *opsworksLayerType) Create(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).OpsWorksConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	attributes, err := lt.AttributeMap(d)
 	if err != nil {
@@ -435,7 +436,7 @@ func (lt *opsworksLayerType) Create(d *schema.ResourceData, meta interface{}) er
 	}.String()
 
 	if len(tags) > 0 {
-		if err := keyvaluetags.OpsworksUpdateTags(conn, arn, nil, tags); err != nil {
+		if err := tftags.OpsworksUpdateTags(conn, arn, nil, tags); err != nil {
 			return fmt.Errorf("error updating Opsworks stack (%s) tags: %s", arn, err)
 		}
 	}
@@ -515,7 +516,7 @@ func (lt *opsworksLayerType) Update(d *schema.ResourceData, meta interface{}) er
 		o, n := d.GetChange("tags_all")
 
 		arn := d.Get("arn").(string)
-		if err := keyvaluetags.OpsworksUpdateTags(conn, arn, o, n); err != nil {
+		if err := tftags.OpsworksUpdateTags(conn, arn, o, n); err != nil {
 			return fmt.Errorf("error updating Opsworks Layer (%s) tags: %s", arn, err)
 		}
 	}

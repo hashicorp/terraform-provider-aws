@@ -12,7 +12,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 )
 
 const filename = `list_tags_gen.go`
@@ -143,16 +143,16 @@ func main() {
 		ServiceNames: serviceNames,
 	}
 	templateFuncMap := template.FuncMap{
-		"ClientType":                           keyvaluetags.ServiceClientType,
-		"ListTagsFunction":                     keyvaluetags.ServiceListTagsFunction,
-		"ListTagsInputFilterIdentifierName":    keyvaluetags.ServiceListTagsInputFilterIdentifierName,
-		"ListTagsInputIdentifierField":         keyvaluetags.ServiceListTagsInputIdentifierField,
-		"ListTagsInputIdentifierRequiresSlice": keyvaluetags.ServiceListTagsInputIdentifierRequiresSlice,
-		"ListTagsOutputTagsField":              keyvaluetags.ServiceListTagsOutputTagsField,
-		"ParentResourceNotFoundError":          keyvaluetags.ServiceParentResourceNotFoundError,
-		"TagPackage":                           keyvaluetags.ServiceTagPackage,
-		"TagResourceTypeField":                 keyvaluetags.ServiceTagResourceTypeField,
-		"TagTypeIdentifierField":               keyvaluetags.ServiceTagTypeIdentifierField,
+		"ClientType":                           tftags.ServiceClientType,
+		"ListTagsFunction":                     tftags.ServiceListTagsFunction,
+		"ListTagsInputFilterIdentifierName":    tftags.ServiceListTagsInputFilterIdentifierName,
+		"ListTagsInputIdentifierField":         tftags.ServiceListTagsInputIdentifierField,
+		"ListTagsInputIdentifierRequiresSlice": tftags.ServiceListTagsInputIdentifierRequiresSlice,
+		"ListTagsOutputTagsField":              tftags.ServiceListTagsOutputTagsField,
+		"ParentResourceNotFoundError":          tftags.ServiceParentResourceNotFoundError,
+		"TagPackage":                           tftags.ServiceTagPackage,
+		"TagResourceTypeField":                 tftags.ServiceTagResourceTypeField,
+		"TagTypeIdentifierField":               tftags.ServiceTagTypeIdentifierField,
 		"Title":                                strings.Title,
 	}
 

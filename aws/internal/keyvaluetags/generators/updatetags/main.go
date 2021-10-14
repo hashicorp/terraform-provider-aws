@@ -12,7 +12,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 )
 
 const filename = `update_tags_gen.go`
@@ -152,23 +152,23 @@ func main() {
 		ServiceNames: serviceNames,
 	}
 	templateFuncMap := template.FuncMap{
-		"ClientType":                      keyvaluetags.ServiceClientType,
-		"TagFunction":                     keyvaluetags.ServiceTagFunction,
-		"TagFunctionBatchSize":            keyvaluetags.ServiceTagFunctionBatchSize,
-		"TagInputCustomValue":             keyvaluetags.ServiceTagInputCustomValue,
-		"TagInputIdentifierField":         keyvaluetags.ServiceTagInputIdentifierField,
-		"TagInputIdentifierRequiresSlice": keyvaluetags.ServiceTagInputIdentifierRequiresSlice,
-		"TagInputTagsField":               keyvaluetags.ServiceTagInputTagsField,
-		"TagPackage":                      keyvaluetags.ServiceTagPackage,
-		"TagResourceTypeField":            keyvaluetags.ServiceTagResourceTypeField,
-		"TagTypeAdditionalBoolFields":     keyvaluetags.ServiceTagTypeAdditionalBoolFields,
-		"TagTypeIdentifierField":          keyvaluetags.ServiceTagTypeIdentifierField,
+		"ClientType":                      tftags.ServiceClientType,
+		"TagFunction":                     tftags.ServiceTagFunction,
+		"TagFunctionBatchSize":            tftags.ServiceTagFunctionBatchSize,
+		"TagInputCustomValue":             tftags.ServiceTagInputCustomValue,
+		"TagInputIdentifierField":         tftags.ServiceTagInputIdentifierField,
+		"TagInputIdentifierRequiresSlice": tftags.ServiceTagInputIdentifierRequiresSlice,
+		"TagInputTagsField":               tftags.ServiceTagInputTagsField,
+		"TagPackage":                      tftags.ServiceTagPackage,
+		"TagResourceTypeField":            tftags.ServiceTagResourceTypeField,
+		"TagTypeAdditionalBoolFields":     tftags.ServiceTagTypeAdditionalBoolFields,
+		"TagTypeIdentifierField":          tftags.ServiceTagTypeIdentifierField,
 		"Title":                           strings.Title,
-		"UntagFunction":                   keyvaluetags.ServiceUntagFunction,
-		"UntagInputCustomValue":           keyvaluetags.ServiceUntagInputCustomValue,
-		"UntagInputRequiresTagKeyType":    keyvaluetags.ServiceUntagInputRequiresTagKeyType,
-		"UntagInputRequiresTagType":       keyvaluetags.ServiceUntagInputRequiresTagType,
-		"UntagInputTagsField":             keyvaluetags.ServiceUntagInputTagsField,
+		"UntagFunction":                   tftags.ServiceUntagFunction,
+		"UntagInputCustomValue":           tftags.ServiceUntagInputCustomValue,
+		"UntagInputRequiresTagKeyType":    tftags.ServiceUntagInputRequiresTagKeyType,
+		"UntagInputRequiresTagType":       tftags.ServiceUntagInputRequiresTagType,
+		"UntagInputTagsField":             tftags.ServiceUntagInputTagsField,
 	}
 
 	tmpl, err := template.New("updatetags").Funcs(templateFuncMap).Parse(templateBody)

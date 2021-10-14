@@ -8,9 +8,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/connect"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	tfconnect "github.com/hashicorp/terraform-provider-aws/aws/internal/service/connect"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceContactFlow() *schema.Resource {
@@ -45,7 +46,7 @@ func DataSourceContactFlow() *schema.Resource {
 				Computed:     true,
 				ExactlyOneOf: []string{"name", "contact_flow_id"},
 			},
-			"tags": tagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 			"type": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -101,7 +102,7 @@ func dataSourceContactFlowRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("content", contactFlow.Content)
 	d.Set("type", contactFlow.Type)
 
-	if err := d.Set("tags", keyvaluetags.ConnectKeyValueTags(contactFlow.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", tftags.ConnectKeyValueTags(contactFlow.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting tags: %s", err))
 	}
 

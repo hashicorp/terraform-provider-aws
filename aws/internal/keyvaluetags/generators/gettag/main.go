@@ -12,7 +12,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 )
 
 const filename = `get_tag_gen.go`
@@ -38,14 +38,14 @@ func main() {
 		ServiceNames: serviceNames,
 	}
 	templateFuncMap := template.FuncMap{
-		"ClientType":                        keyvaluetags.ServiceClientType,
-		"ListTagsFunction":                  keyvaluetags.ServiceListTagsFunction,
-		"ListTagsInputFilterIdentifierName": keyvaluetags.ServiceListTagsInputFilterIdentifierName,
-		"ListTagsOutputTagsField":           keyvaluetags.ServiceListTagsOutputTagsField,
-		"TagPackage":                        keyvaluetags.ServiceTagPackage,
-		"TagResourceTypeField":              keyvaluetags.ServiceTagResourceTypeField,
-		"TagTypeAdditionalBoolFields":       keyvaluetags.ServiceTagTypeAdditionalBoolFields,
-		"TagTypeIdentifierField":            keyvaluetags.ServiceTagTypeIdentifierField,
+		"ClientType":                        tftags.ServiceClientType,
+		"ListTagsFunction":                  tftags.ServiceListTagsFunction,
+		"ListTagsInputFilterIdentifierName": tftags.ServiceListTagsInputFilterIdentifierName,
+		"ListTagsOutputTagsField":           tftags.ServiceListTagsOutputTagsField,
+		"TagPackage":                        tftags.ServiceTagPackage,
+		"TagResourceTypeField":              tftags.ServiceTagResourceTypeField,
+		"TagTypeAdditionalBoolFields":       tftags.ServiceTagTypeAdditionalBoolFields,
+		"TagTypeIdentifierField":            tftags.ServiceTagTypeIdentifierField,
 		"Title":                             strings.Title,
 	}
 

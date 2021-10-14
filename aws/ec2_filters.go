@@ -6,8 +6,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // buildEC2TagFilterList takes a []*ec2.Tag and produces a []*ec2.Filter that
@@ -20,7 +21,7 @@ import (
 // data sources that retrieve data about EC2 objects.
 //
 // It is conventional for an EC2 data source to include an attribute called
-// "tags" which conforms to the schema returned by the tagsSchema() function.
+// "tags" which conforms to the schema returned by the tftags.TagsSchema() function.
 // The value of this can then be converted to a tags slice using tagsFromMap,
 // and the result finally passed in to this function.
 //
@@ -76,7 +77,7 @@ func ec2TagFiltersFromMap(m map[string]interface{}) []*ec2.Filter {
 	}
 
 	filters := []*ec2.Filter{}
-	for _, tag := range keyvaluetags.New(m).IgnoreAws().Ec2Tags() {
+	for _, tag := range tftags.New(m).IgnoreAws().Ec2Tags() {
 		filters = append(filters, &ec2.Filter{
 			Name:   aws.String(fmt.Sprintf("tag:%s", aws.StringValue(tag.Key))),
 			Values: []*string{tag.Value},

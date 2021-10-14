@@ -4,6 +4,7 @@ import (
 	"strings"
 	"testing"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func TestTlsRsaPrivateKeyPem(t *testing.T) {

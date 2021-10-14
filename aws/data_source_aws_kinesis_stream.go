@@ -4,8 +4,9 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceStream() *schema.Resource {
@@ -59,7 +60,7 @@ func DataSourceStream() *schema.Resource {
 				Set:      schema.HashString,
 			},
 
-			"tags": tagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -84,7 +85,7 @@ func dataSourceStreamRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("retention_period", state.retentionPeriod)
 	d.Set("shard_level_metrics", state.shardLevelMetrics)
 
-	tags, err := keyvaluetags.KinesisListTags(conn, sn)
+	tags, err := tftags.KinesisListTags(conn, sn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Kinesis Stream (%s): %w", sn, err)

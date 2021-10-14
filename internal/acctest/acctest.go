@@ -33,6 +33,7 @@ import (
 	organizationsfinder "github.com/hashicorp/terraform-provider-aws/aws/internal/service/organizations/finder"
 	stsfinder "github.com/hashicorp/terraform-provider-aws/aws/internal/service/sts/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 const (

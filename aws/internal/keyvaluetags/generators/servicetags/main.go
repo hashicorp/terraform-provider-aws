@@ -12,7 +12,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 )
 
 const filename = `service_tags_gen.go`
@@ -170,17 +170,17 @@ func main() {
 		SliceServiceNames: sliceServiceNames,
 	}
 	templateFuncMap := template.FuncMap{
-		"TagKeyType":                  keyvaluetags.ServiceTagKeyType,
-		"TagPackage":                  keyvaluetags.ServiceTagPackage,
-		"TagResourceTypeField":        keyvaluetags.ServiceTagResourceTypeField,
-		"TagType":                     keyvaluetags.ServiceTagType,
-		"TagType2":                    keyvaluetags.ServiceTagType2,
-		"TagTypeAdditionalBoolFields": keyvaluetags.ServiceTagTypeAdditionalBoolFields,
-		"TagTypeIdentifierField":      keyvaluetags.ServiceTagTypeIdentifierField,
-		"TagTypeKeyField":             keyvaluetags.ServiceTagTypeKeyField,
-		"TagTypeValueField":           keyvaluetags.ServiceTagTypeValueField,
+		"TagKeyType":                  tftags.ServiceTagKeyType,
+		"TagPackage":                  tftags.ServiceTagPackage,
+		"TagResourceTypeField":        tftags.ServiceTagResourceTypeField,
+		"TagType":                     tftags.ServiceTagType,
+		"TagType2":                    tftags.ServiceTagType2,
+		"TagTypeAdditionalBoolFields": tftags.ServiceTagTypeAdditionalBoolFields,
+		"TagTypeIdentifierField":      tftags.ServiceTagTypeIdentifierField,
+		"TagTypeKeyField":             tftags.ServiceTagTypeKeyField,
+		"TagTypeValueField":           tftags.ServiceTagTypeValueField,
 		"Title":                       strings.Title,
-		"ToSnakeCase":                 keyvaluetags.ToSnakeCase,
+		"ToSnakeCase":                 tftags.ToSnakeCase,
 	}
 
 	tmpl, err := template.New("servicetags").Funcs(templateFuncMap).Parse(templateBody)
@@ -258,7 +258,7 @@ func {{ . | Title }}KeyValueTags(tags map[string]*string) KeyValueTags {
 //
 // This function strips tag resource identifier and type. Generally, this is
 // the desired behavior so the tag schema does not require those attributes.
-// Use (keyvaluetags.KeyValueTags).ListOfMap() for full tag information.
+// Use (tftags.KeyValueTags).ListOfMap() for full tag information.
 func (tags KeyValueTags) {{ . | Title }}ListOfMap() []interface{} {
 	var result []interface{}
 

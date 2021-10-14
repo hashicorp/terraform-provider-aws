@@ -18,12 +18,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceLoadBalancer() *schema.Resource {
@@ -36,7 +37,7 @@ func ResourceLoadBalancer() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -253,8 +254,8 @@ func ResourceLoadBalancer() *schema.Resource {
 				Computed: true,
 			},
 
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -262,7 +263,7 @@ func ResourceLoadBalancer() *schema.Resource {
 func resourceLoadBalancerCreate(d *schema.ResourceData, meta interface{}) error {
 	elbconn := meta.(*conns.AWSClient).ELBConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	// Expand the "listener" set to aws-sdk-go compat []*elb.Listener
 	listeners, err := expandListeners(d.Get("listener").(*schema.Set).List())
@@ -377,7 +378,7 @@ func resourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 // flattenAwsELbResource takes a *elbv2.LoadBalancer and populates all respective resource fields.
-func flattenAwsELbResource(d *schema.ResourceData, ec2conn *ec2.EC2, elbconn *elb.ELB, lb *elb.LoadBalancerDescription, ignoreTagsConfig *keyvaluetags.IgnoreConfig, defaultTagsConfig *keyvaluetags.DefaultConfig) error {
+func flattenAwsELbResource(d *schema.ResourceData, ec2conn *ec2.EC2, elbconn *elb.ELB, lb *elb.LoadBalancerDescription, ignoreTagsConfig *tftags.IgnoreConfig, defaultTagsConfig *tftags.DefaultConfig) error {
 	describeAttrsOpts := &elb.DescribeLoadBalancerAttributesInput{
 		LoadBalancerName: aws.String(d.Id()),
 	}
@@ -451,7 +452,7 @@ func flattenAwsELbResource(d *schema.ResourceData, ec2conn *ec2.EC2, elbconn *el
 		}
 	}
 
-	tags, err := keyvaluetags.ElbListTags(elbconn, d.Id())
+	tags, err := tftags.ElbListTags(elbconn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for ELB (%s): %s", d.Id(), err)
@@ -777,7 +778,7 @@ func resourceLoadBalancerUpdate(d *schema.ResourceData, meta interface{}) error 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := keyvaluetags.ElbUpdateTags(elbconn, d.Id(), o, n); err != nil {
+		if err := tftags.ElbUpdateTags(elbconn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating ELB(%s) tags: %s", d.Id(), err)
 		}
 	}

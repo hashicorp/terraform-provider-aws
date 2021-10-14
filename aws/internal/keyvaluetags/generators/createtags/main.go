@@ -12,7 +12,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 )
 
 const filename = `create_tags_gen.go`
@@ -33,18 +33,18 @@ func main() {
 		ServiceNames: serviceNames,
 	}
 	templateFuncMap := template.FuncMap{
-		"ClientType":                      keyvaluetags.ServiceClientType,
-		"ParentResourceNotFoundError":     keyvaluetags.ServiceParentResourceNotFoundError,
-		"RetryCreationOnResourceNotFound": keyvaluetags.ServiceRetryCreationOnResourceNotFound,
-		"TagFunction":                     keyvaluetags.ServiceTagFunction,
-		"TagFunctionBatchSize":            keyvaluetags.ServiceTagFunctionBatchSize,
-		"TagInputCustomValue":             keyvaluetags.ServiceTagInputCustomValue,
-		"TagInputIdentifierField":         keyvaluetags.ServiceTagInputIdentifierField,
-		"TagInputIdentifierRequiresSlice": keyvaluetags.ServiceTagInputIdentifierRequiresSlice,
-		"TagInputTagsField":               keyvaluetags.ServiceTagInputTagsField,
-		"TagPackage":                      keyvaluetags.ServiceTagPackage,
-		"TagResourceTypeField":            keyvaluetags.ServiceTagResourceTypeField,
-		"TagTypeIdentifierField":          keyvaluetags.ServiceTagTypeIdentifierField,
+		"ClientType":                      tftags.ServiceClientType,
+		"ParentResourceNotFoundError":     tftags.ServiceParentResourceNotFoundError,
+		"RetryCreationOnResourceNotFound": tftags.ServiceRetryCreationOnResourceNotFound,
+		"TagFunction":                     tftags.ServiceTagFunction,
+		"TagFunctionBatchSize":            tftags.ServiceTagFunctionBatchSize,
+		"TagInputCustomValue":             tftags.ServiceTagInputCustomValue,
+		"TagInputIdentifierField":         tftags.ServiceTagInputIdentifierField,
+		"TagInputIdentifierRequiresSlice": tftags.ServiceTagInputIdentifierRequiresSlice,
+		"TagInputTagsField":               tftags.ServiceTagInputTagsField,
+		"TagPackage":                      tftags.ServiceTagPackage,
+		"TagResourceTypeField":            tftags.ServiceTagResourceTypeField,
+		"TagTypeIdentifierField":          tftags.ServiceTagTypeIdentifierField,
 		"Title":                           strings.Title,
 	}
 

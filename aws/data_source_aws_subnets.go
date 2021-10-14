@@ -6,8 +6,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceSubnets() *schema.Resource {
@@ -15,7 +16,7 @@ func DataSourceSubnets() *schema.Resource {
 		Read: dataSourceSubnetsRead,
 		Schema: map[string]*schema.Schema{
 			"filter": dataSourceFiltersSchema(),
-			"tags":   tagsSchemaComputed(),
+			"tags":   tftags.TagsSchemaComputed(),
 
 			"ids": {
 				Type:     schema.TypeList,
@@ -33,7 +34,7 @@ func dataSourceSubnetsRead(d *schema.ResourceData, meta interface{}) error {
 
 	if tags, tagsOk := d.GetOk("tags"); tagsOk {
 		input.Filters = append(input.Filters, buildEC2TagFilterList(
-			keyvaluetags.New(tags.(map[string]interface{})).Ec2Tags(),
+			tftags.New(tags.(map[string]interface{})).Ec2Tags(),
 		)...)
 	}
 
