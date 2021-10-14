@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicediscovery/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicediscovery/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsServiceDiscoveryService() *schema.Resource {
@@ -139,8 +140,8 @@ func resourceAwsServiceDiscoveryService() *schema.Resource {
 }
 
 func resourceAwsServiceDiscoveryServiceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sdconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
@@ -186,9 +187,9 @@ func resourceAwsServiceDiscoveryServiceCreate(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsServiceDiscoveryServiceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sdconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	service, err := finder.ServiceByID(conn, d.Id())
 
@@ -238,7 +239,7 @@ func resourceAwsServiceDiscoveryServiceRead(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsServiceDiscoveryServiceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sdconn
+	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &servicediscovery.UpdateServiceInput{
@@ -280,7 +281,7 @@ func resourceAwsServiceDiscoveryServiceUpdate(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsServiceDiscoveryServiceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sdconn
+	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn
 
 	if d.Get("force_destroy").(bool) {
 		input := &servicediscovery.ListInstancesInput{

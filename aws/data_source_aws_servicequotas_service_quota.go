@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicequotas"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsServiceQuotasServiceQuota() *schema.Resource {
@@ -58,7 +59,7 @@ func dataSourceAwsServiceQuotasServiceQuota() *schema.Resource {
 }
 
 func dataSourceAwsServiceQuotasServiceQuotaRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).servicequotasconn
+	conn := meta.(*conns.AWSClient).ServiceQuotasConn
 
 	quotaCode := d.Get("quota_code").(string)
 	quotaName := d.Get("quota_name").(string)

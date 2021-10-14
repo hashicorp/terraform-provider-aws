@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicediscovery/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -28,7 +29,7 @@ func testSweepServiceDiscoveryServices(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).sdconn
+	conn := client.(*conns.AWSClient).ServiceDiscoveryConn
 	input := &servicediscovery.ListServicesInput{}
 	sweepResources := make([]*testSweepResource, 0)
 
@@ -277,7 +278,7 @@ func TestAccAWSServiceDiscoveryService_Tags(t *testing.T) {
 }
 
 func testAccCheckAwsServiceDiscoveryServiceDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).sdconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_service_discovery_service" {
@@ -311,7 +312,7 @@ func testAccCheckAwsServiceDiscoveryServiceExists(name string) resource.TestChec
 			return fmt.Errorf("No Service Discovery Service ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).sdconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryConn
 
 		_, err := finder.ServiceByID(conn, rs.Primary.ID)
 

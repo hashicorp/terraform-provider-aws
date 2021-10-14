@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicediscovery/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicediscovery/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsServiceDiscoveryInstance() *schema.Resource {
@@ -60,7 +61,7 @@ func resourceAwsServiceDiscoveryInstance() *schema.Resource {
 }
 
 func resourceAwsServiceDiscoveryInstancePut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sdconn
+	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn
 
 	instanceID := d.Get("instance_id").(string)
 	input := &servicediscovery.RegisterInstanceInput{
@@ -89,7 +90,7 @@ func resourceAwsServiceDiscoveryInstancePut(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsServiceDiscoveryInstanceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sdconn
+	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn
 
 	instance, err := finder.InstanceByServiceIDAndInstanceID(conn, d.Get("service_id").(string), d.Get("instance_id").(string))
 
@@ -117,7 +118,7 @@ func resourceAwsServiceDiscoveryInstanceRead(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsServiceDiscoveryInstanceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sdconn
+	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn
 
 	err := deregisterServiceDiscoveryInstance(conn, d.Get("service_id").(string), d.Get("instance_id").(string))
 

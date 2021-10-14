@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicediscovery/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsServiceDiscoveryHttpNamespace() *schema.Resource {
@@ -47,8 +48,8 @@ func resourceAwsServiceDiscoveryHttpNamespace() *schema.Resource {
 }
 
 func resourceAwsServiceDiscoveryHttpNamespaceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sdconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
@@ -93,9 +94,9 @@ func resourceAwsServiceDiscoveryHttpNamespaceCreate(d *schema.ResourceData, meta
 }
 
 func resourceAwsServiceDiscoveryHttpNamespaceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sdconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &servicediscovery.GetNamespaceInput{
 		Id: aws.String(d.Id()),
@@ -136,7 +137,7 @@ func resourceAwsServiceDiscoveryHttpNamespaceRead(d *schema.ResourceData, meta i
 }
 
 func resourceAwsServiceDiscoveryHttpNamespaceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sdconn
+	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -149,7 +150,7 @@ func resourceAwsServiceDiscoveryHttpNamespaceUpdate(d *schema.ResourceData, meta
 }
 
 func resourceAwsServiceDiscoveryHttpNamespaceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sdconn
+	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn
 
 	input := &servicediscovery.DeleteNamespaceInput{
 		Id: aws.String(d.Id()),
