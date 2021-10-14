@@ -11,7 +11,7 @@ import (
 )
 
 func TestAccAWSKinesisStreamConsumerDataSource_basic(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_kinesis_stream_consumer.test"
 	resourceName := "aws_kinesis_stream_consumer.test"
 	streamName := "aws_kinesis_stream.test"
@@ -19,7 +19,7 @@ func TestAccAWSKinesisStreamConsumerDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesis.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -37,7 +37,7 @@ func TestAccAWSKinesisStreamConsumerDataSource_basic(t *testing.T) {
 }
 
 func TestAccAWSKinesisStreamConsumerDataSource_Name(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_kinesis_stream_consumer.test"
 	resourceName := "aws_kinesis_stream_consumer.test"
 	streamName := "aws_kinesis_stream.test"
@@ -45,7 +45,7 @@ func TestAccAWSKinesisStreamConsumerDataSource_Name(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesis.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -63,7 +63,7 @@ func TestAccAWSKinesisStreamConsumerDataSource_Name(t *testing.T) {
 }
 
 func TestAccAWSKinesisStreamConsumerDataSource_Arn(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_kinesis_stream_consumer.test"
 	resourceName := "aws_kinesis_stream_consumer.test"
 	streamName := "aws_kinesis_stream.test"
@@ -71,7 +71,7 @@ func TestAccAWSKinesisStreamConsumerDataSource_Arn(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesis.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{

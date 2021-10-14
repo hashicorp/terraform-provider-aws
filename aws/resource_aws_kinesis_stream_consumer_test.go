@@ -17,12 +17,12 @@ import (
 func TestAccAWSKinesisStreamConsumer_basic(t *testing.T) {
 	resourceName := "aws_kinesis_stream_consumer.test"
 	streamName := "aws_kinesis_stream.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesis.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSKinesisStreamConsumerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -46,19 +46,19 @@ func TestAccAWSKinesisStreamConsumer_basic(t *testing.T) {
 
 func TestAccAWSKinesisStreamConsumer_disappears(t *testing.T) {
 	resourceName := "aws_kinesis_stream_consumer.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesis.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSKinesisStreamConsumerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccAWSKinesisStreamConsumerExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsKinesisStreamConsumer(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsKinesisStreamConsumer(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -68,12 +68,12 @@ func TestAccAWSKinesisStreamConsumer_disappears(t *testing.T) {
 
 func TestAccAWSKinesisStreamConsumer_MaxConcurrentConsumers(t *testing.T) {
 	resourceName := "aws_kinesis_stream_consumer.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesis.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSKinesisStreamConsumerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -93,12 +93,12 @@ func TestAccAWSKinesisStreamConsumer_MaxConcurrentConsumers(t *testing.T) {
 
 func TestAccAWSKinesisStreamConsumer_ExceedMaxConcurrentConsumers(t *testing.T) {
 	resourceName := "aws_kinesis_stream_consumer.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesis.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSKinesisStreamConsumerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -122,7 +122,7 @@ func TestAccAWSKinesisStreamConsumer_ExceedMaxConcurrentConsumers(t *testing.T) 
 }
 
 func testAccCheckAWSKinesisStreamConsumerDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).kinesisconn
+	conn := acctest.Provider.Meta().(*AWSClient).kinesisconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_kinesis_stream_consumer" {
@@ -159,7 +159,7 @@ func testAccAWSKinesisStreamConsumerExists(resourceName string) resource.TestChe
 			return fmt.Errorf("resource %s has not set its id", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).kinesisconn
+		conn := acctest.Provider.Meta().(*AWSClient).kinesisconn
 
 		consumer, err := finder.StreamConsumerByARN(conn, rs.Primary.ID)
 

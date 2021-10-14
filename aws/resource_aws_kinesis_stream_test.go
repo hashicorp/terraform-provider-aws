@@ -77,7 +77,7 @@ func TestAccAWSKinesisStream_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesis.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckKinesisStreamDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -107,7 +107,7 @@ func TestAccAWSKinesisStream_createMultipleConcurrentStreams(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesis.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckKinesisStreamDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -152,7 +152,7 @@ func TestAccAWSKinesisStream_encryptionWithoutKmsKeyThrowsError(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesis.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckKinesisStreamDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -172,7 +172,7 @@ func TestAccAWSKinesisStream_encryption(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesis.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckKinesisStreamDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -230,7 +230,7 @@ func TestAccAWSKinesisStream_shardCount(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesis.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckKinesisStreamDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -272,7 +272,7 @@ func TestAccAWSKinesisStream_retentionPeriod(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesis.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckKinesisStreamDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -323,7 +323,7 @@ func TestAccAWSKinesisStream_shardLevelMetrics(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesis.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckKinesisStreamDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -374,7 +374,7 @@ func TestAccAWSKinesisStream_enforceConsumerDeletion(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesis.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckKinesisStreamDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -404,7 +404,7 @@ func TestAccAWSKinesisStream_Tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesis.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckKinesisStreamDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -457,7 +457,7 @@ func testAccCheckKinesisStreamExists(n string, stream *kinesis.StreamDescription
 			return fmt.Errorf("No Kinesis ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).kinesisconn
+		conn := acctest.Provider.Meta().(*AWSClient).kinesisconn
 		describeOpts := &kinesis.DescribeStreamInput{
 			StreamName: aws.String(rs.Primary.Attributes["name"]),
 		}
@@ -498,7 +498,7 @@ func testAccCheckKinesisStreamDestroy(s *terraform.State) error {
 		if rs.Type != "aws_kinesis_stream" {
 			continue
 		}
-		conn := testAccProvider.Meta().(*AWSClient).kinesisconn
+		conn := acctest.Provider.Meta().(*AWSClient).kinesisconn
 		describeOpts := &kinesis.DescribeStreamInput{
 			StreamName: aws.String(rs.Primary.Attributes["name"]),
 		}
@@ -518,7 +518,7 @@ func testAccCheckKinesisStreamDestroy(s *terraform.State) error {
 
 func testAccAWSKinesisStreamRegisterStreamConsumer(stream *kinesis.StreamDescription, rStr string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).kinesisconn
+		conn := acctest.Provider.Meta().(*AWSClient).kinesisconn
 
 		if _, err := conn.RegisterStreamConsumer(&kinesis.RegisterStreamConsumerInput{
 			ConsumerName: aws.String(rStr),
@@ -558,7 +558,7 @@ func TestAccAWSKinesisStream_UpdateKmsKeyId(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesis.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckKinesisStreamDestroy,
 		Steps: []resource.TestStep{
 			{
