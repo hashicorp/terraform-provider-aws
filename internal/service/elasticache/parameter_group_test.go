@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -642,7 +643,7 @@ func TestFlattenElasticacheParameters(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		output := flattenElastiCacheParameters(tc.Input)
+		output := tfelasticache.FlattenParameters(tc.Input)
 		if !reflect.DeepEqual(output, tc.Output) {
 			t.Fatalf("Got:\n\n%#v\n\nExpected:\n\n%#v", output, tc.Output)
 		}
@@ -657,7 +658,7 @@ func TestExpandElasticacheParameters(t *testing.T) {
 			"apply_method": "immediate",
 		},
 	}
-	parameters := expandElastiCacheParameters(expanded)
+	parameters := tfelasticache.ExpandParameters(expanded)
 
 	expected := &elasticache.ParameterNameValue{
 		ParameterName:  aws.String("activerehashing"),
@@ -689,7 +690,7 @@ func TestElastiCacheParameterChanges(t *testing.T) {
 		},
 		{
 			Name: "Remove all",
-			Old: schema.NewSet(resourceAwsElasticacheParameterHash, []interface{}{
+			Old: schema.NewSet(tfelasticache.ParameterHash, []interface{}{
 				map[string]interface{}{
 					"name":  "reserved-memory",
 					"value": "0",
@@ -706,13 +707,13 @@ func TestElastiCacheParameterChanges(t *testing.T) {
 		},
 		{
 			Name: "No change",
-			Old: schema.NewSet(resourceAwsElasticacheParameterHash, []interface{}{
+			Old: schema.NewSet(tfelasticache.ParameterHash, []interface{}{
 				map[string]interface{}{
 					"name":  "reserved-memory",
 					"value": "0",
 				},
 			}),
-			New: schema.NewSet(resourceAwsElasticacheParameterHash, []interface{}{
+			New: schema.NewSet(tfelasticache.ParameterHash, []interface{}{
 				map[string]interface{}{
 					"name":  "reserved-memory",
 					"value": "0",
@@ -723,7 +724,7 @@ func TestElastiCacheParameterChanges(t *testing.T) {
 		},
 		{
 			Name: "Remove partial",
-			Old: schema.NewSet(resourceAwsElasticacheParameterHash, []interface{}{
+			Old: schema.NewSet(tfelasticache.ParameterHash, []interface{}{
 				map[string]interface{}{
 					"name":  "reserved-memory",
 					"value": "0",
@@ -733,7 +734,7 @@ func TestElastiCacheParameterChanges(t *testing.T) {
 					"value": "yes",
 				},
 			}),
-			New: schema.NewSet(resourceAwsElasticacheParameterHash, []interface{}{
+			New: schema.NewSet(tfelasticache.ParameterHash, []interface{}{
 				map[string]interface{}{
 					"name":  "appendonly",
 					"value": "yes",
@@ -749,13 +750,13 @@ func TestElastiCacheParameterChanges(t *testing.T) {
 		},
 		{
 			Name: "Add to existing",
-			Old: schema.NewSet(resourceAwsElasticacheParameterHash, []interface{}{
+			Old: schema.NewSet(tfelasticache.ParameterHash, []interface{}{
 				map[string]interface{}{
 					"name":  "appendonly",
 					"value": "yes",
 				},
 			}),
-			New: schema.NewSet(resourceAwsElasticacheParameterHash, []interface{}{
+			New: schema.NewSet(tfelasticache.ParameterHash, []interface{}{
 				map[string]interface{}{
 					"name":  "appendonly",
 					"value": "yes",
@@ -776,7 +777,7 @@ func TestElastiCacheParameterChanges(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		remove, addOrUpdate := elastiCacheParameterChanges(tc.Old, tc.New)
+		remove, addOrUpdate := tfelasticache.ParameterChanges(tc.Old, tc.New)
 		if !reflect.DeepEqual(remove, tc.ExpectedRemove) {
 			t.Errorf("Case %q: Remove did not match\n%#v\n\nGot:\n%#v", tc.Name, tc.ExpectedRemove, remove)
 		}

@@ -651,7 +651,7 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElastiCacheConn
 
 	var finalSnapshotID = d.Get("final_snapshot_identifier").(string)
-	err := deleteElasticacheCacheCluster(conn, d.Id(), finalSnapshotID)
+	err := DeleteCacheCluster(conn, d.Id(), finalSnapshotID)
 	if err != nil {
 		if tfawserr.ErrMessageContains(err, elasticache.ErrCodeCacheClusterNotFoundFault, "") {
 			return nil
@@ -681,7 +681,7 @@ func createElasticacheCacheCluster(conn *elasticache.ElastiCache, input *elastic
 	return strings.ToLower(aws.StringValue(output.CacheCluster.CacheClusterId)), nil
 }
 
-func deleteElasticacheCacheCluster(conn *elasticache.ElastiCache, cacheClusterID string, finalSnapshotID string) error {
+func DeleteCacheCluster(conn *elasticache.ElastiCache, cacheClusterID string, finalSnapshotID string) error {
 	input := &elasticache.DeleteCacheClusterInput{
 		CacheClusterId: aws.String(cacheClusterID),
 	}

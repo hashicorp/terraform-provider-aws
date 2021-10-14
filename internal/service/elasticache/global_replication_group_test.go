@@ -66,7 +66,7 @@ func testSweepElasticacheGlobalReplicationGroups(region string) error {
 				}
 
 				log.Printf("[INFO] Deleting ElastiCache Global Replication Group: %s", id)
-				err := deleteElasticacheGlobalReplicationGroup(conn, id, sweeperGlobalReplicationGroupDefaultUpdatedTimeout)
+				err := tfelasticache.DeleteGlobalReplicationGroup(conn, id, sweeperGlobalReplicationGroupDefaultUpdatedTimeout)
 				if err != nil {
 					sweeperErr := fmt.Errorf("error deleting ElastiCache Global Replication Group (%s): %w", id, err)
 					log.Printf("[ERROR] %s", sweeperErr)
@@ -99,14 +99,14 @@ func disassociateMembers(conn *elasticache.ElastiCache, globalReplicationGroup *
 	for _, member := range globalReplicationGroup.Members {
 		member := member
 
-		if aws.StringValue(member.Role) == GlobalReplicationGroupMemberRolePrimary {
+		if aws.StringValue(member.Role) == tfelasticache.GlobalReplicationGroupMemberRolePrimary {
 			continue
 		}
 
 		id := aws.StringValue(globalReplicationGroup.GlobalReplicationGroupId)
 
 		membersGroup.Go(func() error {
-			if err := disassociateElasticacheReplicationGroup(conn, id, aws.StringValue(member.ReplicationGroupId), aws.StringValue(member.ReplicationGroupRegion), sweeperGlobalReplicationGroupDisassociationReadyTimeout); err != nil {
+			if err := tfelasticache.DisassociateReplicationGroup(conn, id, aws.StringValue(member.ReplicationGroupId), aws.StringValue(member.ReplicationGroupRegion), sweeperGlobalReplicationGroupDisassociationReadyTimeout); err != nil {
 				sweeperErr := fmt.Errorf(
 					"error disassociating ElastiCache Replication Group (%s) in %s from Global Group (%s): %w",
 					aws.StringValue(member.ReplicationGroupId), aws.StringValue(member.ReplicationGroupRegion), id, err,
@@ -142,7 +142,7 @@ func TestAccAWSElasticacheGlobalReplicationGroup_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticacheGlobalReplicationGroupExists(resourceName, &globalReplicationGroup),
 					testAccCheckAWSElasticacheReplicationGroupExists(primaryReplicationGroupResourceName, &primaryReplicationGroup),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "elasticache", regexp.MustCompile(`globalreplicationgroup:`+elasticacheGlobalReplicationGroupRegionPrefixFormat+rName)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "elasticache", regexp.MustCompile(`globalreplicationgroup:`+tfelasticache.GlobalReplicationGroupRegionPrefixFormat+rName)),
 					resource.TestCheckResourceAttrPair(resourceName, "at_rest_encryption_enabled", primaryReplicationGroupResourceName, "at_rest_encryption_enabled"),
 					resource.TestCheckResourceAttr(resourceName, "auth_token_enabled", "false"),
 					resource.TestCheckResourceAttrPair(resourceName, "cache_node_type", primaryReplicationGroupResourceName, "node_type"),
@@ -151,8 +151,8 @@ func TestAccAWSElasticacheGlobalReplicationGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "engine_version_actual", primaryReplicationGroupResourceName, "engine_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "actual_engine_version", primaryReplicationGroupResourceName, "engine_version"),
 					resource.TestCheckResourceAttr(resourceName, "global_replication_group_id_suffix", rName),
-					resource.TestMatchResourceAttr(resourceName, "global_replication_group_id", regexp.MustCompile(elasticacheGlobalReplicationGroupRegionPrefixFormat+rName)),
-					resource.TestCheckResourceAttr(resourceName, "global_replication_group_description", elasticacheEmptyDescription),
+					resource.TestMatchResourceAttr(resourceName, "global_replication_group_id", regexp.MustCompile(tfelasticache.GlobalReplicationGroupRegionPrefixFormat+rName)),
+					resource.TestCheckResourceAttr(resourceName, "global_replication_group_description", tfelasticache.EmptyDescription),
 					resource.TestCheckResourceAttr(resourceName, "primary_replication_group_id", primaryReplicationGroupId),
 					resource.TestCheckResourceAttr(resourceName, "transit_encryption_enabled", "false"),
 				),
@@ -219,7 +219,7 @@ func TestAccAWSElasticacheGlobalReplicationGroup_disappears(t *testing.T) {
 				Config: testAccAWSElasticacheGlobalReplicationGroupConfig_basic(rName, primaryReplicationGroupId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticacheGlobalReplicationGroupExists(resourceName, &globalReplicationGroup),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceGlobalReplicationGroup(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfelasticache.ResourceGlobalReplicationGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

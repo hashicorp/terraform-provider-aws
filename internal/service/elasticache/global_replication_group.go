@@ -16,11 +16,11 @@ import (
 )
 
 const (
-	elasticacheEmptyDescription = " "
+	EmptyDescription = " "
 )
 
 const (
-	elasticacheGlobalReplicationGroupRegionPrefixFormat = "[[:alpha:]]{5}-"
+	GlobalReplicationGroupRegionPrefixFormat = "[[:alpha:]]{5}-"
 )
 
 const (
@@ -36,7 +36,7 @@ func ResourceGlobalReplicationGroup() *schema.Resource {
 		Delete: resourceGlobalReplicationGroupDelete,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				re := regexp.MustCompile("^" + elasticacheGlobalReplicationGroupRegionPrefixFormat)
+				re := regexp.MustCompile("^" + GlobalReplicationGroupRegionPrefixFormat)
 				d.Set("global_replication_group_id_suffix", re.ReplaceAllLiteralString(d.Id(), ""))
 
 				return []*schema.ResourceData{d}, nil
@@ -134,7 +134,7 @@ func ResourceGlobalReplicationGroup() *schema.Resource {
 }
 
 func elasticacheDescriptionDiffSuppress(_, old, new string, d *schema.ResourceData) bool {
-	if (old == elasticacheEmptyDescription && new == "") || (old == "" && new == elasticacheEmptyDescription) {
+	if (old == EmptyDescription && new == "") || (old == "" && new == EmptyDescription) {
 		return true
 	}
 	return false
@@ -143,7 +143,7 @@ func elasticacheDescriptionDiffSuppress(_, old, new string, d *schema.ResourceDa
 func elasticacheDescriptionStateFunc(v interface{}) string {
 	s := v.(string)
 	if s == "" {
-		return elasticacheEmptyDescription
+		return EmptyDescription
 	}
 	return s
 }
@@ -256,7 +256,7 @@ func resourceGlobalReplicationGroupDelete(d *schema.ResourceData, meta interface
 	conn := meta.(*conns.AWSClient).ElastiCacheConn
 
 	// Using Update timeout because the Global Replication Group could be in the middle of an update operation
-	err := deleteElasticacheGlobalReplicationGroup(conn, d.Id(), GlobalReplicationGroupDefaultUpdatedTimeout)
+	err := DeleteGlobalReplicationGroup(conn, d.Id(), GlobalReplicationGroupDefaultUpdatedTimeout)
 	if err != nil {
 		return fmt.Errorf("error deleting ElastiCache Global Replication Group: %w", err)
 	}
@@ -264,7 +264,7 @@ func resourceGlobalReplicationGroupDelete(d *schema.ResourceData, meta interface
 	return nil
 }
 
-func deleteElasticacheGlobalReplicationGroup(conn *elasticache.ElastiCache, id string, readyTimeout time.Duration) error {
+func DeleteGlobalReplicationGroup(conn *elasticache.ElastiCache, id string, readyTimeout time.Duration) error {
 	input := &elasticache.DeleteGlobalReplicationGroupInput{
 		GlobalReplicationGroupId:      aws.String(id),
 		RetainPrimaryReplicationGroup: aws.Bool(true),
