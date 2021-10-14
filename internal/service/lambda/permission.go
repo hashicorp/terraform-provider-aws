@@ -27,7 +27,7 @@ func ResourcePermission() *schema.Resource {
 		Read:   resourcePermissionRead,
 		Delete: resourcePermissionDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsLambdaPermissionImport,
+			State: resourcePermissionImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -428,7 +428,7 @@ func GetFunctionNameFromARN(arn string) (string, error) {
 	return matches[5], nil
 }
 
-func resourceAwsLambdaPermissionImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourcePermissionImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	idParts := strings.Split(d.Id(), "/")
 	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 		return nil, fmt.Errorf("Unexpected format of ID (%q), expected FUNCTION_NAME/STATEMENT_ID or FUNCTION_NAME:QUALIFIER/STATEMENT_ID", d.Id())

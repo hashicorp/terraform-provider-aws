@@ -19,7 +19,7 @@ func ResourceAlias() *schema.Resource {
 		Update: resourceAliasUpdate,
 		Delete: resourceAliasDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsLambdaAliasImport,
+			State: resourceAliasImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -200,7 +200,7 @@ func expandLambdaAliasRoutingConfiguration(l []interface{}) *lambda.AliasRouting
 	return aliasRoutingConfiguration
 }
 
-func resourceAwsLambdaAliasImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceAliasImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	idParts := strings.Split(d.Id(), "/")
 	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 		return nil, fmt.Errorf("Unexpected format of ID (%q), expected FUNCTION_NAME/ALIAS", d.Id())

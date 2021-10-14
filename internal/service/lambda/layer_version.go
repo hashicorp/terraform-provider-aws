@@ -21,7 +21,7 @@ const awsMutexLambdaLayerKey = `aws_lambda_layer_version`
 
 func ResourceLayerVersion() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLambdaLayerVersionPublish,
+		Create: resourceLayerVersionPublish,
 		Read:   resourceLayerVersionRead,
 		Delete: resourceLayerVersionDelete,
 
@@ -130,7 +130,7 @@ func ResourceLayerVersion() *schema.Resource {
 	}
 }
 
-func resourceAwsLambdaLayerVersionPublish(d *schema.ResourceData, meta interface{}) error {
+func resourceLayerVersionPublish(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LambdaConn
 
 	layerName := d.Get("layer_name").(string)
