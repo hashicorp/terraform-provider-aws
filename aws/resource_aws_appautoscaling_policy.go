@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsAppautoscalingPolicy() *schema.Resource {
@@ -201,7 +202,7 @@ func resourceAwsAppautoscalingPolicy() *schema.Resource {
 }
 
 func resourceAwsAppautoscalingPolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appautoscalingconn
+	conn := meta.(*conns.AWSClient).ApplicationAutoScalingConn
 
 	params, err := getAwsAppautoscalingPutScalingPolicyInput(d)
 	if err != nil {
@@ -294,7 +295,7 @@ func resourceAwsAppautoscalingPolicyRead(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsAppautoscalingPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appautoscalingconn
+	conn := meta.(*conns.AWSClient).ApplicationAutoScalingConn
 
 	params, inputErr := getAwsAppautoscalingPutScalingPolicyInput(d)
 	if inputErr != nil {
@@ -326,7 +327,7 @@ func resourceAwsAppautoscalingPolicyUpdate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsAppautoscalingPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appautoscalingconn
+	conn := meta.(*conns.AWSClient).ApplicationAutoScalingConn
 	p, err := getAwsAppautoscalingPolicy(d, meta)
 	if err != nil {
 		return fmt.Errorf("Error getting policy: %s", err)
@@ -589,7 +590,7 @@ func getAwsAppautoscalingPutScalingPolicyInput(d *schema.ResourceData) (applicat
 }
 
 func getAwsAppautoscalingPolicy(d *schema.ResourceData, meta interface{}) (*applicationautoscaling.ScalingPolicy, error) {
-	conn := meta.(*AWSClient).appautoscalingconn
+	conn := meta.(*conns.AWSClient).ApplicationAutoScalingConn
 
 	params := applicationautoscaling.DescribeScalingPoliciesInput{
 		PolicyNames:       []*string{aws.String(d.Get("name").(string))},

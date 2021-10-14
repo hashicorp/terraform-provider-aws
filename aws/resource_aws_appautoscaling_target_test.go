@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSAppautoScalingTarget_basic(t *testing.T) {
@@ -193,7 +194,7 @@ func TestAccAWSAppautoScalingTarget_optionalRoleArn(t *testing.T) {
 }
 
 func testAccCheckAWSAppautoscalingTargetDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).appautoscalingconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ApplicationAutoScalingConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appautoscaling_target" {
@@ -239,7 +240,7 @@ func testAccCheckAWSAppautoscalingTargetExists(n string, target *applicationauto
 			return fmt.Errorf("No Application AutoScaling Target ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).appautoscalingconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ApplicationAutoScalingConn
 
 		namespace := rs.Primary.Attributes["service_namespace"]
 		dimension := rs.Primary.Attributes["scalable_dimension"]

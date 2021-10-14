@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestValidateAppautoscalingPolicyImportInput(t *testing.T) {
@@ -440,7 +441,7 @@ func testAccCheckAWSAppautoscalingPolicyExists(n string, policy *applicationauto
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).appautoscalingconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ApplicationAutoScalingConn
 		params := &applicationautoscaling.DescribeScalingPoliciesInput{
 			PolicyNames:       []*string{aws.String(rs.Primary.ID)},
 			ResourceId:        aws.String(rs.Primary.Attributes["resource_id"]),
@@ -462,7 +463,7 @@ func testAccCheckAWSAppautoscalingPolicyExists(n string, policy *applicationauto
 }
 
 func testAccCheckAWSAppautoscalingPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).appautoscalingconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ApplicationAutoScalingConn
 
 	for _, rs := range s.RootModule().Resources {
 		params := applicationautoscaling.DescribeScalingPoliciesInput{
@@ -485,7 +486,7 @@ func testAccCheckAWSAppautoscalingPolicyDestroy(s *terraform.State) error {
 
 func testAccCheckAWSAppautoscalingPolicyDisappears(policy *applicationautoscaling.ScalingPolicy) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).appautoscalingconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ApplicationAutoScalingConn
 
 		input := &applicationautoscaling.DeleteScalingPolicyInput{
 			PolicyName:        policy.PolicyName,
