@@ -1,35 +1,35 @@
 package cloudtrail
 
 const (
-	ResourceTypeDynamoDBTable  = "AWS::DynamoDB::Table"
-	ResourceTypeLambdaFunction = "AWS::Lambda::Function"
-	ResourceTypeS3Object       = "AWS::S3::Object"
+	resourceTypeDynamoDBTable  = "AWS::DynamoDB::Table"
+	resourceTypeLambdaFunction = "AWS::Lambda::Function"
+	resourceTypeS3Object       = "AWS::S3::Object"
 )
 
-func ResourceType_Values() []string {
+func resourceType_Values() []string {
 	return []string{
-		ResourceTypeDynamoDBTable,
-		ResourceTypeLambdaFunction,
-		ResourceTypeS3Object,
+		resourceTypeDynamoDBTable,
+		resourceTypeLambdaFunction,
+		resourceTypeS3Object,
 	}
 }
 
 const (
-	FieldEventCategory = "eventCategory"
-	FieldEventName     = "eventName"
-	FieldEventSource   = "eventSource"
-	FieldReadOnly      = "readOnly"
-	FieldResourcesARN  = "resources.ARN"
-	FieldResourcesType = "resources.type"
+	fieldEventCategory = "eventCategory"
+	fieldEventName     = "eventName"
+	fieldEventSource   = "eventSource"
+	fieldReadOnly      = "readOnly"
+	fieldResourcesARN  = "resources.ARN"
+	fieldResourcesType = "resources.type"
 )
 
-func Field_Values() []string {
+func field_Values() []string {
 	return []string{
-		FieldEventCategory,
-		FieldEventName,
-		FieldEventSource,
-		FieldReadOnly,
-		FieldResourcesARN,
-		FieldResourcesType,
+		fieldEventCategory,
+		fieldEventName,
+		fieldEventSource,
+		fieldReadOnly,
+		fieldResourcesARN,
+		fieldResourcesType,
 	}
 }
