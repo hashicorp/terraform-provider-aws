@@ -14,7 +14,7 @@ import (
 	tfs3outposts "github.com/hashicorp/terraform-provider-aws/internal/service/s3outposts"
 )
 
-func TestAccAWSS3OutpostsEndpoint_basic(t *testing.T) {
+func TestAccS3OutpostsEndpoint_basic(t *testing.T) {
 	resourceName := "aws_s3outposts_endpoint.test"
 	rInt := sdkacctest.RandIntRange(0, 255)
 
@@ -47,7 +47,7 @@ func TestAccAWSS3OutpostsEndpoint_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3OutpostsEndpoint_disappears(t *testing.T) {
+func TestAccS3OutpostsEndpoint_disappears(t *testing.T) {
 	resourceName := "aws_s3outposts_endpoint.test"
 	rInt := sdkacctest.RandIntRange(0, 255)
 
