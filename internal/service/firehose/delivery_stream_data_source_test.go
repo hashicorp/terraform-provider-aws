@@ -22,7 +22,7 @@ func TestAccDataSourceAwsKinesisFirehoseDeliveryStream_basic(t *testing.T) {
 		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsKinesisFirehoseDeliveryStreamConfigBasic(rName),
+				Config: testAccDeliveryStreamBasicDataSourceConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttr(dataSourceName, "name", rName),
@@ -32,7 +32,7 @@ func TestAccDataSourceAwsKinesisFirehoseDeliveryStream_basic(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAwsKinesisFirehoseDeliveryStreamConfigBasic(rName string) string {
+func testAccDeliveryStreamBasicDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 

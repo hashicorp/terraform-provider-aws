@@ -10,7 +10,7 @@ import (
 	tffirehose "github.com/hashicorp/terraform-provider-aws/internal/service/firehose"
 )
 
-func TestAWSKinesisFirehoseMigrateState(t *testing.T) {
+func TestMigrateState(t *testing.T) {
 	cases := map[string]struct {
 		StateVersion int
 		Attributes   map[string]string
@@ -73,7 +73,7 @@ func TestAWSKinesisFirehoseMigrateState(t *testing.T) {
 	}
 }
 
-func TestAWSKinesisFirehoseMigrateState_empty(t *testing.T) {
+func TestMigrateState_empty(t *testing.T) {
 	var is *terraform.InstanceState
 	var meta interface{}
 
