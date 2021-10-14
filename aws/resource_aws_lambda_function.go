@@ -20,10 +20,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	homedir "github.com/mitchellh/go-homedir"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/lambda/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 const awsMutexLambdaKey = `aws_lambda_function`
@@ -326,14 +327,14 @@ func ResourceFunction() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validateArn,
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: customdiff.Sequence(
 			checkHandlerRuntimeForZipFunction,
 			updateComputedAttributesOnPublish,
-			SetTagsDiff,
+			verify.SetTagsDiff,
 		),
 	}
 }
@@ -388,7 +389,7 @@ func hasConfigChanges(d resourceDiffer) bool {
 func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LambdaConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	functionName := d.Get("function_name").(string)
 	reservedConcurrentExecutions := d.Get("reserved_concurrent_executions").(int)
@@ -671,7 +672,7 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 	// Tagging operations are permitted on Lambda functions only.
 	// Tags on aliases and versions are not supported.
 	if !qualifierExistance {
-		tags := keyvaluetags.LambdaKeyValueTags(getFunctionOutput.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+		tags := tftags.LambdaKeyValueTags(getFunctionOutput.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 		//lintignore:AWSR002
 		if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -970,7 +971,7 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := keyvaluetags.LambdaUpdateTags(conn, arn, o, n); err != nil {
+		if err := tftags.LambdaUpdateTags(conn, arn, o, n); err != nil {
 			return fmt.Errorf("error updating Lambda Function (%s) tags: %w", arn, err)
 		}
 	}
