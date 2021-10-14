@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -28,7 +29,7 @@ func testSweepDataSyncLocationS3s(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).datasyncconn
+	conn := client.(*conns.AWSClient).DataSyncConn
 
 	input := &datasync.ListLocationsInput{}
 	for {
@@ -226,7 +227,7 @@ func TestAccAWSDataSyncLocationS3_Tags(t *testing.T) {
 }
 
 func testAccCheckAWSDataSyncLocationS3Destroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).datasyncconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_datasync_location_s3" {
@@ -258,7 +259,7 @@ func testAccCheckAWSDataSyncLocationS3Exists(resourceName string, locationS3 *da
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).datasyncconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn
 		input := &datasync.DescribeLocationS3Input{
 			LocationArn: aws.String(rs.Primary.ID),
 		}
@@ -281,7 +282,7 @@ func testAccCheckAWSDataSyncLocationS3Exists(resourceName string, locationS3 *da
 
 func testAccCheckAWSDataSyncLocationS3Disappears(location *datasync.DescribeLocationS3Output) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).datasyncconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn
 
 		input := &datasync.DeleteLocationInput{
 			LocationArn: location.LocationArn,

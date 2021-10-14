@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/datasync/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -29,7 +30,7 @@ func testSweepDataSyncTasks(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).datasyncconn
+	conn := client.(*conns.AWSClient).DataSyncConn
 
 	input := &datasync.ListTasksInput{}
 	for {
@@ -762,7 +763,7 @@ func TestAccAWSDataSyncTask_Tags(t *testing.T) {
 }
 
 func testAccCheckAWSDataSyncTaskDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).datasyncconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_datasync_task" {
@@ -792,7 +793,7 @@ func testAccCheckAWSDataSyncTaskExists(resourceName string, task *datasync.Descr
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).datasyncconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn
 
 		output, err := finder.TaskByARN(conn, rs.Primary.ID)
 
@@ -822,7 +823,7 @@ func testAccCheckAWSDataSyncTaskNotRecreated(i, j *datasync.DescribeTaskOutput) 
 }
 
 func testAccPreCheckAWSDataSync(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).datasyncconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn
 
 	input := &datasync.ListTasksInput{
 		MaxResults: aws.Int64(1),
