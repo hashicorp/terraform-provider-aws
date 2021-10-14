@@ -17,11 +17,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsAppRunnerCustomDomainAssociation() *schema.Resource {
+func ResourceCustomDomainAssociation() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceAwsAppRunnerCustomDomainAssociationCreate,
-		ReadWithoutTimeout:   resourceAwsAppRunnerCustomDomainAssociationRead,
-		DeleteWithoutTimeout: resourceAwsAppRunnerCustomDomainAssociationDelete,
+		CreateWithoutTimeout: resourceCustomDomainAssociationCreate,
+		ReadWithoutTimeout:   resourceCustomDomainAssociationRead,
+		DeleteWithoutTimeout: resourceCustomDomainAssociationDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -82,7 +82,7 @@ func resourceAwsAppRunnerCustomDomainAssociation() *schema.Resource {
 	}
 }
 
-func resourceAwsAppRunnerCustomDomainAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCustomDomainAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppRunnerConn
 
 	domainName := d.Get("domain_name").(string)
@@ -111,10 +111,10 @@ func resourceAwsAppRunnerCustomDomainAssociationCreate(ctx context.Context, d *s
 		return diag.FromErr(fmt.Errorf("error waiting for App Runner Custom Domain Association (%s) creation: %w", d.Id(), err))
 	}
 
-	return resourceAwsAppRunnerCustomDomainAssociationRead(ctx, d, meta)
+	return resourceCustomDomainAssociationRead(ctx, d, meta)
 }
 
-func resourceAwsAppRunnerCustomDomainAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCustomDomainAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppRunnerConn
 
 	domainName, serviceArn, err := tfapprunner.CustomDomainAssociationParseID(d.Id())
@@ -152,7 +152,7 @@ func resourceAwsAppRunnerCustomDomainAssociationRead(ctx context.Context, d *sch
 	return nil
 }
 
-func resourceAwsAppRunnerCustomDomainAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCustomDomainAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppRunnerConn
 
 	domainName, serviceArn, err := tfapprunner.CustomDomainAssociationParseID(d.Id())

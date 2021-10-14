@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsAppRunnerAutoScalingConfigurationVersion() *schema.Resource {
+func ResourceAutoScalingConfigurationVersion() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAwsAppRunnerAutoScalingConfigurationCreate,
 		ReadWithoutTimeout:   resourceAwsAppRunnerAutoScalingConfigurationRead,

@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/apprunner/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -61,7 +62,7 @@ func testSweepAppRunnerAutoScalingConfigurationVersions(region string) error {
 			arn := aws.StringValue(summaryConfig.AutoScalingConfigurationArn)
 
 			log.Printf("[INFO] Deleting App Runner AutoScaling Configuration Version (%s)", arn)
-			r := resourceAwsAppRunnerAutoScalingConfigurationVersion()
+			r := ResourceAutoScalingConfigurationVersion()
 			d := r.Data(nil)
 			d.SetId(arn)
 
@@ -315,7 +316,7 @@ func TestAccAwsAppRunnerAutoScalingConfigurationVersion_disappears(t *testing.T)
 				Config: testAccAppRunnerAutoScalingConfigurationVersionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppRunnerAutoScalingConfigurationVersionExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsAppRunnerAutoScalingConfigurationVersion(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceAutoScalingConfigurationVersion(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
