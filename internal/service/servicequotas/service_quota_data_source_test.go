@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAwsServiceQuotasServiceQuotaDataSource_QuotaCode(t *testing.T) {
+func TestAccServiceQuotasServiceQuotaDataSource_quotaCode(t *testing.T) {
 	dataSourceName := "data.aws_servicequotas_service_quota.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -36,7 +36,7 @@ func TestAccAwsServiceQuotasServiceQuotaDataSource_QuotaCode(t *testing.T) {
 	})
 }
 
-func TestAccAwsServiceQuotasServiceQuotaDataSource_PermissionError_QuotaCode(t *testing.T) {
+func TestAccServiceQuotasServiceQuotaDataSource_PermissionError_quotaCode(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t); acctest.PreCheckAssumeRoleARN(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, servicequotas.EndpointsID),
@@ -51,7 +51,7 @@ func TestAccAwsServiceQuotasServiceQuotaDataSource_PermissionError_QuotaCode(t *
 	})
 }
 
-func TestAccAwsServiceQuotasServiceQuotaDataSource_QuotaName(t *testing.T) {
+func TestAccServiceQuotasServiceQuotaDataSource_quotaName(t *testing.T) {
 	dataSourceName := "data.aws_servicequotas_service_quota.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -77,7 +77,7 @@ func TestAccAwsServiceQuotasServiceQuotaDataSource_QuotaName(t *testing.T) {
 	})
 }
 
-func TestAccAwsServiceQuotasServiceQuotaDataSource_PermissionError_QuotaName(t *testing.T) {
+func TestAccServiceQuotasServiceQuotaDataSource_PermissionError_quotaName(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t); acctest.PreCheckAssumeRoleARN(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, servicequotas.EndpointsID),

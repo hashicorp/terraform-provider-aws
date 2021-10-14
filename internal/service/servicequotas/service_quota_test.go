@@ -16,7 +16,7 @@ import (
 // and the resource is only designed to help with increases.
 // In the basic case, we test that the resource can match the existing quota
 // without unexpected changes.
-func TestAccAwsServiceQuotasServiceQuota_basic(t *testing.T) {
+func TestAccServiceQuotasServiceQuota_basic(t *testing.T) {
 	dataSourceName := "data.aws_servicequotas_service_quota.test"
 	resourceName := "aws_servicequotas_service_quota.test"
 
@@ -48,7 +48,7 @@ func TestAccAwsServiceQuotasServiceQuota_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsServiceQuotasServiceQuota_Value_IncreaseOnCreate(t *testing.T) {
+func TestAccServiceQuotasServiceQuota_Value_increaseOnCreate(t *testing.T) {
 	quotaCode := os.Getenv("SERVICEQUOTAS_INCREASE_ON_CREATE_QUOTA_CODE")
 	if quotaCode == "" {
 		t.Skip(
@@ -90,7 +90,7 @@ func TestAccAwsServiceQuotasServiceQuota_Value_IncreaseOnCreate(t *testing.T) {
 	})
 }
 
-func TestAccAwsServiceQuotasServiceQuota_Value_IncreaseOnUpdate(t *testing.T) {
+func TestAccServiceQuotasServiceQuota_Value_increaseOnUpdate(t *testing.T) {
 	quotaCode := os.Getenv("SERVICEQUOTAS_INCREASE_ON_UPDATE_QUOTA_CODE")
 	if quotaCode == "" {
 		t.Skip(
@@ -141,7 +141,7 @@ func TestAccAwsServiceQuotasServiceQuota_Value_IncreaseOnUpdate(t *testing.T) {
 	})
 }
 
-func TestAccAwsServiceQuotasServiceQuota_PermissionError(t *testing.T) {
+func TestAccServiceQuotasServiceQuota_permissionError(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t); acctest.PreCheckAssumeRoleARN(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, servicequotas.EndpointsID),
