@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSSfnStateMachine_createUpdate(t *testing.T) {
@@ -253,7 +254,7 @@ func TestAccAWSSfnStateMachine_disappears(t *testing.T) {
 				Config: testAccAWSSfnStateMachineConfig(rName, 5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSfnExists(resourceName, &sm),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSfnStateMachine(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceStateMachine(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

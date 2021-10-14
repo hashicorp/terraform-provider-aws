@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsSfnStateMachine() *schema.Resource {
+func DataSourceStateMachine() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsSfnStateMachineRead,
+		Read: dataSourceStateMachineRead,
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
@@ -43,7 +43,7 @@ func dataSourceAwsSfnStateMachine() *schema.Resource {
 	}
 }
 
-func dataSourceAwsSfnStateMachineRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceStateMachineRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SFNConn
 	params := &sfn.ListStateMachinesInput{}
 	log.Printf("[DEBUG] Reading Step Function State Machine: %s", d.Id())

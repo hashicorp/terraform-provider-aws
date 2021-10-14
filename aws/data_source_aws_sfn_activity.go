@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsSfnActivity() *schema.Resource {
+func DataSourceActivity() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsSfnActivityRead,
+		Read: dataSourceActivityRead,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -42,7 +42,7 @@ func dataSourceAwsSfnActivity() *schema.Resource {
 	}
 }
 
-func dataSourceAwsSfnActivityRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceActivityRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*conns.AWSClient)
 	conn := client.SFNConn
 	log.Print("[DEBUG] Reading Step Function Activity")
