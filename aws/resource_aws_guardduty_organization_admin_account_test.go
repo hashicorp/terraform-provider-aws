@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func testAccAwsGuardDutyOrganizationAdminAccount_basic(t *testing.T) {
@@ -14,10 +15,10 @@ func testAccAwsGuardDutyOrganizationAdminAccount_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccOrganizationsAccountPreCheck(t)
+			acctest.PreCheck(t)
+			acctest.PreCheckOrganizationsAccount(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, guardduty.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsGuardDutyOrganizationAdminAccountDestroy,
 		Steps: []resource.TestStep{
@@ -25,7 +26,7 @@ func testAccAwsGuardDutyOrganizationAdminAccount_basic(t *testing.T) {
 				Config: testAccGuardDutyOrganizationAdminAccountConfigSelf(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsGuardDutyOrganizationAdminAccountExists(resourceName),
-					testAccCheckResourceAttrAccountID(resourceName, "admin_account_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, "admin_account_id"),
 				),
 			},
 			{

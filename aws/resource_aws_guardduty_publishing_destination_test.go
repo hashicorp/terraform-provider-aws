@@ -8,9 +8,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -80,14 +81,14 @@ func testSweepGuarddutyPublishingDestinations(region string) error {
 
 func testAccAwsGuardDutyPublishingDestination_basic(t *testing.T) {
 	resourceName := "aws_guardduty_publishing_destination.test"
-	bucketName := acctest.RandomWithPrefix("tf-acc-test")
+	bucketName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	detectorResourceName := "aws_guardduty_detector.test_gd"
 	bucketResourceName := "aws_s3_bucket.gd_bucket"
 	kmsKeyResourceName := "aws_kms_key.gd_key"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, guardduty.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsGuardDutyPublishingDestinationDestroy,
 		Steps: []resource.TestStep{
@@ -111,11 +112,11 @@ func testAccAwsGuardDutyPublishingDestination_basic(t *testing.T) {
 
 func testAccAwsGuardDutyPublishingDestination_disappears(t *testing.T) {
 	resourceName := "aws_guardduty_publishing_destination.test"
-	bucketName := acctest.RandomWithPrefix("tf-acc-test")
+	bucketName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, guardduty.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsGuardDutyPublishingDestinationDestroy,
 		Steps: []resource.TestStep{
@@ -123,7 +124,7 @@ func testAccAwsGuardDutyPublishingDestination_disappears(t *testing.T) {
 				Config: testAccAwsGuardDutyPublishingDestinationConfig_basic(bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsGuardDutyPublishingDestinationExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsGuardDutyPublishingDestination(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsGuardDutyPublishingDestination(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

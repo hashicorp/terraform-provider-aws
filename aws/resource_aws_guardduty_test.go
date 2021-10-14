@@ -3,6 +3,7 @@ package aws
 import (
 	"os"
 	"testing"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSGuardDuty_serial(t *testing.T) {
