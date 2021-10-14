@@ -23,12 +23,12 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_apprunner_connection", &resource.Sweeper{
 		Name:         "aws_apprunner_connection",
-		F:            testSweepAppRunnerConnections,
+		F:            sweepConnections,
 		Dependencies: []string{"aws_apprunner_service"},
 	})
 }
 
-func testSweepAppRunnerConnections(region string) error {
+func sweepConnections(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
@@ -92,12 +92,12 @@ func TestAccAwsAppRunnerConnection_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAppRunner(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apprunner.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsAppRunnerConnectionDestroy,
+		CheckDestroy: testAccCheckConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppRunnerConnection_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAppRunnerConnectionExists(resourceName),
+					testAccCheckConnectionExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "apprunner", regexp.MustCompile(fmt.Sprintf(`connection/%s/.+`, rName))),
 					resource.TestCheckResourceAttr(resourceName, "connection_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "provider_type", apprunner.ProviderTypeGithub),
@@ -122,12 +122,12 @@ func TestAccAwsAppRunnerConnection_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAppRunner(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apprunner.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsAppRunnerConnectionDestroy,
+		CheckDestroy: testAccCheckConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppRunnerConnection_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAppRunnerConnectionExists(resourceName),
+					testAccCheckConnectionExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfapprunner.ResourceConnection(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -144,12 +144,12 @@ func TestAccAwsAppRunnerConnection_tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAppRunner(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apprunner.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsAppRunnerConnectionDestroy,
+		CheckDestroy: testAccCheckConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppRunnerConnectionConfigTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAppRunnerConnectionExists(resourceName),
+					testAccCheckConnectionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
@@ -164,7 +164,7 @@ func TestAccAwsAppRunnerConnection_tags(t *testing.T) {
 			{
 				Config: testAccAppRunnerConnectionConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAppRunnerConnectionExists(resourceName),
+					testAccCheckConnectionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -176,7 +176,7 @@ func TestAccAwsAppRunnerConnection_tags(t *testing.T) {
 			{
 				Config: testAccAppRunnerConnectionConfigTags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAppRunnerConnectionExists(resourceName),
+					testAccCheckConnectionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
@@ -187,7 +187,7 @@ func TestAccAwsAppRunnerConnection_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsAppRunnerConnectionDestroy(s *terraform.State) error {
+func testAccCheckConnectionDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_apprunner_connection" {
 			continue
@@ -213,7 +213,7 @@ func testAccCheckAwsAppRunnerConnectionDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAwsAppRunnerConnectionExists(n string) resource.TestCheckFunc {
+func testAccCheckConnectionExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

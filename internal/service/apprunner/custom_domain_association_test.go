@@ -30,12 +30,12 @@ func TestAccAwsAppRunnerCustomDomainAssociation_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAppRunner(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apprunner.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsAppRunnerCustomDomainAssociationDestroy,
+		CheckDestroy: testAccCheckCustomDomainAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppRunnerCustomDomainAssociation_basic(rName, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAppRunnerCustomDomainAssociationExists(resourceName),
+					testAccCheckCustomDomainAssociationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "certificate_validation_records.#", "3"),
 					resource.TestCheckResourceAttrSet(resourceName, "dns_target"),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", domain),
@@ -67,12 +67,12 @@ func TestAccAwsAppRunnerCustomDomainAssociation_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAppRunner(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apprunner.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsAppRunnerCustomDomainAssociationDestroy,
+		CheckDestroy: testAccCheckCustomDomainAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppRunnerCustomDomainAssociation_basic(rName, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAppRunnerCustomDomainAssociationExists(resourceName),
+					testAccCheckCustomDomainAssociationExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfapprunner.ResourceCustomDomainAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -81,7 +81,7 @@ func TestAccAwsAppRunnerCustomDomainAssociation_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsAppRunnerCustomDomainAssociationDestroy(s *terraform.State) error {
+func testAccCheckCustomDomainAssociationDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_apprunner_connection" {
 			continue
@@ -113,7 +113,7 @@ func testAccCheckAwsAppRunnerCustomDomainAssociationDestroy(s *terraform.State) 
 	return nil
 }
 
-func testAccCheckAwsAppRunnerCustomDomainAssociationExists(n string) resource.TestCheckFunc {
+func testAccCheckCustomDomainAssociationExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

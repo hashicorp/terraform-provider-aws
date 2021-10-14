@@ -23,11 +23,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_apprunner_service", &resource.Sweeper{
 		Name: "aws_apprunner_service",
-		F:    testSweepAppRunnerServices,
+		F:    sweepServices,
 	})
 }
 
-func testSweepAppRunnerServices(region string) error {
+func sweepServices(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
@@ -89,12 +89,12 @@ func TestAccAwsAppRunnerService_ImageRepository_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAppRunner(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apprunner.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsAppRunnerServiceDestroy,
+		CheckDestroy: testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppRunnerService_imageRepository(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAppRunnerServiceExists(resourceName),
+					testAccCheckServiceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "service_name", rName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "apprunner", regexp.MustCompile(fmt.Sprintf(`service/%s/.+`, rName))),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "auto_scaling_configuration_arn", "apprunner", regexp.MustCompile(`autoscalingconfiguration/DefaultConfiguration/1/.+`)),
@@ -141,18 +141,18 @@ func TestAccAwsAppRunnerService_ImageRepository_AutoScalingConfiguration(t *test
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAppRunner(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apprunner.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsAppRunnerServiceDestroy,
+		CheckDestroy: testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppRunnerService_imageRepository(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAppRunnerServiceExists(resourceName),
+					testAccCheckServiceExists(resourceName),
 				),
 			},
 			{
 				Config: testAccAppRunnerService_imageRepository_autoScalingConfiguration(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAppRunnerServiceExists(resourceName),
+					testAccCheckServiceExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "auto_scaling_configuration_arn", autoScalingResourceName, "arn"),
 				),
 			},
@@ -174,12 +174,12 @@ func TestAccAwsAppRunnerService_ImageRepository_EncryptionConfiguration(t *testi
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAppRunner(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apprunner.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsAppRunnerServiceDestroy,
+		CheckDestroy: testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppRunnerService_imageRepository_encryptionConfiguration(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAppRunnerServiceExists(resourceName),
+					testAccCheckServiceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "encryption_configuration.0.kms_key", kmsResourceName, "arn"),
 				),
@@ -193,7 +193,7 @@ func TestAccAwsAppRunnerService_ImageRepository_EncryptionConfiguration(t *testi
 				// Test resource recreation; EncryptionConfiguration (or lack thereof) Forces New resource
 				Config: testAccAppRunnerService_imageRepository(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAppRunnerServiceExists(resourceName),
+					testAccCheckServiceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "0"),
 				),
 			},
@@ -209,12 +209,12 @@ func TestAccAwsAppRunnerService_ImageRepository_HealthCheckConfiguration(t *test
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAppRunner(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apprunner.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsAppRunnerServiceDestroy,
+		CheckDestroy: testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppRunnerService_imageRepository_healthCheckConfiguration(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAppRunnerServiceExists(resourceName),
+					testAccCheckServiceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "health_check_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_configuration.0.healthy_threshold", "2"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_configuration.0.interval", "5"),
@@ -232,7 +232,7 @@ func TestAccAwsAppRunnerService_ImageRepository_HealthCheckConfiguration(t *test
 				// Test resource recreation; HealthConfiguration Forces New resource
 				Config: testAccAppRunnerService_imageRepository_updateHealthCheckConfiguration(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAppRunnerServiceExists(resourceName),
+					testAccCheckServiceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "health_check_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_configuration.0.healthy_threshold", "2"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_configuration.0.interval", "5"),
@@ -259,12 +259,12 @@ func TestAccAwsAppRunnerService_ImageRepository_InstanceConfiguration(t *testing
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAppRunner(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apprunner.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsAppRunnerServiceDestroy,
+		CheckDestroy: testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppRunnerService_imageRepository_instanceConfiguration(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAppRunnerServiceExists(resourceName),
+					testAccCheckServiceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.cpu", "1024"),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_configuration.0.instance_role_arn", roleResourceName, "arn"),
@@ -279,7 +279,7 @@ func TestAccAwsAppRunnerService_ImageRepository_InstanceConfiguration(t *testing
 			{
 				Config: testAccAppRunnerService_imageRepository_updateInstanceConfiguration(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAppRunnerServiceExists(resourceName),
+					testAccCheckServiceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.cpu", "2048"),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_configuration.0.instance_role_arn", roleResourceName, "arn"),
@@ -294,7 +294,7 @@ func TestAccAwsAppRunnerService_ImageRepository_InstanceConfiguration(t *testing
 			{
 				Config: testAccAppRunnerService_imageRepository(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAppRunnerServiceExists(resourceName),
+					testAccCheckServiceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_configuration.0.cpu"),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_configuration.0.memory"),
@@ -313,12 +313,12 @@ func TestAccAwsAppRunnerService_ImageRepository_RuntimeEnvironmentVars(t *testin
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAppRunner(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apprunner.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsAppRunnerServiceDestroy,
+		CheckDestroy: testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppRunnerService_imageRepository_runtimeEnvVars(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAppRunnerServiceExists(resourceName),
+					testAccCheckServiceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "source_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source_configuration.0.image_repository.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source_configuration.0.image_repository.0.image_configuration.#", "1"),
@@ -343,12 +343,12 @@ func TestAccAwsAppRunnerService_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAppRunner(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apprunner.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsAppRunnerServiceDestroy,
+		CheckDestroy: testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppRunnerService_imageRepository(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAppRunnerServiceExists(resourceName),
+					testAccCheckServiceExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfapprunner.ResourceService(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -365,12 +365,12 @@ func TestAccAwsAppRunnerService_tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAppRunner(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apprunner.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsAppRunnerServiceDestroy,
+		CheckDestroy: testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppRunnerServiceConfigTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAppRunnerServiceExists(resourceName),
+					testAccCheckServiceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -383,7 +383,7 @@ func TestAccAwsAppRunnerService_tags(t *testing.T) {
 			{
 				Config: testAccAppRunnerServiceConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAppRunnerServiceExists(resourceName),
+					testAccCheckServiceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -392,7 +392,7 @@ func TestAccAwsAppRunnerService_tags(t *testing.T) {
 			{
 				Config: testAccAppRunnerServiceConfigTags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAppRunnerServiceExists(resourceName),
+					testAccCheckServiceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -401,7 +401,7 @@ func TestAccAwsAppRunnerService_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsAppRunnerServiceDestroy(s *terraform.State) error {
+func testAccCheckServiceDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_apprunner_service" {
 			continue
@@ -431,7 +431,7 @@ func testAccCheckAwsAppRunnerServiceDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAwsAppRunnerServiceExists(n string) resource.TestCheckFunc {
+func testAccCheckServiceExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
