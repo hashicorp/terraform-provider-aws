@@ -31,7 +31,7 @@ const (
 	EBSSnapshotImportStateDeleted    = "deleted"
 	EBSSnapshotImportStateUpdating   = "updating"
 	EBSSnapshotImportStateValidating = "validating"
-	EBSSnapshotImportStateValidd  = "validated"
+	EBSSnapshotImportStateValidd     = "validated"
 	EBSSnapshotImportStateConverting = "converting"
 	EBSSnapshotImportStateCompleted  = "completed"
 )

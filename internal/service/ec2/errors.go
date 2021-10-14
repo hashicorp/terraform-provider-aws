@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	multierror "github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (
@@ -102,7 +101,6 @@ const (
 const (
 	ErrCodeInvalidPlacementGroupUnknown = "InvalidPlacementGroup.Unknown"
 )
-
 
 func UnsuccessfulItemError(apiObject *ec2.UnsuccessfulItemError) error {
 	if apiObject == nil {
