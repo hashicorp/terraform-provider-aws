@@ -23,11 +23,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_autoscalingplans_scaling_plan", &resource.Sweeper{
 		Name: "aws_autoscalingplans_scaling_plan",
-		F:    testSweepAutoScalingPlansScalingPlans,
+		F:    sweepScalingPlans,
 	})
 }
 
-func testSweepAutoScalingPlansScalingPlans(region string) error {
+func sweepScalingPlans(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
