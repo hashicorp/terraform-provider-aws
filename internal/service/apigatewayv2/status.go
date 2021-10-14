@@ -7,14 +7,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/apigatewayv2/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfapigatewayv2 "github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
-	tfapigatewayv2 "github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
-	tfapigatewayv2 "github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
-	tfapigatewayv2 "github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
-	tfapigatewayv2 "github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
 )
 
 // StatusDeployment fetches the Deployment and its Status
@@ -43,7 +37,7 @@ func StatusDeployment(conn *apigatewayv2.ApiGatewayV2, apiId, deploymentId strin
 
 func StatusDomainName(conn *apigatewayv2.ApiGatewayV2, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		domainName, err := tfapigatewayv2.FindDomainNameByName(conn, name)
+		domainName, err := FindDomainNameByName(conn, name)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
