@@ -21,70 +21,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_timestreamwrite_database", &resource.Sweeper{
-		Name:         "aws_timestreamwrite_database",
-		F:            sweepDatabases,
-		Dependencies: []string{"aws_timestreamwrite_table"},
-	})
-}
 
-func sweepDatabases(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).TimestreamWriteConn
-	ctx := context.Background()
 
-	var sweeperErrs *multierror.Error
 
-	input := &timestreamwrite.ListDatabasesInput{}
-
-	err = conn.ListDatabasesPagesWithContext(ctx, input, func(page *timestreamwrite.ListDatabasesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, database := range page.Databases {
-			if database == nil {
-				continue
-			}
-
-			dbName := aws.StringValue(database.DatabaseName)
-
-			log.Printf("[INFO] Deleting Timestream Database (%s)", dbName)
-			r := tftimestreamwrite.ResourceDatabase()
-			d := r.Data(nil)
-			d.SetId(dbName)
-
-			diags := r.DeleteWithoutTimeout(ctx, d, client)
-
-			if diags != nil && diags.HasError() {
-				for _, d := range diags {
-					if d.Severity == diag.Error {
-						sweeperErr := fmt.Errorf("error deleting Timestream Database (%s): %s", dbName, d.Summary)
-						log.Printf("[ERROR] %s", sweeperErr)
-						sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-					}
-				}
-			}
-		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Timestream Database sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-	}
-
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Timestream Databases: %w", err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func TestAccTimestreamWriteDatabase_basic(t *testing.T) {
 	resourceName := "aws_timestreamwrite_database.test"
