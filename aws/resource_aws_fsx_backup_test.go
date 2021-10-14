@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/fsx/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -71,8 +72,8 @@ func TestAccAWSFsxBackup_basic(t *testing.T) {
 	resourceName := "aws_fsx_backup.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(fsx.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, fsx.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckFsxBackupDestroy,
 		Steps: []resource.TestStep{
@@ -80,8 +81,8 @@ func TestAccAWSFsxBackup_basic(t *testing.T) {
 				Config: testAccAwsFsxBackupConfigBasic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxBackupExists(resourceName, &backup),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexp.MustCompile(`backup/.+`)),
-					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexp.MustCompile(`backup/.+`)),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -99,8 +100,8 @@ func TestAccAWSFsxBackup_disappears(t *testing.T) {
 	resourceName := "aws_fsx_backup.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(fsx.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, fsx.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckFsxBackupDestroy,
 		Steps: []resource.TestStep{
@@ -108,7 +109,7 @@ func TestAccAWSFsxBackup_disappears(t *testing.T) {
 				Config: testAccAwsFsxBackupConfigBasic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxBackupExists(resourceName, &backup),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsFsxBackup(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsFsxBackup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -121,8 +122,8 @@ func TestAccAWSFsxBackup_disappears_filesystem(t *testing.T) {
 	resourceName := "aws_fsx_backup.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(fsx.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, fsx.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckFsxBackupDestroy,
 		Steps: []resource.TestStep{
@@ -130,7 +131,7 @@ func TestAccAWSFsxBackup_disappears_filesystem(t *testing.T) {
 				Config: testAccAwsFsxBackupConfigBasic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxBackupExists(resourceName, &backup),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsFsxLustreFileSystem(), "aws_fsx_lustre_file_system.test"),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsFsxLustreFileSystem(), "aws_fsx_lustre_file_system.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -143,8 +144,8 @@ func TestAccAWSFsxBackup_tags(t *testing.T) {
 	resourceName := "aws_fsx_backup.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(fsx.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, fsx.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckFsxBackupDestroy,
 		Steps: []resource.TestStep{
@@ -187,8 +188,8 @@ func TestAccAWSFsxBackup_implictTags(t *testing.T) {
 	resourceName := "aws_fsx_backup.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(fsx.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, fsx.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckFsxBackupDestroy,
 		Steps: []resource.TestStep{
@@ -256,7 +257,7 @@ func testAccCheckFsxBackupDestroy(s *terraform.State) error {
 }
 
 func testAccAwsFsxBackupConfigBase() string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), `
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 }
@@ -277,7 +278,7 @@ resource "aws_fsx_lustre_file_system" "test" {
 }
 
 func testAccAwsFsxBackupConfigBasic() string {
-	return composeConfig(testAccAwsFsxBackupConfigBase(), `
+	return acctest.ConfigCompose(testAccAwsFsxBackupConfigBase(), `
 resource "aws_fsx_backup" "test" {
   file_system_id = aws_fsx_lustre_file_system.test.id
 }
@@ -285,7 +286,7 @@ resource "aws_fsx_backup" "test" {
 }
 
 func testAccAwsFsxBackupConfigTags1(tagKey1, tagValue1 string) string {
-	return composeConfig(testAccAwsFsxBackupConfigBase(), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAwsFsxBackupConfigBase(), fmt.Sprintf(`
 resource "aws_fsx_backup" "test" {
   file_system_id = aws_fsx_lustre_file_system.test.id
 
@@ -297,7 +298,7 @@ resource "aws_fsx_backup" "test" {
 }
 
 func testAccAwsFsxBackupConfigTags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return composeConfig(testAccAwsFsxBackupConfigBase(), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAwsFsxBackupConfigBase(), fmt.Sprintf(`
 resource "aws_fsx_backup" "test" {
   file_system_id = aws_fsx_lustre_file_system.test.id
 
@@ -310,7 +311,7 @@ resource "aws_fsx_backup" "test" {
 }
 
 func testAccAwsFsxBackupConfigImplictTags(tagKey1, tagValue1 string) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 }

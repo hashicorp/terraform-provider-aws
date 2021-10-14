@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/backup"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAwsBackupGlobalSettings_basic(t *testing.T) {
@@ -15,10 +16,10 @@ func TestAccAwsBackupGlobalSettings_basic(t *testing.T) {
 	resourceName := "aws_backup_global_settings.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			acctest.PreCheck(t)
 			testAccPreCheckAWSBackup(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, backup.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
