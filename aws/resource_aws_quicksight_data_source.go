@@ -1287,8 +1287,8 @@ func diffQuickSightDataSourcePermissions(o, n []interface{}) ([]*quicksight.Reso
 			}
 
 			found = true
-			newActions := flattenStringSet(np.Actions)
-			oldActions := flattenStringSet(op.Actions)
+			newActions := flex.FlattenStringSet(np.Actions)
+			oldActions := flex.FlattenStringSet(op.Actions)
 
 			if newActions.Equal(oldActions) {
 				break
@@ -1299,14 +1299,14 @@ func diffQuickSightDataSourcePermissions(o, n []interface{}) ([]*quicksight.Reso
 
 			if toRemove.Len() > 0 {
 				toRevoke = append(toRevoke, &quicksight.ResourcePermission{
-					Actions:   expandStringSet(toRemove),
+					Actions:   flex.ExpandStringSet(toRemove),
 					Principal: np.Principal,
 				})
 			}
 
 			if toAdd.Len() > 0 {
 				toGrant = append(toGrant, &quicksight.ResourcePermission{
-					Actions:   expandStringSet(toAdd),
+					Actions:   flex.ExpandStringSet(toAdd),
 					Principal: np.Principal,
 				})
 			}
@@ -1342,7 +1342,7 @@ func expandQuickSightDataSourcePermissions(tfList []interface{}) []*quicksight.R
 	for i, tfListRaw := range tfList {
 		tfMap := tfListRaw.(map[string]interface{})
 		permission := &quicksight.ResourcePermission{
-			Actions:   expandStringSet(tfMap["actions"].(*schema.Set)),
+			Actions:   flex.ExpandStringSet(tfMap["actions"].(*schema.Set)),
 			Principal: aws.String(tfMap["principal"].(string)),
 		}
 
@@ -1651,7 +1651,7 @@ func flattenQuickSightPermissions(perms []*quicksight.ResourcePermission) []inte
 		}
 
 		if p.Actions != nil {
-			perm["actions"] = flattenStringList(p.Actions)
+			perm["actions"] = flex.FlattenStringList(p.Actions)
 		}
 
 		values = append(values, perm)
