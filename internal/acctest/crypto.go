@@ -1,4 +1,4 @@
-package aws
+package acctest
 
 import (
 	"crypto/rand"
@@ -21,10 +21,10 @@ const (
 
 var tlsX509CertificateSerialNumberLimit = new(big.Int).Lsh(big.NewInt(1), 128)
 
-// tlsRsaPrivateKeyPem generates a RSA private key PEM string.
-// Wrap with tlsPemEscapeNewlines() to allow simple fmt.Sprintf()
+// TLSRSAPrivateKeyPEM generates a RSA private key PEM string.
+// Wrap with TLSPEMEscapeNewlines() to allow simple fmt.Sprintf()
 // configurations such as: private_key_pem = "%[1]s"
-func tlsRsaPrivateKeyPem(bits int) string {
+func TLSRSAPrivateKeyPEM(bits int) string {
 	key, err := rsa.GenerateKey(rand.Reader, bits)
 
 	if err != nil {
@@ -40,10 +40,10 @@ func tlsRsaPrivateKeyPem(bits int) string {
 	return string(pem.EncodeToMemory(block))
 }
 
-// tlsRsaPublicKeyPem generates a RSA public key PEM string.
-// Wrap with tlsPemEscapeNewlines() to allow simple fmt.Sprintf()
+// TLSRSAPublicKeyPEM generates a RSA public key PEM string.
+// Wrap with TLSPEMEscapeNewlines() to allow simple fmt.Sprintf()
 // configurations such as: public_key_pem = "%[1]s"
-func tlsRsaPublicKeyPem(keyPem string) string {
+func TLSRSAPublicKeyPEM(keyPem string) string {
 	keyBlock, _ := pem.Decode([]byte(keyPem))
 
 	key, err := x509.ParsePKCS1PrivateKey(keyBlock.Bytes)
@@ -68,10 +68,10 @@ func tlsRsaPublicKeyPem(keyPem string) string {
 	return string(pem.EncodeToMemory(block))
 }
 
-// tlsRsaX509LocallySignedCertificatePem generates a local CA x509 certificate PEM string.
-// Wrap with tlsPemEscapeNewlines() to allow simple fmt.Sprintf()
+// TLSRSAX509LocallySignedCertificatePEM generates a local CA x509 certificate PEM string.
+// Wrap with TLSPEMEscapeNewlines() to allow simple fmt.Sprintf()
 // configurations such as: certificate_pem = "%[1]s"
-func tlsRsaX509LocallySignedCertificatePem(caKeyPem, caCertificatePem, keyPem, commonName string) string {
+func TLSRSAX509LocallySignedCertificatePEM(caKeyPem, caCertificatePem, keyPem, commonName string) string {
 	caCertificateBlock, _ := pem.Decode([]byte(caCertificatePem))
 
 	caCertificate, err := x509.ParseCertificate(caCertificateBlock.Bytes)
@@ -134,10 +134,10 @@ func tlsRsaX509LocallySignedCertificatePem(caKeyPem, caCertificatePem, keyPem, c
 	return string(pem.EncodeToMemory(certificateBlock))
 }
 
-// tlsRsaX509SelfSignedCaCertificatePem generates a x509 CA certificate PEM string.
-// Wrap with tlsPemEscapeNewlines() to allow simple fmt.Sprintf()
+// TLSRSAX509SelfSignedCACertificatePEM generates a x509 CA certificate PEM string.
+// Wrap with TLSPEMEscapeNewlines() to allow simple fmt.Sprintf()
 // configurations such as: root_certificate_pem = "%[1]s"
-func tlsRsaX509SelfSignedCaCertificatePem(keyPem string) string {
+func TLSRSAX509SelfSignedCACertificatePEM(keyPem string) string {
 	keyBlock, _ := pem.Decode([]byte(keyPem))
 
 	key, err := x509.ParsePKCS1PrivateKey(keyBlock.Bytes)
@@ -193,10 +193,10 @@ func tlsRsaX509SelfSignedCaCertificatePem(keyPem string) string {
 	return string(pem.EncodeToMemory(certificateBlock))
 }
 
-// tlsRsaX509SelfSignedCertificatePem generates a x509 certificate PEM string.
-// Wrap with tlsPemEscapeNewlines() to allow simple fmt.Sprintf()
+// TLSRSAX509SelfSignedCertificatePEM generates a x509 certificate PEM string.
+// Wrap with TLSPEMEscapeNewlines() to allow simple fmt.Sprintf()
 // configurations such as: private_key_pem = "%[1]s"
-func tlsRsaX509SelfSignedCertificatePem(keyPem, commonName string) string {
+func TLSRSAX509SelfSignedCertificatePEM(keyPem, commonName string) string {
 	keyBlock, _ := pem.Decode([]byte(keyPem))
 
 	key, err := x509.ParsePKCS1PrivateKey(keyBlock.Bytes)
@@ -241,11 +241,11 @@ func tlsRsaX509SelfSignedCertificatePem(keyPem, commonName string) string {
 	return string(pem.EncodeToMemory(certificateBlock))
 }
 
-// tlsRsaX509CertificateRequestPem generates a x509 certificate request PEM string
+// TLSRSAX509CertificateRequestPEM generates a x509 certificate request PEM string
 // and a RSA private key PEM string.
-// Wrap with tlsPemEscapeNewlines() to allow simple fmt.Sprintf()
+// Wrap with TLSPEMEscapeNewlines() to allow simple fmt.Sprintf()
 // configurations such as: certificate_signing_request_pem = "%[1]s" private_key_pem = "%[2]s"
-func tlsRsaX509CertificateRequestPem(keyBits int, commonName string) (string, string) {
+func TLSRSAX509CertificateRequestPEM(keyBits int, commonName string) (string, string) {
 	keyBytes, err := rsa.GenerateKey(rand.Reader, keyBits)
 	if err != nil {
 		//lintignore:R009
@@ -279,6 +279,6 @@ func tlsRsaX509CertificateRequestPem(keyBits int, commonName string) (string, st
 	return string(pem.EncodeToMemory(csrBlock)), string(pem.EncodeToMemory(keyBlock))
 }
 
-func tlsPemEscapeNewlines(pem string) string {
+func TLSPEMEscapeNewlines(pem string) string {
 	return strings.ReplaceAll(pem, "\n", "\\n")
 }

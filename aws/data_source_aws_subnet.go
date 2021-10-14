@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
 )
 
 func dataSourceAwsSubnet() *schema.Resource {
@@ -133,7 +134,7 @@ func dataSourceAwsSubnetRead(d *schema.ResourceData, meta interface{}) error {
 		filters["ipv6-cidr-block-association.ipv6-cidr-block"] = v.(string)
 	}
 
-	req.Filters = buildEC2AttributeFilterList(filters)
+	req.Filters = tfec2.BuildAttributeFilterList(filters)
 
 	if tags, tagsOk := d.GetOk("tags"); tagsOk {
 		req.Filters = append(req.Filters, buildEC2TagFilterList(

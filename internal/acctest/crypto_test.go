@@ -1,13 +1,12 @@
-package aws
+package acctest
 
 import (
 	"strings"
 	"testing"
-	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestTlsRsaPrivateKeyPem(t *testing.T) {
-	key := tlsRsaPrivateKeyPem(2048)
+	key := TLSRSAPrivateKeyPEM(2048)
 
 	if !strings.Contains(key, pemBlockTypeRsaPrivateKey) {
 		t.Errorf("key does not contain RSA PRIVATE KEY: %s", key)
@@ -15,8 +14,8 @@ func TestTlsRsaPrivateKeyPem(t *testing.T) {
 }
 
 func TestTlsRsaPublicKeyPem(t *testing.T) {
-	privateKey := tlsRsaPrivateKeyPem(2048)
-	publicKey := tlsRsaPublicKeyPem(privateKey)
+	privateKey := TLSRSAPrivateKeyPEM(2048)
+	publicKey := TLSRSAPublicKeyPEM(privateKey)
 
 	if !strings.Contains(publicKey, pemBlockTypePublicKey) {
 		t.Errorf("key does not contain PUBLIC KEY: %s", publicKey)
@@ -24,10 +23,10 @@ func TestTlsRsaPublicKeyPem(t *testing.T) {
 }
 
 func TestTlsRsaX509LocallySignedCertificatePem(t *testing.T) {
-	caKey := tlsRsaPrivateKeyPem(2048)
-	caCertificate := tlsRsaX509SelfSignedCaCertificatePem(caKey)
-	key := tlsRsaPrivateKeyPem(2048)
-	certificate := tlsRsaX509LocallySignedCertificatePem(caKey, caCertificate, key, "example.com")
+	caKey := TLSRSAPrivateKeyPEM(2048)
+	caCertificate := TLSRSAX509SelfSignedCACertificatePEM(caKey)
+	key := TLSRSAPrivateKeyPEM(2048)
+	certificate := TLSRSAX509LocallySignedCertificatePEM(caKey, caCertificate, key, "example.com")
 
 	if !strings.Contains(certificate, pemBlockTypeCertificate) {
 		t.Errorf("certificate does not contain CERTIFICATE: %s", certificate)
@@ -35,8 +34,8 @@ func TestTlsRsaX509LocallySignedCertificatePem(t *testing.T) {
 }
 
 func TestTlsRsaX509SelfSignedCaCertificatePem(t *testing.T) {
-	caKey := tlsRsaPrivateKeyPem(2048)
-	caCertificate := tlsRsaX509SelfSignedCaCertificatePem(caKey)
+	caKey := TLSRSAPrivateKeyPEM(2048)
+	caCertificate := TLSRSAX509SelfSignedCACertificatePEM(caKey)
 
 	if !strings.Contains(caCertificate, pemBlockTypeCertificate) {
 		t.Errorf("CA certificate does not contain CERTIFICATE: %s", caCertificate)
@@ -44,8 +43,8 @@ func TestTlsRsaX509SelfSignedCaCertificatePem(t *testing.T) {
 }
 
 func TestTlsRsaX509SelfSignedCertificatePem(t *testing.T) {
-	key := tlsRsaPrivateKeyPem(2048)
-	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
+	key := TLSRSAPrivateKeyPEM(2048)
+	certificate := TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
 
 	if !strings.Contains(certificate, pemBlockTypeCertificate) {
 		t.Errorf("certificate does not contain CERTIFICATE: %s", certificate)
@@ -53,7 +52,7 @@ func TestTlsRsaX509SelfSignedCertificatePem(t *testing.T) {
 }
 
 func TestTlsRsaX509CertificateRequestPem(t *testing.T) {
-	csr, key := tlsRsaX509CertificateRequestPem(2048, "example.com")
+	csr, key := TLSRSAX509CertificateRequestPEM(2048, "example.com")
 
 	if !strings.Contains(csr, pemBlockTypeCertificateRequest) {
 		t.Errorf("certificate does not contain CERTIFICATE REQUEST: %s", csr)

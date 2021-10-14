@@ -1,4 +1,4 @@
-package aws
+package acctest
 
 import (
 	"fmt"
@@ -443,7 +443,7 @@ func TestAccAWSProvider_AssumeRole_Empty(t *testing.T) {
 			{
 				Config: testAccCheckAWSProviderConfigAssumeRoleEmpty,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsCallerIdentityAccountId("data.aws_caller_identity.current"),
+					CheckAwsCallerIdentityAccountId("data.aws_caller_identity.current"),
 				),
 			},
 		},

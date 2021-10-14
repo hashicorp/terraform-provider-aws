@@ -1,4 +1,4 @@
-package aws
+package acctest
 
 import (
 	"context"
@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 const (
@@ -19,13 +18,13 @@ const (
 	Ec2ClassicRegionEnvVar = "AWS_EC2_CLASSIC_REGION"
 )
 
-// testAccProviderEc2Classic is the EC2-Classic provider instance
+// ProviderEC2Classic is the EC2-Classic provider instance
 //
 // This Provider can be used in testing code for API calls without requiring
 // the use of saving and referencing specific ProviderFactories instances.
 //
 // PreCheckEC2Classic(t) must be called before using this provider instance.
-var testAccProviderEc2Classic *schema.Provider
+var ProviderEC2Classic *schema.Provider
 
 // testAccProviderEc2ClassicConfigure ensures the provider is only configured once
 var testAccProviderEc2ClassicConfigure sync.Once
@@ -35,20 +34,20 @@ func PreCheckEC2Classic(t *testing.T) {
 	// Since we are outside the scope of the Terraform configuration we must
 	// call Configure() to properly initialize the provider configuration.
 	testAccProviderEc2ClassicConfigure.Do(func() {
-		testAccProviderEc2Classic = Provider()
+		ProviderEC2Classic = Provider()
 
 		config := map[string]interface{}{
 			"region": EC2ClassicRegion(),
 		}
 
-		err := testAccProviderEc2Classic.Configure(context.Background(), terraform.NewResourceConfigRaw(config))
+		err := ProviderEC2Classic.Configure(context.Background(), terraform.NewResourceConfigRaw(config))
 
 		if err != nil {
 			t.Fatal(err)
 		}
 	})
 
-	client := testAccProviderEc2Classic.Meta().(*AWSClient)
+	client := ProviderEC2Classic.Meta().(*AWSClient)
 	platforms := client.supportedplatforms
 	region := client.region
 	if !hasEc2Classic(platforms) {

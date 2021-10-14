@@ -12,7 +12,7 @@ import (
 
 func testAccCheckDxVirtualInterfaceExists(name string, vif *directconnect.VirtualInterface) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).dxconn
+		conn := acctest.Provider.Meta().(*AWSClient).dxconn
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -42,7 +42,7 @@ func testAccCheckDxVirtualInterfaceExists(name string, vif *directconnect.Virtua
 }
 
 func testAccCheckDxVirtualInterfaceDestroy(s *terraform.State, t string) error {
-	conn := testAccProvider.Meta().(*AWSClient).dxconn
+	conn := acctest.Provider.Meta().(*AWSClient).dxconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != t {

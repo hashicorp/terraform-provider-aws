@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
 )
 
 func TestBuildEC2AttributeFilterList(t *testing.T) {
@@ -47,7 +48,7 @@ func TestBuildEC2AttributeFilterList(t *testing.T) {
 	}
 
 	for i, testCase := range testCases {
-		result := buildEC2AttributeFilterList(testCase.Attrs)
+		result := tfec2.BuildAttributeFilterList(testCase.Attrs)
 
 		if !reflect.DeepEqual(result, testCase.Expected) {
 			t.Errorf(

@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
 )
 
 func resourceAwsDefaultSubnet() *schema.Resource {
@@ -59,7 +60,7 @@ func resourceAwsDefaultSubnetCreate(d *schema.ResourceData, meta interface{}) er
 	conn := meta.(*AWSClient).ec2conn
 
 	req := &ec2.DescribeSubnetsInput{}
-	req.Filters = buildEC2AttributeFilterList(
+	req.Filters = tfec2.BuildAttributeFilterList(
 		map[string]string{
 			"availabilityZone": d.Get("availability_zone").(string),
 			"defaultForAz":     "true",
