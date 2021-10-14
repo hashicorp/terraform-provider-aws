@@ -188,7 +188,7 @@ func dataSourceAwsWorkspacesDirectoryRead(d *schema.ResourceData, meta interface
 	d.Set("directory_type", directory.DirectoryType)
 	d.Set("alias", directory.Alias)
 
-	if err := d.Set("subnet_ids", flattenStringSet(directory.SubnetIds)); err != nil {
+	if err := d.Set("subnet_ids", flex.FlattenStringSet(directory.SubnetIds)); err != nil {
 		return fmt.Errorf("error setting subnet_ids: %w", err)
 	}
 
@@ -204,11 +204,11 @@ func dataSourceAwsWorkspacesDirectoryRead(d *schema.ResourceData, meta interface
 		return fmt.Errorf("error setting workspace_creation_properties: %w", err)
 	}
 
-	if err := d.Set("ip_group_ids", flattenStringSet(directory.IpGroupIds)); err != nil {
+	if err := d.Set("ip_group_ids", flex.FlattenStringSet(directory.IpGroupIds)); err != nil {
 		return fmt.Errorf("error setting ip_group_ids: %w", err)
 	}
 
-	if err := d.Set("dns_ip_addresses", flattenStringSet(directory.DnsIpAddresses)); err != nil {
+	if err := d.Set("dns_ip_addresses", flex.FlattenStringSet(directory.DnsIpAddresses)); err != nil {
 		return fmt.Errorf("error setting dns_ip_addresses: %w", err)
 	}
 
