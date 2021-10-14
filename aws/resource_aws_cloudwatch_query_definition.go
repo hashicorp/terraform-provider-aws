@@ -16,12 +16,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsCloudWatchQueryDefinition() *schema.Resource {
+func ResourceQueryDefinition() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceAwsCloudWatchQueryDefinitionCreate,
-		ReadWithoutTimeout:   resourceAwsCloudWatchQueryDefinitionRead,
-		UpdateWithoutTimeout: resourceAwsCloudWatchQueryDefinitionUpdate,
-		DeleteWithoutTimeout: resourceAwsCloudWatchQueryDefinitionDelete,
+		CreateWithoutTimeout: resourceQueryDefinitionCreate,
+		ReadWithoutTimeout:   resourceQueryDefinitionRead,
+		UpdateWithoutTimeout: resourceQueryDefinitionUpdate,
+		DeleteWithoutTimeout: resourceQueryDefinitionDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceAwsCloudWatchQueryDefinitionImport,
 		},
@@ -55,7 +55,7 @@ func resourceAwsCloudWatchQueryDefinition() *schema.Resource {
 	}
 }
 
-func resourceAwsCloudWatchQueryDefinitionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceQueryDefinitionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
 
 	input := getAwsCloudWatchQueryDefinitionInput(d)
@@ -67,7 +67,7 @@ func resourceAwsCloudWatchQueryDefinitionCreate(ctx context.Context, d *schema.R
 	d.SetId(aws.StringValue(r.QueryDefinitionId))
 	d.Set("query_definition_id", r.QueryDefinitionId) // TODO: is this needed?
 
-	return resourceAwsCloudWatchQueryDefinitionRead(ctx, d, meta)
+	return resourceQueryDefinitionRead(ctx, d, meta)
 }
 
 func getAwsCloudWatchQueryDefinitionInput(d *schema.ResourceData) *cloudwatchlogs.PutQueryDefinitionInput {
@@ -84,7 +84,7 @@ func getAwsCloudWatchQueryDefinitionInput(d *schema.ResourceData) *cloudwatchlog
 	return result
 }
 
-func resourceAwsCloudWatchQueryDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceQueryDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
 
 	result, err := finder.QueryDefinition(ctx, conn, d.Get("name").(string), d.Id())
@@ -109,7 +109,7 @@ func resourceAwsCloudWatchQueryDefinitionRead(ctx context.Context, d *schema.Res
 	return nil
 }
 
-func resourceAwsCloudWatchQueryDefinitionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceQueryDefinitionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
 
 	_, err := conn.PutQueryDefinitionWithContext(ctx, getAwsCloudWatchQueryDefinitionInput(d))
@@ -117,10 +117,10 @@ func resourceAwsCloudWatchQueryDefinitionUpdate(ctx context.Context, d *schema.R
 		return diag.FromErr(err)
 	}
 
-	return resourceAwsCloudWatchQueryDefinitionRead(ctx, d, meta)
+	return resourceQueryDefinitionRead(ctx, d, meta)
 }
 
-func resourceAwsCloudWatchQueryDefinitionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceQueryDefinitionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
 
 	input := &cloudwatchlogs.DeleteQueryDefinitionInput{

@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsCloudwatchLogGroups() *schema.Resource {
+func DataSourceGroups() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsCloudwatchLogGroupsRead,
+		Read: dataSourceGroupsRead,
 
 		Schema: map[string]*schema.Schema{
 			"arns": {
@@ -33,7 +33,7 @@ func dataSourceAwsCloudwatchLogGroups() *schema.Resource {
 	}
 }
 
-func dataSourceAwsCloudwatchLogGroupsRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceGroupsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
 
 	input := &cloudwatchlogs.DescribeLogGroupsInput{

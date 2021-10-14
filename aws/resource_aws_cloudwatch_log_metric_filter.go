@@ -15,12 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsCloudWatchLogMetricFilter() *schema.Resource {
+func ResourceMetricFilter() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCloudWatchLogMetricFilterUpdate,
-		Read:   resourceAwsCloudWatchLogMetricFilterRead,
-		Update: resourceAwsCloudWatchLogMetricFilterUpdate,
-		Delete: resourceAwsCloudWatchLogMetricFilterDelete,
+		Create: resourceMetricFilterUpdate,
+		Read:   resourceMetricFilterRead,
+		Update: resourceMetricFilterUpdate,
+		Delete: resourceMetricFilterDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsCloudWatchLogMetricFilterImport,
 		},
@@ -97,7 +97,7 @@ func resourceAwsCloudWatchLogMetricFilter() *schema.Resource {
 	}
 }
 
-func resourceAwsCloudWatchLogMetricFilterUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceMetricFilterUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
 
 	name := d.Get("name").(string)
@@ -117,8 +117,8 @@ func resourceAwsCloudWatchLogMetricFilterUpdate(d *schema.ResourceData, meta int
 	// clashes, so use a mutex here (and on deletion) to serialise actions on
 	// log groups.
 	mutex_key := fmt.Sprintf(`log-group-%s`, d.Get(`log_group_name`))
-	awsMutexKV.Lock(mutex_key)
-	defer awsMutexKV.Unlock(mutex_key)
+	conns.GlobalMutexKV.Lock(mutex_key)
+	defer conns.GlobalMutexKV.Unlock(mutex_key)
 	log.Printf("[DEBUG] Creating/Updating CloudWatch Log Metric Filter: %s", input)
 	_, err := conn.PutMetricFilter(&input)
 	if err != nil {
@@ -129,10 +129,10 @@ func resourceAwsCloudWatchLogMetricFilterUpdate(d *schema.ResourceData, meta int
 
 	log.Println("[INFO] CloudWatch Log Metric Filter created/updated")
 
-	return resourceAwsCloudWatchLogMetricFilterRead(d, meta)
+	return resourceMetricFilterRead(d, meta)
 }
 
-func resourceAwsCloudWatchLogMetricFilterRead(d *schema.ResourceData, meta interface{}) error {
+func resourceMetricFilterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
 
 	mf, err := lookupCloudWatchLogMetricFilter(conn, d.Get("name").(string),
@@ -199,7 +199,7 @@ func lookupCloudWatchLogMetricFilter(conn *cloudwatchlogs.CloudWatchLogs,
 	}
 }
 
-func resourceAwsCloudWatchLogMetricFilterDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceMetricFilterDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
 
 	input := cloudwatchlogs.DeleteMetricFilterInput{
@@ -210,8 +210,8 @@ func resourceAwsCloudWatchLogMetricFilterDelete(d *schema.ResourceData, meta int
 	// clashes, so use a mutex here (and on creation) to serialise actions on
 	// log groups.
 	mutex_key := fmt.Sprintf(`log-group-%s`, d.Get(`log_group_name`))
-	awsMutexKV.Lock(mutex_key)
-	defer awsMutexKV.Unlock(mutex_key)
+	conns.GlobalMutexKV.Lock(mutex_key)
+	defer conns.GlobalMutexKV.Unlock(mutex_key)
 	log.Printf("[INFO] Deleting CloudWatch Log Metric Filter: %s", d.Id())
 	_, err := conn.DeleteMetricFilter(&input)
 	if err != nil {

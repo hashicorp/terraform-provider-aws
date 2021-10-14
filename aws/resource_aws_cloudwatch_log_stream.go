@@ -15,11 +15,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsCloudWatchLogStream() *schema.Resource {
+func ResourceStream() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCloudWatchLogStreamCreate,
-		Read:   resourceAwsCloudWatchLogStreamRead,
-		Delete: resourceAwsCloudWatchLogStreamDelete,
+		Create: resourceStreamCreate,
+		Read:   resourceStreamRead,
+		Delete: resourceStreamDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsCloudWatchLogStreamImport,
 		},
@@ -46,7 +46,7 @@ func resourceAwsCloudWatchLogStream() *schema.Resource {
 	}
 }
 
-func resourceAwsCloudWatchLogStreamCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceStreamCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
 
 	log.Printf("[DEBUG] Creating CloudWatch Log Stream: %s", d.Get("name").(string))
@@ -60,10 +60,10 @@ func resourceAwsCloudWatchLogStreamCreate(d *schema.ResourceData, meta interface
 
 	d.SetId(d.Get("name").(string))
 
-	return resourceAwsCloudWatchLogStreamRead(d, meta)
+	return resourceStreamRead(d, meta)
 }
 
-func resourceAwsCloudWatchLogStreamRead(d *schema.ResourceData, meta interface{}) error {
+func resourceStreamRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
 
 	group := d.Get("log_group_name").(string)
@@ -107,7 +107,7 @@ func resourceAwsCloudWatchLogStreamRead(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceAwsCloudWatchLogStreamDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceStreamDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
 
 	log.Printf("[INFO] Deleting CloudWatch Log Stream: %s", d.Id())

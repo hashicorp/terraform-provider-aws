@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudwatchlogs/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -51,7 +52,7 @@ func testSweepCloudwatchlogQueryDefinitions(region string) error {
 		}
 
 		for _, queryDefinition := range output.QueryDefinitions {
-			r := resourceAwsCloudWatchQueryDefinition()
+			r := ResourceQueryDefinition()
 			d := r.Data(nil)
 
 			d.SetId(aws.StringValue(queryDefinition.QueryDefinitionId))
@@ -143,7 +144,7 @@ func TestAccAWSCloudWatchQueryDefinition_disappears(t *testing.T) {
 				Config: testAccAWSCloudWatchQueryDefinitionConfig_Basic(queryName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCloudWatchQueryDefinitionExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsCloudWatchQueryDefinition(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceQueryDefinition(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsCloudWatchLogDestination() *schema.Resource {
+func ResourceDestination() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsCloudWatchLogDestinationPut,
 		Update: resourceAwsCloudWatchLogDestinationPut,
-		Read:   resourceAwsCloudWatchLogDestinationRead,
-		Delete: resourceAwsCloudWatchLogDestinationDelete,
+		Read:   resourceDestinationRead,
+		Delete: resourceDestinationDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
@@ -91,10 +91,10 @@ func resourceAwsCloudWatchLogDestinationPut(d *schema.ResourceData, meta interfa
 	}
 	d.SetId(name)
 
-	return resourceAwsCloudWatchLogDestinationRead(d, meta)
+	return resourceDestinationRead(d, meta)
 }
 
-func resourceAwsCloudWatchLogDestinationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceDestinationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
 
 	destination, exists, err := lookupCloudWatchLogDestination(conn, d.Id(), nil)
@@ -114,7 +114,7 @@ func resourceAwsCloudWatchLogDestinationRead(d *schema.ResourceData, meta interf
 	return nil
 }
 
-func resourceAwsCloudWatchLogDestinationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDestinationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
 
 	params := &cloudwatchlogs.DeleteDestinationInput{

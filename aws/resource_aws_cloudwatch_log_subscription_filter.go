@@ -16,12 +16,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsCloudwatchLogSubscriptionFilter() *schema.Resource {
+func ResourceSubscriptionFilter() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCloudwatchLogSubscriptionFilterCreate,
-		Read:   resourceAwsCloudwatchLogSubscriptionFilterRead,
-		Update: resourceAwsCloudwatchLogSubscriptionFilterUpdate,
-		Delete: resourceAwsCloudwatchLogSubscriptionFilterDelete,
+		Create: resourceSubscriptionFilterCreate,
+		Read:   resourceSubscriptionFilterRead,
+		Update: resourceSubscriptionFilterUpdate,
+		Delete: resourceSubscriptionFilterDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsCloudwatchLogSubscriptionFilterImport,
 		},
@@ -61,7 +61,7 @@ func resourceAwsCloudwatchLogSubscriptionFilter() *schema.Resource {
 	}
 }
 
-func resourceAwsCloudwatchLogSubscriptionFilterCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceSubscriptionFilterCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
 	params := getAwsCloudWatchLogsSubscriptionFilterInput(d)
 	log.Printf("[DEBUG] Creating SubscriptionFilter %#v", params)
@@ -94,7 +94,7 @@ func resourceAwsCloudwatchLogSubscriptionFilterCreate(d *schema.ResourceData, me
 	return nil
 }
 
-func resourceAwsCloudwatchLogSubscriptionFilterUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceSubscriptionFilterUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
 
 	params := getAwsCloudWatchLogsSubscriptionFilterInput(d)
@@ -125,7 +125,7 @@ func resourceAwsCloudwatchLogSubscriptionFilterUpdate(d *schema.ResourceData, me
 	}
 
 	d.SetId(cloudwatchLogsSubscriptionFilterId(d.Get("log_group_name").(string)))
-	return resourceAwsCloudwatchLogSubscriptionFilterRead(d, meta)
+	return resourceSubscriptionFilterRead(d, meta)
 }
 
 func getAwsCloudWatchLogsSubscriptionFilterInput(d *schema.ResourceData) cloudwatchlogs.PutSubscriptionFilterInput {
@@ -152,7 +152,7 @@ func getAwsCloudWatchLogsSubscriptionFilterInput(d *schema.ResourceData) cloudwa
 	return params
 }
 
-func resourceAwsCloudwatchLogSubscriptionFilterRead(d *schema.ResourceData, meta interface{}) error {
+func resourceSubscriptionFilterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
 
 	log_group_name := d.Get("log_group_name").(string)
@@ -190,7 +190,7 @@ func resourceAwsCloudwatchLogSubscriptionFilterRead(d *schema.ResourceData, meta
 	return nil
 }
 
-func resourceAwsCloudwatchLogSubscriptionFilterDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceSubscriptionFilterDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
 	log.Printf("[INFO] Deleting CloudWatch Log Group Subscription: %s", d.Id())
 	log_group_name := d.Get("log_group_name").(string)
