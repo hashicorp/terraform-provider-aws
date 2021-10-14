@@ -17,16 +17,16 @@ func TestAccDataSourceAwsWafv2WebACL_basic(t *testing.T) {
 	datasourceName := "data.aws_wafv2_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
+		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
 		ErrorCheck: acctest.ErrorCheck(t, wafv2.EndpointsID),
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccDataSourceAwsWafv2WebACL_NonExistent(name),
+				Config:      testAccWebACLDataSource_NonExistent(name),
 				ExpectError: regexp.MustCompile(`WAFv2 WebACL not found`),
 			},
 			{
-				Config: testAccDataSourceAwsWafv2WebACL_Name(name),
+				Config: testAccWebACLDataSource_Name(name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					acctest.MatchResourceAttrRegionalARN(datasourceName, "arn", "wafv2", regexp.MustCompile(fmt.Sprintf("regional/webacl/%v/.+$", name))),
@@ -40,7 +40,7 @@ func TestAccDataSourceAwsWafv2WebACL_basic(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAwsWafv2WebACL_Name(name string) string {
+func testAccWebACLDataSource_Name(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
   name  = "%s"
@@ -64,7 +64,7 @@ data "aws_wafv2_web_acl" "test" {
 `, name)
 }
 
-func testAccDataSourceAwsWafv2WebACL_NonExistent(name string) string {
+func testAccWebACLDataSource_NonExistent(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
   name  = "%s"

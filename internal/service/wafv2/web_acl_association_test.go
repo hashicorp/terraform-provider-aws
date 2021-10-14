@@ -25,16 +25,16 @@ func TestAccAwsWafv2WebACLAssociation_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckAPIGatewayTypeEDGE(t)
-			testAccPreCheckAWSWafv2ScopeRegional(t)
+			testAccPreCheckScopeRegional(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSWafv2WebACLAssociationDestroy,
+		CheckDestroy: testAccCheckWebACLAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsWafv2WebACLAssociationConfig(testName),
+				Config: testAccWebACLAssociationConfig(testName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWafv2WebACLAssociationExists(resourceName),
+					testAccCheckWebACLAssociationExists(resourceName),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "resource_arn", "apigateway", regexp.MustCompile(fmt.Sprintf("/restapis/.*/stages/%s", testName))),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "web_acl_arn", "wafv2", regexp.MustCompile(fmt.Sprintf("regional/webacl/%s/.*", testName))),
 				),
@@ -43,7 +43,7 @@ func TestAccAwsWafv2WebACLAssociation_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateIdFunc: testAccAWSWafv2WebACLAssociationImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccWebACLAssociationImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -57,24 +57,24 @@ func TestAccAwsWafv2WebACLAssociation_Disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckAPIGatewayTypeEDGE(t)
-			testAccPreCheckAWSWafv2ScopeRegional(t)
+			testAccPreCheckScopeRegional(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSWafv2WebACLAssociationDestroy,
+		CheckDestroy: testAccCheckWebACLAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsWafv2WebACLAssociationConfig(testName),
+				Config: testAccWebACLAssociationConfig(testName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWafv2WebACLAssociationExists(resourceName),
+					testAccCheckWebACLAssociationExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfwafv2.ResourceWebACLAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
 			{
-				Config: testAccAwsWafv2WebACLAssociationConfig(testName),
+				Config: testAccWebACLAssociationConfig(testName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWafv2WebACLAssociationExists(resourceName),
+					testAccCheckWebACLAssociationExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, apigateway.ResourceStage(), "aws_api_gateway_stage.test"),
 				),
 				ExpectNonEmptyPlan: true,
@@ -83,7 +83,7 @@ func TestAccAwsWafv2WebACLAssociation_Disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSWafv2WebACLAssociationDestroy(s *terraform.State) error {
+func testAccCheckWebACLAssociationDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_wafv2_web_acl_association" {
 			continue
@@ -117,7 +117,7 @@ func testAccCheckAWSWafv2WebACLAssociationDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSWafv2WebACLAssociationExists(name string) resource.TestCheckFunc {
+func testAccCheckWebACLAssociationExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		_, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -127,7 +127,7 @@ func testAccCheckAWSWafv2WebACLAssociationExists(name string) resource.TestCheck
 	}
 }
 
-func testAccAwsWafv2WebACLAssociationConfig(name string) string {
+func testAccWebACLAssociationConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_stage" "test" {
   stage_name    = "%s"
@@ -186,7 +186,7 @@ resource "aws_wafv2_web_acl_association" "test" {
 `, name, name, name)
 }
 
-func testAccAWSWafv2WebACLAssociationImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccWebACLAssociationImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {

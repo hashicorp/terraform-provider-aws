@@ -17,16 +17,16 @@ func TestAccDataSourceAwsWafv2IPSet_basic(t *testing.T) {
 	datasourceName := "data.aws_wafv2_ip_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
+		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
 		ErrorCheck: acctest.ErrorCheck(t, wafv2.EndpointsID),
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccDataSourceAwsWafv2IPSet_NonExistent(name),
+				Config:      testAccIPSetDataSource_NonExistent(name),
 				ExpectError: regexp.MustCompile(`WAFv2 IPSet not found`),
 			},
 			{
-				Config: testAccDataSourceAwsWafv2IPSet_Name(name),
+				Config: testAccIPSetDataSource_Name(name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "addresses", resourceName, "addresses"),
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
@@ -42,7 +42,7 @@ func TestAccDataSourceAwsWafv2IPSet_basic(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAwsWafv2IPSet_Name(name string) string {
+func testAccIPSetDataSource_Name(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_ip_set" "test" {
   name               = "%s"
@@ -57,7 +57,7 @@ data "aws_wafv2_ip_set" "test" {
 `, name)
 }
 
-func testAccDataSourceAwsWafv2IPSet_NonExistent(name string) string {
+func testAccIPSetDataSource_NonExistent(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_ip_set" "test" {
   name               = "%s"
