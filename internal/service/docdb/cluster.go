@@ -294,7 +294,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 			Engine:              aws.String(d.Get("engine").(string)),
 			SnapshotIdentifier:  aws.String(d.Get("snapshot_identifier").(string)),
 			DeletionProtection:  aws.Bool(d.Get("deletion_protection").(bool)),
-			Tags:                tags.IgnoreAws().DocdbTags(),
+			Tags:                Tags(tags.IgnoreAws()),
 		}
 
 		if attr := d.Get("availability_zones").(*schema.Set); attr.Len() > 0 {
@@ -377,7 +377,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 			MasterUserPassword:  aws.String(d.Get("master_password").(string)),
 			MasterUsername:      aws.String(d.Get("master_username").(string)),
 			DeletionProtection:  aws.Bool(d.Get("deletion_protection").(bool)),
-			Tags:                tags.IgnoreAws().DocdbTags(),
+			Tags:                Tags(tags.IgnoreAws()),
 		}
 
 		if attr, ok := d.GetOk("port"); ok {
@@ -579,7 +579,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting vpc_security_group_ids: %s", err)
 	}
 
-	tags, err := tftags.DocdbListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(conn, d.Get("arn").(string))
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for DocumentDB Cluster (%s): %s", d.Get("arn").(string), err)
@@ -694,7 +694,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.DocdbUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating DocumentDB Cluster (%s) tags: %s", d.Get("arn").(string), err)
 		}
 

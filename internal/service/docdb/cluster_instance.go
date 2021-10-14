@@ -194,7 +194,7 @@ func resourceClusterInstanceCreate(d *schema.ResourceData, meta interface{}) err
 		Engine:                  aws.String(d.Get("engine").(string)),
 		PromotionTier:           aws.Int64(int64(d.Get("promotion_tier").(int))),
 		AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
-		Tags:                    tags.IgnoreAws().DocdbTags(),
+		Tags:                    Tags(tags.IgnoreAws()),
 	}
 
 	if attr, ok := d.GetOk("availability_zone"); ok {
@@ -326,7 +326,7 @@ func resourceClusterInstanceRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("storage_encrypted", db.StorageEncrypted)
 	d.Set("ca_cert_identifier", db.CACertificateIdentifier)
 
-	tags, err := tftags.DocdbListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(conn, d.Get("arn").(string))
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for DocumentDB Cluster Instance (%s): %s", d.Get("arn").(string), err)
@@ -421,7 +421,7 @@ func resourceClusterInstanceUpdate(d *schema.ResourceData, meta interface{}) err
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.DocdbUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating DocumentDB Cluster Instance (%s) tags: %s", d.Get("arn").(string), err)
 		}
 

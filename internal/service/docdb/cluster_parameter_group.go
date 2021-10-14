@@ -115,7 +115,7 @@ func resourceClusterParameterGroupCreate(d *schema.ResourceData, meta interface{
 		DBClusterParameterGroupName: aws.String(groupName),
 		DBParameterGroupFamily:      aws.String(d.Get("family").(string)),
 		Description:                 aws.String(d.Get("description").(string)),
-		Tags:                        tags.IgnoreAws().DocdbTags(),
+		Tags:                        Tags(tags.IgnoreAws()),
 	}
 
 	log.Printf("[DEBUG] Create DocDB Cluster Parameter Group: %#v", createOpts)
@@ -175,7 +175,7 @@ func resourceClusterParameterGroupRead(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("error setting docdb cluster parameter: %s", err)
 	}
 
-	tags, err := tftags.DocdbListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(conn, d.Get("arn").(string))
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for DocumentDB Cluster Parameter Group (%s): %s", d.Get("arn").(string), err)
@@ -244,7 +244,7 @@ func resourceClusterParameterGroupUpdate(d *schema.ResourceData, meta interface{
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.DocdbUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating DocumentDB Cluster Parameter Group (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
