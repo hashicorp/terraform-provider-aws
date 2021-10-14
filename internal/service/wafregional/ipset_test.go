@@ -20,7 +20,7 @@ import (
 	tfwafregional "github.com/hashicorp/terraform-provider-aws/internal/service/wafregional"
 )
 
-func TestAccAWSWafRegionalIPSet_basic(t *testing.T) {
+func TestAccWAFRegionalIPSet_basic(t *testing.T) {
 	resourceName := "aws_wafregional_ipset.ipset"
 	var v waf.IPSet
 	ipsetName := fmt.Sprintf("ip-set-%s", sdkacctest.RandString(5))
@@ -52,7 +52,7 @@ func TestAccAWSWafRegionalIPSet_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRegionalIPSet_disappears(t *testing.T) {
+func TestAccWAFRegionalIPSet_disappears(t *testing.T) {
 	resourceName := "aws_wafregional_ipset.ipset"
 	var v waf.IPSet
 	ipsetName := fmt.Sprintf("ip-set-%s", sdkacctest.RandString(5))
@@ -74,7 +74,7 @@ func TestAccAWSWafRegionalIPSet_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRegionalIPSet_changeNameForceNew(t *testing.T) {
+func TestAccWAFRegionalIPSet_changeNameForceNew(t *testing.T) {
 	resourceName := "aws_wafregional_ipset.ipset"
 	var before, after waf.IPSet
 	ipsetName := fmt.Sprintf("ip-set-%s", sdkacctest.RandString(5))
@@ -117,7 +117,7 @@ func TestAccAWSWafRegionalIPSet_changeNameForceNew(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRegionalIPSet_changeDescriptors(t *testing.T) {
+func TestAccWAFRegionalIPSet_changeDescriptors(t *testing.T) {
 	resourceName := "aws_wafregional_ipset.ipset"
 	var before, after waf.IPSet
 	ipsetName := fmt.Sprintf("ip-set-%s", sdkacctest.RandString(5))
@@ -161,7 +161,7 @@ func TestAccAWSWafRegionalIPSet_changeDescriptors(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRegionalIPSet_IpSetDescriptors_1000UpdateLimit(t *testing.T) {
+func TestAccWAFRegionalIPSet_IPSetDescriptors_1000UpdateLimit(t *testing.T) {
 	var ipset waf.IPSet
 	ipsetName := fmt.Sprintf("ip-set-%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafregional_ipset.ipset"
@@ -207,7 +207,7 @@ func TestAccAWSWafRegionalIPSet_IpSetDescriptors_1000UpdateLimit(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRegionalIPSet_noDescriptors(t *testing.T) {
+func TestAccWAFRegionalIPSet_noDescriptors(t *testing.T) {
 	resourceName := "aws_wafregional_ipset.ipset"
 	var ipset waf.IPSet
 	ipsetName := fmt.Sprintf("ip-set-%s", sdkacctest.RandString(5))

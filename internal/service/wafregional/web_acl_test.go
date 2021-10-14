@@ -120,7 +120,7 @@ func sweepWebACLs(region string) error {
 	return nil
 }
 
-func TestAccAWSWafRegionalWebAcl_basic(t *testing.T) {
+func TestAccWAFRegionalWebACL_basic(t *testing.T) {
 	var v waf.WebACL
 	wafAclName := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafregional_web_acl.test"
@@ -153,7 +153,7 @@ func TestAccAWSWafRegionalWebAcl_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRegionalWebAcl_tags(t *testing.T) {
+func TestAccWAFRegionalWebACL_tags(t *testing.T) {
 	var v waf.WebACL
 	wafAclName := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafregional_web_acl.test"
@@ -198,7 +198,7 @@ func TestAccAWSWafRegionalWebAcl_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRegionalWebAcl_createRateBased(t *testing.T) {
+func TestAccWAFRegionalWebACL_createRateBased(t *testing.T) {
 	var v waf.WebACL
 	wafAclName := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafregional_web_acl.test"
@@ -229,7 +229,7 @@ func TestAccAWSWafRegionalWebAcl_createRateBased(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRegionalWebAcl_createGroup(t *testing.T) {
+func TestAccWAFRegionalWebACL_createGroup(t *testing.T) {
 	var v waf.WebACL
 	wafAclName := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafregional_web_acl.test"
@@ -260,7 +260,7 @@ func TestAccAWSWafRegionalWebAcl_createGroup(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRegionalWebAcl_changeNameForceNew(t *testing.T) {
+func TestAccWAFRegionalWebACL_changeNameForceNew(t *testing.T) {
 	var before, after waf.WebACL
 	wafAclName := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
 	wafAclNewName := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
@@ -303,7 +303,7 @@ func TestAccAWSWafRegionalWebAcl_changeNameForceNew(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRegionalWebAcl_changeDefaultAction(t *testing.T) {
+func TestAccWAFRegionalWebACL_changeDefaultAction(t *testing.T) {
 	var before, after waf.WebACL
 	wafAclName := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
 	wafAclNewName := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
@@ -346,7 +346,7 @@ func TestAccAWSWafRegionalWebAcl_changeDefaultAction(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRegionalWebAcl_disappears(t *testing.T) {
+func TestAccWAFRegionalWebACL_disappears(t *testing.T) {
 	var v waf.WebACL
 	wafAclName := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafregional_web_acl.test"
@@ -369,7 +369,7 @@ func TestAccAWSWafRegionalWebAcl_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRegionalWebAcl_noRules(t *testing.T) {
+func TestAccWAFRegionalWebACL_noRules(t *testing.T) {
 	var v waf.WebACL
 	wafAclName := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafregional_web_acl.test"
@@ -399,7 +399,7 @@ func TestAccAWSWafRegionalWebAcl_noRules(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRegionalWebAcl_changeRules(t *testing.T) {
+func TestAccWAFRegionalWebACL_changeRules(t *testing.T) {
 	var v waf.WebACL
 	var r waf.Rule
 	var idx int
@@ -446,7 +446,7 @@ func TestAccAWSWafRegionalWebAcl_changeRules(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRegionalWebAcl_LoggingConfiguration(t *testing.T) {
+func TestAccWAFRegionalWebACL_logging(t *testing.T) {
 	var webACL1, webACL2, webACL3 waf.WebACL
 	rName := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafregional_web_acl.test"

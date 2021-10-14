@@ -18,7 +18,7 @@ import (
 
 // Serialized acceptance tests due to WAF account limits
 // https://docs.aws.amazon.com/waf/latest/developerguide/limits.html
-func TestAccAWSWafRegionalRegexPatternSet_serial(t *testing.T) {
+func TestAccWAFRegionalRegexPatternSet_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		"basic":          testAccRegexPatternSet_basic,
 		"changePatterns": testAccRegexPatternSet_changePatterns,

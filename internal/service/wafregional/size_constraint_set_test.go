@@ -16,7 +16,7 @@ import (
 	tfwafregional "github.com/hashicorp/terraform-provider-aws/internal/service/wafregional"
 )
 
-func TestAccAWSWafRegionalSizeConstraintSet_basic(t *testing.T) {
+func TestAccWAFRegionalSizeConstraintSet_basic(t *testing.T) {
 	var constraints waf.SizeConstraintSet
 	sizeConstraintSet := fmt.Sprintf("sizeConstraintSet-%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafregional_size_constraint_set.size_constraint_set"
@@ -56,7 +56,7 @@ func TestAccAWSWafRegionalSizeConstraintSet_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRegionalSizeConstraintSet_changeNameForceNew(t *testing.T) {
+func TestAccWAFRegionalSizeConstraintSet_changeNameForceNew(t *testing.T) {
 	var before, after waf.SizeConstraintSet
 	sizeConstraintSet := fmt.Sprintf("sizeConstraintSet-%s", sdkacctest.RandString(5))
 	sizeConstraintSetNewName := fmt.Sprintf("sizeConstraintSet-%s", sdkacctest.RandString(5))
@@ -97,7 +97,7 @@ func TestAccAWSWafRegionalSizeConstraintSet_changeNameForceNew(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRegionalSizeConstraintSet_disappears(t *testing.T) {
+func TestAccWAFRegionalSizeConstraintSet_disappears(t *testing.T) {
 	var constraints waf.SizeConstraintSet
 	sizeConstraintSet := fmt.Sprintf("sizeConstraintSet-%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafregional_size_constraint_set.size_constraint_set"
@@ -120,7 +120,7 @@ func TestAccAWSWafRegionalSizeConstraintSet_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRegionalSizeConstraintSet_changeConstraints(t *testing.T) {
+func TestAccWAFRegionalSizeConstraintSet_changeConstraints(t *testing.T) {
 	var before, after waf.SizeConstraintSet
 	setName := fmt.Sprintf("sizeConstraintSet-%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafregional_size_constraint_set.size_constraint_set"
@@ -180,7 +180,7 @@ func TestAccAWSWafRegionalSizeConstraintSet_changeConstraints(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRegionalSizeConstraintSet_noConstraints(t *testing.T) {
+func TestAccWAFRegionalSizeConstraintSet_noConstraints(t *testing.T) {
 	var constraints waf.SizeConstraintSet
 	setName := fmt.Sprintf("sizeConstraintSet-%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafregional_size_constraint_set.size_constraint_set"

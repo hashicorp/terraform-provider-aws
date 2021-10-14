@@ -16,7 +16,7 @@ import (
 	tfwafregional "github.com/hashicorp/terraform-provider-aws/internal/service/wafregional"
 )
 
-func TestAccAWSWafRegionalGeoMatchSet_basic(t *testing.T) {
+func TestAccWAFRegionalGeoMatchSet_basic(t *testing.T) {
 	var v waf.GeoMatchSet
 	resourceName := "aws_wafregional_geo_match_set.test"
 	geoMatchSet := fmt.Sprintf("tfacc-%s", sdkacctest.RandString(5))
@@ -54,7 +54,7 @@ func TestAccAWSWafRegionalGeoMatchSet_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRegionalGeoMatchSet_changeNameForceNew(t *testing.T) {
+func TestAccWAFRegionalGeoMatchSet_changeNameForceNew(t *testing.T) {
 	var before, after waf.GeoMatchSet
 	resourceName := "aws_wafregional_geo_match_set.test"
 	geoMatchSet := fmt.Sprintf("tfacc-%s", sdkacctest.RandString(5))
@@ -96,7 +96,7 @@ func TestAccAWSWafRegionalGeoMatchSet_changeNameForceNew(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRegionalGeoMatchSet_disappears(t *testing.T) {
+func TestAccWAFRegionalGeoMatchSet_disappears(t *testing.T) {
 	var v waf.GeoMatchSet
 	resourceName := "aws_wafregional_geo_match_set.test"
 	geoMatchSet := fmt.Sprintf("tfacc-%s", sdkacctest.RandString(5))
@@ -119,7 +119,7 @@ func TestAccAWSWafRegionalGeoMatchSet_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRegionalGeoMatchSet_changeConstraints(t *testing.T) {
+func TestAccWAFRegionalGeoMatchSet_changeConstraints(t *testing.T) {
 	var before, after waf.GeoMatchSet
 	resourceName := "aws_wafregional_geo_match_set.test"
 	setName := fmt.Sprintf("tfacc-%s", sdkacctest.RandString(5))
@@ -175,7 +175,7 @@ func TestAccAWSWafRegionalGeoMatchSet_changeConstraints(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRegionalGeoMatchSet_noConstraints(t *testing.T) {
+func TestAccWAFRegionalGeoMatchSet_noConstraints(t *testing.T) {
 	var ipset waf.GeoMatchSet
 	resourceName := "aws_wafregional_geo_match_set.test"
 	setName := fmt.Sprintf("tfacc-%s", sdkacctest.RandString(5))
