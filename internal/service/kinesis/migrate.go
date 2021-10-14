@@ -7,7 +7,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
-func resourceAwsKinesisStreamResourceV0() *schema.Resource {
+func resourceStreamResourceV0() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
 			"name": {

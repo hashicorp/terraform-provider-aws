@@ -29,7 +29,7 @@ func ResourceStream() *schema.Resource {
 		Update: resourceStreamUpdate,
 		Delete: resourceStreamDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsKinesisStreamImport,
+			State: resourceStreamImport,
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -37,7 +37,7 @@ func ResourceStream() *schema.Resource {
 		SchemaVersion: 1,
 		StateUpgraders: []schema.StateUpgrader{
 			{
-				Type:    resourceAwsKinesisStreamResourceV0().CoreConfigSchema().ImpliedType(),
+				Type:    resourceStreamResourceV0().CoreConfigSchema().ImpliedType(),
 				Upgrade: StreamStateUpgradeV0,
 				Version: 0,
 			},
@@ -110,7 +110,7 @@ func ResourceStream() *schema.Resource {
 	}
 }
 
-func resourceAwsKinesisStreamImport(
+func resourceStreamImport(
 	d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	d.Set("name", d.Id())
 	return []*schema.ResourceData{d}, nil
