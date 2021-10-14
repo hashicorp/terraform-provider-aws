@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudformation/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudformation/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsCloudFormationStackSet() *schema.Resource {
@@ -132,8 +133,8 @@ func resourceAwsCloudFormationStackSet() *schema.Resource {
 }
 
 func resourceAwsCloudFormationStackSetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cfconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).CloudFormationConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
@@ -195,9 +196,9 @@ func resourceAwsCloudFormationStackSetCreate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsCloudFormationStackSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cfconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).CloudFormationConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	stackSet, err := finder.StackSetByName(conn, d.Id())
 
@@ -250,8 +251,8 @@ func resourceAwsCloudFormationStackSetRead(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsCloudFormationStackSetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cfconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).CloudFormationConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &cloudformation.UpdateStackSetInput{
@@ -320,7 +321,7 @@ func resourceAwsCloudFormationStackSetUpdate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsCloudFormationStackSetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cfconn
+	conn := meta.(*conns.AWSClient).CloudFormationConn
 
 	input := &cloudformation.DeleteStackSetInput{
 		StackSetName: aws.String(d.Id()),

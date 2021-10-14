@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsCloudFormationType() *schema.Resource {
@@ -106,7 +107,7 @@ func dataSourceAwsCloudFormationType() *schema.Resource {
 }
 
 func dataSourceAwsCloudFormationTypeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).cfconn
+	conn := meta.(*conns.AWSClient).CloudFormationConn
 
 	input := &cloudformation.DescribeTypeInput{}
 

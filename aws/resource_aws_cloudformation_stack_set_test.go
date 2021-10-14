@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudformation/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -31,7 +32,7 @@ func testSweepCloudformationStackSets(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).cfconn
+	conn := client.(*conns.AWSClient).CloudFormationConn
 	input := &cloudformation.ListStackSetsInput{
 		Status: aws.String(cloudformation.StackSetStatusActive),
 	}
@@ -641,7 +642,7 @@ func testAccCheckCloudFormationStackSetExists(resourceName string, v *cloudforma
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).cfconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn
 
 		output, err := finder.StackSetByName(conn, rs.Primary.ID)
 
@@ -656,7 +657,7 @@ func testAccCheckCloudFormationStackSetExists(resourceName string, v *cloudforma
 }
 
 func testAccCheckAWSCloudFormationStackSetDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).cfconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudformation_stack_set" {
@@ -700,7 +701,7 @@ func testAccCheckCloudFormationStackSetRecreated(i, j *cloudformation.StackSet) 
 }
 
 func testAccPreCheckAWSCloudFormationStackSet(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).cfconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn
 
 	input := &cloudformation.ListStackSetsInput{}
 	_, err := conn.ListStackSets(input)

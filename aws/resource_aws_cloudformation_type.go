@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudformation/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudformation/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsCloudFormationType() *schema.Resource {
@@ -132,7 +133,7 @@ func resourceAwsCloudFormationType() *schema.Resource {
 }
 
 func resourceAwsCloudFormationTypeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).cfconn
+	conn := meta.(*conns.AWSClient).CloudFormationConn
 
 	typeName := d.Get("type_name").(string)
 	input := &cloudformation.RegisterTypeInput{
@@ -176,7 +177,7 @@ func resourceAwsCloudFormationTypeCreate(ctx context.Context, d *schema.Resource
 }
 
 func resourceAwsCloudFormationTypeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).cfconn
+	conn := meta.(*conns.AWSClient).CloudFormationConn
 
 	output, err := finder.TypeByARN(ctx, conn, d.Id())
 
@@ -223,7 +224,7 @@ func resourceAwsCloudFormationTypeRead(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourceAwsCloudFormationTypeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).cfconn
+	conn := meta.(*conns.AWSClient).CloudFormationConn
 
 	input := &cloudformation.DeregisterTypeInput{
 		Arn: aws.String(d.Id()),
