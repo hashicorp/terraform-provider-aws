@@ -628,7 +628,7 @@ func expandAwsCloudWatchEventTargetRunParameters(config []interface{}) *events.R
 		param := c.(map[string]interface{})
 		command := &events.RunCommandTarget{
 			Key:    aws.String(param["key"].(string)),
-			Values: expandStringList(param["values"].([]interface{})),
+			Values: flex.ExpandStringList(param["values"].([]interface{})),
 		}
 		commands = append(commands, command)
 	}
@@ -750,9 +750,9 @@ func expandAwsCloudWatchEventTargetEcsParametersNetworkConfiguration(nc []interf
 	awsVpcConfig := &events.AwsVpcConfiguration{}
 	raw := nc[0].(map[string]interface{})
 	if val, ok := raw["security_groups"]; ok {
-		awsVpcConfig.SecurityGroups = expandStringSet(val.(*schema.Set))
+		awsVpcConfig.SecurityGroups = flex.ExpandStringSet(val.(*schema.Set))
 	}
-	awsVpcConfig.Subnets = expandStringSet(raw["subnets"].(*schema.Set))
+	awsVpcConfig.Subnets = flex.ExpandStringSet(raw["subnets"].(*schema.Set))
 	if val, ok := raw["assign_public_ip"].(bool); ok {
 		awsVpcConfig.AssignPublicIp = aws.String(events.AssignPublicIpDisabled)
 		if val {
@@ -816,15 +816,15 @@ func expandAwsCloudWatchEventTargetHttpParameters(tfMap map[string]interface{}) 
 	apiObject := &events.HttpParameters{}
 
 	if v, ok := tfMap["header_parameters"].(map[string]interface{}); ok && len(v) > 0 {
-		apiObject.HeaderParameters = expandStringMap(v)
+		apiObject.HeaderParameters = flex.ExpandStringMap(v)
 	}
 
 	if v, ok := tfMap["path_parameter_values"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.PathParameterValues = expandStringSet(v)
+		apiObject.PathParameterValues = flex.ExpandStringSet(v)
 	}
 
 	if v, ok := tfMap["query_string_parameters"].(map[string]interface{}); ok && len(v) > 0 {
-		apiObject.QueryStringParameters = expandStringMap(v)
+		apiObject.QueryStringParameters = flex.ExpandStringMap(v)
 	}
 
 	return apiObject
@@ -856,7 +856,7 @@ func flattenAwsCloudWatchEventTargetRunParameters(runCommand *events.RunCommandP
 		config := make(map[string]interface{})
 
 		config["key"] = aws.StringValue(x.Key)
-		config["values"] = flattenStringList(x.Values)
+		config["values"] = flex.FlattenStringList(x.Values)
 
 		result = append(result, config)
 	}
@@ -920,8 +920,8 @@ func flattenAwsCloudWatchEventTargetEcsParametersNetworkConfiguration(nc *events
 	}
 
 	result := make(map[string]interface{})
-	result["security_groups"] = flattenStringSet(nc.AwsvpcConfiguration.SecurityGroups)
-	result["subnets"] = flattenStringSet(nc.AwsvpcConfiguration.Subnets)
+	result["security_groups"] = flex.FlattenStringSet(nc.AwsvpcConfiguration.SecurityGroups)
+	result["subnets"] = flex.FlattenStringSet(nc.AwsvpcConfiguration.Subnets)
 
 	if nc.AwsvpcConfiguration.AssignPublicIp != nil {
 		result["assign_public_ip"] = aws.StringValue(nc.AwsvpcConfiguration.AssignPublicIp) == events.AssignPublicIpEnabled
