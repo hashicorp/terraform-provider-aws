@@ -447,7 +447,7 @@ func testAccCheckAwsLexBotAliasDestroy(botName, botAliasName string) resource.Te
 		})
 
 		if err != nil {
-			if isAWSErr(err, lexmodelbuildingservice.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, lexmodelbuildingservice.ErrCodeNotFoundException, "") {
 				return nil
 			}
 
