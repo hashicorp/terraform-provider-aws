@@ -318,11 +318,11 @@ func dataSourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface
 		return fmt.Errorf("error setting advanced_security_options: %w", err)
 	}
 
-	if err := d.Set("ebs_options", flattenESEBSOptions(ds.EBSOptions)); err != nil {
+	if err := d.Set("ebs_options", flattenEBSOptions(ds.EBSOptions)); err != nil {
 		return fmt.Errorf("error setting ebs_options: %w", err)
 	}
 
-	if err := d.Set("encryption_at_rest", flattenESEncryptAtRestOptions(ds.EncryptionAtRestOptions)); err != nil {
+	if err := d.Set("encryption_at_rest", flattenEncryptAtRestOptions(ds.EncryptionAtRestOptions)); err != nil {
 		return fmt.Errorf("error setting encryption_at_rest: %w", err)
 	}
 
@@ -334,12 +334,12 @@ func dataSourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface
 		return fmt.Errorf("error setting cluster_config: %w", err)
 	}
 
-	if err := d.Set("snapshot_options", flattenESSnapshotOptions(ds.SnapshotOptions)); err != nil {
+	if err := d.Set("snapshot_options", flattenSnapshotOptions(ds.SnapshotOptions)); err != nil {
 		return fmt.Errorf("error setting snapshot_options: %w", err)
 	}
 
 	if ds.VPCOptions != nil {
-		if err := d.Set("vpc_options", flattenESVPCDerivedInfo(ds.VPCOptions)); err != nil {
+		if err := d.Set("vpc_options", flattenVPCDerivedInfo(ds.VPCOptions)); err != nil {
 			return fmt.Errorf("error setting vpc_options: %w", err)
 		}
 
@@ -377,7 +377,7 @@ func dataSourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface
 
 	d.Set("elasticsearch_version", ds.ElasticsearchVersion)
 
-	if err := d.Set("cognito_options", flattenESCognitoOptions(ds.CognitoOptions)); err != nil {
+	if err := d.Set("cognito_options", flattenCognitoOptions(ds.CognitoOptions)); err != nil {
 		return fmt.Errorf("error setting cognito_options: %w", err)
 	}
 
