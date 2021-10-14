@@ -16,7 +16,7 @@ import (
 	tfelb "github.com/hashicorp/terraform-provider-aws/internal/service/elb"
 )
 
-func TestAccAWSLBSSLNegotiationPolicy_basic(t *testing.T) {
+func TestAccELBSSLNegotiationPolicy_basic(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8)) // ELB name cannot be longer than 32 characters
 	elbResourceName := "aws_elb.test"
 	resourceName := "aws_lb_ssl_negotiation_policy.test"
@@ -41,7 +41,7 @@ func TestAccAWSLBSSLNegotiationPolicy_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBSSLNegotiationPolicy_disappears(t *testing.T) {
+func TestAccELBSSLNegotiationPolicy_disappears(t *testing.T) {
 	var loadBalancer elb.LoadBalancerDescription
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8)) // ELB name cannot be longer than 32 characters
 	elbResourceName := "aws_elb.test"

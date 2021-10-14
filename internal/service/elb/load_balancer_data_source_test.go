@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAWSELB_basic(t *testing.T) {
+func TestAccELBLoadBalancerDataSource_basic(t *testing.T) {
 	// Must be less than 32 characters for ELB name
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_elb.test"
