@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsLambdaProvisionedConcurrencyConfig() *schema.Resource {
+func ResourceProvisionedConcurrencyConfig() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLambdaProvisionedConcurrencyConfigCreate,
-		Read:   resourceAwsLambdaProvisionedConcurrencyConfigRead,
-		Update: resourceAwsLambdaProvisionedConcurrencyConfigUpdate,
-		Delete: resourceAwsLambdaProvisionedConcurrencyConfigDelete,
+		Create: resourceProvisionedConcurrencyConfigCreate,
+		Read:   resourceProvisionedConcurrencyConfigRead,
+		Update: resourceProvisionedConcurrencyConfigUpdate,
+		Delete: resourceProvisionedConcurrencyConfigDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -50,7 +50,7 @@ func resourceAwsLambdaProvisionedConcurrencyConfig() *schema.Resource {
 	}
 }
 
-func resourceAwsLambdaProvisionedConcurrencyConfigCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceProvisionedConcurrencyConfigCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LambdaConn
 	functionName := d.Get("function_name").(string)
 	qualifier := d.Get("qualifier").(string)
@@ -73,10 +73,10 @@ func resourceAwsLambdaProvisionedConcurrencyConfigCreate(d *schema.ResourceData,
 		return fmt.Errorf("error waiting for Lambda Provisioned Concurrency Config (%s) to be ready: %s", d.Id(), err)
 	}
 
-	return resourceAwsLambdaProvisionedConcurrencyConfigRead(d, meta)
+	return resourceProvisionedConcurrencyConfigRead(d, meta)
 }
 
-func resourceAwsLambdaProvisionedConcurrencyConfigRead(d *schema.ResourceData, meta interface{}) error {
+func resourceProvisionedConcurrencyConfigRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LambdaConn
 
 	functionName, qualifier, err := resourceAwsLambdaProvisionedConcurrencyConfigParseId(d.Id())
@@ -109,7 +109,7 @@ func resourceAwsLambdaProvisionedConcurrencyConfigRead(d *schema.ResourceData, m
 	return nil
 }
 
-func resourceAwsLambdaProvisionedConcurrencyConfigUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceProvisionedConcurrencyConfigUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LambdaConn
 
 	functionName, qualifier, err := resourceAwsLambdaProvisionedConcurrencyConfigParseId(d.Id())
@@ -134,10 +134,10 @@ func resourceAwsLambdaProvisionedConcurrencyConfigUpdate(d *schema.ResourceData,
 		return fmt.Errorf("error waiting for Lambda Provisioned Concurrency Config (%s) to be ready: %s", d.Id(), err)
 	}
 
-	return resourceAwsLambdaProvisionedConcurrencyConfigRead(d, meta)
+	return resourceProvisionedConcurrencyConfigRead(d, meta)
 }
 
-func resourceAwsLambdaProvisionedConcurrencyConfigDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceProvisionedConcurrencyConfigDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LambdaConn
 
 	functionName, qualifier, err := resourceAwsLambdaProvisionedConcurrencyConfigParseId(d.Id())

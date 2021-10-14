@@ -30,12 +30,12 @@ const awsMutexLambdaKey = `aws_lambda_function`
 
 const LambdaFunctionVersionLatest = "$LATEST"
 
-func resourceAwsLambdaFunction() *schema.Resource {
+func ResourceFunction() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLambdaFunctionCreate,
-		Read:   resourceAwsLambdaFunctionRead,
-		Update: resourceAwsLambdaFunctionUpdate,
-		Delete: resourceAwsLambdaFunctionDelete,
+		Create: resourceFunctionCreate,
+		Read:   resourceFunctionRead,
+		Update: resourceFunctionUpdate,
+		Delete: resourceFunctionDelete,
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
 		},
@@ -385,7 +385,7 @@ func hasConfigChanges(d resourceDiffer) bool {
 
 // resourceAwsLambdaFunction maps to:
 // CreateFunction in the API / SDK
-func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LambdaConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -411,8 +411,8 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 		// Grab an exclusive lock so that we're only reading one function into
 		// memory at a time.
 		// See https://github.com/hashicorp/terraform/issues/9364
-		awsMutexKV.Lock(awsMutexLambdaKey)
-		defer awsMutexKV.Unlock(awsMutexLambdaKey)
+		conns.GlobalMutexKV.Lock(awsMutexLambdaKey)
+		defer conns.GlobalMutexKV.Unlock(awsMutexLambdaKey)
 		file, err := loadFileContent(filename.(string))
 		if err != nil {
 			return fmt.Errorf("unable to load %q: %w", filename.(string), err)
@@ -630,12 +630,12 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
-	return resourceAwsLambdaFunctionRead(d, meta)
+	return resourceFunctionRead(d, meta)
 }
 
-// resourceAwsLambdaFunctionRead maps to:
+// resourceFunctionRead maps to:
 // GetFunction in the API / SDK
-func resourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) error {
+func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LambdaConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -902,7 +902,7 @@ func listVersionsByFunctionPages(c *lambda.Lambda, input *lambda.ListVersionsByF
 
 // resourceAwsLambdaFunction maps to:
 // DeleteFunction in the API / SDK
-func resourceAwsLambdaFunctionDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceFunctionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LambdaConn
 
 	log.Printf("[INFO] Deleting Lambda Function: %s", d.Id())
@@ -934,9 +934,9 @@ func needsFunctionCodeUpdate(d resourceDiffer) bool {
 		d.HasChange("architectures")
 }
 
-// resourceAwsLambdaFunctionUpdate maps to:
+// resourceFunctionUpdate maps to:
 // UpdateFunctionCode in the API / SDK
-func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LambdaConn
 
 	// If Code Signing Config is updated, calls PutFunctionCodeSigningConfig
@@ -1159,8 +1159,8 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 			// Grab an exclusive lock so that we're only reading one function into
 			// memory at a time.
 			// See https://github.com/hashicorp/terraform/issues/9364
-			awsMutexKV.Lock(awsMutexLambdaKey)
-			defer awsMutexKV.Unlock(awsMutexLambdaKey)
+			conns.GlobalMutexKV.Lock(awsMutexLambdaKey)
+			defer conns.GlobalMutexKV.Unlock(awsMutexLambdaKey)
 			file, err := loadFileContent(v.(string))
 			if err != nil {
 				return fmt.Errorf("unable to load %q: %w", v.(string), err)
@@ -1261,7 +1261,7 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
-	return resourceAwsLambdaFunctionRead(d, meta)
+	return resourceFunctionRead(d, meta)
 }
 
 // loadFileContent returns contents of a file in a given path

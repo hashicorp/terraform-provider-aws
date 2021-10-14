@@ -12,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsLambdaAlias() *schema.Resource {
+func ResourceAlias() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLambdaAliasCreate,
-		Read:   resourceAwsLambdaAliasRead,
-		Update: resourceAwsLambdaAliasUpdate,
-		Delete: resourceAwsLambdaAliasDelete,
+		Create: resourceAliasCreate,
+		Read:   resourceAliasRead,
+		Update: resourceAliasUpdate,
+		Delete: resourceAliasDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsLambdaAliasImport,
 		},
@@ -74,9 +74,9 @@ func resourceAwsLambdaAlias() *schema.Resource {
 	}
 }
 
-// resourceAwsLambdaAliasCreate maps to:
+// resourceAliasCreate maps to:
 // CreateAlias in the API / SDK
-func resourceAwsLambdaAliasCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAliasCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LambdaConn
 
 	functionName := d.Get("function_name").(string)
@@ -99,12 +99,12 @@ func resourceAwsLambdaAliasCreate(d *schema.ResourceData, meta interface{}) erro
 
 	d.SetId(aws.StringValue(aliasConfiguration.AliasArn))
 
-	return resourceAwsLambdaAliasRead(d, meta)
+	return resourceAliasRead(d, meta)
 }
 
-// resourceAwsLambdaAliasRead maps to:
+// resourceAliasRead maps to:
 // GetAlias in the API / SDK
-func resourceAwsLambdaAliasRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAliasRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LambdaConn
 
 	log.Printf("[DEBUG] Fetching Lambda alias: %s:%s", d.Get("function_name"), d.Get("name"))
@@ -141,9 +141,9 @@ func resourceAwsLambdaAliasRead(d *schema.ResourceData, meta interface{}) error 
 	return nil
 }
 
-// resourceAwsLambdaAliasDelete maps to:
+// resourceAliasDelete maps to:
 // DeleteAlias in the API / SDK
-func resourceAwsLambdaAliasDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAliasDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LambdaConn
 
 	log.Printf("[INFO] Deleting Lambda alias: %s:%s", d.Get("function_name"), d.Get("name"))
@@ -161,9 +161,9 @@ func resourceAwsLambdaAliasDelete(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-// resourceAwsLambdaAliasUpdate maps to:
+// resourceAliasUpdate maps to:
 // UpdateAlias in the API / SDK
-func resourceAwsLambdaAliasUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAliasUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LambdaConn
 
 	log.Printf("[DEBUG] Updating Lambda alias: %s:%s", d.Get("function_name"), d.Get("name"))

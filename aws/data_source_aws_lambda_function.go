@@ -13,9 +13,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsLambdaFunction() *schema.Resource {
+func DataSourceFunction() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsLambdaFunctionRead,
+		Read: dataSourceFunctionRead,
 
 		Schema: map[string]*schema.Schema{
 			"function_name": {
@@ -194,7 +194,7 @@ func dataSourceAwsLambdaFunction() *schema.Resource {
 	}
 }
 
-func dataSourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LambdaConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

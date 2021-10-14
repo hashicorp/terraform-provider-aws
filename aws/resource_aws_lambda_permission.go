@@ -19,11 +19,11 @@ import (
 
 var LambdaFunctionRegexp = `^(arn:[\w-]+:lambda:)?([a-z]{2}-(?:[a-z]+-){1,2}\d{1}:)?(\d{12}:)?(function:)?([a-zA-Z0-9-_]+)(:(\$LATEST|[a-zA-Z0-9-_]+))?$`
 
-func resourceAwsLambdaPermission() *schema.Resource {
+func ResourcePermission() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLambdaPermissionCreate,
-		Read:   resourceAwsLambdaPermissionRead,
-		Delete: resourceAwsLambdaPermissionDelete,
+		Create: resourcePermissionCreate,
+		Read:   resourcePermissionRead,
+		Delete: resourcePermissionDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsLambdaPermissionImport,
 		},
@@ -89,7 +89,7 @@ func resourceAwsLambdaPermission() *schema.Resource {
 	}
 }
 
-func resourceAwsLambdaPermissionCreate(d *schema.ResourceData, meta interface{}) error {
+func resourcePermissionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LambdaConn
 
 	functionName := d.Get("function_name").(string)
@@ -106,8 +106,8 @@ func resourceAwsLambdaPermissionCreate(d *schema.ResourceData, meta interface{})
 	// There is a bug in the API (reported and acknowledged by AWS)
 	// which causes some permissions to be ignored when API calls are sent in parallel
 	// We work around this bug via mutex
-	awsMutexKV.Lock(functionName)
-	defer awsMutexKV.Unlock(functionName)
+	conns.GlobalMutexKV.Lock(functionName)
+	defer conns.GlobalMutexKV.Unlock(functionName)
 
 	input := lambda.AddPermissionInput{
 		Action:       aws.String(d.Get("action").(string)),
@@ -162,7 +162,7 @@ func resourceAwsLambdaPermissionCreate(d *schema.ResourceData, meta interface{})
 
 	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
 		// IAM is eventually consistent :/
-		err := resourceAwsLambdaPermissionRead(d, meta)
+		err := resourcePermissionRead(d, meta)
 		if err != nil {
 			if strings.HasPrefix(err.Error(), "Error reading Lambda policy: ResourceNotFoundException") {
 				return resource.RetryableError(
@@ -181,7 +181,7 @@ func resourceAwsLambdaPermissionCreate(d *schema.ResourceData, meta interface{})
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		err = resourceAwsLambdaPermissionRead(d, meta)
+		err = resourcePermissionRead(d, meta)
 	}
 	if err != nil {
 		return fmt.Errorf("Error reading new Lambda permissions: %s", err)
@@ -189,7 +189,7 @@ func resourceAwsLambdaPermissionCreate(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
-func resourceAwsLambdaPermissionRead(d *schema.ResourceData, meta interface{}) error {
+func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LambdaConn
 
 	input := lambda.GetPolicyInput{
@@ -308,7 +308,7 @@ func resourceAwsLambdaPermissionRead(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func resourceAwsLambdaPermissionDelete(d *schema.ResourceData, meta interface{}) error {
+func resourcePermissionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LambdaConn
 
 	functionName := d.Get("function_name").(string)
@@ -316,8 +316,8 @@ func resourceAwsLambdaPermissionDelete(d *schema.ResourceData, meta interface{})
 	// There is a bug in the API (reported and acknowledged by AWS)
 	// which causes some permissions to be ignored when API calls are sent in parallel
 	// We work around this bug via mutex
-	awsMutexKV.Lock(functionName)
-	defer awsMutexKV.Unlock(functionName)
+	conns.GlobalMutexKV.Lock(functionName)
+	defer conns.GlobalMutexKV.Unlock(functionName)
 
 	input := lambda.RemovePermissionInput{
 		FunctionName: aws.String(functionName),

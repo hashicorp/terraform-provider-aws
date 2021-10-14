@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsLambdaLayerVersion() *schema.Resource {
+func DataSourceLayerVersion() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsLambdaLayerVersionRead,
+		Read: dataSourceLayerVersionRead,
 
 		Schema: map[string]*schema.Schema{
 			"layer_name": {
@@ -92,7 +92,7 @@ func dataSourceAwsLambdaLayerVersion() *schema.Resource {
 	}
 }
 
-func dataSourceAwsLambdaLayerVersionRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceLayerVersionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LambdaConn
 	layerName := d.Get("layer_name").(string)
 

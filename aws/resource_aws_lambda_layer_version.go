@@ -17,11 +17,11 @@ import (
 
 const awsMutexLambdaLayerKey = `aws_lambda_layer_version`
 
-func resourceAwsLambdaLayerVersion() *schema.Resource {
+func ResourceLayerVersion() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsLambdaLayerVersionPublish,
-		Read:   resourceAwsLambdaLayerVersionRead,
-		Delete: resourceAwsLambdaLayerVersionDelete,
+		Read:   resourceLayerVersionRead,
+		Delete: resourceLayerVersionDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -143,8 +143,8 @@ func resourceAwsLambdaLayerVersionPublish(d *schema.ResourceData, meta interface
 
 	var layerContent *lambda.LayerVersionContentInput
 	if hasFilename {
-		awsMutexKV.Lock(awsMutexLambdaLayerKey)
-		defer awsMutexKV.Unlock(awsMutexLambdaLayerKey)
+		conns.GlobalMutexKV.Lock(awsMutexLambdaLayerKey)
+		defer conns.GlobalMutexKV.Unlock(awsMutexLambdaLayerKey)
 		file, err := loadFileContent(filename.(string))
 		if err != nil {
 			return fmt.Errorf("Unable to load %q: %s", filename.(string), err)
@@ -187,10 +187,10 @@ func resourceAwsLambdaLayerVersionPublish(d *schema.ResourceData, meta interface
 	}
 
 	d.SetId(aws.StringValue(result.LayerVersionArn))
-	return resourceAwsLambdaLayerVersionRead(d, meta)
+	return resourceLayerVersionRead(d, meta)
 }
 
-func resourceAwsLambdaLayerVersionRead(d *schema.ResourceData, meta interface{}) error {
+func resourceLayerVersionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LambdaConn
 
 	layerName, version, err := resourceAwsLambdaLayerVersionParseId(d.Id())
@@ -257,7 +257,7 @@ func resourceAwsLambdaLayerVersionRead(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
-func resourceAwsLambdaLayerVersionDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceLayerVersionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LambdaConn
 
 	version, err := strconv.ParseInt(d.Get("version").(string), 10, 64)
