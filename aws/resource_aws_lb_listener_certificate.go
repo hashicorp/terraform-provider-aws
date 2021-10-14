@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	tfelbv2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/elbv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceListenerCertificate() *schema.Resource {
