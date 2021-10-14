@@ -1,4 +1,4 @@
-package aws
+package dms
 
 import (
 	"context"
@@ -15,56 +15,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	tfdms "github.com/hashicorp/terraform-provider-aws/aws/internal/service/dms"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/dms/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/dms/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
-	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
-	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
-	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
-	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
-	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
-	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
-	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
-	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
-	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
-	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
-	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
-	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
-	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
-	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
-	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
-	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
-	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
-	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
-	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
-	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
-	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
-	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
-	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
-	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
-	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
-	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
-	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
-	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
-	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
-	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
-	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
-	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
-	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
-	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
-	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
-	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
-	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
-	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
-	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
-	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
-	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
 )
 
 func ResourceEndpoint() *schema.Resource {
@@ -150,7 +105,7 @@ func ResourceEndpoint() *schema.Resource {
 			"engine_name": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringInSlice(tfdms.engineName_Values(), false),
+				ValidateFunc: validation.StringInSlice(engineName_Values(), false),
 			},
 			"extra_connection_attributes": {
 				Type:             schema.TypeString,
@@ -252,7 +207,7 @@ func ResourceEndpoint() *schema.Resource {
 						"topic": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  tfdms.kafkaDefaultTopic,
+							Default:  kafkaDefaultTopic,
 						},
 					},
 				},
@@ -306,8 +261,8 @@ func ResourceEndpoint() *schema.Resource {
 						"auth_mechanism": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							Default:      tfdms.mongoDBAuthMechanismValueDefault,
-							ValidateFunc: validation.StringInSlice(tfdms.mongoDBAuthMechanismValue_Values(), false),
+							Default:      mongoDBAuthMechanismValueDefault,
+							ValidateFunc: validation.StringInSlice(mongoDBAuthMechanismValue_Values(), false),
 						},
 						"nesting_level": {
 							Type:         schema.TypeString,
@@ -328,7 +283,7 @@ func ResourceEndpoint() *schema.Resource {
 						"auth_source": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  tfdms.mongoDBAuthSourceAdmin,
+							Default:  mongoDBAuthSourceAdmin,
 						},
 					},
 				},
@@ -383,8 +338,8 @@ func ResourceEndpoint() *schema.Resource {
 						"compression_type": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							Default:      tfdms.s3SettingsCompressionTypeNone,
-							ValidateFunc: validation.StringInSlice(tfdms.s3SettingsCompressionType_Values(), false),
+							Default:      s3SettingsCompressionTypeNone,
+							ValidateFunc: validation.StringInSlice(s3SettingsCompressionType_Values(), false),
 						},
 						"date_partition_enabled": {
 							Type:     schema.TypeBool,
@@ -411,8 +366,8 @@ func ResourceEndpoint() *schema.Resource {
 						"encryption_mode": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							Default:      tfdms.s3SettingsEncryptionModeSseS3,
-							ValidateFunc: validation.StringInSlice(tfdms.s3SettingsEncryptionMode_Values(), false),
+							Default:      s3SettingsEncryptionModeSseS3,
+							ValidateFunc: validation.StringInSlice(s3SettingsEncryptionMode_Values(), false),
 						},
 						"server_side_encryption_kms_key_id": {
 							Type:     schema.TypeString,
@@ -463,26 +418,26 @@ func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	switch d.Get("engine_name").(string) {
-	case tfdms.engineNameDynamoDB:
+	case engineNameDynamoDB:
 		request.DynamoDbSettings = &dms.DynamoDbSettings{
 			ServiceAccessRoleArn: aws.String(d.Get("service_access_role").(string)),
 		}
-	case tfdms.engineNameElasticSearch:
+	case engineNameElasticSearch:
 		request.ElasticsearchSettings = &dms.ElasticsearchSettings{
 			ServiceAccessRoleArn:    aws.String(d.Get("elasticsearch_settings.0.service_access_role_arn").(string)),
 			EndpointUri:             aws.String(d.Get("elasticsearch_settings.0.endpoint_uri").(string)),
 			ErrorRetryDuration:      aws.Int64(int64(d.Get("elasticsearch_settings.0.error_retry_duration").(int))),
 			FullLoadErrorPercentage: aws.Int64(int64(d.Get("elasticsearch_settings.0.full_load_error_percentage").(int))),
 		}
-	case tfdms.engineNameKafka:
+	case engineNameKafka:
 		request.KafkaSettings = expandDmsKafkaSettings(d.Get("kafka_settings").([]interface{})[0].(map[string]interface{}))
-	case tfdms.engineNameKinesis:
+	case engineNameKinesis:
 		request.KinesisSettings = &dms.KinesisSettings{
 			MessageFormat:        aws.String(d.Get("kinesis_settings.0.message_format").(string)),
 			ServiceAccessRoleArn: aws.String(d.Get("kinesis_settings.0.service_access_role_arn").(string)),
 			StreamArn:            aws.String(d.Get("kinesis_settings.0.stream_arn").(string)),
 		}
-	case tfdms.engineNameMongodb:
+	case engineNameMongodb:
 		request.MongoDbSettings = &dms.MongoDbSettings{
 			Username:     aws.String(d.Get("username").(string)),
 			Password:     aws.String(d.Get("password").(string)),
@@ -505,7 +460,7 @@ func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 		request.ServerName = aws.String(d.Get("server_name").(string))
 		request.Port = aws.Int64(int64(d.Get("port").(int)))
 		request.DatabaseName = aws.String(d.Get("database_name").(string))
-	case tfdms.engineNameS3:
+	case engineNameS3:
 		request.S3Settings = &dms.S3Settings{
 			BucketFolder:                  aws.String(d.Get("s3_settings.0.bucket_folder").(string)),
 			BucketName:                    aws.String(d.Get("s3_settings.0.bucket_name").(string)),
@@ -580,7 +535,7 @@ func resourceEndpointRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	endpoint, err := tfdms.FindEndpointByID(conn, d.Id())
+	endpoint, err := FindEndpointByID(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DMS Endpoint (%s) not found, removing from state", d.Id())
@@ -673,14 +628,14 @@ func resourceEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	switch engineName := d.Get("engine_name").(string); engineName {
-	case tfdms.engineNameDynamoDB:
+	case engineNameDynamoDB:
 		if d.HasChange("service_access_role") {
 			request.DynamoDbSettings = &dms.DynamoDbSettings{
 				ServiceAccessRoleArn: aws.String(d.Get("service_access_role").(string)),
 			}
 			hasChanges = true
 		}
-	case tfdms.engineNameElasticSearch:
+	case engineNameElasticSearch:
 		if d.HasChanges(
 			"elasticsearch_settings.0.endpoint_uri",
 			"elasticsearch_settings.0.error_retry_duration",
@@ -695,13 +650,13 @@ func resourceEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 			request.EngineName = aws.String(engineName)
 			hasChanges = true
 		}
-	case tfdms.engineNameKafka:
+	case engineNameKafka:
 		if d.HasChange("kafka_settings") {
 			request.KafkaSettings = expandDmsKafkaSettings(d.Get("kafka_settings").([]interface{})[0].(map[string]interface{}))
 			request.EngineName = aws.String(engineName)
 			hasChanges = true
 		}
-	case tfdms.engineNameKinesis:
+	case engineNameKinesis:
 		if d.HasChanges(
 			"kinesis_settings.0.service_access_role_arn",
 			"kinesis_settings.0.stream_arn") {
@@ -715,7 +670,7 @@ func resourceEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 			request.EngineName = aws.String(engineName)
 			hasChanges = true
 		}
-	case tfdms.engineNameMongodb:
+	case engineNameMongodb:
 		if d.HasChanges(
 			"username", "password", "server_name", "port", "database_name", "mongodb_settings.0.auth_type",
 			"mongodb_settings.0.auth_mechanism", "mongodb_settings.0.nesting_level", "mongodb_settings.0.extract_doc_id",
@@ -746,7 +701,7 @@ func resourceEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 
 			hasChanges = true
 		}
-	case tfdms.engineNameS3:
+	case engineNameS3:
 		if d.HasChanges(
 			"s3_settings.0.service_access_role_arn", "s3_settings.0.external_table_definition",
 			"s3_settings.0.csv_row_delimiter", "s3_settings.0.csv_delimiter", "s3_settings.0.bucket_folder",
@@ -827,7 +782,7 @@ func resourceEndpointDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting DMS Endpoint (%s): %w", d.Id(), err)
 	}
 
-	_, err = tfdms.waitEndpointDeleted(conn, d.Id())
+	_, err = waitEndpointDeleted(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error waiting for DMS Endpoint (%s) delete: %w", d.Id(), err)
@@ -838,23 +793,23 @@ func resourceEndpointDelete(d *schema.ResourceData, meta interface{}) error {
 
 func resourceAwsDmsEndpointCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 	switch engineName := diff.Get("engine_name").(string); engineName {
-	case tfdms.engineNameElasticSearch:
+	case engineNameElasticSearch:
 		if v, ok := diff.GetOk("elasticsearch_settings"); !ok || len(v.([]interface{})) == 0 || v.([]interface{})[0] == nil {
 			return fmt.Errorf("elasticsearch_settings must be set when engine_name = %q", engineName)
 		}
-	case tfdms.engineNameKafka:
+	case engineNameKafka:
 		if v, ok := diff.GetOk("kafka_settings"); !ok || len(v.([]interface{})) == 0 || v.([]interface{})[0] == nil {
 			return fmt.Errorf("kafka_settings must be set when engine_name = %q", engineName)
 		}
-	case tfdms.engineNameKinesis:
+	case engineNameKinesis:
 		if v, ok := diff.GetOk("kinesis_settings"); !ok || len(v.([]interface{})) == 0 || v.([]interface{})[0] == nil {
 			return fmt.Errorf("kinesis_settings must be set when engine_name = %q", engineName)
 		}
-	case tfdms.engineNameMongodb:
+	case engineNameMongodb:
 		if v, ok := diff.GetOk("mongodb_settings"); !ok || len(v.([]interface{})) == 0 || v.([]interface{})[0] == nil {
 			return fmt.Errorf("mongodb_settings must be set when engine_name = %q", engineName)
 		}
-	case tfdms.engineNameS3:
+	case engineNameS3:
 		if v, ok := diff.GetOk("s3_settings"); !ok || len(v.([]interface{})) == 0 || v.([]interface{})[0] == nil {
 			return fmt.Errorf("s3_settings must be set when engine_name = %q", engineName)
 		}
