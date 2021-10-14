@@ -17,60 +17,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_cloudfront_monitoring_subscription", &resource.Sweeper{
-		Name: "aws_cloudfront_monitoring_subscription",
-		F:    sweepMonitoringSubscriptions,
-	})
-}
 
-func sweepMonitoringSubscriptions(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).CloudFrontConn
-	var sweeperErrs *multierror.Error
 
-	distributionSummaries := make([]*cloudfront.DistributionSummary, 0)
 
-	input := &cloudfront.ListDistributionsInput{}
-	err = conn.ListDistributionsPages(input, func(page *cloudfront.ListDistributionsOutput, lastPage bool) bool {
-		distributionSummaries = append(distributionSummaries, page.DistributionList.Items...)
-		return !lastPage
-	})
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping CloudFront Monitoring Subscriptions sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("error listing CloudFront Distributions: %s", err)
-	}
-
-	if len(distributionSummaries) == 0 {
-		log.Print("[DEBUG] No CloudFront Distributions found")
-		return nil
-	}
-
-	for _, distributionSummary := range distributionSummaries {
-
-		_, err := conn.GetMonitoringSubscription(&cloudfront.GetMonitoringSubscriptionInput{
-			DistributionId: distributionSummary.Id,
-		})
-		if err != nil {
-			return fmt.Errorf("error reading CloudFront Monitoring Subscription %s: %s", aws.StringValue(distributionSummary.Id), err)
-		}
-
-		_, err = conn.DeleteMonitoringSubscription(&cloudfront.DeleteMonitoringSubscriptionInput{
-			DistributionId: distributionSummary.Id,
-		})
-		if err != nil {
-			return fmt.Errorf("error deleting CloudFront Monitoring Subscription %s: %s", aws.StringValue(distributionSummary.Id), err)
-		}
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func TestAccCloudFrontMonitoringSubscription_basic(t *testing.T) {
 	var v cloudfront.MonitoringSubscription

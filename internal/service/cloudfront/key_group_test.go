@@ -18,61 +18,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_cloudfront_key_group", &resource.Sweeper{
-		Name: "aws_cloudfront_key_group",
-		F:    sweepKeyGroup,
-	})
-}
 
-func sweepKeyGroup(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("Error getting client: %w", err)
-	}
-	conn := client.(*conns.AWSClient).CloudFrontConn
-	var sweeperErrs *multierror.Error
 
-	input := &cloudfront.ListKeyGroupsInput{}
 
-	for {
-		output, err := conn.ListKeyGroups(input)
-		if err != nil {
-			if sweep.SkipSweepError(err) {
-				log.Printf("[WARN] Skipping CloudFront key group sweep for %s: %s", region, err)
-				return nil
-			}
-			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving CloudFront key group: %w", err))
-			return sweeperErrs.ErrorOrNil()
-		}
-
-		if output == nil || output.KeyGroupList == nil || len(output.KeyGroupList.Items) == 0 {
-			log.Print("[DEBUG] No CloudFront key group to sweep")
-			return nil
-		}
-
-		for _, item := range output.KeyGroupList.Items {
-			strId := aws.StringValue(item.KeyGroup.Id)
-			log.Printf("[INFO] CloudFront key group %s", strId)
-			_, err := conn.DeleteKeyGroup(&cloudfront.DeleteKeyGroupInput{
-				Id: item.KeyGroup.Id,
-			})
-			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting CloudFront key group %s: %w", strId, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
-		}
-
-		if output.KeyGroupList.NextMarker == nil {
-			break
-		}
-		input.Marker = output.KeyGroupList.NextMarker
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func TestAccCloudFrontKeyGroup_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

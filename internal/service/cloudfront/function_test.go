@@ -21,10 +21,7 @@ import (
 func init() {
 	acctest.RegisterServiceErrorCheckFunc(cloudfront.EndpointsID, testAccErrorCheckSkipFunction)
 
-	resource.AddTestSweepers("aws_cloudfront_function", &resource.Sweeper{
-		Name: "aws_cloudfront_function",
-		F:    sweepFunctions,
-	})
+
 }
 
 func testAccErrorCheckSkipFunction(t *testing.T) resource.ErrorCheckFunc {
@@ -33,64 +30,7 @@ func testAccErrorCheckSkipFunction(t *testing.T) resource.ErrorCheckFunc {
 	)
 }
 
-func sweepFunctions(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-	conn := client.(*conns.AWSClient).CloudFrontConn
-	input := &cloudfront.ListFunctionsInput{}
-	var sweeperErrs *multierror.Error
 
-	err = tfcloudfront.ListFunctionsPages(conn, input, func(page *cloudfront.ListFunctionsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, item := range page.FunctionList.Items {
-			name := aws.StringValue(item.Name)
-
-			output, err := tfcloudfront.FindFunctionByNameAndStage(conn, name, cloudfront.FunctionStageDevelopment)
-
-			if tfresource.NotFound(err) {
-				continue
-			}
-
-			if err != nil {
-				sweeperErr := fmt.Errorf("error reading CloudFront Function (%s): %w", name, err)
-				log.Printf("[ERROR] %s", err)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
-
-			r := tfcloudfront.ResourceFunction()
-			d := r.Data(nil)
-			d.SetId(name)
-			d.Set("etag", output.ETag)
-
-			err = r.Delete(d, client)
-
-			if err != nil {
-				log.Printf("[ERROR] %s", err)
-				sweeperErrs = multierror.Append(sweeperErrs, err)
-				continue
-			}
-		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping CloudFront Function sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-	}
-
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing CloudFront Functions: %w", err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func TestAccCloudFrontFunction_basic(t *testing.T) {
 	var conf cloudfront.DescribeFunctionOutput

@@ -21,66 +21,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_cloudfront_distribution", &resource.Sweeper{
-		Name: "aws_cloudfront_distribution",
-		F:    sweepDistributions,
-	})
-}
 
-func sweepDistributions(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).CloudFrontConn
 
-	distributionSummaries := make([]*cloudfront.DistributionSummary, 0)
 
-	input := &cloudfront.ListDistributionsInput{}
-	err = conn.ListDistributionsPages(input, func(page *cloudfront.ListDistributionsOutput, lastPage bool) bool {
-		distributionSummaries = append(distributionSummaries, page.DistributionList.Items...)
-		return !lastPage
-	})
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping CloudFront Distribution sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error listing CloudFront Distributions: %s", err)
-	}
-
-	if len(distributionSummaries) == 0 {
-		log.Print("[DEBUG] No CloudFront Distributions to sweep")
-		return nil
-	}
-
-	for _, distributionSummary := range distributionSummaries {
-		distributionID := aws.StringValue(distributionSummary.Id)
-
-		if aws.BoolValue(distributionSummary.Enabled) {
-			log.Printf("[WARN] Skipping deletion of enabled CloudFront Distribution: %s", distributionID)
-			continue
-		}
-
-		output, err := conn.GetDistribution(&cloudfront.GetDistributionInput{
-			Id: aws.String(distributionID),
-		})
-		if err != nil {
-			return fmt.Errorf("Error reading CloudFront Distribution %s: %s", distributionID, err)
-		}
-
-		_, err = conn.DeleteDistribution(&cloudfront.DeleteDistributionInput{
-			Id:      aws.String(distributionID),
-			IfMatch: output.ETag,
-		})
-		if err != nil {
-			return fmt.Errorf("Error deleting CloudFront Distribution %s: %s", distributionID, err)
-		}
-	}
-
-	return nil
-}
 
 func TestAccCloudFrontDistribution_disappears(t *testing.T) {
 	var distribution cloudfront.Distribution

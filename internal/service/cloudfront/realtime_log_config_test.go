@@ -19,59 +19,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_cloudfront_realtime_log_config", &resource.Sweeper{
-		Name: "aws_cloudfront_realtime_log_config",
-		F:    sweepRealtimeLogsConfig,
-	})
-}
 
-func sweepRealtimeLogsConfig(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).CloudFrontConn
-	input := &cloudfront.ListRealtimeLogConfigsInput{}
-	var sweeperErrs *multierror.Error
 
-	for {
-		output, err := conn.ListRealtimeLogConfigs(input)
 
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping CloudFront Real-time Log Configs sweep for %s: %s", region, err)
-			return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-		}
-
-		if err != nil {
-			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving CloudFront Real-time Log Configs: %w", err))
-			return sweeperErrs
-		}
-
-		for _, config := range output.RealtimeLogConfigs.Items {
-			id := aws.StringValue(config.ARN)
-
-			log.Printf("[INFO] Deleting CloudFront Real-time Log Config: %s", id)
-			r := tfcloudfront.ResourceRealtimeLogConfig()
-			d := r.Data(nil)
-			d.SetId(id)
-			err := r.Delete(d, client)
-
-			if err != nil {
-				log.Printf("[ERROR] %s", err)
-				sweeperErrs = multierror.Append(sweeperErrs, err)
-				continue
-			}
-		}
-
-		if aws.StringValue(output.RealtimeLogConfigs.NextMarker) == "" {
-			break
-		}
-		input.Marker = output.RealtimeLogConfigs.NextMarker
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func TestAccCloudFrontRealtimeLogConfig_basic(t *testing.T) {
 	var v cloudfront.RealtimeLogConfig
