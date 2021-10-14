@@ -70,13 +70,13 @@ func testSweepCodeArtifactRepositories(region string) error {
 }
 
 func TestAccAWSCodeArtifactRepository_basic(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codeartifact_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codeartifact.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCodeArtifactRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -104,13 +104,13 @@ func TestAccAWSCodeArtifactRepository_basic(t *testing.T) {
 }
 
 func TestAccAWSCodeArtifactRepository_tags(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codeartifact_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService("codeartifact", t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codeartifact.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCodeArtifactRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -148,13 +148,13 @@ func TestAccAWSCodeArtifactRepository_tags(t *testing.T) {
 }
 
 func TestAccAWSCodeArtifactRepository_owner(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codeartifact_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codeartifact.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCodeArtifactRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -181,13 +181,13 @@ func TestAccAWSCodeArtifactRepository_owner(t *testing.T) {
 }
 
 func TestAccAWSCodeArtifactRepository_description(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codeartifact_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codeartifact.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCodeArtifactRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -214,13 +214,13 @@ func TestAccAWSCodeArtifactRepository_description(t *testing.T) {
 }
 
 func TestAccAWSCodeArtifactRepository_upstreams(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codeartifact_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codeartifact.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCodeArtifactRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -258,13 +258,13 @@ func TestAccAWSCodeArtifactRepository_upstreams(t *testing.T) {
 }
 
 func TestAccAWSCodeArtifactRepository_externalConnection(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codeartifact_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codeartifact.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCodeArtifactRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -304,20 +304,20 @@ func TestAccAWSCodeArtifactRepository_externalConnection(t *testing.T) {
 }
 
 func TestAccAWSCodeArtifactRepository_disappears(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codeartifact_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codeartifact.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCodeArtifactRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCodeArtifactRepositoryBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeArtifactRepositoryExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsCodeArtifactRepository(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsCodeArtifactRepository(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -336,7 +336,7 @@ func testAccCheckAWSCodeArtifactRepositoryExists(n string) resource.TestCheckFun
 			return fmt.Errorf("no CodeArtifact repository set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).codeartifactconn
+		conn := acctest.Provider.Meta().(*AWSClient).codeartifactconn
 		owner, domain, repo, err := decodeCodeArtifactRepositoryID(rs.Primary.ID)
 		if err != nil {
 			return err
@@ -361,7 +361,7 @@ func testAccCheckAWSCodeArtifactRepositoryDestroy(s *terraform.State) error {
 		if err != nil {
 			return err
 		}
-		conn := testAccProvider.Meta().(*AWSClient).codeartifactconn
+		conn := acctest.Provider.Meta().(*AWSClient).codeartifactconn
 		resp, err := conn.DescribeRepository(&codeartifact.DescribeRepositoryInput{
 			Repository:  aws.String(repo),
 			Domain:      aws.String(domain),
