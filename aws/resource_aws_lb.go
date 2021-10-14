@@ -27,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceLoadBalancer() *schema.Resource {
@@ -67,7 +68,7 @@ func ResourceLoadBalancer() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc:  validateElbName,
+				ValidateFunc:  validName,
 			},
 
 			"name_prefix": {
@@ -75,7 +76,7 @@ func ResourceLoadBalancer() *schema.Resource {
 				Optional:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
-				ValidateFunc:  validateElbNamePrefix,
+				ValidateFunc:  validNamePrefix,
 			},
 
 			"internal": {
@@ -162,7 +163,7 @@ func ResourceLoadBalancer() *schema.Resource {
 				Type:             schema.TypeList,
 				Optional:         true,
 				MaxItems:         1,
-				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"bucket": {

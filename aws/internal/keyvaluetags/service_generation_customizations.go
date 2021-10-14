@@ -128,6 +128,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/worklink"
 	"github.com/aws/aws-sdk-go/service/workspaces"
 	"github.com/aws/aws-sdk-go/service/xray"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // ServiceClientType determines the service client Go type.

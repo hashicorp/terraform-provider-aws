@@ -20,6 +20,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceLaunchTemplate() *schema.Resource {
@@ -39,7 +40,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc:  validateLaunchTemplateName,
+				ValidateFunc:  verify.ValidLaunchTemplateName,
 			},
 
 			"name_prefix": {
@@ -48,7 +49,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
-				ValidateFunc:  validateLaunchTemplateName,
+				ValidateFunc:  verify.ValidLaunchTemplateName,
 			},
 
 			"description": {
@@ -111,8 +112,8 @@ func ResourceLaunchTemplate() *schema.Resource {
 										// configurations to TypeString value is currently safe.
 										Type:             schema.TypeString,
 										Optional:         true,
-										DiffSuppressFunc: suppressEquivalentTypeStringBoolean,
-										ValidateFunc:     validateTypeStringNullableBoolean,
+										DiffSuppressFunc: verify.SuppressEquivalentTypeStringBoolean,
+										ValidateFunc:     verify.ValidTypeStringNullableBoolean,
 									},
 									"encrypted": {
 										// Use TypeString to allow an "unspecified" value,
@@ -121,8 +122,8 @@ func ResourceLaunchTemplate() *schema.Resource {
 										// configurations to TypeString value is currently safe.
 										Type:             schema.TypeString,
 										Optional:         true,
-										DiffSuppressFunc: suppressEquivalentTypeStringBoolean,
-										ValidateFunc:     validateTypeStringNullableBoolean,
+										DiffSuppressFunc: verify.SuppressEquivalentTypeStringBoolean,
+										ValidateFunc:     verify.ValidTypeStringNullableBoolean,
 									},
 									"iops": {
 										Type:     schema.TypeInt,
@@ -132,7 +133,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 									"kms_key_id": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: verify.ValidARN,
 									},
 									"snapshot_id": {
 										Type:     schema.TypeString,
@@ -235,8 +236,8 @@ func ResourceLaunchTemplate() *schema.Resource {
 				// configurations to TypeString value is currently safe.
 				Type:             schema.TypeString,
 				Optional:         true,
-				DiffSuppressFunc: suppressEquivalentTypeStringBoolean,
-				ValidateFunc:     validateTypeStringNullableBoolean,
+				DiffSuppressFunc: verify.SuppressEquivalentTypeStringBoolean,
+				ValidateFunc:     verify.ValidTypeStringNullableBoolean,
 			},
 
 			"elastic_gpu_specifications": {
@@ -276,7 +277,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 							Type:          schema.TypeString,
 							Optional:      true,
 							ConflictsWith: []string{"iam_instance_profile.0.name"},
-							ValidateFunc:  validateArn,
+							ValidateFunc:  verify.ValidARN,
 						},
 						"name": {
 							Type:     schema.TypeString,
@@ -369,7 +370,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 						"license_configuration_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 					},
 				},
@@ -446,14 +447,14 @@ func ResourceLaunchTemplate() *schema.Resource {
 						"associate_carrier_ip_address": {
 							Type:             schema.TypeString,
 							Optional:         true,
-							DiffSuppressFunc: suppressEquivalentTypeStringBoolean,
-							ValidateFunc:     validateTypeStringNullableBoolean,
+							DiffSuppressFunc: verify.SuppressEquivalentTypeStringBoolean,
+							ValidateFunc:     verify.ValidTypeStringNullableBoolean,
 						},
 						"associate_public_ip_address": {
 							Type:             schema.TypeString,
 							Optional:         true,
-							DiffSuppressFunc: suppressEquivalentTypeStringBoolean,
-							ValidateFunc:     validateTypeStringNullableBoolean,
+							DiffSuppressFunc: verify.SuppressEquivalentTypeStringBoolean,
+							ValidateFunc:     verify.ValidTypeStringNullableBoolean,
 						},
 						"delete_on_termination": {
 							// Use TypeString to allow an "unspecified" value,
@@ -462,8 +463,8 @@ func ResourceLaunchTemplate() *schema.Resource {
 							// configurations to TypeString value is currently safe.
 							Type:             schema.TypeString,
 							Optional:         true,
-							DiffSuppressFunc: suppressEquivalentTypeStringBoolean,
-							ValidateFunc:     validateTypeStringNullableBoolean,
+							DiffSuppressFunc: verify.SuppressEquivalentTypeStringBoolean,
+							ValidateFunc:     verify.ValidTypeStringNullableBoolean,
 						},
 						"description": {
 							Type:     schema.TypeString,
@@ -550,7 +551,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 							Type:          schema.TypeString,
 							Optional:      true,
 							ConflictsWith: []string{"placement.0.host_id"},
-							ValidateFunc:  validateArn,
+							ValidateFunc:  verify.ValidARN,
 						},
 						"spread_domain": {
 							Type:     schema.TypeString,

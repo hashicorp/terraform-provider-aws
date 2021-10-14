@@ -1,9 +1,7 @@
-package net_test
+package verify
 
 import (
 	"testing"
-
-	tfnet "github.com/hashicorp/terraform-provider-aws/aws/internal/net"
 )
 
 func TestCIDRBlocksEqual(t *testing.T) {
@@ -20,7 +18,7 @@ func TestCIDRBlocksEqual(t *testing.T) {
 		{"::/0", "::0/0", true},
 		{"", "", false},
 	} {
-		equal := tfnet.CIDRBlocksEqual(ts.cidr1, ts.cidr2)
+		equal := CIDRBlocksEqual(ts.cidr1, ts.cidr2)
 		if ts.equal != equal {
 			t.Fatalf("CIDRBlocksEqual(%q, %q) should be: %t", ts.cidr1, ts.cidr2, ts.equal)
 		}
@@ -37,7 +35,7 @@ func TestCanonicalCIDRBlock(t *testing.T) {
 		{"::0/0", "::/0"},
 		{"", ""},
 	} {
-		got := tfnet.CanonicalCIDRBlock(ts.cidr)
+		got := CanonicalCIDRBlock(ts.cidr)
 		if ts.expected != got {
 			t.Fatalf("CanonicalCIDRBlock(%q) should be: %q, got: %q", ts.cidr, ts.expected, got)
 		}

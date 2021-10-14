@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"strconv"
 	"testing"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func TestNullableInt(t *testing.T) {

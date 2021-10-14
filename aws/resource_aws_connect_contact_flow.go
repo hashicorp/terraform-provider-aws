@@ -18,6 +18,7 @@ import (
 	"github.com/mitchellh/go-homedir"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const awsMutexConnectContactFlowKey = `aws_connect_contact_flow`
@@ -51,7 +52,7 @@ func ResourceContactFlow() *schema.Resource {
 				Computed:         true,
 				ValidateFunc:     validation.StringIsJSON,
 				ConflictsWith:    []string{"filename"},
-				DiffSuppressFunc: suppressEquivalentJsonDiffs,
+				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json

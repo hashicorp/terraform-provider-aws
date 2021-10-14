@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/aws-cloudformation/cloudformation-cli-go-plugin/cfn/handler"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Create handles the Create event from the Cloudformation service.

@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // AttributeMap represents a map of Terraform resource attribute name to AWS API attribute name.

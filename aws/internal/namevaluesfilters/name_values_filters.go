@@ -4,6 +4,7 @@ package namevaluesfilters
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // NameValuesFilters is a standard implementation for AWS resource filters.

@@ -9,8 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func wafSizeConstraintSetSchema() map[string]*schema.Schema {
@@ -166,7 +165,7 @@ func diffWafRegexPatternSetPatternStrings(oldPatterns, newPatterns []interface{}
 	updates := make([]*waf.RegexPatternSetUpdate, 0)
 
 	for _, op := range oldPatterns {
-		if idx, contains := sliceContainsString(newPatterns, op.(string)); contains {
+		if idx, contains := verify.SliceContainsString(newPatterns, op.(string)); contains {
 			newPatterns = append(newPatterns[:idx], newPatterns[idx+1:]...)
 			continue
 		}
@@ -220,16 +219,6 @@ func diffWafRulePredicates(oldP, newP []interface{}) []*waf.RuleUpdate {
 		})
 	}
 	return updates
-}
-
-func sliceContainsString(slice []interface{}, s string) (int, bool) {
-	for idx, value := range slice {
-		v := value.(string)
-		if v == s {
-			return idx, true
-		}
-	}
-	return -1, false
 }
 
 func diffWafRuleGroupActivatedRules(oldRules, newRules []interface{}) []*waf.RuleGroupUpdate {

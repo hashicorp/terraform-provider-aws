@@ -1,16 +1,13 @@
-package aws
+package verify
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/provider"
-	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
-func TestSuppressEquivalentJsonDiffsWhitespaceAndNoWhitespace(t *testing.T) {
+func TestSuppressEquivalentJSONDiffsWhitespaceAndNoWhitespace(t *testing.T) {
 	d := new(schema.ResourceData)
 
 	noWhitespace := `{"test":"test"}`
@@ -19,8 +16,8 @@ func TestSuppressEquivalentJsonDiffsWhitespaceAndNoWhitespace(t *testing.T) {
   "test": "test"
 }`
 
-	if !suppressEquivalentJsonDiffs("", noWhitespace, whitespace, d) {
-		t.Errorf("Expected suppressEquivalentJsonDiffs to return true for %s == %s", noWhitespace, whitespace)
+	if !SuppressEquivalentJSONDiffs("", noWhitespace, whitespace, d) {
+		t.Errorf("Expected SuppressEquivalentJSONDiffs to return true for %s == %s", noWhitespace, whitespace)
 	}
 
 	noWhitespaceDiff := `{"test":"test"}`
@@ -29,8 +26,8 @@ func TestSuppressEquivalentJsonDiffsWhitespaceAndNoWhitespace(t *testing.T) {
   "test": "tested"
 }`
 
-	if suppressEquivalentJsonDiffs("", noWhitespaceDiff, whitespaceDiff, d) {
-		t.Errorf("Expected suppressEquivalentJsonDiffs to return false for %s == %s", noWhitespaceDiff, whitespaceDiff)
+	if SuppressEquivalentJSONDiffs("", noWhitespaceDiff, whitespaceDiff, d) {
+		t.Errorf("Expected SuppressEquivalentJSONDiffs to return false for %s == %s", noWhitespaceDiff, whitespaceDiff)
 	}
 }
 
@@ -63,7 +60,7 @@ func TestSuppressEquivalentTypeStringBoolean(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
-		value := suppressEquivalentTypeStringBoolean("test_property", tc.old, tc.new, nil)
+		value := SuppressEquivalentTypeStringBoolean("test_property", tc.old, tc.new, nil)
 
 		if tc.equivalent && !value {
 			t.Fatalf("expected test case %d to be equivalent", i)
@@ -75,7 +72,7 @@ func TestSuppressEquivalentTypeStringBoolean(t *testing.T) {
 	}
 }
 
-func TestSuppressEquivalentJsonOrYamlDiffs(t *testing.T) {
+func TestSuppressEquivalentJSONOrYAMLDiffs(t *testing.T) {
 	testCases := []struct {
 		description string
 		equivalent  bool
@@ -257,7 +254,7 @@ Outputs:
 	}
 
 	for _, tc := range testCases {
-		value := suppressEquivalentJsonOrYamlDiffs("test_property", tc.old, tc.new, nil)
+		value := SuppressEquivalentJSONOrYAMLDiffs("test_property", tc.old, tc.new, nil)
 
 		if tc.equivalent && !value {
 			t.Fatalf("expected test case (%s) to be equivalent", tc.description)
@@ -265,6 +262,103 @@ Outputs:
 
 		if !tc.equivalent && value {
 			t.Fatalf("expected test case (%s) to not be equivalent", tc.description)
+		}
+	}
+}
+
+func TestDiffStringMaps(t *testing.T) {
+	cases := []struct {
+		Old, New                  map[string]interface{}
+		Create, Remove, Unchanged map[string]interface{}
+	}{
+		// Add
+		{
+			Old: map[string]interface{}{
+				"foo": "bar",
+			},
+			New: map[string]interface{}{
+				"foo": "bar",
+				"bar": "baz",
+			},
+			Create: map[string]interface{}{
+				"bar": "baz",
+			},
+			Remove: map[string]interface{}{},
+			Unchanged: map[string]interface{}{
+				"foo": "bar",
+			},
+		},
+
+		// Modify
+		{
+			Old: map[string]interface{}{
+				"foo": "bar",
+			},
+			New: map[string]interface{}{
+				"foo": "baz",
+			},
+			Create: map[string]interface{}{
+				"foo": "baz",
+			},
+			Remove: map[string]interface{}{
+				"foo": "bar",
+			},
+			Unchanged: map[string]interface{}{},
+		},
+
+		// Overlap
+		{
+			Old: map[string]interface{}{
+				"foo":   "bar",
+				"hello": "world",
+			},
+			New: map[string]interface{}{
+				"foo":   "baz",
+				"hello": "world",
+			},
+			Create: map[string]interface{}{
+				"foo": "baz",
+			},
+			Remove: map[string]interface{}{
+				"foo": "bar",
+			},
+			Unchanged: map[string]interface{}{
+				"hello": "world",
+			},
+		},
+
+		// Remove
+		{
+			Old: map[string]interface{}{
+				"foo": "bar",
+				"bar": "baz",
+			},
+			New: map[string]interface{}{
+				"foo": "bar",
+			},
+			Create: map[string]interface{}{},
+			Remove: map[string]interface{}{
+				"bar": "baz",
+			},
+			Unchanged: map[string]interface{}{
+				"foo": "bar",
+			},
+		},
+	}
+
+	for i, tc := range cases {
+		c, r, u := DiffStringMaps(tc.Old, tc.New)
+		cm := PointersMapToStringList(c)
+		rm := PointersMapToStringList(r)
+		um := PointersMapToStringList(u)
+		if !reflect.DeepEqual(cm, tc.Create) {
+			t.Fatalf("%d: bad create: %#v", i, cm)
+		}
+		if !reflect.DeepEqual(rm, tc.Remove) {
+			t.Fatalf("%d: bad remove: %#v", i, rm)
+		}
+		if !reflect.DeepEqual(um, tc.Unchanged) {
+			t.Fatalf("%d: bad unchanged: %#v", i, rm)
 		}
 	}
 }

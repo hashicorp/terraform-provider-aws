@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceLaunchConfiguration() *schema.Resource {
@@ -106,7 +107,7 @@ func ResourceLaunchConfiguration() *schema.Resource {
 				ConflictsWith: []string{"user_data"},
 				ValidateFunc: func(v interface{}, name string) (warns []string, errs []error) {
 					s := v.(string)
-					if !isBase64Encoded([]byte(s)) {
+					if !verify.IsBase64Encoded([]byte(s)) {
 						errs = append(errs, fmt.Errorf(
 							"%s: must be base64-encoded", name,
 						))
@@ -371,7 +372,7 @@ func resourceLaunchConfigurationCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	if v, ok := d.GetOk("user_data"); ok {
-		userData := base64Encode([]byte(v.(string)))
+		userData := verify.Base64Encode([]byte(v.(string)))
 		createLaunchConfigurationOpts.UserData = aws.String(userData)
 	} else if v, ok := d.GetOk("user_data_base64"); ok {
 		createLaunchConfigurationOpts.UserData = aws.String(v.(string))

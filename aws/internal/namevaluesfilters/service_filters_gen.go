@@ -17,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/resourcegroupstaggingapi"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // []*SERVICE.Filter handling

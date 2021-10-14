@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func decodeEc2TransitGatewayRouteID(id string) (string, string, error) {
@@ -113,8 +114,8 @@ func ec2DescribeTransitGatewayRoute(conn *ec2.EC2, transitGatewayRouteTableID, d
 		if route == nil {
 			continue
 		}
-		if tfnet.CIDRBlocksEqual(aws.StringValue(route.DestinationCidrBlock), destination) {
-			cidrString := tfnet.CanonicalCIDRBlock(aws.StringValue(route.DestinationCidrBlock))
+		if verify.CIDRBlocksEqual(aws.StringValue(route.DestinationCidrBlock), destination) {
+			cidrString := verify.CanonicalCIDRBlock(aws.StringValue(route.DestinationCidrBlock))
 			route.DestinationCidrBlock = aws.String(cidrString)
 			return route, nil
 		}

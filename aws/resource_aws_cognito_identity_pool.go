@@ -12,6 +12,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourcePool() *schema.Resource {
@@ -29,7 +30,7 @@ func ResourcePool() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateCognitoIdentityPoolName,
+				ValidateFunc: validIdentityPoolName,
 			},
 
 			"arn": {
@@ -45,12 +46,12 @@ func ResourcePool() *schema.Resource {
 						"client_id": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateCognitoIdentityProvidersClientId,
+							ValidateFunc: validIdentityProvidersClientID,
 						},
 						"provider_name": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateCognitoIdentityProvidersProviderName,
+							ValidateFunc: validIdentityProvidersProviderName,
 						},
 						"server_side_token_check": {
 							Type:     schema.TypeBool,
@@ -65,7 +66,7 @@ func ResourcePool() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true, // Forcing a new resource since it cannot be edited afterwards
-				ValidateFunc: validateCognitoProviderDeveloperName,
+				ValidateFunc: validProviderDeveloperName,
 			},
 
 			"allow_unauthenticated_identities": {
@@ -85,7 +86,7 @@ func ResourcePool() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validateArn,
+					ValidateFunc: verify.ValidARN,
 				},
 			},
 
@@ -94,7 +95,7 @@ func ResourcePool() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validateArn,
+					ValidateFunc: verify.ValidARN,
 				},
 			},
 
@@ -103,7 +104,7 @@ func ResourcePool() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validateCognitoSupportedLoginProviders,
+					ValidateFunc: validSupportedLoginProviders,
 				},
 			},
 

@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func wafv2EmptySchema() *schema.Schema {
@@ -173,7 +174,7 @@ func wafv2IpSetReferenceStatementSchema() *schema.Schema {
 				"arn": {
 					Type:         schema.TypeString,
 					Required:     true,
-					ValidateFunc: validateArn,
+					ValidateFunc: verify.ValidARN,
 				},
 				"ip_set_forwarded_ip_config": {
 					Type:     schema.TypeList,
@@ -217,7 +218,7 @@ func wafv2RegexPatternSetReferenceStatementSchema() *schema.Schema {
 				"arn": {
 					Type:         schema.TypeString,
 					Required:     true,
-					ValidateFunc: validateArn,
+					ValidateFunc: verify.ValidARN,
 				},
 				"field_to_match":      wafv2FieldToMatchSchema(),
 				"text_transformation": wafv2TextTransformationSchema(),

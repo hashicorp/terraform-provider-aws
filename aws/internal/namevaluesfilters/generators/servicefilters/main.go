@@ -13,6 +13,7 @@ import (
 	"text/template"
 
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/namevaluesfilters"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const filename = `service_filters_gen.go`

@@ -1,4 +1,4 @@
-package net
+package verify
 
 import (
 	"net"
