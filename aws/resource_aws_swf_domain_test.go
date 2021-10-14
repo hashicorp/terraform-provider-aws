@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func testAccPreCheckSwfDomainTestingEnabled(t *testing.T) {
@@ -187,7 +188,7 @@ func TestAccAWSSwfDomain_Description(t *testing.T) {
 }
 
 func testAccCheckAwsSwfDomainDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).swfconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SWFConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_swf_domain" {
@@ -224,7 +225,7 @@ func testAccCheckAwsSwfDomainExists(n string) resource.TestCheckFunc {
 		}
 
 		name := rs.Primary.ID
-		conn := acctest.Provider.Meta().(*AWSClient).swfconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SWFConn
 
 		input := &swf.DescribeDomainInput{
 			Name: aws.String(name),

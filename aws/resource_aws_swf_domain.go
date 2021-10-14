@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsSwfDomain() *schema.Resource {
@@ -67,8 +68,8 @@ func resourceAwsSwfDomain() *schema.Resource {
 }
 
 func resourceAwsSwfDomainCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).swfconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).SWFConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	var name string
@@ -102,9 +103,9 @@ func resourceAwsSwfDomainCreate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceAwsSwfDomainRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).swfconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).SWFConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &swf.DescribeDomainInput{
 		Name: aws.String(d.Id()),
@@ -153,7 +154,7 @@ func resourceAwsSwfDomainRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsSwfDomainUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).swfconn
+	conn := meta.(*conns.AWSClient).SWFConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -167,7 +168,7 @@ func resourceAwsSwfDomainUpdate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceAwsSwfDomainDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).swfconn
+	conn := meta.(*conns.AWSClient).SWFConn
 
 	input := &swf.DeprecateDomainInput{
 		Name: aws.String(d.Get("name").(string)),
