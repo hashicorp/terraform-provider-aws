@@ -40,15 +40,15 @@ func TestAccAWSResourceGroup_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, resourcegroups.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSResourceGroupDestroy,
+		CheckDestroy: testAccCheckResourceGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSResourceGroupConfig_basic(n, desc1, testAccAWSResourceGroupConfigQuery),
+				Config: testAccResourceGroupConfig_basic(n, desc1, testAccResourceGroupQueryConfig),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSResourceGroupExists(resourceName, &v),
+					testAccCheckResourceGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", n),
 					resource.TestCheckResourceAttr(resourceName, "description", desc1),
-					resource.TestCheckResourceAttr(resourceName, "resource_query.0.query", testAccAWSResourceGroupConfigQuery+"\n"),
+					resource.TestCheckResourceAttr(resourceName, "resource_query.0.query", testAccResourceGroupQueryConfig+"\n"),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 				),
 			},
@@ -58,7 +58,7 @@ func TestAccAWSResourceGroup_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSResourceGroupConfig_basic(n, desc2, query2),
+				Config: testAccResourceGroupConfig_basic(n, desc2, query2),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "description", desc2),
 					resource.TestCheckResourceAttr(resourceName, "resource_query.0.query", query2+"\n"),
@@ -78,12 +78,12 @@ func TestAccAWSResourceGroup_tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, resourcegroups.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSResourceGroupDestroy,
+		CheckDestroy: testAccCheckResourceGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSResourceGroupConfigTags1(n, desc1, testAccAWSResourceGroupConfigQuery, "key1", "value1"),
+				Config: testAccResourceGroupTags1Config(n, desc1, testAccResourceGroupQueryConfig, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSResourceGroupExists(resourceName, &v),
+					testAccCheckResourceGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -94,18 +94,18 @@ func TestAccAWSResourceGroup_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSResourceGroupConfigTags2(n, desc1, testAccAWSResourceGroupConfigQuery, "key1", "value1updated", "key2", "value2"),
+				Config: testAccResourceGroupTags2Config(n, desc1, testAccResourceGroupQueryConfig, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSResourceGroupExists(resourceName, &v),
+					testAccCheckResourceGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccAWSResourceGroupConfigTags1(n, desc1, testAccAWSResourceGroupConfigQuery, "key2", "value2"),
+				Config: testAccResourceGroupTags1Config(n, desc1, testAccResourceGroupQueryConfig, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSResourceGroupExists(resourceName, &v),
+					testAccCheckResourceGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -114,7 +114,7 @@ func TestAccAWSResourceGroup_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSResourceGroupExists(n string, v *resourcegroups.Group) resource.TestCheckFunc {
+func testAccCheckResourceGroupExists(n string, v *resourcegroups.Group) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -144,7 +144,7 @@ func testAccCheckAWSResourceGroupExists(n string, v *resourcegroups.Group) resou
 	}
 }
 
-func testAccCheckAWSResourceGroupDestroy(s *terraform.State) error {
+func testAccCheckResourceGroupDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_resourcegroups_group" {
 			continue
@@ -171,7 +171,7 @@ func testAccCheckAWSResourceGroupDestroy(s *terraform.State) error {
 	return nil
 }
 
-const testAccAWSResourceGroupConfigQuery = `{
+const testAccResourceGroupQueryConfig = `{
   "ResourceTypeFilters": [
     "AWS::EC2::Instance"
   ],
@@ -185,7 +185,7 @@ const testAccAWSResourceGroupConfigQuery = `{
   ]
 }`
 
-func testAccAWSResourceGroupConfig_basic(rName, desc, query string) string {
+func testAccResourceGroupConfig_basic(rName, desc, query string) string {
 	return fmt.Sprintf(`
 resource "aws_resourcegroups_group" "test" {
   name        = "%s"
@@ -201,7 +201,7 @@ JSON
 `, rName, desc, query)
 }
 
-func testAccAWSResourceGroupConfigTags1(rName, desc, query, tag1Key, tag1Value string) string {
+func testAccResourceGroupTags1Config(rName, desc, query, tag1Key, tag1Value string) string {
 	return fmt.Sprintf(`
 resource "aws_resourcegroups_group" "test" {
   name        = "%s"
@@ -221,7 +221,7 @@ JSON
 `, rName, desc, query, tag1Key, tag1Value)
 }
 
-func testAccAWSResourceGroupConfigTags2(rName, desc, query, tag1Key, tag1Value, tag2Key, tag2Value string) string {
+func testAccResourceGroupTags2Config(rName, desc, query, tag1Key, tag1Value, tag2Key, tag2Value string) string {
 	return fmt.Sprintf(`
 resource "aws_resourcegroups_group" "test" {
   name        = "%s"
