@@ -7,33 +7,34 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/directconnect/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSDxConnectionConfirmation_basic(t *testing.T) {
 	env, err := testAccCheckAwsDxHostedConnectionEnv()
 	if err != nil {
-		TestAccSkip(t, err.Error())
+		acctest.Skip(t, err.Error())
 	}
 
 	var providers []*schema.Provider
 
-	connectionName := fmt.Sprintf("tf-dx-%s", acctest.RandString(5))
+	connectionName := fmt.Sprintf("tf-dx-%s", sdkacctest.RandString(5))
 	resourceName := "aws_dx_connection_confirmation.test"
 	providerFunc := testAccDxConnectionConfirmationProvider(&providers, 0)
 	altProviderFunc := testAccDxConnectionConfirmationProvider(&providers, 1)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccAlternateAccountPreCheck(t)
+			acctest.PreCheck(t)
+			acctest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:        testAccErrorCheck(t, directconnect.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProviderFactories: acctest.FactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAwsDxHostedConnectionDestroy(altProviderFunc),
 		Steps: []resource.TestStep{
 			{
@@ -73,8 +74,8 @@ func testAccCheckAwsDxConnectionConfirmationExists(name string, providerFunc fun
 }
 
 func testAccDxConnectionConfirmationConfig(name, connectionId, ownerAccountId string) string {
-	return composeConfig(
-		testAccAlternateAccountProviderConfig(),
+	return acctest.ConfigCompose(
+		acctest.ConfigAlternateAccountProvider(),
 		fmt.Sprintf(`
 resource "aws_dx_hosted_connection" "connection" {
   provider = "awsalternate"

@@ -9,9 +9,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAwsDxPrivateVirtualInterface_basic(t *testing.T) {
@@ -24,13 +25,13 @@ func TestAccAwsDxPrivateVirtualInterface_basic(t *testing.T) {
 	var vif directconnect.VirtualInterface
 	resourceName := "aws_dx_private_virtual_interface.test"
 	vpnGatewayResourceName := "aws_vpn_gateway.test"
-	rName := fmt.Sprintf("tf-testacc-private-vif-%s", acctest.RandString(9))
-	bgpAsn := acctest.RandIntRange(64512, 65534)
-	vlan := acctest.RandIntRange(2049, 4094)
+	rName := fmt.Sprintf("tf-testacc-private-vif-%s", sdkacctest.RandString(9))
+	bgpAsn := sdkacctest.RandIntRange(64512, 65534)
+	vlan := sdkacctest.RandIntRange(2049, 4094)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, directconnect.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDxPrivateVirtualInterfaceDestroy,
 		Steps: []resource.TestStep{
@@ -41,7 +42,7 @@ func TestAccAwsDxPrivateVirtualInterface_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_address"),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_side_asn"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "directconnect", regexp.MustCompile(fmt.Sprintf("dxvif/%s", aws.StringValue(vif.VirtualInterfaceId)))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "directconnect", regexp.MustCompile(fmt.Sprintf("dxvif/%s", aws.StringValue(vif.VirtualInterfaceId)))),
 					resource.TestCheckResourceAttrSet(resourceName, "aws_device"),
 					resource.TestCheckResourceAttr(resourceName, "bgp_asn", strconv.Itoa(bgpAsn)),
 					resource.TestCheckResourceAttrSet(resourceName, "bgp_auth_key"),
@@ -62,7 +63,7 @@ func TestAccAwsDxPrivateVirtualInterface_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_address"),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_side_asn"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "directconnect", regexp.MustCompile(fmt.Sprintf("dxvif/%s", aws.StringValue(vif.VirtualInterfaceId)))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "directconnect", regexp.MustCompile(fmt.Sprintf("dxvif/%s", aws.StringValue(vif.VirtualInterfaceId)))),
 					resource.TestCheckResourceAttrSet(resourceName, "aws_device"),
 					resource.TestCheckResourceAttr(resourceName, "bgp_asn", strconv.Itoa(bgpAsn)),
 					resource.TestCheckResourceAttrSet(resourceName, "bgp_auth_key"),
@@ -96,13 +97,13 @@ func TestAccAwsDxPrivateVirtualInterface_Tags(t *testing.T) {
 	var vif directconnect.VirtualInterface
 	resourceName := "aws_dx_private_virtual_interface.test"
 	vpnGatewayResourceName := "aws_vpn_gateway.test"
-	rName := fmt.Sprintf("tf-testacc-private-vif-%s", acctest.RandString(9))
-	bgpAsn := acctest.RandIntRange(64512, 65534)
-	vlan := acctest.RandIntRange(2049, 4094)
+	rName := fmt.Sprintf("tf-testacc-private-vif-%s", sdkacctest.RandString(9))
+	bgpAsn := sdkacctest.RandIntRange(64512, 65534)
+	vlan := sdkacctest.RandIntRange(2049, 4094)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, directconnect.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDxPrivateVirtualInterfaceDestroy,
 		Steps: []resource.TestStep{
@@ -113,7 +114,7 @@ func TestAccAwsDxPrivateVirtualInterface_Tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_address"),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_side_asn"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "directconnect", regexp.MustCompile(fmt.Sprintf("dxvif/%s", aws.StringValue(vif.VirtualInterfaceId)))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "directconnect", regexp.MustCompile(fmt.Sprintf("dxvif/%s", aws.StringValue(vif.VirtualInterfaceId)))),
 					resource.TestCheckResourceAttrSet(resourceName, "aws_device"),
 					resource.TestCheckResourceAttr(resourceName, "bgp_asn", strconv.Itoa(bgpAsn)),
 					resource.TestCheckResourceAttrSet(resourceName, "bgp_auth_key"),
@@ -137,7 +138,7 @@ func TestAccAwsDxPrivateVirtualInterface_Tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_address"),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_side_asn"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "directconnect", regexp.MustCompile(fmt.Sprintf("dxvif/%s", aws.StringValue(vif.VirtualInterfaceId)))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "directconnect", regexp.MustCompile(fmt.Sprintf("dxvif/%s", aws.StringValue(vif.VirtualInterfaceId)))),
 					resource.TestCheckResourceAttrSet(resourceName, "aws_device"),
 					resource.TestCheckResourceAttr(resourceName, "bgp_asn", strconv.Itoa(bgpAsn)),
 					resource.TestCheckResourceAttrSet(resourceName, "bgp_auth_key"),
@@ -174,14 +175,14 @@ func TestAccAwsDxPrivateVirtualInterface_DxGateway(t *testing.T) {
 	var vif directconnect.VirtualInterface
 	resourceName := "aws_dx_private_virtual_interface.test"
 	dxGatewayResourceName := "aws_dx_gateway.test"
-	rName := fmt.Sprintf("tf-testacc-private-vif-%s", acctest.RandString(9))
-	amzAsn := acctest.RandIntRange(64512, 65534)
-	bgpAsn := acctest.RandIntRange(64512, 65534)
-	vlan := acctest.RandIntRange(2049, 4094)
+	rName := fmt.Sprintf("tf-testacc-private-vif-%s", sdkacctest.RandString(9))
+	amzAsn := sdkacctest.RandIntRange(64512, 65534)
+	bgpAsn := sdkacctest.RandIntRange(64512, 65534)
+	vlan := sdkacctest.RandIntRange(2049, 4094)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, directconnect.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDxPrivateVirtualInterfaceDestroy,
 		Steps: []resource.TestStep{
@@ -192,7 +193,7 @@ func TestAccAwsDxPrivateVirtualInterface_DxGateway(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_address"),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_side_asn"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "directconnect", regexp.MustCompile(fmt.Sprintf("dxvif/%s", aws.StringValue(vif.VirtualInterfaceId)))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "directconnect", regexp.MustCompile(fmt.Sprintf("dxvif/%s", aws.StringValue(vif.VirtualInterfaceId)))),
 					resource.TestCheckResourceAttrSet(resourceName, "aws_device"),
 					resource.TestCheckResourceAttr(resourceName, "bgp_asn", strconv.Itoa(bgpAsn)),
 					resource.TestCheckResourceAttrSet(resourceName, "bgp_auth_key"),

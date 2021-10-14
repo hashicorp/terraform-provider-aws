@@ -5,14 +5,15 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccDataSourceAwsDxLocation_basic(t *testing.T) {
 	dsResourceName := "data.aws_dx_location.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, directconnect.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, directconnect.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{

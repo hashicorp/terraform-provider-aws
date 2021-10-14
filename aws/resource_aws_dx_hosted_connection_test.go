@@ -7,12 +7,13 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/directconnect"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/directconnect/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 type testAccDxHostedConnectionEnv struct {
@@ -23,15 +24,15 @@ type testAccDxHostedConnectionEnv struct {
 func TestAccAWSDxHostedConnection_basic(t *testing.T) {
 	env, err := testAccCheckAwsDxHostedConnectionEnv()
 	if err != nil {
-		TestAccSkip(t, err.Error())
+		acctest.Skip(t, err.Error())
 	}
 
-	connectionName := fmt.Sprintf("tf-dx-%s", acctest.RandString(5))
+	connectionName := fmt.Sprintf("tf-dx-%s", sdkacctest.RandString(5))
 	resourceName := "aws_dx_hosted_connection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, directconnect.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDxHostedConnectionDestroy(testAccDxHostedConnectionProvider),
 		Steps: []resource.TestStep{

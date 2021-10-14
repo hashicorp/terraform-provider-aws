@@ -8,12 +8,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
 	multierror "github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/directconnect/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/directconnect/lister"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -112,13 +113,13 @@ func testSweepDirectConnectGateways(region string) error {
 
 func TestAccAwsDxGateway_basic(t *testing.T) {
 	var v directconnect.Gateway
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	rBgpAsn := acctest.RandIntRange(64512, 65534)
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_dx_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, directconnect.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDxGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -126,7 +127,7 @@ func TestAccAwsDxGateway_basic(t *testing.T) {
 				Config: testAccDxGatewayConfig(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsDxGatewayExists(resourceName, &v),
-					testAccCheckResourceAttrAccountID(resourceName, "owner_account_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_account_id"),
 				),
 			},
 			{
@@ -140,13 +141,13 @@ func TestAccAwsDxGateway_basic(t *testing.T) {
 
 func TestAccAwsDxGateway_disappears(t *testing.T) {
 	var v directconnect.Gateway
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	rBgpAsn := acctest.RandIntRange(64512, 65534)
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_dx_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, directconnect.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDxGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -154,7 +155,7 @@ func TestAccAwsDxGateway_disappears(t *testing.T) {
 				Config: testAccDxGatewayConfig(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsDxGatewayExists(resourceName, &v),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsDxGateway(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsDxGateway(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -164,13 +165,13 @@ func TestAccAwsDxGateway_disappears(t *testing.T) {
 
 func TestAccAwsDxGateway_complex(t *testing.T) {
 	var v directconnect.Gateway
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	rBgpAsn := acctest.RandIntRange(64512, 65534)
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_dx_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, directconnect.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDxGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -178,7 +179,7 @@ func TestAccAwsDxGateway_complex(t *testing.T) {
 				Config: testAccDxGatewayAssociationConfig_multiVpnGatewaysSingleAccount(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsDxGatewayExists(resourceName, &v),
-					testAccCheckResourceAttrAccountID(resourceName, "owner_account_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_account_id"),
 				),
 			},
 			{
