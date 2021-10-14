@@ -20,6 +20,30 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
+	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
+	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
+	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
+	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
+	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
+	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
+	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
+	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
+	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
+	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
+	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
+	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
+	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
+	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
+	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
+	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
+	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
+	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
+	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
+	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
+	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
+	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
+	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 )
 
 func init() {
@@ -49,7 +73,7 @@ func testSweepWafXssMatchSet(region string) error {
 
 	input := &waf.ListXssMatchSetsInput{}
 
-	err = lister.ListXssMatchSetsPages(conn, input, func(page *waf.ListXssMatchSetsOutput, lastPage bool) bool {
+	err = tfwaf.ListXSSMatchSetsPages(conn, input, func(page *waf.ListXssMatchSetsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}

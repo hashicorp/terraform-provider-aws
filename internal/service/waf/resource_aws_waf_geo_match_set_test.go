@@ -20,6 +20,30 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
+	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
+	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
+	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
+	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
+	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
+	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
+	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
+	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
+	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
+	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
+	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
+	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
+	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
+	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
+	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
+	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
+	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
+	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
+	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
+	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
+	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
+	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
+	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 )
 
 func init() {
@@ -49,7 +73,7 @@ func testSweepWafGeoMatchSet(region string) error {
 
 	input := &waf.ListGeoMatchSetsInput{}
 
-	err = lister.ListGeoMatchSetsPages(conn, input, func(page *waf.ListGeoMatchSetsOutput, lastPage bool) bool {
+	err = tfwaf.ListGeoMatchSetsPages(conn, input, func(page *waf.ListGeoMatchSetsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
