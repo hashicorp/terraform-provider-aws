@@ -14,7 +14,7 @@ import (
 	tfkinesis "github.com/hashicorp/terraform-provider-aws/internal/service/kinesis"
 )
 
-func TestAccAWSKinesisStreamDataSource_basic(t *testing.T) {
+func TestAccKinesisStreamDataSource_basic(t *testing.T) {
 	var stream kinesis.StreamDescription
 
 	sn := fmt.Sprintf("terraform-kinesis-test-%d", sdkacctest.RandInt())
