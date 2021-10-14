@@ -15,6 +15,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
+	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
+	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
+	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
+	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
 )
 
 func TestDecodeStorageGatewayUploadBufferID(t *testing.T) {
@@ -152,7 +157,7 @@ func testAccCheckAWSStorageGatewayUploadBufferExists(resourceName string) resour
 			return err
 		}
 
-		foundDiskID, err := finder.UploadBufferDisk(conn, gatewayARN, diskID)
+		foundDiskID, err := tfstoragegateway.FindUploadBufferDisk(conn, gatewayARN, diskID)
 
 		if err != nil {
 			return fmt.Errorf("error reading Storage Gateway Upload Buffer (%s): %w", rs.Primary.ID, err)

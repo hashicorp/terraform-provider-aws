@@ -13,6 +13,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
+	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
+	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
+	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
+	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
 )
 
 func ResourceUploadBuffer() *schema.Resource {
@@ -83,7 +88,7 @@ func resourceUploadBufferCreate(d *schema.ResourceData, meta interface{}) error 
 		return resourceUploadBufferRead(d, meta)
 	}
 
-	disk, err := finder.LocalDiskByDiskPath(conn, aws.StringValue(output.GatewayARN), aws.StringValue(input.DiskIds[0]))
+	disk, err := tfstoragegateway.FindLocalDiskByDiskPath(conn, aws.StringValue(output.GatewayARN), aws.StringValue(input.DiskIds[0]))
 
 	if err != nil {
 		return fmt.Errorf("error listing Storage Gateway Local Disks after creating Upload Buffer: %w", err)
@@ -106,7 +111,7 @@ func resourceUploadBufferRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	foundDiskID, err := finder.UploadBufferDisk(conn, gatewayARN, diskID)
+	foundDiskID, err := tfstoragegateway.FindUploadBufferDisk(conn, gatewayARN, diskID)
 
 	if !d.IsNewResource() && isAWSErrStorageGatewayGatewayNotFound(err) {
 		log.Printf("[WARN] Storage Gateway Upload Buffer (%s) not found, removing from state", d.Id())
@@ -132,7 +137,7 @@ func resourceUploadBufferRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("gateway_arn", gatewayARN)
 
 	if _, ok := d.GetOk("disk_path"); !ok {
-		disk, err := finder.LocalDiskByDiskId(conn, gatewayARN, aws.StringValue(foundDiskID))
+		disk, err := tfstoragegateway.FindLocalDiskByDiskID(conn, gatewayARN, aws.StringValue(foundDiskID))
 
 		if err != nil {
 			return fmt.Errorf("error listing Storage Gateway Local Disks: %w", err)

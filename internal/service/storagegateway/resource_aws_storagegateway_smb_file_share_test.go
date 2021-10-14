@@ -16,6 +16,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
+	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
+	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
+	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
+	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
 )
 
 func TestAccAWSStorageGatewaySmbFileShare_Authentication_ActiveDirectory(t *testing.T) {
@@ -898,7 +903,7 @@ func testAccCheckAWSStorageGatewaySmbFileShareDestroy(s *terraform.State) error 
 			continue
 		}
 
-		_, err := finder.SMBFileShareByARN(conn, rs.Primary.ID)
+		_, err := tfstoragegateway.FindSMBFileShareByARN(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -924,7 +929,7 @@ func testAccCheckAWSStorageGatewaySmbFileShareExists(resourceName string, smbFil
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn
 
-		output, err := finder.SMBFileShareByARN(conn, rs.Primary.ID)
+		output, err := tfstoragegateway.FindSMBFileShareByARN(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

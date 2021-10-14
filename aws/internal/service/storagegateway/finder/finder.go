@@ -9,9 +9,39 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/aws/internal/service/storagegateway"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
+	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
+	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
+	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
+	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
+	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
+	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
+	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
+	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
+	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
+	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
+	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
+	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
+	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
+	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
+	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
+	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
+	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
+	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
+	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
+	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
+	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
+	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
+	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
+	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
+	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
+	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
+	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
+	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
+	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
 )
 
-func LocalDiskByDiskId(conn *storagegateway.StorageGateway, gatewayARN string, diskID string) (*storagegateway.Disk, error) {
+func FindLocalDiskByDiskID(conn *storagegateway.StorageGateway, gatewayARN string, diskID string) (*storagegateway.Disk, error) {
 	input := &storagegateway.ListLocalDisksInput{
 		GatewayARN: aws.String(gatewayARN),
 	}
@@ -35,7 +65,7 @@ func LocalDiskByDiskId(conn *storagegateway.StorageGateway, gatewayARN string, d
 	return nil, nil
 }
 
-func LocalDiskByDiskPath(conn *storagegateway.StorageGateway, gatewayARN string, diskPath string) (*storagegateway.Disk, error) {
+func FindLocalDiskByDiskPath(conn *storagegateway.StorageGateway, gatewayARN string, diskPath string) (*storagegateway.Disk, error) {
 	input := &storagegateway.ListLocalDisksInput{
 		GatewayARN: aws.String(gatewayARN),
 	}
@@ -59,7 +89,7 @@ func LocalDiskByDiskPath(conn *storagegateway.StorageGateway, gatewayARN string,
 	return nil, nil
 }
 
-func UploadBufferDisk(conn *storagegateway.StorageGateway, gatewayARN string, diskID string) (*string, error) {
+func FindUploadBufferDisk(conn *storagegateway.StorageGateway, gatewayARN string, diskID string) (*string, error) {
 	input := &storagegateway.DescribeUploadBufferInput{
 		GatewayARN: aws.String(gatewayARN),
 	}
@@ -86,14 +116,14 @@ func UploadBufferDisk(conn *storagegateway.StorageGateway, gatewayARN string, di
 	return result, err
 }
 
-func SMBFileShareByARN(conn *storagegateway.StorageGateway, arn string) (*storagegateway.SMBFileShareInfo, error) {
+func FindSMBFileShareByARN(conn *storagegateway.StorageGateway, arn string) (*storagegateway.SMBFileShareInfo, error) {
 	input := &storagegateway.DescribeSMBFileSharesInput{
 		FileShareARNList: aws.StringSlice([]string{arn}),
 	}
 
 	output, err := conn.DescribeSMBFileShares(input)
 
-	if tfstoragegateway.OperationErrorCode(err) == tfstoragegateway.OperationErrCodeFileShareNotFound {
+	if tfstoragegateway.operationErrorCode(err) == tfstoragegateway.operationErrCodeFileShareNotFound {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -116,7 +146,7 @@ func SMBFileShareByARN(conn *storagegateway.StorageGateway, arn string) (*storag
 	return output.SMBFileShareInfoList[0], nil
 }
 
-func FileSystemAssociationByARN(conn *storagegateway.StorageGateway, fileSystemAssociationARN string) (*storagegateway.FileSystemAssociationInfo, error) {
+func FindFileSystemAssociationByARN(conn *storagegateway.StorageGateway, fileSystemAssociationARN string) (*storagegateway.FileSystemAssociationInfo, error) {
 
 	input := &storagegateway.DescribeFileSystemAssociationsInput{
 		FileSystemAssociationARNList: []*string{aws.String(fileSystemAssociationARN)},
@@ -125,7 +155,7 @@ func FileSystemAssociationByARN(conn *storagegateway.StorageGateway, fileSystemA
 
 	output, err := conn.DescribeFileSystemAssociations(input)
 	if err != nil {
-		if tfstoragegateway.InvalidGatewayRequestErrCodeEquals(err, tfstoragegateway.FileSystemAssociationNotFound) {
+		if tfstoragegateway.invalidGatewayRequestErrCodeEquals(err, tfstoragegateway.fileSystemAssociationNotFound) {
 			log.Printf("[WARN] Storage Gateway File System Association (%s) not found", fileSystemAssociationARN)
 			return nil, nil
 		}

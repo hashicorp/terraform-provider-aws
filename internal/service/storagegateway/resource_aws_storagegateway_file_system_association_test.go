@@ -15,6 +15,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
+	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
+	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
+	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
+	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
 )
 
 func TestAccAWSStorageGatewayFileSystemAssociation_basic(t *testing.T) {
@@ -273,7 +278,7 @@ func testAccCheckAwsStorageGatewayFileSystemAssociationDestroy(s *terraform.Stat
 			continue
 		}
 
-		output, err := finder.FileSystemAssociationByARN(conn, rs.Primary.ID)
+		output, err := tfstoragegateway.FindFileSystemAssociationByARN(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -301,7 +306,7 @@ func testAccCheckAwsStorageGatewayFileSystemAssociationExists(resourceName strin
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn
 
-		output, err := finder.FileSystemAssociationByARN(conn, rs.Primary.ID)
+		output, err := tfstoragegateway.FindFileSystemAssociationByARN(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
