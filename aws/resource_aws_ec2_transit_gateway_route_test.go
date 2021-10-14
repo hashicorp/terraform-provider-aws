@@ -19,7 +19,7 @@ func testAccAWSEc2TransitGatewayRoute_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -50,7 +50,7 @@ func testAccAWSEc2TransitGatewayRoute_basic_ipv6(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -80,7 +80,7 @@ func testAccAWSEc2TransitGatewayRoute_blackhole(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -111,7 +111,7 @@ func testAccAWSEc2TransitGatewayRoute_disappears(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -138,7 +138,7 @@ func testAccAWSEc2TransitGatewayRoute_disappears_TransitGatewayAttachment(t *tes
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -172,7 +172,7 @@ func testAccCheckAWSEc2TransitGatewayRouteExists(resourceName string, transitGat
 			return err
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 		route, err := ec2DescribeTransitGatewayRoute(conn, transitGatewayRouteTableID, destination)
 
@@ -191,7 +191,7 @@ func testAccCheckAWSEc2TransitGatewayRouteExists(resourceName string, transitGat
 }
 
 func testAccCheckAWSEc2TransitGatewayRouteDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ec2_transit_gateway_route" {
@@ -226,7 +226,7 @@ func testAccCheckAWSEc2TransitGatewayRouteDestroy(s *terraform.State) error {
 
 func testAccCheckAWSEc2TransitGatewayRouteDisappears(transitGateway *ec2.TransitGateway, transitGatewayRoute *ec2.TransitGatewayRoute) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 		input := &ec2.DeleteTransitGatewayRouteInput{
 			DestinationCidrBlock:       transitGatewayRoute.DestinationCidrBlock,

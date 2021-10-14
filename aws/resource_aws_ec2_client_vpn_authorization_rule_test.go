@@ -23,7 +23,7 @@ func testAccAwsEc2ClientVpnAuthorizationRule_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnAuthorizationRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -68,7 +68,7 @@ func testAccAwsEc2ClientVpnAuthorizationRule_groups(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnAuthorizationRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -139,7 +139,7 @@ func testAccAwsEc2ClientVpnAuthorizationRule_Subnets(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnAuthorizationRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -182,14 +182,14 @@ func testAccAwsEc2ClientVpnAuthorizationRule_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnAuthorizationRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEc2ClientVpnAuthorizationRuleConfigBasic(rStr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsEc2ClientVpnAuthorizationRuleExists(resourceName, &v),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsEc2ClientVpnAuthorizationRule(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsEc2ClientVpnAuthorizationRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -198,7 +198,7 @@ func testAccAwsEc2ClientVpnAuthorizationRule_disappears(t *testing.T) {
 }
 
 func testAccCheckAwsEc2ClientVpnAuthorizationRuleDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ec2_client_vpn_authorization_rule" {
@@ -229,7 +229,7 @@ func testAccCheckAwsEc2ClientVpnAuthorizationRuleExists(name string, assoc *ec2.
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 		result, err := finder.ClientVpnAuthorizationRuleByID(conn, rs.Primary.ID)
 		if err != nil {
@@ -364,13 +364,13 @@ resource "aws_subnet" "test" {
 }
 
 func testAccEc2ClientVpnAuthorizationRuleAcmCertificateBase() string {
-	key := tlsRsaPrivateKeyPem(2048)
-	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
+	key := acctest.TLSRSAPrivateKeyPEM(2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
 
 	return fmt.Sprintf(`
 resource "aws_acm_certificate" "test" {
   certificate_body = "%[1]s"
   private_key      = "%[2]s"
 }
-`, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key))
+`, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key))
 }

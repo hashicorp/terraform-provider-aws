@@ -19,7 +19,7 @@ func TestAccAWSDataSourceIAMInstanceProfile_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDatasourceAwsIamInstanceProfileConfig(roleName, profileName),

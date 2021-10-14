@@ -16,7 +16,7 @@ func TestAccDataSourceAwsEBSEncryptionByDefault_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsEBSEncryptionByDefaultConfig,
@@ -30,7 +30,7 @@ func TestAccDataSourceAwsEBSEncryptionByDefault_basic(t *testing.T) {
 
 func testAccCheckDataSourceAwsEBSEncryptionByDefault(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

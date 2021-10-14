@@ -21,7 +21,7 @@ func TestAccAWSEc2AvailabilityZoneGroup_OptInStatus(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2AvailabilityZoneGroup(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -55,7 +55,7 @@ func TestAccAWSEc2AvailabilityZoneGroup_OptInStatus(t *testing.T) {
 }
 
 func testAccPreCheckAWSEc2AvailabilityZoneGroup(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 	input := &ec2.DescribeAvailabilityZonesInput{
 		AllAvailabilityZones: aws.Bool(true),

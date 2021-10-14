@@ -93,7 +93,7 @@ func testAccAWSEc2TransitGatewayVpcAttachment_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayVpcAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -127,7 +127,7 @@ func testAccAWSEc2TransitGatewayVpcAttachment_disappears(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayVpcAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -149,7 +149,7 @@ func testAccAWSEc2TransitGatewayVpcAttachment_ApplianceModeSupport(t *testing.T)
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayVpcAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -191,7 +191,7 @@ func testAccAWSEc2TransitGatewayVpcAttachment_DnsSupport(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayVpcAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -225,7 +225,7 @@ func testAccAWSEc2TransitGatewayVpcAttachment_Ipv6Support(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayVpcAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -257,7 +257,7 @@ func testAccAWSEc2TransitGatewayVpcAttachment_SharedTransitGateway(t *testing.T)
 	var providers []*schema.Provider
 	var transitGatewayVpcAttachment1 ec2.TransitGatewayVpcAttachment
 	resourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -292,7 +292,7 @@ func testAccAWSEc2TransitGatewayVpcAttachment_SubnetIds(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayVpcAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -334,7 +334,7 @@ func testAccAWSEc2TransitGatewayVpcAttachment_Tags(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayVpcAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -382,7 +382,7 @@ func testAccAWSEc2TransitGatewayVpcAttachment_TransitGatewayDefaultRouteTableAss
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayVpcAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -414,7 +414,7 @@ func testAccAWSEc2TransitGatewayVpcAttachment_TransitGatewayDefaultRouteTableAss
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayVpcAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -464,7 +464,7 @@ func testAccAWSEc2TransitGatewayVpcAttachment_TransitGatewayDefaultRouteTablePro
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayVpcAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -516,7 +516,7 @@ func testAccCheckAWSEc2TransitGatewayVpcAttachmentExists(resourceName string, tr
 			return fmt.Errorf("No EC2 Transit Gateway VPC Attachment ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 		attachment, err := ec2DescribeTransitGatewayVpcAttachment(conn, rs.Primary.ID)
 
@@ -539,7 +539,7 @@ func testAccCheckAWSEc2TransitGatewayVpcAttachmentExists(resourceName string, tr
 }
 
 func testAccCheckAWSEc2TransitGatewayVpcAttachmentDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ec2_transit_gateway_route_table" {
@@ -570,7 +570,7 @@ func testAccCheckAWSEc2TransitGatewayVpcAttachmentDestroy(s *terraform.State) er
 
 func testAccCheckAWSEc2TransitGatewayVpcAttachmentDisappears(transitGatewayVpcAttachment *ec2.TransitGatewayVpcAttachment) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 		input := &ec2.DeleteTransitGatewayVpcAttachmentInput{
 			TransitGatewayAttachmentId: transitGatewayVpcAttachment.TransitGatewayAttachmentId,

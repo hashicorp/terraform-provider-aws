@@ -17,7 +17,7 @@ func TestAccAWSEc2Tag_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckEc2TagDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -44,14 +44,14 @@ func TestAccAWSEc2Tag_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckEc2TagDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEc2TagConfig(rBgpAsn, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEc2TagExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsEc2Tag(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsEc2Tag(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -66,7 +66,7 @@ func TestAccAWSEc2Tag_Value(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckEc2TagDestroy,
 		Steps: []resource.TestStep{
 			{

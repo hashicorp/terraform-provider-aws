@@ -30,12 +30,12 @@ func TestAccAWSSpotDatafeedSubscription_serial(t *testing.T) {
 func testAccAWSSpotDatafeedSubscription_basic(t *testing.T) {
 	var subscription ec2.SpotDatafeedSubscription
 	resourceName := "aws_spot_datafeed_subscription.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSpotDatafeedSubscription(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSpotDatafeedSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -55,7 +55,7 @@ func testAccAWSSpotDatafeedSubscription_basic(t *testing.T) {
 
 func testAccCheckAWSSpotDatafeedSubscriptionDisappears(subscription *ec2.SpotDatafeedSubscription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 		_, err := conn.DeleteSpotDatafeedSubscription(&ec2.DeleteSpotDatafeedSubscriptionInput{})
 		if err != nil {
@@ -80,12 +80,12 @@ func testAccCheckAWSSpotDatafeedSubscriptionDisappears(subscription *ec2.SpotDat
 func testAccAWSSpotDatafeedSubscription_disappears(t *testing.T) {
 	var subscription ec2.SpotDatafeedSubscription
 	resourceName := "aws_spot_datafeed_subscription.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSpotDatafeedSubscription(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSpotDatafeedSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -111,7 +111,7 @@ func testAccCheckAWSSpotDatafeedSubscriptionExists(n string, subscription *ec2.S
 			return fmt.Errorf("No policy ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 		resp, err := conn.DescribeSpotDatafeedSubscription(&ec2.DescribeSpotDatafeedSubscriptionInput{})
 		if err != nil {
@@ -125,7 +125,7 @@ func testAccCheckAWSSpotDatafeedSubscriptionExists(n string, subscription *ec2.S
 }
 
 func testAccCheckAWSSpotDatafeedSubscriptionDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_spot_datafeed_subscription" {
@@ -147,7 +147,7 @@ func testAccCheckAWSSpotDatafeedSubscriptionDestroy(s *terraform.State) error {
 }
 
 func testAccPreCheckAWSSpotDatafeedSubscription(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 	input := &ec2.DescribeSpotDatafeedSubscriptionInput{}
 

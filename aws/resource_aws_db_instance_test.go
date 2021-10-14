@@ -61,7 +61,7 @@ func TestAccAWSDBInstance_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -127,7 +127,7 @@ func TestAccAWSDBInstance_OnlyMajorVersion(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -157,7 +157,7 @@ func TestAccAWSDBInstance_namePrefix(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -179,7 +179,7 @@ func TestAccAWSDBInstance_generatedName(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -201,7 +201,7 @@ func TestAccAWSDBInstance_kmsKey(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -235,7 +235,7 @@ func TestAccAWSDBInstance_subnetGroup(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -266,7 +266,7 @@ func TestAccAWSDBInstance_optionGroup(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -288,7 +288,7 @@ func TestAccAWSDBInstance_iamAuth(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -307,13 +307,13 @@ func TestAccAWSDBInstance_iamAuth(t *testing.T) {
 func TestAccAWSDBInstance_AllowMajorVersionUpgrade(t *testing.T) {
 	var dbInstance1 rds.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -350,14 +350,14 @@ func TestAccAWSDBInstance_DbSubnetGroupName(t *testing.T) {
 	var dbInstance rds.DBInstance
 	var dbSubnetGroup rds.DBSubnetGroup
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dbSubnetGroupResourceName := "aws_db_subnet_group.test"
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -377,7 +377,7 @@ func TestAccAWSDBInstance_DbSubnetGroupName_RamShared(t *testing.T) {
 	var dbSubnetGroup rds.DBSubnetGroup
 	var providers []*schema.Provider
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dbSubnetGroupResourceName := "aws_db_subnet_group.test"
 	resourceName := "aws_db_instance.test"
 
@@ -407,14 +407,14 @@ func TestAccAWSDBInstance_DbSubnetGroupName_VpcSecurityGroupIds(t *testing.T) {
 	var dbInstance rds.DBInstance
 	var dbSubnetGroup rds.DBSubnetGroup
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dbSubnetGroupResourceName := "aws_db_subnet_group.test"
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -432,13 +432,13 @@ func TestAccAWSDBInstance_DbSubnetGroupName_VpcSecurityGroupIds(t *testing.T) {
 func TestAccAWSDBInstance_DeletionProtection(t *testing.T) {
 	var dbInstance rds.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -478,7 +478,7 @@ func TestAccAWSDBInstance_FinalSnapshotIdentifier(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		// testAccCheckAWSDBInstanceSnapshot verifies a database snapshot is
 		// created, and subsequently deletes it
 		CheckDestroy: testAccCheckAWSDBInstanceSnapshot,
@@ -499,7 +499,7 @@ func TestAccAWSDBInstance_FinalSnapshotIdentifier_SkipFinalSnapshot(t *testing.T
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceNoSnapshot,
 		Steps: []resource.TestStep{
 			{
@@ -515,13 +515,13 @@ func TestAccAWSDBInstance_FinalSnapshotIdentifier_SkipFinalSnapshot(t *testing.T
 func TestAccAWSDBInstance_IsAlreadyBeingDeleted(t *testing.T) {
 	var dbInstance rds.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -533,7 +533,7 @@ func TestAccAWSDBInstance_IsAlreadyBeingDeleted(t *testing.T) {
 			{
 				PreConfig: func() {
 					// Get Database Instance into deleting state
-					conn := testAccProvider.Meta().(*AWSClient).rdsconn
+					conn := acctest.Provider.Meta().(*AWSClient).rdsconn
 					input := &rds.DeleteDBInstanceInput{
 						DBInstanceIdentifier: aws.String(rName),
 						SkipFinalSnapshot:    aws.Bool(true),
@@ -553,13 +553,13 @@ func TestAccAWSDBInstance_IsAlreadyBeingDeleted(t *testing.T) {
 func TestAccAWSDBInstance_MaxAllocatedStorage(t *testing.T) {
 	var dbInstance rds.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -597,13 +597,13 @@ func TestAccAWSDBInstance_MaxAllocatedStorage(t *testing.T) {
 func TestAccAWSDBInstance_Password(t *testing.T) {
 	var dbInstance rds.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			// Password should not be shown in error message
@@ -636,14 +636,14 @@ func TestAccAWSDBInstance_Password(t *testing.T) {
 func TestAccAWSDBInstance_ReplicateSourceDb(t *testing.T) {
 	var dbInstance, sourceDbInstance rds.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceResourceName := "aws_db_instance.source"
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -661,14 +661,14 @@ func TestAccAWSDBInstance_ReplicateSourceDb(t *testing.T) {
 func TestAccAWSDBInstance_ReplicateSourceDb_AllocatedStorage(t *testing.T) {
 	var dbInstance, sourceDbInstance rds.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceResourceName := "aws_db_instance.source"
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -687,14 +687,14 @@ func TestAccAWSDBInstance_ReplicateSourceDb_AllocatedStorage(t *testing.T) {
 func TestAccAWSDBInstance_ReplicateSourceDb_Iops(t *testing.T) {
 	var dbInstance, sourceDbInstance rds.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceResourceName := "aws_db_instance.source"
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -713,14 +713,14 @@ func TestAccAWSDBInstance_ReplicateSourceDb_Iops(t *testing.T) {
 func TestAccAWSDBInstance_ReplicateSourceDb_AllocatedStorageAndIops(t *testing.T) {
 	var dbInstance, sourceDbInstance rds.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceResourceName := "aws_db_instance.source"
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -740,14 +740,14 @@ func TestAccAWSDBInstance_ReplicateSourceDb_AllocatedStorageAndIops(t *testing.T
 func TestAccAWSDBInstance_ReplicateSourceDb_AllowMajorVersionUpgrade(t *testing.T) {
 	var dbInstance, sourceDbInstance rds.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceResourceName := "aws_db_instance.source"
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -766,14 +766,14 @@ func TestAccAWSDBInstance_ReplicateSourceDb_AllowMajorVersionUpgrade(t *testing.
 func TestAccAWSDBInstance_ReplicateSourceDb_AutoMinorVersionUpgrade(t *testing.T) {
 	var dbInstance, sourceDbInstance rds.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceResourceName := "aws_db_instance.source"
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -792,14 +792,14 @@ func TestAccAWSDBInstance_ReplicateSourceDb_AutoMinorVersionUpgrade(t *testing.T
 func TestAccAWSDBInstance_ReplicateSourceDb_AvailabilityZone(t *testing.T) {
 	var dbInstance, sourceDbInstance rds.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceResourceName := "aws_db_instance.source"
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -817,14 +817,14 @@ func TestAccAWSDBInstance_ReplicateSourceDb_AvailabilityZone(t *testing.T) {
 func TestAccAWSDBInstance_ReplicateSourceDb_BackupRetentionPeriod(t *testing.T) {
 	var dbInstance, sourceDbInstance rds.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceResourceName := "aws_db_instance.source"
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -843,14 +843,14 @@ func TestAccAWSDBInstance_ReplicateSourceDb_BackupRetentionPeriod(t *testing.T) 
 func TestAccAWSDBInstance_ReplicateSourceDb_BackupWindow(t *testing.T) {
 	var dbInstance, sourceDbInstance rds.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceResourceName := "aws_db_instance.source"
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -871,7 +871,7 @@ func TestAccAWSDBInstance_ReplicateSourceDb_DbSubnetGroupName(t *testing.T) {
 	var dbSubnetGroup rds.DBSubnetGroup
 	var providers []*schema.Provider
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dbSubnetGroupResourceName := "aws_db_subnet_group.test"
 	resourceName := "aws_db_instance.test"
 
@@ -901,7 +901,7 @@ func TestAccAWSDBInstance_ReplicateSourceDb_DbSubnetGroupName_RamShared(t *testi
 	var dbSubnetGroup rds.DBSubnetGroup
 	var providers []*schema.Provider
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dbSubnetGroupResourceName := "aws_db_subnet_group.test"
 	resourceName := "aws_db_instance.test"
 
@@ -933,7 +933,7 @@ func TestAccAWSDBInstance_ReplicateSourceDb_DbSubnetGroupName_VpcSecurityGroupId
 	var dbSubnetGroup rds.DBSubnetGroup
 	var providers []*schema.Provider
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dbSubnetGroupResourceName := "aws_db_subnet_group.test"
 	resourceName := "aws_db_instance.test"
 
@@ -973,14 +973,14 @@ func TestAccAWSDBInstance_ReplicateSourceDb_DeletionProtection(t *testing.T) {
 
 	var dbInstance, sourceDbInstance rds.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceResourceName := "aws_db_instance.source"
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1009,14 +1009,14 @@ func TestAccAWSDBInstance_ReplicateSourceDb_DeletionProtection(t *testing.T) {
 func TestAccAWSDBInstance_ReplicateSourceDb_IamDatabaseAuthenticationEnabled(t *testing.T) {
 	var dbInstance, sourceDbInstance rds.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceResourceName := "aws_db_instance.source"
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1035,14 +1035,14 @@ func TestAccAWSDBInstance_ReplicateSourceDb_IamDatabaseAuthenticationEnabled(t *
 func TestAccAWSDBInstance_ReplicateSourceDb_MaintenanceWindow(t *testing.T) {
 	var dbInstance, sourceDbInstance rds.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceResourceName := "aws_db_instance.source"
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1061,14 +1061,14 @@ func TestAccAWSDBInstance_ReplicateSourceDb_MaintenanceWindow(t *testing.T) {
 func TestAccAWSDBInstance_ReplicateSourceDb_MaxAllocatedStorage(t *testing.T) {
 	var dbInstance, sourceDbInstance rds.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceResourceName := "aws_db_instance.source"
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1087,14 +1087,14 @@ func TestAccAWSDBInstance_ReplicateSourceDb_MaxAllocatedStorage(t *testing.T) {
 func TestAccAWSDBInstance_ReplicateSourceDb_Monitoring(t *testing.T) {
 	var dbInstance, sourceDbInstance rds.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceResourceName := "aws_db_instance.source"
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1113,14 +1113,14 @@ func TestAccAWSDBInstance_ReplicateSourceDb_Monitoring(t *testing.T) {
 func TestAccAWSDBInstance_ReplicateSourceDb_MultiAZ(t *testing.T) {
 	var dbInstance, sourceDbInstance rds.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceResourceName := "aws_db_instance.source"
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1139,14 +1139,14 @@ func TestAccAWSDBInstance_ReplicateSourceDb_MultiAZ(t *testing.T) {
 func TestAccAWSDBInstance_ReplicateSourceDb_ParameterGroupName(t *testing.T) {
 	var dbInstance, sourceDbInstance rds.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceResourceName := "aws_db_instance.source"
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1166,14 +1166,14 @@ func TestAccAWSDBInstance_ReplicateSourceDb_ParameterGroupName(t *testing.T) {
 func TestAccAWSDBInstance_ReplicateSourceDb_Port(t *testing.T) {
 	var dbInstance, sourceDbInstance rds.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceResourceName := "aws_db_instance.source"
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1192,14 +1192,14 @@ func TestAccAWSDBInstance_ReplicateSourceDb_Port(t *testing.T) {
 func TestAccAWSDBInstance_ReplicateSourceDb_VpcSecurityGroupIds(t *testing.T) {
 	var dbInstance, sourceDbInstance rds.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceResourceName := "aws_db_instance.source"
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1218,7 +1218,7 @@ func TestAccAWSDBInstance_ReplicateSourceDb_VpcSecurityGroupIds(t *testing.T) {
 func TestAccAWSDBInstance_ReplicateSourceDb_CACertificateIdentifier(t *testing.T) {
 	var dbInstance, sourceDbInstance rds.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceResourceName := "aws_db_instance.source"
 	resourceName := "aws_db_instance.test"
 	dataSourceName := "data.aws_rds_certificate.latest"
@@ -1226,7 +1226,7 @@ func TestAccAWSDBInstance_ReplicateSourceDb_CACertificateIdentifier(t *testing.T
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1246,14 +1246,14 @@ func TestAccAWSDBInstance_ReplicateSourceDb_CACertificateIdentifier(t *testing.T
 func TestAccAWSDBInstance_ReplicateSourceDb_ReplicaMode(t *testing.T) {
 	var dbInstance, sourceDbInstance rds.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceResourceName := "aws_db_instance.source"
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1271,14 +1271,14 @@ func TestAccAWSDBInstance_ReplicateSourceDb_ReplicaMode(t *testing.T) {
 
 func TestAccAWSDBInstance_S3Import(t *testing.T) {
 	var snap rds.DBInstance
-	bucket := sdkacctest.RandomWithPrefix("tf-acc-test")
+	bucket := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	uniqueId := sdkacctest.RandomWithPrefix("tf-acc-s3-import-test")
 	bucketPrefix := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1295,7 +1295,7 @@ func TestAccAWSDBInstance_SnapshotIdentifier(t *testing.T) {
 	var dbInstance, sourceDbInstance rds.DBInstance
 	var dbSnapshot rds.DBSnapshot
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
 	snapshotResourceName := "aws_db_snapshot.test"
 	resourceName := "aws_db_instance.test"
@@ -1303,7 +1303,7 @@ func TestAccAWSDBInstance_SnapshotIdentifier(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1321,13 +1321,13 @@ func TestAccAWSDBInstance_SnapshotIdentifier(t *testing.T) {
 func TestAccAWSDBInstance_SnapshotIdentifierRemoved(t *testing.T) {
 	var dbInstance1, dbInstance2 rds.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1351,7 +1351,7 @@ func TestAccAWSDBInstance_SnapshotIdentifier_AllocatedStorage(t *testing.T) {
 	var dbInstance, sourceDbInstance rds.DBInstance
 	var dbSnapshot rds.DBSnapshot
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
 	snapshotResourceName := "aws_db_snapshot.test"
 	resourceName := "aws_db_instance.test"
@@ -1359,7 +1359,7 @@ func TestAccAWSDBInstance_SnapshotIdentifier_AllocatedStorage(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1379,7 +1379,7 @@ func TestAccAWSDBInstance_SnapshotIdentifier_Io1Storage(t *testing.T) {
 	var dbInstance, sourceDbInstance rds.DBInstance
 	var dbSnapshot rds.DBSnapshot
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
 	snapshotResourceName := "aws_db_snapshot.test"
 	resourceName := "aws_db_instance.test"
@@ -1387,7 +1387,7 @@ func TestAccAWSDBInstance_SnapshotIdentifier_Io1Storage(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1407,7 +1407,7 @@ func TestAccAWSDBInstance_SnapshotIdentifier_AllowMajorVersionUpgrade(t *testing
 	var dbInstance, sourceDbInstance rds.DBInstance
 	var dbSnapshot rds.DBSnapshot
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
 	snapshotResourceName := "aws_db_snapshot.test"
 	resourceName := "aws_db_instance.test"
@@ -1415,7 +1415,7 @@ func TestAccAWSDBInstance_SnapshotIdentifier_AllowMajorVersionUpgrade(t *testing
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1435,7 +1435,7 @@ func TestAccAWSDBInstance_SnapshotIdentifier_AutoMinorVersionUpgrade(t *testing.
 	var dbInstance, sourceDbInstance rds.DBInstance
 	var dbSnapshot rds.DBSnapshot
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
 	snapshotResourceName := "aws_db_snapshot.test"
 	resourceName := "aws_db_instance.test"
@@ -1443,7 +1443,7 @@ func TestAccAWSDBInstance_SnapshotIdentifier_AutoMinorVersionUpgrade(t *testing.
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1463,7 +1463,7 @@ func TestAccAWSDBInstance_SnapshotIdentifier_AvailabilityZone(t *testing.T) {
 	var dbInstance, sourceDbInstance rds.DBInstance
 	var dbSnapshot rds.DBSnapshot
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
 	snapshotResourceName := "aws_db_snapshot.test"
 	resourceName := "aws_db_instance.test"
@@ -1471,7 +1471,7 @@ func TestAccAWSDBInstance_SnapshotIdentifier_AvailabilityZone(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1490,7 +1490,7 @@ func TestAccAWSDBInstance_SnapshotIdentifier_BackupRetentionPeriod(t *testing.T)
 	var dbInstance, sourceDbInstance rds.DBInstance
 	var dbSnapshot rds.DBSnapshot
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
 	snapshotResourceName := "aws_db_snapshot.test"
 	resourceName := "aws_db_instance.test"
@@ -1498,7 +1498,7 @@ func TestAccAWSDBInstance_SnapshotIdentifier_BackupRetentionPeriod(t *testing.T)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1518,7 +1518,7 @@ func TestAccAWSDBInstance_SnapshotIdentifier_BackupRetentionPeriod_Unset(t *test
 	var dbInstance, sourceDbInstance rds.DBInstance
 	var dbSnapshot rds.DBSnapshot
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
 	snapshotResourceName := "aws_db_snapshot.test"
 	resourceName := "aws_db_instance.test"
@@ -1526,7 +1526,7 @@ func TestAccAWSDBInstance_SnapshotIdentifier_BackupRetentionPeriod_Unset(t *test
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1546,7 +1546,7 @@ func TestAccAWSDBInstance_SnapshotIdentifier_BackupWindow(t *testing.T) {
 	var dbInstance, sourceDbInstance rds.DBInstance
 	var dbSnapshot rds.DBSnapshot
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
 	snapshotResourceName := "aws_db_snapshot.test"
 	resourceName := "aws_db_instance.test"
@@ -1554,7 +1554,7 @@ func TestAccAWSDBInstance_SnapshotIdentifier_BackupWindow(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1575,7 +1575,7 @@ func TestAccAWSDBInstance_SnapshotIdentifier_DbSubnetGroupName(t *testing.T) {
 	var dbSnapshot rds.DBSnapshot
 	var dbSubnetGroup rds.DBSubnetGroup
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dbSubnetGroupResourceName := "aws_db_subnet_group.test"
 	sourceDbResourceName := "aws_db_instance.source"
 	snapshotResourceName := "aws_db_snapshot.test"
@@ -1584,7 +1584,7 @@ func TestAccAWSDBInstance_SnapshotIdentifier_DbSubnetGroupName(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1607,7 +1607,7 @@ func TestAccAWSDBInstance_SnapshotIdentifier_DbSubnetGroupName_RamShared(t *test
 	var dbSubnetGroup rds.DBSubnetGroup
 	var providers []*schema.Provider
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dbSubnetGroupResourceName := "aws_db_subnet_group.test"
 	sourceDbResourceName := "aws_db_instance.source"
 	snapshotResourceName := "aws_db_snapshot.test"
@@ -1642,7 +1642,7 @@ func TestAccAWSDBInstance_SnapshotIdentifier_DbSubnetGroupName_VpcSecurityGroupI
 	var dbSnapshot rds.DBSnapshot
 	var dbSubnetGroup rds.DBSubnetGroup
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dbSubnetGroupResourceName := "aws_db_subnet_group.test"
 	sourceDbResourceName := "aws_db_instance.source"
 	snapshotResourceName := "aws_db_snapshot.test"
@@ -1651,7 +1651,7 @@ func TestAccAWSDBInstance_SnapshotIdentifier_DbSubnetGroupName_VpcSecurityGroupI
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1672,7 +1672,7 @@ func TestAccAWSDBInstance_SnapshotIdentifier_DeletionProtection(t *testing.T) {
 	var dbInstance, sourceDbInstance rds.DBInstance
 	var dbSnapshot rds.DBSnapshot
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
 	snapshotResourceName := "aws_db_snapshot.test"
 	resourceName := "aws_db_instance.test"
@@ -1680,7 +1680,7 @@ func TestAccAWSDBInstance_SnapshotIdentifier_DeletionProtection(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1710,7 +1710,7 @@ func TestAccAWSDBInstance_SnapshotIdentifier_IamDatabaseAuthenticationEnabled(t 
 	var dbInstance, sourceDbInstance rds.DBInstance
 	var dbSnapshot rds.DBSnapshot
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
 	snapshotResourceName := "aws_db_snapshot.test"
 	resourceName := "aws_db_instance.test"
@@ -1718,7 +1718,7 @@ func TestAccAWSDBInstance_SnapshotIdentifier_IamDatabaseAuthenticationEnabled(t 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1738,7 +1738,7 @@ func TestAccAWSDBInstance_SnapshotIdentifier_MaintenanceWindow(t *testing.T) {
 	var dbInstance, sourceDbInstance rds.DBInstance
 	var dbSnapshot rds.DBSnapshot
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
 	snapshotResourceName := "aws_db_snapshot.test"
 	resourceName := "aws_db_instance.test"
@@ -1746,7 +1746,7 @@ func TestAccAWSDBInstance_SnapshotIdentifier_MaintenanceWindow(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1766,7 +1766,7 @@ func TestAccAWSDBInstance_SnapshotIdentifier_MaxAllocatedStorage(t *testing.T) {
 	var dbInstance, sourceDbInstance rds.DBInstance
 	var dbSnapshot rds.DBSnapshot
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
 	snapshotResourceName := "aws_db_snapshot.test"
 	resourceName := "aws_db_instance.test"
@@ -1774,7 +1774,7 @@ func TestAccAWSDBInstance_SnapshotIdentifier_MaxAllocatedStorage(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1794,7 +1794,7 @@ func TestAccAWSDBInstance_SnapshotIdentifier_Monitoring(t *testing.T) {
 	var dbInstance, sourceDbInstance rds.DBInstance
 	var dbSnapshot rds.DBSnapshot
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
 	snapshotResourceName := "aws_db_snapshot.test"
 	resourceName := "aws_db_instance.test"
@@ -1802,7 +1802,7 @@ func TestAccAWSDBInstance_SnapshotIdentifier_Monitoring(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1822,7 +1822,7 @@ func TestAccAWSDBInstance_SnapshotIdentifier_MultiAZ(t *testing.T) {
 	var dbInstance, sourceDbInstance rds.DBInstance
 	var dbSnapshot rds.DBSnapshot
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
 	snapshotResourceName := "aws_db_snapshot.test"
 	resourceName := "aws_db_instance.test"
@@ -1830,7 +1830,7 @@ func TestAccAWSDBInstance_SnapshotIdentifier_MultiAZ(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1850,7 +1850,7 @@ func TestAccAWSDBInstance_SnapshotIdentifier_MultiAZ_SQLServer(t *testing.T) {
 	var dbInstance, sourceDbInstance rds.DBInstance
 	var dbSnapshot rds.DBSnapshot
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
 	snapshotResourceName := "aws_db_snapshot.test"
 	resourceName := "aws_db_instance.test"
@@ -1858,7 +1858,7 @@ func TestAccAWSDBInstance_SnapshotIdentifier_MultiAZ_SQLServer(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1878,7 +1878,7 @@ func TestAccAWSDBInstance_SnapshotIdentifier_ParameterGroupName(t *testing.T) {
 	var dbInstance, sourceDbInstance rds.DBInstance
 	var dbSnapshot rds.DBSnapshot
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
 	snapshotResourceName := "aws_db_snapshot.test"
 	resourceName := "aws_db_instance.test"
@@ -1886,7 +1886,7 @@ func TestAccAWSDBInstance_SnapshotIdentifier_ParameterGroupName(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1907,7 +1907,7 @@ func TestAccAWSDBInstance_SnapshotIdentifier_Port(t *testing.T) {
 	var dbInstance, sourceDbInstance rds.DBInstance
 	var dbSnapshot rds.DBSnapshot
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
 	snapshotResourceName := "aws_db_snapshot.test"
 	resourceName := "aws_db_instance.test"
@@ -1915,7 +1915,7 @@ func TestAccAWSDBInstance_SnapshotIdentifier_Port(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1935,7 +1935,7 @@ func TestAccAWSDBInstance_SnapshotIdentifier_Tags(t *testing.T) {
 	var dbInstance, sourceDbInstance rds.DBInstance
 	var dbSnapshot rds.DBSnapshot
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
 	snapshotResourceName := "aws_db_snapshot.test"
 	resourceName := "aws_db_instance.test"
@@ -1943,7 +1943,7 @@ func TestAccAWSDBInstance_SnapshotIdentifier_Tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1968,7 +1968,7 @@ func TestAccAWSDBInstance_SnapshotIdentifier_Tags_Unset(t *testing.T) {
 	var dbInstance, sourceDbInstance rds.DBInstance
 	var dbSnapshot rds.DBSnapshot
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
 	snapshotResourceName := "aws_db_snapshot.test"
 	resourceName := "aws_db_instance.test"
@@ -1976,7 +1976,7 @@ func TestAccAWSDBInstance_SnapshotIdentifier_Tags_Unset(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1996,7 +1996,7 @@ func TestAccAWSDBInstance_SnapshotIdentifier_VpcSecurityGroupIds(t *testing.T) {
 	var dbInstance, sourceDbInstance rds.DBInstance
 	var dbSnapshot rds.DBSnapshot
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
 	snapshotResourceName := "aws_db_snapshot.test"
 	resourceName := "aws_db_instance.test"
@@ -2004,7 +2004,7 @@ func TestAccAWSDBInstance_SnapshotIdentifier_VpcSecurityGroupIds(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -2027,7 +2027,7 @@ func TestAccAWSDBInstance_SnapshotIdentifier_VpcSecurityGroupIds_Tags(t *testing
 	var dbInstance, sourceDbInstance rds.DBInstance
 	var dbSnapshot rds.DBSnapshot
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
 	snapshotResourceName := "aws_db_snapshot.test"
 	resourceName := "aws_db_instance.test"
@@ -2035,7 +2035,7 @@ func TestAccAWSDBInstance_SnapshotIdentifier_VpcSecurityGroupIds_Tags(t *testing
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -2055,12 +2055,12 @@ func TestAccAWSDBInstance_SnapshotIdentifier_VpcSecurityGroupIds_Tags(t *testing
 func TestAccAWSDBInstance_MonitoringInterval(t *testing.T) {
 	var dbInstance rds.DBInstance
 	resourceName := "aws_db_instance.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -2110,12 +2110,12 @@ func TestAccAWSDBInstance_MonitoringRoleArn_EnabledToDisabled(t *testing.T) {
 	var dbInstance rds.DBInstance
 	iamRoleResourceName := "aws_iam_role.test"
 	resourceName := "aws_db_instance.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -2151,12 +2151,12 @@ func TestAccAWSDBInstance_MonitoringRoleArn_EnabledToRemoved(t *testing.T) {
 	var dbInstance rds.DBInstance
 	iamRoleResourceName := "aws_iam_role.test"
 	resourceName := "aws_db_instance.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -2191,12 +2191,12 @@ func TestAccAWSDBInstance_MonitoringRoleArn_RemovedToEnabled(t *testing.T) {
 	var dbInstance rds.DBInstance
 	iamRoleResourceName := "aws_iam_role.test"
 	resourceName := "aws_db_instance.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -2238,7 +2238,7 @@ func TestAccAWSDBInstance_separateIopsUpdate(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -2268,7 +2268,7 @@ func TestAccAWSDBInstance_portUpdate(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -2299,7 +2299,7 @@ func TestAccAWSDBInstance_MSSQL_TZ(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -2332,7 +2332,7 @@ func TestAccAWSDBInstance_MSSQL_TZ(t *testing.T) {
 func TestAccAWSDBInstance_MSSQL_Domain(t *testing.T) {
 	var vBefore, vAfter rds.DBInstance
 	resourceName := "aws_db_instance.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	domain := acctest.RandomDomain()
 	directory1 := domain.RandomSubdomain().String()
@@ -2341,7 +2341,7 @@ func TestAccAWSDBInstance_MSSQL_Domain(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -2370,14 +2370,14 @@ func TestAccAWSDBInstance_MSSQL_DomainSnapshotRestore(t *testing.T) {
 	var v, vRestoredInstance rds.DBInstance
 	resourceName := "aws_db_instance.test"
 	originResourceName := "aws_db_instance.origin"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	domain := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -2401,7 +2401,7 @@ func TestAccAWSDBInstance_MySQL_SnapshotRestoreWithEngineVersion(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -2423,7 +2423,7 @@ func TestAccAWSDBInstance_MinorVersion(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -2444,7 +2444,7 @@ func TestAccAWSDBInstance_ec2Classic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckEC2Classic(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAWSDBInstanceEc2ClassicDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -2465,7 +2465,7 @@ func TestAccAWSDBInstance_cloudwatchLogsExportConfiguration(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -2498,7 +2498,7 @@ func TestAccAWSDBInstance_EnabledCloudwatchLogsExports_MySQL(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -2544,13 +2544,13 @@ func TestAccAWSDBInstance_EnabledCloudwatchLogsExports_MySQL(t *testing.T) {
 func TestAccAWSDBInstance_EnabledCloudwatchLogsExports_MSSQL(t *testing.T) {
 	var dbInstance rds.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -2578,13 +2578,13 @@ func TestAccAWSDBInstance_EnabledCloudwatchLogsExports_MSSQL(t *testing.T) {
 func TestAccAWSDBInstance_EnabledCloudwatchLogsExports_Oracle(t *testing.T) {
 	var dbInstance rds.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -2613,13 +2613,13 @@ func TestAccAWSDBInstance_EnabledCloudwatchLogsExports_Oracle(t *testing.T) {
 func TestAccAWSDBInstance_EnabledCloudwatchLogsExports_Postgresql(t *testing.T) {
 	var dbInstance rds.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -2654,7 +2654,7 @@ func TestAccAWSDBInstance_NoDeleteAutomatedBackups(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceAutomatedBackups,
 		Steps: []resource.TestStep{
 			{
@@ -2668,7 +2668,7 @@ func TestAccAWSDBInstance_NoDeleteAutomatedBackups(t *testing.T) {
 }
 
 func testAccCheckAWSDBInstanceAutomatedBackups(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).rdsconn
+	conn := acctest.Provider.Meta().(*AWSClient).rdsconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_db_instance" {
@@ -2702,7 +2702,7 @@ func testAccCheckAWSDBInstanceAutomatedBackups(s *terraform.State) error {
 }
 
 func testAccCheckAWSDBInstanceDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).rdsconn
+	conn := acctest.Provider.Meta().(*AWSClient).rdsconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_db_instance" {
@@ -2807,7 +2807,7 @@ func testAccCheckAWSDBInstanceSnapshot(s *terraform.State) error {
 			continue
 		}
 
-		awsClient := testAccProvider.Meta().(*AWSClient)
+		awsClient := acctest.Provider.Meta().(*AWSClient)
 		conn := awsClient.rdsconn
 
 		log.Printf("[INFO] Trying to locate the DBInstance Final Snapshot")
@@ -2879,7 +2879,7 @@ func testAccCheckAWSDBInstanceSnapshot(s *terraform.State) error {
 }
 
 func testAccCheckAWSDBInstanceNoSnapshot(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).rdsconn
+	conn := acctest.Provider.Meta().(*AWSClient).rdsconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_db_instance" {
@@ -2932,7 +2932,7 @@ func testAccCheckAWSDBInstanceExists(n string, v *rds.DBInstance) resource.TestC
 			return fmt.Errorf("No DB Instance ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).rdsconn
+		conn := acctest.Provider.Meta().(*AWSClient).rdsconn
 
 		output, err := finder.DBInstanceByID(conn, rs.Primary.ID)
 
@@ -2947,7 +2947,7 @@ func testAccCheckAWSDBInstanceExists(n string, v *rds.DBInstance) resource.TestC
 }
 
 func testAccCheckAWSDBInstanceEc2ClassicDestroy(s *terraform.State) error {
-	conn := testAccProviderEc2Classic.Meta().(*AWSClient).rdsconn
+	conn := acctest.ProviderEC2Classic.Meta().(*AWSClient).rdsconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_db_instance" {
@@ -2982,7 +2982,7 @@ func testAccCheckAWSDBInstanceEc2ClassicExists(resourceName string, v *rds.DBIns
 			return fmt.Errorf("resource ID not set")
 		}
 
-		conn := testAccProviderEc2Classic.Meta().(*AWSClient).rdsconn
+		conn := acctest.ProviderEC2Classic.Meta().(*AWSClient).rdsconn
 
 		output, err := finder.DBInstanceByID(conn, rs.Primary.ID)
 
@@ -2999,13 +2999,13 @@ func testAccCheckAWSDBInstanceEc2ClassicExists(resourceName string, v *rds.DBIns
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/8792
 func TestAccAWSDBInstance_PerformanceInsightsEnabled_DisabledToEnabled(t *testing.T) {
 	var dbInstance rds.DBInstance
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccRDSPerformanceInsightsDefaultVersionPreCheck(t, "mysql") },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -3038,13 +3038,13 @@ func TestAccAWSDBInstance_PerformanceInsightsEnabled_DisabledToEnabled(t *testin
 
 func TestAccAWSDBInstance_PerformanceInsightsEnabled_EnabledToDisabled(t *testing.T) {
 	var dbInstance rds.DBInstance
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccRDSPerformanceInsightsDefaultVersionPreCheck(t, "mysql") },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -3077,14 +3077,14 @@ func TestAccAWSDBInstance_PerformanceInsightsEnabled_EnabledToDisabled(t *testin
 
 func TestAccAWSDBInstance_PerformanceInsightsKmsKeyId(t *testing.T) {
 	var dbInstance rds.DBInstance
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	kmsKeyResourceName := "aws_kms_key.test"
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccRDSPerformanceInsightsDefaultVersionPreCheck(t, "mysql") },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -3127,13 +3127,13 @@ func TestAccAWSDBInstance_PerformanceInsightsKmsKeyId(t *testing.T) {
 
 func TestAccAWSDBInstance_PerformanceInsightsRetentionPeriod(t *testing.T) {
 	var dbInstance rds.DBInstance
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccRDSPerformanceInsightsDefaultVersionPreCheck(t, "mysql") },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -3169,7 +3169,7 @@ func TestAccAWSDBInstance_PerformanceInsightsRetentionPeriod(t *testing.T) {
 func TestAccAWSDBInstance_ReplicateSourceDb_PerformanceInsightsEnabled(t *testing.T) {
 	var dbInstance, sourceDbInstance rds.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	kmsKeyResourceName := "aws_kms_key.test"
 	sourceResourceName := "aws_db_instance.source"
 	resourceName := "aws_db_instance.test"
@@ -3177,7 +3177,7 @@ func TestAccAWSDBInstance_ReplicateSourceDb_PerformanceInsightsEnabled(t *testin
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccRDSPerformanceInsightsDefaultVersionPreCheck(t, "mysql") },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -3199,7 +3199,7 @@ func TestAccAWSDBInstance_SnapshotIdentifier_PerformanceInsightsEnabled(t *testi
 	var dbInstance, sourceDbInstance rds.DBInstance
 	var dbSnapshot rds.DBSnapshot
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	kmsKeyResourceName := "aws_kms_key.test"
 	sourceDbResourceName := "aws_db_instance.source"
 	snapshotResourceName := "aws_db_snapshot.test"
@@ -3208,7 +3208,7 @@ func TestAccAWSDBInstance_SnapshotIdentifier_PerformanceInsightsEnabled(t *testi
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccRDSPerformanceInsightsDefaultVersionPreCheck(t, "mysql") },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -3235,7 +3235,7 @@ func TestAccAWSDBInstance_CACertificateIdentifier(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -3257,7 +3257,7 @@ func TestAccAWSDBInstance_RestoreToPointInTime_SourceIdentifier(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -3293,7 +3293,7 @@ func TestAccAWSDBInstance_RestoreToPointInTime_SourceResourceID(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -3324,13 +3324,13 @@ func TestAccAWSDBInstance_RestoreToPointInTime_SourceResourceID(t *testing.T) {
 func TestAccAWSDBInstance_NationalCharacterSet_Oracle(t *testing.T) {
 	var dbInstance rds.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -3359,13 +3359,13 @@ func TestAccAWSDBInstance_NationalCharacterSet_Oracle(t *testing.T) {
 func TestAccAWSDBInstance_NoNationalCharacterSet_Oracle(t *testing.T) {
 	var dbInstance rds.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -3393,13 +3393,13 @@ func TestAccAWSDBInstance_NoNationalCharacterSet_Oracle(t *testing.T) {
 
 func TestAccAWSDBInstance_CoipEnabled(t *testing.T) {
 	var v rds.DBInstance
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -3417,13 +3417,13 @@ func TestAccAWSDBInstance_CoipEnabled(t *testing.T) {
 
 func TestAccAWSDBInstance_CoipEnabled_DisabledToEnabled(t *testing.T) {
 	var dbInstance rds.DBInstance
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -3456,13 +3456,13 @@ func TestAccAWSDBInstance_CoipEnabled_DisabledToEnabled(t *testing.T) {
 
 func TestAccAWSDBInstance_CoipEnabled_EnabledToDisabled(t *testing.T) {
 	var dbInstance rds.DBInstance
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -3495,14 +3495,14 @@ func TestAccAWSDBInstance_CoipEnabled_EnabledToDisabled(t *testing.T) {
 
 func TestAccAWSDBInstance_CoipEnabled_RestoreToPointInTime(t *testing.T) {
 	var dbInstance, sourceDbInstance rds.DBInstance
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceName := "aws_db_instance.test"
 	resourceName := "aws_db_instance.restore"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -3535,7 +3535,7 @@ func TestAccAWSDBInstance_CoipEnabled_SnapshotIdentifier(t *testing.T) {
 	var dbInstance, sourceDbInstance rds.DBInstance
 	var dbSnapshot rds.DBSnapshot
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.test"
 	snapshotResourceName := "aws_db_snapshot.test"
 	resourceName := "aws_db_instance.restore"
@@ -3543,7 +3543,7 @@ func TestAccAWSDBInstance_CoipEnabled_SnapshotIdentifier(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -3561,13 +3561,13 @@ func TestAccAWSDBInstance_CoipEnabled_SnapshotIdentifier(t *testing.T) {
 
 func TestAccAWSDBInstance_license(t *testing.T) {
 	var dbInstance1 rds.DBInstance
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{

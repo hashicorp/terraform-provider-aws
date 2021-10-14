@@ -19,7 +19,7 @@ func testAccAWSEc2TransitGatewayRouteTableAssociation_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayRouteTableAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -58,7 +58,7 @@ func testAccCheckAWSEc2TransitGatewayRouteTableAssociationExists(resourceName st
 			return err
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 		association, err := ec2DescribeTransitGatewayRouteTableAssociation(conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
 
@@ -77,7 +77,7 @@ func testAccCheckAWSEc2TransitGatewayRouteTableAssociationExists(resourceName st
 }
 
 func testAccCheckAWSEc2TransitGatewayRouteTableAssociationDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ec2_transit_gateway_route_table_association" {

@@ -14,7 +14,7 @@ import (
 
 func TestAccAWSDbInstanceRoleAssociation_basic(t *testing.T) {
 	var dbInstanceRole1 rds.DBInstanceRole
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dbInstanceResourceName := "aws_db_instance.test"
 	iamRoleResourceName := "aws_iam_role.test"
 	resourceName := "aws_db_instance_role_association.test"
@@ -22,7 +22,7 @@ func TestAccAWSDbInstanceRoleAssociation_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDbInstanceRoleAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -46,14 +46,14 @@ func TestAccAWSDbInstanceRoleAssociation_basic(t *testing.T) {
 func TestAccAWSDbInstanceRoleAssociation_disappears(t *testing.T) {
 	var dbInstance1 rds.DBInstance
 	var dbInstanceRole1 rds.DBInstanceRole
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dbInstanceResourceName := "aws_db_instance.test"
 	resourceName := "aws_db_instance_role_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDbInstanceRoleAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -83,7 +83,7 @@ func testAccCheckAWSDbInstanceRoleAssociationExists(resourceName string, dbInsta
 			return fmt.Errorf("error reading resource ID: %s", err)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).rdsconn
+		conn := acctest.Provider.Meta().(*AWSClient).rdsconn
 
 		role, err := rdsDescribeDbInstanceRole(conn, dbInstanceIdentifier, roleArn)
 
@@ -106,7 +106,7 @@ func testAccCheckAWSDbInstanceRoleAssociationExists(resourceName string, dbInsta
 }
 
 func testAccCheckAWSDbInstanceRoleAssociationDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).rdsconn
+	conn := acctest.Provider.Meta().(*AWSClient).rdsconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_db_instance_role_association" {
@@ -141,7 +141,7 @@ func testAccCheckAWSDbInstanceRoleAssociationDestroy(s *terraform.State) error {
 
 func testAccCheckAWSDbInstanceRoleAssociationDisappears(dbInstance *rds.DBInstance, dbInstanceRole *rds.DBInstanceRole) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).rdsconn
+		conn := acctest.Provider.Meta().(*AWSClient).rdsconn
 
 		input := &rds.RemoveRoleFromDBInstanceInput{
 			DBInstanceIdentifier: dbInstance.DBInstanceIdentifier,

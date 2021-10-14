@@ -67,13 +67,13 @@ func testSweepElasticacheCacheSecurityGroups(region string) error {
 }
 
 func TestAccAWSElasticacheSecurityGroup_basic(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckEC2Classic(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAWSElasticacheSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -93,7 +93,7 @@ func TestAccAWSElasticacheSecurityGroup_basic(t *testing.T) {
 }
 
 func testAccCheckAWSElasticacheSecurityGroupDestroy(s *terraform.State) error {
-	conn := testAccProviderEc2Classic.Meta().(*AWSClient).elasticacheconn
+	conn := acctest.ProviderEC2Classic.Meta().(*AWSClient).elasticacheconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_elasticache_security_group" {
@@ -125,7 +125,7 @@ func testAccCheckAWSElasticacheSecurityGroupExists(n string) resource.TestCheckF
 			return fmt.Errorf("No cache security group ID is set")
 		}
 
-		conn := testAccProviderEc2Classic.Meta().(*AWSClient).elasticacheconn
+		conn := acctest.ProviderEC2Classic.Meta().(*AWSClient).elasticacheconn
 		_, err := conn.DescribeCacheSecurityGroups(&elasticache.DescribeCacheSecurityGroupsInput{
 			CacheSecurityGroupName: aws.String(rs.Primary.ID),
 		})

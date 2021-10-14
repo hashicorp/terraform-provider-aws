@@ -77,13 +77,13 @@ func testSweepDbClusterSnapshots(region string) error {
 
 func TestAccAWSDBClusterSnapshot_basic(t *testing.T) {
 	var dbClusterSnapshot rds.DBClusterSnapshot
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_cluster_snapshot.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDbClusterSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -117,13 +117,13 @@ func TestAccAWSDBClusterSnapshot_basic(t *testing.T) {
 
 func TestAccAWSDBClusterSnapshot_Tags(t *testing.T) {
 	var dbClusterSnapshot rds.DBClusterSnapshot
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_cluster_snapshot.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDbClusterSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -168,7 +168,7 @@ func TestAccAWSDBClusterSnapshot_Tags(t *testing.T) {
 }
 
 func testAccCheckDbClusterSnapshotDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).rdsconn
+	conn := acctest.Provider.Meta().(*AWSClient).rdsconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_db_cluster_snapshot" {
@@ -206,7 +206,7 @@ func testAccCheckDbClusterSnapshotExists(resourceName string, dbClusterSnapshot 
 			return fmt.Errorf("No ID is set for %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).rdsconn
+		conn := acctest.Provider.Meta().(*AWSClient).rdsconn
 
 		request := &rds.DescribeDBClusterSnapshotsInput{
 			DBClusterSnapshotIdentifier: aws.String(rs.Primary.ID),

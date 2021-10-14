@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
 )
 
 const (
@@ -82,7 +83,7 @@ func resourceAwsVpcIpv4CidrBlockAssociationRead(d *schema.ResourceData, meta int
 	conn := meta.(*AWSClient).ec2conn
 
 	input := &ec2.DescribeVpcsInput{
-		Filters: buildEC2AttributeFilterList(
+		Filters: tfec2.BuildAttributeFilterList(
 			map[string]string{
 				"cidr-block-association.association-id": d.Id(),
 			},

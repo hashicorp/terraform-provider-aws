@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
 )
 
 func dataSourceAwsSecurityGroup() *schema.Resource {
@@ -61,7 +62,7 @@ func dataSourceAwsSecurityGroupRead(d *schema.ResourceData, meta interface{}) er
 		req.GroupIds = []*string{aws.String(id.(string))}
 	}
 
-	req.Filters = buildEC2AttributeFilterList(
+	req.Filters = tfec2.BuildAttributeFilterList(
 		map[string]string{
 			"group-name": d.Get("name").(string),
 			"vpc-id":     d.Get("vpc_id").(string),

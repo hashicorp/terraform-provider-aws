@@ -34,7 +34,7 @@ func TestAccAWSDefaultNetworkAcl_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDefaultNetworkAclDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -62,7 +62,7 @@ func TestAccAWSDefaultNetworkAcl_basicIpv6Vpc(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDefaultNetworkAclDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -91,7 +91,7 @@ func TestAccAWSDefaultNetworkAcl_deny_ingress(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDefaultNetworkAclDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -117,7 +117,7 @@ func TestAccAWSDefaultNetworkAcl_withIpv6Ingress(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDefaultNetworkAclDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -143,7 +143,7 @@ func TestAccAWSDefaultNetworkAcl_SubnetRemoval(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDefaultNetworkAclDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -186,7 +186,7 @@ func TestAccAWSDefaultNetworkAcl_SubnetReassign(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDefaultNetworkAclDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -266,7 +266,7 @@ func testAccGetAWSDefaultNetworkAcl(n string, networkAcl *ec2.NetworkAcl) resour
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("No Network ACL is set")
 		}
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 		resp, err := conn.DescribeNetworkAcls(&ec2.DescribeNetworkAclsInput{
 			NetworkAclIds: []*string{aws.String(rs.Primary.ID)},

@@ -112,14 +112,14 @@ func TestAccAwsRoute53KeySigningKey_basic(t *testing.T) {
 	kmsKeyResourceName := "aws_kms_key.test"
 	route53ZoneResourceName := "aws_route53_zone.test"
 	resourceName := "aws_route53_key_signing_key.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckRoute53KeySigningKey(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsRoute53KeySigningKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -153,21 +153,21 @@ func TestAccAwsRoute53KeySigningKey_basic(t *testing.T) {
 
 func TestAccAwsRoute53KeySigningKey_disappears(t *testing.T) {
 	resourceName := "aws_route53_key_signing_key.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckRoute53KeySigningKey(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsRoute53KeySigningKeyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsRoute53KeySigningKeyConfig_Name(rName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccAwsRoute53KeySigningKeyExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsRoute53KeySigningKey(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsRoute53KeySigningKey(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -177,14 +177,14 @@ func TestAccAwsRoute53KeySigningKey_disappears(t *testing.T) {
 
 func TestAccAwsRoute53KeySigningKey_Status(t *testing.T) {
 	resourceName := "aws_route53_key_signing_key.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckRoute53KeySigningKey(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsRoute53KeySigningKeyDestroy,
 		Steps: []resource.TestStep{
 			{

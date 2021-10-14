@@ -68,12 +68,12 @@ func testSweepEc2PlacementGroups(region string) error {
 func TestAccAWSPlacementGroup_basic(t *testing.T) {
 	var pg ec2.PlacementGroup
 	resourceName := "aws_placement_group.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSPlacementGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -97,19 +97,19 @@ func TestAccAWSPlacementGroup_basic(t *testing.T) {
 func TestAccAWSPlacementGroup_disappears(t *testing.T) {
 	var pg ec2.PlacementGroup
 	resourceName := "aws_placement_group.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSPlacementGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSPlacementGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSPlacementGroupExists(resourceName, &pg),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsPlacementGroup(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsPlacementGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -120,12 +120,12 @@ func TestAccAWSPlacementGroup_disappears(t *testing.T) {
 func TestAccAWSPlacementGroup_Tags(t *testing.T) {
 	var pg ec2.PlacementGroup
 	resourceName := "aws_placement_group.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSPlacementGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -169,7 +169,7 @@ func TestAccAWSPlacementGroup_PartitionCount(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSPlacementGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -191,7 +191,7 @@ func TestAccAWSPlacementGroup_PartitionCount(t *testing.T) {
 }
 
 func testAccCheckAWSPlacementGroupDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_placement_group" {
@@ -225,7 +225,7 @@ func testAccCheckAWSPlacementGroupExists(n string, v *ec2.PlacementGroup) resour
 			return fmt.Errorf("No EC2 Placement Group ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 		output, err := finder.PlacementGroupByName(conn, rs.Primary.ID)
 

@@ -13,12 +13,12 @@ import (
 func TestAccDataSourceAwsNetworkInterface_basic(t *testing.T) {
 	datasourceName := "data.aws_network_interface.test"
 	resourceName := "aws_network_interface.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsNetworkInterfaceConfigBasic(rName),
@@ -41,12 +41,12 @@ func TestAccDataSourceAwsNetworkInterface_basic(t *testing.T) {
 
 func TestAccDataSourceAwsNetworkInterface_filters(t *testing.T) {
 	datasourceName := "data.aws_network_interface.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsNetworkInterfaceConfigFilters(rName),
@@ -66,12 +66,12 @@ func TestAccDataSourceAwsNetworkInterface_CarrierIPAssociation(t *testing.T) {
 	eipAssociationResourceName := "aws_eip_association.test"
 	securityGroupResourceName := "aws_security_group.test"
 	vpcResourceName := "aws_vpc.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckAWSWavelengthZoneAvailable(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsNetworkInterfaceConfigCarrierIPAssociation(rName),
@@ -114,12 +114,12 @@ func TestAccDataSourceAwsNetworkInterface_PublicIPAssociation(t *testing.T) {
 	eipAssociationResourceName := "aws_eip_association.test"
 	securityGroupResourceName := "aws_security_group.test"
 	vpcResourceName := "aws_vpc.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsNetworkInterfaceConfigPublicIPAssociation(rName),

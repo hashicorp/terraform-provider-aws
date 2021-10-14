@@ -111,7 +111,7 @@ func TestAccAWSVpnGateway_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckVpnGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -146,7 +146,7 @@ func TestAccAWSVpnGateway_withAvailabilityZoneSetToState(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckVpnGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -173,7 +173,7 @@ func TestAccAWSVpnGateway_withAmazonSideAsnSetToState(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckVpnGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -200,14 +200,14 @@ func TestAccAWSVpnGateway_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckVpnGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVpnGatewayConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpnGatewayExists(resourceName, &v),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsVpnGateway(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsVpnGateway(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -258,7 +258,7 @@ func TestAccAWSVpnGateway_reattach(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckVpnGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -322,7 +322,7 @@ func TestAccAWSVpnGateway_delete(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckVpnGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -350,7 +350,7 @@ func TestAccAWSVpnGateway_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckVpnGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -388,7 +388,7 @@ func TestAccAWSVpnGateway_tags(t *testing.T) {
 }
 
 func testAccCheckVpnGatewayDestroy(s *terraform.State) error {
-	ec2conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	ec2conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_vpn_gateway" {
@@ -442,7 +442,7 @@ func testAccCheckVpnGatewayExists(n string, ig *ec2.VpnGateway) resource.TestChe
 			return fmt.Errorf("No ID is set")
 		}
 
-		ec2conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		ec2conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 		resp, err := ec2conn.DescribeVpnGateways(&ec2.DescribeVpnGatewaysInput{
 			VpnGatewayIds: []*string{aws.String(rs.Primary.ID)},
 		})

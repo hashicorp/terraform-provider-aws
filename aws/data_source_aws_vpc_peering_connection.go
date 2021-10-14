@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
 )
 
 func dataSourceAwsVpcPeeringConnection() *schema.Resource {
@@ -117,7 +118,7 @@ func dataSourceAwsVpcPeeringConnectionRead(d *schema.ResourceData, meta interfac
 		req.VpcPeeringConnectionIds = aws.StringSlice([]string{id.(string)})
 	}
 
-	req.Filters = buildEC2AttributeFilterList(
+	req.Filters = tfec2.BuildAttributeFilterList(
 		map[string]string{
 			"status-code":                   d.Get("status").(string),
 			"requester-vpc-info.vpc-id":     d.Get("vpc_id").(string),

@@ -38,7 +38,7 @@ func testAccAwsConnectContactFlow_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsConnectContactFlowDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -87,7 +87,7 @@ func testAccAwsConnectContactFlow_filename(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsConnectContactFlowDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -141,14 +141,14 @@ func testAccAwsConnectContactFlow_disappears_ConnectInstance(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsConnectContactFlowDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsConnectContactFlowConfigBasic(rName, rName2, "Disappear"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsConnectContactFlowExists(resourceName, &v),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsConnectInstance(), instanceResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsConnectInstance(), instanceResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -172,7 +172,7 @@ func testAccCheckAwsConnectContactFlowExists(resourceName string, function *conn
 			return err
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).connectconn
+		conn := acctest.Provider.Meta().(*AWSClient).connectconn
 
 		params := &connect.DescribeContactFlowInput{
 			ContactFlowId: aws.String(contactFlowID),
@@ -196,7 +196,7 @@ func testAccCheckAwsConnectContactFlowDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).connectconn
+		conn := acctest.Provider.Meta().(*AWSClient).connectconn
 
 		instanceID, contactFlowID, err := resourceAwsConnectContactFlowParseID(rs.Primary.ID)
 

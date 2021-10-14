@@ -22,7 +22,7 @@ func TestAccAWSOpsworksInstance_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsOpsworksInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -72,7 +72,7 @@ func TestAccAWSOpsworksInstance_UpdateHostNameForceNew(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsOpsworksInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -122,7 +122,7 @@ func testAccCheckAWSOpsworksInstanceExists(
 			return fmt.Errorf("No Opsworks Instance is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).opsworksconn
+		conn := acctest.Provider.Meta().(*AWSClient).opsworksconn
 
 		params := &opsworks.DescribeInstancesInput{
 			InstanceIds: []*string{&rs.Primary.ID},
@@ -170,7 +170,7 @@ func testAccCheckAWSOpsworksInstanceAttributes(
 }
 
 func testAccCheckAwsOpsworksInstanceDestroy(s *terraform.State) error {
-	opsworksconn := testAccProvider.Meta().(*AWSClient).opsworksconn
+	opsworksconn := acctest.Provider.Meta().(*AWSClient).opsworksconn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_opsworks_instance" {
 			continue

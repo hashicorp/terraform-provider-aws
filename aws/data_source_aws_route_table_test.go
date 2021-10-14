@@ -21,12 +21,12 @@ func TestAccDataSourceAwsRouteTable_basic(t *testing.T) {
 	datasource3Name := "data.aws_route_table.by_subnet"
 	datasource4Name := "data.aws_route_table.by_id"
 	datasource5Name := "data.aws_route_table.by_gateway"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsRouteTableConfigBasic(rName),
@@ -99,12 +99,12 @@ func TestAccDataSourceAwsRouteTable_basic(t *testing.T) {
 
 func TestAccDataSourceAwsRouteTable_main(t *testing.T) {
 	datasourceName := "data.aws_route_table.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsRouteTableConfigMain(rName),

@@ -71,13 +71,13 @@ func TestParseStorageGatewayVolumeGatewayARNAndTargetNameFromARN(t *testing.T) {
 
 func TestAccAWSStorageGatewayCachedIscsiVolume_basic(t *testing.T) {
 	var cachedIscsiVolume storagegateway.CachediSCSIVolume
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_cached_iscsi_volume.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSStorageGatewayCachedIscsiVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -110,14 +110,14 @@ func TestAccAWSStorageGatewayCachedIscsiVolume_basic(t *testing.T) {
 
 func TestAccAWSStorageGatewayCachedIscsiVolume_kms(t *testing.T) {
 	var cachedIscsiVolume storagegateway.CachediSCSIVolume
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_cached_iscsi_volume.test"
 	keyResourceName := "aws_kms_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSStorageGatewayCachedIscsiVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -139,13 +139,13 @@ func TestAccAWSStorageGatewayCachedIscsiVolume_kms(t *testing.T) {
 
 func TestAccAWSStorageGatewayCachedIscsiVolume_Tags(t *testing.T) {
 	var cachedIscsiVolume storagegateway.CachediSCSIVolume
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_cached_iscsi_volume.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSStorageGatewayCachedIscsiVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -187,13 +187,13 @@ func TestAccAWSStorageGatewayCachedIscsiVolume_Tags(t *testing.T) {
 
 func TestAccAWSStorageGatewayCachedIscsiVolume_SnapshotId(t *testing.T) {
 	var cachedIscsiVolume storagegateway.CachediSCSIVolume
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_cached_iscsi_volume.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSStorageGatewayCachedIscsiVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -226,13 +226,13 @@ func TestAccAWSStorageGatewayCachedIscsiVolume_SnapshotId(t *testing.T) {
 func TestAccAWSStorageGatewayCachedIscsiVolume_SourceVolumeArn(t *testing.T) {
 	acctest.Skip(t, "This test can cause Storage Gateway 2.0.10.0 to enter an irrecoverable state during volume deletion.")
 	var cachedIscsiVolume storagegateway.CachediSCSIVolume
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_cached_iscsi_volume.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSStorageGatewayCachedIscsiVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -264,20 +264,20 @@ func TestAccAWSStorageGatewayCachedIscsiVolume_SourceVolumeArn(t *testing.T) {
 
 func TestAccAWSStorageGatewayCachedIscsiVolume_disappears(t *testing.T) {
 	var storedIscsiVolume storagegateway.CachediSCSIVolume
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_cached_iscsi_volume.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSStorageGatewayCachedIscsiVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSStorageGatewayCachedIscsiVolumeConfig_Basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSStorageGatewayCachedIscsiVolumeExists(resourceName, &storedIscsiVolume),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsStorageGatewayCachedIscsiVolume(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsStorageGatewayCachedIscsiVolume(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -292,7 +292,7 @@ func testAccCheckAWSStorageGatewayCachedIscsiVolumeExists(resourceName string, c
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).storagegatewayconn
+		conn := acctest.Provider.Meta().(*AWSClient).storagegatewayconn
 
 		input := &storagegateway.DescribeCachediSCSIVolumesInput{
 			VolumeARNs: []*string{aws.String(rs.Primary.ID)},
@@ -315,7 +315,7 @@ func testAccCheckAWSStorageGatewayCachedIscsiVolumeExists(resourceName string, c
 }
 
 func testAccCheckAWSStorageGatewayCachedIscsiVolumeDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).storagegatewayconn
+	conn := acctest.Provider.Meta().(*AWSClient).storagegatewayconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_storagegateway_cached_iscsi_volume" {

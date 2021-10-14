@@ -83,7 +83,7 @@ func testSweepEc2TransitGatewayPeeringAttachments(region string) error {
 func testAccAWSEc2TransitGatewayPeeringAttachment_basic(t *testing.T) {
 	var transitGatewayPeeringAttachment ec2.TransitGatewayPeeringAttachment
 	var providers []*schema.Provider
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ec2_transit_gateway_peering_attachment.test"
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 	transitGatewayResourceNamePeer := "aws_ec2_transit_gateway.peer"
@@ -122,7 +122,7 @@ func testAccAWSEc2TransitGatewayPeeringAttachment_basic(t *testing.T) {
 func testAccAWSEc2TransitGatewayPeeringAttachment_disappears(t *testing.T) {
 	var transitGatewayPeeringAttachment ec2.TransitGatewayPeeringAttachment
 	var providers []*schema.Provider
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ec2_transit_gateway_peering_attachment.test"
 
 	resource.Test(t, resource.TestCase{
@@ -150,7 +150,7 @@ func testAccAWSEc2TransitGatewayPeeringAttachment_disappears(t *testing.T) {
 func testAccAWSEc2TransitGatewayPeeringAttachment_Tags_sameAccount(t *testing.T) {
 	var transitGatewayPeeringAttachment ec2.TransitGatewayPeeringAttachment
 	var providers []*schema.Provider
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ec2_transit_gateway_peering_attachment.test"
 
 	resource.Test(t, resource.TestCase{
@@ -202,7 +202,7 @@ func testAccAWSEc2TransitGatewayPeeringAttachment_Tags_sameAccount(t *testing.T)
 func testAccAWSEc2TransitGatewayPeeringAttachment_differentAccount(t *testing.T) {
 	var transitGatewayPeeringAttachment ec2.TransitGatewayPeeringAttachment
 	var providers []*schema.Provider
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ec2_transit_gateway_peering_attachment.test"
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 	transitGatewayResourceNamePeer := "aws_ec2_transit_gateway.peer"
@@ -256,7 +256,7 @@ func testAccCheckAWSEc2TransitGatewayPeeringAttachmentExists(resourceName string
 			return fmt.Errorf("No EC2 Transit Gateway Peering Attachment ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 		attachment, err := ec2DescribeTransitGatewayPeeringAttachment(conn, rs.Primary.ID)
 
@@ -279,7 +279,7 @@ func testAccCheckAWSEc2TransitGatewayPeeringAttachmentExists(resourceName string
 }
 
 func testAccCheckAWSEc2TransitGatewayPeeringAttachmentDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ec2_transit_gateway_peering_attachment" {
@@ -310,7 +310,7 @@ func testAccCheckAWSEc2TransitGatewayPeeringAttachmentDestroy(s *terraform.State
 
 func testAccCheckAWSEc2TransitGatewayPeeringAttachmentDisappears(transitGatewayPeeringAttachment *ec2.TransitGatewayPeeringAttachment) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 		input := &ec2.DeleteTransitGatewayPeeringAttachmentInput{
 			TransitGatewayAttachmentId: transitGatewayPeeringAttachment.TransitGatewayAttachmentId,

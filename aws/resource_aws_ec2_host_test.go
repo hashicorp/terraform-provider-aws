@@ -76,7 +76,7 @@ func TestAccAWSEc2Host_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckEc2HostDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -108,14 +108,14 @@ func TestAccAWSEc2Host_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckEc2HostDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSEc2HostConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEc2HostExists(resourceName, &host),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsEc2Host(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsEc2Host(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -126,12 +126,12 @@ func TestAccAWSEc2Host_disappears(t *testing.T) {
 func TestAccAWSEc2Host_InstanceFamily(t *testing.T) {
 	var host ec2.Host
 	resourceName := "aws_ec2_host.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckEc2HostDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -178,7 +178,7 @@ func TestAccAWSEc2Host_Tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckEc2HostDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -226,7 +226,7 @@ func testAccCheckEc2HostExists(n string, v *ec2.Host) resource.TestCheckFunc {
 			return fmt.Errorf("No EC2 Host ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 		output, err := finder.HostByID(conn, rs.Primary.ID)
 
@@ -241,7 +241,7 @@ func testAccCheckEc2HostExists(n string, v *ec2.Host) resource.TestCheckFunc {
 }
 
 func testAccCheckEc2HostDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ec2_host" {

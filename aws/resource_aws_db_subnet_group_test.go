@@ -74,7 +74,7 @@ func TestAccAWSDBSubnetGroup_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDBSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -103,7 +103,7 @@ func TestAccAWSDBSubnetGroup_namePrefix(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDBSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -124,7 +124,7 @@ func TestAccAWSDBSubnetGroup_generatedName(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDBSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -150,7 +150,7 @@ func TestAccAWSDBSubnetGroup_withUndocumentedCharacters(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDBSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -180,7 +180,7 @@ func TestAccAWSDBSubnetGroup_updateDescription(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDBSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -209,7 +209,7 @@ func TestAccAWSDBSubnetGroup_updateDescription(t *testing.T) {
 }
 
 func testAccCheckDBSubnetGroupDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).rdsconn
+	conn := acctest.Provider.Meta().(*AWSClient).rdsconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_db_subnet_group" {
@@ -251,7 +251,7 @@ func testAccCheckDBSubnetGroupExists(n string, v *rds.DBSubnetGroup) resource.Te
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).rdsconn
+		conn := acctest.Provider.Meta().(*AWSClient).rdsconn
 		resp, err := conn.DescribeDBSubnetGroups(
 			&rds.DescribeDBSubnetGroupsInput{DBSubnetGroupName: aws.String(rs.Primary.ID)})
 		if err != nil {

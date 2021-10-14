@@ -16,12 +16,12 @@ import (
 
 func TestAccAWSVPNGatewayRoutePropagation_basic(t *testing.T) {
 	resourceName := "aws_vpn_gateway_route_propagation.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSVPNGatewayRoutePropagationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -36,19 +36,19 @@ func TestAccAWSVPNGatewayRoutePropagation_basic(t *testing.T) {
 
 func TestAccAWSVPNGatewayRoutePropagation_disappears(t *testing.T) {
 	resourceName := "aws_vpn_gateway_route_propagation.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSVPNGatewayRoutePropagationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSVPNGatewayRoutePropagationConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSVPNGatewayRoutePropagationExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsVpnGatewayRoutePropagation(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsVpnGatewayRoutePropagation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -73,7 +73,7 @@ func testAccCheckAWSVPNGatewayRoutePropagationExists(n string) resource.TestChec
 			return err
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 		err = finder.VpnGatewayRoutePropagationExists(conn, routeTableID, gatewayID)
 
@@ -97,7 +97,7 @@ func testAccCheckAWSVPNGatewayRoutePropagationDestroy(s *terraform.State) error 
 			return err
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 		err = finder.VpnGatewayRoutePropagationExists(conn, routeTableID, gatewayID)
 

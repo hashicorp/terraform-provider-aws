@@ -14,7 +14,7 @@ func testAccDataSourceAwsEc2TransitGatewayRouteTables_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsEc2TransitGatewayRouteTablesConfig,
@@ -32,7 +32,7 @@ func testAccDataSourceAwsEc2TransitGatewayRouteTables_Filter(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsEc2TransitGatewayRouteTablesTransitGatewayFilter,

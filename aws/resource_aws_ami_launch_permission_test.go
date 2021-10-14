@@ -14,12 +14,12 @@ import (
 
 func TestAccAWSAMILaunchPermission_basic(t *testing.T) {
 	resourceName := "aws_ami_launch_permission.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAMILaunchPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -40,12 +40,12 @@ func TestAccAWSAMILaunchPermission_basic(t *testing.T) {
 
 func TestAccAWSAMILaunchPermission_Disappears_LaunchPermission(t *testing.T) {
 	resourceName := "aws_ami_launch_permission.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAMILaunchPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -64,12 +64,12 @@ func TestAccAWSAMILaunchPermission_Disappears_LaunchPermission(t *testing.T) {
 // Images with <group>all</group> will not have <userId> and can cause a panic
 func TestAccAWSAMILaunchPermission_Disappears_LaunchPermission_Public(t *testing.T) {
 	resourceName := "aws_ami_launch_permission.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAMILaunchPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -88,12 +88,12 @@ func TestAccAWSAMILaunchPermission_Disappears_LaunchPermission_Public(t *testing
 func TestAccAWSAMILaunchPermission_Disappears_AMI(t *testing.T) {
 	imageID := ""
 	resourceName := "aws_ami_launch_permission.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAMILaunchPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -145,7 +145,7 @@ func testAccCheckAWSAMILaunchPermissionExists(resourceName string) resource.Test
 			return fmt.Errorf("No resource ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 		accountID := rs.Primary.Attributes["account_id"]
 		imageID := rs.Primary.Attributes["image_id"]
 
@@ -164,7 +164,7 @@ func testAccCheckAWSAMILaunchPermissionDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 		accountID := rs.Primary.Attributes["account_id"]
 		imageID := rs.Primary.Attributes["image_id"]
 
@@ -189,7 +189,7 @@ func testAccCheckAWSAMILaunchPermissionAddPublic(resourceName string) resource.T
 			return fmt.Errorf("No resource ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 		imageID := rs.Primary.Attributes["image_id"]
 
 		input := &ec2.ModifyImageAttributeInput{
@@ -219,7 +219,7 @@ func testAccCheckAWSAMILaunchPermissionDisappears(resourceName string) resource.
 			return fmt.Errorf("No resource ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 		accountID := rs.Primary.Attributes["account_id"]
 		imageID := rs.Primary.Attributes["image_id"]
 
@@ -244,7 +244,7 @@ func testAccCheckAWSAMILaunchPermissionDisappears(resourceName string) resource.
 // so we can test that Terraform will react properly
 func testAccAWSAMIDisappears(imageID *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 		req := &ec2.DeregisterImageInput{
 			ImageId: aws.String(*imageID),
 		}

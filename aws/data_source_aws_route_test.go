@@ -20,12 +20,12 @@ func TestAccAWSRouteDataSource_basic(t *testing.T) {
 	datasource1Name := "data.aws_route.by_destination_cidr_block"
 	datasource2Name := "data.aws_route.by_instance_id"
 	datasource3Name := "data.aws_route.by_peering_connection_id"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsRouteConfigBasic(rName),
@@ -52,12 +52,12 @@ func TestAccAWSRouteDataSource_basic(t *testing.T) {
 func TestAccAWSRouteDataSource_TransitGatewayID(t *testing.T) {
 	dataSourceName := "data.aws_route.test"
 	resourceName := "aws_route.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -75,12 +75,12 @@ func TestAccAWSRouteDataSource_TransitGatewayID(t *testing.T) {
 func TestAccAWSRouteDataSource_IPv6DestinationCidr(t *testing.T) {
 	dataSourceName := "data.aws_route.test"
 	resourceName := "aws_route.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -97,12 +97,12 @@ func TestAccAWSRouteDataSource_IPv6DestinationCidr(t *testing.T) {
 func TestAccAWSRouteDataSource_LocalGatewayID(t *testing.T) {
 	dataSourceName := "data.aws_route.by_local_gateway_id"
 	resourceName := "aws_route.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -120,12 +120,12 @@ func TestAccAWSRouteDataSource_LocalGatewayID(t *testing.T) {
 func TestAccAWSRouteDataSource_CarrierGatewayID(t *testing.T) {
 	dataSourceName := "data.aws_route.test"
 	resourceName := "aws_route.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWavelengthZoneAvailable(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -143,12 +143,12 @@ func TestAccAWSRouteDataSource_CarrierGatewayID(t *testing.T) {
 func TestAccAWSRouteDataSource_DestinationPrefixListId(t *testing.T) {
 	dataSourceName := "data.aws_route.test"
 	resourceName := "aws_route.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -168,12 +168,12 @@ func TestAccAWSRouteDataSource_GatewayVpcEndpoint(t *testing.T) {
 	var vpce ec2.VpcEndpoint
 	rtResourceName := "aws_route_table.test"
 	vpceResourceName := "aws_vpc_endpoint.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{
 			{

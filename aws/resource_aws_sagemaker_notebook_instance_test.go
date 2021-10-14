@@ -78,13 +78,13 @@ func testSweepSagemakerNotebookInstances(region string) error {
 
 func TestAccAWSSagemakerNotebookInstance_basic(t *testing.T) {
 	var notebook sagemaker.DescribeNotebookInstanceOutput
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_notebook_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerNotebookInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -116,13 +116,13 @@ func TestAccAWSSagemakerNotebookInstance_basic(t *testing.T) {
 
 func TestAccAWSSagemakerNotebookInstance_update(t *testing.T) {
 	var notebook sagemaker.DescribeNotebookInstanceOutput
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_notebook_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerNotebookInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -151,12 +151,12 @@ func TestAccAWSSagemakerNotebookInstance_update(t *testing.T) {
 
 func TestAccAWSSagemakerNotebookInstance_volumesize(t *testing.T) {
 	var notebook1, notebook2, notebook3 sagemaker.DescribeNotebookInstanceOutput
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	var resourceName = "aws_sagemaker_notebook_instance.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerNotebookInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -193,14 +193,14 @@ func TestAccAWSSagemakerNotebookInstance_volumesize(t *testing.T) {
 
 func TestAccAWSSagemakerNotebookInstance_LifecycleConfigName(t *testing.T) {
 	var notebook sagemaker.DescribeNotebookInstanceOutput
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_notebook_instance.test"
 	sagemakerLifecycleConfigResourceName := "aws_sagemaker_notebook_instance_lifecycle_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerNotebookInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -235,13 +235,13 @@ func TestAccAWSSagemakerNotebookInstance_LifecycleConfigName(t *testing.T) {
 
 func TestAccAWSSagemakerNotebookInstance_tags(t *testing.T) {
 	var notebook sagemaker.DescribeNotebookInstanceOutput
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_notebook_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerNotebookInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -280,13 +280,13 @@ func TestAccAWSSagemakerNotebookInstance_tags(t *testing.T) {
 
 func TestAccAWSSagemakerNotebookInstance_kms(t *testing.T) {
 	var notebook sagemaker.DescribeNotebookInstanceOutput
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_notebook_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerNotebookInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -307,20 +307,20 @@ func TestAccAWSSagemakerNotebookInstance_kms(t *testing.T) {
 
 func TestAccAWSSagemakerNotebookInstance_disappears(t *testing.T) {
 	var notebook sagemaker.DescribeNotebookInstanceOutput
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_notebook_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerNotebookInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSagemakerNotebookInstanceBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerNotebookInstanceExists(resourceName, &notebook),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSagemakerNotebookInstance(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSagemakerNotebookInstance(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -329,7 +329,7 @@ func TestAccAWSSagemakerNotebookInstance_disappears(t *testing.T) {
 }
 
 func testAccCheckAWSSagemakerNotebookInstanceDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).sagemakerconn
+	conn := acctest.Provider.Meta().(*AWSClient).sagemakerconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_sagemaker_notebook_instance" {
@@ -368,7 +368,7 @@ func testAccCheckAWSSagemakerNotebookInstanceExists(n string, notebook *sagemake
 			return fmt.Errorf("No sagmaker Notebook Instance ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).sagemakerconn
+		conn := acctest.Provider.Meta().(*AWSClient).sagemakerconn
 		opts := &sagemaker.DescribeNotebookInstanceInput{
 			NotebookInstanceName: aws.String(rs.Primary.ID),
 		}
@@ -405,13 +405,13 @@ func testAccCheckAWSSagemakerNotebookInstanceRecreated(i, j *sagemaker.DescribeN
 
 func TestAccAWSSagemakerNotebookInstance_root_access(t *testing.T) {
 	var notebook sagemaker.DescribeNotebookInstanceOutput
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_notebook_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerNotebookInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -439,13 +439,13 @@ func TestAccAWSSagemakerNotebookInstance_root_access(t *testing.T) {
 
 func TestAccAWSSagemakerNotebookInstance_platform_identifier(t *testing.T) {
 	var notebook sagemaker.DescribeNotebookInstanceOutput
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_notebook_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerNotebookInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -473,13 +473,13 @@ func TestAccAWSSagemakerNotebookInstance_platform_identifier(t *testing.T) {
 
 func TestAccAWSSagemakerNotebookInstance_direct_internet_access(t *testing.T) {
 	var notebook sagemaker.DescribeNotebookInstanceOutput
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_notebook_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerNotebookInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -513,12 +513,12 @@ func TestAccAWSSagemakerNotebookInstance_direct_internet_access(t *testing.T) {
 
 func TestAccAWSSagemakerNotebookInstance_default_code_repository(t *testing.T) {
 	var notebook sagemaker.DescribeNotebookInstanceOutput
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	var resourceName = "aws_sagemaker_notebook_instance.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerNotebookInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -553,12 +553,12 @@ func TestAccAWSSagemakerNotebookInstance_default_code_repository(t *testing.T) {
 
 func TestAccAWSSagemakerNotebookInstance_additional_code_repositories(t *testing.T) {
 	var notebook sagemaker.DescribeNotebookInstanceOutput
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	var resourceName = "aws_sagemaker_notebook_instance.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerNotebookInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -604,12 +604,12 @@ func TestAccAWSSagemakerNotebookInstance_additional_code_repositories(t *testing
 
 func TestAccAWSSagemakerNotebookInstance_default_code_repository_sagemakerRepo(t *testing.T) {
 	var notebook sagemaker.DescribeNotebookInstanceOutput
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	var resourceName = "aws_sagemaker_notebook_instance.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerNotebookInstanceDestroy,
 		Steps: []resource.TestStep{
 			{

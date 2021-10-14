@@ -19,13 +19,13 @@ import (
 
 func TestAccAWSEBSSnapshotImport_basic(t *testing.T) {
 	var v ec2.Snapshot
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ebs_snapshot_import.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsEbsSnapshotImportDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -44,13 +44,13 @@ func TestAccAWSEBSSnapshotImport_basic(t *testing.T) {
 
 func TestAccAWSEBSSnapshotImport_tags(t *testing.T) {
 	var v ec2.Snapshot
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ebs_snapshot_import.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsEbsSnapshotImportDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -90,13 +90,13 @@ func TestAccAWSEBSSnapshotImport_tags(t *testing.T) {
 
 func TestAccAWSEBSSnapshotImport_disappears(t *testing.T) {
 	var v ec2.Snapshot
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ebs_snapshot_import.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsEbsSnapshotImportDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -106,7 +106,7 @@ func TestAccAWSEBSSnapshotImport_disappears(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`snapshot/snap-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsEbsSnapshotImport(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsEbsSnapshotImport(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -116,14 +116,14 @@ func TestAccAWSEBSSnapshotImport_disappears(t *testing.T) {
 
 func TestAccAWSEBSSnapshotImport_disappears_S3BucketObject(t *testing.T) {
 	var v ec2.Snapshot
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	parentResourceName := "aws_s3_bucket_object.image"
 	resourceName := "aws_ebs_snapshot_import.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsEbsSnapshotImportDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -133,7 +133,7 @@ func TestAccAWSEBSSnapshotImport_disappears_S3BucketObject(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`snapshot/snap-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsS3BucketObject(), parentResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsS3BucketObject(), parentResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -152,7 +152,7 @@ func testAccCheckSnapshotImportExists(n string, v *ec2.Snapshot) resource.TestCh
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 		request := &ec2.DescribeSnapshotsInput{
 			SnapshotIds: []*string{aws.String(rs.Primary.ID)},
@@ -170,7 +170,7 @@ func testAccCheckSnapshotImportExists(n string, v *ec2.Snapshot) resource.TestCh
 }
 
 func testAccCheckAwsEbsSnapshotImportDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ebs_snapshot_import" {

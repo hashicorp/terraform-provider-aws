@@ -24,7 +24,7 @@ func testAccAwsEc2ClientVpnRoute_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -59,7 +59,7 @@ func testAccAwsEc2ClientVpnRoute_description(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -89,14 +89,14 @@ func testAccAwsEc2ClientVpnRoute_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEc2ClientVpnRouteConfigBasic(rStr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsEc2ClientVpnRouteExists(resourceName, &v),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsEc2ClientVpnRoute(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsEc2ClientVpnRoute(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -105,7 +105,7 @@ func testAccAwsEc2ClientVpnRoute_disappears(t *testing.T) {
 }
 
 func testAccCheckAwsEc2ClientVpnRouteDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ec2_client_vpn_route" {
@@ -134,7 +134,7 @@ func testAccCheckAwsEc2ClientVpnRouteExists(name string, route *ec2.ClientVpnRou
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 		resp, err := finder.ClientVpnRouteByID(conn, rs.Primary.ID)
 		if err != nil {
@@ -250,13 +250,13 @@ resource "aws_subnet" "test" {
 }
 
 func testAccEc2ClientVpnRouteAcmCertificateBase() string {
-	key := tlsRsaPrivateKeyPem(2048)
-	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
+	key := acctest.TLSRSAPrivateKeyPEM(2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
 
 	return fmt.Sprintf(`
 resource "aws_acm_certificate" "test" {
   certificate_body = "%[1]s"
   private_key      = "%[2]s"
 }
-`, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key))
+`, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key))
 }

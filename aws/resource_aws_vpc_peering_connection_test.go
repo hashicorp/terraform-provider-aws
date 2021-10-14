@@ -96,7 +96,7 @@ func TestAccAWSVPCPeeringConnection_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSVpcPeeringConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -125,7 +125,7 @@ func TestAccAWSVPCPeeringConnection_plan(t *testing.T) {
 
 	// reach out and DELETE the VPC Peering connection outside of Terraform
 	testDestroy := func(*terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 		log.Printf("[DEBUG] Test deleting the VPC Peering Connection.")
 		_, err := conn.DeleteVpcPeeringConnection(
 			&ec2.DeleteVpcPeeringConnectionInput{
@@ -138,7 +138,7 @@ func TestAccAWSVPCPeeringConnection_plan(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSVpcPeeringConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -164,7 +164,7 @@ func TestAccAWSVPCPeeringConnection_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -210,7 +210,7 @@ func TestAccAWSVPCPeeringConnection_options(t *testing.T) {
 	resourceName := "aws_vpc_peering_connection.test"
 
 	testAccepterChange := func(*terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 		log.Printf("[DEBUG] Test change to the VPC Peering Connection Options.")
 
 		_, err := conn.ModifyVpcPeeringConnectionOptions(
@@ -227,7 +227,7 @@ func TestAccAWSVPCPeeringConnection_options(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSVpcPeeringConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -384,7 +384,7 @@ func TestAccAWSVPCPeeringConnection_failedState(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSVpcPeeringConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -396,7 +396,7 @@ func TestAccAWSVPCPeeringConnection_failedState(t *testing.T) {
 }
 
 func testAccCheckAWSVpcPeeringConnectionDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_vpc_peering_connection" {
@@ -440,7 +440,7 @@ func testAccCheckAWSVpcPeeringConnectionDestroy(s *terraform.State) error {
 }
 
 func testAccCheckAWSVpcPeeringConnectionExists(n string, connection *ec2.VpcPeeringConnection) resource.TestCheckFunc {
-	return testAccCheckAWSVpcPeeringConnectionExistsWithProvider(n, connection, func() *schema.Provider { return testAccProvider })
+	return testAccCheckAWSVpcPeeringConnectionExistsWithProvider(n, connection, func() *schema.Provider { return acctest.Provider })
 }
 
 func testAccCheckAWSVpcPeeringConnectionExistsWithProvider(n string, connection *ec2.VpcPeeringConnection, providerF func() *schema.Provider) resource.TestCheckFunc {
@@ -473,7 +473,7 @@ func testAccCheckAWSVpcPeeringConnectionExistsWithProvider(n string, connection 
 }
 
 func testAccCheckAWSVpcPeeringConnectionOptions(n, block string, options *ec2.VpcPeeringConnectionOptionsDescription) resource.TestCheckFunc {
-	return testAccCheckAWSVpcPeeringConnectionOptionsWithProvider(n, block, options, func() *schema.Provider { return testAccProvider })
+	return testAccCheckAWSVpcPeeringConnectionOptionsWithProvider(n, block, options, func() *schema.Provider { return acctest.Provider })
 }
 
 func testAccCheckAWSVpcPeeringConnectionOptionsWithProvider(n, block string, options *ec2.VpcPeeringConnectionOptionsDescription, providerF func() *schema.Provider) resource.TestCheckFunc {
@@ -575,7 +575,7 @@ func TestAccAWSVPCPeeringConnection_accept(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSVpcPeeringConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -640,7 +640,7 @@ func TestAccAWSVPCPeeringConnection_optionsNoAutoAccept(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSVpcPeeringConnectionDestroy,
 		Steps: []resource.TestStep{
 			{

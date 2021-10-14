@@ -21,7 +21,7 @@ func TestAccAWSRdsOrderableDbInstanceDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccAWSRdsOrderableDbInstancePreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -45,7 +45,7 @@ func TestAccAWSRdsOrderableDbInstanceDataSource_preferredClass(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccAWSRdsOrderableDbInstancePreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -65,7 +65,7 @@ func TestAccAWSRdsOrderableDbInstanceDataSource_preferredVersion(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccAWSRdsOrderableDbInstancePreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -86,7 +86,7 @@ func TestAccAWSRdsOrderableDbInstanceDataSource_preferredClassAndVersion(t *test
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccAWSRdsOrderableDbInstancePreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -106,7 +106,7 @@ func TestAccAWSRdsOrderableDbInstanceDataSource_supportsEnhancedMonitoring(t *te
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccAWSRdsOrderableDbInstancePreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -125,7 +125,7 @@ func TestAccAWSRdsOrderableDbInstanceDataSource_supportsIAMDatabaseAuthenticatio
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccAWSRdsOrderableDbInstancePreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -144,7 +144,7 @@ func TestAccAWSRdsOrderableDbInstanceDataSource_supportsIops(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccAWSRdsOrderableDbInstancePreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -163,7 +163,7 @@ func TestAccAWSRdsOrderableDbInstanceDataSource_supportsKerberosAuthentication(t
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccAWSRdsOrderableDbInstancePreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -186,7 +186,7 @@ func TestAccAWSRdsOrderableDbInstanceDataSource_supportsPerformanceInsights(t *t
 			testAccRDSPerformanceInsightsDefaultVersionPreCheck(t, "mysql")
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -205,7 +205,7 @@ func TestAccAWSRdsOrderableDbInstanceDataSource_supportsStorageAutoscaling(t *te
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccAWSRdsOrderableDbInstancePreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -224,7 +224,7 @@ func TestAccAWSRdsOrderableDbInstanceDataSource_supportsStorageEncryption(t *tes
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccAWSRdsOrderableDbInstancePreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -238,7 +238,7 @@ func TestAccAWSRdsOrderableDbInstanceDataSource_supportsStorageEncryption(t *tes
 }
 
 func testAccAWSRdsOrderableDbInstancePreCheck(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).rdsconn
+	conn := acctest.Provider.Meta().(*AWSClient).rdsconn
 
 	input := &rds.DescribeOrderableDBInstanceOptionsInput{
 		Engine:          aws.String("mysql"),

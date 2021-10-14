@@ -17,7 +17,7 @@ func TestAccAWSEc2InstanceTypeOfferingsDataSource_Filter(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2InstanceTypeOfferings(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -36,7 +36,7 @@ func TestAccAWSEc2InstanceTypeOfferingsDataSource_LocationType(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2InstanceTypeOfferings(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -89,7 +89,7 @@ func testAccCheckEc2InstanceTypeOfferingsLocations(dataSourceName string) resour
 }
 
 func testAccPreCheckAWSEc2InstanceTypeOfferings(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 	input := &ec2.DescribeInstanceTypeOfferingsInput{
 		MaxResults: aws.Int64(5),

@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
 )
 
 func dataSourceAwsRouteTable() *schema.Resource {
@@ -179,7 +180,7 @@ func dataSourceAwsRouteTableRead(d *schema.ResourceData, meta interface{}) error
 	if !rtbOk && !vpcIdOk && !subnetIdOk && !gatewayIdOk && !filterOk && !tagsOk {
 		return fmt.Errorf("one of route_table_id, vpc_id, subnet_id, gateway_id, filters, or tags must be assigned")
 	}
-	req.Filters = buildEC2AttributeFilterList(
+	req.Filters = tfec2.BuildAttributeFilterList(
 		map[string]string{
 			"route-table-id":         rtbId.(string),
 			"vpc-id":                 vpcId.(string),

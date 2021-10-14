@@ -18,7 +18,7 @@ func TestAccAwsConnectContactFlowDataSource_ContactFlowId(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsConnectContactFlowDataSourceConfig_ContactFlowId(rName, resourceName),
@@ -47,7 +47,7 @@ func TestAccAwsConnectContactFlowDataSource_Name(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsConnectContactFlowDataSourceConfig_Name(rName, rName2),

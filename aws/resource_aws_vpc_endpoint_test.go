@@ -92,12 +92,12 @@ func testSweepEc2VpcEndpoints(region string) error {
 func TestAccAWSVpcEndpoint_gatewayBasic(t *testing.T) {
 	var endpoint ec2.VpcEndpoint
 	resourceName := "aws_vpc_endpoint.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckVpcEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -131,12 +131,12 @@ func TestAccAWSVpcEndpoint_gatewayWithRouteTableAndPolicy(t *testing.T) {
 	var routeTable ec2.RouteTable
 	resourceName := "aws_vpc_endpoint.test"
 	routeTableResourceName := "aws_route_table.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckVpcEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -225,12 +225,12 @@ func TestAccAWSVpcEndpoint_gatewayPolicy(t *testing.T) {
 `
 
 	resourceName := "aws_vpc_endpoint.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckVpcEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -257,12 +257,12 @@ func TestAccAWSVpcEndpoint_gatewayPolicy(t *testing.T) {
 func TestAccAWSVpcEndpoint_interfaceBasic(t *testing.T) {
 	var endpoint ec2.VpcEndpoint
 	resourceName := "aws_vpc_endpoint.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckVpcEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -295,12 +295,12 @@ func TestAccAWSVpcEndpoint_interfaceBasic(t *testing.T) {
 func TestAccAWSVpcEndpoint_interfaceWithSubnetAndSecurityGroup(t *testing.T) {
 	var endpoint ec2.VpcEndpoint
 	resourceName := "aws_vpc_endpoint.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckVpcEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -353,12 +353,12 @@ func TestAccAWSVpcEndpoint_interfaceWithSubnetAndSecurityGroup(t *testing.T) {
 func TestAccAWSVpcEndpoint_interfaceNonAWSServiceAcceptOnCreate(t *testing.T) {
 	var endpoint ec2.VpcEndpoint
 	resourceName := "aws_vpc_endpoint.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckVpcEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -394,12 +394,12 @@ func TestAccAWSVpcEndpoint_interfaceNonAWSServiceAcceptOnCreate(t *testing.T) {
 func TestAccAWSVpcEndpoint_interfaceNonAWSServiceAcceptOnUpdate(t *testing.T) {
 	var endpoint ec2.VpcEndpoint
 	resourceName := "aws_vpc_endpoint.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckVpcEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -455,19 +455,19 @@ func TestAccAWSVpcEndpoint_interfaceNonAWSServiceAcceptOnUpdate(t *testing.T) {
 func TestAccAWSVpcEndpoint_disappears(t *testing.T) {
 	var endpoint ec2.VpcEndpoint
 	resourceName := "aws_vpc_endpoint.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckVpcEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVpcEndpointConfig_gatewayBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcEndpointExists(resourceName, &endpoint),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsVpcEndpoint(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsVpcEndpoint(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -478,12 +478,12 @@ func TestAccAWSVpcEndpoint_disappears(t *testing.T) {
 func TestAccAWSVpcEndpoint_tags(t *testing.T) {
 	var endpoint ec2.VpcEndpoint
 	resourceName := "aws_vpc_endpoint.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckVpcEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -524,12 +524,12 @@ func TestAccAWSVpcEndpoint_VpcEndpointType_GatewayLoadBalancer(t *testing.T) {
 	var endpoint ec2.VpcEndpoint
 	vpcEndpointServiceResourceName := "aws_vpc_endpoint_service.test"
 	resourceName := "aws_vpc_endpoint.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckElbv2GatewayLoadBalancer(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckVpcEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -549,7 +549,7 @@ func TestAccAWSVpcEndpoint_VpcEndpointType_GatewayLoadBalancer(t *testing.T) {
 }
 
 func testAccCheckVpcEndpointDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_vpc_endpoint" {
@@ -581,7 +581,7 @@ func testAccCheckVpcEndpointExists(n string, endpoint *ec2.VpcEndpoint) resource
 			return fmt.Errorf("No VPC Endpoint ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 		out, err := finder.VpcEndpointByID(conn, rs.Primary.ID)
 

@@ -22,7 +22,7 @@ func TestAccAWSNeptuneSubnetGroup_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckNeptuneSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -51,7 +51,7 @@ func TestAccAWSNeptuneSubnetGroup_namePrefix(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckNeptuneSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -79,7 +79,7 @@ func TestAccAWSNeptuneSubnetGroup_generatedName(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckNeptuneSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -105,7 +105,7 @@ func TestAccAWSNeptuneSubnetGroup_updateDescription(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckNeptuneSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -137,7 +137,7 @@ func TestAccAWSNeptuneSubnetGroup_updateDescription(t *testing.T) {
 }
 
 func testAccCheckNeptuneSubnetGroupDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).neptuneconn
+	conn := acctest.Provider.Meta().(*AWSClient).neptuneconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_neptune_subnet_group" {
@@ -179,7 +179,7 @@ func testAccCheckNeptuneSubnetGroupExists(n string, v *neptune.DBSubnetGroup) re
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).neptuneconn
+		conn := acctest.Provider.Meta().(*AWSClient).neptuneconn
 		resp, err := conn.DescribeDBSubnetGroups(
 			&neptune.DescribeDBSubnetGroupsInput{DBSubnetGroupName: aws.String(rs.Primary.ID)})
 		if err != nil {

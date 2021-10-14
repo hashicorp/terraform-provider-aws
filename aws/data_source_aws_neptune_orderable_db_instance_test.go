@@ -20,7 +20,7 @@ func TestAccAWSNeptuneOrderableDbInstanceDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSNeptuneOrderableDbInstance(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -46,7 +46,7 @@ func TestAccAWSNeptuneOrderableDbInstanceDataSource_preferred(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSNeptuneOrderableDbInstance(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -63,7 +63,7 @@ func TestAccAWSNeptuneOrderableDbInstanceDataSource_preferred(t *testing.T) {
 }
 
 func testAccPreCheckAWSNeptuneOrderableDbInstance(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).neptuneconn
+	conn := acctest.Provider.Meta().(*AWSClient).neptuneconn
 
 	input := &neptune.DescribeOrderableDBInstanceOptionsInput{
 		Engine: aws.String("mysql"),

@@ -72,12 +72,12 @@ func TestAccAWSENI_basic(t *testing.T) {
 	var conf ec2.NetworkInterface
 	resourceName := "aws_network_interface.test"
 	subnetResourceName := "aws_subnet.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSENIDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -112,12 +112,12 @@ func TestAccAWSENI_basic(t *testing.T) {
 func TestAccAWSENI_IPv6(t *testing.T) {
 	var conf ec2.NetworkInterface
 	resourceName := "aws_network_interface.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSENIDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -155,13 +155,13 @@ func TestAccAWSENI_IPv6(t *testing.T) {
 
 func TestAccAWSENI_Tags(t *testing.T) {
 	resourceName := "aws_network_interface.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	var conf ec2.NetworkInterface
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSENIDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -201,12 +201,12 @@ func TestAccAWSENI_Tags(t *testing.T) {
 func TestAccAWSENI_IPv6Count(t *testing.T) {
 	var conf ec2.NetworkInterface
 	resourceName := "aws_network_interface.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSENIDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -249,19 +249,19 @@ func TestAccAWSENI_IPv6Count(t *testing.T) {
 func TestAccAWSENI_disappears(t *testing.T) {
 	var networkInterface ec2.NetworkInterface
 	resourceName := "aws_network_interface.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSENIDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSENIConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSENIExists(resourceName, &networkInterface),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsNetworkInterface(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsNetworkInterface(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -274,12 +274,12 @@ func TestAccAWSENI_Description(t *testing.T) {
 	resourceName := "aws_network_interface.test"
 	subnetResourceName := "aws_subnet.test"
 	securityGroupResourceName := "aws_security_group.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSENIDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -340,12 +340,12 @@ func TestAccAWSENI_Description(t *testing.T) {
 func TestAccAWSENI_Attachment(t *testing.T) {
 	var conf ec2.NetworkInterface
 	resourceName := "aws_network_interface.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSENIDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -373,12 +373,12 @@ func TestAccAWSENI_Attachment(t *testing.T) {
 func TestAccAWSENI_IgnoreExternalAttachment(t *testing.T) {
 	var conf ec2.NetworkInterface
 	resourceName := "aws_network_interface.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSENIDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -400,12 +400,12 @@ func TestAccAWSENI_IgnoreExternalAttachment(t *testing.T) {
 func TestAccAWSENI_SourceDestCheck(t *testing.T) {
 	var conf ec2.NetworkInterface
 	resourceName := "aws_network_interface.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSENIDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -441,12 +441,12 @@ func TestAccAWSENI_SourceDestCheck(t *testing.T) {
 func TestAccAWSENI_PrivateIpsCount(t *testing.T) {
 	var conf ec2.NetworkInterface
 	resourceName := "aws_network_interface.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSENIDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -504,12 +504,12 @@ func TestAccAWSENI_PrivateIpsCount(t *testing.T) {
 func TestAccAWSENI_InterfaceType_efa(t *testing.T) {
 	var conf ec2.NetworkInterface
 	resourceName := "aws_network_interface.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSENIDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -539,7 +539,7 @@ func testAccCheckAWSENIExists(n string, res *ec2.NetworkInterface) resource.Test
 			return fmt.Errorf("No ENI ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 		input := &ec2.DescribeNetworkInterfacesInput{
 			NetworkInterfaceIds: []*string{aws.String(rs.Primary.ID)},
 		}
@@ -566,7 +566,7 @@ func testAccCheckAWSENIDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 		input := &ec2.DescribeNetworkInterfacesInput{
 			NetworkInterfaceIds: []*string{aws.String(rs.Primary.ID)},
 		}
@@ -597,7 +597,7 @@ func testAccCheckAWSENIMakeExternalAttachment(n string, conf *ec2.NetworkInterfa
 			NetworkInterfaceId: conf.NetworkInterfaceId,
 		}
 
-		_, err := testAccProvider.Meta().(*AWSClient).ec2conn.AttachNetworkInterface(input)
+		_, err := acctest.Provider.Meta().(*AWSClient).ec2conn.AttachNetworkInterface(input)
 
 		if err != nil {
 			return fmt.Errorf("error attaching ENI: %w", err)

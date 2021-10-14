@@ -23,6 +23,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/waiter"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
 )
 
 func resourceAwsSecurityGroup() *schema.Resource {
@@ -1354,7 +1355,7 @@ func deleteLingeringLambdaENIs(conn *ec2.EC2, filterName, resourceId string, tim
 	}
 
 	resp, err := conn.DescribeNetworkInterfaces(&ec2.DescribeNetworkInterfacesInput{
-		Filters: buildEC2AttributeFilterList(map[string]string{
+		Filters: tfec2.BuildAttributeFilterList(map[string]string{
 			filterName:    resourceId,
 			"description": "AWS Lambda VPC ENI*",
 		}),

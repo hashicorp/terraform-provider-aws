@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-const SagemakerNotebookInstanceLifecycleConfigurationResourcePrefix = "tf-acc-test"
+
 
 func init() {
 	resource.AddTestSweepers("aws_sagemaker_notebook_instance_lifecycle_configuration", &resource.Sweeper{
@@ -41,7 +41,7 @@ func testSweepSagemakerNotebookInstanceLifecycleConfiguration(region string) err
 		}
 		for _, lifecycleConfig := range page.NotebookInstanceLifecycleConfigs {
 			name := aws.StringValue(lifecycleConfig.NotebookInstanceLifecycleConfigName)
-			if !strings.HasPrefix(name, SagemakerNotebookInstanceLifecycleConfigurationResourcePrefix) {
+			if !strings.HasPrefix(name, acctest.ResourcePrefix) {
 				log.Printf("[INFO] Skipping SageMaker Notebook Instance Lifecycle Configuration: %s", name)
 				continue
 			}
@@ -69,13 +69,13 @@ func testSweepSagemakerNotebookInstanceLifecycleConfiguration(region string) err
 
 func TestAccAWSSagemakerNotebookInstanceLifecycleConfiguration_basic(t *testing.T) {
 	var lifecycleConfig sagemaker.DescribeNotebookInstanceLifecycleConfigOutput
-	rName := sdkacctest.RandomWithPrefix(SagemakerNotebookInstanceLifecycleConfigurationResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_notebook_instance_lifecycle_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerNotebookInstanceLifecycleConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -100,13 +100,13 @@ func TestAccAWSSagemakerNotebookInstanceLifecycleConfiguration_basic(t *testing.
 
 func TestAccAWSSagemakerNotebookInstanceLifecycleConfiguration_Update(t *testing.T) {
 	var lifecycleConfig sagemaker.DescribeNotebookInstanceLifecycleConfigOutput
-	rName := sdkacctest.RandomWithPrefix(SagemakerNotebookInstanceLifecycleConfigurationResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_notebook_instance_lifecycle_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerNotebookInstanceLifecycleConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -146,7 +146,7 @@ func testAccCheckAWSSagemakerNotebookInstanceLifecycleConfigurationExists(resour
 			return fmt.Errorf("no ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).sagemakerconn
+		conn := acctest.Provider.Meta().(*AWSClient).sagemakerconn
 		output, err := conn.DescribeNotebookInstanceLifecycleConfig(&sagemaker.DescribeNotebookInstanceLifecycleConfigInput{
 			NotebookInstanceLifecycleConfigName: aws.String(rs.Primary.ID),
 		})
@@ -171,7 +171,7 @@ func testAccCheckAWSSagemakerNotebookInstanceLifecycleConfigurationDestroy(s *te
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).sagemakerconn
+		conn := acctest.Provider.Meta().(*AWSClient).sagemakerconn
 		lifecycleConfig, err := conn.DescribeNotebookInstanceLifecycleConfig(&sagemaker.DescribeNotebookInstanceLifecycleConfigInput{
 			NotebookInstanceLifecycleConfigName: aws.String(rs.Primary.ID),
 		})

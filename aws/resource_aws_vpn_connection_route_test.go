@@ -18,7 +18,7 @@ func TestAccAWSVpnConnectionRoute_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccAwsVpnConnectionRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -38,7 +38,7 @@ func TestAccAWSVpnConnectionRoute_basic(t *testing.T) {
 }
 
 func testAccAwsVpnConnectionRouteDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_vpn_connection_route" {
 			continue
@@ -119,7 +119,7 @@ func testAccAwsVpnConnectionRoute(vpnConnectionRouteResource string) resource.Te
 			},
 		}
 
-		ec2conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		ec2conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 		_, err := ec2conn.DescribeVpnConnections(&ec2.DescribeVpnConnectionsInput{
 			Filters: routeFilters,

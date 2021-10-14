@@ -14,12 +14,12 @@ import (
 func TestAccDataSourceAwsKmsPublicKey_basic(t *testing.T) {
 	resourceName := "aws_kms_key.test"
 	datasourceName := "data.aws_kms_public_key.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsKmsPublicKeyConfig(rName),
@@ -39,12 +39,12 @@ func TestAccDataSourceAwsKmsPublicKey_basic(t *testing.T) {
 func TestAccDataSourceAwsKmsPublicKey_encrypt(t *testing.T) {
 	resourceName := "aws_kms_key.test"
 	datasourceName := "data.aws_kms_public_key.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsKmsPublicKeyEncryptConfig(rName),

@@ -22,7 +22,7 @@ func testAccAWSEc2TransitGatewayVpnAttachmentDataSource_TransitGatewayIdAndVpnCo
 			testAccPreCheckAWSEc2TransitGateway(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -49,7 +49,7 @@ func testAccAWSEc2TransitGatewayVpnAttachmentDataSource_filter(t *testing.T) {
 			testAccPreCheckAWSEc2TransitGateway(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{

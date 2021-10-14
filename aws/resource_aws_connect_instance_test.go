@@ -102,7 +102,7 @@ func testAccAwsConnectInstance_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsConnectInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -156,7 +156,7 @@ func testAccAwsConnectInstance_directory(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsConnectInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -185,7 +185,7 @@ func testAccAwsConnectInstance_saml(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsConnectInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -215,7 +215,7 @@ func testAccCheckAwsConnectInstanceExists(resourceName string, instance *connect
 			return fmt.Errorf("Connect instance ID not set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).connectconn
+		conn := acctest.Provider.Meta().(*AWSClient).connectconn
 
 		input := &connect.DescribeInstanceInput{
 			InstanceId: aws.String(rs.Primary.ID),
@@ -241,7 +241,7 @@ func testAccCheckAwsConnectInstanceDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).connectconn
+		conn := acctest.Provider.Meta().(*AWSClient).connectconn
 
 		instanceID := rs.Primary.ID
 

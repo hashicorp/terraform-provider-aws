@@ -11,13 +11,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
 )
 
 func TestAccDataSourceAwsPrefixList_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsPrefixListConfig,
@@ -34,7 +35,7 @@ func TestAccDataSourceAwsPrefixList_filter(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsPrefixListConfigFilter,
@@ -51,7 +52,7 @@ func TestAccDataSourceAwsPrefixList_nameDoesNotOverrideFilter(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDataSourceAwsPrefixListConfig_nameDoesNotOverrideFilter,
@@ -63,10 +64,10 @@ func TestAccDataSourceAwsPrefixList_nameDoesNotOverrideFilter(t *testing.T) {
 
 func testAccDataSourceAwsPrefixListCheck(name string) resource.TestCheckFunc {
 	getPrefixListId := func(name string) (string, error) {
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 		input := ec2.DescribePrefixListsInput{
-			Filters: buildEC2AttributeFilterList(map[string]string{
+			Filters: tfec2.BuildAttributeFilterList(map[string]string{
 				"prefix-list-name": name,
 			}),
 		}

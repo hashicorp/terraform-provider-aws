@@ -35,7 +35,7 @@ func testSweepRedshiftSnapshotSchedules(region string) error {
 	var errs *multierror.Error
 
 	input := &redshift.DescribeSnapshotSchedulesInput{}
-	prefixesToSweep := []string{"tf-acc-test"}
+	prefixesToSweep := []string{acctest.ResourcePrefix}
 
 	err = conn.DescribeSnapshotSchedulesPages(input, func(page *redshift.DescribeSnapshotSchedulesOutput, lastPage bool) bool {
 		if page == nil {
@@ -79,13 +79,13 @@ func testSweepRedshiftSnapshotSchedules(region string) error {
 
 func TestAccAWSRedshiftSnapshotSchedule_basic(t *testing.T) {
 	var v redshift.SnapshotSchedule
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_redshift_snapshot_schedule.default"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSRedshiftSnapshotScheduleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -116,13 +116,13 @@ func TestAccAWSRedshiftSnapshotSchedule_basic(t *testing.T) {
 
 func TestAccAWSRedshiftSnapshotSchedule_withMultipleDefinition(t *testing.T) {
 	var v redshift.SnapshotSchedule
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_redshift_snapshot_schedule.default"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSRedshiftSnapshotScheduleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -159,7 +159,7 @@ func TestAccAWSRedshiftSnapshotSchedule_withIdentifierPrefix(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSRedshiftSnapshotScheduleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -183,13 +183,13 @@ func TestAccAWSRedshiftSnapshotSchedule_withIdentifierPrefix(t *testing.T) {
 
 func TestAccAWSRedshiftSnapshotSchedule_withDescription(t *testing.T) {
 	var v redshift.SnapshotSchedule
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_redshift_snapshot_schedule.default"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSRedshiftSnapshotScheduleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -214,13 +214,13 @@ func TestAccAWSRedshiftSnapshotSchedule_withDescription(t *testing.T) {
 
 func TestAccAWSRedshiftSnapshotSchedule_withTags(t *testing.T) {
 	var v redshift.SnapshotSchedule
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_redshift_snapshot_schedule.default"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSRedshiftSnapshotScheduleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -257,14 +257,14 @@ func TestAccAWSRedshiftSnapshotSchedule_withForceDestroy(t *testing.T) {
 	var snapshotSchedule redshift.SnapshotSchedule
 	var cluster redshift.Cluster
 	rInt := sdkacctest.RandInt()
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_redshift_snapshot_schedule.default"
 	clusterResourceName := "aws_redshift_cluster.default"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSRedshiftSnapshotScheduleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -293,7 +293,7 @@ func testAccCheckAWSRedshiftSnapshotScheduleDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).redshiftconn
+		conn := acctest.Provider.Meta().(*AWSClient).redshiftconn
 		resp, err := conn.DescribeSnapshotSchedules(&redshift.DescribeSnapshotSchedulesInput{
 			ScheduleIdentifier: aws.String(rs.Primary.ID),
 		})
@@ -325,7 +325,7 @@ func testAccCheckAWSRedshiftSnapshotScheduleExists(n string, v *redshift.Snapsho
 			return fmt.Errorf("No Redshift Cluster Snapshot Schedule ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).redshiftconn
+		conn := acctest.Provider.Meta().(*AWSClient).redshiftconn
 		resp, err := conn.DescribeSnapshotSchedules(&redshift.DescribeSnapshotSchedulesInput{
 			ScheduleIdentifier: aws.String(rs.Primary.ID),
 		})
@@ -347,7 +347,7 @@ func testAccCheckAWSRedshiftSnapshotScheduleExists(n string, v *redshift.Snapsho
 
 func testAccCheckAWSRedshiftSnapshotScheduleCreateSnapshotScheduleAssociation(cluster *redshift.Cluster, snapshotSchedule *redshift.SnapshotSchedule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).redshiftconn
+		conn := acctest.Provider.Meta().(*AWSClient).redshiftconn
 
 		if _, err := conn.ModifyClusterSnapshotSchedule(&redshift.ModifyClusterSnapshotScheduleInput{
 			ClusterIdentifier:    cluster.ClusterIdentifier,

@@ -23,7 +23,7 @@ func TestAccAWSEc2TrafficMirrorFilter_basic(t *testing.T) {
 			testAccPreCheckAWSEc2TrafficMirrorFilter(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEc2TrafficMirrorFilterDestroy,
 		Steps: []resource.TestStep{
 			//create
@@ -73,7 +73,7 @@ func TestAccAWSEc2TrafficMirrorFilter_tags(t *testing.T) {
 			testAccPreCheckAWSEc2TrafficMirrorFilter(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEc2TrafficMirrorFilterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -121,14 +121,14 @@ func TestAccAWSEc2TrafficMirrorFilter_disappears(t *testing.T) {
 			testAccPreCheckAWSEc2TrafficMirrorFilter(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEc2TrafficMirrorFilterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTrafficMirrorFilterConfig(description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEc2TrafficMirrorFilterExists(resourceName, &v),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsEc2TrafficMirrorFilter(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsEc2TrafficMirrorFilter(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -146,7 +146,7 @@ func testAccCheckAWSEc2TrafficMirrorFilterExists(name string, traffic *ec2.Traff
 			return fmt.Errorf("No ID set for %s", name)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 		out, err := conn.DescribeTrafficMirrorFilters(&ec2.DescribeTrafficMirrorFiltersInput{
 			TrafficMirrorFilterIds: []*string{
 				aws.String(rs.Primary.ID),
@@ -207,7 +207,7 @@ resource "aws_ec2_traffic_mirror_filter" "test" {
 }
 
 func testAccPreCheckAWSEc2TrafficMirrorFilter(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 	_, err := conn.DescribeTrafficMirrorFilters(&ec2.DescribeTrafficMirrorFiltersInput{})
 
@@ -221,7 +221,7 @@ func testAccPreCheckAWSEc2TrafficMirrorFilter(t *testing.T) {
 }
 
 func testAccCheckAWSEc2TrafficMirrorFilterDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ec2_traffic_mirror_filter" {

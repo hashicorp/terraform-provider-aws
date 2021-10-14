@@ -20,12 +20,12 @@ import (
 func TestAccAWSAccessKey_basic(t *testing.T) {
 	var conf iam.AccessKeyMetadata
 	resourceName := "aws_iam_access_key.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAccessKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -54,12 +54,12 @@ func TestAccAWSAccessKey_basic(t *testing.T) {
 func TestAccAWSAccessKey_encrypted(t *testing.T) {
 	var conf iam.AccessKeyMetadata
 	resourceName := "aws_iam_access_key.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAccessKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -88,12 +88,12 @@ func TestAccAWSAccessKey_encrypted(t *testing.T) {
 func TestAccAWSAccessKey_status(t *testing.T) {
 	var conf iam.AccessKeyMetadata
 	resourceName := "aws_iam_access_key.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAccessKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -128,7 +128,7 @@ func TestAccAWSAccessKey_status(t *testing.T) {
 }
 
 func testAccCheckAWSAccessKeyDestroy(s *terraform.State) error {
-	iamconn := testAccProvider.Meta().(*AWSClient).iamconn
+	iamconn := acctest.Provider.Meta().(*AWSClient).iamconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_access_key" {
@@ -170,7 +170,7 @@ func testAccCheckAWSAccessKeyExists(n string, res *iam.AccessKeyMetadata) resour
 			return fmt.Errorf("No Role name is set")
 		}
 
-		iamconn := testAccProvider.Meta().(*AWSClient).iamconn
+		iamconn := acctest.Provider.Meta().(*AWSClient).iamconn
 		name := rs.Primary.Attributes["user"]
 
 		resp, err := iamconn.ListAccessKeys(&iam.ListAccessKeysInput{
@@ -193,7 +193,7 @@ func testAccCheckAWSAccessKeyExists(n string, res *iam.AccessKeyMetadata) resour
 
 func testAccCheckAWSAccessKeyAttributes(accessKeyMetadata *iam.AccessKeyMetadata, status string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if !strings.Contains(*accessKeyMetadata.UserName, "tf-acc-test") {
+		if !strings.Contains(*accessKeyMetadata.UserName, acctest.ResourcePrefix) {
 			return fmt.Errorf("Bad username: %s", *accessKeyMetadata.UserName)
 		}
 

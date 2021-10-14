@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
 )
 
 func resourceAwsNetworkAcl() *schema.Resource {
@@ -742,7 +743,7 @@ func getDefaultNetworkAcl(vpcId string, conn *ec2.EC2) (defaultAcl *ec2.NetworkA
 
 func findNetworkAclAssociation(subnetId string, conn *ec2.EC2) (networkAclAssociation *ec2.NetworkAclAssociation, err error) {
 	req := &ec2.DescribeNetworkAclsInput{}
-	req.Filters = buildEC2AttributeFilterList(
+	req.Filters = tfec2.BuildAttributeFilterList(
 		map[string]string{
 			"association.subnet-id": subnetId,
 		},

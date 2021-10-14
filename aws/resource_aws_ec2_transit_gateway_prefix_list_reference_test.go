@@ -18,7 +18,7 @@ func testAccAwsEc2TransitGatewayPrefixListReference_basic(t *testing.T) {
 	managedPrefixListResourceName := "aws_ec2_managed_prefix_list.test"
 	resourceName := "aws_ec2_transit_gateway_prefix_list_reference.test"
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -27,7 +27,7 @@ func testAccAwsEc2TransitGatewayPrefixListReference_basic(t *testing.T) {
 			testAccPreCheckEc2ManagedPrefixList(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsEc2TransitGatewayPrefixListReferenceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -52,7 +52,7 @@ func testAccAwsEc2TransitGatewayPrefixListReference_basic(t *testing.T) {
 
 func testAccAwsEc2TransitGatewayPrefixListReference_disappears(t *testing.T) {
 	resourceName := "aws_ec2_transit_gateway_prefix_list_reference.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -61,14 +61,14 @@ func testAccAwsEc2TransitGatewayPrefixListReference_disappears(t *testing.T) {
 			testAccPreCheckEc2ManagedPrefixList(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsEc2TransitGatewayPrefixListReferenceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsEc2TransitGatewayPrefixListReferenceConfig_Blackhole(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccAwsEc2TransitGatewayPrefixListReferenceExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsEc2TransitGatewayPrefixListReference(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsEc2TransitGatewayPrefixListReference(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -79,7 +79,7 @@ func testAccAwsEc2TransitGatewayPrefixListReference_disappears(t *testing.T) {
 func testAccAwsEc2TransitGatewayPrefixListReference_disappears_TransitGateway(t *testing.T) {
 	resourceName := "aws_ec2_transit_gateway_prefix_list_reference.test"
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -88,14 +88,14 @@ func testAccAwsEc2TransitGatewayPrefixListReference_disappears_TransitGateway(t 
 			testAccPreCheckEc2ManagedPrefixList(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsEc2TransitGatewayPrefixListReferenceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsEc2TransitGatewayPrefixListReferenceConfig_Blackhole(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccAwsEc2TransitGatewayPrefixListReferenceExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsEc2TransitGateway(), transitGatewayResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsEc2TransitGateway(), transitGatewayResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -107,7 +107,7 @@ func testAccAwsEc2TransitGatewayPrefixListReference_TransitGatewayAttachmentId(t
 	resourceName := "aws_ec2_transit_gateway_prefix_list_reference.test"
 	transitGatewayVpcAttachmentResourceName1 := "aws_ec2_transit_gateway_vpc_attachment.test.0"
 	transitGatewayVpcAttachmentResourceName2 := "aws_ec2_transit_gateway_vpc_attachment.test.1"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -116,7 +116,7 @@ func testAccAwsEc2TransitGatewayPrefixListReference_TransitGatewayAttachmentId(t
 			testAccPreCheckEc2ManagedPrefixList(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsEc2TransitGatewayPrefixListReferenceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -145,7 +145,7 @@ func testAccAwsEc2TransitGatewayPrefixListReference_TransitGatewayAttachmentId(t
 }
 
 func testAccCheckAwsEc2TransitGatewayPrefixListReferenceDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ec2_transit_gateway_prefix_list_reference" {
@@ -182,7 +182,7 @@ func testAccAwsEc2TransitGatewayPrefixListReferenceExists(resourceName string) r
 			return fmt.Errorf("resource %s has not set its id", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 		transitGatewayPrefixListReference, err := finder.TransitGatewayPrefixListReferenceByID(conn, rs.Primary.ID)
 

@@ -88,12 +88,12 @@ func testSweepDbSnapshots(region string) error {
 func TestAccAWSDBSnapshot_basic(t *testing.T) {
 	var v rds.DBSnapshot
 	resourceName := "aws_db_snapshot.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDbSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -116,12 +116,12 @@ func TestAccAWSDBSnapshot_basic(t *testing.T) {
 func TestAccAWSDBSnapshot_tags(t *testing.T) {
 	var v rds.DBSnapshot
 	resourceName := "aws_db_snapshot.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDbSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -160,13 +160,13 @@ func TestAccAWSDBSnapshot_tags(t *testing.T) {
 
 func TestAccAWSDBSnapshot_disappears(t *testing.T) {
 	var v rds.DBSnapshot
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_snapshot.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDbSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -182,7 +182,7 @@ func TestAccAWSDBSnapshot_disappears(t *testing.T) {
 }
 
 func testAccCheckDbSnapshotDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).rdsconn
+	conn := acctest.Provider.Meta().(*AWSClient).rdsconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_db_snapshot" {
@@ -224,7 +224,7 @@ func testAccCheckDbSnapshotExists(n string, v *rds.DBSnapshot) resource.TestChec
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).rdsconn
+		conn := acctest.Provider.Meta().(*AWSClient).rdsconn
 
 		request := &rds.DescribeDBSnapshotsInput{
 			DBSnapshotIdentifier: aws.String(rs.Primary.ID),
@@ -243,7 +243,7 @@ func testAccCheckDbSnapshotExists(n string, v *rds.DBSnapshot) resource.TestChec
 
 func testAccCheckDbSnapshotDisappears(snapshot *rds.DBSnapshot) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).rdsconn
+		conn := acctest.Provider.Meta().(*AWSClient).rdsconn
 
 		if _, err := conn.DeleteDBSnapshot(&rds.DeleteDBSnapshotInput{
 			DBSnapshotIdentifier: snapshot.DBSnapshotIdentifier,

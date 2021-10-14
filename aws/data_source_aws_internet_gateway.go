@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
 )
 
 func dataSourceAwsInternetGateway() *schema.Resource {
@@ -63,7 +64,7 @@ func dataSourceAwsInternetGatewayRead(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("One of internet_gateway_id or filter or tags must be assigned")
 	}
 
-	req.Filters = buildEC2AttributeFilterList(map[string]string{
+	req.Filters = tfec2.BuildAttributeFilterList(map[string]string{
 		"internet-gateway-id": internetGatewayId.(string),
 	})
 	req.Filters = append(req.Filters, buildEC2TagFilterList(

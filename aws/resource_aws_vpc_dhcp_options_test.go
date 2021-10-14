@@ -41,7 +41,7 @@ func testSweepVpcDhcpOptions(region string) error {
 						continue
 					}
 
-					if aws.StringValue(dhcpConfiguration.Values[0].Value) == resourceAwsEc2RegionalPrivateDnsSuffix(region) {
+					if aws.StringValue(dhcpConfiguration.Values[0].Value) == regionalPrivateDNSSuffix(region) {
 						defaultDomainNameFound = true
 					}
 				} else if aws.StringValue(dhcpConfiguration.Key) == "domain-name-servers" {
@@ -92,7 +92,7 @@ func TestAccAWSDHCPOptions_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDHCPOptionsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -127,7 +127,7 @@ func TestAccAWSDHCPOptions_deleteOptions(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDHCPOptionsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -150,7 +150,7 @@ func TestAccAWSDHCPOptions_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDHCPOptionsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -195,14 +195,14 @@ func TestAccAWSDHCPOptions_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDHCPOptionsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDHCPOptionsConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDHCPOptionsExists(resourceName, &d),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsVpcDhcpOptions(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsVpcDhcpOptions(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -211,7 +211,7 @@ func TestAccAWSDHCPOptions_disappears(t *testing.T) {
 }
 
 func testAccCheckDHCPOptionsDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_vpc_dhcp_options" {
@@ -254,7 +254,7 @@ func testAccCheckDHCPOptionsExists(n string, d *ec2.DhcpOptions) resource.TestCh
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 		resp, err := conn.DescribeDhcpOptions(&ec2.DescribeDhcpOptionsInput{
 			DhcpOptionsIds: []*string{
 				aws.String(rs.Primary.ID),
@@ -284,7 +284,7 @@ func testAccCheckDHCPOptionsDelete(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 		_, err := conn.DeleteDhcpOptions(&ec2.DeleteDhcpOptionsInput{
 			DhcpOptionsId: aws.String(rs.Primary.ID),
 		})

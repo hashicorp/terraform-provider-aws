@@ -15,13 +15,13 @@ import (
 
 func TestAccAWSAMICopy_basic(t *testing.T) {
 	var image ec2.Image
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ami_copy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAMICopyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -43,13 +43,13 @@ func TestAccAWSAMICopy_basic(t *testing.T) {
 
 func TestAccAWSAMICopy_Description(t *testing.T) {
 	var image ec2.Image
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ami_copy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAMICopyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -72,13 +72,13 @@ func TestAccAWSAMICopy_Description(t *testing.T) {
 
 func TestAccAWSAMICopy_EnaSupport(t *testing.T) {
 	var image ec2.Image
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ami_copy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAMICopyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -94,14 +94,14 @@ func TestAccAWSAMICopy_EnaSupport(t *testing.T) {
 
 func TestAccAWSAMICopy_DestinationOutpost(t *testing.T) {
 	var image ec2.Image
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	outpostDataSourceName := "data.aws_outposts_outpost.test"
 	resourceName := "aws_ami_copy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAMICopyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -118,12 +118,12 @@ func TestAccAWSAMICopy_DestinationOutpost(t *testing.T) {
 func TestAccAWSAMICopy_tags(t *testing.T) {
 	var ami ec2.Image
 	resourceName := "aws_ami_copy.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAMICopyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -169,7 +169,7 @@ func testAccCheckAWSAMICopyExists(resourceName string, image *ec2.Image) resourc
 			return fmt.Errorf("No ID set for %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 		input := &ec2.DescribeImagesInput{
 			ImageIds: []*string{aws.String(rs.Primary.ID)},
@@ -190,7 +190,7 @@ func testAccCheckAWSAMICopyExists(resourceName string, image *ec2.Image) resourc
 }
 
 func testAccCheckAWSAMICopyDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ami_copy" {

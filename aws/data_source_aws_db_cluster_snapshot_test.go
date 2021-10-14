@@ -12,14 +12,14 @@ import (
 )
 
 func TestAccAWSDbClusterSnapshotDataSource_DbClusterSnapshotIdentifier(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_db_cluster_snapshot.test"
 	resourceName := "aws_db_cluster_snapshot.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAwsDbClusterSnapshotDataSourceConfig_DbClusterSnapshotIdentifier(rName),
@@ -49,14 +49,14 @@ func TestAccAWSDbClusterSnapshotDataSource_DbClusterSnapshotIdentifier(t *testin
 }
 
 func TestAccAWSDbClusterSnapshotDataSource_DbClusterIdentifier(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_db_cluster_snapshot.test"
 	resourceName := "aws_db_cluster_snapshot.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAwsDbClusterSnapshotDataSourceConfig_DbClusterIdentifier(rName),
@@ -86,14 +86,14 @@ func TestAccAWSDbClusterSnapshotDataSource_DbClusterIdentifier(t *testing.T) {
 }
 
 func TestAccAWSDbClusterSnapshotDataSource_MostRecent(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_db_cluster_snapshot.test"
 	resourceName := "aws_db_cluster_snapshot.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAwsDbClusterSnapshotDataSourceConfig_MostRecent(rName),

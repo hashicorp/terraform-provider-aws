@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
 )
 
 func dataSourceAwsVpcEndpoint() *schema.Resource {
@@ -126,7 +127,7 @@ func dataSourceAwsVpcEndpointRead(d *schema.ResourceData, meta interface{}) erro
 		req.VpcEndpointIds = aws.StringSlice([]string{id.(string)})
 	}
 
-	req.Filters = buildEC2AttributeFilterList(
+	req.Filters = tfec2.BuildAttributeFilterList(
 		map[string]string{
 			"vpc-endpoint-state": d.Get("state").(string),
 			"vpc-id":             d.Get("vpc_id").(string),
@@ -174,7 +175,7 @@ func dataSourceAwsVpcEndpointRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("vpc_id", vpce.VpcId)
 
 	respPl, err := conn.DescribePrefixLists(&ec2.DescribePrefixListsInput{
-		Filters: buildEC2AttributeFilterList(map[string]string{
+		Filters: tfec2.BuildAttributeFilterList(map[string]string{
 			"prefix-list-name": serviceName,
 		}),
 	})

@@ -16,14 +16,14 @@ func TestAccAwsEc2SpotPriceDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAwsEc2SpotPrice(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsEc2SpotPriceDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, "spot_price", regexp.MustCompile(`^\d+\.\d+$`)),
-					resource.TestMatchResourceAttr(dataSourceName, "spot_price_timestamp", regexp.MustCompile(rfc3339RegexPattern)),
+					resource.TestMatchResourceAttr(dataSourceName, "spot_price_timestamp", regexp.MustCompile(acctest.RFC3339RegexPattern)),
 				),
 			},
 		},
@@ -36,14 +36,14 @@ func TestAccAwsEc2SpotPriceDataSource_Filter(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAwsEc2SpotPrice(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsEc2SpotPriceDataSourceFilterConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, "spot_price", regexp.MustCompile(`^\d+\.\d+$`)),
-					resource.TestMatchResourceAttr(dataSourceName, "spot_price_timestamp", regexp.MustCompile(rfc3339RegexPattern)),
+					resource.TestMatchResourceAttr(dataSourceName, "spot_price_timestamp", regexp.MustCompile(acctest.RFC3339RegexPattern)),
 				),
 			},
 		},
@@ -51,7 +51,7 @@ func TestAccAwsEc2SpotPriceDataSource_Filter(t *testing.T) {
 }
 
 func testAccPreCheckAwsEc2SpotPrice(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 	input := &ec2.DescribeSpotPriceHistoryInput{
 		MaxResults: aws.Int64(5),

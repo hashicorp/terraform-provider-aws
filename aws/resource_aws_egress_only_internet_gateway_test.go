@@ -69,7 +69,7 @@ func TestAccAWSEgressOnlyInternetGateway_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEgressOnlyInternetGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -95,7 +95,7 @@ func TestAccAWSEgressOnlyInternetGateway_Tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEgressOnlyInternetGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -133,7 +133,7 @@ func TestAccAWSEgressOnlyInternetGateway_Tags(t *testing.T) {
 }
 
 func testAccCheckAWSEgressOnlyInternetGatewayDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_egress_only_internet_gateway" {
@@ -168,7 +168,7 @@ func testAccCheckAWSEgressOnlyInternetGatewayExists(n string, igw *ec2.EgressOnl
 			return fmt.Errorf("No Egress Only IGW ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 		resp, err := conn.DescribeEgressOnlyInternetGateways(&ec2.DescribeEgressOnlyInternetGatewaysInput{
 			EgressOnlyInternetGatewayIds: []*string{aws.String(rs.Primary.ID)},
 		})

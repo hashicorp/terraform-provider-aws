@@ -19,7 +19,7 @@ func TestAccAWSDHCPOptionsAssociation_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDHCPOptionsAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -48,7 +48,7 @@ func TestAccAWSDHCPOptionsAssociation_disappears_vpc(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDHCPOptionsAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -57,7 +57,7 @@ func TestAccAWSDHCPOptionsAssociation_disappears_vpc(t *testing.T) {
 					testAccCheckDHCPOptionsExists("aws_vpc_dhcp_options.test", &d),
 					acctest.CheckVPCExists("aws_vpc.test", &v),
 					testAccCheckDHCPOptionsAssociationExist(resourceName, &v),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsVpc(), "aws_vpc.test"),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsVpc(), "aws_vpc.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -73,7 +73,7 @@ func TestAccAWSDHCPOptionsAssociation_disappears_dhcp(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDHCPOptionsAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -82,7 +82,7 @@ func TestAccAWSDHCPOptionsAssociation_disappears_dhcp(t *testing.T) {
 					testAccCheckDHCPOptionsExists("aws_vpc_dhcp_options.test", &d),
 					acctest.CheckVPCExists("aws_vpc.test", &v),
 					testAccCheckDHCPOptionsAssociationExist(resourceName, &v),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsVpcDhcpOptions(), "aws_vpc_dhcp_options.test"),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsVpcDhcpOptions(), "aws_vpc_dhcp_options.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -98,7 +98,7 @@ func TestAccAWSDHCPOptionsAssociation_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDHCPOptionsAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -107,7 +107,7 @@ func TestAccAWSDHCPOptionsAssociation_disappears(t *testing.T) {
 					testAccCheckDHCPOptionsExists("aws_vpc_dhcp_options.test", &d),
 					acctest.CheckVPCExists("aws_vpc.test", &v),
 					testAccCheckDHCPOptionsAssociationExist(resourceName, &v),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsVpcDhcpOptionsAssociation(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsVpcDhcpOptionsAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -127,7 +127,7 @@ func testAccDHCPOptionsAssociationVPCImportIdFunc(resourceName string) resource.
 }
 
 func testAccCheckDHCPOptionsAssociationDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_vpc_dhcp_options_association" {

@@ -22,7 +22,7 @@ func TestAccAWSRedshiftSnapshotScheduleAssociation_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSRedshiftSnapshotScheduleAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -48,7 +48,7 @@ func testAccCheckAWSRedshiftSnapshotScheduleAssociationDestroy(s *terraform.Stat
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).redshiftconn
+		conn := acctest.Provider.Meta().(*AWSClient).redshiftconn
 		clusterIdentifier, scheduleIdentifier, err := resourceAwsRedshiftSnapshotScheduleAssociationParseId(rs.Primary.ID)
 		if err != nil {
 			return err
@@ -89,7 +89,7 @@ func testAccCheckAWSRedshiftSnapshotScheduleAssociationExists(n string) resource
 			return err
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).redshiftconn
+		conn := acctest.Provider.Meta().(*AWSClient).redshiftconn
 		resp, err := conn.DescribeSnapshotSchedules(&redshift.DescribeSnapshotSchedulesInput{
 			ScheduleIdentifier: aws.String(scheduleIdentifier),
 			ClusterIdentifier:  aws.String(clusterIdentifier),

@@ -68,7 +68,7 @@ func TestAccAWSElasticacheSubnetGroup_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSElasticacheSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -98,7 +98,7 @@ func TestAccAWSElasticacheSubnetGroup_update(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSElasticacheSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -134,7 +134,7 @@ func TestAccAWSElasticacheSubnetGroup_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSElasticacheSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -181,7 +181,7 @@ func TestAccAWSElasticacheSubnetGroup_tags(t *testing.T) {
 }
 
 func testAccCheckAWSElasticacheSubnetGroupDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).elasticacheconn
+	conn := acctest.Provider.Meta().(*AWSClient).elasticacheconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_elasticache_subnet_group" {
@@ -215,7 +215,7 @@ func testAccCheckAWSElasticacheSubnetGroupExists(n string, csg *elasticache.Cach
 			return fmt.Errorf("No cache subnet group ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).elasticacheconn
+		conn := acctest.Provider.Meta().(*AWSClient).elasticacheconn
 		resp, err := conn.DescribeCacheSubnetGroups(&elasticache.DescribeCacheSubnetGroupsInput{
 			CacheSubnetGroupName: aws.String(rs.Primary.ID),
 		})

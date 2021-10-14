@@ -61,9 +61,9 @@ func testSweepKeyPairs(region string) error {
 func TestAccAWSKeyPair_basic(t *testing.T) {
 	var keyPair ec2.KeyPairInfo
 	resourceName := "aws_key_pair.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	publicKey, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
@@ -71,7 +71,7 @@ func TestAccAWSKeyPair_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSKeyPairDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -97,9 +97,9 @@ func TestAccAWSKeyPair_basic(t *testing.T) {
 func TestAccAWSKeyPair_tags(t *testing.T) {
 	var keyPair ec2.KeyPairInfo
 	resourceName := "aws_key_pair.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	publicKey, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
@@ -107,7 +107,7 @@ func TestAccAWSKeyPair_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSKeyPairDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -149,7 +149,7 @@ func TestAccAWSKeyPair_generatedName(t *testing.T) {
 	var keyPair ec2.KeyPairInfo
 	resourceName := "aws_key_pair.test"
 
-	publicKey, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
@@ -157,7 +157,7 @@ func TestAccAWSKeyPair_generatedName(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSKeyPairDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -182,7 +182,7 @@ func TestAccAWSKeyPair_namePrefix(t *testing.T) {
 	var keyPair ec2.KeyPairInfo
 	resourceName := "aws_key_pair.test"
 
-	publicKey, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
@@ -190,7 +190,7 @@ func TestAccAWSKeyPair_namePrefix(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSKeyPairDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -214,9 +214,9 @@ func TestAccAWSKeyPair_namePrefix(t *testing.T) {
 func TestAccAWSKeyPair_disappears(t *testing.T) {
 	var keyPair ec2.KeyPairInfo
 	resourceName := "aws_key_pair.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	publicKey, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
@@ -224,14 +224,14 @@ func TestAccAWSKeyPair_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSKeyPairDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSKeyPairConfig(rName, publicKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSKeyPairExists(resourceName, &keyPair),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsKeyPair(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsKeyPair(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -240,7 +240,7 @@ func TestAccAWSKeyPair_disappears(t *testing.T) {
 }
 
 func testAccCheckAWSKeyPairDestroy(s *terraform.State) error {
-	ec2conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	ec2conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_key_pair" {
@@ -286,7 +286,7 @@ func testAccCheckAWSKeyPairExists(n string, res *ec2.KeyPairInfo) resource.TestC
 			return fmt.Errorf("No KeyPair name is set")
 		}
 
-		ec2conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		ec2conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 		resp, err := ec2conn.DescribeKeyPairs(&ec2.DescribeKeyPairsInput{
 			KeyNames: []*string{aws.String(rs.Primary.ID)},

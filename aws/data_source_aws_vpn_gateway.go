@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
 )
 
 func dataSourceAwsVpnGateway() *schema.Resource {
@@ -62,21 +63,21 @@ func dataSourceAwsVpnGatewayRead(d *schema.ResourceData, meta interface{}) error
 		req.VpnGatewayIds = aws.StringSlice([]string{id.(string)})
 	}
 
-	req.Filters = buildEC2AttributeFilterList(
+	req.Filters = tfec2.BuildAttributeFilterList(
 		map[string]string{
 			"state":             d.Get("state").(string),
 			"availability-zone": d.Get("availability_zone").(string),
 		},
 	)
 	if asn, ok := d.GetOk("amazon_side_asn"); ok {
-		req.Filters = append(req.Filters, buildEC2AttributeFilterList(
+		req.Filters = append(req.Filters, tfec2.BuildAttributeFilterList(
 			map[string]string{
 				"amazon-side-asn": asn.(string),
 			},
 		)...)
 	}
 	if id, ok := d.GetOk("attached_vpc_id"); ok {
-		req.Filters = append(req.Filters, buildEC2AttributeFilterList(
+		req.Filters = append(req.Filters, tfec2.BuildAttributeFilterList(
 			map[string]string{
 				"attachment.state":  "attached",
 				"attachment.vpc-id": id.(string),

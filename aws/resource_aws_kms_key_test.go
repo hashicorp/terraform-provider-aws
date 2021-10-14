@@ -82,7 +82,7 @@ func TestAccAWSKmsKey_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSKmsKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -106,13 +106,13 @@ func TestAccAWSKmsKey_basic(t *testing.T) {
 
 func TestAccAWSKmsKey_asymmetricKey(t *testing.T) {
 	var key kms.KeyMetadata
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kms_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSKmsKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -129,20 +129,20 @@ func TestAccAWSKmsKey_asymmetricKey(t *testing.T) {
 
 func TestAccAWSKmsKey_disappears(t *testing.T) {
 	var key kms.KeyMetadata
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kms_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSKmsKeyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSKmsKeyConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSKmsKeyExists(resourceName, &key),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsKmsKey(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsKmsKey(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -152,14 +152,14 @@ func TestAccAWSKmsKey_disappears(t *testing.T) {
 
 func TestAccAWSKmsKey_policy(t *testing.T) {
 	var key kms.KeyMetadata
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kms_key.test"
 	expectedPolicyText := `{"Version":"2012-10-17","Id":"kms-tf-1","Statement":[{"Sid":"Enable IAM User Permissions","Effect":"Allow","Principal":{"AWS":"*"},"Action":"kms:*","Resource":"*"}]}`
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSKmsKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -187,13 +187,13 @@ func TestAccAWSKmsKey_policy(t *testing.T) {
 
 func TestAccAWSKmsKey_policyBypass(t *testing.T) {
 	var key kms.KeyMetadata
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kms_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSKmsKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -219,13 +219,13 @@ func TestAccAWSKmsKey_policyBypass(t *testing.T) {
 
 func TestAccAWSKmsKey_policyBypassUpdate(t *testing.T) {
 	var before, after kms.KeyMetadata
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kms_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSKmsKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -248,13 +248,13 @@ func TestAccAWSKmsKey_policyBypassUpdate(t *testing.T) {
 
 func TestAccAWSKmsKey_Policy_IamRole(t *testing.T) {
 	var key kms.KeyMetadata
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kms_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSKmsKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -276,13 +276,13 @@ func TestAccAWSKmsKey_Policy_IamRole(t *testing.T) {
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/7646
 func TestAccAWSKmsKey_Policy_IamServiceLinkedRole(t *testing.T) {
 	var key kms.KeyMetadata
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kms_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSKmsKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -303,13 +303,13 @@ func TestAccAWSKmsKey_Policy_IamServiceLinkedRole(t *testing.T) {
 
 func TestAccAWSKmsKey_isEnabled(t *testing.T) {
 	var key1, key2, key3 kms.KeyMetadata
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kms_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSKmsKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -351,13 +351,13 @@ func TestAccAWSKmsKey_isEnabled(t *testing.T) {
 
 func TestAccAWSKmsKey_tags(t *testing.T) {
 	var key kms.KeyMetadata
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kms_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSKmsKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -406,7 +406,7 @@ func testAccCheckAWSKmsKeyHasPolicy(name string, expectedPolicyText string) reso
 			return fmt.Errorf("No KMS Key ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).kmsconn
+		conn := acctest.Provider.Meta().(*AWSClient).kmsconn
 
 		out, err := conn.GetKeyPolicy(&kms.GetKeyPolicyInput{
 			KeyId:      aws.String(rs.Primary.ID),
@@ -432,7 +432,7 @@ func testAccCheckAWSKmsKeyHasPolicy(name string, expectedPolicyText string) reso
 }
 
 func testAccCheckAWSKmsKeyDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).kmsconn
+	conn := acctest.Provider.Meta().(*AWSClient).kmsconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_kms_key" {
@@ -466,7 +466,7 @@ func testAccCheckAWSKmsKeyExists(name string, key *kms.KeyMetadata) resource.Tes
 			return fmt.Errorf("No KMS Key ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).kmsconn
+		conn := acctest.Provider.Meta().(*AWSClient).kmsconn
 
 		outputRaw, err := tfresource.RetryWhenNotFound(waiter.PropagationTimeout, func() (interface{}, error) {
 			return finder.KeyByID(conn, rs.Primary.ID)
