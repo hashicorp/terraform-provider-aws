@@ -17,6 +17,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
 )
 
 func init() {
@@ -218,7 +227,7 @@ func testAccCheckAWSGlueRegistryExists(resourceName string, registry *glue.GetRe
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
-		output, err := finder.RegistryByID(conn, rs.Primary.ID)
+		output, err := tfglue.FindRegistryByID(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -243,7 +252,7 @@ func testAccCheckAWSGlueRegistryDestroy(s *terraform.State) error {
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
-		output, err := finder.RegistryByID(conn, rs.Primary.ID)
+		output, err := tfglue.FindRegistryByID(conn, rs.Primary.ID)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 				return nil

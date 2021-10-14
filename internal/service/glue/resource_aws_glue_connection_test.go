@@ -18,6 +18,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
 )
 
 func init() {
@@ -428,7 +437,7 @@ func testAccCheckAWSGlueConnectionExists(resourceName string, connection *glue.C
 			return err
 		}
 
-		output, err := finder.ConnectionByName(conn, connectionName, catalogID)
+		output, err := tfglue.FindConnectionByName(conn, connectionName, catalogID)
 
 		if err != nil {
 			return err
@@ -452,7 +461,7 @@ func testAccCheckAWSGlueConnectionDestroy(s *terraform.State) error {
 			return err
 		}
 
-		_, err = finder.ConnectionByName(conn, connectionName, catalogID)
+		_, err = tfglue.FindConnectionByName(conn, connectionName, catalogID)
 
 		if tfresource.NotFound(err) {
 			continue

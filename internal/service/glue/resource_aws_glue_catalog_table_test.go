@@ -15,6 +15,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
 )
 
 func init() {
@@ -1122,7 +1131,7 @@ func testAccCheckGlueTableDestroy(s *terraform.State) error {
 			return err
 		}
 
-		if _, err := finder.TableByName(conn, catalogId, dbName, resourceName); err != nil {
+		if _, err := tfglue.FindTableByName(conn, catalogId, dbName, resourceName); err != nil {
 			//Verify the error is what we want
 			if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 				continue
@@ -1152,7 +1161,7 @@ func testAccCheckGlueCatalogTableExists(name string) resource.TestCheckFunc {
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
-		out, err := finder.TableByName(conn, catalogId, dbName, resourceName)
+		out, err := tfglue.FindTableByName(conn, catalogId, dbName, resourceName)
 		if err != nil {
 			return err
 		}

@@ -14,6 +14,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
 )
 
 func TestAccAWSGluePartition_basic(t *testing.T) {
@@ -177,7 +186,7 @@ func testAccCheckGluePartitionDestroy(s *terraform.State) error {
 			continue
 		}
 
-		if _, err := finder.PartitionByValues(conn, rs.Primary.ID); err != nil {
+		if _, err := tfglue.FindPartitionByValues(conn, rs.Primary.ID); err != nil {
 			if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 				continue
 			}
@@ -201,7 +210,7 @@ func testAccCheckGluePartitionExists(name string) resource.TestCheckFunc {
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
-		out, err := finder.PartitionByValues(conn, rs.Primary.ID)
+		out, err := tfglue.FindPartitionByValues(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}

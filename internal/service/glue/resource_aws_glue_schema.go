@@ -16,6 +16,55 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
 )
 
 func ResourceSchema() *schema.Resource {
@@ -108,7 +157,7 @@ func resourceSchemaCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("registry_arn"); ok {
-		input.RegistryId = tfglue.CreateAwsGlueRegistryID(v.(string))
+		input.RegistryId = tfglue.createRegistryID(v.(string))
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -126,7 +175,7 @@ func resourceSchemaCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.SetId(aws.StringValue(output.SchemaArn))
 
-	_, err = waiter.SchemaAvailable(conn, d.Id())
+	_, err = tfglue.waitSchemaAvailable(conn, d.Id())
 	if err != nil {
 		return fmt.Errorf("error waiting for Glue Schema (%s) to be Available: %w", d.Id(), err)
 	}
@@ -139,7 +188,7 @@ func resourceSchemaRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	output, err := finder.SchemaByID(conn, d.Id())
+	output, err := tfglue.FindSchemaByID(conn, d.Id())
 	if err != nil {
 		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 			log.Printf("[WARN] Glue Schema (%s) not found, removing from state", d.Id())
@@ -184,7 +233,7 @@ func resourceSchemaRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
-	schemeDefOutput, err := finder.SchemaVersionByID(conn, d.Id())
+	schemeDefOutput, err := tfglue.FindSchemaVersionByID(conn, d.Id())
 	if err != nil {
 		return fmt.Errorf("error reading Glue Schema Definition (%s): %w", d.Id(), err)
 	}
@@ -198,7 +247,7 @@ func resourceSchemaUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 
 	input := &glue.UpdateSchemaInput{
-		SchemaId: tfglue.CreateAwsGlueSchemaID(d.Id()),
+		SchemaId: tfglue.createSchemaID(d.Id()),
 		SchemaVersionNumber: &glue.SchemaVersionNumber{
 			LatestVersion: aws.Bool(true),
 		},
@@ -222,7 +271,7 @@ func resourceSchemaUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error updating Glue Schema (%s): %w", d.Id(), err)
 		}
 
-		_, err = waiter.SchemaAvailable(conn, d.Id())
+		_, err = tfglue.waitSchemaAvailable(conn, d.Id())
 		if err != nil {
 			return fmt.Errorf("error waiting for Glue Schema (%s) to be Available: %w", d.Id(), err)
 		}
@@ -237,7 +286,7 @@ func resourceSchemaUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("schema_definition") {
 		defInput := &glue.RegisterSchemaVersionInput{
-			SchemaId:         tfglue.CreateAwsGlueSchemaID(d.Id()),
+			SchemaId:         tfglue.createSchemaID(d.Id()),
 			SchemaDefinition: aws.String(d.Get("schema_definition").(string)),
 		}
 
@@ -246,7 +295,7 @@ func resourceSchemaUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error updating Glue Schema Definition (%s): %w", d.Id(), err)
 		}
 
-		_, err = waiter.SchemaVersionAvailable(conn, d.Id())
+		_, err = tfglue.waitSchemaVersionAvailable(conn, d.Id())
 		if err != nil {
 			return fmt.Errorf("error waiting for Glue Schema Version (%s) to be Available: %w", d.Id(), err)
 		}
@@ -260,7 +309,7 @@ func resourceSchemaDelete(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Deleting Glue Schema: %s", d.Id())
 	input := &glue.DeleteSchemaInput{
-		SchemaId: tfglue.CreateAwsGlueSchemaID(d.Id()),
+		SchemaId: tfglue.createSchemaID(d.Id()),
 	}
 
 	_, err := conn.DeleteSchema(input)
@@ -271,7 +320,7 @@ func resourceSchemaDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting Glue Schema (%s): %w", d.Id(), err)
 	}
 
-	_, err = waiter.SchemaDeleted(conn, d.Id())
+	_, err = tfglue.waitSchemaDeleted(conn, d.Id())
 	if err != nil {
 		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 			return nil

@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 func ResourceCrawler() *schema.Resource {
@@ -287,7 +288,7 @@ func resourceCrawlerCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Retry for IAM eventual consistency
-	err = resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err = resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 		_, err = glueConn.CreateCrawler(crawlerInput)
 		if err != nil {
 			// InvalidInputException: Insufficient Lake Formation permission(s) on xxx
@@ -608,7 +609,7 @@ func resourceCrawlerUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		// Retry for IAM eventual consistency
-		err = resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+		err = resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 			_, err := glueConn.UpdateCrawler(updateCrawlerInput)
 			if err != nil {
 				// InvalidInputException: Insufficient Lake Formation permission(s) on xxx

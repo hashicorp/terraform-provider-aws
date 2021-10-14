@@ -15,6 +15,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
 )
 
 func ResourceCatalogTable() *schema.Resource {
@@ -388,7 +397,7 @@ func resourceCatalogTableRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	out, err := finder.TableByName(conn, catalogID, dbName, name)
+	out, err := tfglue.FindTableByName(conn, catalogID, dbName, name)
 	if err != nil {
 
 		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {

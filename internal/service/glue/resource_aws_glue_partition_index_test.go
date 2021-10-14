@@ -14,6 +14,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
 )
 
 func TestAccAWSGluePartitionIndex_basic(t *testing.T) {
@@ -226,7 +235,7 @@ func testAccCheckGluePartitionIndexDestroy(s *terraform.State) error {
 			continue
 		}
 
-		if _, err := finder.PartitionIndexByName(conn, rs.Primary.ID); err != nil {
+		if _, err := tfglue.FindPartitionIndexByName(conn, rs.Primary.ID); err != nil {
 			//Verify the error is what we want
 			if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 				continue
@@ -251,7 +260,7 @@ func testAccCheckGluePartitionIndexExists(name string) resource.TestCheckFunc {
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
-		out, err := finder.PartitionIndexByName(conn, rs.Primary.ID)
+		out, err := tfglue.FindPartitionIndexByName(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
