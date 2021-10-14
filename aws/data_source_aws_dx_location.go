@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/directconnect/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsDxLocation() *schema.Resource {
@@ -40,7 +41,7 @@ func dataSourceAwsDxLocation() *schema.Resource {
 }
 
 func dataSourceAwsDxLocationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dxconn
+	conn := meta.(*conns.AWSClient).DirectConnectConn
 	locationCode := d.Get("location_code").(string)
 
 	location, err := finder.LocationByCode(conn, locationCode)

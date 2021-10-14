@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/directconnect/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/directconnect/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsDxHostedConnection() *schema.Resource {
@@ -94,7 +95,7 @@ func resourceAwsDxHostedConnection() *schema.Resource {
 }
 
 func resourceAwsDxHostedConnectionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dxconn
+	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	name := d.Get("name").(string)
 	input := &directconnect.AllocateHostedConnectionInput{
@@ -118,7 +119,7 @@ func resourceAwsDxHostedConnectionCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsDxHostedConnectionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dxconn
+	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	connection, err := finder.HostedConnectionByID(conn, d.Id())
 
@@ -153,7 +154,7 @@ func resourceAwsDxHostedConnectionRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsDxHostedConnectionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dxconn
+	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	return deleteDirectConnectConnection(conn, d.Id(), waiter.HostedConnectionDeleted)
 }

@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/directconnect/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 type testAccDxHostedConnectionEnv struct {
@@ -67,7 +68,7 @@ func testAccCheckAwsDxHostedConnectionEnv() (*testAccDxHostedConnectionEnv, erro
 func testAccCheckAwsDxHostedConnectionDestroy(providerFunc func() *schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		provider := providerFunc()
-		conn := provider.Meta().(*AWSClient).dxconn
+		conn := provider.Meta().(*conns.AWSClient).DirectConnectConn
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_dx_hosted_connection" {
@@ -93,7 +94,7 @@ func testAccCheckAwsDxHostedConnectionDestroy(providerFunc func() *schema.Provid
 
 func testAccCheckAwsDxHostedConnectionExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).dxconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {

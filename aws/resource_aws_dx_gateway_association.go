@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/directconnect/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/directconnect/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsDxGatewayAssociation() *schema.Resource {
@@ -110,7 +111,7 @@ func resourceAwsDxGatewayAssociation() *schema.Resource {
 }
 
 func resourceAwsDxGatewayAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dxconn
+	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	var associationID string
 	directConnectGatewayID := d.Get("dx_gateway_id").(string)
@@ -170,7 +171,7 @@ func resourceAwsDxGatewayAssociationCreate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsDxGatewayAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dxconn
+	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	associationID := d.Get("dx_gateway_association_id").(string)
 
@@ -201,7 +202,7 @@ func resourceAwsDxGatewayAssociationRead(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsDxGatewayAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dxconn
+	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	associationID := d.Get("dx_gateway_association_id").(string)
 	input := &directconnect.UpdateDirectConnectGatewayAssociationInput{
@@ -234,7 +235,7 @@ func resourceAwsDxGatewayAssociationUpdate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsDxGatewayAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dxconn
+	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	associationID := d.Get("dx_gateway_association_id").(string)
 
@@ -259,7 +260,7 @@ func resourceAwsDxGatewayAssociationDelete(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsDxGatewayAssociationImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	conn := meta.(*AWSClient).dxconn
+	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	parts := strings.Split(d.Id(), "/")
 

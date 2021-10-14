@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/directconnect/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSDxConnectionConfirmation_basic(t *testing.T) {
@@ -57,7 +58,7 @@ func testAccCheckAwsDxConnectionConfirmationExists(name string, providerFunc fun
 		}
 
 		provider := providerFunc()
-		conn := provider.Meta().(*AWSClient).dxconn
+		conn := provider.Meta().(*conns.AWSClient).DirectConnectConn
 
 		connection, err := finder.ConnectionByID(conn, rs.Primary.ID)
 

@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsDxPublicVirtualInterface() *schema.Resource {
@@ -110,8 +111,8 @@ func resourceAwsDxPublicVirtualInterface() *schema.Resource {
 }
 
 func resourceAwsDxPublicVirtualInterfaceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dxconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).DirectConnectConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	req := &directconnect.CreatePublicVirtualInterfaceInput{
@@ -155,9 +156,9 @@ func resourceAwsDxPublicVirtualInterfaceCreate(d *schema.ResourceData, meta inte
 }
 
 func resourceAwsDxPublicVirtualInterfaceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dxconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).DirectConnectConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	vif, err := dxVirtualInterfaceRead(d.Id(), conn)
 	if err != nil {
@@ -173,10 +174,10 @@ func resourceAwsDxPublicVirtualInterfaceRead(d *schema.ResourceData, meta interf
 	d.Set("amazon_address", vif.AmazonAddress)
 	d.Set("amazon_side_asn", strconv.FormatInt(aws.Int64Value(vif.AmazonSideAsn), 10))
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
+		Partition: meta.(*conns.AWSClient).Partition,
+		Region:    meta.(*conns.AWSClient).Region,
 		Service:   "directconnect",
-		AccountID: meta.(*AWSClient).accountid,
+		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("dxvif/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)
@@ -224,7 +225,7 @@ func resourceAwsDxPublicVirtualInterfaceDelete(d *schema.ResourceData, meta inte
 }
 
 func resourceAwsDxPublicVirtualInterfaceImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	conn := meta.(*AWSClient).dxconn
+	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	vif, err := dxVirtualInterfaceRead(d.Id(), conn)
 	if err != nil {

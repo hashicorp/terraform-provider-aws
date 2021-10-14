@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsDxConnection() *schema.Resource {
@@ -49,8 +50,8 @@ func dataSourceAwsDxConnection() *schema.Resource {
 }
 
 func dataSourceAwsDxConnectionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dxconn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).DirectConnectConn
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	var connections []*directconnect.Connection
 	input := &directconnect.DescribeConnectionsInput{}
@@ -82,7 +83,7 @@ func dataSourceAwsDxConnectionRead(d *schema.ResourceData, meta interface{}) err
 	d.SetId(aws.StringValue(connection.ConnectionId))
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*conns.AWSClient).Partition,
 		Region:    aws.StringValue(connection.Region),
 		Service:   "directconnect",
 		AccountID: aws.StringValue(connection.OwnerAccount),

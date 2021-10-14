@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/directconnect/lister"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -32,7 +33,7 @@ func testSweepDirectConnectGateways(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).dxconn
+	conn := client.(*conns.AWSClient).DirectConnectConn
 	input := &directconnect.DescribeDirectConnectGatewaysInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]*testSweepResource, 0)
@@ -192,7 +193,7 @@ func TestAccAwsDxGateway_complex(t *testing.T) {
 }
 
 func testAccCheckAwsDxGatewayDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).dxconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_dx_gateway" {
@@ -225,7 +226,7 @@ func testAccCheckAwsDxGatewayExists(name string, v *directconnect.Gateway) resou
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).dxconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn
 
 		output, err := finder.GatewayByID(conn, rs.Primary.ID)
 

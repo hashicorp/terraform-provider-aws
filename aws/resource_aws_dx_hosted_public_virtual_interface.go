@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsDxHostedPublicVirtualInterface() *schema.Resource {
@@ -108,7 +109,7 @@ func resourceAwsDxHostedPublicVirtualInterface() *schema.Resource {
 }
 
 func resourceAwsDxHostedPublicVirtualInterfaceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dxconn
+	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	req := &directconnect.AllocatePublicVirtualInterfaceInput{
 		ConnectionId: aws.String(d.Get("connection_id").(string)),
@@ -149,7 +150,7 @@ func resourceAwsDxHostedPublicVirtualInterfaceCreate(d *schema.ResourceData, met
 }
 
 func resourceAwsDxHostedPublicVirtualInterfaceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dxconn
+	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	vif, err := dxVirtualInterfaceRead(d.Id(), conn)
 	if err != nil {
@@ -165,10 +166,10 @@ func resourceAwsDxHostedPublicVirtualInterfaceRead(d *schema.ResourceData, meta 
 	d.Set("amazon_address", vif.AmazonAddress)
 	d.Set("amazon_side_asn", strconv.FormatInt(aws.Int64Value(vif.AmazonSideAsn), 10))
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
+		Partition: meta.(*conns.AWSClient).Partition,
+		Region:    meta.(*conns.AWSClient).Region,
 		Service:   "directconnect",
-		AccountID: meta.(*AWSClient).accountid,
+		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("dxvif/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)
@@ -192,7 +193,7 @@ func resourceAwsDxHostedPublicVirtualInterfaceDelete(d *schema.ResourceData, met
 }
 
 func resourceAwsDxHostedPublicVirtualInterfaceImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	conn := meta.(*AWSClient).dxconn
+	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	vif, err := dxVirtualInterfaceRead(d.Id(), conn)
 	if err != nil {
