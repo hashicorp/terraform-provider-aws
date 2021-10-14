@@ -10,8 +10,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceAPI() *schema.Resource {
@@ -133,8 +134,8 @@ func ResourceAPI() *schema.Resource {
 				Optional: true,
 				Default:  "$request.method $request.path",
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 			"target": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -147,7 +148,7 @@ func ResourceAPI() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -179,7 +180,7 @@ func resourceAwsAPIGatewayV2ImportOpenAPI(d *schema.ResourceData, meta interface
 			return fmt.Errorf("error importing API Gateway v2 API (%s) OpenAPI specification: %s", d.Id(), err)
 		}
 
-		tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+		tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 		corsConfiguration := d.Get("cors_configuration")
 
@@ -201,7 +202,7 @@ func resourceAwsAPIGatewayV2ImportOpenAPI(d *schema.ResourceData, meta interface
 			}
 		}
 
-		if err := keyvaluetags.Apigatewayv2UpdateTags(conn, d.Get("arn").(string), d.Get("tags_all"), tags); err != nil {
+		if err := tftags.Apigatewayv2UpdateTags(conn, d.Get("arn").(string), d.Get("tags_all"), tags); err != nil {
 			return fmt.Errorf("error updating API Gateway v2 API (%s) tags: %s", d.Id(), err)
 		}
 
@@ -218,7 +219,7 @@ func resourceAwsAPIGatewayV2ImportOpenAPI(d *schema.ResourceData, meta interface
 func resourceAPICreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	protocolType := d.Get("protocol_type").(string)
 	req := &apigatewayv2.CreateApiInput{
@@ -313,7 +314,7 @@ func resourceAPIRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("protocol_type", resp.ProtocolType)
 	d.Set("route_selection_expression", resp.RouteSelectionExpression)
 
-	tags := keyvaluetags.Apigatewayv2KeyValueTags(resp.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := tftags.Apigatewayv2KeyValueTags(resp.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -384,7 +385,7 @@ func resourceAPIUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := keyvaluetags.Apigatewayv2UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := tftags.Apigatewayv2UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating API Gateway v2 API (%s) tags: %s", d.Id(), err)
 		}
 	}
