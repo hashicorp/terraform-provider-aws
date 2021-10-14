@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -70,7 +71,7 @@ func testSweepEfsMountTargets(region string) error {
 						continue
 					}
 
-					err = waitForDeleteEfsMountTarget(conn, id, 10*time.Minute)
+					err = tfefs.WaitForDeleteMountTarget(conn, id, 10*time.Minute)
 					if err != nil {
 						errors = multierror.Append(errors, fmt.Errorf("error waiting for EFS Mount Target %q to delete: %w", id, err))
 						continue
@@ -151,7 +152,7 @@ func TestAccAWSEFSMountTarget_disappears(t *testing.T) {
 				Config: testAccAWSEFSMountTargetConfig(ct),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEfsMountTarget(resourceName, &mount),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceMountTarget(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfefs.ResourceMountTarget(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -217,7 +218,7 @@ func TestResourceAWSEFSMountTarget_hasEmptyMountTargets(t *testing.T) {
 		MountTargets: []*efs.MountTargetDescription{},
 	}
 
-	actual := hasEmptyMountTargets(mto)
+	actual := tfefs.HasEmptyMountTargets(mto)
 	if !actual {
 		t.Fatalf("Expected return value to be true, got %t", actual)
 	}
@@ -225,7 +226,7 @@ func TestResourceAWSEFSMountTarget_hasEmptyMountTargets(t *testing.T) {
 	// Add an empty mount target.
 	mto.MountTargets = append(mto.MountTargets, &efs.MountTargetDescription{})
 
-	actual = hasEmptyMountTargets(mto)
+	actual = tfefs.HasEmptyMountTargets(mto)
 	if actual {
 		t.Fatalf("Expected return value to be false, got %t", actual)
 	}

@@ -142,7 +142,7 @@ func resourceMountTargetCreate(d *schema.ResourceData, meta interface{}) error {
 				return nil, "error", err
 			}
 
-			if hasEmptyMountTargets(resp) {
+			if HasEmptyMountTargets(resp) {
 				return nil, "error", fmt.Errorf("EFS mount target %q could not be found.", d.Id())
 			}
 
@@ -200,7 +200,7 @@ func resourceMountTargetRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error reading EFS mount target %s: %s", d.Id(), err)
 	}
 
-	if hasEmptyMountTargets(resp) {
+	if HasEmptyMountTargets(resp) {
 		return fmt.Errorf("EFS mount target %q could not be found.", d.Id())
 	}
 
@@ -270,7 +270,7 @@ func resourceMountTargetDelete(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = waitForDeleteEfsMountTarget(conn, d.Id(), 10*time.Minute)
+	err = WaitForDeleteMountTarget(conn, d.Id(), 10*time.Minute)
 	if err != nil {
 		return fmt.Errorf("Error waiting for EFS mount target (%q) to delete: %s", d.Id(), err.Error())
 	}
@@ -280,7 +280,7 @@ func resourceMountTargetDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func waitForDeleteEfsMountTarget(conn *efs.EFS, id string, timeout time.Duration) error {
+func WaitForDeleteMountTarget(conn *efs.EFS, id string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{efs.LifeCycleStateAvailable, efs.LifeCycleStateDeleting, efs.LifeCycleStateDeleted},
 		Target:  []string{},
@@ -296,7 +296,7 @@ func waitForDeleteEfsMountTarget(conn *efs.EFS, id string, timeout time.Duration
 				return nil, "error", err
 			}
 
-			if hasEmptyMountTargets(resp) {
+			if HasEmptyMountTargets(resp) {
 				return nil, "", nil
 			}
 
@@ -313,7 +313,7 @@ func waitForDeleteEfsMountTarget(conn *efs.EFS, id string, timeout time.Duration
 	return err
 }
 
-func hasEmptyMountTargets(mto *efs.DescribeMountTargetsOutput) bool {
+func HasEmptyMountTargets(mto *efs.DescribeMountTargetsOutput) bool {
 	if mto != nil && len(mto.MountTargets) > 0 {
 		return false
 	}
