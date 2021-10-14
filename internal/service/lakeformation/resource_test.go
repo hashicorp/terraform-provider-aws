@@ -15,7 +15,7 @@ import (
 	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
 )
 
-func TestAccAWSLakeFormationResource_basic(t *testing.T) {
+func TestAccLakeFormationResource_basic(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	roleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceAddr := "aws_lakeformation_resource.test"
@@ -40,7 +40,7 @@ func TestAccAWSLakeFormationResource_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSLakeFormationResource_disappears(t *testing.T) {
+func TestAccLakeFormationResource_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lakeformation_resource.test"
 
@@ -62,7 +62,7 @@ func TestAccAWSLakeFormationResource_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSLakeFormationResource_serviceLinkedRole(t *testing.T) {
+func TestAccLakeFormationResource_serviceLinkedRole(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceAddr := "aws_lakeformation_resource.test"
 	bucketAddr := "aws_s3_bucket.test"
@@ -89,7 +89,7 @@ func TestAccAWSLakeFormationResource_serviceLinkedRole(t *testing.T) {
 	})
 }
 
-func TestAccAWSLakeFormationResource_updateRoleToRole(t *testing.T) {
+func TestAccLakeFormationResource_updateRoleToRole(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	roleName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	roleName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -123,7 +123,7 @@ func TestAccAWSLakeFormationResource_updateRoleToRole(t *testing.T) {
 	})
 }
 
-func TestAccAWSLakeFormationResource_updateSLRToRole(t *testing.T) {
+func TestAccLakeFormationResource_updateSLRToRole(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	roleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceAddr := "aws_lakeformation_resource.test"
