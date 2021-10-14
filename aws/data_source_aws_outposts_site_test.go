@@ -6,21 +6,22 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/outposts"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSOutpostsSiteDataSource_Id(t *testing.T) {
 	dataSourceName := "data.aws_outposts_site.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsSites(t) },
-		ErrorCheck:   testAccErrorCheck(t, outposts.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSOutpostsSites(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, outposts.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSOutpostsSiteDataSourceConfigId(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceAttrAccountID(dataSourceName, "account_id"),
+					acctest.CheckResourceAttrAccountID(dataSourceName, "account_id"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "description"),
 					resource.TestMatchResourceAttr(dataSourceName, "id", regexp.MustCompile(`^os-.+$`)),
 					resource.TestMatchResourceAttr(dataSourceName, "name", regexp.MustCompile(`^.+$`)),
@@ -35,8 +36,8 @@ func TestAccAWSOutpostsSiteDataSource_Name(t *testing.T) {
 	dataSourceName := "data.aws_outposts_site.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsSites(t) },
-		ErrorCheck:   testAccErrorCheck(t, outposts.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSOutpostsSites(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, outposts.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
