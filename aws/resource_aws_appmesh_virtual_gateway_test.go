@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/appmesh/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -31,7 +32,7 @@ func testSweepAppmeshVirtualGateways(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).appmeshconn
+	conn := client.(*conns.AWSClient).AppMeshConn
 
 	var sweeperErrs *multierror.Error
 
@@ -799,7 +800,7 @@ func testAccAwsAppmeshVirtualGateway_Tags(t *testing.T) {
 }
 
 func testAccCheckAppmeshVirtualGatewayDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).appmeshconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appmesh_virtual_node" {
@@ -821,7 +822,7 @@ func testAccCheckAppmeshVirtualGatewayDestroy(s *terraform.State) error {
 
 func testAccCheckAppmeshVirtualGatewayExists(name string, v *appmesh.VirtualGatewayData) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).appmeshconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshConn
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {

@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/appmesh"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsAppmeshVirtualService() *schema.Resource {
@@ -99,8 +100,8 @@ func dataSourceAwsAppmeshVirtualService() *schema.Resource {
 }
 
 func dataSourceAwsAppmeshVirtualServiceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appmeshconn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).AppMeshConn
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	req := &appmesh.DescribeVirtualServiceInput{
 		MeshName:           aws.String(d.Get("mesh_name").(string)),

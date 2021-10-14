@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/appmesh/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsAppmeshVirtualRouter() *schema.Resource {
@@ -126,8 +127,8 @@ func resourceAwsAppmeshVirtualRouter() *schema.Resource {
 }
 
 func resourceAwsAppmeshVirtualRouterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appmeshconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).AppMeshConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	req := &appmesh.CreateVirtualRouterInput{
@@ -152,9 +153,9 @@ func resourceAwsAppmeshVirtualRouterCreate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsAppmeshVirtualRouterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appmeshconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).AppMeshConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	req := &appmesh.DescribeVirtualRouterInput{
 		MeshName:          aws.String(d.Get("mesh_name").(string)),
@@ -244,7 +245,7 @@ func resourceAwsAppmeshVirtualRouterRead(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsAppmeshVirtualRouterUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appmeshconn
+	conn := meta.(*conns.AWSClient).AppMeshConn
 
 	if d.HasChange("spec") {
 		_, v := d.GetChange("spec")
@@ -277,7 +278,7 @@ func resourceAwsAppmeshVirtualRouterUpdate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsAppmeshVirtualRouterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appmeshconn
+	conn := meta.(*conns.AWSClient).AppMeshConn
 
 	log.Printf("[DEBUG] Deleting App Mesh virtual router: %s", d.Id())
 	_, err := conn.DeleteVirtualRouter(&appmesh.DeleteVirtualRouterInput{
@@ -304,7 +305,7 @@ func resourceAwsAppmeshVirtualRouterImport(d *schema.ResourceData, meta interfac
 	name := parts[1]
 	log.Printf("[DEBUG] Importing App Mesh virtual router %s from mesh %s", name, mesh)
 
-	conn := meta.(*AWSClient).appmeshconn
+	conn := meta.(*conns.AWSClient).AppMeshConn
 
 	resp, err := conn.DescribeVirtualRouter(&appmesh.DescribeVirtualRouterInput{
 		MeshName:          aws.String(mesh),
