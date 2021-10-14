@@ -20,68 +20,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_datasync_location_smb", &resource.Sweeper{
-		Name: "aws_datasync_location_smb",
-		F:    sweepLocationSMBs,
-	})
-}
 
-func sweepLocationSMBs(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-	conn := client.(*conns.AWSClient).DataSyncConn
 
-	input := &datasync.ListLocationsInput{}
-	for {
-		output, err := conn.ListLocations(input)
 
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping DataSync Location SMB sweep for %s: %s", region, err)
-			return nil
-		}
-
-		if err != nil {
-			return fmt.Errorf("Error retrieving DataSync Location SMBs: %w", err)
-		}
-
-		if len(output.Locations) == 0 {
-			log.Print("[DEBUG] No DataSync Location SMBs to sweep")
-			return nil
-		}
-
-		for _, location := range output.Locations {
-			uri := aws.StringValue(location.LocationUri)
-			if !strings.HasPrefix(uri, "smb://") {
-				log.Printf("[INFO] Skipping DataSync Location SMB: %s", uri)
-				continue
-			}
-			log.Printf("[INFO] Deleting DataSync Location SMB: %s", uri)
-
-			r := tfdatasync.ResourceLocationSMB()
-			d := r.Data(nil)
-			d.SetId(aws.StringValue(location.LocationArn))
-			err = r.Delete(d, client)
-			if tfawserr.ErrMessageContains(err, "InvalidRequestException", "not found") {
-				continue
-			}
-
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete DataSync Location SMB (%s): %s", uri, err)
-			}
-		}
-
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-
-		input.NextToken = output.NextToken
-	}
-
-	return nil
-}
 
 func TestAccDataSyncLocationSMB_basic(t *testing.T) {
 	var locationSmb1 datasync.DescribeLocationSmbOutput

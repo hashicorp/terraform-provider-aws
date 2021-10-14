@@ -19,69 +19,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_datasync_location_fsx_windows_file_system", &resource.Sweeper{
-		Name: "aws_datasync_location_fsx_windows_file_system",
-		F:    sweepLocationFSxWindows,
-	})
-}
 
-func sweepLocationFSxWindows(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-	conn := client.(*conns.AWSClient).DataSyncConn
 
-	input := &datasync.ListLocationsInput{}
-	for {
-		output, err := conn.ListLocations(input)
 
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping DataSync Location FSX Windows sweep for %s: %s", region, err)
-			return nil
-		}
-
-		if err != nil {
-			return fmt.Errorf("error retrieving DataSync Location FSX Windows: %w", err)
-		}
-
-		if len(output.Locations) == 0 {
-			log.Print("[DEBUG] No DataSync Location FSX Windows File System to sweep")
-			return nil
-		}
-
-		for _, location := range output.Locations {
-			uri := aws.StringValue(location.LocationUri)
-			if !strings.HasPrefix(uri, "fsxw://") {
-				log.Printf("[INFO] Skipping DataSync Location FSX Windows File System: %s", uri)
-				continue
-			}
-			log.Printf("[INFO] Deleting DataSync Location FSX Windows File System: %s", uri)
-			input := &datasync.DeleteLocationInput{
-				LocationArn: location.LocationArn,
-			}
-
-			_, err := conn.DeleteLocation(input)
-
-			if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
-				continue
-			}
-
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete DataSync Location FSX Windows (%s): %s", uri, err)
-			}
-		}
-
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-
-		input.NextToken = output.NextToken
-	}
-
-	return nil
-}
 
 func TestAccDataSyncLocationFSxWindowsFileSystem_basic(t *testing.T) {
 	var locationFsxWindows1 datasync.DescribeLocationFsxWindowsOutput

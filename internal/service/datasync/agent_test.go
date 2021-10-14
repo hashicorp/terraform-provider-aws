@@ -20,66 +20,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_datasync_agent", &resource.Sweeper{
-		Name: "aws_datasync_agent",
-		F:    sweepAgents,
-	})
-}
 
-func sweepAgents(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).DataSyncConn
 
-	input := &datasync.ListAgentsInput{}
-	for {
-		output, err := conn.ListAgents(input)
 
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping DataSync Agent sweep for %s: %s", region, err)
-			return nil
-		}
-
-		if err != nil {
-			return fmt.Errorf("Error retrieving DataSync Agents: %s", err)
-		}
-
-		if len(output.Agents) == 0 {
-			log.Print("[DEBUG] No DataSync Agents to sweep")
-			return nil
-		}
-
-		for _, agent := range output.Agents {
-			name := aws.StringValue(agent.Name)
-
-			log.Printf("[INFO] Deleting DataSync Agent: %s", name)
-			input := &datasync.DeleteAgentInput{
-				AgentArn: agent.AgentArn,
-			}
-
-			_, err := conn.DeleteAgent(input)
-
-			if tfawserr.ErrMessageContains(err, "InvalidRequestException", "does not exist") {
-				continue
-			}
-
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete DataSync Agent (%s): %s", name, err)
-			}
-		}
-
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-
-		input.NextToken = output.NextToken
-	}
-
-	return nil
-}
 
 func TestAccDataSyncAgent_basic(t *testing.T) {
 	var agent1 datasync.DescribeAgentOutput

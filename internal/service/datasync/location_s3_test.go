@@ -19,69 +19,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_datasync_location_s3", &resource.Sweeper{
-		Name: "aws_datasync_location_s3",
-		F:    sweepLocationS3s,
-	})
-}
 
-func sweepLocationS3s(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).DataSyncConn
 
-	input := &datasync.ListLocationsInput{}
-	for {
-		output, err := conn.ListLocations(input)
 
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping DataSync Location S3 sweep for %s: %s", region, err)
-			return nil
-		}
-
-		if err != nil {
-			return fmt.Errorf("Error retrieving DataSync Location S3s: %s", err)
-		}
-
-		if len(output.Locations) == 0 {
-			log.Print("[DEBUG] No DataSync Location S3s to sweep")
-			return nil
-		}
-
-		for _, location := range output.Locations {
-			uri := aws.StringValue(location.LocationUri)
-			if !strings.HasPrefix(uri, "s3://") {
-				log.Printf("[INFO] Skipping DataSync Location S3: %s", uri)
-				continue
-			}
-			log.Printf("[INFO] Deleting DataSync Location S3: %s", uri)
-			input := &datasync.DeleteLocationInput{
-				LocationArn: location.LocationArn,
-			}
-
-			_, err := conn.DeleteLocation(input)
-
-			if tfawserr.ErrMessageContains(err, "InvalidRequestException", "not found") {
-				continue
-			}
-
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete DataSync Location S3 (%s): %s", uri, err)
-			}
-		}
-
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-
-		input.NextToken = output.NextToken
-	}
-
-	return nil
-}
 
 func TestAccDataSyncLocationS3_basic(t *testing.T) {
 	var locationS31 datasync.DescribeLocationS3Output

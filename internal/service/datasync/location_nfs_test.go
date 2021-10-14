@@ -20,68 +20,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_datasync_location_nfs", &resource.Sweeper{
-		Name: "aws_datasync_location_nfs",
-		F:    sweepLocationNFSs,
-	})
-}
 
-func sweepLocationNFSs(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).DataSyncConn
 
-	input := &datasync.ListLocationsInput{}
-	for {
-		output, err := conn.ListLocations(input)
 
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping DataSync Location Nfs sweep for %s: %s", region, err)
-			return nil
-		}
-
-		if err != nil {
-			return fmt.Errorf("Error retrieving DataSync Location Nfss: %s", err)
-		}
-
-		if len(output.Locations) == 0 {
-			log.Print("[DEBUG] No DataSync Location Nfss to sweep")
-			return nil
-		}
-
-		for _, location := range output.Locations {
-			uri := aws.StringValue(location.LocationUri)
-			if !strings.HasPrefix(uri, "nfs://") {
-				log.Printf("[INFO] Skipping DataSync Location Nfs: %s", uri)
-				continue
-			}
-			log.Printf("[INFO] Deleting DataSync Location Nfs: %s", uri)
-
-			r := tfdatasync.ResourceLocationNFS()
-			d := r.Data(nil)
-			d.SetId(aws.StringValue(location.LocationArn))
-			err = r.Delete(d, client)
-			if tfawserr.ErrMessageContains(err, "InvalidRequestException", "not found") {
-				continue
-			}
-
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete DataSync Location Nfs (%s): %s", uri, err)
-			}
-		}
-
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-
-		input.NextToken = output.NextToken
-	}
-
-	return nil
-}
 
 func TestAccDataSyncLocationNFS_basic(t *testing.T) {
 	var locationNfs1 datasync.DescribeLocationNfsOutput

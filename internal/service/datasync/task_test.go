@@ -20,66 +20,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_datasync_task", &resource.Sweeper{
-		Name: "aws_datasync_task",
-		F:    sweepTasks,
-	})
-}
 
-func sweepTasks(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-	conn := client.(*conns.AWSClient).DataSyncConn
 
-	input := &datasync.ListTasksInput{}
-	for {
-		output, err := conn.ListTasks(input)
 
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping DataSync Task sweep for %s: %s", region, err)
-			return nil
-		}
-
-		if err != nil {
-			return fmt.Errorf("Error retrieving DataSync Tasks: %w", err)
-		}
-
-		if len(output.Tasks) == 0 {
-			log.Print("[DEBUG] No DataSync Tasks to sweep")
-			return nil
-		}
-
-		for _, task := range output.Tasks {
-			name := aws.StringValue(task.Name)
-
-			log.Printf("[INFO] Deleting DataSync Task: %s", name)
-			input := &datasync.DeleteTaskInput{
-				TaskArn: task.TaskArn,
-			}
-
-			_, err := conn.DeleteTask(input)
-
-			if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
-				continue
-			}
-
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete DataSync Task (%s): %s", name, err)
-			}
-		}
-
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-
-		input.NextToken = output.NextToken
-	}
-
-	return nil
-}
 
 func TestAccDataSyncTask_basic(t *testing.T) {
 	var task1 datasync.DescribeTaskOutput
