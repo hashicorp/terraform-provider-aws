@@ -388,7 +388,7 @@ func resourceAwsGlueCatalogTableRead(d *schema.ResourceData, meta interface{}) e
 	out, err := finder.TableByName(conn, catalogID, dbName, name)
 	if err != nil {
 
-		if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 			log.Printf("[WARN] Glue Catalog Table (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -493,7 +493,7 @@ func resourceAwsGlueCatalogTableDelete(d *schema.ResourceData, meta interface{})
 		DatabaseName: aws.String(dbName),
 	})
 	if err != nil {
-		if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 			return nil
 		}
 		return fmt.Errorf("Error deleting Glue Catalog Table: %w", err)

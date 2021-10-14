@@ -727,7 +727,7 @@ func testAccCheckAWSGlueJobDestroy(s *terraform.State) error {
 		})
 
 		if err != nil {
-			if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 				return nil
 			}
 

@@ -245,7 +245,7 @@ func resourceAwsGlueDevEndpointCreate(d *schema.ResourceData, meta interface{}) 
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.CreateDevEndpoint(input)
 	}
 
@@ -477,7 +477,7 @@ func resourceAwsDevEndpointUpdate(d *schema.ResourceData, meta interface{}) erro
 		err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 			_, err := conn.UpdateDevEndpoint(input)
 			if err != nil {
-				if isAWSErr(err, glue.ErrCodeInvalidInputException, "another concurrent update operation") {
+				if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "another concurrent update operation") {
 					return resource.RetryableError(err)
 				}
 
@@ -486,7 +486,7 @@ func resourceAwsDevEndpointUpdate(d *schema.ResourceData, meta interface{}) erro
 			return nil
 		})
 
-		if isResourceTimeoutError(err) {
+		if tfresource.TimedOut(err) {
 			_, err = conn.UpdateDevEndpoint(input)
 		}
 

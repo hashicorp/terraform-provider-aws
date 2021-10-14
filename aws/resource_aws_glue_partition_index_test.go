@@ -223,7 +223,7 @@ func testAccCheckGluePartitionIndexDestroy(s *terraform.State) error {
 
 		if _, err := finder.PartitionIndexByName(conn, rs.Primary.ID); err != nil {
 			//Verify the error is what we want
-			if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 				continue
 			}
 
