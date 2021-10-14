@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
@@ -240,5 +240,5 @@ func resourceAwsWafRegionalSqlInjectionMatchSetTupleHash(v interface{}) int {
 	}
 	buf.WriteString(fmt.Sprintf("%s-", m["text_transformation"].(string)))
 
-	return hashcode.String(buf.String())
+	return create.StringHashcode(buf.String())
 }
