@@ -19,50 +19,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_api_gateway_vpc_link", &resource.Sweeper{
-		Name: "aws_api_gateway_vpc_link",
-		F:    sweepVPCLinks,
-	})
-}
 
-func sweepVPCLinks(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-	conn := client.(*conns.AWSClient).APIGatewayConn
 
-	sweepResources := make([]*sweep.SweepResource, 0)
-	var sweeperErrs *multierror.Error
 
-	err = conn.GetVpcLinksPages(&apigateway.GetVpcLinksInput{}, func(page *apigateway.GetVpcLinksOutput, lastPage bool) bool {
-		for _, item := range page.Items {
-			id := aws.StringValue(item.Id)
-
-			log.Printf("[INFO] Deleting API Gateway VPC Link (%s)", id)
-			r := tfapigateway.ResourceVPCLink()
-			d := r.Data(nil)
-			d.SetId(id)
-
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-		}
-		return !lastPage
-	})
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping API Gateway VPC Link sweep for %s: %s", region, err)
-		return nil
-	}
-	if err != nil {
-		return fmt.Errorf("error retrieving API Gateway VPC Links: %w", err)
-	}
-
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping API Gateway VPC Links: %w", err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func TestAccAPIGatewayVPCLink_basic(t *testing.T) {
 	rName := sdkacctest.RandString(5)

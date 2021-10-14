@@ -19,54 +19,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_api_gateway_rest_api", &resource.Sweeper{
-		Name: "aws_api_gateway_rest_api",
-		F:    sweepRestAPIs,
-	})
-}
 
-func sweepRestAPIs(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).APIGatewayConn
 
-	err = conn.GetRestApisPages(&apigateway.GetRestApisInput{}, func(page *apigateway.GetRestApisOutput, lastPage bool) bool {
-		for _, item := range page.Items {
-			input := &apigateway.DeleteRestApiInput{
-				RestApiId: item.Id,
-			}
-			log.Printf("[INFO] Deleting API Gateway REST API: %s", input)
-			// TooManyRequestsException: Too Many Requests can take over a minute to resolve itself
-			err := resource.Retry(2*time.Minute, func() *resource.RetryError {
-				_, err := conn.DeleteRestApi(input)
-				if err != nil {
-					if tfawserr.ErrMessageContains(err, apigateway.ErrCodeTooManyRequestsException, "") {
-						return resource.RetryableError(err)
-					}
-					return resource.NonRetryableError(err)
-				}
-				return nil
-			})
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete API Gateway REST API %s: %s", *item.Name, err)
-				continue
-			}
-		}
-		return !lastPage
-	})
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping API Gateway REST API sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error retrieving API Gateway REST APIs: %s", err)
-	}
 
-	return nil
-}
 
 func TestAccAPIGatewayRestAPI_basic(t *testing.T) {
 	var conf apigateway.RestApi
