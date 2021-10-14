@@ -146,7 +146,7 @@ func resourceEventSubscriptionCreate(d *schema.ResourceData, meta interface{}) e
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"creating"},
 		Target:     []string{"active"},
-		Refresh:    resourceAwsNeptuneEventSubscriptionRefreshFunc(d.Id(), conn),
+		Refresh:    resourceEventSubscriptionRefreshFunc(d.Id(), conn),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -166,7 +166,7 @@ func resourceEventSubscriptionRead(d *schema.ResourceData, meta interface{}) err
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	sub, err := resourceAwsNeptuneEventSubscriptionRetrieve(d.Id(), conn)
+	sub, err := resourceEventSubscriptionRetrieve(d.Id(), conn)
 	if err != nil {
 		return fmt.Errorf("Error reading Neptune Event Subscription %s: %s", d.Id(), err)
 	}
@@ -266,7 +266,7 @@ func resourceEventSubscriptionUpdate(d *schema.ResourceData, meta interface{}) e
 		stateConf := &resource.StateChangeConf{
 			Pending:    []string{"modifying"},
 			Target:     []string{"active"},
-			Refresh:    resourceAwsNeptuneEventSubscriptionRefreshFunc(d.Id(), conn),
+			Refresh:    resourceEventSubscriptionRefreshFunc(d.Id(), conn),
 			Timeout:    d.Timeout(schema.TimeoutUpdate),
 			MinTimeout: 10 * time.Second,
 			Delay:      30 * time.Second,
@@ -349,7 +349,7 @@ func resourceEventSubscriptionDelete(d *schema.ResourceData, meta interface{}) e
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"deleting"},
 		Target:     []string{},
-		Refresh:    resourceAwsNeptuneEventSubscriptionRefreshFunc(d.Id(), conn),
+		Refresh:    resourceEventSubscriptionRefreshFunc(d.Id(), conn),
 		Timeout:    d.Timeout(schema.TimeoutDelete),
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -363,9 +363,9 @@ func resourceEventSubscriptionDelete(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func resourceAwsNeptuneEventSubscriptionRefreshFunc(name string, conn *neptune.Neptune) resource.StateRefreshFunc {
+func resourceEventSubscriptionRefreshFunc(name string, conn *neptune.Neptune) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		sub, err := resourceAwsNeptuneEventSubscriptionRetrieve(name, conn)
+		sub, err := resourceEventSubscriptionRetrieve(name, conn)
 
 		if err != nil {
 			log.Printf("Error on retrieving Neptune Event Subscription when waiting: %s", err)
@@ -384,7 +384,7 @@ func resourceAwsNeptuneEventSubscriptionRefreshFunc(name string, conn *neptune.N
 	}
 }
 
-func resourceAwsNeptuneEventSubscriptionRetrieve(name string, conn *neptune.Neptune) (*neptune.EventSubscription, error) {
+func resourceEventSubscriptionRetrieve(name string, conn *neptune.Neptune) (*neptune.EventSubscription, error) {
 
 	request := &neptune.DescribeEventSubscriptionsInput{
 		SubscriptionName: aws.String(name),

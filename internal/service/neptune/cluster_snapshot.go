@@ -114,7 +114,7 @@ func resourceClusterSnapshotCreate(d *schema.ResourceData, meta interface{}) err
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"creating"},
 		Target:     []string{"available"},
-		Refresh:    resourceAwsNeptuneClusterSnapshotStateRefreshFunc(d.Id(), conn),
+		Refresh:    resourceClusterSnapshotStateRefreshFunc(d.Id(), conn),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
 		MinTimeout: 10 * time.Second,
 		Delay:      5 * time.Second,
@@ -195,7 +195,7 @@ func resourceClusterSnapshotDelete(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func resourceAwsNeptuneClusterSnapshotStateRefreshFunc(dbClusterSnapshotIdentifier string, conn *neptune.Neptune) resource.StateRefreshFunc {
+func resourceClusterSnapshotStateRefreshFunc(dbClusterSnapshotIdentifier string, conn *neptune.Neptune) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &neptune.DescribeDBClusterSnapshotsInput{
 			DBClusterSnapshotIdentifier: aws.String(dbClusterSnapshotIdentifier),

@@ -267,9 +267,9 @@ func resourceClusterInstanceCreate(d *schema.ResourceData, meta interface{}) err
 	d.SetId(aws.StringValue(resp.DBInstance.DBInstanceIdentifier))
 
 	stateConf := &resource.StateChangeConf{
-		Pending:    resourceAwsNeptuneClusterInstanceCreateUpdatePendingStates,
+		Pending:    resourceClusterInstanceCreateUpdatePendingStates,
 		Target:     []string{"available"},
-		Refresh:    resourceAwsNeptuneInstanceStateRefreshFunc(d.Id(), conn),
+		Refresh:    resourceInstanceStateRefreshFunc(d.Id(), conn),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -285,7 +285,7 @@ func resourceClusterInstanceCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceClusterInstanceRead(d *schema.ResourceData, meta interface{}) error {
-	db, err := resourceAwsNeptuneInstanceRetrieve(d.Id(), meta.(*conns.AWSClient).NeptuneConn)
+	db, err := resourceInstanceRetrieve(d.Id(), meta.(*conns.AWSClient).NeptuneConn)
 	if err != nil {
 		return fmt.Errorf("Error on retrieving Neptune Cluster Instance (%s): %s", d.Id(), err)
 	}
@@ -440,9 +440,9 @@ func resourceClusterInstanceUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 
 		stateConf := &resource.StateChangeConf{
-			Pending:    resourceAwsNeptuneClusterInstanceCreateUpdatePendingStates,
+			Pending:    resourceClusterInstanceCreateUpdatePendingStates,
 			Target:     []string{"available"},
-			Refresh:    resourceAwsNeptuneInstanceStateRefreshFunc(d.Id(), conn),
+			Refresh:    resourceInstanceStateRefreshFunc(d.Id(), conn),
 			Timeout:    d.Timeout(schema.TimeoutUpdate),
 			MinTimeout: 10 * time.Second,
 			Delay:      30 * time.Second,
@@ -484,9 +484,9 @@ func resourceClusterInstanceDelete(d *schema.ResourceData, meta interface{}) err
 
 	log.Println("[INFO] Waiting for Neptune Cluster Instance to be destroyed")
 	stateConf := &resource.StateChangeConf{
-		Pending:    resourceAwsNeptuneClusterInstanceDeletePendingStates,
+		Pending:    resourceClusterInstanceDeletePendingStates,
 		Target:     []string{},
-		Refresh:    resourceAwsNeptuneInstanceStateRefreshFunc(d.Id(), conn),
+		Refresh:    resourceInstanceStateRefreshFunc(d.Id(), conn),
 		Timeout:    d.Timeout(schema.TimeoutDelete),
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -497,7 +497,7 @@ func resourceClusterInstanceDelete(d *schema.ResourceData, meta interface{}) err
 
 }
 
-var resourceAwsNeptuneClusterInstanceCreateUpdatePendingStates = []string{
+var resourceClusterInstanceCreateUpdatePendingStates = []string{
 	"backing-up",
 	"creating",
 	"maintenance",
@@ -511,14 +511,14 @@ var resourceAwsNeptuneClusterInstanceCreateUpdatePendingStates = []string{
 	"storage-optimization",
 }
 
-var resourceAwsNeptuneClusterInstanceDeletePendingStates = []string{
+var resourceClusterInstanceDeletePendingStates = []string{
 	"modifying",
 	"deleting",
 }
 
-func resourceAwsNeptuneInstanceStateRefreshFunc(id string, conn *neptune.Neptune) resource.StateRefreshFunc {
+func resourceInstanceStateRefreshFunc(id string, conn *neptune.Neptune) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		v, err := resourceAwsNeptuneInstanceRetrieve(id, conn)
+		v, err := resourceInstanceRetrieve(id, conn)
 
 		if err != nil {
 			log.Printf("Error on retrieving Neptune Instance when waiting: %s", err)
@@ -537,7 +537,7 @@ func resourceAwsNeptuneInstanceStateRefreshFunc(id string, conn *neptune.Neptune
 	}
 }
 
-func resourceAwsNeptuneInstanceRetrieve(id string, conn *neptune.Neptune) (*neptune.DBInstance, error) {
+func resourceInstanceRetrieve(id string, conn *neptune.Neptune) (*neptune.DBInstance, error) {
 	opts := neptune.DescribeDBInstancesInput{
 		DBInstanceIdentifier: aws.String(id),
 	}

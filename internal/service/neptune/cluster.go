@@ -472,10 +472,10 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	return flattenAwsNeptuneClusterResource(d, meta, dbc)
+	return flattenClusterResource(d, meta, dbc)
 }
 
-func flattenAwsNeptuneClusterResource(d *schema.ResourceData, meta interface{}, dbc *neptune.DBCluster) error {
+func flattenClusterResource(d *schema.ResourceData, meta interface{}, dbc *neptune.DBCluster) error {
 	conn := meta.(*conns.AWSClient).NeptuneConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
