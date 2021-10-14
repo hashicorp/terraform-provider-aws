@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsCodeStarConnectionsHost() *schema.Resource {
+func ResourceHost() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCodeStarConnectionsHostCreate,
-		Read:   resourceAwsCodeStarConnectionsHostRead,
-		Update: resourceAwsCodeStarConnectionsHostUpdate,
-		Delete: resourceAwsCodeStarConnectionsHostDelete,
+		Create: resourceHostCreate,
+		Read:   resourceHostRead,
+		Update: resourceHostUpdate,
+		Delete: resourceHostDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -80,7 +80,7 @@ func resourceAwsCodeStarConnectionsHost() *schema.Resource {
 	}
 }
 
-func resourceAwsCodeStarConnectionsHostCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceHostCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn
 
 	params := &codestarconnections.CreateHostInput{
@@ -102,10 +102,10 @@ func resourceAwsCodeStarConnectionsHostCreate(d *schema.ResourceData, meta inter
 		return fmt.Errorf("error waiting for CodeStar Connections Host (%s) creation: %w", d.Id(), err)
 	}
 
-	return resourceAwsCodeStarConnectionsHostRead(d, meta)
+	return resourceHostRead(d, meta)
 }
 
-func resourceAwsCodeStarConnectionsHostRead(d *schema.ResourceData, meta interface{}) error {
+func resourceHostRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn
 
 	input := &codestarconnections.GetHostInput{
@@ -138,7 +138,7 @@ func resourceAwsCodeStarConnectionsHostRead(d *schema.ResourceData, meta interfa
 	return nil
 }
 
-func resourceAwsCodeStarConnectionsHostUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceHostUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn
 
 	if d.HasChanges("provider_endpoint", "vpc_configuration") {
@@ -159,10 +159,10 @@ func resourceAwsCodeStarConnectionsHostUpdate(d *schema.ResourceData, meta inter
 		}
 	}
 
-	return resourceAwsCodeStarConnectionsHostRead(d, meta)
+	return resourceHostRead(d, meta)
 }
 
-func resourceAwsCodeStarConnectionsHostDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceHostDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn
 
 	input := &codestarconnections.DeleteHostInput{

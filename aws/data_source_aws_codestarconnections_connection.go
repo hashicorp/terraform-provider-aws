@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsCodeStarConnectionsConnection() *schema.Resource {
+func DataSourceConnection() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsCodeStarConnectionsConnectionRead,
+		Read: dataSourceConnectionRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -45,7 +45,7 @@ func dataSourceAwsCodeStarConnectionsConnection() *schema.Resource {
 	}
 }
 
-func dataSourceAwsCodeStarConnectionsConnectionRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
