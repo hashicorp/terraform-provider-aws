@@ -20,6 +20,7 @@ import (
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceDomain() *schema.Resource {
@@ -68,7 +69,7 @@ func ResourceDomain() *schema.Resource {
 				Optional:         true,
 				Computed:         true,
 				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
+				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
 			},
 			"advanced_options": {
 				Type:     schema.TypeMap,
@@ -102,7 +103,7 @@ func ResourceDomain() *schema.Resource {
 									"master_user_arn": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: verify.ValidARN,
 									},
 									"master_user_name": {
 										Type:     schema.TypeString,
@@ -169,7 +170,7 @@ func ResourceDomain() *schema.Resource {
 						"custom_endpoint_certificate_arn": {
 							Type:             schema.TypeString,
 							Optional:         true,
-							ValidateFunc:     validateArn,
+							ValidateFunc:     verify.ValidARN,
 							DiffSuppressFunc: isCustomEndpointDisabled,
 						},
 					},
@@ -291,7 +292,7 @@ func ResourceDomain() *schema.Resource {
 							Type:             schema.TypeList,
 							Optional:         true,
 							MaxItems:         1,
-							DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
+							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"availability_zone_count": {
@@ -392,7 +393,7 @@ func ResourceDomain() *schema.Resource {
 						"cloudwatch_log_group_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 						"enabled": {
 							Type:     schema.TypeBool,
@@ -431,7 +432,7 @@ func ResourceDomain() *schema.Resource {
 						"role_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 					},
 				},
@@ -701,7 +702,7 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 		}
 		d.Set("access_policies", policies)
 	}
-	err = d.Set("advanced_options", pointersMapToStringList(ds.AdvancedOptions))
+	err = d.Set("advanced_options", verify.PointersMapToStringList(ds.AdvancedOptions))
 	if err != nil {
 		return err
 	}
@@ -756,7 +757,7 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return err
 		}
-		endpoints := pointersMapToStringList(ds.Endpoints)
+		endpoints := verify.PointersMapToStringList(ds.Endpoints)
 		err = d.Set("endpoint", endpoints["vpc"])
 		if err != nil {
 			return err
