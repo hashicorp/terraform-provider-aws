@@ -200,7 +200,7 @@ func resourcePlatformApplicationRead(d *schema.ResourceData, meta interface{}) e
 	// We will use the ID, which should be a platform application ARN, to:
 	//  * Validate its an appropriate ARN on import
 	//  * Parse out the name and platform
-	arn, name, platform, err := decodeResourceAwsSnsPlatformApplicationID(d.Id())
+	arn, name, platform, err := DecodePlatformApplicationID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -274,7 +274,7 @@ func resourcePlatformApplicationDelete(d *schema.ResourceData, meta interface{})
 	return err
 }
 
-func decodeResourceAwsSnsPlatformApplicationID(input string) (arnS, name, platform string, err error) {
+func DecodePlatformApplicationID(input string) (arnS, name, platform string, err error) {
 	platformApplicationArn, err := arn.Parse(input)
 	if err != nil {
 		err = fmt.Errorf(

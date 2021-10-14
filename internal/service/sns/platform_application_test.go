@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfsns "github.com/hashicorp/terraform-provider-aws/internal/service/sns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -182,7 +183,7 @@ func TestDecodeResourceAwsSnsPlatformApplicationID(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		arn, name, platform, err := decodeResourceAwsSnsPlatformApplicationID(tc.Input)
+		arn, name, platform, err := tfsns.DecodePlatformApplicationID(tc.Input)
 		if tc.ErrCount == 0 && err != nil {
 			t.Fatalf("expected %q not to trigger an error, received: %s", tc.Input, err)
 		}

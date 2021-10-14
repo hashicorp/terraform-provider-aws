@@ -559,7 +559,7 @@ func TestAccAWSSNSTopic_disappears(t *testing.T) {
 				Config: testAccAWSSNSTopicConfigNameGenerated,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSNSTopicExists(resourceName, attributes),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceTopic(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfsns.ResourceTopic(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
