@@ -10,19 +10,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	tfcloudformation "github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudformation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudformation/lister"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
-	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
-	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
-	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
-	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
-	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
-	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
-	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
-	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
 )
 
 const (
@@ -98,7 +87,7 @@ func WaitStackSetOperationSucceeded(conn *cloudformation.CloudFormation, stackSe
 			})
 
 			if listErr == nil {
-				tfresource.SetLastError(waitErr, fmt.Errorf("Operation (%s) Results: %w", operationID, tfcloudformation.StackSetOperationError(summaries)))
+				tfresource.SetLastError(waitErr, fmt.Errorf("Operation (%s) Results: %w", operationID, StackSetOperationError(summaries)))
 			} else {
 				tfresource.SetLastError(waitErr, fmt.Errorf("error listing CloudFormation Stack Set (%s) Operation (%s) results: %w", stackSetName, operationID, listErr))
 			}
@@ -295,7 +284,7 @@ func WaitTypeRegistrationProgressStatusComplete(ctx context.Context, conn *cloud
 func getCloudFormationDeletionReasons(conn *cloudformation.CloudFormation, stackID, requestToken string) ([]string, error) {
 	var failures []string
 
-	err := tfcloudformation.listStackEventsForOperation(conn, stackID, requestToken, func(e *cloudformation.StackEvent) {
+	err := listStackEventsForOperation(conn, stackID, requestToken, func(e *cloudformation.StackEvent) {
 		if isFailedEvent(e) || isStackDeletionEvent(e) {
 			failures = append(failures, aws.StringValue(e.ResourceStatusReason))
 		}
@@ -305,7 +294,7 @@ func getCloudFormationDeletionReasons(conn *cloudformation.CloudFormation, stack
 
 func getCloudFormationRollbackReasons(conn *cloudformation.CloudFormation, stackID, requestToken string) ([]string, error) {
 	var failures []string
-	err := tfcloudformation.listStackEventsForOperation(conn, stackID, requestToken, func(e *cloudformation.StackEvent) {
+	err := listStackEventsForOperation(conn, stackID, requestToken, func(e *cloudformation.StackEvent) {
 		if isFailedEvent(e) || isRollbackEvent(e) {
 			failures = append(failures, aws.StringValue(e.ResourceStatusReason))
 		}
@@ -316,7 +305,7 @@ func getCloudFormationRollbackReasons(conn *cloudformation.CloudFormation, stack
 func getCloudFormationFailures(conn *cloudformation.CloudFormation, stackID, requestToken string) ([]string, error) {
 	var failures []string
 
-	err := tfcloudformation.listStackEventsForOperation(conn, stackID, requestToken, func(e *cloudformation.StackEvent) {
+	err := listStackEventsForOperation(conn, stackID, requestToken, func(e *cloudformation.StackEvent) {
 		if isFailedEvent(e) {
 			failures = append(failures, aws.StringValue(e.ResourceStatusReason))
 		}

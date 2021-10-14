@@ -1,4 +1,4 @@
-package aws
+package cloudformation
 
 import (
 	"fmt"
@@ -11,30 +11,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudformation/waiter"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
-	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
-	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
-	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
-	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
-	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
-	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
-	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
-	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
-	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
-	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
-	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
-	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
-	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
-	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
-	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
-	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
-	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
-	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
 )
 
 func ResourceStack() *schema.Resource {
@@ -49,9 +29,9 @@ func ResourceStack() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(tfcloudformation.StackCreatedDefaultTimeout),
-			Update: schema.DefaultTimeout(tfcloudformation.StackUpdatedDefaultTimeout),
-			Delete: schema.DefaultTimeout(tfcloudformation.StackDeletedDefaultTimeout),
+			Create: schema.DefaultTimeout(StackCreatedDefaultTimeout),
+			Update: schema.DefaultTimeout(StackUpdatedDefaultTimeout),
+			Delete: schema.DefaultTimeout(StackDeletedDefaultTimeout),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -206,7 +186,7 @@ func resourceStackCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(aws.StringValue(resp.StackId))
 
-	stack, err := tfcloudformation.WaitStackCreated(conn, d.Id(), requestToken, d.Timeout(schema.TimeoutCreate))
+	stack, err := WaitStackCreated(conn, d.Id(), requestToken, d.Timeout(schema.TimeoutCreate))
 	if err != nil {
 		if stack != nil {
 			status := aws.StringValue(stack.StackStatus)
@@ -393,7 +373,7 @@ func resourceStackUpdate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error updating CloudFormation stack (%s): %w", d.Id(), err)
 	}
 
-	_, err = tfcloudformation.WaitStackUpdated(conn, d.Id(), requestToken, d.Timeout(schema.TimeoutUpdate))
+	_, err = WaitStackUpdated(conn, d.Id(), requestToken, d.Timeout(schema.TimeoutUpdate))
 	if err != nil {
 		return fmt.Errorf("error waiting for CloudFormation Stack update: %w", err)
 	}
@@ -420,7 +400,7 @@ func resourceStackDelete(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	_, err = tfcloudformation.WaitStackDeleted(conn, d.Id(), requestToken, d.Timeout(schema.TimeoutDelete))
+	_, err = WaitStackDeleted(conn, d.Id(), requestToken, d.Timeout(schema.TimeoutDelete))
 	if err != nil {
 		return fmt.Errorf("error waiting for CloudFormation Stack deletion: %w", err)
 	}

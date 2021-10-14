@@ -1,11 +1,11 @@
-package cloudformation
+package cloudformation_test
 
 import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudformation"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
 	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
 	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
 	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
