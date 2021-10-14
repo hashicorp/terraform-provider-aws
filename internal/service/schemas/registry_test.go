@@ -108,7 +108,7 @@ func sweepRegistries(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSSchemasRegistry_basic(t *testing.T) {
+func TestAccSchemasRegistry_basic(t *testing.T) {
 	var v schemas.DescribeRegistryOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_schemas_registry.test"
@@ -138,7 +138,7 @@ func TestAccAWSSchemasRegistry_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSchemasRegistry_disappears(t *testing.T) {
+func TestAccSchemasRegistry_disappears(t *testing.T) {
 	var v schemas.DescribeRegistryOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_schemas_registry.test"
@@ -161,7 +161,7 @@ func TestAccAWSSchemasRegistry_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSSchemasRegistry_Description(t *testing.T) {
+func TestAccSchemasRegistry_description(t *testing.T) {
 	var v schemas.DescribeRegistryOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_schemas_registry.test"
@@ -202,7 +202,7 @@ func TestAccAWSSchemasRegistry_Description(t *testing.T) {
 	})
 }
 
-func TestAccAWSSchemasRegistry_Tags(t *testing.T) {
+func TestAccSchemasRegistry_tags(t *testing.T) {
 	var v schemas.DescribeRegistryOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_schemas_registry.test"

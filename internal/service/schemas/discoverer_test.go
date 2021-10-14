@@ -67,7 +67,7 @@ func sweepDiscoverers(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSSchemasDiscoverer_basic(t *testing.T) {
+func TestAccSchemasDiscoverer_basic(t *testing.T) {
 	var v schemas.DescribeDiscovererOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_schemas_discoverer.test"
@@ -96,7 +96,7 @@ func TestAccAWSSchemasDiscoverer_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSchemasDiscoverer_disappears(t *testing.T) {
+func TestAccSchemasDiscoverer_disappears(t *testing.T) {
 	var v schemas.DescribeDiscovererOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_schemas_discoverer.test"
@@ -119,7 +119,7 @@ func TestAccAWSSchemasDiscoverer_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSSchemasDiscoverer_Description(t *testing.T) {
+func TestAccSchemasDiscoverer_description(t *testing.T) {
 	var v schemas.DescribeDiscovererOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_schemas_discoverer.test"
@@ -160,7 +160,7 @@ func TestAccAWSSchemasDiscoverer_Description(t *testing.T) {
 	})
 }
 
-func TestAccAWSSchemasDiscoverer_Tags(t *testing.T) {
+func TestAccSchemasDiscoverer_tags(t *testing.T) {
 	var v schemas.DescribeDiscovererOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_schemas_discoverer.test"
