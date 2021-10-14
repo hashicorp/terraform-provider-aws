@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	tfapprunner "github.com/hashicorp/terraform-provider-aws/aws/internal/service/apprunner"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func TestCustomDomainAssociationParseID(t *testing.T) {
