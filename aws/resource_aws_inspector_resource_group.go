@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAWSInspectorResourceGroup() *schema.Resource {
+func ResourceResourceGroup() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsInspectorResourceGroupCreate,
 		Read:   resourceAwsInspectorResourceGroupRead,
