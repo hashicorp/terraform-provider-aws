@@ -7,19 +7,20 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/xray"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSXrayGroup_basic(t *testing.T) {
 	var Group xray.Group
 	resourceName := "aws_xray_group.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, xray.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, xray.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSXrayGroupDestroy,
 		Steps: []resource.TestStep{
@@ -27,7 +28,7 @@ func TestAccAWSXrayGroup_basic(t *testing.T) {
 				Config: testAccAWSXrayGroupBasicConfig(rName, "responsetime > 5"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckXrayGroupExists(resourceName, &Group),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "xray", regexp.MustCompile(`group/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "xray", regexp.MustCompile(`group/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "group_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "filter_expression", "responsetime > 5"),
 				),
@@ -41,7 +42,7 @@ func TestAccAWSXrayGroup_basic(t *testing.T) {
 				Config: testAccAWSXrayGroupBasicConfig(rName, "responsetime > 10"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckXrayGroupExists(resourceName, &Group),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "xray", regexp.MustCompile(`group/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "xray", regexp.MustCompile(`group/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "group_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "filter_expression", "responsetime > 10"),
 				),
@@ -53,11 +54,11 @@ func TestAccAWSXrayGroup_basic(t *testing.T) {
 func TestAccAWSXrayGroup_tags(t *testing.T) {
 	var Group xray.Group
 	resourceName := "aws_xray_group.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, xray.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, xray.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSXrayGroupDestroy,
 		Steps: []resource.TestStep{
@@ -97,11 +98,11 @@ func TestAccAWSXrayGroup_tags(t *testing.T) {
 func TestAccAWSXrayGroup_disappears(t *testing.T) {
 	var Group xray.Group
 	resourceName := "aws_xray_group.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, xray.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, xray.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSXrayGroupDestroy,
 		Steps: []resource.TestStep{
@@ -109,7 +110,7 @@ func TestAccAWSXrayGroup_disappears(t *testing.T) {
 				Config: testAccAWSXrayGroupBasicConfig(rName, "responsetime > 5"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckXrayGroupExists(resourceName, &Group),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsXrayGroup(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsXrayGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
