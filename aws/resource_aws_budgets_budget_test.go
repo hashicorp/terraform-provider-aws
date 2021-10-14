@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -216,7 +217,7 @@ func TestAccAWSBudgetsBudget_disappears(t *testing.T) {
 				Config: testAccAWSBudgetsBudgetConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccAWSBudgetsBudgetExists(resourceName, &budget),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsBudgetsBudget(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceBudget(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

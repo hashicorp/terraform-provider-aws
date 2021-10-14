@@ -19,12 +19,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsBudgetsBudgetAction() *schema.Resource {
+func ResourceBudgetAction() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsBudgetsBudgetActionCreate,
-		Read:   resourceAwsBudgetsBudgetActionRead,
-		Update: resourceAwsBudgetsBudgetActionUpdate,
-		Delete: resourceAwsBudgetsBudgetActionDelete,
+		Create: resourceBudgetActionCreate,
+		Read:   resourceBudgetActionRead,
+		Update: resourceBudgetActionUpdate,
+		Delete: resourceBudgetActionDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -208,7 +208,7 @@ func resourceAwsBudgetsBudgetAction() *schema.Resource {
 	}
 }
 
-func resourceAwsBudgetsBudgetActionCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceBudgetActionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BudgetsConn
 
 	accountID := d.Get("account_id").(string)
@@ -247,10 +247,10 @@ func resourceAwsBudgetsBudgetActionCreate(d *schema.ResourceData, meta interface
 		return fmt.Errorf("error waiting for Budget Action (%s) to create: %w", d.Id(), err)
 	}
 
-	return resourceAwsBudgetsBudgetActionRead(d, meta)
+	return resourceBudgetActionRead(d, meta)
 }
 
-func resourceAwsBudgetsBudgetActionRead(d *schema.ResourceData, meta interface{}) error {
+func resourceBudgetActionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BudgetsConn
 
 	accountID, actionID, budgetName, err := tfbudgets.BudgetActionParseResourceID(d.Id())
@@ -305,7 +305,7 @@ func resourceAwsBudgetsBudgetActionRead(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceAwsBudgetsBudgetActionUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceBudgetActionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BudgetsConn
 
 	accountID, actionID, budgetName, err := tfbudgets.BudgetActionParseResourceID(d.Id())
@@ -355,10 +355,10 @@ func resourceAwsBudgetsBudgetActionUpdate(d *schema.ResourceData, meta interface
 		return fmt.Errorf("error waiting for Budget Action (%s) to update: %w", d.Id(), err)
 	}
 
-	return resourceAwsBudgetsBudgetActionRead(d, meta)
+	return resourceBudgetActionRead(d, meta)
 }
 
-func resourceAwsBudgetsBudgetActionDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceBudgetActionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BudgetsConn
 
 	accountID, actionID, budgetName, err := tfbudgets.BudgetActionParseResourceID(d.Id())

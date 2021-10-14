@@ -19,12 +19,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsBudgetsBudget() *schema.Resource {
+func ResourceBudget() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsBudgetsBudgetCreate,
-		Read:   resourceAwsBudgetsBudgetRead,
-		Update: resourceAwsBudgetsBudgetUpdate,
-		Delete: resourceAwsBudgetsBudgetDelete,
+		Create: resourceBudgetCreate,
+		Read:   resourceBudgetRead,
+		Update: resourceBudgetUpdate,
+		Delete: resourceBudgetDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -224,7 +224,7 @@ func resourceAwsBudgetsBudget() *schema.Resource {
 	}
 }
 
-func resourceAwsBudgetsBudgetCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceBudgetCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BudgetsConn
 
 	budget, err := expandBudgetsBudgetUnmarshal(d)
@@ -260,10 +260,10 @@ func resourceAwsBudgetsBudgetCreate(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("error creating Budget (%s) Notifications: %s", d.Id(), err)
 	}
 
-	return resourceAwsBudgetsBudgetRead(d, meta)
+	return resourceBudgetRead(d, meta)
 }
 
-func resourceAwsBudgetsBudgetRead(d *schema.ResourceData, meta interface{}) error {
+func resourceBudgetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BudgetsConn
 
 	accountID, budgetName, err := tfbudgets.BudgetParseResourceID(d.Id())
@@ -383,7 +383,7 @@ func resourceAwsBudgetsBudgetRead(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func resourceAwsBudgetsBudgetUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceBudgetUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BudgetsConn
 
 	accountID, _, err := tfbudgets.BudgetParseResourceID(d.Id())
@@ -411,10 +411,10 @@ func resourceAwsBudgetsBudgetUpdate(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("update budget notification failed: %v", err)
 	}
 
-	return resourceAwsBudgetsBudgetRead(d, meta)
+	return resourceBudgetRead(d, meta)
 }
 
-func resourceAwsBudgetsBudgetDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceBudgetDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BudgetsConn
 
 	accountID, budgetName, err := tfbudgets.BudgetParseResourceID(d.Id())

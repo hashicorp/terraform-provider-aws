@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -54,7 +55,7 @@ func testSweepBudgetsBudgetActionss(region string) error {
 			log.Printf("[INFO] Deleting Budget Action: %s", name)
 			id := fmt.Sprintf("%s:%s:%s", accountID, aws.StringValue(action.ActionId), name)
 
-			r := resourceAwsBudgetsBudgetAction()
+			r := ResourceBudgetAction()
 			d := r.Data(nil)
 			d.SetId(id)
 
@@ -131,7 +132,7 @@ func TestAccAWSBudgetsBudgetAction_disappears(t *testing.T) {
 				Config: testAccAWSBudgetsBudgetActionConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccAWSBudgetsBudgetActionExists(resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsBudgetsBudgetAction(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceBudgetAction(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
