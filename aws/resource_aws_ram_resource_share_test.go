@@ -16,12 +16,12 @@ import (
 func TestAccAwsRamResourceShare_basic(t *testing.T) {
 	var resourceShare ram.ResourceShare
 	resourceName := "aws_ram_resource_share.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ram.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsRamResourceShareDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -46,12 +46,12 @@ func TestAccAwsRamResourceShare_basic(t *testing.T) {
 func TestAccAwsRamResourceShare_AllowExternalPrincipals(t *testing.T) {
 	var resourceShare1, resourceShare2 ram.ResourceShare
 	resourceName := "aws_ram_resource_share.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ram.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsRamResourceShareDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -80,13 +80,13 @@ func TestAccAwsRamResourceShare_AllowExternalPrincipals(t *testing.T) {
 func TestAccAwsRamResourceShare_Name(t *testing.T) {
 	var resourceShare1, resourceShare2 ram.ResourceShare
 	resourceName := "aws_ram_resource_share.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
-	rName2 := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ram.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsRamResourceShareDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -115,12 +115,12 @@ func TestAccAwsRamResourceShare_Name(t *testing.T) {
 func TestAccAwsRamResourceShare_Tags(t *testing.T) {
 	var resourceShare1, resourceShare2, resourceShare3 ram.ResourceShare
 	resourceName := "aws_ram_resource_share.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ram.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsRamResourceShareDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -159,7 +159,7 @@ func TestAccAwsRamResourceShare_Tags(t *testing.T) {
 
 func testAccCheckAwsRamResourceShareExists(resourceName string, resourceShare *ram.ResourceShare) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).ramconn
+		conn := acctest.Provider.Meta().(*AWSClient).ramconn
 
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -195,7 +195,7 @@ func testAccCheckAwsRamResourceShareExists(resourceName string, resourceShare *r
 }
 
 func testAccCheckAwsRamResourceShareDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ramconn
+	conn := acctest.Provider.Meta().(*AWSClient).ramconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ram_resource_share" {
