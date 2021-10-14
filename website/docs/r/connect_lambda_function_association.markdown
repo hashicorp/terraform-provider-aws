@@ -21,11 +21,12 @@ resource "aws_connect_lambda_function_association" "test" {
   instance_id  = aws_connect_instance.test.id
 }
 ```
+
 ## Argument Reference
 
 The following arguments are supported:
 
-* `function_arn` - (Required) Name or Amazon Resource Name (ARN) of the Lambda Function, omitting any version or alias qualifier.
+* `function_arn` - (Required) Amazon Resource Name (ARN) of the Lambda Function, omitting any version or alias qualifier.
 * `instance_id` - (Required) The identifier of the Amazon Connect instance. You can find the instanceId in the ARN of the instance.
 
 ### Timeouts
