@@ -11,7 +11,7 @@ const (
 	engineNameAuroraServerless           = "aurora-serverless"
 	engineNameAzuredb                    = "azuredb"
 	engineNameDB2                        = "db2"
-	engineNameTransfer                = "dms-transfer"
+	engineNameTransfer                   = "dms-transfer"
 	engineNameDocDB                      = "docdb"
 	engineNameDynamoDB                   = "dynamodb"
 	engineNameElasticSearch              = "elasticsearch"
