@@ -18,6 +18,35 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
 )
 
 func ResourceStackSet() *schema.Resource {
@@ -32,7 +61,7 @@ func ResourceStackSet() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Update: schema.DefaultTimeout(waiter.StackSetUpdatedDefaultTimeout),
+			Update: schema.DefaultTimeout(tfcloudformation.StackSetUpdatedDefaultTimeout),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -202,7 +231,7 @@ func resourceStackSetRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	stackSet, err := finder.StackSetByName(conn, d.Id())
+	stackSet, err := tfcloudformation.FindStackSetByName(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudFormation StackSet (%s) not found, removing from state", d.Id())
@@ -315,7 +344,7 @@ func resourceStackSetUpdate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error updating CloudFormation StackSet (%s): %w", d.Id(), err)
 	}
 
-	if _, err := waiter.StackSetOperationSucceeded(conn, d.Id(), aws.StringValue(output.OperationId), d.Timeout(schema.TimeoutUpdate)); err != nil {
+	if _, err := tfcloudformation.WaitStackSetOperationSucceeded(conn, d.Id(), aws.StringValue(output.OperationId), d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return fmt.Errorf("error waiting for CloudFormation StackSet (%s) update: %w", d.Id(), err)
 	}
 

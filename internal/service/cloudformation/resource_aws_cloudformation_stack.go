@@ -16,6 +16,25 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
 )
 
 func ResourceStack() *schema.Resource {
@@ -30,9 +49,9 @@ func ResourceStack() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(waiter.StackCreatedDefaultTimeout),
-			Update: schema.DefaultTimeout(waiter.StackUpdatedDefaultTimeout),
-			Delete: schema.DefaultTimeout(waiter.StackDeletedDefaultTimeout),
+			Create: schema.DefaultTimeout(tfcloudformation.StackCreatedDefaultTimeout),
+			Update: schema.DefaultTimeout(tfcloudformation.StackUpdatedDefaultTimeout),
+			Delete: schema.DefaultTimeout(tfcloudformation.StackDeletedDefaultTimeout),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -187,7 +206,7 @@ func resourceStackCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(aws.StringValue(resp.StackId))
 
-	stack, err := waiter.StackCreated(conn, d.Id(), requestToken, d.Timeout(schema.TimeoutCreate))
+	stack, err := tfcloudformation.WaitStackCreated(conn, d.Id(), requestToken, d.Timeout(schema.TimeoutCreate))
 	if err != nil {
 		if stack != nil {
 			status := aws.StringValue(stack.StackStatus)
@@ -374,7 +393,7 @@ func resourceStackUpdate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error updating CloudFormation stack (%s): %w", d.Id(), err)
 	}
 
-	_, err = waiter.StackUpdated(conn, d.Id(), requestToken, d.Timeout(schema.TimeoutUpdate))
+	_, err = tfcloudformation.WaitStackUpdated(conn, d.Id(), requestToken, d.Timeout(schema.TimeoutUpdate))
 	if err != nil {
 		return fmt.Errorf("error waiting for CloudFormation Stack update: %w", err)
 	}
@@ -401,7 +420,7 @@ func resourceStackDelete(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	_, err = waiter.StackDeleted(conn, d.Id(), requestToken, d.Timeout(schema.TimeoutDelete))
+	_, err = tfcloudformation.WaitStackDeleted(conn, d.Id(), requestToken, d.Timeout(schema.TimeoutDelete))
 	if err != nil {
 		return fmt.Errorf("error waiting for CloudFormation Stack deletion: %w", err)
 	}

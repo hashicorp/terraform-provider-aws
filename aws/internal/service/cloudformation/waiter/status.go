@@ -9,11 +9,21 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudformation/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
 )
 
-func ChangeSetStatus(conn *cloudformation.CloudFormation, stackID, changeSetName string) resource.StateRefreshFunc {
+func StatusChangeSet(conn *cloudformation.CloudFormation, stackID, changeSetName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.ChangeSetByStackIDAndChangeSetName(conn, stackID, changeSetName)
+		output, err := tfcloudformation.FindChangeSetByStackIDAndChangeSetName(conn, stackID, changeSetName)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -27,9 +37,9 @@ func ChangeSetStatus(conn *cloudformation.CloudFormation, stackID, changeSetName
 	}
 }
 
-func StackSetOperationStatus(conn *cloudformation.CloudFormation, stackSetName, operationID string) resource.StateRefreshFunc {
+func StatusStackSetOperation(conn *cloudformation.CloudFormation, stackSetName, operationID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.StackSetOperationByStackSetNameAndOperationID(conn, stackSetName, operationID)
+		output, err := tfcloudformation.FindStackSetOperationByStackSetNameAndOperationID(conn, stackSetName, operationID)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -48,7 +58,7 @@ const (
 	stackStatusNotFound = "NotFound"
 )
 
-func StackStatus(conn *cloudformation.CloudFormation, stackName string) resource.StateRefreshFunc {
+func StatusStack(conn *cloudformation.CloudFormation, stackName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		resp, err := conn.DescribeStacks(&cloudformation.DescribeStacksInput{
 			StackName: aws.String(stackName),
@@ -65,9 +75,9 @@ func StackStatus(conn *cloudformation.CloudFormation, stackName string) resource
 	}
 }
 
-func TypeRegistrationProgressStatus(ctx context.Context, conn *cloudformation.CloudFormation, registrationToken string) resource.StateRefreshFunc {
+func StatusTypeRegistrationProgress(ctx context.Context, conn *cloudformation.CloudFormation, registrationToken string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.TypeRegistrationByToken(ctx, conn, registrationToken)
+		output, err := tfcloudformation.FindTypeRegistrationByToken(ctx, conn, registrationToken)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

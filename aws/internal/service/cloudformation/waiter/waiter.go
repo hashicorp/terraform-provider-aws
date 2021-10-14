@@ -14,18 +14,27 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudformation/lister"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
 )
 
 const (
 	ChangeSetCreatedTimeout = 5 * time.Minute
 )
 
-func ChangeSetCreated(conn *cloudformation.CloudFormation, stackID, changeSetName string) (*cloudformation.DescribeChangeSetOutput, error) {
+func WaitChangeSetCreated(conn *cloudformation.CloudFormation, stackID, changeSetName string) (*cloudformation.DescribeChangeSetOutput, error) {
 	stateConf := resource.StateChangeConf{
 		Pending: []string{cloudformation.ChangeSetStatusCreateInProgress, cloudformation.ChangeSetStatusCreatePending},
 		Target:  []string{cloudformation.ChangeSetStatusCreateComplete},
 		Timeout: ChangeSetCreatedTimeout,
-		Refresh: ChangeSetStatus(conn, stackID, changeSetName),
+		Refresh: StatusChangeSet(conn, stackID, changeSetName),
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -59,11 +68,11 @@ const (
 	StackSetUpdatedDefaultTimeout = 30 * time.Minute
 )
 
-func StackSetOperationSucceeded(conn *cloudformation.CloudFormation, stackSetName, operationID string, timeout time.Duration) (*cloudformation.StackSetOperation, error) {
+func WaitStackSetOperationSucceeded(conn *cloudformation.CloudFormation, stackSetName, operationID string, timeout time.Duration) (*cloudformation.StackSetOperation, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{cloudformation.StackSetOperationStatusRunning},
 		Target:  []string{cloudformation.StackSetOperationStatusSucceeded},
-		Refresh: StackSetOperationStatus(conn, stackSetName, operationID),
+		Refresh: StatusStackSetOperation(conn, stackSetName, operationID),
 		Timeout: timeout,
 		Delay:   stackSetOperationDelay,
 	}
@@ -118,7 +127,7 @@ const (
 	stackDeletedMinTimeout = 5 * time.Second
 )
 
-func StackCreated(conn *cloudformation.CloudFormation, stackID, requestToken string, timeout time.Duration) (*cloudformation.Stack, error) {
+func WaitStackCreated(conn *cloudformation.CloudFormation, stackID, requestToken string, timeout time.Duration) (*cloudformation.Stack, error) {
 	stateConf := resource.StateChangeConf{
 		Pending: []string{
 			cloudformation.StackStatusCreateInProgress,
@@ -136,7 +145,7 @@ func StackCreated(conn *cloudformation.CloudFormation, stackID, requestToken str
 		Timeout:    timeout,
 		MinTimeout: stackCreatedMinTimeout,
 		Delay:      10 * time.Second,
-		Refresh:    StackStatus(conn, stackID),
+		Refresh:    StatusStack(conn, stackID),
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -180,7 +189,7 @@ func StackCreated(conn *cloudformation.CloudFormation, stackID, requestToken str
 	return stack, nil
 }
 
-func StackUpdated(conn *cloudformation.CloudFormation, stackID, requestToken string, timeout time.Duration) (*cloudformation.Stack, error) {
+func WaitStackUpdated(conn *cloudformation.CloudFormation, stackID, requestToken string, timeout time.Duration) (*cloudformation.Stack, error) {
 	stateConf := resource.StateChangeConf{
 		Pending: []string{
 			cloudformation.StackStatusUpdateCompleteCleanupInProgress,
@@ -197,7 +206,7 @@ func StackUpdated(conn *cloudformation.CloudFormation, stackID, requestToken str
 		Timeout:    timeout,
 		MinTimeout: stackUpdatedMinTimeout,
 		Delay:      10 * time.Second,
-		Refresh:    StackStatus(conn, stackID),
+		Refresh:    StatusStack(conn, stackID),
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -223,7 +232,7 @@ func StackUpdated(conn *cloudformation.CloudFormation, stackID, requestToken str
 	return stack, nil
 }
 
-func StackDeleted(conn *cloudformation.CloudFormation, stackID, requestToken string, timeout time.Duration) (*cloudformation.Stack, error) {
+func WaitStackDeleted(conn *cloudformation.CloudFormation, stackID, requestToken string, timeout time.Duration) (*cloudformation.Stack, error) {
 	stateConf := resource.StateChangeConf{
 		Pending: []string{
 			cloudformation.StackStatusDeleteInProgress,
@@ -236,7 +245,7 @@ func StackDeleted(conn *cloudformation.CloudFormation, stackID, requestToken str
 		Timeout:    timeout,
 		MinTimeout: stackDeletedMinTimeout,
 		Delay:      10 * time.Second,
-		Refresh:    StackStatus(conn, stackID),
+		Refresh:    StatusStack(conn, stackID),
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -266,11 +275,11 @@ const (
 	TypeRegistrationTimeout = 5 * time.Minute
 )
 
-func TypeRegistrationProgressStatusComplete(ctx context.Context, conn *cloudformation.CloudFormation, registrationToken string) (*cloudformation.DescribeTypeRegistrationOutput, error) {
+func WaitTypeRegistrationProgressStatusComplete(ctx context.Context, conn *cloudformation.CloudFormation, registrationToken string) (*cloudformation.DescribeTypeRegistrationOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{cloudformation.RegistrationStatusInProgress},
 		Target:  []string{cloudformation.RegistrationStatusComplete},
-		Refresh: TypeRegistrationProgressStatus(ctx, conn, registrationToken),
+		Refresh: StatusTypeRegistrationProgress(ctx, conn, registrationToken),
 		Timeout: TypeRegistrationTimeout,
 	}
 
@@ -286,7 +295,7 @@ func TypeRegistrationProgressStatusComplete(ctx context.Context, conn *cloudform
 func getCloudFormationDeletionReasons(conn *cloudformation.CloudFormation, stackID, requestToken string) ([]string, error) {
 	var failures []string
 
-	err := lister.ListStackEventsForOperation(conn, stackID, requestToken, func(e *cloudformation.StackEvent) {
+	err := tfcloudformation.listStackEventsForOperation(conn, stackID, requestToken, func(e *cloudformation.StackEvent) {
 		if isFailedEvent(e) || isStackDeletionEvent(e) {
 			failures = append(failures, aws.StringValue(e.ResourceStatusReason))
 		}
@@ -296,7 +305,7 @@ func getCloudFormationDeletionReasons(conn *cloudformation.CloudFormation, stack
 
 func getCloudFormationRollbackReasons(conn *cloudformation.CloudFormation, stackID, requestToken string) ([]string, error) {
 	var failures []string
-	err := lister.ListStackEventsForOperation(conn, stackID, requestToken, func(e *cloudformation.StackEvent) {
+	err := tfcloudformation.listStackEventsForOperation(conn, stackID, requestToken, func(e *cloudformation.StackEvent) {
 		if isFailedEvent(e) || isRollbackEvent(e) {
 			failures = append(failures, aws.StringValue(e.ResourceStatusReason))
 		}
@@ -307,7 +316,7 @@ func getCloudFormationRollbackReasons(conn *cloudformation.CloudFormation, stack
 func getCloudFormationFailures(conn *cloudformation.CloudFormation, stackID, requestToken string) ([]string, error) {
 	var failures []string
 
-	err := lister.ListStackEventsForOperation(conn, stackID, requestToken, func(e *cloudformation.StackEvent) {
+	err := tfcloudformation.listStackEventsForOperation(conn, stackID, requestToken, func(e *cloudformation.StackEvent) {
 		if isFailedEvent(e) {
 			failures = append(failures, aws.StringValue(e.ResourceStatusReason))
 		}

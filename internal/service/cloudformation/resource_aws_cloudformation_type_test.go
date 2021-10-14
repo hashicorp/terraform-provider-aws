@@ -24,6 +24,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
 )
 
 func TestAccAwsCloudformationType_basic(t *testing.T) {
@@ -154,7 +164,7 @@ func testAccCheckAwsCloudformationTypeExists(resourceName string) resource.TestC
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn
 
-		_, err := finder.TypeByARN(context.TODO(), conn, rs.Primary.ID)
+		_, err := tfcloudformation.FindTypeByARN(context.TODO(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -172,7 +182,7 @@ func testAccCheckAwsCloudformationTypeDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.TypeByARN(context.TODO(), conn, rs.Primary.ID)
+		_, err := tfcloudformation.FindTypeByARN(context.TODO(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue

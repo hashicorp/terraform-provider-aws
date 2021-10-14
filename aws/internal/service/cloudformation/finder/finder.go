@@ -10,9 +10,17 @@ import (
 	tfcloudformation "github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudformation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
 )
 
-func ChangeSetByStackIDAndChangeSetName(conn *cloudformation.CloudFormation, stackID, changeSetName string) (*cloudformation.DescribeChangeSetOutput, error) {
+func FindChangeSetByStackIDAndChangeSetName(conn *cloudformation.CloudFormation, stackID, changeSetName string) (*cloudformation.DescribeChangeSetOutput, error) {
 	input := &cloudformation.DescribeChangeSetInput{
 		ChangeSetName: aws.String(changeSetName),
 		StackName:     aws.String(stackID),
@@ -38,7 +46,7 @@ func ChangeSetByStackIDAndChangeSetName(conn *cloudformation.CloudFormation, sta
 	return output, nil
 }
 
-func StackByID(conn *cloudformation.CloudFormation, id string) (*cloudformation.Stack, error) {
+func FindStackByID(conn *cloudformation.CloudFormation, id string) (*cloudformation.Stack, error) {
 	input := &cloudformation.DescribeStacksInput{
 		StackName: aws.String(id),
 	}
@@ -76,7 +84,7 @@ func StackByID(conn *cloudformation.CloudFormation, id string) (*cloudformation.
 	return stack, nil
 }
 
-func StackInstanceAccountIdByOrgIds(conn *cloudformation.CloudFormation, stackSetName, region string, orgIDs []string) (string, error) {
+func FindStackInstanceAccountIdByOrgIDs(conn *cloudformation.CloudFormation, stackSetName, region string, orgIDs []string) (string, error) {
 	input := &cloudformation.ListStackInstancesInput{
 		StackInstanceRegion: aws.String(region),
 		StackSetName:        aws.String(stackSetName),
@@ -120,7 +128,7 @@ func StackInstanceAccountIdByOrgIds(conn *cloudformation.CloudFormation, stackSe
 	return result, nil
 }
 
-func StackInstanceByName(conn *cloudformation.CloudFormation, stackSetName, accountID, region string) (*cloudformation.StackInstance, error) {
+func FindStackInstanceByName(conn *cloudformation.CloudFormation, stackSetName, accountID, region string) (*cloudformation.StackInstance, error) {
 	input := &cloudformation.DescribeStackInstanceInput{
 		StackInstanceAccount: aws.String(accountID),
 		StackInstanceRegion:  aws.String(region),
@@ -147,7 +155,7 @@ func StackInstanceByName(conn *cloudformation.CloudFormation, stackSetName, acco
 	return output.StackInstance, nil
 }
 
-func StackSetByName(conn *cloudformation.CloudFormation, name string) (*cloudformation.StackSet, error) {
+func FindStackSetByName(conn *cloudformation.CloudFormation, name string) (*cloudformation.StackSet, error) {
 	input := &cloudformation.DescribeStackSetInput{
 		StackSetName: aws.String(name),
 	}
@@ -172,7 +180,7 @@ func StackSetByName(conn *cloudformation.CloudFormation, name string) (*cloudfor
 	return output.StackSet, nil
 }
 
-func StackSetOperationByStackSetNameAndOperationID(conn *cloudformation.CloudFormation, stackSetName, operationID string) (*cloudformation.StackSetOperation, error) {
+func FindStackSetOperationByStackSetNameAndOperationID(conn *cloudformation.CloudFormation, stackSetName, operationID string) (*cloudformation.StackSetOperation, error) {
 	input := &cloudformation.DescribeStackSetOperationInput{
 		OperationId:  aws.String(operationID),
 		StackSetName: aws.String(stackSetName),
@@ -198,24 +206,24 @@ func StackSetOperationByStackSetNameAndOperationID(conn *cloudformation.CloudFor
 	return output.StackSetOperation, nil
 }
 
-func TypeByARN(ctx context.Context, conn *cloudformation.CloudFormation, arn string) (*cloudformation.DescribeTypeOutput, error) {
+func FindTypeByARN(ctx context.Context, conn *cloudformation.CloudFormation, arn string) (*cloudformation.DescribeTypeOutput, error) {
 	input := &cloudformation.DescribeTypeInput{
 		Arn: aws.String(arn),
 	}
 
-	return Type(ctx, conn, input)
+	return FindType(ctx, conn, input)
 }
 
-func TypeByName(ctx context.Context, conn *cloudformation.CloudFormation, name string) (*cloudformation.DescribeTypeOutput, error) {
+func FindTypeByName(ctx context.Context, conn *cloudformation.CloudFormation, name string) (*cloudformation.DescribeTypeOutput, error) {
 	input := &cloudformation.DescribeTypeInput{
 		Type:     aws.String(cloudformation.RegistryTypeResource),
 		TypeName: aws.String(name),
 	}
 
-	return Type(ctx, conn, input)
+	return FindType(ctx, conn, input)
 }
 
-func Type(ctx context.Context, conn *cloudformation.CloudFormation, input *cloudformation.DescribeTypeInput) (*cloudformation.DescribeTypeOutput, error) {
+func FindType(ctx context.Context, conn *cloudformation.CloudFormation, input *cloudformation.DescribeTypeInput) (*cloudformation.DescribeTypeOutput, error) {
 	output, err := conn.DescribeTypeWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, cloudformation.ErrCodeTypeNotFoundException) {
@@ -243,7 +251,7 @@ func Type(ctx context.Context, conn *cloudformation.CloudFormation, input *cloud
 	return output, nil
 }
 
-func TypeRegistrationByToken(ctx context.Context, conn *cloudformation.CloudFormation, registrationToken string) (*cloudformation.DescribeTypeRegistrationOutput, error) {
+func FindTypeRegistrationByToken(ctx context.Context, conn *cloudformation.CloudFormation, registrationToken string) (*cloudformation.DescribeTypeRegistrationOutput, error) {
 	input := &cloudformation.DescribeTypeRegistrationInput{
 		RegistrationToken: aws.String(registrationToken),
 	}

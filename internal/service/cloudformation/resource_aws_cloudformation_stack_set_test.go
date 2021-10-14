@@ -19,6 +19,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
 )
 
 func init() {
@@ -648,7 +658,7 @@ func testAccCheckCloudFormationStackSetExists(resourceName string, v *cloudforma
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn
 
-		output, err := finder.StackSetByName(conn, rs.Primary.ID)
+		output, err := tfcloudformation.FindStackSetByName(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -668,7 +678,7 @@ func testAccCheckAWSCloudFormationStackSetDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.StackSetByName(conn, rs.Primary.ID)
+		_, err := tfcloudformation.FindStackSetByName(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
