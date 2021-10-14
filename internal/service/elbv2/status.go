@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func statusLoadBalancerState(conn *elbv2.ELBV2, arn string) resource.StateRefreshFunc {
