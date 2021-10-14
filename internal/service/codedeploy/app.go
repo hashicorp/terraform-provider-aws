@@ -105,7 +105,7 @@ func resourceAppCreate(d *schema.ResourceData, meta interface{}) error {
 	resp, err := conn.CreateApplication(&codedeploy.CreateApplicationInput{
 		ApplicationName: aws.String(application),
 		ComputePlatform: aws.String(computePlatform),
-		Tags:            tags.IgnoreAws().CodedeployTags(),
+		Tags:            Tags(tags.IgnoreAws()),
 	})
 	if err != nil {
 		return err
@@ -169,7 +169,7 @@ func resourceAppRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("github_account_name", app.GitHubAccountName)
 	d.Set("linked_to_github", app.LinkedToGitHub)
 
-	tags, err := tftags.CodedeployListTags(conn, appArn)
+	tags, err := ListTags(conn, appArn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for CodeDeploy application (%s): %w", d.Id(), err)
@@ -208,7 +208,7 @@ func resourceAwsCodeDeployUpdate(d *schema.ResourceData, meta interface{}) error
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.CodedeployUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating CodeDeploy Application (%s) tags: %w", d.Get("arn").(string), err)
 		}
 	}
