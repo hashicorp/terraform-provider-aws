@@ -18,55 +18,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_lambda_layer", &resource.Sweeper{
-		Name: "aws_lambda_layer",
-		F:    sweepLayerVersions,
-	})
-}
 
-func sweepLayerVersions(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
 
-	conn := client.(*conns.AWSClient).LambdaConn
-	resp, err := conn.ListLayers(&lambda.ListLayersInput{})
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Lambda Layer sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error retrieving Lambda layers: %s", err)
-	}
 
-	if len(resp.Layers) == 0 {
-		log.Print("[DEBUG] No aws lambda layers to sweep")
-		return nil
-	}
-
-	for _, l := range resp.Layers {
-		versionResp, err := conn.ListLayerVersions(&lambda.ListLayerVersionsInput{
-			LayerName: l.LayerName,
-		})
-		if err != nil {
-			return fmt.Errorf("Error retrieving versions for lambda layer: %s", err)
-		}
-
-		for _, v := range versionResp.LayerVersions {
-			_, err := conn.DeleteLayerVersion(&lambda.DeleteLayerVersionInput{
-				LayerName:     l.LayerName,
-				VersionNumber: v.Version,
-			})
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	return nil
-}
 
 func TestAccLambdaLayerVersion_basic(t *testing.T) {
 	resourceName := "aws_lambda_layer_version.lambda_layer_test"

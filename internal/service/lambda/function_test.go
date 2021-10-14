@@ -27,10 +27,7 @@ import (
 func init() {
 	acctest.RegisterServiceErrorCheckFunc(lambda.EndpointsID, testAccErrorCheckSkipLambda)
 
-	resource.AddTestSweepers("aws_lambda_function", &resource.Sweeper{
-		Name: "aws_lambda_function",
-		F:    sweepFunctions,
-	})
+
 }
 
 func testAccErrorCheckSkipLambda(t *testing.T) resource.ErrorCheckFunc {
@@ -39,40 +36,7 @@ func testAccErrorCheckSkipLambda(t *testing.T) resource.ErrorCheckFunc {
 	)
 }
 
-func sweepFunctions(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
 
-	conn := client.(*conns.AWSClient).LambdaConn
-
-	resp, err := conn.ListFunctions(&lambda.ListFunctionsInput{})
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Lambda Function sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error retrieving Lambda functions: %s", err)
-	}
-
-	if len(resp.Functions) == 0 {
-		log.Print("[DEBUG] No aws lambda functions to sweep")
-		return nil
-	}
-
-	for _, f := range resp.Functions {
-		_, err := conn.DeleteFunction(
-			&lambda.DeleteFunctionInput{
-				FunctionName: f.FunctionName,
-			})
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
 
 func TestAccLambdaFunction_basic(t *testing.T) {
 	var conf lambda.GetFunctionOutput
