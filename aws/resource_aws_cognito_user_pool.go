@@ -18,6 +18,7 @@ import (
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceUserPool() *schema.Resource {
@@ -37,7 +38,7 @@ func ResourceUserPool() *schema.Resource {
 				Type:             schema.TypeList,
 				Optional:         true,
 				MaxItems:         1,
-				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"recovery_mechanism": {
@@ -81,17 +82,17 @@ func ResourceUserPool() *schema.Resource {
 									"email_message": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validateCognitoUserPoolInviteTemplateEmailMessage,
+										ValidateFunc: validUserPoolInviteTemplateEmailMessage,
 									},
 									"email_subject": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validateCognitoUserPoolTemplateEmailSubject,
+										ValidateFunc: validUserPoolTemplateEmailSubject,
 									},
 									"sms_message": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validateCognitoUserPoolInviteTemplateSmsMessage,
+										ValidateFunc: validUserPoolInviteTemplateSMSMessage,
 									},
 								},
 							},
@@ -159,7 +160,7 @@ func ResourceUserPool() *schema.Resource {
 				Type:             schema.TypeList,
 				Optional:         true,
 				MaxItems:         1,
-				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"configuration_set": {
@@ -188,7 +189,7 @@ func ResourceUserPool() *schema.Resource {
 						"source_arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 					},
 				},
@@ -197,14 +198,14 @@ func ResourceUserPool() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
-				ValidateFunc:  validateCognitoUserPoolEmailVerificationSubject,
+				ValidateFunc:  validUserPoolEmailVerificationSubject,
 				ConflictsWith: []string{"verification_message_template.0.email_subject"},
 			},
 			"email_verification_message": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
-				ValidateFunc:  validateCognitoUserPoolEmailVerificationMessage,
+				ValidateFunc:  validUserPoolEmailVerificationMessage,
 				ConflictsWith: []string{"verification_message_template.0.email_message"},
 			},
 			"endpoint": {
@@ -220,57 +221,57 @@ func ResourceUserPool() *schema.Resource {
 						"create_auth_challenge": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 						"custom_message": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 						"define_auth_challenge": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 						"post_authentication": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 						"post_confirmation": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 						"pre_authentication": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 						"pre_sign_up": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 						"pre_token_generation": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 						"user_migration": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 						"verify_auth_challenge_response": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 						"kms_key_id": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 						"custom_email_sender": {
 							Type:         schema.TypeList,
@@ -283,7 +284,7 @@ func ResourceUserPool() *schema.Resource {
 									"lambda_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: verify.ValidARN,
 									},
 									"lambda_version": {
 										Type:         schema.TypeString,
@@ -304,7 +305,7 @@ func ResourceUserPool() *schema.Resource {
 									"lambda_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: verify.ValidARN,
 									},
 									"lambda_version": {
 										Type:         schema.TypeString,
@@ -396,7 +397,7 @@ func ResourceUserPool() *schema.Resource {
 						"name": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateCognitoUserPoolSchemaName,
+							ValidateFunc: validUserPoolSchemaName,
 						},
 						"number_attribute_constraints": {
 							Type:     schema.TypeList,
@@ -442,7 +443,7 @@ func ResourceUserPool() *schema.Resource {
 			"sms_authentication_message": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateCognitoUserPoolSmsAuthenticationMessage,
+				ValidateFunc: validUserPoolSMSAuthenticationMessage,
 			},
 			"sms_configuration": {
 				Type:     schema.TypeList,
@@ -458,7 +459,7 @@ func ResourceUserPool() *schema.Resource {
 						"sns_caller_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 					},
 				},
@@ -467,7 +468,7 @@ func ResourceUserPool() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
-				ValidateFunc:  validateCognitoUserPoolSmsVerificationMessage,
+				ValidateFunc:  validUserPoolSMSVerificationMessage,
 				ConflictsWith: []string{"verification_message_template.0.sms_message"},
 			},
 			"software_token_mfa_configuration": {
@@ -541,33 +542,33 @@ func ResourceUserPool() *schema.Resource {
 							Type:          schema.TypeString,
 							Optional:      true,
 							Computed:      true,
-							ValidateFunc:  validateCognitoUserPoolTemplateEmailMessage,
+							ValidateFunc:  validUserPoolTemplateEmailMessage,
 							ConflictsWith: []string{"email_verification_message"},
 						},
 						"email_message_by_link": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
-							ValidateFunc: validateCognitoUserPoolTemplateEmailMessageByLink,
+							ValidateFunc: validUserPoolTemplateEmailMessageByLink,
 						},
 						"email_subject": {
 							Type:          schema.TypeString,
 							Optional:      true,
 							Computed:      true,
-							ValidateFunc:  validateCognitoUserPoolTemplateEmailSubject,
+							ValidateFunc:  validUserPoolTemplateEmailSubject,
 							ConflictsWith: []string{"email_verification_subject"},
 						},
 						"email_subject_by_link": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
-							ValidateFunc: validateCognitoUserPoolTemplateEmailSubjectByLink,
+							ValidateFunc: validUserPoolTemplateEmailSubjectByLink,
 						},
 						"sms_message": {
 							Type:          schema.TypeString,
 							Optional:      true,
 							Computed:      true,
-							ValidateFunc:  validateCognitoUserPoolTemplateSmsMessage,
+							ValidateFunc:  validUserPoolTemplateSMSMessage,
 							ConflictsWith: []string{"sms_verification_message"},
 						},
 					},
