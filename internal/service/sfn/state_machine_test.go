@@ -25,12 +25,12 @@ func TestAccAWSSfnStateMachine_createUpdate(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sfn.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSfnStateMachineDestroy,
+		CheckDestroy: testAccCheckStateMachineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSfnStateMachineConfig(rName, 5),
+				Config: testAccStateMachineConfig(rName, 5),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSfnExists(resourceName, &sm),
+					testAccCheckExists(resourceName, &sm),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "states", fmt.Sprintf("stateMachine:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "status", sfn.StateMachineStatusActive),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -54,9 +54,9 @@ func TestAccAWSSfnStateMachine_createUpdate(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSSfnStateMachineConfig(rName, 10),
+				Config: testAccStateMachineConfig(rName, 10),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSfnExists(resourceName, &sm),
+					testAccCheckExists(resourceName, &sm),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "states", fmt.Sprintf("stateMachine:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "status", sfn.StateMachineStatusActive),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -86,12 +86,12 @@ func TestAccAWSSfnStateMachine_expressUpdate(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sfn.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSfnStateMachineDestroy,
+		CheckDestroy: testAccCheckStateMachineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSfnStateMachineTypedConfig(rName, "EXPRESS", 5),
+				Config: testAccStateMachineTypedConfig(rName, "EXPRESS", 5),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSfnExists(resourceName, &sm),
+					testAccCheckExists(resourceName, &sm),
 					resource.TestCheckResourceAttr(resourceName, "status", sfn.StateMachineStatusActive),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
@@ -102,9 +102,9 @@ func TestAccAWSSfnStateMachine_expressUpdate(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSSfnStateMachineTypedConfig(rName, "EXPRESS", 10),
+				Config: testAccStateMachineTypedConfig(rName, "EXPRESS", 10),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSfnExists(resourceName, &sm),
+					testAccCheckExists(resourceName, &sm),
 					resource.TestCheckResourceAttr(resourceName, "status", sfn.StateMachineStatusActive),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
@@ -126,12 +126,12 @@ func TestAccAWSSfnStateMachine_standardUpdate(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sfn.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSfnStateMachineDestroy,
+		CheckDestroy: testAccCheckStateMachineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSfnStateMachineTypedConfig(rName, "STANDARD", 5),
+				Config: testAccStateMachineTypedConfig(rName, "STANDARD", 5),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSfnExists(resourceName, &sm),
+					testAccCheckExists(resourceName, &sm),
 					resource.TestCheckResourceAttr(resourceName, "status", sfn.StateMachineStatusActive),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
@@ -142,9 +142,9 @@ func TestAccAWSSfnStateMachine_standardUpdate(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSSfnStateMachineTypedConfig(rName, "STANDARD", 10),
+				Config: testAccStateMachineTypedConfig(rName, "STANDARD", 10),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSfnExists(resourceName, &sm),
+					testAccCheckExists(resourceName, &sm),
 					resource.TestCheckResourceAttr(resourceName, "status", sfn.StateMachineStatusActive),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
@@ -166,12 +166,12 @@ func TestAccAWSSfnStateMachine_tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sfn.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSfnStateMachineDestroy,
+		CheckDestroy: testAccCheckStateMachineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSfnStateMachineConfigTags1(rName, "key1", "value1"),
+				Config: testAccStateMachineTags1Config(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSfnExists(resourceName, &sm),
+					testAccCheckExists(resourceName, &sm),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -182,18 +182,18 @@ func TestAccAWSSfnStateMachine_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSSfnStateMachineConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccStateMachineTags2Config(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSfnExists(resourceName, &sm),
+					testAccCheckExists(resourceName, &sm),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccAWSSfnStateMachineConfigTags1(rName, "key2", "value2"),
+				Config: testAccStateMachineTags1Config(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSfnExists(resourceName, &sm),
+					testAccCheckExists(resourceName, &sm),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -211,12 +211,12 @@ func TestAccAWSSfnStateMachine_TracingConfiguration(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sfn.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSfnStateMachineDestroy,
+		CheckDestroy: testAccCheckStateMachineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSfnStateMachineConfigTracingConfigDisable(rName),
+				Config: testAccStateMachineTracingDisableConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSfnExists(resourceName, &sm),
+					testAccCheckExists(resourceName, &sm),
 					resource.TestCheckResourceAttr(resourceName, "tracing_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tracing_configuration.0.enabled", "false"),
 				),
@@ -227,9 +227,9 @@ func TestAccAWSSfnStateMachine_TracingConfiguration(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSSfnStateMachineConfigTracingConfigEnable(rName),
+				Config: testAccStateMachineTracingEnableConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSfnExists(resourceName, &sm),
+					testAccCheckExists(resourceName, &sm),
 					resource.TestCheckResourceAttr(resourceName, "tracing_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tracing_configuration.0.enabled", "true"),
 				),
@@ -247,12 +247,12 @@ func TestAccAWSSfnStateMachine_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sfn.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSfnStateMachineDestroy,
+		CheckDestroy: testAccCheckStateMachineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSfnStateMachineConfig(rName, 5),
+				Config: testAccStateMachineConfig(rName, 5),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSfnExists(resourceName, &sm),
+					testAccCheckExists(resourceName, &sm),
 					acctest.CheckResourceDisappears(acctest.Provider, tfsfn.ResourceStateMachine(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -270,12 +270,12 @@ func TestAccAWSSfnStateMachine_expressLoggingConfiguration(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sfn.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSfnStateMachineDestroy,
+		CheckDestroy: testAccCheckStateMachineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSfnStateMachineExpressConfigLogConfiguration(rName, sfn.LogLevelError),
+				Config: testAccStateMachineExpressLogConfigurationConfig(rName, sfn.LogLevelError),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSfnExists(resourceName, &sm),
+					testAccCheckExists(resourceName, &sm),
 					resource.TestCheckResourceAttr(resourceName, "status", sfn.StateMachineStatusActive),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
@@ -287,9 +287,9 @@ func TestAccAWSSfnStateMachine_expressLoggingConfiguration(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSSfnStateMachineExpressConfigLogConfiguration(rName, sfn.LogLevelAll),
+				Config: testAccStateMachineExpressLogConfigurationConfig(rName, sfn.LogLevelAll),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSfnExists(resourceName, &sm),
+					testAccCheckExists(resourceName, &sm),
 					resource.TestCheckResourceAttr(resourceName, "status", sfn.StateMachineStatusActive),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
@@ -303,7 +303,7 @@ func TestAccAWSSfnStateMachine_expressLoggingConfiguration(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSSfnExists(n string, v *sfn.DescribeStateMachineOutput) resource.TestCheckFunc {
+func testAccCheckExists(n string, v *sfn.DescribeStateMachineOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -328,7 +328,7 @@ func testAccCheckAWSSfnExists(n string, v *sfn.DescribeStateMachineOutput) resou
 	}
 }
 
-func testAccCheckAWSSfnStateMachineDestroy(s *terraform.State) error {
+func testAccCheckStateMachineDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).SFNConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -352,7 +352,7 @@ func testAccCheckAWSSfnStateMachineDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSSfnStateMachineConfigBase(rName string) string {
+func testAccStateMachineBaseConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role_policy" "for_lambda" {
   name = "%[1]s-lambda"
@@ -452,8 +452,8 @@ EOF
 `, rName)
 }
 
-func testAccAWSSfnStateMachineConfig(rName string, rMaxAttempts int) string {
-	return acctest.ConfigCompose(testAccAWSSfnStateMachineConfigBase(rName), fmt.Sprintf(`
+func testAccStateMachineConfig(rName string, rMaxAttempts int) string {
+	return acctest.ConfigCompose(testAccStateMachineBaseConfig(rName), fmt.Sprintf(`
 resource "aws_sfn_state_machine" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.for_sfn.arn
@@ -485,8 +485,8 @@ EOF
 `, rName, rMaxAttempts))
 }
 
-func testAccAWSSfnStateMachineConfigTags1(rName, tag1Key, tag1Value string) string {
-	return acctest.ConfigCompose(testAccAWSSfnStateMachineConfigBase(rName), fmt.Sprintf(`
+func testAccStateMachineTags1Config(rName, tag1Key, tag1Value string) string {
+	return acctest.ConfigCompose(testAccStateMachineBaseConfig(rName), fmt.Sprintf(`
 resource "aws_sfn_state_machine" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.for_sfn.arn
@@ -522,8 +522,8 @@ EOF
 `, rName, tag1Key, tag1Value))
 }
 
-func testAccAWSSfnStateMachineConfigTags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
-	return acctest.ConfigCompose(testAccAWSSfnStateMachineConfigBase(rName), fmt.Sprintf(`
+func testAccStateMachineTags2Config(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
+	return acctest.ConfigCompose(testAccStateMachineBaseConfig(rName), fmt.Sprintf(`
 resource "aws_sfn_state_machine" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.for_sfn.arn
@@ -560,8 +560,8 @@ EOF
 `, rName, tag1Key, tag1Value, tag2Key, tag2Value))
 }
 
-func testAccAWSSfnStateMachineTypedConfig(rName, rType string, rMaxAttempts int) string {
-	return acctest.ConfigCompose(testAccAWSSfnStateMachineConfigBase(rName), fmt.Sprintf(`
+func testAccStateMachineTypedConfig(rName, rType string, rMaxAttempts int) string {
+	return acctest.ConfigCompose(testAccStateMachineBaseConfig(rName), fmt.Sprintf(`
 resource "aws_sfn_state_machine" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.for_sfn.arn
@@ -592,8 +592,8 @@ EOF
 `, rName, rType, rMaxAttempts))
 }
 
-func testAccAWSSfnStateMachineExpressConfigLogConfiguration(rName string, rLevel string) string {
-	return acctest.ConfigCompose(testAccAWSSfnStateMachineConfigBase(rName), fmt.Sprintf(`
+func testAccStateMachineExpressLogConfigurationConfig(rName string, rLevel string) string {
+	return acctest.ConfigCompose(testAccStateMachineBaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
   name = %[1]q
 }
@@ -636,8 +636,8 @@ EOF
 `, rName, rLevel))
 }
 
-func testAccAWSSfnStateMachineConfigTracingConfigEnable(rName string) string {
-	return acctest.ConfigCompose(testAccAWSSfnStateMachineConfigBase(rName), fmt.Sprintf(`
+func testAccStateMachineTracingEnableConfig(rName string) string {
+	return acctest.ConfigCompose(testAccStateMachineBaseConfig(rName), fmt.Sprintf(`
 resource "aws_sfn_state_machine" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.for_sfn.arn
@@ -673,8 +673,8 @@ EOF
 `, rName))
 }
 
-func testAccAWSSfnStateMachineConfigTracingConfigDisable(rName string) string {
-	return acctest.ConfigCompose(testAccAWSSfnStateMachineConfigBase(rName), fmt.Sprintf(`
+func testAccStateMachineTracingDisableConfig(rName string) string {
+	return acctest.ConfigCompose(testAccStateMachineBaseConfig(rName), fmt.Sprintf(`
 resource "aws_sfn_state_machine" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.for_sfn.arn

@@ -21,7 +21,7 @@ func TestAccDataSourceAwsSfnStateMachine_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsSfnStateMachineConfig(rName),
+				Config: testAccStateMachineDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "creation_date", dataSourceName, "creation_date"),
@@ -35,7 +35,7 @@ func TestAccDataSourceAwsSfnStateMachine_basic(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAwsSfnStateMachineConfig(rName string) string {
+func testAccStateMachineDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 
