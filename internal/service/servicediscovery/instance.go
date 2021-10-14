@@ -21,13 +21,13 @@ import (
 
 func ResourceInstance() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsServiceDiscoveryInstancePut,
+		Create: resourceInstancePut,
 		Read:   resourceInstanceRead,
-		Update: resourceAwsServiceDiscoveryInstancePut,
+		Update: resourceInstancePut,
 		Delete: resourceInstanceDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: resourceAwsServiceDiscoveryInstanceImport,
+			StateContext: resourceInstanceImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -61,7 +61,7 @@ func ResourceInstance() *schema.Resource {
 	}
 }
 
-func resourceAwsServiceDiscoveryInstancePut(d *schema.ResourceData, meta interface{}) error {
+func resourceInstancePut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn
 
 	instanceID := d.Get("instance_id").(string)
@@ -130,7 +130,7 @@ func resourceInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsServiceDiscoveryInstanceImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceInstanceImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	parts := strings.SplitN(d.Id(), "/", 2)
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
 		return nil, fmt.Errorf("unexpected format (%q), expected <service-id>/<instance-id>", d.Id())
