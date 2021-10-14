@@ -14,6 +14,7 @@ import (
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceDataLakeSettings() *schema.Resource {
@@ -33,7 +34,7 @@ func ResourceDataLakeSettings() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validateArn,
+					ValidateFunc: verify.ValidARN,
 				},
 			},
 			"catalog_id": {
@@ -61,7 +62,7 @@ func ResourceDataLakeSettings() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
-							ValidateFunc: validatePrincipal,
+							ValidateFunc: validPrincipal,
 						},
 					},
 				},
@@ -86,7 +87,7 @@ func ResourceDataLakeSettings() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
-							ValidateFunc: validatePrincipal,
+							ValidateFunc: validPrincipal,
 						},
 					},
 				},
@@ -97,7 +98,7 @@ func ResourceDataLakeSettings() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validateAwsAccountId,
+					ValidateFunc: verify.ValidAccountID,
 				},
 			},
 		},
