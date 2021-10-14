@@ -84,7 +84,7 @@ func sweepLags(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAwsDxLag_basic(t *testing.T) {
+func TestAccDirectConnectLag_basic(t *testing.T) {
 	var lag directconnect.Lag
 	resourceName := "aws_dx_lag.test"
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -140,7 +140,7 @@ func TestAccAwsDxLag_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsDxLag_disappears(t *testing.T) {
+func TestAccDirectConnectLag_disappears(t *testing.T) {
 	var lag directconnect.Lag
 	resourceName := "aws_dx_lag.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -163,7 +163,7 @@ func TestAccAwsDxLag_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAwsDxLag_ConnectionID(t *testing.T) {
+func TestAccDirectConnectLag_connectionID(t *testing.T) {
 	var lag directconnect.Lag
 	resourceName := "aws_dx_lag.test"
 	connectionResourceName := "aws_dx_connection.test"
@@ -202,7 +202,7 @@ func TestAccAwsDxLag_ConnectionID(t *testing.T) {
 	})
 }
 
-func TestAccAwsDxLag_ProviderName(t *testing.T) {
+func TestAccDirectConnectLag_providerName(t *testing.T) {
 	var lag directconnect.Lag
 	resourceName := "aws_dx_lag.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -240,7 +240,7 @@ func TestAccAwsDxLag_ProviderName(t *testing.T) {
 	})
 }
 
-func TestAccAwsDxLag_Tags(t *testing.T) {
+func TestAccDirectConnectLag_tags(t *testing.T) {
 	var lag directconnect.Lag
 	resourceName := "aws_dx_lag.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

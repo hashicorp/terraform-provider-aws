@@ -16,7 +16,7 @@ import (
 	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
 )
 
-func TestAccAWSDxConnectionConfirmation_basic(t *testing.T) {
+func TestAccDirectConnectConnectionConfirmation_basic(t *testing.T) {
 	env, err := testAccCheckHostedConnectionEnv()
 	if err != nil {
 		acctest.Skip(t, err.Error())

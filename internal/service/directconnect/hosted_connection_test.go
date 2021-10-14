@@ -22,7 +22,7 @@ type testAccDxHostedConnectionEnv struct {
 	OwnerAccountId string
 }
 
-func TestAccAWSDxHostedConnection_basic(t *testing.T) {
+func TestAccDirectConnectHostedConnection_basic(t *testing.T) {
 	env, err := testAccCheckHostedConnectionEnv()
 	if err != nil {
 		acctest.Skip(t, err.Error())

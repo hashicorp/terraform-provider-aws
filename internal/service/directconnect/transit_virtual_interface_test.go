@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAwsDxTransitVirtualInterface_serial(t *testing.T) {
+func TestAccDirectConnectTransitVirtualInterface_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		"basic": testAccTransitVirtualInterface_basic,
 		"tags":  testAccTransitVirtualInterface_Tags,

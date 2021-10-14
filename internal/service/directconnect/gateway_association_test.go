@@ -168,7 +168,7 @@ func sweepGatewayAssociations(region string) error {
 }
 
 // V0 state upgrade testing must be done via acceptance testing due to API call
-func TestAccAwsDxGatewayAssociation_V0StateUpgrade(t *testing.T) {
+func TestAccDirectConnectGatewayAssociation_v0StateUpgrade(t *testing.T) {
 	resourceName := "aws_dx_gateway_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
@@ -192,7 +192,7 @@ func TestAccAwsDxGatewayAssociation_V0StateUpgrade(t *testing.T) {
 	})
 }
 
-func TestAccAwsDxGatewayAssociation_basicVpnGatewaySingleAccount(t *testing.T) {
+func TestAccDirectConnectGatewayAssociation_basicVPNGatewaySingleAccount(t *testing.T) {
 	resourceName := "aws_dx_gateway_association.test"
 	resourceNameDxGw := "aws_dx_gateway.test"
 	resourceNameVgw := "aws_vpn_gateway.test"
@@ -231,7 +231,7 @@ func TestAccAwsDxGatewayAssociation_basicVpnGatewaySingleAccount(t *testing.T) {
 	})
 }
 
-func TestAccAwsDxGatewayAssociation_basicVpnGatewayCrossAccount(t *testing.T) {
+func TestAccDirectConnectGatewayAssociation_basicVPNGatewayCrossAccount(t *testing.T) {
 	var providers []*schema.Provider
 	resourceName := "aws_dx_gateway_association.test"
 	resourceNameDxGw := "aws_dx_gateway.test"
@@ -266,7 +266,7 @@ func TestAccAwsDxGatewayAssociation_basicVpnGatewayCrossAccount(t *testing.T) {
 	})
 }
 
-func TestAccAwsDxGatewayAssociation_basicTransitGatewaySingleAccount(t *testing.T) {
+func TestAccDirectConnectGatewayAssociation_basicTransitGatewaySingleAccount(t *testing.T) {
 	resourceName := "aws_dx_gateway_association.test"
 	resourceNameDxGw := "aws_dx_gateway.test"
 	resourceNameTgw := "aws_ec2_transit_gateway.test"
@@ -306,7 +306,7 @@ func TestAccAwsDxGatewayAssociation_basicTransitGatewaySingleAccount(t *testing.
 	})
 }
 
-func TestAccAwsDxGatewayAssociation_basicTransitGatewayCrossAccount(t *testing.T) {
+func TestAccDirectConnectGatewayAssociation_basicTransitGatewayCrossAccount(t *testing.T) {
 	var providers []*schema.Provider
 	resourceName := "aws_dx_gateway_association.test"
 	resourceNameDxGw := "aws_dx_gateway.test"
@@ -342,7 +342,7 @@ func TestAccAwsDxGatewayAssociation_basicTransitGatewayCrossAccount(t *testing.T
 	})
 }
 
-func TestAccAwsDxGatewayAssociation_multiVpnGatewaysSingleAccount(t *testing.T) {
+func TestAccDirectConnectGatewayAssociation_multiVPNGatewaysSingleAccount(t *testing.T) {
 	resourceName1 := "aws_dx_gateway_association.test.0"
 	resourceName2 := "aws_dx_gateway_association.test.1"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -373,7 +373,7 @@ func TestAccAwsDxGatewayAssociation_multiVpnGatewaysSingleAccount(t *testing.T) 
 	})
 }
 
-func TestAccAwsDxGatewayAssociation_allowedPrefixesVpnGatewaySingleAccount(t *testing.T) {
+func TestAccDirectConnectGatewayAssociation_allowedPrefixesVPNGatewaySingleAccount(t *testing.T) {
 	resourceName := "aws_dx_gateway_association.test"
 	resourceNameDxGw := "aws_dx_gateway.test"
 	resourceNameVgw := "aws_vpn_gateway.test"
@@ -418,7 +418,7 @@ func TestAccAwsDxGatewayAssociation_allowedPrefixesVpnGatewaySingleAccount(t *te
 	})
 }
 
-func TestAccAwsDxGatewayAssociation_allowedPrefixesVpnGatewayCrossAccount(t *testing.T) {
+func TestAccDirectConnectGatewayAssociation_allowedPrefixesVPNGatewayCrossAccount(t *testing.T) {
 	var providers []*schema.Provider
 	resourceName := "aws_dx_gateway_association.test"
 	resourceNameDxGw := "aws_dx_gateway.test"
@@ -463,7 +463,7 @@ func TestAccAwsDxGatewayAssociation_allowedPrefixesVpnGatewayCrossAccount(t *tes
 	})
 }
 
-func TestAccAwsDxGatewayAssociation_recreateProposal(t *testing.T) {
+func TestAccDirectConnectGatewayAssociation_recreateProposal(t *testing.T) {
 	var providers []*schema.Provider
 	resourceName := "aws_dx_gateway_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

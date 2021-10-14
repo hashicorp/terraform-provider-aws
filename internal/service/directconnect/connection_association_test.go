@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccAWSDxConnectionAssociation_basic(t *testing.T) {
+func TestAccDirectConnectConnectionAssociation_basic(t *testing.T) {
 	resourceName := "aws_dx_connection_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -34,7 +34,7 @@ func TestAccAWSDxConnectionAssociation_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDxConnectionAssociation_LAGOnConnection(t *testing.T) {
+func TestAccDirectConnectConnectionAssociation_lAGOnConnection(t *testing.T) {
 	resourceName := "aws_dx_connection_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -54,7 +54,7 @@ func TestAccAWSDxConnectionAssociation_LAGOnConnection(t *testing.T) {
 	})
 }
 
-func TestAccAWSDxConnectionAssociation_Multiple(t *testing.T) {
+func TestAccDirectConnectConnectionAssociation_multiple(t *testing.T) {
 	resourceName1 := "aws_dx_connection_association.test1"
 	resourceName2 := "aws_dx_connection_association.test2"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

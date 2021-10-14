@@ -83,7 +83,7 @@ func sweepConnections(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAwsDxConnection_basic(t *testing.T) {
+func TestAccDirectConnectConnection_basic(t *testing.T) {
 	var connection directconnect.Connection
 	resourceName := "aws_dx_connection.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -117,7 +117,7 @@ func TestAccAwsDxConnection_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsDxConnection_disappears(t *testing.T) {
+func TestAccDirectConnectConnection_disappears(t *testing.T) {
 	var connection directconnect.Connection
 	resourceName := "aws_dx_connection.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -140,7 +140,7 @@ func TestAccAwsDxConnection_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAwsDxConnection_ProviderName(t *testing.T) {
+func TestAccDirectConnectConnection_providerName(t *testing.T) {
 	var connection directconnect.Connection
 	resourceName := "aws_dx_connection.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -174,7 +174,7 @@ func TestAccAwsDxConnection_ProviderName(t *testing.T) {
 	})
 }
 
-func TestAccAwsDxConnection_Tags(t *testing.T) {
+func TestAccDirectConnectConnection_tags(t *testing.T) {
 	var connection directconnect.Connection
 	resourceName := "aws_dx_connection.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

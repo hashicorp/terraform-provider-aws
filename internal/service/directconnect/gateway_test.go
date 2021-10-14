@@ -112,7 +112,7 @@ func sweepGateways(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAwsDxGateway_basic(t *testing.T) {
+func TestAccDirectConnectGateway_basic(t *testing.T) {
 	var v directconnect.Gateway
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
@@ -140,7 +140,7 @@ func TestAccAwsDxGateway_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsDxGateway_disappears(t *testing.T) {
+func TestAccDirectConnectGateway_disappears(t *testing.T) {
 	var v directconnect.Gateway
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
@@ -164,7 +164,7 @@ func TestAccAwsDxGateway_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAwsDxGateway_complex(t *testing.T) {
+func TestAccDirectConnectGateway_complex(t *testing.T) {
 	var v directconnect.Gateway
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
