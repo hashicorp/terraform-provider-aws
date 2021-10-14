@@ -158,7 +158,7 @@ func testAccCheckAWSResourceGroupDestroy(s *terraform.State) error {
 			}
 		}
 
-		if isAWSErr(err, resourcegroups.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, resourcegroups.ErrCodeNotFoundException, "") {
 			return nil
 		}
 
