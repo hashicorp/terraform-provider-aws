@@ -31,6 +31,7 @@ import (
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceGroup() *schema.Resource {
@@ -83,14 +84,14 @@ func ResourceGroup() *schema.Resource {
 							Optional:      true,
 							Computed:      true,
 							ConflictsWith: []string{"launch_template.0.name"},
-							ValidateFunc:  validateLaunchTemplateId,
+							ValidateFunc:  verify.ValidLaunchTemplateID,
 						},
 						"name": {
 							Type:          schema.TypeString,
 							Optional:      true,
 							Computed:      true,
 							ConflictsWith: []string{"launch_template.0.id"},
-							ValidateFunc:  validateLaunchTemplateName,
+							ValidateFunc:  verify.ValidLaunchTemplateName,
 						},
 						"version": {
 							Type:         schema.TypeString,
