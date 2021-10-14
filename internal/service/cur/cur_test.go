@@ -6,7 +6,7 @@ import (
 )
 
 // Serialize to limit API rate-limit exceeded errors.
-func TestAccAwsCur_serial(t *testing.T) {
+func TestAccCUR_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"ReportDefinition": {
 			"basic":      testAccReportDefinition_basic,
