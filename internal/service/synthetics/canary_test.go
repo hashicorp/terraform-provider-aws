@@ -22,61 +22,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_synthetics_canary", &resource.Sweeper{
-		Name: "aws_synthetics_canary",
-		F:    sweepCanaries,
-		Dependencies: []string{
-			"aws_lambda_function",
-			"aws_lambda_layer",
-			"aws_cloudwatch_log_group",
-		},
-	})
-}
 
-func sweepCanaries(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).SyntheticsConn
-	input := &synthetics.DescribeCanariesInput{}
-	var sweeperErrs *multierror.Error
 
-	for {
-		output, err := conn.DescribeCanaries(input)
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Synthetics Canary sweep for %s: %s", region, err)
-			return nil
-		}
-		if err != nil {
-			return fmt.Errorf("error retrieving Synthetics Canaries: %w", err)
-		}
 
-		for _, canary := range output.Canaries {
-			name := aws.StringValue(canary.Name)
-			log.Printf("[INFO] Deleting Synthetics Canary: %s", name)
-
-			r := tfsynthetics.ResourceCanary()
-			d := r.Data(nil)
-			d.SetId(name)
-			err := r.Delete(d, client)
-
-			if err != nil {
-				log.Printf("[ERROR] %s", err)
-				sweeperErrs = multierror.Append(sweeperErrs, err)
-				continue
-			}
-		}
-
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-		input.NextToken = output.NextToken
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func TestAccSyntheticsCanary_basic(t *testing.T) {
 	var conf1, conf2 synthetics.Canary
