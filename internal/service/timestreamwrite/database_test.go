@@ -24,12 +24,12 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_timestreamwrite_database", &resource.Sweeper{
 		Name:         "aws_timestreamwrite_database",
-		F:            testSweepTimestreamWriteDatabases,
+		F:            sweepDatabases,
 		Dependencies: []string{"aws_timestreamwrite_table"},
 	})
 }
 
-func testSweepTimestreamWriteDatabases(region string) error {
+func sweepDatabases(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -91,15 +91,15 @@ func TestAccAWSTimestreamWriteDatabase_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSTimestreamWrite(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, timestreamwrite.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSTimestreamWriteDatabaseDestroy,
+		CheckDestroy: testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSTimestreamWriteDatabaseConfigBasic(rName),
+				Config: testAccDatabaseBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSTimestreamWriteDatabaseExists(resourceName),
+					testAccCheckDatabaseExists(resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "timestream", fmt.Sprintf("database/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "database_name", rName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "kms_key_id", "kms", regexp.MustCompile(`key/.+`)),
@@ -120,15 +120,15 @@ func TestAccAWSTimestreamWriteDatabase_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSTimestreamWrite(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, timestreamwrite.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSTimestreamWriteDatabaseDestroy,
+		CheckDestroy: testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSTimestreamWriteDatabaseConfigBasic(rName),
+				Config: testAccDatabaseBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSTimestreamWriteDatabaseExists(resourceName),
+					testAccCheckDatabaseExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tftimestreamwrite.ResourceDatabase(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -143,15 +143,15 @@ func TestAccAWSTimestreamWriteDatabase_kmsKey(t *testing.T) {
 	kmsResourceName := "aws_kms_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSTimestreamWrite(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, timestreamwrite.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSTimestreamWriteDatabaseDestroy,
+		CheckDestroy: testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSTimestreamWriteDatabaseConfigKmsKey(rName),
+				Config: testAccDatabaseKMSKeyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSTimestreamWriteDatabaseExists(resourceName),
+					testAccCheckDatabaseExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "database_name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsResourceName, "arn"),
 				),
@@ -171,22 +171,22 @@ func TestAccAWSTimestreamWriteDatabase_updateKmsKey(t *testing.T) {
 	kmsResourceName := "aws_kms_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSTimestreamWrite(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, timestreamwrite.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSTimestreamWriteDatabaseDestroy,
+		CheckDestroy: testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSTimestreamWriteDatabaseConfigBasic(rName),
+				Config: testAccDatabaseBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSTimestreamWriteDatabaseExists(resourceName),
+					testAccCheckDatabaseExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "kms_key_id", "kms", regexp.MustCompile(`key/.+`)),
 				),
 			},
 			{
-				Config: testAccAWSTimestreamWriteDatabaseConfigKmsKey(rName),
+				Config: testAccDatabaseKMSKeyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSTimestreamWriteDatabaseExists(resourceName),
+					testAccCheckDatabaseExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsResourceName, "arn"),
 				),
 			},
@@ -196,9 +196,9 @@ func TestAccAWSTimestreamWriteDatabase_updateKmsKey(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSTimestreamWriteDatabaseConfigBasic(rName),
+				Config: testAccDatabaseBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSTimestreamWriteDatabaseExists(resourceName),
+					testAccCheckDatabaseExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "kms_key_id", "kms", regexp.MustCompile(`key/.+`)),
 				),
 			},
@@ -211,15 +211,15 @@ func TestAccAWSTimestreamWriteDatabase_Tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSTimestreamWrite(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, timestreamwrite.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSTimestreamWriteDatabaseDestroy,
+		CheckDestroy: testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSTimestreamWriteDatabaseConfigTags1(rName, "key1", "value1"),
+				Config: testAccDatabaseTags1Config(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSTimestreamWriteDatabaseExists(resourceName),
+					testAccCheckDatabaseExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
@@ -227,9 +227,9 @@ func TestAccAWSTimestreamWriteDatabase_Tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSTimestreamWriteDatabaseConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccDatabaseTags2Config(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSTimestreamWriteDatabaseExists(resourceName),
+					testAccCheckDatabaseExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -239,9 +239,9 @@ func TestAccAWSTimestreamWriteDatabase_Tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSTimestreamWriteDatabaseConfigTags1(rName, "key2", "value2"),
+				Config: testAccDatabaseTags1Config(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSTimestreamWriteDatabaseExists(resourceName),
+					testAccCheckDatabaseExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
@@ -257,7 +257,7 @@ func TestAccAWSTimestreamWriteDatabase_Tags(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSTimestreamWriteDatabaseDestroy(s *terraform.State) error {
+func testAccCheckDatabaseDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).TimestreamWriteConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -285,7 +285,7 @@ func testAccCheckAWSTimestreamWriteDatabaseDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSTimestreamWriteDatabaseExists(n string) resource.TestCheckFunc {
+func testAccCheckDatabaseExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -314,7 +314,7 @@ func testAccCheckAWSTimestreamWriteDatabaseExists(n string) resource.TestCheckFu
 	}
 }
 
-func testAccPreCheckAWSTimestreamWrite(t *testing.T) {
+func testAccPreCheck(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).TimestreamWriteConn
 
 	input := &timestreamwrite.ListDatabasesInput{}
@@ -330,7 +330,7 @@ func testAccPreCheckAWSTimestreamWrite(t *testing.T) {
 	}
 }
 
-func testAccAWSTimestreamWriteDatabaseConfigBasic(rName string) string {
+func testAccDatabaseBasicConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_timestreamwrite_database" "test" {
   database_name = %[1]q
@@ -338,7 +338,7 @@ resource "aws_timestreamwrite_database" "test" {
 `, rName)
 }
 
-func testAccAWSTimestreamWriteDatabaseConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccDatabaseTags1Config(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_timestreamwrite_database" "test" {
   database_name = %[1]q
@@ -350,7 +350,7 @@ resource "aws_timestreamwrite_database" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccAWSTimestreamWriteDatabaseConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccDatabaseTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_timestreamwrite_database" "test" {
   database_name = %[1]q
@@ -363,7 +363,7 @@ resource "aws_timestreamwrite_database" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccAWSTimestreamWriteDatabaseConfigKmsKey(rName string) string {
+func testAccDatabaseKMSKeyConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description = %[1]q
