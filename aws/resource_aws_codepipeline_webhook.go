@@ -9,8 +9,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceWebhook() *schema.Resource {
@@ -97,11 +98,11 @@ func ResourceWebhook() *schema.Resource {
 				ForceNew: true,
 				Required: true,
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -136,7 +137,7 @@ func extractCodePipelineWebhookAuthConfig(authType string, authConfig map[string
 func resourceWebhookCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodePipelineConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	authType := d.Get("authentication").(string)
 
 	var authConfig map[string]interface{}
@@ -278,7 +279,7 @@ func resourceWebhookRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting filter: %s", err)
 	}
 
-	tags := keyvaluetags.CodepipelineKeyValueTags(webhook.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := tftags.CodepipelineKeyValueTags(webhook.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -298,7 +299,7 @@ func resourceWebhookUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := keyvaluetags.CodepipelineUpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := tftags.CodepipelineUpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating CodePipeline Webhook (%s) tags: %s", d.Id(), err)
 		}
 	}
