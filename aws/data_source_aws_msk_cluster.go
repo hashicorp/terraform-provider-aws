@@ -7,9 +7,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/kafka"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	tfkafka "github.com/hashicorp/terraform-provider-aws/aws/internal/service/kafka"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceCluster() *schema.Resource {
@@ -50,7 +51,7 @@ func DataSourceCluster() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"tags": tagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 			"zookeeper_connect_string": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -112,7 +113,7 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("kafka_version", cluster.CurrentBrokerSoftwareInfo.KafkaVersion)
 	d.Set("number_of_broker_nodes", cluster.NumberOfBrokerNodes)
 
-	if err := d.Set("tags", keyvaluetags.KafkaKeyValueTags(cluster.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", tftags.KafkaKeyValueTags(cluster.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 
