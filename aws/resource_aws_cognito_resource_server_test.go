@@ -7,22 +7,23 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSCognitoResourceServer_basic(t *testing.T) {
 	var resourceServer cognitoidentityprovider.ResourceServerType
-	identifier := fmt.Sprintf("tf-acc-test-resource-server-id-%s", acctest.RandString(10))
-	name1 := fmt.Sprintf("tf-acc-test-resource-server-name-%s", acctest.RandString(10))
-	name2 := fmt.Sprintf("tf-acc-test-resource-server-name-%s", acctest.RandString(10))
-	poolName := fmt.Sprintf("tf-acc-test-pool-%s", acctest.RandString(10))
+	identifier := fmt.Sprintf("tf-acc-test-resource-server-id-%s", sdkacctest.RandString(10))
+	name1 := fmt.Sprintf("tf-acc-test-resource-server-name-%s", sdkacctest.RandString(10))
+	name2 := fmt.Sprintf("tf-acc-test-resource-server-name-%s", sdkacctest.RandString(10))
+	poolName := fmt.Sprintf("tf-acc-test-pool-%s", sdkacctest.RandString(10))
 	resourceName := "aws_cognito_resource_server.main"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
-		ErrorCheck:   testAccErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoResourceServerDestroy,
 		Steps: []resource.TestStep{
@@ -57,14 +58,14 @@ func TestAccAWSCognitoResourceServer_basic(t *testing.T) {
 
 func TestAccAWSCognitoResourceServer_scope(t *testing.T) {
 	var resourceServer cognitoidentityprovider.ResourceServerType
-	identifier := fmt.Sprintf("tf-acc-test-resource-server-id-%s", acctest.RandString(10))
-	name := fmt.Sprintf("tf-acc-test-resource-server-name-%s", acctest.RandString(10))
-	poolName := fmt.Sprintf("tf-acc-test-pool-%s", acctest.RandString(10))
+	identifier := fmt.Sprintf("tf-acc-test-resource-server-id-%s", sdkacctest.RandString(10))
+	name := fmt.Sprintf("tf-acc-test-resource-server-name-%s", sdkacctest.RandString(10))
+	poolName := fmt.Sprintf("tf-acc-test-pool-%s", sdkacctest.RandString(10))
 	resourceName := "aws_cognito_resource_server.main"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
-		ErrorCheck:   testAccErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoResourceServerDestroy,
 		Steps: []resource.TestStep{

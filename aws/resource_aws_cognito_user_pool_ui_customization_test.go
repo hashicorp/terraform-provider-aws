@@ -7,14 +7,15 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cognitoidentityprovider/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSCognitoUserPoolUICustomization_AllClients_CSS(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cognito_user_pool_ui_customization.test"
 	userPoolResourceName := "aws_cognito_user_pool.test"
 
@@ -22,8 +23,8 @@ func TestAccAWSCognitoUserPoolUICustomization_AllClients_CSS(t *testing.T) {
 	cssUpdated := ".label-customizable {font-weight: 100;}"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolUICustomizationDestroy,
 		Steps: []resource.TestStep{
@@ -66,14 +67,14 @@ func TestAccAWSCognitoUserPoolUICustomization_AllClients_CSS(t *testing.T) {
 }
 
 func TestAccAWSCognitoUserPoolUICustomization_AllClients_Disappears(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cognito_user_pool_ui_customization.test"
 
 	css := ".label-customizable {font-weight: 400;}"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
-		ErrorCheck:   testAccErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolUICustomizationDestroy,
 		Steps: []resource.TestStep{
@@ -81,7 +82,7 @@ func TestAccAWSCognitoUserPoolUICustomization_AllClients_Disappears(t *testing.T
 				Config: testAccAWSCognitoUserPoolUICustomizationConfig_AllClients_CSS(rName, css),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoUserPoolUICustomizationExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsCognitoUserPoolUICustomization(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsCognitoUserPoolUICustomization(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -90,7 +91,7 @@ func TestAccAWSCognitoUserPoolUICustomization_AllClients_Disappears(t *testing.T
 }
 
 func TestAccAWSCognitoUserPoolUICustomization_AllClients_ImageFile(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cognito_user_pool_ui_customization.test"
 	userPoolResourceName := "aws_cognito_user_pool.test"
 
@@ -98,8 +99,8 @@ func TestAccAWSCognitoUserPoolUICustomization_AllClients_ImageFile(t *testing.T)
 	updatedFilename := "testdata/service/cognitoidentityprovider/logo_modified.png"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolUICustomizationDestroy,
 		Steps: []resource.TestStep{
@@ -142,7 +143,7 @@ func TestAccAWSCognitoUserPoolUICustomization_AllClients_ImageFile(t *testing.T)
 }
 
 func TestAccAWSCognitoUserPoolUICustomization_AllClients_CSSAndImageFile(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cognito_user_pool_ui_customization.test"
 	userPoolResourceName := "aws_cognito_user_pool.test"
 
@@ -151,8 +152,8 @@ func TestAccAWSCognitoUserPoolUICustomization_AllClients_CSSAndImageFile(t *test
 	updatedFilename := "testdata/service/cognitoidentityprovider/logo_modified.png"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolUICustomizationDestroy,
 		Steps: []resource.TestStep{
@@ -209,7 +210,7 @@ func TestAccAWSCognitoUserPoolUICustomization_AllClients_CSSAndImageFile(t *test
 }
 
 func TestAccAWSCognitoUserPoolUICustomization_Client_CSS(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cognito_user_pool_ui_customization.test"
 	clientResourceName := "aws_cognito_user_pool_client.test"
 	userPoolResourceName := "aws_cognito_user_pool.test"
@@ -218,8 +219,8 @@ func TestAccAWSCognitoUserPoolUICustomization_Client_CSS(t *testing.T) {
 	cssUpdated := ".label-customizable {font-weight: 100;}"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolUICustomizationDestroy,
 		Steps: []resource.TestStep{
@@ -262,14 +263,14 @@ func TestAccAWSCognitoUserPoolUICustomization_Client_CSS(t *testing.T) {
 }
 
 func TestAccAWSCognitoUserPoolUICustomization_Client_Disappears(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cognito_user_pool_ui_customization.test"
 
 	css := ".label-customizable {font-weight: 400;}"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
-		ErrorCheck:   testAccErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolUICustomizationDestroy,
 		Steps: []resource.TestStep{
@@ -277,7 +278,7 @@ func TestAccAWSCognitoUserPoolUICustomization_Client_Disappears(t *testing.T) {
 				Config: testAccAWSCognitoUserPoolUICustomizationConfig_Client_CSS(rName, css),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoUserPoolUICustomizationExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsCognitoUserPoolUICustomization(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsCognitoUserPoolUICustomization(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -286,7 +287,7 @@ func TestAccAWSCognitoUserPoolUICustomization_Client_Disappears(t *testing.T) {
 }
 
 func TestAccAWSCognitoUserPoolUICustomization_Client_Image(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cognito_user_pool_ui_customization.test"
 	clientResourceName := "aws_cognito_user_pool_client.test"
 	userPoolResourceName := "aws_cognito_user_pool.test"
@@ -295,8 +296,8 @@ func TestAccAWSCognitoUserPoolUICustomization_Client_Image(t *testing.T) {
 	updatedFilename := "testdata/service/cognitoidentityprovider/logo_modified.png"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolUICustomizationDestroy,
 		Steps: []resource.TestStep{
@@ -339,7 +340,7 @@ func TestAccAWSCognitoUserPoolUICustomization_Client_Image(t *testing.T) {
 }
 
 func TestAccAWSCognitoUserPoolUICustomization_ClientAndAll_CSS(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cognito_user_pool_ui_customization.ui_all"
 	clientUIResourceName := "aws_cognito_user_pool_ui_customization.ui_client"
 
@@ -350,8 +351,8 @@ func TestAccAWSCognitoUserPoolUICustomization_ClientAndAll_CSS(t *testing.T) {
 	clientCSS := ".label-customizable {font-weight: 100;}"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolUICustomizationDestroy,
 		Steps: []resource.TestStep{
@@ -414,7 +415,7 @@ func TestAccAWSCognitoUserPoolUICustomization_ClientAndAll_CSS(t *testing.T) {
 }
 
 func TestAccAWSCognitoUserPoolUICustomization_UpdateClientToAll_CSS(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cognito_user_pool_ui_customization.test"
 	clientResourceName := "aws_cognito_user_pool_client.test"
 
@@ -422,8 +423,8 @@ func TestAccAWSCognitoUserPoolUICustomization_UpdateClientToAll_CSS(t *testing.T
 	cssUpdated := ".label-customizable {font-weight: 400;}"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolUICustomizationDestroy,
 		Steps: []resource.TestStep{
@@ -453,7 +454,7 @@ func TestAccAWSCognitoUserPoolUICustomization_UpdateClientToAll_CSS(t *testing.T
 }
 
 func TestAccAWSCognitoUserPoolUICustomization_UpdateAllToClient_CSS(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cognito_user_pool_ui_customization.test"
 	clientResourceName := "aws_cognito_user_pool_client.test"
 
@@ -461,8 +462,8 @@ func TestAccAWSCognitoUserPoolUICustomization_UpdateAllToClient_CSS(t *testing.T
 	cssUpdated := ".label-customizable {font-weight: 400;}"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolUICustomizationDestroy,
 		Steps: []resource.TestStep{

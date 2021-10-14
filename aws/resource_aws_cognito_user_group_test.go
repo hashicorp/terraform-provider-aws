@@ -8,20 +8,21 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSCognitoUserGroup_basic(t *testing.T) {
-	poolName := fmt.Sprintf("tf-acc-%s", acctest.RandString(10))
-	groupName := fmt.Sprintf("tf-acc-%s", acctest.RandString(10))
-	updatedGroupName := fmt.Sprintf("tf-acc-%s", acctest.RandString(10))
+	poolName := fmt.Sprintf("tf-acc-%s", sdkacctest.RandString(10))
+	groupName := fmt.Sprintf("tf-acc-%s", sdkacctest.RandString(10))
+	updatedGroupName := fmt.Sprintf("tf-acc-%s", sdkacctest.RandString(10))
 	resourceName := "aws_cognito_user_group.main"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
-		ErrorCheck:   testAccErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserGroupDestroy,
 		Steps: []resource.TestStep{
@@ -49,14 +50,14 @@ func TestAccAWSCognitoUserGroup_basic(t *testing.T) {
 }
 
 func TestAccAWSCognitoUserGroup_complex(t *testing.T) {
-	poolName := fmt.Sprintf("tf-acc-%s", acctest.RandString(10))
-	groupName := fmt.Sprintf("tf-acc-%s", acctest.RandString(10))
-	updatedGroupName := fmt.Sprintf("tf-acc-%s", acctest.RandString(10))
+	poolName := fmt.Sprintf("tf-acc-%s", sdkacctest.RandString(10))
+	groupName := fmt.Sprintf("tf-acc-%s", sdkacctest.RandString(10))
+	updatedGroupName := fmt.Sprintf("tf-acc-%s", sdkacctest.RandString(10))
 	resourceName := "aws_cognito_user_group.main"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
-		ErrorCheck:   testAccErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserGroupDestroy,
 		Steps: []resource.TestStep{
@@ -90,12 +91,12 @@ func TestAccAWSCognitoUserGroup_complex(t *testing.T) {
 }
 
 func TestAccAWSCognitoUserGroup_RoleArn(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc")
+	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_cognito_user_group.main"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
-		ErrorCheck:   testAccErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserGroupDestroy,
 		Steps: []resource.TestStep{
