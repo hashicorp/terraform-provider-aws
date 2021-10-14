@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAwsTransferServer_basic(t *testing.T) {
+func TestAccTransferServerDataSource_basic(t *testing.T) {
 	resourceName := "aws_transfer_server.test"
 	datasourceName := "data.aws_transfer_server.test"
 
@@ -33,7 +33,7 @@ func TestAccDataSourceAwsTransferServer_basic(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsTransferServer_service_managed(t *testing.T) {
+func TestAccTransferServerDataSource_Service_managed(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 	resourceName := "aws_transfer_server.test"
 	datasourceName := "data.aws_transfer_server.test"
@@ -62,7 +62,7 @@ func TestAccDataSourceAwsTransferServer_service_managed(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsTransferServer_apigateway(t *testing.T) {
+func TestAccTransferServerDataSource_apigateway(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 	resourceName := "aws_transfer_server.test"
 	datasourceName := "data.aws_transfer_server.test"

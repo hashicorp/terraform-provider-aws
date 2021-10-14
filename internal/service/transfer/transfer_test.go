@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestAccAWSTransfer_serial(t *testing.T) {
+func TestAccTransfer_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Access": {
 			"disappears": testAccAccess_disappears,
