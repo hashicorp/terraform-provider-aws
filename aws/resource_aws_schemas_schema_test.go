@@ -5,12 +5,13 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/schemas"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	tfschemas "github.com/hashicorp/terraform-provider-aws/aws/internal/service/schemas"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/schemas/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 const (
@@ -67,12 +68,12 @@ const (
 
 func TestAccAWSSchemasSchema_basic(t *testing.T) {
 	var v schemas.DescribeSchemaOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_schemas_schema.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(schemas.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, schemas.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(schemas.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, schemas.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSchemasSchemaDestroy,
 		Steps: []resource.TestStep{
@@ -80,7 +81,7 @@ func TestAccAWSSchemasSchema_basic(t *testing.T) {
 				Config: testAccAWSSchemasSchemaConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemasSchemaExists(resourceName, &v),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "schemas", fmt.Sprintf("schema/%s/%s", rName, rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "schemas", fmt.Sprintf("schema/%s/%s", rName, rName)),
 					resource.TestCheckResourceAttrSet(resourceName, "content"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "last_modified"),
@@ -103,12 +104,12 @@ func TestAccAWSSchemasSchema_basic(t *testing.T) {
 
 func TestAccAWSSchemasSchema_disappears(t *testing.T) {
 	var v schemas.DescribeSchemaOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_schemas_schema.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(schemas.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, schemas.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(schemas.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, schemas.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSchemasSchemaDestroy,
 		Steps: []resource.TestStep{
@@ -116,7 +117,7 @@ func TestAccAWSSchemasSchema_disappears(t *testing.T) {
 				Config: testAccAWSSchemasSchemaConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemasSchemaExists(resourceName, &v),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsSchemasSchema(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSchemasSchema(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -126,12 +127,12 @@ func TestAccAWSSchemasSchema_disappears(t *testing.T) {
 
 func TestAccAWSSchemasSchema_ContentDescription(t *testing.T) {
 	var v schemas.DescribeSchemaOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_schemas_schema.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(schemas.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, schemas.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(schemas.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, schemas.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSchemasSchemaDestroy,
 		Steps: []resource.TestStep{
@@ -172,12 +173,12 @@ func TestAccAWSSchemasSchema_ContentDescription(t *testing.T) {
 
 func TestAccAWSSchemasSchema_Tags(t *testing.T) {
 	var v schemas.DescribeSchemaOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_schemas_schema.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(schemas.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, schemas.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(schemas.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, schemas.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSchemasSchemaDestroy,
 		Steps: []resource.TestStep{

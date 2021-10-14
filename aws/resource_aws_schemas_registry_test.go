@@ -9,12 +9,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/schemas"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	tfschemas "github.com/hashicorp/terraform-provider-aws/aws/internal/service/schemas"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/schemas/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -108,12 +109,12 @@ func testSweepSchemasRegistries(region string) error {
 
 func TestAccAWSSchemasRegistry_basic(t *testing.T) {
 	var v schemas.DescribeRegistryOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_schemas_registry.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(schemas.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, schemas.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(schemas.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, schemas.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSchemasRegistryDestroy,
 		Steps: []resource.TestStep{
@@ -121,7 +122,7 @@ func TestAccAWSSchemasRegistry_basic(t *testing.T) {
 				Config: testAccAWSSchemasRegistryConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemasRegistryExists(resourceName, &v),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "schemas", fmt.Sprintf("registry/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "schemas", fmt.Sprintf("registry/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -138,12 +139,12 @@ func TestAccAWSSchemasRegistry_basic(t *testing.T) {
 
 func TestAccAWSSchemasRegistry_disappears(t *testing.T) {
 	var v schemas.DescribeRegistryOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_schemas_registry.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(schemas.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, schemas.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(schemas.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, schemas.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSchemasRegistryDestroy,
 		Steps: []resource.TestStep{
@@ -151,7 +152,7 @@ func TestAccAWSSchemasRegistry_disappears(t *testing.T) {
 				Config: testAccAWSSchemasRegistryConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemasRegistryExists(resourceName, &v),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsSchemasRegistry(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSchemasRegistry(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -161,12 +162,12 @@ func TestAccAWSSchemasRegistry_disappears(t *testing.T) {
 
 func TestAccAWSSchemasRegistry_Description(t *testing.T) {
 	var v schemas.DescribeRegistryOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_schemas_registry.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(schemas.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, schemas.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(schemas.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, schemas.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSchemasRegistryDestroy,
 		Steps: []resource.TestStep{
@@ -202,12 +203,12 @@ func TestAccAWSSchemasRegistry_Description(t *testing.T) {
 
 func TestAccAWSSchemasRegistry_Tags(t *testing.T) {
 	var v schemas.DescribeRegistryOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_schemas_registry.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(schemas.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, schemas.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(schemas.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, schemas.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSchemasRegistryDestroy,
 		Steps: []resource.TestStep{
