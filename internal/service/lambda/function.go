@@ -29,7 +29,7 @@ import (
 
 const awsMutexLambdaKey = `aws_lambda_function`
 
-const LambdaFunctionVersionLatest = "$LATEST"
+const FunctionVersionLatest = "$LATEST"
 
 func ResourceFunction() *schema.Resource {
 	return &schema.Resource{
@@ -764,7 +764,7 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Add Image Configuration
-	imageConfig := flattenLambdaImageConfig(function.ImageConfigResponse)
+	imageConfig := FlattenImageConfig(function.ImageConfigResponse)
 	log.Printf("[INFO] Setting Lambda %s Image config %#v from API", d.Id(), imageConfig)
 	if err := d.Set("image_config", imageConfig); err != nil {
 		return fmt.Errorf("error setting image config for Lambda Function: %w", err)
@@ -1415,7 +1415,7 @@ func expandLambdaFileSystemConfigs(fscMaps []interface{}) []*lambda.FileSystemCo
 	return fileSystemConfigs
 }
 
-func flattenLambdaImageConfig(response *lambda.ImageConfigResponse) []map[string]interface{} {
+func FlattenImageConfig(response *lambda.ImageConfigResponse) []map[string]interface{} {
 	settings := make(map[string]interface{})
 
 	if response == nil || response.Error != nil || response.ImageConfig == nil {

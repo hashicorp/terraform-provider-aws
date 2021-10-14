@@ -80,7 +80,7 @@ func resourceProvisionedConcurrencyConfigCreate(d *schema.ResourceData, meta int
 func resourceProvisionedConcurrencyConfigRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LambdaConn
 
-	functionName, qualifier, err := resourceAwsLambdaProvisionedConcurrencyConfigParseId(d.Id())
+	functionName, qualifier, err := ProvisionedConcurrencyConfigParseID(d.Id())
 
 	if err != nil {
 		return err
@@ -113,7 +113,7 @@ func resourceProvisionedConcurrencyConfigRead(d *schema.ResourceData, meta inter
 func resourceProvisionedConcurrencyConfigUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LambdaConn
 
-	functionName, qualifier, err := resourceAwsLambdaProvisionedConcurrencyConfigParseId(d.Id())
+	functionName, qualifier, err := ProvisionedConcurrencyConfigParseID(d.Id())
 
 	if err != nil {
 		return err
@@ -141,7 +141,7 @@ func resourceProvisionedConcurrencyConfigUpdate(d *schema.ResourceData, meta int
 func resourceProvisionedConcurrencyConfigDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LambdaConn
 
-	functionName, qualifier, err := resourceAwsLambdaProvisionedConcurrencyConfigParseId(d.Id())
+	functionName, qualifier, err := ProvisionedConcurrencyConfigParseID(d.Id())
 
 	if err != nil {
 		return err
@@ -165,7 +165,7 @@ func resourceProvisionedConcurrencyConfigDelete(d *schema.ResourceData, meta int
 	return nil
 }
 
-func resourceAwsLambdaProvisionedConcurrencyConfigParseId(id string) (string, string, error) {
+func ProvisionedConcurrencyConfigParseID(id string) (string, string, error) {
 	parts := strings.SplitN(id, ":", 2)
 
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {

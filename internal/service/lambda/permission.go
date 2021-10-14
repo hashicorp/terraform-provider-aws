@@ -203,7 +203,7 @@ func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Looking for Lambda permission: %s", input)
 	var out *lambda.GetPolicyOutput
-	var statement *LambdaPolicyStatement
+	var statement *PolicyStatement
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 		// IAM is eventually consistent :/
 		var err error
@@ -269,7 +269,7 @@ func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("No Lambda Permission policy found with ID %s", d.Id())
 	}
 
-	qualifier, err := getQualifierFromLambdaAliasOrVersionArn(statement.Resource)
+	qualifier, err := GetQualifierFromAliasOrVersionARN(statement.Resource)
 	if err != nil {
 		log.Printf("[ERR] Error getting Lambda Qualifier: %s", err)
 	}
@@ -281,7 +281,7 @@ func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
 		trimmedArn := strings.TrimSuffix(statement.Resource, ":"+qualifier)
 		d.Set("function_name", trimmedArn)
 	} else {
-		functionName, err := getFunctionNameFromLambdaArn(statement.Resource)
+		functionName, err := GetFunctionNameFromARN(statement.Resource)
 		if err != nil {
 			return err
 		}
@@ -382,18 +382,18 @@ func resourcePermissionDelete(d *schema.ResourceData, meta interface{}) error {
 
 	return nil
 }
-func getLambdaPolicyStatement(out *lambda.GetPolicyOutput, statemendId string) (statement *LambdaPolicyStatement, err error) {
+func getLambdaPolicyStatement(out *lambda.GetPolicyOutput, statemendId string) (statement *PolicyStatement, err error) {
 	policyInBytes := []byte(*out.Policy)
-	policy := LambdaPolicy{}
+	policy := Policy{}
 	err = json.Unmarshal(policyInBytes, &policy)
 	if err != nil {
 		return nil, fmt.Errorf("Error unmarshalling Lambda policy: %s", err)
 	}
 
-	return findLambdaPolicyStatementById(&policy, statemendId)
+	return FindPolicyStatementByID(&policy, statemendId)
 }
 
-func findLambdaPolicyStatementById(policy *LambdaPolicy, id string) (*LambdaPolicyStatement, error) {
+func FindPolicyStatementByID(policy *Policy, id string) (*PolicyStatement, error) {
 
 	log.Printf("[DEBUG] Received %d statements in Lambda policy: %s", len(policy.Statement), policy.Statement)
 	for _, statement := range policy.Statement {
@@ -409,7 +409,7 @@ func findLambdaPolicyStatementById(policy *LambdaPolicy, id string) (*LambdaPoli
 	}
 }
 
-func getQualifierFromLambdaAliasOrVersionArn(arn string) (string, error) {
+func GetQualifierFromAliasOrVersionARN(arn string) (string, error) {
 	matches := regexp.MustCompile(LambdaFunctionRegexp).FindStringSubmatch(arn)
 	if len(matches) < 8 || matches[7] == "" {
 		return "", fmt.Errorf("Invalid ARN or otherwise unable to get qualifier from ARN (%q)",
@@ -419,7 +419,7 @@ func getQualifierFromLambdaAliasOrVersionArn(arn string) (string, error) {
 	return matches[7], nil
 }
 
-func getFunctionNameFromLambdaArn(arn string) (string, error) {
+func GetFunctionNameFromARN(arn string) (string, error) {
 	matches := regexp.MustCompile(LambdaFunctionRegexp).FindStringSubmatch(arn)
 	if len(matches) < 6 || matches[5] == "" {
 		return "", fmt.Errorf("Invalid ARN or otherwise unable to get qualifier from ARN (%q)",
@@ -463,13 +463,13 @@ func resourceAwsLambdaPermissionImport(d *schema.ResourceData, meta interface{})
 	return []*schema.ResourceData{d}, nil
 }
 
-type LambdaPolicy struct {
+type Policy struct {
 	Version   string
-	Statement []LambdaPolicyStatement
+	Statement []PolicyStatement
 	Id        string
 }
 
-type LambdaPolicyStatement struct {
+type PolicyStatement struct {
 	Condition map[string]map[string]string
 	Action    string
 	Resource  string

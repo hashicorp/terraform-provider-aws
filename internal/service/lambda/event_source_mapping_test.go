@@ -264,7 +264,7 @@ func TestAccAWSLambdaEventSourceMapping_disappears(t *testing.T) {
 				Config: testAccAWSLambdaEventSourceMappingConfigSqsBatchSize(rName, "7"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLambdaEventSourceMappingExists(resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceEventSourceMapping(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tflambda.ResourceEventSourceMapping(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

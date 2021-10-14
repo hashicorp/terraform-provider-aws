@@ -123,8 +123,8 @@ func ResourceEventSourceMapping() *schema.Resource {
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					// Using function name or ARN should not be shown as a diff.
 					// Try to convert the old and new values from ARN to function name
-					oldFunctionName, oldFunctionNameErr := getFunctionNameFromLambdaArn(old)
-					newFunctionName, newFunctionNameErr := getFunctionNameFromLambdaArn(new)
+					oldFunctionName, oldFunctionNameErr := GetFunctionNameFromARN(old)
+					newFunctionName, newFunctionNameErr := GetFunctionNameFromARN(new)
 					return (oldFunctionName == new && oldFunctionNameErr == nil) || (newFunctionName == old && newFunctionNameErr == nil)
 				},
 			},

@@ -195,7 +195,7 @@ func resourceAwsLambdaLayerVersionPublish(d *schema.ResourceData, meta interface
 func resourceLayerVersionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LambdaConn
 
-	layerName, version, err := resourceAwsLambdaLayerVersionParseId(d.Id())
+	layerName, version, err := LayerVersionParseID(d.Id())
 	if err != nil {
 		return fmt.Errorf("Error parsing lambda layer ID: %s", err)
 	}
@@ -279,7 +279,7 @@ func resourceLayerVersionDelete(d *schema.ResourceData, meta interface{}) error 
 	return nil
 }
 
-func resourceAwsLambdaLayerVersionParseId(id string) (layerName string, version int64, err error) {
+func LayerVersionParseID(id string) (layerName string, version int64, err error) {
 	arn, err := arn2.Parse(id)
 	if err != nil {
 		return

@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -308,7 +309,7 @@ func testAccCheckLambdaLayerVersionDestroy(s *terraform.State) error {
 			continue
 		}
 
-		layerName, version, err := resourceAwsLambdaLayerVersionParseId(rs.Primary.ID)
+		layerName, version, err := tflambda.LayerVersionParseID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}

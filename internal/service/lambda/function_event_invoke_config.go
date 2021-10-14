@@ -155,7 +155,7 @@ func resourceFunctionEventInvokeConfigCreate(d *schema.ResourceData, meta interf
 func resourceFunctionEventInvokeConfigRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LambdaConn
 
-	functionName, qualifier, err := resourceAwsLambdaFunctionEventInvokeConfigParseId(d.Id())
+	functionName, qualifier, err := FunctionEventInvokeConfigParseID(d.Id())
 
 	if err != nil {
 		return err
@@ -196,7 +196,7 @@ func resourceFunctionEventInvokeConfigRead(d *schema.ResourceData, meta interfac
 func resourceFunctionEventInvokeConfigUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LambdaConn
 
-	functionName, qualifier, err := resourceAwsLambdaFunctionEventInvokeConfigParseId(d.Id())
+	functionName, qualifier, err := FunctionEventInvokeConfigParseID(d.Id())
 
 	if err != nil {
 		return err
@@ -251,7 +251,7 @@ func resourceFunctionEventInvokeConfigUpdate(d *schema.ResourceData, meta interf
 func resourceFunctionEventInvokeConfigDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LambdaConn
 
-	functionName, qualifier, err := resourceAwsLambdaFunctionEventInvokeConfigParseId(d.Id())
+	functionName, qualifier, err := FunctionEventInvokeConfigParseID(d.Id())
 
 	if err != nil {
 		return err
@@ -278,7 +278,7 @@ func resourceFunctionEventInvokeConfigDelete(d *schema.ResourceData, meta interf
 	return nil
 }
 
-func resourceAwsLambdaFunctionEventInvokeConfigParseId(id string) (string, string, error) {
+func FunctionEventInvokeConfigParseID(id string) (string, string, error) {
 	if arn.IsARN(id) {
 		parsedARN, err := arn.Parse(id)
 
