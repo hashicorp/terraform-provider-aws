@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAwsAppsyncDatasource_basic(t *testing.T) {
@@ -398,7 +399,7 @@ func TestAccAwsAppsyncDatasource_Type_None(t *testing.T) {
 }
 
 func testAccCheckAwsAppsyncDatasourceDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).appsyncconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appsync_datasource" {
 			continue
@@ -442,7 +443,7 @@ func testAccCheckAwsAppsyncDatasourceExists(name string) resource.TestCheckFunc 
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).appsyncconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn
 
 		input := &appsync.GetDataSourceInput{
 			ApiId: aws.String(apiID),

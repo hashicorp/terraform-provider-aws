@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAwsAppsyncFunction_basic(t *testing.T) {
@@ -140,7 +141,7 @@ func TestAccAwsAppsyncFunction_disappears(t *testing.T) {
 }
 
 func testAccCheckAwsAppsyncFunctionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).appsyncconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appsync_function" {
 			continue
@@ -174,7 +175,7 @@ func testAccCheckAwsAppsyncFunctionExists(name string, config *appsync.FunctionC
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).appsyncconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn
 
 		apiID, functionID, err := decodeAppsyncFunctionID(rs.Primary.ID)
 		if err != nil {

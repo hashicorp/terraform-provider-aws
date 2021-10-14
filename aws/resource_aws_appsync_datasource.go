@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/appsync"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsAppsyncDatasource() *schema.Resource {
@@ -139,8 +140,8 @@ func resourceAwsAppsyncDatasource() *schema.Resource {
 }
 
 func resourceAwsAppsyncDatasourceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appsyncconn
-	region := meta.(*AWSClient).region
+	conn := meta.(*conns.AWSClient).AppSyncConn
+	region := meta.(*conns.AWSClient).Region
 
 	input := &appsync.CreateDataSourceInput{
 		ApiId: aws.String(d.Get("api_id").(string)),
@@ -183,7 +184,7 @@ func resourceAwsAppsyncDatasourceCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsAppsyncDatasourceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appsyncconn
+	conn := meta.(*conns.AWSClient).AppSyncConn
 
 	apiID, name, err := decodeAppsyncDataSourceID(d.Id())
 
@@ -234,8 +235,8 @@ func resourceAwsAppsyncDatasourceRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsAppsyncDatasourceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appsyncconn
-	region := meta.(*AWSClient).region
+	conn := meta.(*conns.AWSClient).AppSyncConn
+	region := meta.(*conns.AWSClient).Region
 
 	apiID, name, err := decodeAppsyncDataSourceID(d.Id())
 
@@ -281,7 +282,7 @@ func resourceAwsAppsyncDatasourceUpdate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsAppsyncDatasourceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appsyncconn
+	conn := meta.(*conns.AWSClient).AppSyncConn
 
 	apiID, name, err := decodeAppsyncDataSourceID(d.Id())
 
