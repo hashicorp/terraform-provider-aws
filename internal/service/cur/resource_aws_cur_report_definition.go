@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfcur "github.com/hashicorp/terraform-provider-aws/internal/service/cur"
 )
 
 func ResourceReportDefinition() *schema.Resource {
@@ -163,7 +164,7 @@ func resourceReportDefinitionCreate(d *schema.ResourceData, meta interface{}) er
 func resourceReportDefinitionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CURConn
 
-	reportDefinition, err := finder.ReportDefinitionByName(conn, d.Id())
+	reportDefinition, err := tfcur.FindReportDefinitionByName(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error reading Cost And Usage Report Definition (%s): %w", d.Id(), err)
