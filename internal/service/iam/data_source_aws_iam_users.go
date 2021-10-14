@@ -1,4 +1,4 @@
-package aws
+package iam
 
 import (
 	"fmt"
@@ -6,15 +6,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 func DataSourceUsers() *schema.Resource {
@@ -50,7 +44,7 @@ func dataSourceUsersRead(d *schema.ResourceData, meta interface{}) error {
 	nameRegex := d.Get("name_regex").(string)
 	pathPrefix := d.Get("path_prefix").(string)
 
-	results, err := tfiam.FindUsers(conn, nameRegex, pathPrefix)
+	results, err := FindUsers(conn, nameRegex, pathPrefix)
 
 	if err != nil {
 		return fmt.Errorf("error reading IAM users: %w", err)

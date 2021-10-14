@@ -1,4 +1,4 @@
-package aws
+package iam
 
 import (
 	"fmt"
@@ -10,18 +10,10 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 func ResourceUserPolicyAttachment() *schema.Resource {
@@ -74,10 +66,10 @@ func resourceUserPolicyAttachmentRead(d *schema.ResourceData, meta interface{}) 
 
 	var attachedPolicy *iam.AttachedPolicy
 
-	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(PropagationTimeout, func() *resource.RetryError {
 		var err error
 
-		attachedPolicy, err = tfiam.FindUserAttachedPolicy(conn, user, arn)
+		attachedPolicy, err = FindUserAttachedPolicy(conn, user, arn)
 
 		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			return resource.RetryableError(err)
@@ -97,7 +89,7 @@ func resourceUserPolicyAttachmentRead(d *schema.ResourceData, meta interface{}) 
 	})
 
 	if tfresource.TimedOut(err) {
-		attachedPolicy, err = tfiam.FindUserAttachedPolicy(conn, user, arn)
+		attachedPolicy, err = FindUserAttachedPolicy(conn, user, arn)
 	}
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {

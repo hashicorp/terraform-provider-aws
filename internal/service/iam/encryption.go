@@ -1,11 +1,11 @@
-package encryption
+package iam
 
 import (
 	"encoding/base64"
 	"fmt"
 	"strings"
 
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/vault/helper/pgpkeys"
+	"github.com/hashicorp/terraform-provider-aws/internal/vault/helper/pgpkeys"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 

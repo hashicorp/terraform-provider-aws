@@ -1,11 +1,11 @@
-package iam
+package iam_test
 
 import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
