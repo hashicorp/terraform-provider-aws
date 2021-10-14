@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/identitystore"
+	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
@@ -22,7 +23,7 @@ func TestAccAWSIdentityStoreGroupDataSource_DisplayName(t *testing.T) {
 			testAccPreCheckAWSIdentityStoreGroupName(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, identitystore.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -49,7 +50,7 @@ func TestAccAWSIdentityStoreGroupDataSource_GroupID(t *testing.T) {
 			testAccPreCheckAWSIdentityStoreGroupID(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, identitystore.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -67,7 +68,7 @@ func TestAccAWSIdentityStoreGroupDataSource_NonExistent(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSSOAdminInstances(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, identitystore.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -134,8 +135,9 @@ data "aws_identitystore_group" "test" {
   identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
 }
 `
+
 func testAccPreCheckAWSSSOAdminInstances(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).ssoadminconn
+	conn := acctest.Provider.Meta().(*AWSClient).ssoadminconn
 
 	var instances []*ssoadmin.InstanceMetadata
 	err := conn.ListInstancesPages(&ssoadmin.ListInstancesInput{}, func(page *ssoadmin.ListInstancesOutput, lastPage bool) bool {
@@ -160,4 +162,3 @@ func testAccPreCheckAWSSSOAdminInstances(t *testing.T) {
 		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
-
