@@ -80,7 +80,7 @@ func sweepQueues(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSSQSQueue_basic(t *testing.T) {
+func TestAccSQSQueue_basic(t *testing.T) {
 	var queueAttributes map[string]string
 	resourceName := "aws_sqs_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -124,7 +124,7 @@ func TestAccAWSSQSQueue_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSQSQueue_disappears(t *testing.T) {
+func TestAccSQSQueue_disappears(t *testing.T) {
 	var queueAttributes map[string]string
 	resourceName := "aws_sqs_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -147,7 +147,7 @@ func TestAccAWSSQSQueue_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSSQSQueue_Name_Generated(t *testing.T) {
+func TestAccSQSQueue_Name_generated(t *testing.T) {
 	var queueAttributes map[string]string
 	resourceName := "aws_sqs_queue.test"
 
@@ -175,7 +175,7 @@ func TestAccAWSSQSQueue_Name_Generated(t *testing.T) {
 	})
 }
 
-func TestAccAWSSQSQueue_Name_Generated_FIFOQueue(t *testing.T) {
+func TestAccSQSQueue_NameGenerated_fifoQueue(t *testing.T) {
 	var queueAttributes map[string]string
 	resourceName := "aws_sqs_queue.test"
 
@@ -203,7 +203,7 @@ func TestAccAWSSQSQueue_Name_Generated_FIFOQueue(t *testing.T) {
 	})
 }
 
-func TestAccAWSSQSQueue_NamePrefix(t *testing.T) {
+func TestAccSQSQueue_namePrefix(t *testing.T) {
 	var queueAttributes map[string]string
 	resourceName := "aws_sqs_queue.test"
 
@@ -231,7 +231,7 @@ func TestAccAWSSQSQueue_NamePrefix(t *testing.T) {
 	})
 }
 
-func TestAccAWSSQSQueue_NamePrefix_FIFOQueue(t *testing.T) {
+func TestAccSQSQueue_NamePrefix_fifoQueue(t *testing.T) {
 	var queueAttributes map[string]string
 	resourceName := "aws_sqs_queue.test"
 
@@ -259,7 +259,7 @@ func TestAccAWSSQSQueue_NamePrefix_FIFOQueue(t *testing.T) {
 	})
 }
 
-func TestAccAWSSQSQueue_Tags(t *testing.T) {
+func TestAccSQSQueue_tags(t *testing.T) {
 	var queueAttributes map[string]string
 	resourceName := "aws_sqs_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -304,7 +304,7 @@ func TestAccAWSSQSQueue_Tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSSQSQueue_Update(t *testing.T) {
+func TestAccSQSQueue_update(t *testing.T) {
 	var queueAttributes map[string]string
 	resourceName := "aws_sqs_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -370,7 +370,7 @@ func TestAccAWSSQSQueue_Update(t *testing.T) {
 	})
 }
 
-func TestAccAWSSQSQueue_Policy(t *testing.T) {
+func TestAccSQSQueue_policy(t *testing.T) {
 	var queueAttributes map[string]string
 	resourceName := "aws_sqs_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -402,7 +402,7 @@ func TestAccAWSSQSQueue_Policy(t *testing.T) {
 	})
 }
 
-func TestAccAWSSQSQueue_RecentlyDeleted(t *testing.T) {
+func TestAccSQSQueue_recentlyDeleted(t *testing.T) {
 	var queueAttributes map[string]string
 	resourceName := "aws_sqs_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -431,7 +431,7 @@ func TestAccAWSSQSQueue_RecentlyDeleted(t *testing.T) {
 	})
 }
 
-func TestAccAWSSQSQueue_RedrivePolicy(t *testing.T) {
+func TestAccSQSQueue_redrivePolicy(t *testing.T) {
 	var queueAttributes map[string]string
 	resourceName := "aws_sqs_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -460,7 +460,7 @@ func TestAccAWSSQSQueue_RedrivePolicy(t *testing.T) {
 	})
 }
 
-func TestAccAWSSQSQueue_FIFOQueue(t *testing.T) {
+func TestAccSQSQueue_fifoQueue(t *testing.T) {
 	var queueAttributes map[string]string
 	resourceName := "aws_sqs_queue.test"
 	rName := fmt.Sprintf("%s.fifo", sdkacctest.RandomWithPrefix(acctest.ResourcePrefix))
@@ -489,7 +489,7 @@ func TestAccAWSSQSQueue_FIFOQueue(t *testing.T) {
 	})
 }
 
-func TestAccAWSSQSQueue_FIFOQueue_ExpectNameError(t *testing.T) {
+func TestAccSQSQueue_FIFOQueue_expectNameError(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -506,7 +506,7 @@ func TestAccAWSSQSQueue_FIFOQueue_ExpectNameError(t *testing.T) {
 	})
 }
 
-func TestAccAWSSQSQueue_FIFOQueue_ContentBasedDeduplication(t *testing.T) {
+func TestAccSQSQueue_FIFOQueue_contentBasedDeduplication(t *testing.T) {
 	var queueAttributes map[string]string
 	resourceName := "aws_sqs_queue.test"
 	rName := fmt.Sprintf("%s.fifo", sdkacctest.RandomWithPrefix(acctest.ResourcePrefix))
@@ -534,7 +534,7 @@ func TestAccAWSSQSQueue_FIFOQueue_ContentBasedDeduplication(t *testing.T) {
 	})
 }
 
-func TestAccAWSSQSQueue_FIFOQueue_HighThroughputMode(t *testing.T) {
+func TestAccSQSQueue_FIFOQueue_highThroughputMode(t *testing.T) {
 	var queueAttributes map[string]string
 	resourceName := "aws_sqs_queue.test"
 	rName := fmt.Sprintf("%s.fifo", sdkacctest.RandomWithPrefix(acctest.ResourcePrefix))
@@ -572,7 +572,7 @@ func TestAccAWSSQSQueue_FIFOQueue_HighThroughputMode(t *testing.T) {
 	})
 }
 
-func TestAccAWSSQSQueue_StandardQueue_ExpectContentBasedDeduplicationError(t *testing.T) {
+func TestAccSQSQueue_StandardQueue_expectContentBasedDeduplicationError(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -589,7 +589,7 @@ func TestAccAWSSQSQueue_StandardQueue_ExpectContentBasedDeduplicationError(t *te
 	})
 }
 
-func TestAccAWSSQSQueue_Encryption(t *testing.T) {
+func TestAccSQSQueue_encryption(t *testing.T) {
 	var queueAttributes map[string]string
 	resourceName := "aws_sqs_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -625,7 +625,7 @@ func TestAccAWSSQSQueue_Encryption(t *testing.T) {
 	})
 }
 
-func TestAccAWSSQSQueue_ZeroVisibilityTimeoutSeconds(t *testing.T) {
+func TestAccSQSQueue_zeroVisibilityTimeoutSeconds(t *testing.T) {
 	var queueAttributes map[string]string
 	resourceName := "aws_sqs_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -653,7 +653,7 @@ func TestAccAWSSQSQueue_ZeroVisibilityTimeoutSeconds(t *testing.T) {
 }
 
 // https://github.com/hashicorp/terraform-provider-aws/issues/19786.
-func TestAccAWSSQSQueue_DefaultKmsDataKeyReusePeriodSeconds(t *testing.T) {
+func TestAccSQSQueue_defaultKMSDataKeyReusePeriodSeconds(t *testing.T) {
 	var queueAttributes map[string]string
 	resourceName := "aws_sqs_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
