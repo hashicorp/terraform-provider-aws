@@ -12,13 +12,13 @@ import (
 )
 
 func TestAccAWSDynamodbTag_basic(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dynamodb_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dynamodb.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDynamodbTagDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -39,20 +39,20 @@ func TestAccAWSDynamodbTag_basic(t *testing.T) {
 }
 
 func TestAccAWSDynamodbTag_disappears(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dynamodb_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dynamodb.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDynamodbTagDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDynamodbTagConfig(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDynamodbTagExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsDynamodbTag(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsDynamodbTag(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -63,7 +63,7 @@ func TestAccAWSDynamodbTag_disappears(t *testing.T) {
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/13725
 func TestAccAWSDynamodbTag_ResourceArn_TableReplica(t *testing.T) {
 	var providers []*schema.Provider
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dynamodb_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -92,13 +92,13 @@ func TestAccAWSDynamodbTag_ResourceArn_TableReplica(t *testing.T) {
 }
 
 func TestAccAWSDynamodbTag_Value(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dynamodb_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dynamodb.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDynamodbTagDestroy,
 		Steps: []resource.TestStep{
 			{

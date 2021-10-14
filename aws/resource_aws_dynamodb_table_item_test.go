@@ -28,7 +28,7 @@ func TestAccAWSDynamoDbTableItem_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dynamodb.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDynamoDbItemDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -63,7 +63,7 @@ func TestAccAWSDynamoDbTableItem_rangeKey(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dynamodb.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDynamoDbItemDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -107,7 +107,7 @@ func TestAccAWSDynamoDbTableItem_withMultipleItems(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dynamodb.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDynamoDbItemDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -155,7 +155,7 @@ func TestAccAWSDynamoDbTableItem_update(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dynamodb.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDynamoDbItemDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -203,7 +203,7 @@ func TestAccAWSDynamoDbTableItem_updateWithRangeKey(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dynamodb.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDynamoDbItemDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -233,7 +233,7 @@ func TestAccAWSDynamoDbTableItem_updateWithRangeKey(t *testing.T) {
 }
 
 func testAccCheckAWSDynamoDbItemDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).dynamodbconn
+	conn := acctest.Provider.Meta().(*AWSClient).dynamodbconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_dynamodb_table_item" {
@@ -280,7 +280,7 @@ func testAccCheckAWSDynamoDbTableItemExists(n string, item *dynamodb.GetItemOutp
 			return fmt.Errorf("No DynamoDB table item ID specified!")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).dynamodbconn
+		conn := acctest.Provider.Meta().(*AWSClient).dynamodbconn
 
 		attrs := rs.Primary.Attributes
 		attributes, err := expandDynamoDbTableItemAttributes(attrs["item"])
@@ -307,7 +307,7 @@ func testAccCheckAWSDynamoDbTableItemExists(n string, item *dynamodb.GetItemOutp
 
 func testAccCheckAWSDynamoDbTableItemCount(tableName string, count int64) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).dynamodbconn
+		conn := acctest.Provider.Meta().(*AWSClient).dynamodbconn
 		out, err := conn.Scan(&dynamodb.ScanInput{
 			ConsistentRead: aws.Bool(true),
 			TableName:      aws.String(tableName),
