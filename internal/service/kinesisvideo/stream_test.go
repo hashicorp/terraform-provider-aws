@@ -16,7 +16,7 @@ import (
 	tfkinesisvideo "github.com/hashicorp/terraform-provider-aws/internal/service/kinesisvideo"
 )
 
-func TestAccAWSKinesisVideoStream_basic(t *testing.T) {
+func TestAccKinesisVideoStream_basic(t *testing.T) {
 	var stream kinesisvideo.StreamInfo
 
 	resourceName := "aws_kinesis_video_stream.default"
@@ -56,7 +56,7 @@ func TestAccAWSKinesisVideoStream_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSKinesisVideoStream_options(t *testing.T) {
+func TestAccKinesisVideoStream_options(t *testing.T) {
 	var stream kinesisvideo.StreamInfo
 
 	resourceName := "aws_kinesis_video_stream.default"
@@ -101,7 +101,7 @@ func TestAccAWSKinesisVideoStream_options(t *testing.T) {
 	})
 }
 
-func TestAccAWSKinesisVideoStream_Tags(t *testing.T) {
+func TestAccKinesisVideoStream_tags(t *testing.T) {
 	var stream kinesisvideo.StreamInfo
 
 	resourceName := "aws_kinesis_video_stream.default"
@@ -147,7 +147,7 @@ func TestAccAWSKinesisVideoStream_Tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSKinesisVideoStream_disappears(t *testing.T) {
+func TestAccKinesisVideoStream_disappears(t *testing.T) {
 	var stream kinesisvideo.StreamInfo
 
 	resourceName := "aws_kinesis_video_stream.default"
