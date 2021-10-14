@@ -71,7 +71,7 @@ func dataSourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) e
 
 	if v := d.Get("key_types").(*schema.Set); v.Len() > 0 {
 		params.Includes = &acm.Filters{
-			KeyTypes: expandStringSet(v),
+			KeyTypes: flex.ExpandStringSet(v),
 		}
 	}
 
@@ -79,7 +79,7 @@ func dataSourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) e
 	statuses, ok := d.GetOk("statuses")
 	if ok {
 		statusStrings := statuses.([]interface{})
-		params.CertificateStatuses = expandStringList(statusStrings)
+		params.CertificateStatuses = flex.ExpandStringList(statusStrings)
 	} else {
 		params.CertificateStatuses = []*string{aws.String(acm.CertificateStatusIssued)}
 	}
@@ -113,7 +113,7 @@ func dataSourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("Multiple certificates for domain %q found in this region", target)
 	}
 
-	typesStrings := expandStringList(filterTypes.([]interface{}))
+	typesStrings := flex.ExpandStringList(filterTypes.([]interface{}))
 
 	for _, arn := range arns {
 		var err error

@@ -18,10 +18,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 )
 
 const (
@@ -442,7 +442,6 @@ func cleanUpSubjectAlternativeNames(cert *acm.CertificateDetail) []string {
 		}
 	}
 	return vs
-
 }
 
 func convertValidationOptions(certificate *acm.CertificateDetail) ([]map[string]interface{}, []string, error) {
@@ -575,4 +574,18 @@ func isChangeNormalizeCertRemoval(oldRaw, newRaw interface{}) bool {
 
 	newCleanVal := sha1.Sum(stripCR([]byte(strings.TrimSpace(new))))
 	return hex.EncodeToString(newCleanVal[:]) == old
+}
+
+// strip CRs from raw literals. Lifted from go/scanner/scanner.go
+// See https://github.com/golang/go/blob/release-branch.go1.6/src/go/scanner/scanner.go#L479
+func stripCR(b []byte) []byte {
+	c := make([]byte, len(b))
+	i := 0
+	for _, ch := range b {
+		if ch != '\r' {
+			c[i] = ch
+			i++
+		}
+	}
+	return c[:i]
 }
