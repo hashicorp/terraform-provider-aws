@@ -12,11 +12,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsNeptuneClusterSnapshot() *schema.Resource {
+func ResourceClusterSnapshot() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsNeptuneClusterSnapshotCreate,
-		Read:   resourceAwsNeptuneClusterSnapshotRead,
-		Delete: resourceAwsNeptuneClusterSnapshotDelete,
+		Create: resourceClusterSnapshotCreate,
+		Read:   resourceClusterSnapshotRead,
+		Delete: resourceClusterSnapshotDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -94,7 +94,7 @@ func resourceAwsNeptuneClusterSnapshot() *schema.Resource {
 	}
 }
 
-func resourceAwsNeptuneClusterSnapshotCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterSnapshotCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).NeptuneConn
 
 	input := &neptune.CreateDBClusterSnapshotInput{
@@ -124,10 +124,10 @@ func resourceAwsNeptuneClusterSnapshotCreate(d *schema.ResourceData, meta interf
 		return fmt.Errorf("error waiting for Neptune DB Cluster Snapshot %q to create: %s", d.Id(), err)
 	}
 
-	return resourceAwsNeptuneClusterSnapshotRead(d, meta)
+	return resourceClusterSnapshotRead(d, meta)
 }
 
-func resourceAwsNeptuneClusterSnapshotRead(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterSnapshotRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).NeptuneConn
 
 	input := &neptune.DescribeDBClusterSnapshotsInput{
@@ -174,7 +174,7 @@ func resourceAwsNeptuneClusterSnapshotRead(d *schema.ResourceData, meta interfac
 	return nil
 }
 
-func resourceAwsNeptuneClusterSnapshotDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterSnapshotDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).NeptuneConn
 
 	input := &neptune.DeleteDBClusterSnapshotInput{

@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsNeptuneOrderableDbInstance() *schema.Resource {
+func DataSourceOrderableDBInstance() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsNeptuneOrderableDbInstanceRead,
+		Read: dataSourceOrderableDBInstanceRead,
 		Schema: map[string]*schema.Schema{
 			"availability_zones": {
 				Type:     schema.TypeList,
@@ -131,7 +131,7 @@ func dataSourceAwsNeptuneOrderableDbInstance() *schema.Resource {
 	}
 }
 
-func dataSourceAwsNeptuneOrderableDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceOrderableDBInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).NeptuneConn
 
 	input := &neptune.DescribeOrderableDBInstanceOptionsInput{}

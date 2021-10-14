@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSNeptuneCluster_basic(t *testing.T) {
@@ -522,7 +523,7 @@ func TestAccAWSNeptuneCluster_disappears(t *testing.T) {
 				Config: testAccAWSNeptuneClusterConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSNeptuneClusterExists(resourceName, &dbCluster),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsNeptuneCluster(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceCluster(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -28,12 +28,12 @@ const (
 	neptuneDefaultPort = 8182
 )
 
-func resourceAwsNeptuneCluster() *schema.Resource {
+func ResourceCluster() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsNeptuneClusterCreate,
-		Read:   resourceAwsNeptuneClusterRead,
-		Update: resourceAwsNeptuneClusterUpdate,
-		Delete: resourceAwsNeptuneClusterDelete,
+		Create: resourceClusterCreate,
+		Read:   resourceClusterRead,
+		Update: resourceClusterUpdate,
+		Delete: resourceClusterDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -276,7 +276,7 @@ func resourceAwsNeptuneCluster() *schema.Resource {
 	}
 }
 
-func resourceAwsNeptuneClusterCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).NeptuneConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -432,14 +432,14 @@ func resourceAwsNeptuneClusterCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if clusterUpdate {
-		return resourceAwsNeptuneClusterUpdate(d, meta)
+		return resourceClusterUpdate(d, meta)
 	}
 
-	return resourceAwsNeptuneClusterRead(d, meta)
+	return resourceClusterRead(d, meta)
 
 }
 
-func resourceAwsNeptuneClusterRead(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).NeptuneConn
 
 	resp, err := conn.DescribeDBClusters(&neptune.DescribeDBClustersInput{
@@ -554,7 +554,7 @@ func flattenAwsNeptuneClusterResource(d *schema.ResourceData, meta interface{}, 
 	return nil
 }
 
-func resourceAwsNeptuneClusterUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).NeptuneConn
 	requestUpdate := false
 
@@ -692,10 +692,10 @@ func resourceAwsNeptuneClusterUpdate(d *schema.ResourceData, meta interface{}) e
 
 	}
 
-	return resourceAwsNeptuneClusterRead(d, meta)
+	return resourceClusterRead(d, meta)
 }
 
-func resourceAwsNeptuneClusterDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).NeptuneConn
 	log.Printf("[DEBUG] Destroying Neptune Cluster (%s)", d.Id())
 
