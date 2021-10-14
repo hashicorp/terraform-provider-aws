@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfses "github.com/hashicorp/terraform-provider-aws/internal/service/ses"
 )
 
 func TestAccAWSSESEventDestination_basic(t *testing.T) {
@@ -91,9 +92,9 @@ func TestAccAWSSESEventDestination_disappears(t *testing.T) {
 					testAccCheckAwsSESEventDestinationExists(cloudwatchDestinationResourceName, &v1),
 					testAccCheckAwsSESEventDestinationExists(kinesisDestinationResourceName, &v2),
 					testAccCheckAwsSESEventDestinationExists(snsDestinationResourceName, &v3),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceEventDestination(), cloudwatchDestinationResourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceEventDestination(), kinesisDestinationResourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceEventDestination(), snsDestinationResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfses.ResourceEventDestination(), cloudwatchDestinationResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfses.ResourceEventDestination(), kinesisDestinationResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfses.ResourceEventDestination(), snsDestinationResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
