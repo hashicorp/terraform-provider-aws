@@ -1,4 +1,4 @@
-package aws
+package storagegateway
 
 import (
 	"fmt"
@@ -11,84 +11,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/aws/internal/service/storagegateway"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/storagegateway/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/storagegateway/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
 )
 
 func ResourceSMBFileShare() *schema.Resource {
@@ -132,8 +59,8 @@ func ResourceSMBFileShare() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				Default:      tfstoragegateway.authenticationActiveDirectory,
-				ValidateFunc: validation.StringInSlice(tfstoragegateway.authentication_Values(), false),
+				Default:      authenticationActiveDirectory,
+				ValidateFunc: validation.StringInSlice(authentication_Values(), false),
 			},
 			"bucket_region": {
 				Type:         schema.TypeString,
@@ -164,8 +91,8 @@ func ResourceSMBFileShare() *schema.Resource {
 			"default_storage_class": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      tfstoragegateway.defaultStorageClassS3Standard,
-				ValidateFunc: validation.StringInSlice(tfstoragegateway.defaultStorageClass_Values(), false),
+				Default:      defaultStorageClassS3Standard,
+				ValidateFunc: validation.StringInSlice(defaultStorageClass_Values(), false),
 			},
 			"fileshare_id": {
 				Type:     schema.TypeString,
@@ -364,7 +291,7 @@ func resourceSMBFileShareCreate(d *schema.ResourceData, meta interface{}) error 
 
 	d.SetId(aws.StringValue(output.FileShareARN))
 
-	if _, err = tfstoragegateway.waitSMBFileShareCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err = waitSMBFileShareCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for Storage Gateway SMB File Share (%s) to create: %w", d.Id(), err)
 	}
 
@@ -376,7 +303,7 @@ func resourceSMBFileShareRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	fileshare, err := tfstoragegateway.FindSMBFileShareByARN(conn, d.Id())
+	fileshare, err := FindSMBFileShareByARN(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Storage Gateway SMB File Share (%s) not found, removing from state", d.Id())
@@ -508,7 +435,7 @@ func resourceSMBFileShareUpdate(d *schema.ResourceData, meta interface{}) error 
 			return fmt.Errorf("error updating Storage Gateway SMB File Share (%s): %w", d.Id(), err)
 		}
 
-		if _, err = tfstoragegateway.waitSMBFileShareUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if _, err = waitSMBFileShareUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("error waiting for Storage Gateway SMB File Share (%s) to update: %w", d.Id(), err)
 		}
 	}
@@ -531,7 +458,7 @@ func resourceSMBFileShareDelete(d *schema.ResourceData, meta interface{}) error 
 		FileShareARN: aws.String(d.Id()),
 	})
 
-	if tfstoragegateway.operationErrorCode(err) == tfstoragegateway.operationErrCodeFileShareNotFound {
+	if operationErrorCode(err) == operationErrCodeFileShareNotFound {
 		return nil
 	}
 
@@ -539,7 +466,7 @@ func resourceSMBFileShareDelete(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error deleting Storage Gateway SMB File Share (%s): %w", d.Id(), err)
 	}
 
-	if _, err = tfstoragegateway.waitSMBFileShareDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err = waitSMBFileShareDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return fmt.Errorf("error waiting for Storage Gateway SMB File Share (%s) to delete: %w", d.Id(), err)
 	}
 
