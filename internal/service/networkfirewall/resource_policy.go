@@ -17,9 +17,9 @@ import (
 
 func ResourceResourcePolicy() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceAwsNetworkFirewallResourcePolicyPut,
+		CreateContext: resourceResourcePolicyPut,
 		ReadContext:   resourceResourcePolicyRead,
-		UpdateContext: resourceAwsNetworkFirewallResourcePolicyPut,
+		UpdateContext: resourceResourcePolicyPut,
 		DeleteContext: resourceResourcePolicyDelete,
 
 		Importer: &schema.ResourceImporter{
@@ -43,7 +43,7 @@ func ResourceResourcePolicy() *schema.Resource {
 	}
 }
 
-func resourceAwsNetworkFirewallResourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).NetworkFirewallConn
 	resourceArn := d.Get("resource_arn").(string)
 	input := &networkfirewall.PutResourcePolicyInput{
