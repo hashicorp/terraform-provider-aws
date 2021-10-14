@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsCloudWatchLogStream() *schema.Resource {
@@ -46,7 +47,7 @@ func resourceAwsCloudWatchLogStream() *schema.Resource {
 }
 
 func resourceAwsCloudWatchLogStreamCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatchlogsconn
+	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
 
 	log.Printf("[DEBUG] Creating CloudWatch Log Stream: %s", d.Get("name").(string))
 	_, err := conn.CreateLogStream(&cloudwatchlogs.CreateLogStreamInput{
@@ -63,7 +64,7 @@ func resourceAwsCloudWatchLogStreamCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsCloudWatchLogStreamRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatchlogsconn
+	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
 
 	group := d.Get("log_group_name").(string)
 
@@ -107,7 +108,7 @@ func resourceAwsCloudWatchLogStreamRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsCloudWatchLogStreamDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatchlogsconn
+	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
 
 	log.Printf("[INFO] Deleting CloudWatch Log Stream: %s", d.Id())
 	params := &cloudwatchlogs.DeleteLogStreamInput{

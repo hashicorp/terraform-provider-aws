@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsCloudWatchLogMetricFilter() *schema.Resource {
@@ -97,7 +98,7 @@ func resourceAwsCloudWatchLogMetricFilter() *schema.Resource {
 }
 
 func resourceAwsCloudWatchLogMetricFilterUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatchlogsconn
+	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
 
 	name := d.Get("name").(string)
 	logGroupName := d.Get("log_group_name").(string)
@@ -132,7 +133,7 @@ func resourceAwsCloudWatchLogMetricFilterUpdate(d *schema.ResourceData, meta int
 }
 
 func resourceAwsCloudWatchLogMetricFilterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatchlogsconn
+	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
 
 	mf, err := lookupCloudWatchLogMetricFilter(conn, d.Get("name").(string),
 		d.Get("log_group_name").(string), nil)
@@ -199,7 +200,7 @@ func lookupCloudWatchLogMetricFilter(conn *cloudwatchlogs.CloudWatchLogs,
 }
 
 func resourceAwsCloudWatchLogMetricFilterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatchlogsconn
+	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
 
 	input := cloudwatchlogs.DeleteMetricFilterInput{
 		FilterName:   aws.String(d.Get("name").(string)),

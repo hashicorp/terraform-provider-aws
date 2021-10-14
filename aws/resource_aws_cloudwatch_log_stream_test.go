@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSCloudWatchLogStream_basic(t *testing.T) {
@@ -96,7 +97,7 @@ func testAccCheckCloudWatchLogStreamExists(n string, ls *cloudwatchlogs.LogStrea
 		}
 
 		logGroupName := rs.Primary.Attributes["log_group_name"]
-		conn := acctest.Provider.Meta().(*AWSClient).cloudwatchlogsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchLogsConn
 		logGroup, exists, err := lookupCloudWatchLogStream(conn, rs.Primary.ID, logGroupName, nil)
 		if err != nil {
 			return err
@@ -112,7 +113,7 @@ func testAccCheckCloudWatchLogStreamExists(n string, ls *cloudwatchlogs.LogStrea
 }
 
 func testAccCheckAWSCloudWatchLogStreamDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).cloudwatchlogsconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchLogsConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudwatch_log_stream" {

@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSCloudwatchLogSubscriptionFilter_basic(t *testing.T) {
@@ -234,7 +235,7 @@ func TestAccAWSCloudwatchLogSubscriptionFilter_RoleArn(t *testing.T) {
 
 func testAccCheckCloudwatchLogSubscriptionFilterDisappears(filter *cloudwatchlogs.SubscriptionFilter) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).cloudwatchlogsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchLogsConn
 
 		input := &cloudwatchlogs.DeleteSubscriptionFilterInput{
 			FilterName:   filter.FilterName,
@@ -248,7 +249,7 @@ func testAccCheckCloudwatchLogSubscriptionFilterDisappears(filter *cloudwatchlog
 }
 
 func testAccCheckCloudwatchLogSubscriptionFilterDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).cloudwatchlogsconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchLogsConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudwatch_log_subscription_filter" {
@@ -285,7 +286,7 @@ func testAccCheckAwsCloudwatchLogSubscriptionFilterExists(n string, filter *clou
 			return fmt.Errorf("SubscriptionFilter ID not set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).cloudwatchlogsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchLogsConn
 
 		logGroupName := rs.Primary.Attributes["log_group_name"]
 		filterName := rs.Primary.Attributes["name"]

@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsCloudWatchLogDestination() *schema.Resource {
@@ -58,7 +59,7 @@ func resourceAwsCloudWatchLogDestination() *schema.Resource {
 }
 
 func resourceAwsCloudWatchLogDestinationPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatchlogsconn
+	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
 
 	name := d.Get("name").(string)
 	roleArn := d.Get("role_arn").(string)
@@ -94,7 +95,7 @@ func resourceAwsCloudWatchLogDestinationPut(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsCloudWatchLogDestinationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatchlogsconn
+	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
 
 	destination, exists, err := lookupCloudWatchLogDestination(conn, d.Id(), nil)
 	if err != nil {
@@ -114,7 +115,7 @@ func resourceAwsCloudWatchLogDestinationRead(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsCloudWatchLogDestinationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatchlogsconn
+	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
 
 	params := &cloudwatchlogs.DeleteDestinationInput{
 		DestinationName: aws.String(d.Id()),

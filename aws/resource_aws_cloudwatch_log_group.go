@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	tfcloudwatchlogs "github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudwatchlogs"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsCloudWatchLogGroup() *schema.Resource {
@@ -66,8 +67,8 @@ func resourceAwsCloudWatchLogGroup() *schema.Resource {
 }
 
 func resourceAwsCloudWatchLogGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatchlogsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	var logGroupName string
@@ -122,9 +123,9 @@ func resourceAwsCloudWatchLogGroupCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsCloudWatchLogGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatchlogsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	log.Printf("[DEBUG] Reading CloudWatch Log Group: %q", d.Get("name").(string))
 	lg, err := lookupCloudWatchLogGroup(conn, d.Id())
@@ -185,7 +186,7 @@ func lookupCloudWatchLogGroup(conn *cloudwatchlogs.CloudWatchLogs, name string) 
 }
 
 func resourceAwsCloudWatchLogGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatchlogsconn
+	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
 
 	name := d.Id()
 	log.Printf("[DEBUG] Updating CloudWatch Log Group: %q", name)
@@ -245,7 +246,7 @@ func resourceAwsCloudWatchLogGroupUpdate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsCloudWatchLogGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatchlogsconn
+	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
 	log.Printf("[INFO] Deleting CloudWatch Log Group: %s", d.Id())
 	_, err := conn.DeleteLogGroup(&cloudwatchlogs.DeleteLogGroupInput{
 		LogGroupName: aws.String(d.Get("name").(string)),

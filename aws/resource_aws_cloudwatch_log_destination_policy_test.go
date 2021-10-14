@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSCloudwatchLogDestinationPolicy_basic(t *testing.T) {
@@ -38,7 +39,7 @@ func TestAccAWSCloudwatchLogDestinationPolicy_basic(t *testing.T) {
 }
 
 func testAccCheckAWSCloudwatchLogDestinationPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).cloudwatchlogsconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchLogsConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudwatch_log_destination_policy" {
@@ -66,7 +67,7 @@ func testAccCheckAWSCloudwatchLogDestinationPolicyExists(n string, d *cloudwatch
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).cloudwatchlogsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchLogsConn
 		destination, exists, err := lookupCloudWatchLogDestination(conn, rs.Primary.ID, nil)
 		if err != nil {
 			return err

@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	tfcloudwatchlogs "github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudwatchlogs"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsCloudwatchLogGroups() *schema.Resource {
@@ -33,7 +34,7 @@ func dataSourceAwsCloudwatchLogGroups() *schema.Resource {
 }
 
 func dataSourceAwsCloudwatchLogGroupsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatchlogsconn
+	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
 
 	input := &cloudwatchlogs.DescribeLogGroupsInput{
 		LogGroupNamePrefix: aws.String(d.Get("log_group_name_prefix").(string)),
@@ -55,7 +56,7 @@ func dataSourceAwsCloudwatchLogGroupsRead(d *schema.ResourceData, meta interface
 		return fmt.Errorf("error reading CloudWatch Log Groups: %w", err)
 	}
 
-	d.SetId(meta.(*AWSClient).region)
+	d.SetId(meta.(*conns.AWSClient).Region)
 
 	var arns, logGroupNames []string
 

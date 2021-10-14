@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsCloudWatchLogResourcePolicy() *schema.Resource {
@@ -40,7 +41,7 @@ func resourceAwsCloudWatchLogResourcePolicy() *schema.Resource {
 }
 
 func resourceAwsCloudWatchLogResourcePolicyPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatchlogsconn
+	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
 
 	policyName := d.Get("policy_name").(string)
 
@@ -61,7 +62,7 @@ func resourceAwsCloudWatchLogResourcePolicyPut(d *schema.ResourceData, meta inte
 }
 
 func resourceAwsCloudWatchLogResourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatchlogsconn
+	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
 	policyName := d.Get("policy_name").(string)
 	resourcePolicy, exists, err := lookupCloudWatchLogResourcePolicy(conn, policyName, nil)
 	if err != nil {
@@ -79,7 +80,7 @@ func resourceAwsCloudWatchLogResourcePolicyRead(d *schema.ResourceData, meta int
 }
 
 func resourceAwsCloudWatchLogResourcePolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatchlogsconn
+	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
 	input := cloudwatchlogs.DeleteResourcePolicyInput{
 		PolicyName: aws.String(d.Id()),
 	}

@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsCloudwatchLogSubscriptionFilter() *schema.Resource {
@@ -61,7 +62,7 @@ func resourceAwsCloudwatchLogSubscriptionFilter() *schema.Resource {
 }
 
 func resourceAwsCloudwatchLogSubscriptionFilterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatchlogsconn
+	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
 	params := getAwsCloudWatchLogsSubscriptionFilterInput(d)
 	log.Printf("[DEBUG] Creating SubscriptionFilter %#v", params)
 
@@ -94,7 +95,7 @@ func resourceAwsCloudwatchLogSubscriptionFilterCreate(d *schema.ResourceData, me
 }
 
 func resourceAwsCloudwatchLogSubscriptionFilterUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatchlogsconn
+	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
 
 	params := getAwsCloudWatchLogsSubscriptionFilterInput(d)
 
@@ -152,7 +153,7 @@ func getAwsCloudWatchLogsSubscriptionFilterInput(d *schema.ResourceData) cloudwa
 }
 
 func resourceAwsCloudwatchLogSubscriptionFilterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatchlogsconn
+	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
 
 	log_group_name := d.Get("log_group_name").(string)
 	name := d.Get("name").(string) // "name" is a required field in the schema
@@ -190,7 +191,7 @@ func resourceAwsCloudwatchLogSubscriptionFilterRead(d *schema.ResourceData, meta
 }
 
 func resourceAwsCloudwatchLogSubscriptionFilterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatchlogsconn
+	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
 	log.Printf("[INFO] Deleting CloudWatch Log Group Subscription: %s", d.Id())
 	log_group_name := d.Get("log_group_name").(string)
 	name := d.Get("name").(string)
