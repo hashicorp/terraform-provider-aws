@@ -106,11 +106,11 @@ func resourceAwsDbEventSubscriptionCreate(d *schema.ResourceData, meta interface
 	}
 
 	if v, ok := d.GetOk("event_categories"); ok && v.(*schema.Set).Len() > 0 {
-		input.EventCategories = expandStringSet(v.(*schema.Set))
+		input.EventCategories = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("source_ids"); ok && v.(*schema.Set).Len() > 0 {
-		input.SourceIds = expandStringSet(v.(*schema.Set))
+		input.SourceIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("source_type"); ok {
@@ -198,7 +198,7 @@ func resourceAwsDbEventSubscriptionUpdate(d *schema.ResourceData, meta interface
 		}
 
 		if d.HasChange("event_categories") {
-			input.EventCategories = expandStringSet(d.Get("event_categories").(*schema.Set))
+			input.EventCategories = flex.ExpandStringSet(d.Get("event_categories").(*schema.Set))
 		}
 
 		if d.HasChange("source_type") {

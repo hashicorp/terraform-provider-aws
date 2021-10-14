@@ -569,7 +569,7 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		if attr, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && attr.(*schema.Set).Len() > 0 {
-			opts.EnableCloudwatchLogsExports = expandStringSet(attr.(*schema.Set))
+			opts.EnableCloudwatchLogsExports = flex.ExpandStringSet(attr.(*schema.Set))
 		}
 
 		if attr, ok := d.GetOk("iam_database_authentication_enabled"); ok {
@@ -629,7 +629,7 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		if attr := d.Get("security_group_names").(*schema.Set); attr.Len() > 0 {
-			modifyDbInstanceInput.DBSecurityGroups = expandStringSet(attr)
+			modifyDbInstanceInput.DBSecurityGroups = flex.ExpandStringSet(attr)
 			requiresModifyDbInstance = true
 		}
 
@@ -638,7 +638,7 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		if attr := d.Get("vpc_security_group_ids").(*schema.Set); attr.Len() > 0 {
-			opts.VpcSecurityGroupIds = expandStringSet(attr)
+			opts.VpcSecurityGroupIds = flex.ExpandStringSet(attr)
 		}
 
 		if attr, ok := d.GetOk("performance_insights_enabled"); ok {
@@ -736,11 +736,11 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		if attr := d.Get("vpc_security_group_ids").(*schema.Set); attr.Len() > 0 {
-			opts.VpcSecurityGroupIds = expandStringSet(attr)
+			opts.VpcSecurityGroupIds = flex.ExpandStringSet(attr)
 		}
 
 		if attr := d.Get("security_group_names").(*schema.Set); attr.Len() > 0 {
-			opts.DBSecurityGroups = expandStringSet(attr)
+			opts.DBSecurityGroups = flex.ExpandStringSet(attr)
 		}
 		if attr, ok := d.GetOk("storage_type"); ok {
 			opts.StorageType = aws.String(attr.(string))
@@ -908,7 +908,7 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		if attr, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && attr.(*schema.Set).Len() > 0 {
-			opts.EnableCloudwatchLogsExports = expandStringSet(attr.(*schema.Set))
+			opts.EnableCloudwatchLogsExports = flex.ExpandStringSet(attr.(*schema.Set))
 		}
 
 		if attr, ok := d.GetOk("engine"); ok {
@@ -986,7 +986,7 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		if attr := d.Get("security_group_names").(*schema.Set); attr.Len() > 0 {
-			modifyDbInstanceInput.DBSecurityGroups = expandStringSet(attr)
+			modifyDbInstanceInput.DBSecurityGroups = flex.ExpandStringSet(attr)
 			requiresModifyDbInstance = true
 		}
 
@@ -1000,7 +1000,7 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		if attr := d.Get("vpc_security_group_ids").(*schema.Set); attr.Len() > 0 {
-			opts.VpcSecurityGroupIds = expandStringSet(attr)
+			opts.VpcSecurityGroupIds = flex.ExpandStringSet(attr)
 		}
 
 		if attr, ok := d.GetOk("performance_insights_enabled"); ok {
@@ -1064,7 +1064,7 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			}
 
 			if v, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && v.(*schema.Set).Len() > 0 {
-				input.EnableCloudwatchLogsExports = expandStringSet(v.(*schema.Set))
+				input.EnableCloudwatchLogsExports = flex.ExpandStringSet(v.(*schema.Set))
 			}
 
 			if v, ok := d.GetOk("engine"); ok {
@@ -1120,7 +1120,7 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			}
 
 			if v, ok := d.GetOk("vpc_security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
-				input.VpcSecurityGroupIds = expandStringSet(v.(*schema.Set))
+				input.VpcSecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 			}
 
 			if attr, ok := d.GetOk("customer_owned_ip_enabled"); ok {
@@ -1205,11 +1205,11 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		if attr := d.Get("vpc_security_group_ids").(*schema.Set); attr.Len() > 0 {
-			opts.VpcSecurityGroupIds = expandStringSet(attr)
+			opts.VpcSecurityGroupIds = flex.ExpandStringSet(attr)
 		}
 
 		if attr := d.Get("security_group_names").(*schema.Set); attr.Len() > 0 {
-			opts.DBSecurityGroups = expandStringSet(attr)
+			opts.DBSecurityGroups = flex.ExpandStringSet(attr)
 		}
 		if attr, ok := d.GetOk("storage_type"); ok {
 			opts.StorageType = aws.String(attr.(string))
@@ -1220,7 +1220,7 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		if attr, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && attr.(*schema.Set).Len() > 0 {
-			opts.EnableCloudwatchLogsExports = expandStringSet(attr.(*schema.Set))
+			opts.EnableCloudwatchLogsExports = flex.ExpandStringSet(attr.(*schema.Set))
 		}
 
 		if attr, ok := d.GetOk("iops"); ok {
@@ -1439,7 +1439,7 @@ func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("monitoring_interval", v.MonitoringInterval)
 	d.Set("monitoring_role_arn", v.MonitoringRoleArn)
 
-	if err := d.Set("enabled_cloudwatch_logs_exports", flattenStringList(v.EnabledCloudwatchLogsExports)); err != nil {
+	if err := d.Set("enabled_cloudwatch_logs_exports", flex.FlattenStringList(v.EnabledCloudwatchLogsExports)); err != nil {
 		return fmt.Errorf("error setting enabled_cloudwatch_logs_exports: %s", err)
 	}
 
@@ -1672,14 +1672,14 @@ func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 
 	if d.HasChange("vpc_security_group_ids") {
 		if attr := d.Get("vpc_security_group_ids").(*schema.Set); attr.Len() > 0 {
-			req.VpcSecurityGroupIds = expandStringSet(attr)
+			req.VpcSecurityGroupIds = flex.ExpandStringSet(attr)
 		}
 		requestUpdate = true
 	}
 
 	if d.HasChange("security_group_names") {
 		if attr := d.Get("security_group_names").(*schema.Set); attr.Len() > 0 {
-			req.DBSecurityGroups = expandStringSet(attr)
+			req.DBSecurityGroups = flex.ExpandStringSet(attr)
 		}
 		requestUpdate = true
 	}
@@ -1707,8 +1707,8 @@ func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 		disable := o.Difference(n)
 
 		req.CloudwatchLogsExportConfiguration = &rds.CloudwatchLogsExportConfiguration{
-			EnableLogTypes:  expandStringSet(enable),
-			DisableLogTypes: expandStringSet(disable),
+			EnableLogTypes:  flex.ExpandStringSet(enable),
+			DisableLogTypes: flex.ExpandStringSet(disable),
 		}
 		requestUpdate = true
 	}

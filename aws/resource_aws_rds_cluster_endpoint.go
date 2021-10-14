@@ -98,10 +98,10 @@ func resourceAwsRDSClusterEndpointCreate(d *schema.ResourceData, meta interface{
 	}
 
 	if v := d.Get("static_members"); v != nil {
-		createClusterEndpointInput.StaticMembers = expandStringSet(v.(*schema.Set))
+		createClusterEndpointInput.StaticMembers = flex.ExpandStringSet(v.(*schema.Set))
 	}
 	if v := d.Get("excluded_members"); v != nil {
-		createClusterEndpointInput.ExcludedMembers = expandStringSet(v.(*schema.Set))
+		createClusterEndpointInput.ExcludedMembers = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	_, err := conn.CreateDBClusterEndpoint(createClusterEndpointInput)
@@ -159,11 +159,11 @@ func resourceAwsRDSClusterEndpointRead(d *schema.ResourceData, meta interface{})
 	d.Set("endpoint", clusterEp.Endpoint)
 	d.Set("custom_endpoint_type", clusterEp.CustomEndpointType)
 
-	if err := d.Set("excluded_members", flattenStringList(clusterEp.ExcludedMembers)); err != nil {
+	if err := d.Set("excluded_members", flex.FlattenStringList(clusterEp.ExcludedMembers)); err != nil {
 		return fmt.Errorf("error setting excluded_members: %s", err)
 	}
 
-	if err := d.Set("static_members", flattenStringList(clusterEp.StaticMembers)); err != nil {
+	if err := d.Set("static_members", flex.FlattenStringList(clusterEp.StaticMembers)); err != nil {
 		return fmt.Errorf("error setting static_members: %s", err)
 	}
 
@@ -206,13 +206,13 @@ func resourceAwsRDSClusterEndpointUpdate(d *schema.ResourceData, meta interface{
 	}
 
 	if attr := d.Get("excluded_members").(*schema.Set); attr.Len() > 0 {
-		input.ExcludedMembers = expandStringSet(attr)
+		input.ExcludedMembers = flex.ExpandStringSet(attr)
 	} else {
 		input.ExcludedMembers = make([]*string, 0)
 	}
 
 	if attr := d.Get("static_members").(*schema.Set); attr.Len() > 0 {
-		input.StaticMembers = expandStringSet(attr)
+		input.StaticMembers = flex.ExpandStringSet(attr)
 	} else {
 		input.StaticMembers = make([]*string, 0)
 	}

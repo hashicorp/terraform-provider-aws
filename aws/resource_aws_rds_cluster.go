@@ -521,13 +521,13 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 			DeletionProtection:   aws.Bool(d.Get("deletion_protection").(bool)),
 			Engine:               aws.String(d.Get("engine").(string)),
 			EngineMode:           aws.String(d.Get("engine_mode").(string)),
-			ScalingConfiguration: expandRdsClusterScalingConfiguration(d.Get("scaling_configuration").([]interface{})),
+			ScalingConfiguration: expandClusterScalingConfiguration(d.Get("scaling_configuration").([]interface{})),
 			SnapshotIdentifier:   aws.String(d.Get("snapshot_identifier").(string)),
 			Tags:                 tags.IgnoreAws().RdsTags(),
 		}
 
 		if attr := d.Get("availability_zones").(*schema.Set); attr.Len() > 0 {
-			opts.AvailabilityZones = expandStringSet(attr)
+			opts.AvailabilityZones = flex.ExpandStringSet(attr)
 		}
 
 		if v, ok := d.GetOk("backtrack_window"); ok {
@@ -552,7 +552,7 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		if attr, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && attr.(*schema.Set).Len() > 0 {
-			opts.EnableCloudwatchLogsExports = expandStringSet(attr.(*schema.Set))
+			opts.EnableCloudwatchLogsExports = flex.ExpandStringSet(attr.(*schema.Set))
 		}
 
 		if attr, ok := d.GetOk("engine_version"); ok {
@@ -587,7 +587,7 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		if attr := d.Get("vpc_security_group_ids").(*schema.Set); attr.Len() > 0 {
-			opts.VpcSecurityGroupIds = expandStringSet(attr)
+			opts.VpcSecurityGroupIds = flex.ExpandStringSet(attr)
 		}
 
 		log.Printf("[DEBUG] RDS Cluster restore from snapshot configuration: %s", opts)
@@ -655,11 +655,11 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		if attr := d.Get("vpc_security_group_ids").(*schema.Set); attr.Len() > 0 {
-			createOpts.VpcSecurityGroupIds = expandStringSet(attr)
+			createOpts.VpcSecurityGroupIds = flex.ExpandStringSet(attr)
 		}
 
 		if attr := d.Get("availability_zones").(*schema.Set); attr.Len() > 0 {
-			createOpts.AvailabilityZones = expandStringSet(attr)
+			createOpts.AvailabilityZones = flex.ExpandStringSet(attr)
 		}
 
 		if v, ok := d.GetOk("backup_retention_period"); ok {
@@ -683,7 +683,7 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		if attr, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && attr.(*schema.Set).Len() > 0 {
-			createOpts.EnableCloudwatchLogsExports = expandStringSet(attr.(*schema.Set))
+			createOpts.EnableCloudwatchLogsExports = flex.ExpandStringSet(attr.(*schema.Set))
 		}
 
 		if attr, ok := d.GetOkExists("storage_encrypted"); ok {
@@ -765,7 +765,7 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		if attr := d.Get("vpc_security_group_ids").(*schema.Set); attr.Len() > 0 {
-			createOpts.VpcSecurityGroupIds = expandStringSet(attr)
+			createOpts.VpcSecurityGroupIds = flex.ExpandStringSet(attr)
 		}
 
 		if attr, ok := d.GetOk("kms_key_id"); ok {
@@ -773,7 +773,7 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		if attr, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && attr.(*schema.Set).Len() > 0 {
-			createOpts.EnableCloudwatchLogsExports = expandStringSet(attr.(*schema.Set))
+			createOpts.EnableCloudwatchLogsExports = flex.ExpandStringSet(attr.(*schema.Set))
 		}
 
 		if attr, ok := d.GetOk("iam_database_authentication_enabled"); ok {
@@ -805,7 +805,7 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 				case "preferred_maintenance_window":
 					modifyDbClusterInput.PreferredMaintenanceWindow = aws.String(val.(string))
 				case "scaling_configuration":
-					modifyDbClusterInput.ScalingConfiguration = expandRdsClusterScalingConfiguration(d.Get("scaling_configuration").([]interface{}))
+					modifyDbClusterInput.ScalingConfiguration = expandClusterScalingConfiguration(d.Get("scaling_configuration").([]interface{}))
 				}
 			}
 		}
@@ -827,7 +827,7 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 			DeletionProtection:   aws.Bool(d.Get("deletion_protection").(bool)),
 			Engine:               aws.String(d.Get("engine").(string)),
 			EngineMode:           aws.String(d.Get("engine_mode").(string)),
-			ScalingConfiguration: expandRdsClusterScalingConfiguration(d.Get("scaling_configuration").([]interface{})),
+			ScalingConfiguration: expandClusterScalingConfiguration(d.Get("scaling_configuration").([]interface{})),
 			Tags:                 tags.IgnoreAws().RdsTags(),
 		}
 
@@ -880,11 +880,11 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		if attr := d.Get("vpc_security_group_ids").(*schema.Set); attr.Len() > 0 {
-			createOpts.VpcSecurityGroupIds = expandStringSet(attr)
+			createOpts.VpcSecurityGroupIds = flex.ExpandStringSet(attr)
 		}
 
 		if attr := d.Get("availability_zones").(*schema.Set); attr.Len() > 0 {
-			createOpts.AvailabilityZones = expandStringSet(attr)
+			createOpts.AvailabilityZones = flex.ExpandStringSet(attr)
 		}
 
 		if v, ok := d.GetOk("backup_retention_period"); ok {
@@ -912,7 +912,7 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		if attr, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && attr.(*schema.Set).Len() > 0 {
-			createOpts.EnableCloudwatchLogsExports = expandStringSet(attr.(*schema.Set))
+			createOpts.EnableCloudwatchLogsExports = flex.ExpandStringSet(attr.(*schema.Set))
 		}
 
 		if attr, ok := d.GetOk("replication_source_identifier"); ok && createOpts.GlobalClusterIdentifier == nil {
@@ -1096,7 +1096,7 @@ func resourceAwsRDSClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("reader_endpoint", dbc.ReaderEndpoint)
 	d.Set("replication_source_identifier", dbc.ReplicationSourceIdentifier)
 
-	if err := d.Set("scaling_configuration", flattenRdsScalingConfigurationInfo(dbc.ScalingConfigurationInfo)); err != nil {
+	if err := d.Set("scaling_configuration", flattenRDSScalingConfigurationInfo(dbc.ScalingConfigurationInfo)); err != nil {
 		return fmt.Errorf("error setting scaling_configuration: %s", err)
 	}
 
@@ -1186,7 +1186,7 @@ func resourceAwsRDSClusterUpdate(d *schema.ResourceData, meta interface{}) error
 
 	if d.HasChange("vpc_security_group_ids") {
 		if attr := d.Get("vpc_security_group_ids").(*schema.Set); attr.Len() > 0 {
-			req.VpcSecurityGroupIds = expandStringSet(attr)
+			req.VpcSecurityGroupIds = flex.ExpandStringSet(attr)
 		} else {
 			req.VpcSecurityGroupIds = []*string{}
 		}
@@ -1237,14 +1237,14 @@ func resourceAwsRDSClusterUpdate(d *schema.ResourceData, meta interface{}) error
 		disable := o.Difference(n)
 
 		req.CloudwatchLogsExportConfiguration = &rds.CloudwatchLogsExportConfiguration{
-			EnableLogTypes:  expandStringSet(enable),
-			DisableLogTypes: expandStringSet(disable),
+			EnableLogTypes:  flex.ExpandStringSet(enable),
+			DisableLogTypes: flex.ExpandStringSet(disable),
 		}
 		requestUpdate = true
 	}
 
 	if d.HasChange("scaling_configuration") {
-		req.ScalingConfiguration = expandRdsClusterScalingConfiguration(d.Get("scaling_configuration").([]interface{}))
+		req.ScalingConfiguration = expandClusterScalingConfiguration(d.Get("scaling_configuration").([]interface{}))
 		requestUpdate = true
 	}
 
