@@ -13,9 +13,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsInternetGateway() *schema.Resource {
+func DataSourceInternetGateway() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsInternetGatewayRead,
+		Read: dataSourceInternetGatewayRead,
 		Schema: map[string]*schema.Schema{
 			"internet_gateway_id": {
 				Type:     schema.TypeString,
@@ -52,7 +52,7 @@ func dataSourceAwsInternetGateway() *schema.Resource {
 	}
 }
 
-func dataSourceAwsInternetGatewayRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceInternetGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

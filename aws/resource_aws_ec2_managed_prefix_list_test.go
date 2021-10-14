@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAwsEc2ManagedPrefixList_basic(t *testing.T) {
@@ -71,7 +72,7 @@ func TestAccAwsEc2ManagedPrefixList_disappears(t *testing.T) {
 				Config: testAccAwsEc2ManagedPrefixListConfig_Name(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccAwsEc2ManagedPrefixListExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsEc2ManagedPrefixList(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceManagedPrefixList(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

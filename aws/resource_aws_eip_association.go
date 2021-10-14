@@ -14,11 +14,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsEipAssociation() *schema.Resource {
+func ResourceEIPAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEipAssociationCreate,
-		Read:   resourceAwsEipAssociationRead,
-		Delete: resourceAwsEipAssociationDelete,
+		Create: resourceEIPAssociationCreate,
+		Read:   resourceEIPAssociationRead,
+		Delete: resourceEIPAssociationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -68,7 +68,7 @@ func resourceAwsEipAssociation() *schema.Resource {
 	}
 }
 
-func resourceAwsEipAssociationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceEIPAssociationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	request := &ec2.AssociateAddressInput{}
@@ -147,10 +147,10 @@ func resourceAwsEipAssociationCreate(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
-	return resourceAwsEipAssociationRead(d, meta)
+	return resourceEIPAssociationRead(d, meta)
 }
 
-func resourceAwsEipAssociationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceEIPAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	request, err := describeAddressesById(d.Id(), meta.(*conns.AWSClient).SupportedPlatforms)
@@ -201,7 +201,7 @@ func resourceAwsEipAssociationRead(d *schema.ResourceData, meta interface{}) err
 	return readAwsEipAssociation(d, response.Addresses[0])
 }
 
-func resourceAwsEipAssociationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceEIPAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	var opts *ec2.DisassociateAddressInput

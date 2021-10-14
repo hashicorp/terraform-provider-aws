@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsFlowLog() *schema.Resource {
+func ResourceFlowLog() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsLogFlowCreate,
 		Read:   resourceAwsLogFlowRead,

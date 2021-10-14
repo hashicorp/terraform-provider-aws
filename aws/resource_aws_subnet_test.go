@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 // add sweeper to delete known test subnets
@@ -88,7 +89,7 @@ func testSweepSubnets(region string) error {
 				continue
 			}
 
-			r := resourceAwsSubnet()
+			r := ResourceSubnet()
 			d := r.Data(nil)
 			d.SetId(id)
 
@@ -719,7 +720,7 @@ func TestAccAWSSubnet_disappears(t *testing.T) {
 				Config: testAccSubnetConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSubnet(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceSubnet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

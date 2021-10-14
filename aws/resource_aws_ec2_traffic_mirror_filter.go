@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsEc2TrafficMirrorFilter() *schema.Resource {
+func ResourceTrafficMirrorFilter() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEc2TrafficMirrorFilterCreate,
-		Read:   resourceAwsEc2TrafficMirrorFilterRead,
-		Update: resourceAwsEc2TrafficMirrorFilterUpdate,
-		Delete: resourceAwsEc2TrafficMirrorFilterDelete,
+		Create: resourceTrafficMirrorFilterCreate,
+		Read:   resourceTrafficMirrorFilterRead,
+		Update: resourceTrafficMirrorFilterUpdate,
+		Delete: resourceTrafficMirrorFilterDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -50,7 +50,7 @@ func resourceAwsEc2TrafficMirrorFilter() *schema.Resource {
 	}
 }
 
-func resourceAwsEc2TrafficMirrorFilterCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceTrafficMirrorFilterCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -85,10 +85,10 @@ func resourceAwsEc2TrafficMirrorFilterCreate(d *schema.ResourceData, meta interf
 
 	}
 
-	return resourceAwsEc2TrafficMirrorFilterRead(d, meta)
+	return resourceTrafficMirrorFilterRead(d, meta)
 }
 
-func resourceAwsEc2TrafficMirrorFilterUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceTrafficMirrorFilterUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	if d.HasChange("network_services") {
@@ -121,10 +121,10 @@ func resourceAwsEc2TrafficMirrorFilterUpdate(d *schema.ResourceData, meta interf
 		}
 	}
 
-	return resourceAwsEc2TrafficMirrorFilterRead(d, meta)
+	return resourceTrafficMirrorFilterRead(d, meta)
 }
 
-func resourceAwsEc2TrafficMirrorFilterRead(d *schema.ResourceData, meta interface{}) error {
+func resourceTrafficMirrorFilterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -182,7 +182,7 @@ func resourceAwsEc2TrafficMirrorFilterRead(d *schema.ResourceData, meta interfac
 	return nil
 }
 
-func resourceAwsEc2TrafficMirrorFilterDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceTrafficMirrorFilterDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	input := &ec2.DeleteTrafficMirrorFilterInput{

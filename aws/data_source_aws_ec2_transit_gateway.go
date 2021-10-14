@@ -12,9 +12,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsEc2TransitGateway() *schema.Resource {
+func DataSourceTransitGateway() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEc2TransitGatewayRead,
+		Read: dataSourceTransitGatewayRead,
 
 		Schema: map[string]*schema.Schema{
 			"amazon_side_asn": {
@@ -72,7 +72,7 @@ func dataSourceAwsEc2TransitGateway() *schema.Resource {
 	}
 }
 
-func dataSourceAwsEc2TransitGatewayRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceTransitGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

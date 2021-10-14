@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsVpcPeeringConnections() *schema.Resource {
+func DataSourceVPCPeeringConnections() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsVpcPeeringConnectionsRead,
+		Read: dataSourceVPCPeeringConnectionsRead,
 
 		Schema: map[string]*schema.Schema{
 			"filter": ec2CustomFiltersSchema(),
@@ -27,7 +27,7 @@ func dataSourceAwsVpcPeeringConnections() *schema.Resource {
 	}
 }
 
-func dataSourceAwsVpcPeeringConnectionsRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceVPCPeeringConnectionsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	req := &ec2.DescribeVpcPeeringConnectionsInput{}

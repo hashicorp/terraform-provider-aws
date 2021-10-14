@@ -17,12 +17,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsRoute53KeySigningKey() *schema.Resource {
+func ResourceKeySigningKey() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRoute53KeySigningKeyCreate,
-		Read:   resourceAwsRoute53KeySigningKeyRead,
-		Update: resourceAwsRoute53KeySigningKeyUpdate,
-		Delete: resourceAwsRoute53KeySigningKeyDelete,
+		Create: resourceKeySigningKeyCreate,
+		Read:   resourceKeySigningKeyRead,
+		Update: resourceKeySigningKeyUpdate,
+		Delete: resourceKeySigningKeyDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -101,7 +101,7 @@ func resourceAwsRoute53KeySigningKey() *schema.Resource {
 	}
 }
 
-func resourceAwsRoute53KeySigningKeyCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceKeySigningKeyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53Conn
 
 	hostedZoneID := d.Get("hosted_zone_id").(string)
@@ -137,10 +137,10 @@ func resourceAwsRoute53KeySigningKeyCreate(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("error waiting for Route 53 Key Signing Key (%s) status (%s): %w", d.Id(), status, err)
 	}
 
-	return resourceAwsRoute53KeySigningKeyRead(d, meta)
+	return resourceKeySigningKeyRead(d, meta)
 }
 
-func resourceAwsRoute53KeySigningKeyRead(d *schema.ResourceData, meta interface{}) error {
+func resourceKeySigningKeyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53Conn
 
 	hostedZoneID, name, err := tfroute53.KeySigningKeyParseResourceID(d.Id())
@@ -195,7 +195,7 @@ func resourceAwsRoute53KeySigningKeyRead(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func resourceAwsRoute53KeySigningKeyUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceKeySigningKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53Conn
 
 	if d.HasChange("status") {
@@ -245,10 +245,10 @@ func resourceAwsRoute53KeySigningKeyUpdate(d *schema.ResourceData, meta interfac
 		}
 	}
 
-	return resourceAwsRoute53KeySigningKeyRead(d, meta)
+	return resourceKeySigningKeyRead(d, meta)
 }
 
-func resourceAwsRoute53KeySigningKeyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceKeySigningKeyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53Conn
 
 	status := d.Get("status").(string)

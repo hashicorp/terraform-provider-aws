@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSKmsExternalKey_basic(t *testing.T) {
@@ -75,7 +76,7 @@ func TestAccAWSKmsExternalKey_disappears(t *testing.T) {
 				Config: testAccAWSKmsExternalKeyConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSKmsExternalKeyExists(resourceName, &key),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsKmsExternalKey(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceExternalKey(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

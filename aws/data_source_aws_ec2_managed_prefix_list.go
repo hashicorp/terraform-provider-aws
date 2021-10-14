@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsEc2ManagedPrefixList() *schema.Resource {
+func DataSourceManagedPrefixList() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceAwsEc2ManagedPrefixListRead,
+		ReadContext: dataSourceManagedPrefixListRead,
 		Schema: map[string]*schema.Schema{
 			"address_family": {
 				Type:     schema.TypeString,
@@ -67,7 +67,7 @@ func dataSourceAwsEc2ManagedPrefixList() *schema.Resource {
 	}
 }
 
-func dataSourceAwsEc2ManagedPrefixListRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceManagedPrefixListRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

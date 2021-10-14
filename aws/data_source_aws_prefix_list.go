@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsPrefixList() *schema.Resource {
+func DataSourcePrefixList() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsPrefixListRead,
+		Read: dataSourcePrefixListRead,
 
 		Schema: map[string]*schema.Schema{
 			"prefix_list_id": {
@@ -34,7 +34,7 @@ func dataSourceAwsPrefixList() *schema.Resource {
 	}
 }
 
-func dataSourceAwsPrefixListRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourcePrefixListRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	filters, filtersOk := d.GetOk("filter")

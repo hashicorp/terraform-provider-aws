@@ -27,12 +27,12 @@ const (
 	VPCEndpointCreationTimeout = 10 * time.Minute
 )
 
-func resourceAwsVpcEndpoint() *schema.Resource {
+func ResourceVPCEndpoint() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsVpcEndpointCreate,
-		Read:   resourceAwsVpcEndpointRead,
-		Update: resourceAwsVpcEndpointUpdate,
-		Delete: resourceAwsVpcEndpointDelete,
+		Create: resourceVPCEndpointCreate,
+		Read:   resourceVPCEndpointRead,
+		Update: resourceVPCEndpointUpdate,
+		Delete: resourceVPCEndpointDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -157,7 +157,7 @@ func resourceAwsVpcEndpoint() *schema.Resource {
 	}
 }
 
-func resourceAwsVpcEndpointCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 	if d.Get("vpc_endpoint_type").(string) == ec2.VpcEndpointTypeInterface &&
 		d.Get("security_group_ids").(*schema.Set).Len() == 0 {
 		return errors.New("An Interface VPC Endpoint must always have at least one Security Group")
@@ -208,10 +208,10 @@ func resourceAwsVpcEndpointCreate(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error waiting for VPC Endpoint (%s) to become available: %w", d.Id(), err)
 	}
 
-	return resourceAwsVpcEndpointRead(d, meta)
+	return resourceVPCEndpointRead(d, meta)
 }
 
-func resourceAwsVpcEndpointRead(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCEndpointRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -313,7 +313,7 @@ func resourceAwsVpcEndpointRead(d *schema.ResourceData, meta interface{}) error 
 	return nil
 }
 
-func resourceAwsVpcEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	if d.HasChange("auto_accept") && d.Get("auto_accept").(bool) && d.Get("state").(string) == tfec2.VpcEndpointStatePendingAcceptance {
@@ -367,10 +367,10 @@ func resourceAwsVpcEndpointUpdate(d *schema.ResourceData, meta interface{}) erro
 		}
 	}
 
-	return resourceAwsVpcEndpointRead(d, meta)
+	return resourceVPCEndpointRead(d, meta)
 }
 
-func resourceAwsVpcEndpointDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCEndpointDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	input := &ec2.DeleteVpcEndpointsInput{

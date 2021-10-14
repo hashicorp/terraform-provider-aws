@@ -13,9 +13,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsNetworkAcls() *schema.Resource {
+func DataSourceNetworkACLs() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsNetworkAclsRead,
+		Read: dataSourceNetworkACLsRead,
 		Schema: map[string]*schema.Schema{
 			"filter": ec2CustomFiltersSchema(),
 
@@ -36,7 +36,7 @@ func dataSourceAwsNetworkAcls() *schema.Resource {
 	}
 }
 
-func dataSourceAwsNetworkAclsRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceNetworkACLsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	req := &ec2.DescribeNetworkAclsInput{}

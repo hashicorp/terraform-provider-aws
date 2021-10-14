@@ -13,11 +13,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsEc2TransitGatewayRoute() *schema.Resource {
+func ResourceTransitGatewayRoute() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEc2TransitGatewayRouteCreate,
-		Read:   resourceAwsEc2TransitGatewayRouteRead,
-		Delete: resourceAwsEc2TransitGatewayRouteDelete,
+		Create: resourceTransitGatewayRouteCreate,
+		Read:   resourceTransitGatewayRouteRead,
+		Delete: resourceTransitGatewayRouteDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -52,7 +52,7 @@ func resourceAwsEc2TransitGatewayRoute() *schema.Resource {
 	}
 }
 
-func resourceAwsEc2TransitGatewayRouteCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceTransitGatewayRouteCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	destination := d.Get("destination_cidr_block").(string)
@@ -73,10 +73,10 @@ func resourceAwsEc2TransitGatewayRouteCreate(d *schema.ResourceData, meta interf
 
 	d.SetId(fmt.Sprintf("%s_%s", transitGatewayRouteTableID, destination))
 
-	return resourceAwsEc2TransitGatewayRouteRead(d, meta)
+	return resourceTransitGatewayRouteRead(d, meta)
 }
 
-func resourceAwsEc2TransitGatewayRouteRead(d *schema.ResourceData, meta interface{}) error {
+func resourceTransitGatewayRouteRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	transitGatewayRouteTableID, destination, err := decodeEc2TransitGatewayRouteID(d.Id())
@@ -148,7 +148,7 @@ func resourceAwsEc2TransitGatewayRouteRead(d *schema.ResourceData, meta interfac
 	return nil
 }
 
-func resourceAwsEc2TransitGatewayRouteDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceTransitGatewayRouteDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	transitGatewayRouteTableID, destination, err := decodeEc2TransitGatewayRouteID(d.Id())

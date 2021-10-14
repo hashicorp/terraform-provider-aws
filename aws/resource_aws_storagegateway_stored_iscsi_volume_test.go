@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSStorageGatewayStoredIscsiVolume_basic(t *testing.T) {
@@ -184,7 +185,7 @@ func TestAccAWSStorageGatewayStoredIscsiVolume_disappears(t *testing.T) {
 				Config: testAccAWSStorageGatewayStoredIscsiVolumeConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSStorageGatewayStoredIscsiVolumeExists(resourceName, &storedIscsiVolume),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsStorageGatewayStoredIscsiVolume(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceStorediSCSIVolume(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

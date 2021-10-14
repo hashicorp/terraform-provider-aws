@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 // IPv4 to Internet Gateway.
@@ -81,7 +82,7 @@ func TestAccAWSRoute_disappears(t *testing.T) {
 				Config: testAccAWSRouteConfigIpv4InternetGateway(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRouteExists(resourceName, &route),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsRoute(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceRoute(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -106,7 +107,7 @@ func TestAccAWSRoute_disappears_RouteTable(t *testing.T) {
 				Config: testAccAWSRouteConfigIpv4InternetGateway(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRouteExists(resourceName, &route),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsRouteTable(), rtResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceRouteTable(), rtResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

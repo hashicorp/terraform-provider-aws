@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 // This will currently skip EIPs with associations,
@@ -74,7 +75,7 @@ func testSweepEC2Eips(region string) error {
 			continue
 		}
 
-		r := resourceAwsEip()
+		r := ResourceEIP()
 		d := r.Data(nil)
 		if address.AllocationId != nil {
 			d.SetId(aws.StringValue(address.AllocationId))
@@ -139,7 +140,7 @@ func TestAccAWSEIP_disappears(t *testing.T) {
 				Config: testAccEIPConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEIPExists(resourceName, false, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsEip(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceEIP(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

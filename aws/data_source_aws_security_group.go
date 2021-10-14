@@ -15,9 +15,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsSecurityGroup() *schema.Resource {
+func DataSourceSecurityGroup() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsSecurityGroupRead,
+		Read: dataSourceSecurityGroupRead,
 
 		Schema: map[string]*schema.Schema{
 			"vpc_id": {
@@ -53,7 +53,7 @@ func dataSourceAwsSecurityGroup() *schema.Resource {
 	}
 }
 
-func dataSourceAwsSecurityGroupRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceSecurityGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

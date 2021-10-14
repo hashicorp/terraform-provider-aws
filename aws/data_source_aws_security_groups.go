@@ -12,9 +12,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsSecurityGroups() *schema.Resource {
+func DataSourceSecurityGroups() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsSecurityGroupsRead,
+		Read: dataSourceSecurityGroupsRead,
 
 		Schema: map[string]*schema.Schema{
 			"filter": dataSourceFiltersSchema(),
@@ -39,7 +39,7 @@ func dataSourceAwsSecurityGroups() *schema.Resource {
 	}
 }
 
-func dataSourceAwsSecurityGroupsRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceSecurityGroupsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	req := &ec2.DescribeSecurityGroupsInput{}
 

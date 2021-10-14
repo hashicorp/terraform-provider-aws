@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsEc2TrafficMirrorFilterRule() *schema.Resource {
+func ResourceTrafficMirrorFilterRule() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEc2TrafficMirrorFilterRuleCreate,
-		Read:   resourceAwsEc2TrafficMirrorFilterRuleRead,
-		Update: resourceAwsEc2TrafficMirrorFilterRuleUpdate,
-		Delete: resourceAwsEc2TrafficMirrorFilterRuleDelete,
+		Create: resourceTrafficMirrorFilterRuleCreate,
+		Read:   resourceTrafficMirrorFilterRuleRead,
+		Update: resourceTrafficMirrorFilterRuleUpdate,
+		Delete: resourceTrafficMirrorFilterRuleDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsEc2TrafficMirrorFilterRuleImport,
 		},
@@ -112,7 +112,7 @@ func resourceAwsEc2TrafficMirrorFilterRule() *schema.Resource {
 	}
 }
 
-func resourceAwsEc2TrafficMirrorFilterRuleCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceTrafficMirrorFilterRuleCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	filterId := d.Get("traffic_mirror_filter_id")
@@ -148,10 +148,10 @@ func resourceAwsEc2TrafficMirrorFilterRuleCreate(d *schema.ResourceData, meta in
 	}
 
 	d.SetId(aws.StringValue(out.TrafficMirrorFilterRule.TrafficMirrorFilterRuleId))
-	return resourceAwsEc2TrafficMirrorFilterRuleRead(d, meta)
+	return resourceTrafficMirrorFilterRuleRead(d, meta)
 }
 
-func resourceAwsEc2TrafficMirrorFilterRuleRead(d *schema.ResourceData, meta interface{}) error {
+func resourceTrafficMirrorFilterRuleRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	ruleId := d.Id()
 
@@ -234,7 +234,7 @@ func findEc2TrafficMirrorFilterRule(ruleId string, filters []*ec2.TrafficMirrorF
 	return rule
 }
 
-func resourceAwsEc2TrafficMirrorFilterRuleUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceTrafficMirrorFilterRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	ruleId := d.Id()
 
@@ -314,10 +314,10 @@ func resourceAwsEc2TrafficMirrorFilterRuleUpdate(d *schema.ResourceData, meta in
 		return fmt.Errorf("error modifying EC2 Traffic Mirror Filter Rule (%s): %w", ruleId, err)
 	}
 
-	return resourceAwsEc2TrafficMirrorFilterRuleRead(d, meta)
+	return resourceTrafficMirrorFilterRuleRead(d, meta)
 }
 
-func resourceAwsEc2TrafficMirrorFilterRuleDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceTrafficMirrorFilterRuleDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	ruleId := d.Id()

@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsEc2Tag() *schema.Resource {
+func ResourceTag() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEc2TagCreate,
-		Read:   resourceAwsEc2TagRead,
-		Update: resourceAwsEc2TagUpdate,
-		Delete: resourceAwsEc2TagDelete,
+		Create: resourceTagCreate,
+		Read:   resourceTagRead,
+		Update: resourceTagUpdate,
+		Delete: resourceTagDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -43,7 +43,7 @@ func resourceAwsEc2Tag() *schema.Resource {
 	}
 }
 
-func resourceAwsEc2TagCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceTagCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	identifier := d.Get("resource_id").(string)
@@ -56,10 +56,10 @@ func resourceAwsEc2TagCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(tagresource.SetResourceID(identifier, key))
 
-	return resourceAwsEc2TagRead(d, meta)
+	return resourceTagRead(d, meta)
 }
 
-func resourceAwsEc2TagRead(d *schema.ResourceData, meta interface{}) error {
+func resourceTagRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	identifier, key, err := tagresource.GetResourceID(d.Id())
 
@@ -86,7 +86,7 @@ func resourceAwsEc2TagRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsEc2TagUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceTagUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	identifier, key, err := tagresource.GetResourceID(d.Id())
 
@@ -98,10 +98,10 @@ func resourceAwsEc2TagUpdate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error updating %s resource (%s) tag (%s): %w", ec2.ServiceID, identifier, key, err)
 	}
 
-	return resourceAwsEc2TagRead(d, meta)
+	return resourceTagRead(d, meta)
 }
 
-func resourceAwsEc2TagDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceTagDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	identifier, key, err := tagresource.GetResourceID(d.Id())
 

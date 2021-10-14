@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsRedshiftSnapshotScheduleAssociation() *schema.Resource {
+func ResourceSnapshotScheduleAssociation() *schema.Resource {
 
 	return &schema.Resource{
-		Create: resourceAwsRedshiftSnapshotScheduleAssociationCreate,
-		Read:   resourceAwsRedshiftSnapshotScheduleAssociationRead,
-		Delete: resourceAwsRedshiftSnapshotScheduleAssociationDelete,
+		Create: resourceSnapshotScheduleAssociationCreate,
+		Read:   resourceSnapshotScheduleAssociationRead,
+		Delete: resourceSnapshotScheduleAssociationDelete,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				clusterIdentifier, scheduleIdentifier, err := resourceAwsRedshiftSnapshotScheduleAssociationParseId(d.Id())
@@ -48,7 +48,7 @@ func resourceAwsRedshiftSnapshotScheduleAssociation() *schema.Resource {
 	}
 }
 
-func resourceAwsRedshiftSnapshotScheduleAssociationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceSnapshotScheduleAssociationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RedshiftConn
 	clusterIdentifier := d.Get("cluster_identifier").(string)
 	scheduleIdentifier := d.Get("schedule_identifier").(string)
@@ -69,10 +69,10 @@ func resourceAwsRedshiftSnapshotScheduleAssociationCreate(d *schema.ResourceData
 
 	d.SetId(fmt.Sprintf("%s/%s", clusterIdentifier, scheduleIdentifier))
 
-	return resourceAwsRedshiftSnapshotScheduleAssociationRead(d, meta)
+	return resourceSnapshotScheduleAssociationRead(d, meta)
 }
 
-func resourceAwsRedshiftSnapshotScheduleAssociationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceSnapshotScheduleAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RedshiftConn
 	clusterIdentifier, scheduleIdentifier, err := resourceAwsRedshiftSnapshotScheduleAssociationParseId(d.Id())
 	if err != nil {
@@ -115,7 +115,7 @@ func resourceAwsRedshiftSnapshotScheduleAssociationRead(d *schema.ResourceData, 
 	return nil
 }
 
-func resourceAwsRedshiftSnapshotScheduleAssociationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceSnapshotScheduleAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RedshiftConn
 	clusterIdentifier, scheduleIdentifier, err := resourceAwsRedshiftSnapshotScheduleAssociationParseId(d.Id())
 	if err != nil {

@@ -20,13 +20,13 @@ import (
 
 const DefaultSecurityGroupName = "default"
 
-func resourceAwsDefaultSecurityGroup() *schema.Resource {
+func ResourceDefaultSecurityGroup() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
-		Create: resourceAwsDefaultSecurityGroupCreate,
-		Read:   resourceAwsDefaultSecurityGroupRead,
-		Update: resourceAwsDefaultSecurityGroupUpdate,
-		Delete: resourceAwsDefaultSecurityGroupDelete,
+		Create: resourceDefaultSecurityGroupCreate,
+		Read:   resourceDefaultSecurityGroupRead,
+		Update: resourceDefaultSecurityGroupUpdate,
+		Delete: resourceDefaultSecurityGroupDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -193,7 +193,7 @@ func resourceAwsDefaultSecurityGroup() *schema.Resource {
 	}
 }
 
-func resourceAwsDefaultSecurityGroupCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceDefaultSecurityGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -260,10 +260,10 @@ func resourceAwsDefaultSecurityGroupCreate(d *schema.ResourceData, meta interfac
 		return err
 	}
 
-	return resourceAwsDefaultSecurityGroupUpdate(d, meta)
+	return resourceDefaultSecurityGroupUpdate(d, meta)
 }
 
-func resourceAwsDefaultSecurityGroupRead(d *schema.ResourceData, meta interface{}) error {
+func resourceDefaultSecurityGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -325,7 +325,7 @@ func resourceAwsDefaultSecurityGroupRead(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func resourceAwsDefaultSecurityGroupUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceDefaultSecurityGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	group, err := finder.SecurityGroupByID(conn, d.Id())
@@ -353,10 +353,10 @@ func resourceAwsDefaultSecurityGroupUpdate(d *schema.ResourceData, meta interfac
 		}
 	}
 
-	return resourceAwsDefaultSecurityGroupRead(d, meta)
+	return resourceDefaultSecurityGroupRead(d, meta)
 }
 
-func resourceAwsDefaultSecurityGroupDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDefaultSecurityGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[WARN] Cannot destroy Default Security Group. Terraform will remove this resource from the state file, however resources may remain.")
 	return nil
 }

@@ -18,12 +18,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsEbsVolume() *schema.Resource {
+func ResourceEBSVolume() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEbsVolumeCreate,
-		Read:   resourceAwsEbsVolumeRead,
+		Create: resourceEBSVolumeCreate,
+		Read:   resourceEBSVolumeRead,
 		Update: resourceAWSEbsVolumeUpdate,
-		Delete: resourceAwsEbsVolumeDelete,
+		Delete: resourceEBSVolumeDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -102,7 +102,7 @@ func resourceAwsEbsVolume() *schema.Resource {
 	}
 }
 
-func resourceAwsEbsVolumeCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceEBSVolumeCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -165,7 +165,7 @@ func resourceAwsEbsVolumeCreate(d *schema.ResourceData, meta interface{}) error 
 
 	d.SetId(aws.StringValue(result.VolumeId))
 
-	return resourceAwsEbsVolumeRead(d, meta)
+	return resourceEBSVolumeRead(d, meta)
 }
 
 func resourceAWSEbsVolumeUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -225,7 +225,7 @@ func resourceAWSEbsVolumeUpdate(d *schema.ResourceData, meta interface{}) error 
 		}
 	}
 
-	return resourceAwsEbsVolumeRead(d, meta)
+	return resourceEBSVolumeRead(d, meta)
 }
 
 // volumeStateRefreshFunc returns a resource.StateRefreshFunc that is used to watch
@@ -253,7 +253,7 @@ func volumeStateRefreshFunc(conn *ec2.EC2, volumeID string) resource.StateRefres
 	}
 }
 
-func resourceAwsEbsVolumeRead(d *schema.ResourceData, meta interface{}) error {
+func resourceEBSVolumeRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -311,7 +311,7 @@ func resourceAwsEbsVolumeRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsEbsVolumeDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceEBSVolumeDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	input := &ec2.DeleteVolumeInput{

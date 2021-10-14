@@ -12,9 +12,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsEc2TransitGatewayVpcAttachment() *schema.Resource {
+func DataSourceTransitGatewayVPCAttachment() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEc2TransitGatewayVpcAttachmentRead,
+		Read: dataSourceTransitGatewayVPCAttachmentRead,
 
 		Schema: map[string]*schema.Schema{
 			"appliance_mode_support": {
@@ -57,7 +57,7 @@ func dataSourceAwsEc2TransitGatewayVpcAttachment() *schema.Resource {
 	}
 }
 
-func dataSourceAwsEc2TransitGatewayVpcAttachmentRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceTransitGatewayVPCAttachmentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

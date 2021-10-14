@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func testAccAwsEc2TransitGatewayPrefixListReference_basic(t *testing.T) {
@@ -69,7 +70,7 @@ func testAccAwsEc2TransitGatewayPrefixListReference_disappears(t *testing.T) {
 				Config: testAccAwsEc2TransitGatewayPrefixListReferenceConfig_Blackhole(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccAwsEc2TransitGatewayPrefixListReferenceExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsEc2TransitGatewayPrefixListReference(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceTransitGatewayPrefixListReference(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -96,7 +97,7 @@ func testAccAwsEc2TransitGatewayPrefixListReference_disappears_TransitGateway(t 
 				Config: testAccAwsEc2TransitGatewayPrefixListReferenceConfig_Blackhole(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccAwsEc2TransitGatewayPrefixListReferenceExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsEc2TransitGateway(), transitGatewayResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceTransitGateway(), transitGatewayResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

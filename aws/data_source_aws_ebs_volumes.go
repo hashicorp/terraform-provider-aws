@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsEbsVolumes() *schema.Resource {
+func DataSourceEBSVolumes() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEbsVolumesRead,
+		Read: dataSourceEBSVolumesRead,
 		Schema: map[string]*schema.Schema{
 			"filter": ec2CustomFiltersSchema(),
 
@@ -29,7 +29,7 @@ func dataSourceAwsEbsVolumes() *schema.Resource {
 	}
 }
 
-func dataSourceAwsEbsVolumesRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceEBSVolumesRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	req := &ec2.DescribeVolumesInput{}

@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsEgressOnlyInternetGateway() *schema.Resource {
+func ResourceEgressOnlyInternetGateway() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEgressOnlyInternetGatewayCreate,
-		Read:   resourceAwsEgressOnlyInternetGatewayRead,
-		Update: resourceAwsEgressOnlyInternetGatewayUpdate,
-		Delete: resourceAwsEgressOnlyInternetGatewayDelete,
+		Create: resourceEgressOnlyInternetGatewayCreate,
+		Read:   resourceEgressOnlyInternetGatewayRead,
+		Update: resourceEgressOnlyInternetGatewayUpdate,
+		Delete: resourceEgressOnlyInternetGatewayDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -37,7 +37,7 @@ func resourceAwsEgressOnlyInternetGateway() *schema.Resource {
 	}
 }
 
-func resourceAwsEgressOnlyInternetGatewayCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceEgressOnlyInternetGatewayCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -52,10 +52,10 @@ func resourceAwsEgressOnlyInternetGatewayCreate(d *schema.ResourceData, meta int
 
 	d.SetId(aws.StringValue(resp.EgressOnlyInternetGateway.EgressOnlyInternetGatewayId))
 
-	return resourceAwsEgressOnlyInternetGatewayRead(d, meta)
+	return resourceEgressOnlyInternetGatewayRead(d, meta)
 }
 
-func resourceAwsEgressOnlyInternetGatewayRead(d *schema.ResourceData, meta interface{}) error {
+func resourceEgressOnlyInternetGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -122,7 +122,7 @@ func getEc2EgressOnlyInternetGateway(id string, resp *ec2.DescribeEgressOnlyInte
 	return nil
 }
 
-func resourceAwsEgressOnlyInternetGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceEgressOnlyInternetGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	if d.HasChange("tags_all") {
@@ -133,10 +133,10 @@ func resourceAwsEgressOnlyInternetGatewayUpdate(d *schema.ResourceData, meta int
 		}
 	}
 
-	return resourceAwsEgressOnlyInternetGatewayRead(d, meta)
+	return resourceEgressOnlyInternetGatewayRead(d, meta)
 }
 
-func resourceAwsEgressOnlyInternetGatewayDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceEgressOnlyInternetGatewayDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	_, err := conn.DeleteEgressOnlyInternetGateway(&ec2.DeleteEgressOnlyInternetGatewayInput{

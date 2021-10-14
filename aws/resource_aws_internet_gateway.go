@@ -15,12 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsInternetGateway() *schema.Resource {
+func ResourceInternetGateway() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsInternetGatewayCreate,
-		Read:   resourceAwsInternetGatewayRead,
-		Update: resourceAwsInternetGatewayUpdate,
-		Delete: resourceAwsInternetGatewayDelete,
+		Create: resourceInternetGatewayCreate,
+		Read:   resourceInternetGatewayRead,
+		Update: resourceInternetGatewayUpdate,
+		Delete: resourceInternetGatewayDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -46,7 +46,7 @@ func resourceAwsInternetGateway() *schema.Resource {
 	}
 }
 
-func resourceAwsInternetGatewayCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceInternetGatewayCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -94,10 +94,10 @@ func resourceAwsInternetGatewayCreate(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("error attaching EC2 Internet Gateway (%s): %s", d.Id(), err)
 	}
 
-	return resourceAwsInternetGatewayRead(d, meta)
+	return resourceInternetGatewayRead(d, meta)
 }
 
-func resourceAwsInternetGatewayRead(d *schema.ResourceData, meta interface{}) error {
+func resourceInternetGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -146,7 +146,7 @@ func resourceAwsInternetGatewayRead(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func resourceAwsInternetGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceInternetGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("vpc_id") {
 		// If we're already attached, detach it first
 		if err := resourceAwsInternetGatewayDetach(d, meta); err != nil {
@@ -169,10 +169,10 @@ func resourceAwsInternetGatewayUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	return resourceAwsInternetGatewayRead(d, meta)
+	return resourceInternetGatewayRead(d, meta)
 }
 
-func resourceAwsInternetGatewayDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceInternetGatewayDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	// Detach if it is attached

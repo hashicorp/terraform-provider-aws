@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsEc2LocalGatewayVirtualInterface() *schema.Resource {
+func DataSourceLocalGatewayVirtualInterface() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEc2LocalGatewayVirtualInterfaceRead,
+		Read: dataSourceLocalGatewayVirtualInterfaceRead,
 
 		Schema: map[string]*schema.Schema{
 			"filter": ec2CustomFiltersSchema(),
@@ -55,7 +55,7 @@ func dataSourceAwsEc2LocalGatewayVirtualInterface() *schema.Resource {
 	}
 }
 
-func dataSourceAwsEc2LocalGatewayVirtualInterfaceRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceLocalGatewayVirtualInterfaceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

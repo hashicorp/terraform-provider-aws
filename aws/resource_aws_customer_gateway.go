@@ -16,12 +16,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsCustomerGateway() *schema.Resource {
+func ResourceCustomerGateway() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCustomerGatewayCreate,
-		Read:   resourceAwsCustomerGatewayRead,
-		Update: resourceAwsCustomerGatewayUpdate,
-		Delete: resourceAwsCustomerGatewayDelete,
+		Create: resourceCustomerGatewayCreate,
+		Read:   resourceCustomerGatewayRead,
+		Update: resourceCustomerGatewayUpdate,
+		Delete: resourceCustomerGatewayDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -73,7 +73,7 @@ func resourceAwsCustomerGateway() *schema.Resource {
 	}
 }
 
-func resourceAwsCustomerGatewayCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceCustomerGatewayCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -138,7 +138,7 @@ func resourceAwsCustomerGatewayCreate(d *schema.ResourceData, meta interface{}) 
 			"Error waiting for customer gateway (%s) to become ready: %s", cgId, err)
 	}
 
-	return resourceAwsCustomerGatewayRead(d, meta)
+	return resourceCustomerGatewayRead(d, meta)
 }
 
 func customerGatewayRefreshFunc(conn *ec2.EC2, gatewayId string) resource.StateRefreshFunc {
@@ -207,7 +207,7 @@ func resourceAwsCustomerGatewayExists(vpnType, ipAddress, bgpAsn, deviceName str
 	return false, nil
 }
 
-func resourceAwsCustomerGatewayRead(d *schema.ResourceData, meta interface{}) error {
+func resourceCustomerGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -271,7 +271,7 @@ func resourceAwsCustomerGatewayRead(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func resourceAwsCustomerGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceCustomerGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	if d.HasChange("tags_all") {
@@ -282,10 +282,10 @@ func resourceAwsCustomerGatewayUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	return resourceAwsCustomerGatewayRead(d, meta)
+	return resourceCustomerGatewayRead(d, meta)
 }
 
-func resourceAwsCustomerGatewayDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceCustomerGatewayDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	_, err := conn.DeleteCustomerGateway(&ec2.DeleteCustomerGatewayInput{

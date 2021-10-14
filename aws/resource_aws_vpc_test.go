@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 // add sweeper to delete known test vpcs
@@ -68,7 +69,7 @@ func testSweepVPCs(region string) error {
 				continue
 			}
 
-			r := resourceAwsVpc()
+			r := ResourceVPC()
 			d := r.Data(nil)
 			d.SetId(id)
 

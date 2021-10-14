@@ -11,11 +11,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSpotDataFeedSubscription() *schema.Resource {
+func ResourceSpotDataFeedSubscription() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSpotDataFeedSubscriptionCreate,
-		Read:   resourceAwsSpotDataFeedSubscriptionRead,
-		Delete: resourceAwsSpotDataFeedSubscriptionDelete,
+		Create: resourceSpotDataFeedSubscriptionCreate,
+		Read:   resourceSpotDataFeedSubscriptionRead,
+		Delete: resourceSpotDataFeedSubscriptionDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -35,7 +35,7 @@ func resourceAwsSpotDataFeedSubscription() *schema.Resource {
 	}
 }
 
-func resourceAwsSpotDataFeedSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceSpotDataFeedSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	params := &ec2.CreateSpotDatafeedSubscriptionInput{
@@ -54,9 +54,9 @@ func resourceAwsSpotDataFeedSubscriptionCreate(d *schema.ResourceData, meta inte
 
 	d.SetId("spot-datafeed-subscription")
 
-	return resourceAwsSpotDataFeedSubscriptionRead(d, meta)
+	return resourceSpotDataFeedSubscriptionRead(d, meta)
 }
-func resourceAwsSpotDataFeedSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
+func resourceSpotDataFeedSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	resp, err := conn.DescribeSpotDatafeedSubscription(&ec2.DescribeSpotDatafeedSubscriptionInput{})
@@ -82,7 +82,7 @@ func resourceAwsSpotDataFeedSubscriptionRead(d *schema.ResourceData, meta interf
 
 	return nil
 }
-func resourceAwsSpotDataFeedSubscriptionDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceSpotDataFeedSubscriptionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	log.Printf("[INFO] Deleting Spot Datafeed Subscription")

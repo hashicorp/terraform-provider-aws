@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -35,7 +36,7 @@ func testSweepSagemakerFlowDefinitions(region string) error {
 	err = conn.ListFlowDefinitionsPages(&sagemaker.ListFlowDefinitionsInput{}, func(page *sagemaker.ListFlowDefinitionsOutput, lastPage bool) bool {
 		for _, flowDefinition := range page.FlowDefinitionSummaries {
 
-			r := resourceAwsSagemakerFlowDefinition()
+			r := ResourceFlowDefinition()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(flowDefinition.FlowDefinitionName))
 			err := r.Delete(d, client)
@@ -227,8 +228,8 @@ func testAccAWSSagemakerFlowDefinition_disappears(t *testing.T) {
 				Config: testAccAWSSagemakerFlowDefinitionBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerFlowDefinitionExists(resourceName, &flowDefinition),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSagemakerFlowDefinition(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSagemakerFlowDefinition(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceFlowDefinition(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceFlowDefinition(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

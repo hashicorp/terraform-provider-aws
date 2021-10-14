@@ -16,12 +16,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsVpcDhcpOptions() *schema.Resource {
+func ResourceVPCDHCPOptions() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsVpcDhcpOptionsCreate,
-		Read:   resourceAwsVpcDhcpOptionsRead,
-		Update: resourceAwsVpcDhcpOptionsUpdate,
-		Delete: resourceAwsVpcDhcpOptionsDelete,
+		Create: resourceVPCDHCPOptionsCreate,
+		Read:   resourceVPCDHCPOptionsRead,
+		Update: resourceVPCDHCPOptionsUpdate,
+		Delete: resourceVPCDHCPOptionsDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -78,7 +78,7 @@ func resourceAwsVpcDhcpOptions() *schema.Resource {
 	}
 }
 
-func resourceAwsVpcDhcpOptionsCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCDHCPOptionsCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -150,10 +150,10 @@ func resourceAwsVpcDhcpOptionsCreate(d *schema.ResourceData, meta interface{}) e
 			d.Id(), err)
 	}
 
-	return resourceAwsVpcDhcpOptionsRead(d, meta)
+	return resourceVPCDHCPOptionsRead(d, meta)
 }
 
-func resourceAwsVpcDhcpOptionsRead(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCDHCPOptionsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -221,7 +221,7 @@ func resourceAwsVpcDhcpOptionsRead(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func resourceAwsVpcDhcpOptionsUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCDHCPOptionsUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	if d.HasChange("tags_all") {
@@ -231,10 +231,10 @@ func resourceAwsVpcDhcpOptionsUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
-	return resourceAwsVpcDhcpOptionsRead(d, meta)
+	return resourceVPCDHCPOptionsRead(d, meta)
 }
 
-func resourceAwsVpcDhcpOptionsDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCDHCPOptionsDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	err := resource.Retry(3*time.Minute, func() *resource.RetryError {

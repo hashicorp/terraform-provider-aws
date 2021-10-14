@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsEc2CoipPools() *schema.Resource {
+func DataSourceCoIPPools() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEc2CoipPoolsRead,
+		Read: dataSourceCoIPPoolsRead,
 		Schema: map[string]*schema.Schema{
 			"filter": ec2CustomFiltersSchema(),
 
@@ -28,7 +28,7 @@ func dataSourceAwsEc2CoipPools() *schema.Resource {
 	}
 }
 
-func dataSourceAwsEc2CoipPoolsRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceCoIPPoolsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	req := &ec2.DescribeCoipPoolsInput{}

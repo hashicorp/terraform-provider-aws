@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAwsEc2LocalGatewayRouteTableVpcAssociation_basic(t *testing.T) {
@@ -58,7 +59,7 @@ func TestAccAwsEc2LocalGatewayRouteTableVpcAssociation_disappears(t *testing.T) 
 				Config: testAccAwsEc2LocalGatewayRouteTableVpcAssociationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsEc2LocalGatewayRouteTableVpcAssociationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsEc2LocalGatewayRouteTableVpcAssociation(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceLocalGatewayRouteTableVPCAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSEMRInstanceFleet_basic(t *testing.T) {
@@ -153,7 +154,7 @@ func TestAccAWSEMRInstanceFleet_disappears(t *testing.T) {
 					testAccCheckAWSEmrInstanceFleetExists(resourceName, &fleet),
 					// EMR Instance Fleet can only be scaled down and are not removed until the
 					// Cluster is removed. Verify EMR Cluster disappearance handling.
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsEMRCluster(), emrClusterResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceCluster(), emrClusterResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

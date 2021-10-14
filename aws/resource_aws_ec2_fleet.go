@@ -15,12 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsEc2Fleet() *schema.Resource {
+func ResourceFleet() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEc2FleetCreate,
-		Read:   resourceAwsEc2FleetRead,
-		Update: resourceAwsEc2FleetUpdate,
-		Delete: resourceAwsEc2FleetDelete,
+		Create: resourceFleetCreate,
+		Read:   resourceFleetRead,
+		Update: resourceFleetUpdate,
+		Delete: resourceFleetDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -339,7 +339,7 @@ func resourceAwsEc2Fleet() *schema.Resource {
 	}
 }
 
-func resourceAwsEc2FleetCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceFleetCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -397,10 +397,10 @@ func resourceAwsEc2FleetCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error waiting for EC2 Fleet (%s) activation: %s", d.Id(), err)
 	}
 
-	return resourceAwsEc2FleetRead(d, meta)
+	return resourceFleetRead(d, meta)
 }
 
-func resourceAwsEc2FleetRead(d *schema.ResourceData, meta interface{}) error {
+func resourceFleetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -499,7 +499,7 @@ func resourceAwsEc2FleetRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsEc2FleetUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceFleetUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	input := &ec2.ModifyFleetInput{
@@ -540,10 +540,10 @@ func resourceAwsEc2FleetUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	return resourceAwsEc2FleetRead(d, meta)
+	return resourceFleetRead(d, meta)
 }
 
-func resourceAwsEc2FleetDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceFleetDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	input := &ec2.DeleteFleetsInput{

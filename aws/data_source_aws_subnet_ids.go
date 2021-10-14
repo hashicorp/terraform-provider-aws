@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsSubnetIDs() *schema.Resource {
+func DataSourceSubnetIDs() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsSubnetIDsRead,
+		Read: dataSourceSubnetIDsRead,
 		Schema: map[string]*schema.Schema{
 			"filter": ec2CustomFiltersSchema(),
 
@@ -34,7 +34,7 @@ func dataSourceAwsSubnetIDs() *schema.Resource {
 	}
 }
 
-func dataSourceAwsSubnetIDsRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceSubnetIDsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	req := &ec2.DescribeSubnetsInput{}

@@ -15,12 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsEMRInstanceFleet() *schema.Resource {
+func ResourceInstanceFleet() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEMRInstanceFleetCreate,
-		Read:   resourceAwsEMRInstanceFleetRead,
-		Update: resourceAwsEMRInstanceFleetUpdate,
-		Delete: resourceAwsEMRInstanceFleetDelete,
+		Create: resourceInstanceFleetCreate,
+		Read:   resourceInstanceFleetRead,
+		Update: resourceInstanceFleetUpdate,
+		Delete: resourceInstanceFleetDelete,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
@@ -211,7 +211,7 @@ func resourceAwsEMRInstanceFleet() *schema.Resource {
 	}
 }
 
-func resourceAwsEMRInstanceFleetCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceInstanceFleetCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EMRConn
 
 	addInstanceFleetInput := &emr.AddInstanceFleetInput{
@@ -242,7 +242,7 @@ func resourceAwsEMRInstanceFleetCreate(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
-func resourceAwsEMRInstanceFleetRead(d *schema.ResourceData, meta interface{}) error {
+func resourceInstanceFleetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EMRConn
 	instanceFleets, err := fetchAllEMRInstanceFleets(conn, d.Get("cluster_id").(string))
 
@@ -285,7 +285,7 @@ func findInstanceFleetById(instanceFleets []*emr.InstanceFleet, fleetId string) 
 	return nil
 }
 
-func resourceAwsEMRInstanceFleetUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceInstanceFleetUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EMRConn
 
 	log.Printf("[DEBUG] Modify EMR task fleet")
@@ -320,7 +320,7 @@ func resourceAwsEMRInstanceFleetUpdate(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("error waiting for instance (%s) to terminate: %s", d.Id(), err)
 	}
 
-	return resourceAwsEMRInstanceFleetRead(d, meta)
+	return resourceInstanceFleetRead(d, meta)
 }
 
 func instanceFleetStateRefresh(conn *emr.EMR, clusterID, ifID string) resource.StateRefreshFunc {
@@ -345,7 +345,7 @@ func instanceFleetStateRefresh(conn *emr.EMR, clusterID, ifID string) resource.S
 	}
 }
 
-func resourceAwsEMRInstanceFleetDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceInstanceFleetDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[WARN] AWS EMR Instance Fleet does not support DELETE; resizing cluster to zero before removing from state")
 	conn := meta.(*conns.AWSClient).EMRConn
 

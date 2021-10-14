@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func testAccAwsEc2ClientVpnRoute_basic(t *testing.T) {
@@ -97,7 +98,7 @@ func testAccAwsEc2ClientVpnRoute_disappears(t *testing.T) {
 				Config: testAccEc2ClientVpnRouteConfigBasic(rStr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsEc2ClientVpnRouteExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsEc2ClientVpnRoute(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceClientVPNRoute(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

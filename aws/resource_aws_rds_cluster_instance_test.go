@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSRDSClusterInstance_basic(t *testing.T) {
@@ -243,7 +244,7 @@ func TestAccAWSRDSClusterInstance_disappears(t *testing.T) {
 				Config: testAccAWSClusterInstanceConfig(sdkacctest.RandInt()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSClusterInstanceExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsRDSClusterInstance(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceClusterInstance(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

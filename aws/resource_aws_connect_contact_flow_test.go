@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 //Serialized acceptance tests due to Connect account limits (max 2 parallel tests)
@@ -149,7 +150,7 @@ func testAccAwsConnectContactFlow_disappears_ConnectInstance(t *testing.T) {
 				Config: testAccAwsConnectContactFlowConfigBasic(rName, rName2, "Disappear"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsConnectContactFlowExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsConnectInstance(), instanceResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceInstance(), instanceResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

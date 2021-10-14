@@ -24,13 +24,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsNetworkAcl() *schema.Resource {
+func ResourceNetworkACL() *schema.Resource {
 
 	return &schema.Resource{
-		Create: resourceAwsNetworkAclCreate,
-		Read:   resourceAwsNetworkAclRead,
-		Delete: resourceAwsNetworkAclDelete,
-		Update: resourceAwsNetworkAclUpdate,
+		Create: resourceNetworkACLCreate,
+		Read:   resourceNetworkACLRead,
+		Delete: resourceNetworkACLDelete,
+		Update: resourceNetworkACLUpdate,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -193,7 +193,7 @@ func resourceAwsNetworkAcl() *schema.Resource {
 	}
 }
 
-func resourceAwsNetworkAclCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceNetworkACLCreate(d *schema.ResourceData, meta interface{}) error {
 
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -265,10 +265,10 @@ func resourceAwsNetworkAclCreate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	return resourceAwsNetworkAclRead(d, meta)
+	return resourceNetworkACLRead(d, meta)
 }
 
-func resourceAwsNetworkAclRead(d *schema.ResourceData, meta interface{}) error {
+func resourceNetworkACLRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -383,7 +383,7 @@ func resourceAwsNetworkAclRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsNetworkAclUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceNetworkACLUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	if d.HasChange("ingress") {
@@ -471,7 +471,7 @@ func resourceAwsNetworkAclUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	return resourceAwsNetworkAclRead(d, meta)
+	return resourceNetworkACLRead(d, meta)
 }
 
 func updateNetworkAclEntries(d *schema.ResourceData, entryType string, conn *ec2.EC2) error {
@@ -580,7 +580,7 @@ func updateNetworkAclEntries(d *schema.ResourceData, entryType string, conn *ec2
 	return nil
 }
 
-func resourceAwsNetworkAclDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceNetworkACLDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	log.Printf("[INFO] Deleting Network Acl: %s", d.Id())

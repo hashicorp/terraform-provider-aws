@@ -11,11 +11,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsRoute53VPCAssociationAuthorization() *schema.Resource {
+func ResourceVPCAssociationAuthorization() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRoute53VPCAssociationAuthorizationCreate,
-		Read:   resourceAwsRoute53VPCAssociationAuthorizationRead,
-		Delete: resourceAwsRoute53VPCAssociationAuthorizationDelete,
+		Create: resourceVPCAssociationAuthorizationCreate,
+		Read:   resourceVPCAssociationAuthorizationRead,
+		Delete: resourceVPCAssociationAuthorizationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -43,7 +43,7 @@ func resourceAwsRoute53VPCAssociationAuthorization() *schema.Resource {
 	}
 }
 
-func resourceAwsRoute53VPCAssociationAuthorizationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCAssociationAuthorizationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53Conn
 
 	req := &route53.CreateVPCAssociationAuthorizationInput{
@@ -67,10 +67,10 @@ func resourceAwsRoute53VPCAssociationAuthorizationCreate(d *schema.ResourceData,
 	// Store association id
 	d.SetId(fmt.Sprintf("%s:%s", *req.HostedZoneId, *req.VPC.VPCId))
 
-	return resourceAwsRoute53VPCAssociationAuthorizationRead(d, meta)
+	return resourceVPCAssociationAuthorizationRead(d, meta)
 }
 
-func resourceAwsRoute53VPCAssociationAuthorizationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCAssociationAuthorizationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53Conn
 
 	zone_id, vpc_id, err := resourceAwsRoute53VPCAssociationAuthorizationParseId(d.Id())
@@ -119,7 +119,7 @@ func resourceAwsRoute53VPCAssociationAuthorizationRead(d *schema.ResourceData, m
 	return nil
 }
 
-func resourceAwsRoute53VPCAssociationAuthorizationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCAssociationAuthorizationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53Conn
 
 	zone_id, vpc_id, err := resourceAwsRoute53VPCAssociationAuthorizationParseId(d.Id())

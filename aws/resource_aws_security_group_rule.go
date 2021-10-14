@@ -22,13 +22,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSecurityGroupRule() *schema.Resource {
+func ResourceSecurityGroupRule() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
-		Create: resourceAwsSecurityGroupRuleCreate,
-		Read:   resourceAwsSecurityGroupRuleRead,
-		Update: resourceAwsSecurityGroupRuleUpdate,
-		Delete: resourceAwsSecurityGroupRuleDelete,
+		Create: resourceSecurityGroupRuleCreate,
+		Read:   resourceSecurityGroupRuleRead,
+		Update: resourceSecurityGroupRuleUpdate,
+		Delete: resourceSecurityGroupRuleDelete,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				importParts, err := validateSecurityGroupRuleImportString(d.Id())
@@ -152,12 +152,12 @@ func resourceAwsSecurityGroupRule() *schema.Resource {
 	}
 }
 
-func resourceAwsSecurityGroupRuleCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceSecurityGroupRuleCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	sg_id := d.Get("security_group_id").(string)
 
-	awsMutexKV.Lock(sg_id)
-	defer awsMutexKV.Unlock(sg_id)
+	conns.GlobalMutexKV.Lock(sg_id)
+	defer conns.GlobalMutexKV.Unlock(sg_id)
 
 	sg, err := finder.SecurityGroupByID(conn, sg_id)
 	if err != nil {
@@ -279,7 +279,7 @@ information and instructions for recovery. Error: %w`, sg_id, autherr)
 	return nil
 }
 
-func resourceAwsSecurityGroupRuleRead(d *schema.ResourceData, meta interface{}) error {
+func resourceSecurityGroupRuleRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	sg_id := d.Get("security_group_id").(string)
 	sg, err := finder.SecurityGroupByID(conn, sg_id)
@@ -341,7 +341,7 @@ func resourceAwsSecurityGroupRuleRead(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func resourceAwsSecurityGroupRuleUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceSecurityGroupRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	if d.HasChange("description") {
@@ -350,15 +350,15 @@ func resourceAwsSecurityGroupRuleUpdate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	return resourceAwsSecurityGroupRuleRead(d, meta)
+	return resourceSecurityGroupRuleRead(d, meta)
 }
 
-func resourceAwsSecurityGroupRuleDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceSecurityGroupRuleDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	sg_id := d.Get("security_group_id").(string)
 
-	awsMutexKV.Lock(sg_id)
-	defer awsMutexKV.Unlock(sg_id)
+	conns.GlobalMutexKV.Lock(sg_id)
+	defer conns.GlobalMutexKV.Unlock(sg_id)
 
 	sg, err := finder.SecurityGroupByID(conn, sg_id)
 	if err != nil {
@@ -857,8 +857,8 @@ func validateAwsSecurityGroupRule(d *schema.ResourceData) error {
 func resourceSecurityGroupRuleDescriptionUpdate(conn *ec2.EC2, d *schema.ResourceData) error {
 	sg_id := d.Get("security_group_id").(string)
 
-	awsMutexKV.Lock(sg_id)
-	defer awsMutexKV.Unlock(sg_id)
+	conns.GlobalMutexKV.Lock(sg_id)
+	defer conns.GlobalMutexKV.Unlock(sg_id)
 
 	sg, err := finder.SecurityGroupByID(conn, sg_id)
 	if err != nil {

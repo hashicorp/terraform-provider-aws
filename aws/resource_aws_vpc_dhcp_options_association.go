@@ -16,12 +16,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsVpcDhcpOptionsAssociation() *schema.Resource {
+func ResourceVPCDHCPOptionsAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsVpcDhcpOptionsAssociationCreate,
-		Read:   resourceAwsVpcDhcpOptionsAssociationRead,
-		Update: resourceAwsVpcDhcpOptionsAssociationUpdate,
-		Delete: resourceAwsVpcDhcpOptionsAssociationDelete,
+		Create: resourceVPCDHCPOptionsAssociationCreate,
+		Read:   resourceVPCDHCPOptionsAssociationRead,
+		Update: resourceVPCDHCPOptionsAssociationUpdate,
+		Delete: resourceVPCDHCPOptionsAssociationDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsVpcDhcpOptionsAssociationImport,
 		},
@@ -62,7 +62,7 @@ func resourceAwsVpcDhcpOptionsAssociationImport(d *schema.ResourceData, meta int
 	return []*schema.ResourceData{d}, nil
 }
 
-func resourceAwsVpcDhcpOptionsAssociationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCDHCPOptionsAssociationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	vpcId := d.Get("vpc_id").(string)
@@ -82,10 +82,10 @@ func resourceAwsVpcDhcpOptionsAssociationCreate(d *schema.ResourceData, meta int
 
 	log.Printf("[INFO] VPC DHCP Association ID: %s", d.Id())
 
-	return resourceAwsVpcDhcpOptionsAssociationRead(d, meta)
+	return resourceVPCDHCPOptionsAssociationRead(d, meta)
 }
 
-func resourceAwsVpcDhcpOptionsAssociationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCDHCPOptionsAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	var vpc *ec2.Vpc
@@ -137,15 +137,15 @@ func resourceAwsVpcDhcpOptionsAssociationRead(d *schema.ResourceData, meta inter
 }
 
 // DHCP Options Asociations cannot be updated.
-func resourceAwsVpcDhcpOptionsAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
-	return resourceAwsVpcDhcpOptionsAssociationCreate(d, meta)
+func resourceVPCDHCPOptionsAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
+	return resourceVPCDHCPOptionsAssociationCreate(d, meta)
 }
 
 const VPCDefaultOptionsID = "default"
 
 // AWS does not provide an API to disassociate a DHCP Options set from a VPC.
 // So, we do this by setting the VPC to the default DHCP Options Set.
-func resourceAwsVpcDhcpOptionsAssociationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCDHCPOptionsAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	log.Printf("[INFO] Disassociating DHCP Options Set %s from VPC %s...", d.Get("dhcp_options_id"), d.Get("vpc_id"))

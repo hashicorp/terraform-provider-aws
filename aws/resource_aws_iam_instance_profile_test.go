@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -46,7 +47,7 @@ func testSweepIamInstanceProfile(region string) error {
 				continue
 			}
 
-			r := resourceAwsIamInstanceProfile()
+			r := ResourceInstanceProfile()
 			d := r.Data(nil)
 			d.SetId(name)
 
@@ -227,7 +228,7 @@ func TestAccAWSIAMInstanceProfile_disappears(t *testing.T) {
 				Config: testAccAwsIamInstanceProfileConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSInstanceProfileExists(resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsIamInstanceProfile(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceInstanceProfile(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -250,7 +251,7 @@ func TestAccAWSIAMInstanceProfile_disappears_role(t *testing.T) {
 				Config: testAccAwsIamInstanceProfileConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSInstanceProfileExists(resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsIamRole(), "aws_iam_role.test"),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceRole(), "aws_iam_role.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -11,11 +11,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsEc2TransitGatewayRouteTableAssociation() *schema.Resource {
+func ResourceTransitGatewayRouteTableAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEc2TransitGatewayRouteTableAssociationCreate,
-		Read:   resourceAwsEc2TransitGatewayRouteTableAssociationRead,
-		Delete: resourceAwsEc2TransitGatewayRouteTableAssociationDelete,
+		Create: resourceTransitGatewayRouteTableAssociationCreate,
+		Read:   resourceTransitGatewayRouteTableAssociationRead,
+		Delete: resourceTransitGatewayRouteTableAssociationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -45,7 +45,7 @@ func resourceAwsEc2TransitGatewayRouteTableAssociation() *schema.Resource {
 	}
 }
 
-func resourceAwsEc2TransitGatewayRouteTableAssociationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceTransitGatewayRouteTableAssociationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	transitGatewayAttachmentID := d.Get("transit_gateway_attachment_id").(string)
@@ -67,10 +67,10 @@ func resourceAwsEc2TransitGatewayRouteTableAssociationCreate(d *schema.ResourceD
 		return fmt.Errorf("error waiting for EC2 Transit Gateway Route Table (%s) association (%s): %s", transitGatewayRouteTableID, transitGatewayAttachmentID, err)
 	}
 
-	return resourceAwsEc2TransitGatewayRouteTableAssociationRead(d, meta)
+	return resourceTransitGatewayRouteTableAssociationRead(d, meta)
 }
 
-func resourceAwsEc2TransitGatewayRouteTableAssociationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceTransitGatewayRouteTableAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	transitGatewayRouteTableID, transitGatewayAttachmentID, err := decodeEc2TransitGatewayRouteTableAssociationID(d.Id())
@@ -110,7 +110,7 @@ func resourceAwsEc2TransitGatewayRouteTableAssociationRead(d *schema.ResourceDat
 	return nil
 }
 
-func resourceAwsEc2TransitGatewayRouteTableAssociationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceTransitGatewayRouteTableAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	transitGatewayRouteTableID, transitGatewayAttachmentID, err := decodeEc2TransitGatewayRouteTableAssociationID(d.Id())

@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSKinesisAnalyticsV2ApplicationSnapshot_basic(t *testing.T) {
@@ -60,7 +61,7 @@ func TestAccAWSKinesisAnalyticsV2ApplicationSnapshot_disappears(t *testing.T) {
 				Config: testAccKinesisAnalyticsV2ApplicationSnapshotConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsV2ApplicationSnapshotExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsKinesisAnalyticsV2ApplicationSnapshot(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceApplicationSnapshot(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -84,7 +85,7 @@ func TestAccAWSKinesisAnalyticsV2ApplicationSnapshot_disappears_Application(t *t
 				Config: testAccKinesisAnalyticsV2ApplicationSnapshotConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsV2ApplicationSnapshotExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsKinesisAnalyticsV2Application(), applicationResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceApplication(), applicationResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

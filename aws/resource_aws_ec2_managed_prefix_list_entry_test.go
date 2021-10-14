@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAwsEc2ManagedPrefixListEntry_ipv4(t *testing.T) {
@@ -162,7 +163,7 @@ func TestAccAwsEc2ManagedPrefixListEntry_disappears(t *testing.T) {
 				Config: testAccAwsEc2ManagedPrefixListEntryIpv4Config(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSEc2ManagedPrefixListEntryExists(resourceName, &entry),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsEc2ManagedPrefixListEntry(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceManagedPrefixListEntry(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

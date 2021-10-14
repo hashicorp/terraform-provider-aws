@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSRedshiftSnapshotCopyGrant_basic(t *testing.T) {
@@ -99,7 +100,7 @@ func TestAccAWSRedshiftSnapshotCopyGrant_disappears(t *testing.T) {
 				Config: testAccAWSRedshiftSnapshotCopyGrant_Basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRedshiftSnapshotCopyGrantExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsRedshiftSnapshotCopyGrant(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceSnapshotCopyGrant(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

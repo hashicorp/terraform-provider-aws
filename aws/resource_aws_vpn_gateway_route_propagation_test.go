@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSVPNGatewayRoutePropagation_basic(t *testing.T) {
@@ -49,7 +50,7 @@ func TestAccAWSVPNGatewayRoutePropagation_disappears(t *testing.T) {
 				Config: testAccAWSVPNGatewayRoutePropagationConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSVPNGatewayRoutePropagationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsVpnGatewayRoutePropagation(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceVPNGatewayRoutePropagation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

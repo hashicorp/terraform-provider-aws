@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSVpnGatewayAttachment_basic(t *testing.T) {
@@ -50,7 +51,7 @@ func TestAccAWSVpnGatewayAttachment_disappears(t *testing.T) {
 				Config: testAccVpnGatewayAttachmentConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpnGatewayAttachmentExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsVpnGatewayAttachment(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceVPNGatewayAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

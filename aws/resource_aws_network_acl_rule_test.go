@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSNetworkAclRule_basic(t *testing.T) {
@@ -105,7 +106,7 @@ func TestAccAWSNetworkAclRule_disappears_NetworkAcl(t *testing.T) {
 				Config: testAccAWSNetworkAclRuleBasicConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSNetworkAclExists(resourceName, &networkAcl),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsNetworkAcl(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceNetworkACL(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

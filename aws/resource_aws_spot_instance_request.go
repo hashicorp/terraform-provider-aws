@@ -24,12 +24,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSpotInstanceRequest() *schema.Resource {
+func ResourceSpotInstanceRequest() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSpotInstanceRequestCreate,
-		Read:   resourceAwsSpotInstanceRequestRead,
-		Delete: resourceAwsSpotInstanceRequestDelete,
-		Update: resourceAwsSpotInstanceRequestUpdate,
+		Create: resourceSpotInstanceRequestCreate,
+		Read:   resourceSpotInstanceRequestRead,
+		Delete: resourceSpotInstanceRequestDelete,
+		Update: resourceSpotInstanceRequestUpdate,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -41,7 +41,7 @@ func resourceAwsSpotInstanceRequest() *schema.Resource {
 
 		Schema: func() map[string]*schema.Schema {
 			// The Spot Instance Request Schema is based on the AWS Instance schema.
-			s := resourceAwsInstance().Schema
+			s := ResourceInstance().Schema
 
 			// Everything on a spot instance is ForceNew except tags
 			for k, v := range s {
@@ -159,7 +159,7 @@ func resourceAwsSpotInstanceRequest() *schema.Resource {
 	}
 }
 
-func resourceAwsSpotInstanceRequestCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceSpotInstanceRequestCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -282,11 +282,11 @@ func resourceAwsSpotInstanceRequestCreate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	return resourceAwsSpotInstanceRequestRead(d, meta)
+	return resourceSpotInstanceRequestRead(d, meta)
 }
 
 // Update spot state, etc
-func resourceAwsSpotInstanceRequestRead(d *schema.ResourceData, meta interface{}) error {
+func resourceSpotInstanceRequestRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -470,7 +470,7 @@ func readInstance(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsSpotInstanceRequestUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceSpotInstanceRequestUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	if d.HasChange("tags_all") {
@@ -481,10 +481,10 @@ func resourceAwsSpotInstanceRequestUpdate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	return resourceAwsSpotInstanceRequestRead(d, meta)
+	return resourceSpotInstanceRequestRead(d, meta)
 }
 
-func resourceAwsSpotInstanceRequestDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceSpotInstanceRequestDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	log.Printf("[INFO] Cancelling spot request: %s", d.Id())

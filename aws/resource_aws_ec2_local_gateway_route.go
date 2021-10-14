@@ -17,11 +17,11 @@ const (
 	ec2LocalGatewayRouteEventualConsistencyTimeout = 1 * time.Minute
 )
 
-func resourceAwsEc2LocalGatewayRoute() *schema.Resource {
+func ResourceLocalGatewayRoute() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEc2LocalGatewayRouteCreate,
-		Read:   resourceAwsEc2LocalGatewayRouteRead,
-		Delete: resourceAwsEc2LocalGatewayRouteDelete,
+		Create: resourceLocalGatewayRouteCreate,
+		Read:   resourceLocalGatewayRouteRead,
+		Delete: resourceLocalGatewayRouteDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -47,7 +47,7 @@ func resourceAwsEc2LocalGatewayRoute() *schema.Resource {
 	}
 }
 
-func resourceAwsEc2LocalGatewayRouteCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceLocalGatewayRouteCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	destination := d.Get("destination_cidr_block").(string)
@@ -67,10 +67,10 @@ func resourceAwsEc2LocalGatewayRouteCreate(d *schema.ResourceData, meta interfac
 
 	d.SetId(fmt.Sprintf("%s_%s", localGatewayRouteTableID, destination))
 
-	return resourceAwsEc2LocalGatewayRouteRead(d, meta)
+	return resourceLocalGatewayRouteRead(d, meta)
 }
 
-func resourceAwsEc2LocalGatewayRouteRead(d *schema.ResourceData, meta interface{}) error {
+func resourceLocalGatewayRouteRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	localGatewayRouteTableID, destination, err := decodeEc2LocalGatewayRouteID(d.Id())
@@ -134,7 +134,7 @@ func resourceAwsEc2LocalGatewayRouteRead(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func resourceAwsEc2LocalGatewayRouteDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceLocalGatewayRouteDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	localGatewayRouteTableID, destination, err := decodeEc2LocalGatewayRouteID(d.Id())

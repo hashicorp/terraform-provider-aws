@@ -8,9 +8,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsEbsEncryptionByDefault() *schema.Resource {
+func DataSourceEBSEncryptionByDefault() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEbsEncryptionByDefaultRead,
+		Read: dataSourceEBSEncryptionByDefaultRead,
 
 		Schema: map[string]*schema.Schema{
 			"enabled": {
@@ -20,7 +20,7 @@ func dataSourceAwsEbsEncryptionByDefault() *schema.Resource {
 		},
 	}
 }
-func dataSourceAwsEbsEncryptionByDefaultRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceEBSEncryptionByDefaultRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	res, err := conn.GetEbsEncryptionByDefault(&ec2.GetEbsEncryptionByDefaultInput{})

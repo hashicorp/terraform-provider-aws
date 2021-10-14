@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsVpcPeeringConnectionAccepter() *schema.Resource {
+func ResourceVPCPeeringConnectionAccepter() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsVPCPeeringAccepterCreate,
 		Read:   resourceAwsVPCPeeringRead,

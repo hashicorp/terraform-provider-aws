@@ -18,12 +18,12 @@ const (
 	ec2ResourceTypeCapacityReservation = "capacity-reservation"
 )
 
-func resourceAwsEc2CapacityReservation() *schema.Resource {
+func ResourceCapacityReservation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEc2CapacityReservationCreate,
-		Read:   resourceAwsEc2CapacityReservationRead,
-		Update: resourceAwsEc2CapacityReservationUpdate,
-		Delete: resourceAwsEc2CapacityReservationDelete,
+		Create: resourceCapacityReservationCreate,
+		Read:   resourceCapacityReservationRead,
+		Update: resourceCapacityReservationUpdate,
+		Delete: resourceCapacityReservationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -128,7 +128,7 @@ func resourceAwsEc2CapacityReservation() *schema.Resource {
 	}
 }
 
-func resourceAwsEc2CapacityReservationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceCapacityReservationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -177,10 +177,10 @@ func resourceAwsEc2CapacityReservationCreate(d *schema.ResourceData, meta interf
 		return fmt.Errorf("Error creating EC2 Capacity Reservation: %s", err)
 	}
 	d.SetId(aws.StringValue(out.CapacityReservation.CapacityReservationId))
-	return resourceAwsEc2CapacityReservationRead(d, meta)
+	return resourceCapacityReservationRead(d, meta)
 }
 
-func resourceAwsEc2CapacityReservationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceCapacityReservationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -244,7 +244,7 @@ func resourceAwsEc2CapacityReservationRead(d *schema.ResourceData, meta interfac
 	return nil
 }
 
-func resourceAwsEc2CapacityReservationUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceCapacityReservationUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	opts := &ec2.ModifyCapacityReservationInput{
@@ -276,10 +276,10 @@ func resourceAwsEc2CapacityReservationUpdate(d *schema.ResourceData, meta interf
 		}
 	}
 
-	return resourceAwsEc2CapacityReservationRead(d, meta)
+	return resourceCapacityReservationRead(d, meta)
 }
 
-func resourceAwsEc2CapacityReservationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceCapacityReservationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	opts := &ec2.CancelCapacityReservationInput{

@@ -20,12 +20,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSagemakerFlowDefinition() *schema.Resource {
+func ResourceFlowDefinition() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSagemakerFlowDefinitionCreate,
-		Read:   resourceAwsSagemakerFlowDefinitionRead,
-		Update: resourceAwsSagemakerFlowDefinitionUpdate,
-		Delete: resourceAwsSagemakerFlowDefinitionDelete,
+		Create: resourceFlowDefinitionCreate,
+		Read:   resourceFlowDefinitionRead,
+		Update: resourceFlowDefinitionUpdate,
+		Delete: resourceFlowDefinitionDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -240,7 +240,7 @@ func resourceAwsSagemakerFlowDefinition() *schema.Resource {
 	}
 }
 
-func resourceAwsSagemakerFlowDefinitionCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceFlowDefinitionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -284,10 +284,10 @@ func resourceAwsSagemakerFlowDefinitionCreate(d *schema.ResourceData, meta inter
 		return fmt.Errorf("error waiting for SageMaker Flow Definition (%s) to become active: %w", d.Id(), err)
 	}
 
-	return resourceAwsSagemakerFlowDefinitionRead(d, meta)
+	return resourceFlowDefinitionRead(d, meta)
 }
 
-func resourceAwsSagemakerFlowDefinitionRead(d *schema.ResourceData, meta interface{}) error {
+func resourceFlowDefinitionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -345,7 +345,7 @@ func resourceAwsSagemakerFlowDefinitionRead(d *schema.ResourceData, meta interfa
 	return nil
 }
 
-func resourceAwsSagemakerFlowDefinitionUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceFlowDefinitionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	if d.HasChange("tags_all") {
@@ -356,10 +356,10 @@ func resourceAwsSagemakerFlowDefinitionUpdate(d *schema.ResourceData, meta inter
 		}
 	}
 
-	return resourceAwsSagemakerFlowDefinitionRead(d, meta)
+	return resourceFlowDefinitionRead(d, meta)
 }
 
-func resourceAwsSagemakerFlowDefinitionDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceFlowDefinitionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	log.Printf("[DEBUG] Deleting SageMaker Flow Definition: %s", d.Id())

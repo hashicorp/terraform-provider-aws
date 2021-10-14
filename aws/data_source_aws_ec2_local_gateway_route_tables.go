@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsEc2LocalGatewayRouteTables() *schema.Resource {
+func DataSourceLocalGatewayRouteTables() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEc2LocalGatewayRouteTablesRead,
+		Read: dataSourceLocalGatewayRouteTablesRead,
 		Schema: map[string]*schema.Schema{
 			"filter": ec2CustomFiltersSchema(),
 
@@ -28,7 +28,7 @@ func dataSourceAwsEc2LocalGatewayRouteTables() *schema.Resource {
 	}
 }
 
-func dataSourceAwsEc2LocalGatewayRouteTablesRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceLocalGatewayRouteTablesRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	req := &ec2.DescribeLocalGatewayRouteTablesInput{}

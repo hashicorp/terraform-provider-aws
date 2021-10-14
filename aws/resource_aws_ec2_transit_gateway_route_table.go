@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsEc2TransitGatewayRouteTable() *schema.Resource {
+func ResourceTransitGatewayRouteTable() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEc2TransitGatewayRouteTableCreate,
-		Read:   resourceAwsEc2TransitGatewayRouteTableRead,
-		Update: resourceAwsEc2TransitGatewayRouteTableUpdate,
-		Delete: resourceAwsEc2TransitGatewayRouteTableDelete,
+		Create: resourceTransitGatewayRouteTableCreate,
+		Read:   resourceTransitGatewayRouteTableRead,
+		Update: resourceTransitGatewayRouteTableUpdate,
+		Delete: resourceTransitGatewayRouteTableDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -50,7 +50,7 @@ func resourceAwsEc2TransitGatewayRouteTable() *schema.Resource {
 	}
 }
 
-func resourceAwsEc2TransitGatewayRouteTableCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceTransitGatewayRouteTableCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -72,10 +72,10 @@ func resourceAwsEc2TransitGatewayRouteTableCreate(d *schema.ResourceData, meta i
 		return fmt.Errorf("error waiting for EC2 Transit Gateway Route Table (%s) availability: %s", d.Id(), err)
 	}
 
-	return resourceAwsEc2TransitGatewayRouteTableRead(d, meta)
+	return resourceTransitGatewayRouteTableRead(d, meta)
 }
 
-func resourceAwsEc2TransitGatewayRouteTableRead(d *schema.ResourceData, meta interface{}) error {
+func resourceTransitGatewayRouteTableRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -133,7 +133,7 @@ func resourceAwsEc2TransitGatewayRouteTableRead(d *schema.ResourceData, meta int
 	return nil
 }
 
-func resourceAwsEc2TransitGatewayRouteTableUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceTransitGatewayRouteTableUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	if d.HasChange("tags_all") {
@@ -147,7 +147,7 @@ func resourceAwsEc2TransitGatewayRouteTableUpdate(d *schema.ResourceData, meta i
 	return nil
 }
 
-func resourceAwsEc2TransitGatewayRouteTableDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceTransitGatewayRouteTableDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	input := &ec2.DeleteTransitGatewayRouteTableInput{

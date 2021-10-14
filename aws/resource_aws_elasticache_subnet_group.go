@@ -16,12 +16,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsElasticacheSubnetGroup() *schema.Resource {
+func ResourceSubnetGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsElasticacheSubnetGroupCreate,
-		Read:   resourceAwsElasticacheSubnetGroupRead,
-		Update: resourceAwsElasticacheSubnetGroupUpdate,
-		Delete: resourceAwsElasticacheSubnetGroupDelete,
+		Create: resourceSubnetGroupCreate,
+		Read:   resourceSubnetGroupRead,
+		Update: resourceSubnetGroupUpdate,
+		Delete: resourceSubnetGroupDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -73,7 +73,7 @@ func resourceAwsElasticacheSubnetGroupDiff(_ context.Context, diff *schema.Resou
 	return SetTagsDiff(context.Background(), diff, meta)
 }
 
-func resourceAwsElasticacheSubnetGroupCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceSubnetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElastiCacheConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -105,10 +105,10 @@ func resourceAwsElasticacheSubnetGroupCreate(d *schema.ResourceData, meta interf
 	// name contained uppercase characters.
 	d.SetId(strings.ToLower(name))
 
-	return resourceAwsElasticacheSubnetGroupRead(d, meta)
+	return resourceSubnetGroupRead(d, meta)
 }
 
-func resourceAwsElasticacheSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
+func resourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElastiCacheConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -172,7 +172,7 @@ func resourceAwsElasticacheSubnetGroupRead(d *schema.ResourceData, meta interfac
 	return nil
 }
 
-func resourceAwsElasticacheSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElastiCacheConn
 
 	if d.HasChanges("subnet_ids", "description") {
@@ -202,9 +202,9 @@ func resourceAwsElasticacheSubnetGroupUpdate(d *schema.ResourceData, meta interf
 		}
 	}
 
-	return resourceAwsElasticacheSubnetGroupRead(d, meta)
+	return resourceSubnetGroupRead(d, meta)
 }
-func resourceAwsElasticacheSubnetGroupDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceSubnetGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElastiCacheConn
 
 	log.Printf("[DEBUG] Cache subnet group delete: %s", d.Id())

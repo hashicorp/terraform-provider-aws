@@ -15,12 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsEc2ClientVpnEndpoint() *schema.Resource {
+func ResourceClientVPNEndpoint() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEc2ClientVpnEndpointCreate,
-		Read:   resourceAwsEc2ClientVpnEndpointRead,
-		Delete: resourceAwsEc2ClientVpnEndpointDelete,
-		Update: resourceAwsEc2ClientVpnEndpointUpdate,
+		Create: resourceClientVPNEndpointCreate,
+		Read:   resourceClientVPNEndpointRead,
+		Delete: resourceClientVPNEndpointDelete,
+		Update: resourceClientVPNEndpointUpdate,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -143,7 +143,7 @@ func resourceAwsEc2ClientVpnEndpoint() *schema.Resource {
 	}
 }
 
-func resourceAwsEc2ClientVpnEndpointCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceClientVPNEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -208,10 +208,10 @@ func resourceAwsEc2ClientVpnEndpointCreate(d *schema.ResourceData, meta interfac
 
 	d.SetId(aws.StringValue(resp.ClientVpnEndpointId))
 
-	return resourceAwsEc2ClientVpnEndpointRead(d, meta)
+	return resourceClientVPNEndpointRead(d, meta)
 }
 
-func resourceAwsEc2ClientVpnEndpointRead(d *schema.ResourceData, meta interface{}) error {
+func resourceClientVPNEndpointRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -293,7 +293,7 @@ func resourceAwsEc2ClientVpnEndpointRead(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func resourceAwsEc2ClientVpnEndpointDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceClientVPNEndpointDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	err := deleteClientVpnEndpoint(conn, d.Id())
@@ -304,7 +304,7 @@ func resourceAwsEc2ClientVpnEndpointDelete(d *schema.ResourceData, meta interfac
 	return nil
 }
 
-func resourceAwsEc2ClientVpnEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceClientVPNEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	req := &ec2.ModifyClientVpnEndpointInput{
@@ -376,7 +376,7 @@ func resourceAwsEc2ClientVpnEndpointUpdate(d *schema.ResourceData, meta interfac
 		}
 	}
 
-	return resourceAwsEc2ClientVpnEndpointRead(d, meta)
+	return resourceClientVPNEndpointRead(d, meta)
 }
 
 func flattenConnLoggingConfig(lopts *ec2.ConnectionLogResponseOptions) []map[string]interface{} {

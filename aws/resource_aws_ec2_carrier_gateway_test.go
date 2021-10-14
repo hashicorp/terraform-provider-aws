@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -42,7 +43,7 @@ func testSweepEc2CarrierGateway(region string) error {
 		}
 
 		for _, carrierGateway := range page.CarrierGateways {
-			r := resourceAwsEc2CarrierGateway()
+			r := ResourceCarrierGateway()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(carrierGateway.CarrierGatewayId))
 			err = r.Delete(d, client)
@@ -115,7 +116,7 @@ func TestAccAWSEc2CarrierGateway_disappears(t *testing.T) {
 				Config: testAccEc2CarrierGatewayConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEc2CarrierGatewayExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsEc2CarrierGateway(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceCarrierGateway(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

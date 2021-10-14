@@ -13,11 +13,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSnapshotCreateVolumePermission() *schema.Resource {
+func ResourceSnapshotCreateVolumePermission() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSnapshotCreateVolumePermissionCreate,
-		Read:   resourceAwsSnapshotCreateVolumePermissionRead,
-		Delete: resourceAwsSnapshotCreateVolumePermissionDelete,
+		Create: resourceSnapshotCreateVolumePermissionCreate,
+		Read:   resourceSnapshotCreateVolumePermissionRead,
+		Delete: resourceSnapshotCreateVolumePermissionDelete,
 
 		Schema: map[string]*schema.Schema{
 			"snapshot_id": {
@@ -34,7 +34,7 @@ func resourceAwsSnapshotCreateVolumePermission() *schema.Resource {
 	}
 }
 
-func resourceAwsSnapshotCreateVolumePermissionCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceSnapshotCreateVolumePermissionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	snapshot_id := d.Get("snapshot_id").(string)
@@ -73,7 +73,7 @@ func resourceAwsSnapshotCreateVolumePermissionCreate(d *schema.ResourceData, met
 	return nil
 }
 
-func resourceAwsSnapshotCreateVolumePermissionRead(d *schema.ResourceData, meta interface{}) error {
+func resourceSnapshotCreateVolumePermissionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	snapshotID, accountID, err := resourceAwsSnapshotCreateVolumePermissionParseID(d.Id())
@@ -94,7 +94,7 @@ func resourceAwsSnapshotCreateVolumePermissionRead(d *schema.ResourceData, meta 
 	return nil
 }
 
-func resourceAwsSnapshotCreateVolumePermissionDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceSnapshotCreateVolumePermissionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	snapshotID, accountID, err := resourceAwsSnapshotCreateVolumePermissionParseID(d.Id())

@@ -12,9 +12,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsAvailabilityZones() *schema.Resource {
+func DataSourceAvailabilityZones() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsAvailabilityZonesRead,
+		Read: dataSourceAvailabilityZonesRead,
 
 		Schema: map[string]*schema.Schema{
 			"all_availability_zones": {
@@ -61,7 +61,7 @@ func dataSourceAwsAvailabilityZones() *schema.Resource {
 	}
 }
 
-func dataSourceAwsAvailabilityZonesRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAvailabilityZonesRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	log.Printf("[DEBUG] Reading Availability Zones.")

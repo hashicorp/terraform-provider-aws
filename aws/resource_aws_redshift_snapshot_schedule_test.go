@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -48,7 +49,7 @@ func testSweepRedshiftSnapshotSchedules(region string) error {
 
 			for _, prefix := range prefixesToSweep {
 				if strings.HasPrefix(id, prefix) {
-					r := resourceAwsRedshiftSnapshotSchedule()
+					r := ResourceSnapshotSchedule()
 					d := r.Data(nil)
 					d.SetId(id)
 

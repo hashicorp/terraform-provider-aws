@@ -12,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsNeptuneSubnetGroup() *schema.Resource {
+func ResourceSubnetGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsNeptuneSubnetGroupCreate,
-		Read:   resourceAwsNeptuneSubnetGroupRead,
-		Update: resourceAwsNeptuneSubnetGroupUpdate,
-		Delete: resourceAwsNeptuneSubnetGroupDelete,
+		Create: resourceSubnetGroupCreate,
+		Read:   resourceSubnetGroupRead,
+		Update: resourceSubnetGroupUpdate,
+		Delete: resourceSubnetGroupDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -67,7 +67,7 @@ func resourceAwsNeptuneSubnetGroup() *schema.Resource {
 	}
 }
 
-func resourceAwsNeptuneSubnetGroupCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceSubnetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).NeptuneConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -102,10 +102,10 @@ func resourceAwsNeptuneSubnetGroupCreate(d *schema.ResourceData, meta interface{
 
 	d.SetId(aws.StringValue(createOpts.DBSubnetGroupName))
 	log.Printf("[INFO] Neptune Subnet Group ID: %s", d.Id())
-	return resourceAwsNeptuneSubnetGroupRead(d, meta)
+	return resourceSubnetGroupRead(d, meta)
 }
 
-func resourceAwsNeptuneSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
+func resourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).NeptuneConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -174,7 +174,7 @@ func resourceAwsNeptuneSubnetGroupRead(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
-func resourceAwsNeptuneSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).NeptuneConn
 	if d.HasChanges("subnet_ids", "description") {
 		_, n := d.GetChange("subnet_ids")
@@ -207,10 +207,10 @@ func resourceAwsNeptuneSubnetGroupUpdate(d *schema.ResourceData, meta interface{
 		}
 	}
 
-	return resourceAwsNeptuneSubnetGroupRead(d, meta)
+	return resourceSubnetGroupRead(d, meta)
 }
 
-func resourceAwsNeptuneSubnetGroupDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceSubnetGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).NeptuneConn
 
 	input := neptune.DeleteDBSubnetGroupInput{

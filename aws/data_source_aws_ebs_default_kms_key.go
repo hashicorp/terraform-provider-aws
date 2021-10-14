@@ -8,9 +8,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsEbsDefaultKmsKey() *schema.Resource {
+func DataSourceEBSDefaultKMSKey() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEbsDefaultKmsKeyRead,
+		Read: dataSourceEBSDefaultKMSKeyRead,
 
 		Schema: map[string]*schema.Schema{
 			"key_arn": {
@@ -20,7 +20,7 @@ func dataSourceAwsEbsDefaultKmsKey() *schema.Resource {
 		},
 	}
 }
-func dataSourceAwsEbsDefaultKmsKeyRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceEBSDefaultKMSKeyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	res, err := conn.GetEbsDefaultKmsKeyId(&ec2.GetEbsDefaultKmsKeyIdInput{})

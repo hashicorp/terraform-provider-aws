@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsDbSubnetGroup() *schema.Resource {
+func DataSourceSubnetGroup() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsDbSubnetGroupRead,
+		Read: dataSourceSubnetGroupRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -44,7 +44,7 @@ func dataSourceAwsDbSubnetGroup() *schema.Resource {
 	}
 }
 
-func dataSourceAwsDbSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 
 	name := d.Get("name").(string)

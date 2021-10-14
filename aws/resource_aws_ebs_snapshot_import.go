@@ -17,12 +17,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsEbsSnapshotImport() *schema.Resource {
+func ResourceEBSSnapshotImport() *schema.Resource {
 	return &schema.Resource{
-		Create:        resourceAwsEbsSnapshotImportCreate,
-		Read:          resourceAwsEbsSnapshotImportRead,
-		Update:        resourceAwsEbsSnapshotImportUpdate,
-		Delete:        resourceAwsEbsSnapshotImportDelete,
+		Create:        resourceEBSSnapshotImportCreate,
+		Read:          resourceEBSSnapshotImportRead,
+		Update:        resourceEBSSnapshotImportUpdate,
+		Delete:        resourceEBSSnapshotImportDelete,
 		CustomizeDiff: SetTagsDiff,
 
 		Timeouts: &schema.ResourceTimeout{
@@ -157,7 +157,7 @@ func resourceAwsEbsSnapshotImport() *schema.Resource {
 	}
 }
 
-func resourceAwsEbsSnapshotImportCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceEBSSnapshotImportCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 
@@ -247,10 +247,10 @@ func resourceAwsEbsSnapshotImportCreate(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("error importing EBS Snapshot: %s", err)
 	}
 
-	return resourceAwsEbsSnapshotImportRead(d, meta)
+	return resourceEBSSnapshotImportRead(d, meta)
 }
 
-func resourceAwsEbsSnapshotImportRead(d *schema.ResourceData, meta interface{}) error {
+func resourceEBSSnapshotImportRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -306,7 +306,7 @@ func resourceAwsEbsSnapshotImportRead(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func resourceAwsEbsSnapshotImportUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceEBSSnapshotImportUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	if d.HasChange("tags_all") {
@@ -316,10 +316,10 @@ func resourceAwsEbsSnapshotImportUpdate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	return resourceAwsEbsSnapshotImportRead(d, meta)
+	return resourceEBSSnapshotImportRead(d, meta)
 }
 
-func resourceAwsEbsSnapshotImportDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceEBSSnapshotImportDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	input := &ec2.DeleteSnapshotInput{
 		SnapshotId: aws.String(d.Id()),

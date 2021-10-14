@@ -12,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsEc2ClientVpnNetworkAssociation() *schema.Resource {
+func ResourceClientVPNNetworkAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEc2ClientVpnNetworkAssociationCreate,
-		Read:   resourceAwsEc2ClientVpnNetworkAssociationRead,
-		Update: resourceAwsEc2ClientVpnNetworkAssociationUpdate,
-		Delete: resourceAwsEc2ClientVpnNetworkAssociationDelete,
+		Create: resourceClientVPNNetworkAssociationCreate,
+		Read:   resourceClientVPNNetworkAssociationRead,
+		Update: resourceClientVPNNetworkAssociationUpdate,
+		Delete: resourceClientVPNNetworkAssociationDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsEc2ClientVpnNetworkAssociationImport,
 		},
@@ -58,7 +58,7 @@ func resourceAwsEc2ClientVpnNetworkAssociation() *schema.Resource {
 	}
 }
 
-func resourceAwsEc2ClientVpnNetworkAssociationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceClientVPNNetworkAssociationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	req := &ec2.AssociateClientVpnTargetNetworkInput{
@@ -93,10 +93,10 @@ func resourceAwsEc2ClientVpnNetworkAssociationCreate(d *schema.ResourceData, met
 		}
 	}
 
-	return resourceAwsEc2ClientVpnNetworkAssociationRead(d, meta)
+	return resourceClientVPNNetworkAssociationRead(d, meta)
 }
 
-func resourceAwsEc2ClientVpnNetworkAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceClientVPNNetworkAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	if d.HasChange("security_groups") {
@@ -111,10 +111,10 @@ func resourceAwsEc2ClientVpnNetworkAssociationUpdate(d *schema.ResourceData, met
 		}
 	}
 
-	return resourceAwsEc2ClientVpnNetworkAssociationRead(d, meta)
+	return resourceClientVPNNetworkAssociationRead(d, meta)
 }
 
-func resourceAwsEc2ClientVpnNetworkAssociationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceClientVPNNetworkAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	var err error
 
@@ -159,7 +159,7 @@ func resourceAwsEc2ClientVpnNetworkAssociationRead(d *schema.ResourceData, meta 
 	return nil
 }
 
-func resourceAwsEc2ClientVpnNetworkAssociationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceClientVPNNetworkAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	err := deleteClientVpnNetworkAssociation(conn, d.Id(), d.Get("client_vpn_endpoint_id").(string))

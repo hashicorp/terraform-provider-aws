@@ -18,13 +18,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSpotFleetRequest() *schema.Resource {
+func ResourceSpotFleetRequest() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
-		Create: resourceAwsSpotFleetRequestCreate,
-		Read:   resourceAwsSpotFleetRequestRead,
-		Delete: resourceAwsSpotFleetRequestDelete,
-		Update: resourceAwsSpotFleetRequestUpdate,
+		Create: resourceSpotFleetRequestCreate,
+		Read:   resourceSpotFleetRequestRead,
+		Delete: resourceSpotFleetRequestDelete,
+		Update: resourceSpotFleetRequestUpdate,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				d.Set("instance_pools_to_use_count", 1)
@@ -922,7 +922,7 @@ func expandSpotCapacityRebalance(l []interface{}) *ec2.SpotCapacityRebalance {
 	return capacityRebalance
 }
 
-func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceSpotFleetRequestCreate(d *schema.ResourceData, meta interface{}) error {
 	// http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_RequestSpotFleet.html
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -1117,7 +1117,7 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 		}
 	}
 
-	return resourceAwsSpotFleetRequestRead(d, meta)
+	return resourceSpotFleetRequestRead(d, meta)
 }
 
 func resourceAwsSpotFleetRequestStateRefreshFunc(d *schema.ResourceData, meta interface{}) resource.StateRefreshFunc {
@@ -1208,7 +1208,7 @@ func resourceAwsSpotFleetRequestFulfillmentRefreshFunc(id string, conn *ec2.EC2)
 	}
 }
 
-func resourceAwsSpotFleetRequestRead(d *schema.ResourceData, meta interface{}) error {
+func resourceSpotFleetRequestRead(d *schema.ResourceData, meta interface{}) error {
 	// http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeSpotFleetRequests.html
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -1595,7 +1595,7 @@ func rootBlockDeviceToSet(
 	return set
 }
 
-func resourceAwsSpotFleetRequestUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceSpotFleetRequestUpdate(d *schema.ResourceData, meta interface{}) error {
 	// http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_ModifySpotFleetRequest.html
 	conn := meta.(*conns.AWSClient).EC2Conn
 
@@ -1646,10 +1646,10 @@ func resourceAwsSpotFleetRequestUpdate(d *schema.ResourceData, meta interface{})
 		}
 	}
 
-	return resourceAwsSpotFleetRequestRead(d, meta)
+	return resourceSpotFleetRequestRead(d, meta)
 }
 
-func resourceAwsSpotFleetRequestDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceSpotFleetRequestDelete(d *schema.ResourceData, meta interface{}) error {
 	// http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_CancelSpotFleetRequests.html
 	conn := meta.(*conns.AWSClient).EC2Conn
 	terminateInstances := d.Get("terminate_instances_with_expiration").(bool)

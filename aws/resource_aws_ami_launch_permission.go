@@ -12,11 +12,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsAmiLaunchPermission() *schema.Resource {
+func ResourceAMILaunchPermission() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAmiLaunchPermissionCreate,
-		Read:   resourceAwsAmiLaunchPermissionRead,
-		Delete: resourceAwsAmiLaunchPermissionDelete,
+		Create: resourceAMILaunchPermissionCreate,
+		Read:   resourceAMILaunchPermissionRead,
+		Delete: resourceAMILaunchPermissionDelete,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
@@ -47,7 +47,7 @@ func resourceAwsAmiLaunchPermission() *schema.Resource {
 	}
 }
 
-func resourceAwsAmiLaunchPermissionCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAMILaunchPermissionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	image_id := d.Get("image_id").(string)
@@ -70,7 +70,7 @@ func resourceAwsAmiLaunchPermissionCreate(d *schema.ResourceData, meta interface
 	return nil
 }
 
-func resourceAwsAmiLaunchPermissionRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAMILaunchPermissionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	exists, err := hasLaunchPermission(conn, d.Get("image_id").(string), d.Get("account_id").(string))
@@ -90,7 +90,7 @@ func resourceAwsAmiLaunchPermissionRead(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceAwsAmiLaunchPermissionDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAMILaunchPermissionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	image_id := d.Get("image_id").(string)

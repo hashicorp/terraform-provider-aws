@@ -12,9 +12,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsEc2CoipPool() *schema.Resource {
+func DataSourceCoIPPool() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEc2CoipPoolRead,
+		Read: dataSourceCoIPPoolRead,
 
 		Schema: map[string]*schema.Schema{
 			"local_gateway_route_table_id": {
@@ -48,7 +48,7 @@ func dataSourceAwsEc2CoipPool() *schema.Resource {
 	}
 }
 
-func dataSourceAwsEc2CoipPoolRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceCoIPPoolRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

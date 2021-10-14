@@ -19,11 +19,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsNetworkAclRule() *schema.Resource {
+func ResourceNetworkACLRule() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsNetworkAclRuleCreate,
-		Read:   resourceAwsNetworkAclRuleRead,
-		Delete: resourceAwsNetworkAclRuleDelete,
+		Create: resourceNetworkACLRuleCreate,
+		Read:   resourceNetworkACLRuleRead,
+		Delete: resourceNetworkACLRuleDelete,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), ":")
@@ -125,7 +125,7 @@ func resourceAwsNetworkAclRule() *schema.Resource {
 	}
 }
 
-func resourceAwsNetworkAclRuleCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceNetworkACLRuleCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	egress := d.Get("egress").(bool)
 	networkAclID := d.Get("network_acl_id").(string)
@@ -200,10 +200,10 @@ func resourceAwsNetworkAclRuleCreate(d *schema.ResourceData, meta interface{}) e
 
 	d.SetId(networkAclIdRuleNumberEgressHash(networkAclID, ruleNumber, egress, d.Get("protocol").(string)))
 
-	return resourceAwsNetworkAclRuleRead(d, meta)
+	return resourceNetworkACLRuleRead(d, meta)
 }
 
-func resourceAwsNetworkAclRuleRead(d *schema.ResourceData, meta interface{}) error {
+func resourceNetworkACLRuleRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	egress := d.Get("egress").(bool)
 	networkAclID := d.Get("network_acl_id").(string)
@@ -287,7 +287,7 @@ func resourceAwsNetworkAclRuleRead(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func resourceAwsNetworkAclRuleDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceNetworkACLRuleDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	params := &ec2.DeleteNetworkAclEntryInput{

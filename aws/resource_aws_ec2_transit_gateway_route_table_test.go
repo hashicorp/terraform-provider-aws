@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func testAccAWSEc2TransitGatewayRouteTable_basic(t *testing.T) {
@@ -59,7 +60,7 @@ func testAccAWSEc2TransitGatewayRouteTable_disappears(t *testing.T) {
 				Config: testAccAWSEc2TransitGatewayRouteTableConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEc2TransitGatewayRouteTableExists(resourceName, &transitGatewayRouteTable1),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsEc2TransitGatewayRouteTable(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceTransitGatewayRouteTable(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -84,7 +85,7 @@ func testAccAWSEc2TransitGatewayRouteTable_disappears_TransitGateway(t *testing.
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEc2TransitGatewayExists(transitGatewayResourceName, &transitGateway1),
 					testAccCheckAWSEc2TransitGatewayRouteTableExists(resourceName, &transitGatewayRouteTable1),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsEc2TransitGateway(), transitGatewayResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceTransitGateway(), transitGatewayResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

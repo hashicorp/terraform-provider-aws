@@ -15,9 +15,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsAmiIds() *schema.Resource {
+func DataSourceAMIIDs() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsAmiIdsRead,
+		Read: dataSourceAMIIDsRead,
 
 		Schema: map[string]*schema.Schema{
 			"filter": dataSourceFiltersSchema(),
@@ -54,7 +54,7 @@ func dataSourceAwsAmiIds() *schema.Resource {
 	}
 }
 
-func dataSourceAwsAmiIdsRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAMIIDsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	params := &ec2.DescribeImagesInput{

@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -756,7 +757,7 @@ func TestAccAWSEBSVolume_disappears(t *testing.T) {
 				Config: testAccAwsEbsVolumeConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsEbsVolume(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceEBSVolume(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

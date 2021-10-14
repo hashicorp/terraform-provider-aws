@@ -9,9 +9,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsOutpostsOutpostInstanceTypes() *schema.Resource {
+func DataSourceOutpostInstanceTypes() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsOutpostsOutpostInstanceTypesRead,
+		Read: dataSourceOutpostInstanceTypesRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -28,7 +28,7 @@ func dataSourceAwsOutpostsOutpostInstanceTypes() *schema.Resource {
 	}
 }
 
-func dataSourceAwsOutpostsOutpostInstanceTypesRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceOutpostInstanceTypesRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).OutpostsConn
 
 	input := &outposts.GetOutpostInstanceTypesInput{

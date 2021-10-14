@@ -17,6 +17,7 @@ import (
 	tfconnect "github.com/hashicorp/terraform-provider-aws/aws/internal/service/connect"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -53,7 +54,7 @@ func testSweepConnectInstance(region string) error {
 			id := aws.StringValue(instanceSummary.Id)
 
 			log.Printf("[INFO] Deleting Connect Instance (%s)", id)
-			r := resourceAwsConnectInstance()
+			r := ResourceInstance()
 			d := r.Data(nil)
 			d.SetId(id)
 

@@ -15,12 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsEc2ManagedPrefixListEntry() *schema.Resource {
+func ResourceManagedPrefixListEntry() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
-		Create: resourceAwsEc2ManagedPrefixListEntryCreate,
-		Read:   resourceAwsEc2ManagedPrefixListEntryRead,
-		Delete: resourceAwsEc2ManagedPrefixListEntryDelete,
+		Create: resourceManagedPrefixListEntryCreate,
+		Read:   resourceManagedPrefixListEntryRead,
+		Delete: resourceManagedPrefixListEntryDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsEc2ManagedPrefixListEntryImport,
 		},
@@ -47,7 +47,7 @@ func resourceAwsEc2ManagedPrefixListEntry() *schema.Resource {
 	}
 }
 
-func resourceAwsEc2ManagedPrefixListEntryCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceManagedPrefixListEntryCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	cidr := d.Get("cidr").(string)
@@ -84,10 +84,10 @@ func resourceAwsEc2ManagedPrefixListEntryCreate(d *schema.ResourceData, meta int
 		return fmt.Errorf("error waiting for EC2 Managed Prefix List Entry (%s) create: %w", d.Id(), err)
 	}
 
-	return resourceAwsEc2ManagedPrefixListEntryRead(d, meta)
+	return resourceManagedPrefixListEntryRead(d, meta)
 }
 
-func resourceAwsEc2ManagedPrefixListEntryRead(d *schema.ResourceData, meta interface{}) error {
+func resourceManagedPrefixListEntryRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	plID, cidr, err := tfec2.ManagedPrefixListEntryParseID(d.Id())
@@ -118,7 +118,7 @@ func resourceAwsEc2ManagedPrefixListEntryRead(d *schema.ResourceData, meta inter
 	return nil
 }
 
-func resourceAwsEc2ManagedPrefixListEntryDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceManagedPrefixListEntryDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	plID, cidr, err := tfec2.ManagedPrefixListEntryParseID(d.Id())

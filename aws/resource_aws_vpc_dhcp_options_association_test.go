@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSDHCPOptionsAssociation_basic(t *testing.T) {
@@ -58,7 +59,7 @@ func TestAccAWSDHCPOptionsAssociation_disappears_vpc(t *testing.T) {
 					testAccCheckDHCPOptionsExists("aws_vpc_dhcp_options.test", &d),
 					acctest.CheckVPCExists("aws_vpc.test", &v),
 					testAccCheckDHCPOptionsAssociationExist(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsVpc(), "aws_vpc.test"),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceVPC(), "aws_vpc.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -83,7 +84,7 @@ func TestAccAWSDHCPOptionsAssociation_disappears_dhcp(t *testing.T) {
 					testAccCheckDHCPOptionsExists("aws_vpc_dhcp_options.test", &d),
 					acctest.CheckVPCExists("aws_vpc.test", &v),
 					testAccCheckDHCPOptionsAssociationExist(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsVpcDhcpOptions(), "aws_vpc_dhcp_options.test"),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceVPCDHCPOptions(), "aws_vpc_dhcp_options.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -108,7 +109,7 @@ func TestAccAWSDHCPOptionsAssociation_disappears(t *testing.T) {
 					testAccCheckDHCPOptionsExists("aws_vpc_dhcp_options.test", &d),
 					acctest.CheckVPCExists("aws_vpc.test", &v),
 					testAccCheckDHCPOptionsAssociationExist(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsVpcDhcpOptionsAssociation(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceVPCDHCPOptionsAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

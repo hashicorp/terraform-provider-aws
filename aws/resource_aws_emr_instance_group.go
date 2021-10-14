@@ -21,12 +21,12 @@ const (
 	emrInstanceGroupUpdateTimeout = 30 * time.Minute
 )
 
-func resourceAwsEMRInstanceGroup() *schema.Resource {
+func ResourceInstanceGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEMRInstanceGroupCreate,
-		Read:   resourceAwsEMRInstanceGroupRead,
-		Update: resourceAwsEMRInstanceGroupUpdate,
-		Delete: resourceAwsEMRInstanceGroupDelete,
+		Create: resourceInstanceGroupCreate,
+		Read:   resourceInstanceGroupRead,
+		Update: resourceInstanceGroupUpdate,
+		Delete: resourceInstanceGroupDelete,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
@@ -133,7 +133,7 @@ func resourceAwsEMRInstanceGroup() *schema.Resource {
 	}
 }
 
-func resourceAwsEMRInstanceGroupCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceInstanceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EMRConn
 
 	instanceRole := emr.InstanceGroupTypeTask
@@ -192,10 +192,10 @@ func resourceAwsEMRInstanceGroupCreate(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("error waiting for EMR Instance Group (%s) creation: %s", d.Id(), err)
 	}
 
-	return resourceAwsEMRInstanceGroupRead(d, meta)
+	return resourceInstanceGroupRead(d, meta)
 }
 
-func resourceAwsEMRInstanceGroupRead(d *schema.ResourceData, meta interface{}) error {
+func resourceInstanceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EMRConn
 
 	ig, err := fetchEMRInstanceGroup(conn, d.Get("cluster_id").(string), d.Id())
@@ -282,7 +282,7 @@ func resourceAwsEMRInstanceGroupRead(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func resourceAwsEMRInstanceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceInstanceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EMRConn
 
 	log.Printf("[DEBUG] Modify EMR task group")
@@ -341,10 +341,10 @@ func resourceAwsEMRInstanceGroupUpdate(d *schema.ResourceData, meta interface{})
 		}
 	}
 
-	return resourceAwsEMRInstanceGroupRead(d, meta)
+	return resourceInstanceGroupRead(d, meta)
 }
 
-func resourceAwsEMRInstanceGroupDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceInstanceGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EMRConn
 
 	log.Printf("[WARN] AWS EMR Instance Group does not support DELETE; resizing cluster to zero before removing from state")

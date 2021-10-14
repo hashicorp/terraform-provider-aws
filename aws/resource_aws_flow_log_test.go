@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -39,7 +40,7 @@ func testSweepFlowLogs(region string) error {
 		}
 
 		for _, flowLog := range page.FlowLogs {
-			r := resourceAwsFlowLog()
+			r := ResourceFlowLog()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(flowLog.FlowLogId))
 
@@ -501,7 +502,7 @@ func TestAccAWSFlowLog_disappears(t *testing.T) {
 				Config: testAccFlowLogConfig_VPCID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowLogExists(resourceName, &flowLog),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsFlowLog(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceFlowLog(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

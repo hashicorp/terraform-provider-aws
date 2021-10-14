@@ -13,9 +13,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsEbsSnapshot() *schema.Resource {
+func DataSourceEBSSnapshot() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEbsSnapshotRead,
+		Read: dataSourceEBSSnapshotRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -90,7 +90,7 @@ func dataSourceAwsEbsSnapshot() *schema.Resource {
 	}
 }
 
-func dataSourceAwsEbsSnapshotRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceEBSSnapshotRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	restorableUsers, restorableUsersOk := d.GetOk("restorable_by_user_ids")

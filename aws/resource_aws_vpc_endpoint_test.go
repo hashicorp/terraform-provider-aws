@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -61,7 +62,7 @@ func testSweepEc2VpcEndpoints(region string) error {
 
 			log.Printf("[INFO] Deleting EC2 VPC Endpoint: %s", id)
 
-			r := resourceAwsVpcEndpoint()
+			r := ResourceVPCEndpoint()
 			d := r.Data(nil)
 			d.SetId(id)
 
@@ -468,7 +469,7 @@ func TestAccAWSVpcEndpoint_disappears(t *testing.T) {
 				Config: testAccVpcEndpointConfig_gatewayBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcEndpointExists(resourceName, &endpoint),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsVpcEndpoint(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceVPCEndpoint(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

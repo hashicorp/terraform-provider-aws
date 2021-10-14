@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/experimental/sync"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 const clientVpnEndpointDefaultLimit = 5
@@ -177,7 +178,7 @@ func testAccAwsEc2ClientVpnEndpoint_disappears(t *testing.T) {
 				Config: testAccEc2ClientVpnEndpointConfig(rStr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsEc2ClientVpnEndpointExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsEc2ClientVpnEndpoint(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceClientVPNEndpoint(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

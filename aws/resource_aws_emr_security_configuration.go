@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsEMRSecurityConfiguration() *schema.Resource {
+func ResourceSecurityConfiguration() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsEmrSecurityConfigurationCreate,
 		Read:   resourceAwsEmrSecurityConfigurationRead,

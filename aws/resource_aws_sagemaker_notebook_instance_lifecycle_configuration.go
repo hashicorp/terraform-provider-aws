@@ -12,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSagemakerNotebookInstanceLifeCycleConfiguration() *schema.Resource {
+func ResourceNotebookInstanceLifeCycleConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSagemakerNotebookInstanceLifeCycleConfigurationCreate,
-		Read:   resourceAwsSagemakerNotebookInstanceLifeCycleConfigurationRead,
-		Update: resourceAwsSagemakerNotebookInstanceLifeCycleConfigurationUpdate,
-		Delete: resourceAwsSagemakerNotebookInstanceLifeCycleConfigurationDelete,
+		Create: resourceNotebookInstanceLifeCycleConfigurationCreate,
+		Read:   resourceNotebookInstanceLifeCycleConfigurationRead,
+		Update: resourceNotebookInstanceLifeCycleConfigurationUpdate,
+		Delete: resourceNotebookInstanceLifeCycleConfigurationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -50,7 +50,7 @@ func resourceAwsSagemakerNotebookInstanceLifeCycleConfiguration() *schema.Resour
 	}
 }
 
-func resourceAwsSagemakerNotebookInstanceLifeCycleConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceNotebookInstanceLifeCycleConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	var name string
@@ -83,10 +83,10 @@ func resourceAwsSagemakerNotebookInstanceLifeCycleConfigurationCreate(d *schema.
 	}
 	d.SetId(name)
 
-	return resourceAwsSagemakerNotebookInstanceLifeCycleConfigurationRead(d, meta)
+	return resourceNotebookInstanceLifeCycleConfigurationRead(d, meta)
 }
 
-func resourceAwsSagemakerNotebookInstanceLifeCycleConfigurationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceNotebookInstanceLifeCycleConfigurationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	request := &sagemaker.DescribeNotebookInstanceLifecycleConfigInput{
@@ -126,7 +126,7 @@ func resourceAwsSagemakerNotebookInstanceLifeCycleConfigurationRead(d *schema.Re
 	return nil
 }
 
-func resourceAwsSagemakerNotebookInstanceLifeCycleConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceNotebookInstanceLifeCycleConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	updateOpts := &sagemaker.UpdateNotebookInstanceLifecycleConfigInput{
@@ -147,10 +147,10 @@ func resourceAwsSagemakerNotebookInstanceLifeCycleConfigurationUpdate(d *schema.
 	if err != nil {
 		return fmt.Errorf("error updating SageMaker Notebook Instance Lifecycle Configuration: %s", err)
 	}
-	return resourceAwsSagemakerNotebookInstanceLifeCycleConfigurationRead(d, meta)
+	return resourceNotebookInstanceLifeCycleConfigurationRead(d, meta)
 }
 
-func resourceAwsSagemakerNotebookInstanceLifeCycleConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceNotebookInstanceLifeCycleConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	deleteOpts := &sagemaker.DeleteNotebookInstanceLifecycleConfigInput{

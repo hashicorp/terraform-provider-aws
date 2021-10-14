@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSNetworkInterfaceSGAttachment_basic(t *testing.T) {
@@ -53,7 +54,7 @@ func TestAccAWSNetworkInterfaceSGAttachment_disappears(t *testing.T) {
 				Config: testAccAwsNetworkInterfaceSGAttachmentConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSNetworkInterfaceSGAttachmentExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsNetworkInterfaceSGAttachment(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceNetworkInterfaceSGAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

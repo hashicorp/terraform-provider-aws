@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -42,7 +43,7 @@ func testSweepEc2Hosts(region string) error {
 		}
 
 		for _, host := range page.Hosts {
-			r := resourceAwsEc2Host()
+			r := ResourceHost()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(host.HostId))
 
@@ -116,7 +117,7 @@ func TestAccAWSEc2Host_disappears(t *testing.T) {
 				Config: testAccAWSEc2HostConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEc2HostExists(resourceName, &host),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsEc2Host(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceHost(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

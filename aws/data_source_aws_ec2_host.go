@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsEc2Host() *schema.Resource {
+func DataSourceHost() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceAwsAwsEc2HostRead,
 

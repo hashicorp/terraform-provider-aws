@@ -13,11 +13,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsVpnGatewayAttachment() *schema.Resource {
+func ResourceVPNGatewayAttachment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsVpnGatewayAttachmentCreate,
-		Read:   resourceAwsVpnGatewayAttachmentRead,
-		Delete: resourceAwsVpnGatewayAttachmentDelete,
+		Create: resourceVPNGatewayAttachmentCreate,
+		Read:   resourceVPNGatewayAttachmentRead,
+		Delete: resourceVPNGatewayAttachmentDelete,
 
 		Schema: map[string]*schema.Schema{
 			"vpc_id": {
@@ -35,7 +35,7 @@ func resourceAwsVpnGatewayAttachment() *schema.Resource {
 	}
 }
 
-func resourceAwsVpnGatewayAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceVPNGatewayAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	vpcId := d.Get("vpc_id").(string)
@@ -61,10 +61,10 @@ func resourceAwsVpnGatewayAttachmentCreate(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("error waiting for VPN Gateway (%s) Attachment (%s) to become attached: %w", vgwId, vpcId, err)
 	}
 
-	return resourceAwsVpnGatewayAttachmentRead(d, meta)
+	return resourceVPNGatewayAttachmentRead(d, meta)
 }
 
-func resourceAwsVpnGatewayAttachmentRead(d *schema.ResourceData, meta interface{}) error {
+func resourceVPNGatewayAttachmentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	vpcId := d.Get("vpc_id").(string)
@@ -91,7 +91,7 @@ func resourceAwsVpnGatewayAttachmentRead(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func resourceAwsVpnGatewayAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceVPNGatewayAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	vpcId := d.Get("vpc_id").(string)

@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsIAMInstanceProfile() *schema.Resource {
+func DataSourceInstanceProfile() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsIAMInstanceProfileRead,
+		Read: dataSourceInstanceProfileRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -47,7 +47,7 @@ func dataSourceAwsIAMInstanceProfile() *schema.Resource {
 	}
 }
 
-func dataSourceAwsIAMInstanceProfileRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceInstanceProfileRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
 	name := d.Get("name").(string)

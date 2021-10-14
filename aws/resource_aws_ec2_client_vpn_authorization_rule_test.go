@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func testAccAwsEc2ClientVpnAuthorizationRule_basic(t *testing.T) {
@@ -190,7 +191,7 @@ func testAccAwsEc2ClientVpnAuthorizationRule_disappears(t *testing.T) {
 				Config: testAccEc2ClientVpnAuthorizationRuleConfigBasic(rStr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsEc2ClientVpnAuthorizationRuleExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsEc2ClientVpnAuthorizationRule(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceClientVPNAuthorizationRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

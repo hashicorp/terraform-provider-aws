@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSEbsSnapshotCopy_basic(t *testing.T) {
@@ -157,7 +158,7 @@ func TestAccAWSEbsSnapshotCopy_disappears(t *testing.T) {
 				Config: testAccAwsEbsSnapshotCopyConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEbsSnapshotCopyExists(resourceName, &snapshot),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsEbsSnapshotCopy(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceEBSSnapshotCopy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

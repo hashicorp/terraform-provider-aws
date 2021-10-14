@@ -12,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsEc2TransitGatewayVpcAttachmentAccepter() *schema.Resource {
+func ResourceTransitGatewayVPCAttachmentAccepter() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEc2TransitGatewayVpcAttachmentAccepterCreate,
-		Read:   resourceAwsEc2TransitGatewayVpcAttachmentAccepterRead,
-		Update: resourceAwsEc2TransitGatewayVpcAttachmentAccepterUpdate,
-		Delete: resourceAwsEc2TransitGatewayVpcAttachmentAccepterDelete,
+		Create: resourceTransitGatewayVPCAttachmentAccepterCreate,
+		Read:   resourceTransitGatewayVPCAttachmentAccepterRead,
+		Update: resourceTransitGatewayVPCAttachmentAccepterUpdate,
+		Delete: resourceTransitGatewayVPCAttachmentAccepterDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -75,7 +75,7 @@ func resourceAwsEc2TransitGatewayVpcAttachmentAccepter() *schema.Resource {
 	}
 }
 
-func resourceAwsEc2TransitGatewayVpcAttachmentAccepterCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceTransitGatewayVPCAttachmentAccepterCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -120,10 +120,10 @@ func resourceAwsEc2TransitGatewayVpcAttachmentAccepterCreate(d *schema.ResourceD
 		return fmt.Errorf("error updating EC2 Transit Gateway Attachment (%s) Route Table (%s) propagation: %s", d.Id(), aws.StringValue(transitGateway.Options.PropagationDefaultRouteTableId), err)
 	}
 
-	return resourceAwsEc2TransitGatewayVpcAttachmentAccepterRead(d, meta)
+	return resourceTransitGatewayVPCAttachmentAccepterRead(d, meta)
 }
 
-func resourceAwsEc2TransitGatewayVpcAttachmentAccepterRead(d *schema.ResourceData, meta interface{}) error {
+func resourceTransitGatewayVPCAttachmentAccepterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -207,7 +207,7 @@ func resourceAwsEc2TransitGatewayVpcAttachmentAccepterRead(d *schema.ResourceDat
 	return nil
 }
 
-func resourceAwsEc2TransitGatewayVpcAttachmentAccepterUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceTransitGatewayVPCAttachmentAccepterUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	if d.HasChanges("transit_gateway_default_route_table_association", "transit_gateway_default_route_table_propagation") {
@@ -246,7 +246,7 @@ func resourceAwsEc2TransitGatewayVpcAttachmentAccepterUpdate(d *schema.ResourceD
 	return nil
 }
 
-func resourceAwsEc2TransitGatewayVpcAttachmentAccepterDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceTransitGatewayVPCAttachmentAccepterDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	input := &ec2.DeleteTransitGatewayVpcAttachmentInput{
