@@ -125,13 +125,13 @@ func testSweepAppConfigHostedConfigurationVersions(region string) error {
 }
 
 func TestAccAWSAppConfigHostedConfigurationVersion_basic(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appconfig_hosted_configuration_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAppConfigHostedConfigurationVersionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -157,20 +157,20 @@ func TestAccAWSAppConfigHostedConfigurationVersion_basic(t *testing.T) {
 }
 
 func TestAccAWSAppConfigHostedConfigurationVersion_disappears(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appconfig_hosted_configuration_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAppConfigHostedConfigurationVersionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAppConfigHostedConfigurationVersion(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAppConfigHostedConfigurationVersionExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsAppconfigHostedConfigurationVersion(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsAppconfigHostedConfigurationVersion(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -179,7 +179,7 @@ func TestAccAWSAppConfigHostedConfigurationVersion_disappears(t *testing.T) {
 }
 
 func testAccCheckAppConfigHostedConfigurationVersionDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).appconfigconn
+	conn := acctest.Provider.Meta().(*AWSClient).appconfigconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appconfig_hosted_configuration_version" {
@@ -233,7 +233,7 @@ func testAccCheckAWSAppConfigHostedConfigurationVersionExists(resourceName strin
 			return err
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).appconfigconn
+		conn := acctest.Provider.Meta().(*AWSClient).appconfigconn
 
 		output, err := conn.GetHostedConfigurationVersion(&appconfig.GetHostedConfigurationVersionInput{
 			ApplicationId:          aws.String(appID),

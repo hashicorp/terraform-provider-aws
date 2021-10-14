@@ -103,14 +103,14 @@ func testSweepAppConfigConfigurationProfiles(region string) error {
 }
 
 func TestAccAWSAppConfigConfigurationProfile_basic(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appconfig_configuration_profile.test"
 	appResourceName := "aws_appconfig_application.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAppConfigConfigurationProfileDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -136,20 +136,20 @@ func TestAccAWSAppConfigConfigurationProfile_basic(t *testing.T) {
 }
 
 func TestAccAWSAppConfigConfigurationProfile_disappears(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appconfig_configuration_profile.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAppConfigConfigurationProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAppConfigConfigurationProfileConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAppConfigConfigurationProfileExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsAppconfigConfigurationProfile(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsAppconfigConfigurationProfile(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -158,13 +158,13 @@ func TestAccAWSAppConfigConfigurationProfile_disappears(t *testing.T) {
 }
 
 func TestAccAWSAppConfigConfigurationProfile_Validators_JSON(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appconfig_configuration_profile.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAppConfigConfigurationProfileDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -211,13 +211,13 @@ func TestAccAWSAppConfigConfigurationProfile_Validators_JSON(t *testing.T) {
 }
 
 func TestAccAWSAppConfigConfigurationProfile_Validators_Lambda(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appconfig_configuration_profile.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAppConfigConfigurationProfileDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -249,13 +249,13 @@ func TestAccAWSAppConfigConfigurationProfile_Validators_Lambda(t *testing.T) {
 }
 
 func TestAccAWSAppConfigConfigurationProfile_Validators_Multiple(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appconfig_configuration_profile.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAppConfigConfigurationProfileDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -283,14 +283,14 @@ func TestAccAWSAppConfigConfigurationProfile_Validators_Multiple(t *testing.T) {
 }
 
 func TestAccAWSAppConfigConfigurationProfile_updateName(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rNameUpdated := sdkacctest.RandomWithPrefix("tf-acc-test-update")
 	resourceName := "aws_appconfig_configuration_profile.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAppConfigConfigurationProfileDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -317,14 +317,14 @@ func TestAccAWSAppConfigConfigurationProfile_updateName(t *testing.T) {
 }
 
 func TestAccAWSAppConfigConfigurationProfile_updateDescription(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	description := sdkacctest.RandomWithPrefix("tf-acc-test-update")
 	resourceName := "aws_appconfig_configuration_profile.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAppConfigConfigurationProfileDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -356,13 +356,13 @@ func TestAccAWSAppConfigConfigurationProfile_updateDescription(t *testing.T) {
 }
 
 func TestAccAWSAppConfigConfigurationProfile_Tags(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appconfig_configuration_profile.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAppConfigConfigurationProfileDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -400,7 +400,7 @@ func TestAccAWSAppConfigConfigurationProfile_Tags(t *testing.T) {
 }
 
 func testAccCheckAppConfigConfigurationProfileDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).appconfigconn
+	conn := acctest.Provider.Meta().(*AWSClient).appconfigconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appconfig_configuration_profile" {
@@ -453,7 +453,7 @@ func testAccCheckAWSAppConfigConfigurationProfileExists(resourceName string) res
 			return err
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).appconfigconn
+		conn := acctest.Provider.Meta().(*AWSClient).appconfigconn
 
 		output, err := conn.GetConfigurationProfile(&appconfig.GetConfigurationProfileInput{
 			ApplicationId:          aws.String(appID),
