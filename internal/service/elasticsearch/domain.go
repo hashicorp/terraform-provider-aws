@@ -32,7 +32,7 @@ func ResourceDomain() *schema.Resource {
 		Update: resourceDomainUpdate,
 		Delete: resourceDomainDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsElasticSearchDomainImport,
+			State: resourceDomainImport,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -446,7 +446,7 @@ func ResourceDomain() *schema.Resource {
 	}
 }
 
-func resourceAwsElasticSearchDomainImport(
+func resourceDomainImport(
 	d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	d.Set("domain_name", d.Id())
 	return []*schema.ResourceData{d}, nil
@@ -1000,12 +1000,12 @@ func resourceDomainDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Waiting for ElasticSearch domain %q to be deleted", domainName)
-	err = resourceAwsElasticSearchDomainDeleteWaiter(domainName, conn)
+	err = resourceDomainDeleteWaiter(domainName, conn)
 
 	return err
 }
 
-func resourceAwsElasticSearchDomainDeleteWaiter(domainName string, conn *elasticsearch.ElasticsearchService) error {
+func resourceDomainDeleteWaiter(domainName string, conn *elasticsearch.ElasticsearchService) error {
 	input := &elasticsearch.DescribeElasticsearchDomainInput{
 		DomainName: aws.String(domainName),
 	}

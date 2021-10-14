@@ -17,9 +17,9 @@ import (
 
 func ResourceDomainPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsElasticSearchDomainPolicyUpsert,
+		Create: resourceDomainPolicyUpsert,
 		Read:   resourceDomainPolicyRead,
-		Update: resourceAwsElasticSearchDomainPolicyUpsert,
+		Update: resourceDomainPolicyUpsert,
 		Delete: resourceDomainPolicyDelete,
 
 		Schema: map[string]*schema.Schema{
@@ -59,7 +59,7 @@ func resourceDomainPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsElasticSearchDomainPolicyUpsert(d *schema.ResourceData, meta interface{}) error {
+func resourceDomainPolicyUpsert(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElasticSearchConn
 	domainName := d.Get("domain_name").(string)
 	_, err := conn.UpdateElasticsearchDomainConfig(&elasticsearch.UpdateElasticsearchDomainConfigInput{

@@ -17,9 +17,9 @@ import (
 
 func ResourceDomainSAMLOptions() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsElasticSearchDomainSAMLOptionsPut,
+		Create: resourceDomainSAMLOptionsPut,
 		Read:   resourceDomainSAMLOptionsRead,
-		Update: resourceAwsElasticSearchDomainSAMLOptionsPut,
+		Update: resourceDomainSAMLOptionsPut,
 		Delete: resourceDomainSAMLOptionsDelete,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
@@ -136,7 +136,7 @@ func resourceDomainSAMLOptionsRead(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func resourceAwsElasticSearchDomainSAMLOptionsPut(d *schema.ResourceData, meta interface{}) error {
+func resourceDomainSAMLOptionsPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElasticSearchConn
 
 	domainName := d.Get("domain_name").(string)
