@@ -10,9 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 const (
@@ -269,7 +267,7 @@ const (
 	NetworkACLEntryPropagationTimeout = 5 * time.Minute
 )
 
-func WaitRouteDeleted(conn *ec2.EC2, routeFinder tfec2.RouteFinder, routeTableID, destination string, timeout time.Duration) (*ec2.Route, error) {
+func WaitRouteDeleted(conn *ec2.EC2, routeFinder RouteFinder, routeTableID, destination string, timeout time.Duration) (*ec2.Route, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:                   []string{RouteStatusReady},
 		Target:                    []string{},
@@ -287,7 +285,7 @@ func WaitRouteDeleted(conn *ec2.EC2, routeFinder tfec2.RouteFinder, routeTableID
 	return nil, err
 }
 
-func WaitRouteReady(conn *ec2.EC2, routeFinder tfec2.RouteFinder, routeTableID, destination string, timeout time.Duration) (*ec2.Route, error) {
+func WaitRouteReady(conn *ec2.EC2, routeFinder RouteFinder, routeTableID, destination string, timeout time.Duration) (*ec2.Route, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    []string{RouteStatusReady},
@@ -501,7 +499,7 @@ func WaitTransitGatewayPrefixListReferenceStateDeleted(conn *ec2.EC2, transitGat
 
 	outputRaw, err := stateConf.WaitForState()
 
-	if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidRouteTableIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidRouteTableIDNotFound) {
 		return nil, nil
 	}
 
@@ -560,7 +558,7 @@ func WaitTransitGatewayRouteTablePropagationStateDisabled(conn *ec2.EC2, transit
 
 	outputRaw, err := stateConf.WaitForState()
 
-	if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidRouteTableIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidRouteTableIDNotFound) {
 		return nil, nil
 	}
 
@@ -799,8 +797,8 @@ func WaitPlacementGroupDeleted(conn *ec2.EC2, name string) (*ec2.PlacementGroup,
 
 func WaitVPCEndpointAccepted(conn *ec2.EC2, vpcEndpointID string, timeout time.Duration) (*ec2.VpcEndpoint, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{tfec2.VPCEndpointStatePendingAcceptance},
-		Target:     []string{tfec2.VPCEndpointStateAvailable},
+		Pending:    []string{VPCEndpointStatePendingAcceptance},
+		Target:     []string{VPCEndpointStateAvailable},
 		Timeout:    timeout,
 		Refresh:    StatusVPCEndpointState(conn, vpcEndpointID),
 		Delay:      5 * time.Second,
@@ -810,7 +808,7 @@ func WaitVPCEndpointAccepted(conn *ec2.EC2, vpcEndpointID string, timeout time.D
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*ec2.VpcEndpoint); ok {
-		if state, lastError := aws.StringValue(output.State), output.LastError; state == tfec2.VPCEndpointStateFailed && lastError != nil {
+		if state, lastError := aws.StringValue(output.State), output.LastError; state == VPCEndpointStateFailed && lastError != nil {
 			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(lastError.Code), aws.StringValue(lastError.Message)))
 		}
 
@@ -822,8 +820,8 @@ func WaitVPCEndpointAccepted(conn *ec2.EC2, vpcEndpointID string, timeout time.D
 
 func WaitVPCEndpointAvailable(conn *ec2.EC2, vpcEndpointID string, timeout time.Duration) (*ec2.VpcEndpoint, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{tfec2.VPCEndpointStatePending},
-		Target:     []string{tfec2.VPCEndpointStateAvailable, tfec2.VPCEndpointStatePendingAcceptance},
+		Pending:    []string{VPCEndpointStatePending},
+		Target:     []string{VPCEndpointStateAvailable, VPCEndpointStatePendingAcceptance},
 		Timeout:    timeout,
 		Refresh:    StatusVPCEndpointState(conn, vpcEndpointID),
 		Delay:      5 * time.Second,
@@ -833,7 +831,7 @@ func WaitVPCEndpointAvailable(conn *ec2.EC2, vpcEndpointID string, timeout time.
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*ec2.VpcEndpoint); ok {
-		if state, lastError := aws.StringValue(output.State), output.LastError; state == tfec2.VPCEndpointStateFailed && lastError != nil {
+		if state, lastError := aws.StringValue(output.State), output.LastError; state == VPCEndpointStateFailed && lastError != nil {
 			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(lastError.Code), aws.StringValue(lastError.Message)))
 		}
 
@@ -845,7 +843,7 @@ func WaitVPCEndpointAvailable(conn *ec2.EC2, vpcEndpointID string, timeout time.
 
 func WaitVPCEndpointDeleted(conn *ec2.EC2, vpcEndpointID string, timeout time.Duration) (*ec2.VpcEndpoint, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{tfec2.VPCEndpointStateDeleting},
+		Pending:    []string{VPCEndpointStateDeleting},
 		Target:     []string{},
 		Timeout:    timeout,
 		Refresh:    StatusVPCEndpointState(conn, vpcEndpointID),
@@ -892,13 +890,13 @@ func WaitVPCEndpointRouteTableAssociationReady(conn *ec2.EC2, vpcEndpointID, rou
 
 func WaitEBSSnapshotImportComplete(conn *ec2.EC2, importTaskID string) (*ec2.SnapshotTaskDetail, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{tfec2.EBSSnapshotImportStateActive,
-			tfec2.EBSSnapshotImportStateUpdating,
-			tfec2.EBSSnapshotImportStateValidating,
-			tfec2.EBSSnapshotImportStateValidd,
-			tfec2.EBSSnapshotImportStateConverting,
+		Pending: []string{EBSSnapshotImportStateActive,
+			EBSSnapshotImportStateUpdating,
+			EBSSnapshotImportStateValidating,
+			EBSSnapshotImportStateValidd,
+			EBSSnapshotImportStateConverting,
 		},
-		Target:  []string{tfec2.EBSSnapshotImportStateCompleted},
+		Target:  []string{EBSSnapshotImportStateCompleted},
 		Refresh: StatusEBSSnapshotImport(conn, importTaskID),
 		Timeout: 60 * time.Minute,
 		Delay:   10 * time.Second,

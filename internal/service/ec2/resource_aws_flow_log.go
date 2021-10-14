@@ -1,4 +1,4 @@
-package aws
+package ec2
 
 import (
 	"fmt"
@@ -11,132 +11,11 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
 func ResourceFlowLog() *schema.Resource {
@@ -325,7 +204,7 @@ func resourceAwsLogFlowCreate(d *schema.ResourceData, meta interface{}) error {
 	output, err := conn.CreateFlowLogs(input)
 
 	if err == nil && output != nil {
-		err = tfec2.UnsuccessfulItemsError(output.Unsuccessful)
+		err = UnsuccessfulItemsError(output.Unsuccessful)
 	}
 
 	if err != nil {
@@ -342,7 +221,7 @@ func resourceAwsLogFlowRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	fl, err := tfec2.FindFlowLogByID(conn, d.Id())
+	fl, err := FindFlowLogByID(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Flow Log %s not found, removing from state", d.Id())
@@ -422,10 +301,10 @@ func resourceAwsLogFlowDelete(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err == nil && output != nil {
-		err = tfec2.UnsuccessfulItemsError(output.Unsuccessful)
+		err = UnsuccessfulItemsError(output.Unsuccessful)
 	}
 
-	if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidFlowLogIdNotFound) {
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidFlowLogIdNotFound) {
 		return nil
 	}
 

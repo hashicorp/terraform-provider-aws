@@ -1,4 +1,4 @@
-package aws
+package ec2
 
 import (
 	"fmt"
@@ -8,57 +8,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
 func ResourceTransitGatewayVPCAttachment() *schema.Resource {
@@ -241,7 +194,7 @@ func resourceTransitGatewayVPCAttachmentRead(d *schema.ResourceData, meta interf
 		}
 
 		transitGatewayPropagationDefaultRouteTableID := aws.StringValue(transitGateway.Options.PropagationDefaultRouteTableId)
-		transitGatewayDefaultRouteTablePropagation, err = tfec2.FindTransitGatewayRouteTablePropagation(conn, transitGatewayPropagationDefaultRouteTableID, d.Id())
+		transitGatewayDefaultRouteTablePropagation, err = FindTransitGatewayRouteTablePropagation(conn, transitGatewayPropagationDefaultRouteTableID, d.Id())
 		if err != nil {
 			return fmt.Errorf("error determining EC2 Transit Gateway Attachment (%s) propagation to Route Table (%s): %s", d.Id(), transitGatewayPropagationDefaultRouteTableID, err)
 		}

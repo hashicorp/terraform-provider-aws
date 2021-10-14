@@ -1,4 +1,4 @@
-package aws
+package ec2_test
 
 import (
 	"regexp"
