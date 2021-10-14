@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsStorageGatewayTapePool() *schema.Resource {
@@ -61,8 +62,8 @@ func resourceAwsStorageGatewayTapePool() *schema.Resource {
 }
 
 func resourceAwsStorageGatewayTapePoolCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).storagegatewayconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).StorageGatewayConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &storagegateway.CreateTapePoolInput{
@@ -85,7 +86,7 @@ func resourceAwsStorageGatewayTapePoolCreate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsStorageGatewayTapePoolUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).storagegatewayconn
+	conn := meta.(*conns.AWSClient).StorageGatewayConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -98,9 +99,9 @@ func resourceAwsStorageGatewayTapePoolUpdate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsStorageGatewayTapePoolRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).storagegatewayconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).StorageGatewayConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &storagegateway.ListTapePoolsInput{
 		PoolARNs: []*string{aws.String(d.Id())},
@@ -147,7 +148,7 @@ func resourceAwsStorageGatewayTapePoolRead(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsStorageGatewayTapePoolDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).storagegatewayconn
+	conn := meta.(*conns.AWSClient).StorageGatewayConn
 
 	input := &storagegateway.DeleteTapePoolInput{
 		PoolARN: aws.String(d.Id()),

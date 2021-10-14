@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/storagegateway/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsStorageGatewayNfsFileShare() *schema.Resource {
@@ -198,8 +199,8 @@ func resourceAwsStorageGatewayNfsFileShare() *schema.Resource {
 }
 
 func resourceAwsStorageGatewayNfsFileShareCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).storagegatewayconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).StorageGatewayConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	fileShareDefaults, err := expandStorageGatewayNfsFileShareDefaults(d.Get("nfs_file_share_defaults").([]interface{}))
@@ -256,9 +257,9 @@ func resourceAwsStorageGatewayNfsFileShareCreate(d *schema.ResourceData, meta in
 }
 
 func resourceAwsStorageGatewayNfsFileShareRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).storagegatewayconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).StorageGatewayConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &storagegateway.DescribeNFSFileSharesInput{
 		FileShareARNList: []*string{aws.String(d.Id())},
@@ -330,7 +331,7 @@ func resourceAwsStorageGatewayNfsFileShareRead(d *schema.ResourceData, meta inte
 }
 
 func resourceAwsStorageGatewayNfsFileShareUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).storagegatewayconn
+	conn := meta.(*conns.AWSClient).StorageGatewayConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -392,7 +393,7 @@ func resourceAwsStorageGatewayNfsFileShareUpdate(d *schema.ResourceData, meta in
 }
 
 func resourceAwsStorageGatewayNfsFileShareDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).storagegatewayconn
+	conn := meta.(*conns.AWSClient).StorageGatewayConn
 
 	input := &storagegateway.DeleteFileShareInput{
 		FileShareARN: aws.String(d.Id()),

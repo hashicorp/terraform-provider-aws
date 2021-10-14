@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/storagegateway/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSStorageGatewaySmbFileShare_Authentication_ActiveDirectory(t *testing.T) {
@@ -887,7 +888,7 @@ func TestAccAWSStorageGatewaySmbFileShare_AdminUserList(t *testing.T) {
 }
 
 func testAccCheckAWSStorageGatewaySmbFileShareDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).storagegatewayconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_storagegateway_smb_file_share" {
@@ -918,7 +919,7 @@ func testAccCheckAWSStorageGatewaySmbFileShareExists(resourceName string, smbFil
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).storagegatewayconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn
 
 		output, err := finder.SMBFileShareByARN(conn, rs.Primary.ID)
 

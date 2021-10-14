@@ -15,6 +15,7 @@ import (
 	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/aws/internal/service/storagegateway"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/storagegateway/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/storagegateway/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsStorageGatewayFileSystemAssociation() *schema.Resource {
@@ -93,8 +94,8 @@ func resourceAwsStorageGatewayFileSystemAssociation() *schema.Resource {
 }
 
 func resourceAwsStorageGatewayFileSystemAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).storagegatewayconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).StorageGatewayConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &storagegateway.AssociateFileSystemInput{
@@ -131,9 +132,9 @@ func resourceAwsStorageGatewayFileSystemAssociationCreate(d *schema.ResourceData
 }
 
 func resourceAwsStorageGatewayFileSystemAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).storagegatewayconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).StorageGatewayConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	filesystem, err := finder.FileSystemAssociationByARN(conn, d.Id())
 
@@ -172,7 +173,7 @@ func resourceAwsStorageGatewayFileSystemAssociationRead(d *schema.ResourceData, 
 }
 
 func resourceAwsStorageGatewayFileSystemAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).storagegatewayconn
+	conn := meta.(*conns.AWSClient).StorageGatewayConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -209,7 +210,7 @@ func resourceAwsStorageGatewayFileSystemAssociationUpdate(d *schema.ResourceData
 }
 
 func resourceAwsStorageGatewayFileSystemAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).storagegatewayconn
+	conn := meta.(*conns.AWSClient).StorageGatewayConn
 
 	input := &storagegateway.DisassociateFileSystemInput{
 		FileSystemAssociationARN: aws.String(d.Id()),
