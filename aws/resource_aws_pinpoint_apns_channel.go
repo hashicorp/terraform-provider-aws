@@ -123,7 +123,7 @@ func resourceAwsPinpointAPNSChannelRead(d *schema.ResourceData, meta interface{}
 		ApplicationId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if isAWSErr(err, pinpoint.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, pinpoint.ErrCodeNotFoundException, "") {
 			log.Printf("[WARN] Pinpoint APNs Channel for application %s not found, error code (404)", d.Id())
 			d.SetId("")
 			return nil
@@ -148,7 +148,7 @@ func resourceAwsPinpointAPNSChannelDelete(d *schema.ResourceData, meta interface
 		ApplicationId: aws.String(d.Id()),
 	})
 
-	if isAWSErr(err, pinpoint.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, pinpoint.ErrCodeNotFoundException, "") {
 		return nil
 	}
 

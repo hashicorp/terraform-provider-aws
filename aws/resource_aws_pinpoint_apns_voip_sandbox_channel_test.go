@@ -230,7 +230,7 @@ func testAccCheckAWSPinpointAPNSVoipSandboxChannelDestroy(s *terraform.State) er
 		}
 		_, err := conn.GetApnsVoipSandboxChannel(params)
 		if err != nil {
-			if isAWSErr(err, pinpoint.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, pinpoint.ErrCodeNotFoundException, "") {
 				continue
 			}
 			return err

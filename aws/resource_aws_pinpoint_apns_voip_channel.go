@@ -123,7 +123,7 @@ func resourceAwsPinpointAPNSVoipChannelRead(d *schema.ResourceData, meta interfa
 		ApplicationId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if isAWSErr(err, pinpoint.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, pinpoint.ErrCodeNotFoundException, "") {
 			log.Printf("[WARN] Pinpoint APNs Voip Channel for application %s not found, error code (404)", d.Id())
 			d.SetId("")
 			return nil
@@ -148,7 +148,7 @@ func resourceAwsPinpointAPNSVoipChannelDelete(d *schema.ResourceData, meta inter
 		ApplicationId: aws.String(d.Id()),
 	})
 
-	if isAWSErr(err, pinpoint.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, pinpoint.ErrCodeNotFoundException, "") {
 		return nil
 	}
 
