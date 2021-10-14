@@ -137,6 +137,7 @@ func testSweepDirectConnectGatewayAssociations(region string) error {
 					r := resourceAwsDxGatewayAssociation()
 					d := r.Data(nil)
 					d.SetId(tfdirectconnect.GatewayAssociationCreateResourceID(directConnectGatewayID, transitGatewayID))
+					d.Set("dx_gateway_association_id", association.AssociationId)
 
 					sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
 				}
