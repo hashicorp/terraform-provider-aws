@@ -1,4 +1,4 @@
-package aws
+package applicationautoscaling_test
 
 import (
 	"fmt"
