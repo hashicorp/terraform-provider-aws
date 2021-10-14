@@ -3,7 +3,6 @@ package budgets
 import (
 	"fmt"
 	"strings"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const budgetActionResourceIDSeparator = ":"
