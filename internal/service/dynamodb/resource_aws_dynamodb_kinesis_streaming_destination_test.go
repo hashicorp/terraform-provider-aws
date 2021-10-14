@@ -17,6 +17,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfdynamodb "github.com/hashicorp/terraform-provider-aws/internal/service/dynamodb"
+	tfdynamodb "github.com/hashicorp/terraform-provider-aws/internal/service/dynamodb"
+	tfdynamodb "github.com/hashicorp/terraform-provider-aws/internal/service/dynamodb"
+	tfdynamodb "github.com/hashicorp/terraform-provider-aws/internal/service/dynamodb"
+	tfdynamodb "github.com/hashicorp/terraform-provider-aws/internal/service/dynamodb"
 )
 
 func TestAccAwsDynamoDbKinesisStreamingDestination_basic(t *testing.T) {
@@ -137,7 +142,7 @@ func testAccCheckDynamoDbKinesisStreamingDestinationExists(resourceName string) 
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn
 
-		output, err := finder.DynamoDBKinesisDataStreamDestination(context.Background(), conn, streamArn, tableName)
+		output, err := tfdynamodb.FindDynamoDBKinesisDataStreamDestination(context.Background(), conn, streamArn, tableName)
 
 		if err != nil {
 			return err
@@ -165,7 +170,7 @@ func testAccCheckAWSDynamoDbKinesisStreamingDestinationDestroy(s *terraform.Stat
 			return err
 		}
 
-		output, err := finder.DynamoDBKinesisDataStreamDestination(context.Background(), conn, streamArn, tableName)
+		output, err := tfdynamodb.FindDynamoDBKinesisDataStreamDestination(context.Background(), conn, streamArn, tableName)
 
 		if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
 			continue

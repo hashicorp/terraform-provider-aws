@@ -10,24 +10,24 @@ import (
 )
 
 const (
-	KinesisStreamingDestinationActiveTimeout   = 5 * time.Minute
-	KinesisStreamingDestinationDisabledTimeout = 5 * time.Minute
-	CreateTableTimeout                         = 20 * time.Minute
-	UpdateTableTimeoutTotal                    = 60 * time.Minute
-	ReplicaUpdateTimeout                       = 30 * time.Minute
-	UpdateTableTimeout                         = 20 * time.Minute
-	UpdateTableContinuousBackupsTimeout        = 20 * time.Minute
-	DeleteTableTimeout                         = 10 * time.Minute
-	PITRUpdateTimeout                          = 30 * time.Second
-	TTLUpdateTimeout                           = 30 * time.Second
+	kinesisStreamingDestinationActiveTimeout   = 5 * time.Minute
+	kinesisStreamingDestinationDisabledTimeout = 5 * time.Minute
+	createTableTimeout                         = 20 * time.Minute
+	updateTableTimeoutTotal                    = 60 * time.Minute
+	replicaUpdateTimeout                       = 30 * time.Minute
+	updateTableTimeout                         = 20 * time.Minute
+	updateTableContinuousBackupsTimeout        = 20 * time.Minute
+	deleteTableTimeout                         = 10 * time.Minute
+	pitrUpdateTimeout                          = 30 * time.Second
+	ttlUpdateTimeout                           = 30 * time.Second
 )
 
-func DynamoDBKinesisStreamingDestinationActive(ctx context.Context, conn *dynamodb.DynamoDB, streamArn, tableName string) error {
+func waitDynamoDBKinesisStreamingDestinationActive(ctx context.Context, conn *dynamodb.DynamoDB, streamArn, tableName string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{dynamodb.DestinationStatusDisabled, dynamodb.DestinationStatusEnabling},
 		Target:  []string{dynamodb.DestinationStatusActive},
-		Timeout: KinesisStreamingDestinationActiveTimeout,
-		Refresh: DynamoDBKinesisStreamingDestinationStatus(ctx, conn, streamArn, tableName),
+		Timeout: kinesisStreamingDestinationActiveTimeout,
+		Refresh: statusDynamoDBKinesisStreamingDestination(ctx, conn, streamArn, tableName),
 	}
 
 	_, err := stateConf.WaitForStateContext(ctx)
@@ -35,12 +35,12 @@ func DynamoDBKinesisStreamingDestinationActive(ctx context.Context, conn *dynamo
 	return err
 }
 
-func DynamoDBKinesisStreamingDestinationDisabled(ctx context.Context, conn *dynamodb.DynamoDB, streamArn, tableName string) error {
+func waitDynamoDBKinesisStreamingDestinationDisabled(ctx context.Context, conn *dynamodb.DynamoDB, streamArn, tableName string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{dynamodb.DestinationStatusActive, dynamodb.DestinationStatusDisabling},
 		Target:  []string{dynamodb.DestinationStatusDisabled},
-		Timeout: KinesisStreamingDestinationDisabledTimeout,
-		Refresh: DynamoDBKinesisStreamingDestinationStatus(ctx, conn, streamArn, tableName),
+		Timeout: kinesisStreamingDestinationDisabledTimeout,
+		Refresh: statusDynamoDBKinesisStreamingDestination(ctx, conn, streamArn, tableName),
 	}
 
 	_, err := stateConf.WaitForStateContext(ctx)
@@ -48,7 +48,7 @@ func DynamoDBKinesisStreamingDestinationDisabled(ctx context.Context, conn *dyna
 	return err
 }
 
-func DynamoDBTableActive(conn *dynamodb.DynamoDB, tableName string) (*dynamodb.TableDescription, error) {
+func waitDynamoDBTableActive(conn *dynamodb.DynamoDB, tableName string) (*dynamodb.TableDescription, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			dynamodb.TableStatusCreating,
@@ -57,8 +57,8 @@ func DynamoDBTableActive(conn *dynamodb.DynamoDB, tableName string) (*dynamodb.T
 		Target: []string{
 			dynamodb.TableStatusActive,
 		},
-		Timeout: CreateTableTimeout,
-		Refresh: DynamoDBTableStatus(conn, tableName),
+		Timeout: createTableTimeout,
+		Refresh: statusDynamoDBTable(conn, tableName),
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -70,15 +70,15 @@ func DynamoDBTableActive(conn *dynamodb.DynamoDB, tableName string) (*dynamodb.T
 	return nil, err
 }
 
-func DynamoDBTableDeleted(conn *dynamodb.DynamoDB, tableName string) (*dynamodb.TableDescription, error) {
+func waitDynamoDBTableDeleted(conn *dynamodb.DynamoDB, tableName string) (*dynamodb.TableDescription, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			dynamodb.TableStatusActive,
 			dynamodb.TableStatusDeleting,
 		},
 		Target:  []string{},
-		Timeout: DeleteTableTimeout,
-		Refresh: DynamoDBTableStatus(conn, tableName),
+		Timeout: deleteTableTimeout,
+		Refresh: statusDynamoDBTable(conn, tableName),
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -90,7 +90,7 @@ func DynamoDBTableDeleted(conn *dynamodb.DynamoDB, tableName string) (*dynamodb.
 	return nil, err
 }
 
-func DynamoDBReplicaActive(conn *dynamodb.DynamoDB, tableName, region string) (*dynamodb.DescribeTableOutput, error) {
+func waitDynamoDBReplicaActive(conn *dynamodb.DynamoDB, tableName, region string) (*dynamodb.DescribeTableOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			dynamodb.ReplicaStatusCreating,
@@ -100,8 +100,8 @@ func DynamoDBReplicaActive(conn *dynamodb.DynamoDB, tableName, region string) (*
 		Target: []string{
 			dynamodb.ReplicaStatusActive,
 		},
-		Timeout: ReplicaUpdateTimeout,
-		Refresh: DynamoDBReplicaUpdate(conn, tableName, region),
+		Timeout: replicaUpdateTimeout,
+		Refresh: statusDynamoDBReplicaUpdate(conn, tableName, region),
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -113,7 +113,7 @@ func DynamoDBReplicaActive(conn *dynamodb.DynamoDB, tableName, region string) (*
 	return nil, err
 }
 
-func DynamoDBReplicaDeleted(conn *dynamodb.DynamoDB, tableName, region string) (*dynamodb.DescribeTableOutput, error) {
+func waitDynamoDBReplicaDeleted(conn *dynamodb.DynamoDB, tableName, region string) (*dynamodb.DescribeTableOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			dynamodb.ReplicaStatusCreating,
@@ -122,8 +122,8 @@ func DynamoDBReplicaDeleted(conn *dynamodb.DynamoDB, tableName, region string) (
 			dynamodb.ReplicaStatusActive,
 		},
 		Target:  []string{""},
-		Timeout: ReplicaUpdateTimeout,
-		Refresh: DynamoDBReplicaDelete(conn, tableName, region),
+		Timeout: replicaUpdateTimeout,
+		Refresh: statusDynamoDBReplicaDelete(conn, tableName, region),
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -135,7 +135,7 @@ func DynamoDBReplicaDeleted(conn *dynamodb.DynamoDB, tableName, region string) (
 	return nil, err
 }
 
-func DynamoDBGSIActive(conn *dynamodb.DynamoDB, tableName, indexName string) (*dynamodb.GlobalSecondaryIndexDescription, error) {
+func waitDynamoDBGSIActive(conn *dynamodb.DynamoDB, tableName, indexName string) (*dynamodb.GlobalSecondaryIndexDescription, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			dynamodb.IndexStatusCreating,
@@ -144,8 +144,8 @@ func DynamoDBGSIActive(conn *dynamodb.DynamoDB, tableName, indexName string) (*d
 		Target: []string{
 			dynamodb.IndexStatusActive,
 		},
-		Timeout: UpdateTableTimeout,
-		Refresh: DynamoDBGSIStatus(conn, tableName, indexName),
+		Timeout: updateTableTimeout,
+		Refresh: statusDynamoDBGSI(conn, tableName, indexName),
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -157,7 +157,7 @@ func DynamoDBGSIActive(conn *dynamodb.DynamoDB, tableName, indexName string) (*d
 	return nil, err
 }
 
-func DynamoDBGSIDeleted(conn *dynamodb.DynamoDB, tableName, indexName string) (*dynamodb.GlobalSecondaryIndexDescription, error) {
+func waitDynamoDBGSIDeleted(conn *dynamodb.DynamoDB, tableName, indexName string) (*dynamodb.GlobalSecondaryIndexDescription, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			dynamodb.IndexStatusActive,
@@ -165,8 +165,8 @@ func DynamoDBGSIDeleted(conn *dynamodb.DynamoDB, tableName, indexName string) (*
 			dynamodb.IndexStatusUpdating,
 		},
 		Target:  []string{},
-		Timeout: UpdateTableTimeout,
-		Refresh: DynamoDBGSIStatus(conn, tableName, indexName),
+		Timeout: updateTableTimeout,
+		Refresh: statusDynamoDBGSI(conn, tableName, indexName),
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -178,7 +178,7 @@ func DynamoDBGSIDeleted(conn *dynamodb.DynamoDB, tableName, indexName string) (*
 	return nil, err
 }
 
-func DynamoDBPITRUpdated(conn *dynamodb.DynamoDB, tableName string, toEnable bool) (*dynamodb.PointInTimeRecoveryDescription, error) {
+func waitDynamoDBPITRUpdated(conn *dynamodb.DynamoDB, tableName string, toEnable bool) (*dynamodb.PointInTimeRecoveryDescription, error) {
 	var pending []string
 	target := []string{dynamodb.TimeToLiveStatusDisabled}
 
@@ -192,8 +192,8 @@ func DynamoDBPITRUpdated(conn *dynamodb.DynamoDB, tableName string, toEnable boo
 	stateConf := &resource.StateChangeConf{
 		Pending: pending,
 		Target:  target,
-		Timeout: PITRUpdateTimeout,
-		Refresh: DynamoDBPITRStatus(conn, tableName),
+		Timeout: pitrUpdateTimeout,
+		Refresh: statusDynamoDBPITR(conn, tableName),
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -205,7 +205,7 @@ func DynamoDBPITRUpdated(conn *dynamodb.DynamoDB, tableName string, toEnable boo
 	return nil, err
 }
 
-func DynamoDBTTLUpdated(conn *dynamodb.DynamoDB, tableName string, toEnable bool) (*dynamodb.TimeToLiveDescription, error) {
+func waitDynamoDBTTLUpdated(conn *dynamodb.DynamoDB, tableName string, toEnable bool) (*dynamodb.TimeToLiveDescription, error) {
 	pending := []string{
 		dynamodb.TimeToLiveStatusEnabled,
 		dynamodb.TimeToLiveStatusDisabling,
@@ -223,8 +223,8 @@ func DynamoDBTTLUpdated(conn *dynamodb.DynamoDB, tableName string, toEnable bool
 	stateConf := &resource.StateChangeConf{
 		Pending: pending,
 		Target:  target,
-		Timeout: TTLUpdateTimeout,
-		Refresh: DynamoDBTTLStatus(conn, tableName),
+		Timeout: ttlUpdateTimeout,
+		Refresh: statusDynamoDBTTL(conn, tableName),
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -236,7 +236,7 @@ func DynamoDBTTLUpdated(conn *dynamodb.DynamoDB, tableName string, toEnable bool
 	return nil, err
 }
 
-func DynamoDBSSEUpdated(conn *dynamodb.DynamoDB, tableName string) (*dynamodb.TableDescription, error) {
+func waitDynamoDBSSEUpdated(conn *dynamodb.DynamoDB, tableName string) (*dynamodb.TableDescription, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			dynamodb.SSEStatusDisabling,
@@ -247,8 +247,8 @@ func DynamoDBSSEUpdated(conn *dynamodb.DynamoDB, tableName string) (*dynamodb.Ta
 			dynamodb.SSEStatusDisabled,
 			dynamodb.SSEStatusEnabled,
 		},
-		Timeout: UpdateTableTimeout,
-		Refresh: DynamoDBTableSESStatus(conn, tableName),
+		Timeout: updateTableTimeout,
+		Refresh: statusDynamoDBTableSES(conn, tableName),
 	}
 
 	outputRaw, err := stateConf.WaitForState()
