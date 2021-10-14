@@ -62,7 +62,7 @@ func TestAccAWSKmsAlias_disappears(t *testing.T) {
 				Config: testAccAWSKmsAliasConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSKmsAliasExists(resourceName, &alias),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceAlias(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfkms.ResourceAlias(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

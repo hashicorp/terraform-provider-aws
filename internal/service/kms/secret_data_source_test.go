@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 )
 
 func TestAccAWSKmsSecretDataSource_removed(t *testing.T) {
@@ -17,7 +18,7 @@ func TestAccAWSKmsSecretDataSource_removed(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAwsKmsSecretDataSourceConfig,
-				ExpectError: regexp.MustCompile(dataSourceAwsKmsSecretRemovedMessage),
+				ExpectError: regexp.MustCompile(tfkms.SecretRemovedMessage),
 			},
 		},
 	})

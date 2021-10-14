@@ -282,7 +282,7 @@ func resourceGrantDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Checking if grant is revoked: %s", grantId)
-	err = waitForKmsGrantToBeRevoked(conn, keyId, grantId)
+	err = WaitForGrantToBeRevoked(conn, keyId, grantId)
 
 	return err
 }
@@ -329,7 +329,7 @@ func findKmsGrantByIdWithRetry(conn *kms.KMS, keyId string, grantId string) (*km
 }
 
 // Used by the tests as well
-func waitForKmsGrantToBeRevoked(conn *kms.KMS, keyId string, grantId string) error {
+func WaitForGrantToBeRevoked(conn *kms.KMS, keyId string, grantId string) error {
 	var grant *kms.GrantListEntry
 	err := resource.Retry(3*time.Minute, func() *resource.RetryError {
 		var err error

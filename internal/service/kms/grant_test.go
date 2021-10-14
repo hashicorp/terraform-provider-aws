@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 )
 
 func TestAccAWSKmsGrant_basic(t *testing.T) {
@@ -237,7 +238,7 @@ func testAccCheckAWSKmsGrantDestroy(s *terraform.State) error {
 			continue
 		}
 
-		err := waitForKmsGrantToBeRevoked(conn, rs.Primary.Attributes["key_id"], rs.Primary.ID)
+		err := tfkms.WaitForGrantToBeRevoked(conn, rs.Primary.Attributes["key_id"], rs.Primary.ID)
 		return err
 	}
 

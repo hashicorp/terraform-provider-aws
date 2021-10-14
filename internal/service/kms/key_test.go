@@ -52,7 +52,7 @@ func testSweepKmsKeys(region string) error {
 				continue
 			}
 
-			r := ResourceKey()
+			r := tfkms.ResourceKey()
 			d := r.Data(nil)
 			d.SetId(kKeyId)
 			d.Set("key_id", kKeyId)
@@ -143,7 +143,7 @@ func TestAccAWSKmsKey_disappears(t *testing.T) {
 				Config: testAccAWSKmsKeyConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSKmsKeyExists(resourceName, &key),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceKey(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfkms.ResourceKey(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
