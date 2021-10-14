@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfquicksight "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
 )
 
 func TestAccAWSQuickSightGroupMembership_basic(t *testing.T) {
@@ -84,7 +85,7 @@ func testAccCheckQuickSightGroupMembershipDestroy(s *terraform.State) error {
 			GroupName:    aws.String(groupName),
 		}
 
-		found, err := finder.GroupMembership(conn, listInput, userName)
+		found, err := tfquicksight.FindGroupMembership(conn, listInput, userName)
 
 		if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
 			continue
@@ -120,7 +121,7 @@ func testAccCheckQuickSightGroupMembershipExists(resourceName string) resource.T
 			GroupName:    aws.String(groupName),
 		}
 
-		found, err := finder.GroupMembership(conn, listInput, userName)
+		found, err := tfquicksight.FindGroupMembership(conn, listInput, userName)
 		if err != nil {
 			return fmt.Errorf("Error listing QuickSight Group Memberships: %s", err)
 		}

@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfquicksight "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
 )
 
 func ResourceGroupMembership() *schema.Resource {
@@ -108,7 +109,7 @@ func resourceGroupMembershipRead(ctx context.Context, d *schema.ResourceData, me
 		GroupName:    aws.String(groupName),
 	}
 
-	found, err := finder.GroupMembership(conn, listInput, userName)
+	found, err := tfquicksight.FindGroupMembership(conn, listInput, userName)
 	if err != nil {
 		return diag.Errorf("Error listing QuickSight Group Memberships (%s): %s", d.Id(), err)
 	}

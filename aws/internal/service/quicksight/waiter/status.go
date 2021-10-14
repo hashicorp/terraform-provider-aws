@@ -9,8 +9,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// DataSourceStatus fetches the DataSource and its Status
-func DataSourceStatus(ctx context.Context, conn *quicksight.QuickSight, accountId, datasourceId string) resource.StateRefreshFunc {
+// status fetches the DataSource and its Status
+func status(ctx context.Context, conn *quicksight.QuickSight, accountId, datasourceId string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &quicksight.DescribeDataSourceInput{
 			AwsAccountId: aws.String(accountId),
