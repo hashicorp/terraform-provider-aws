@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSDynamoDbTableItem_basic(t *testing.T) {
@@ -233,7 +234,7 @@ func TestAccAWSDynamoDbTableItem_updateWithRangeKey(t *testing.T) {
 }
 
 func testAccCheckAWSDynamoDbItemDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).dynamodbconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_dynamodb_table_item" {
@@ -280,7 +281,7 @@ func testAccCheckAWSDynamoDbTableItemExists(n string, item *dynamodb.GetItemOutp
 			return fmt.Errorf("No DynamoDB table item ID specified!")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).dynamodbconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn
 
 		attrs := rs.Primary.Attributes
 		attributes, err := expandDynamoDbTableItemAttributes(attrs["item"])
@@ -307,7 +308,7 @@ func testAccCheckAWSDynamoDbTableItemExists(n string, item *dynamodb.GetItemOutp
 
 func testAccCheckAWSDynamoDbTableItemCount(tableName string, count int64) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).dynamodbconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn
 		out, err := conn.Scan(&dynamodb.ScanInput{
 			ConsistentRead: aws.Bool(true),
 			TableName:      aws.String(tableName),

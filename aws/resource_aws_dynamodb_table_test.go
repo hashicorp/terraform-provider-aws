@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -32,7 +33,7 @@ func testSweepDynamoDbTables(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*AWSClient).dynamodbconn
+	conn := client.(*conns.AWSClient).DynamoDBConn
 	sweepResources := make([]*testSweepResource, 0)
 	var errs *multierror.Error
 	var g multierror.Group
@@ -1486,7 +1487,7 @@ func TestAccAWSDynamoDbTable_Replica_singleWithCMK(t *testing.T) {
 }
 
 func testAccCheckAWSDynamoDbTableDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).dynamodbconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_dynamodb_table" {
@@ -1527,7 +1528,7 @@ func testAccCheckInitialAWSDynamoDbTableExists(n string, table *dynamodb.Describ
 			return fmt.Errorf("No DynamoDB table name specified!")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).dynamodbconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn
 
 		params := &dynamodb.DescribeTableInput{
 			TableName: aws.String(rs.Primary.ID),

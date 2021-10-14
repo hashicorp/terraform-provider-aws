@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/dynamodb/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAwsDynamoDbKinesisStreamingDestination_basic(t *testing.T) {
@@ -131,7 +132,7 @@ func testAccCheckDynamoDbKinesisStreamingDestinationExists(resourceName string) 
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).dynamodbconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn
 
 		output, err := finder.DynamoDBKinesisDataStreamDestination(context.Background(), conn, streamArn, tableName)
 
@@ -148,7 +149,7 @@ func testAccCheckDynamoDbKinesisStreamingDestinationExists(resourceName string) 
 }
 
 func testAccCheckAWSDynamoDbKinesisStreamingDestinationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).dynamodbconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_dynamodb_kinesis_streaming_destination" {

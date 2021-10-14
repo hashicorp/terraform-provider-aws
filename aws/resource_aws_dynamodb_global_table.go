@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsDynamoDbGlobalTable() *schema.Resource {
@@ -57,7 +58,7 @@ func resourceAwsDynamoDbGlobalTable() *schema.Resource {
 }
 
 func resourceAwsDynamoDbGlobalTableCreate(d *schema.ResourceData, meta interface{}) error {
-	dynamodbconn := meta.(*AWSClient).dynamodbconn
+	conn := meta.(*conns.AWSClient).DynamoDBConn
 
 	globalTableName := d.Get("name").(string)
 
@@ -67,7 +68,7 @@ func resourceAwsDynamoDbGlobalTableCreate(d *schema.ResourceData, meta interface
 	}
 
 	log.Printf("[DEBUG] Creating DynamoDB Global Table: %#v", input)
-	_, err := dynamodbconn.CreateGlobalTable(input)
+	_, err := conn.CreateGlobalTable(input)
 	if err != nil {
 		return err
 	}
@@ -112,7 +113,7 @@ func resourceAwsDynamoDbGlobalTableRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsDynamoDbGlobalTableUpdate(d *schema.ResourceData, meta interface{}) error {
-	dynamodbconn := meta.(*AWSClient).dynamodbconn
+	conn := meta.(*conns.AWSClient).DynamoDBConn
 
 	if d.HasChange("replica") {
 		o, n := d.GetChange("replica")
@@ -137,7 +138,7 @@ func resourceAwsDynamoDbGlobalTableUpdate(d *schema.ResourceData, meta interface
 			ReplicaUpdates:  replicaUpdates,
 		}
 		log.Printf("[DEBUG] Updating DynamoDB Global Table: %#v", input)
-		if _, err := dynamodbconn.UpdateGlobalTable(input); err != nil {
+		if _, err := conn.UpdateGlobalTable(input); err != nil {
 			return err
 		}
 
@@ -166,14 +167,14 @@ func resourceAwsDynamoDbGlobalTableUpdate(d *schema.ResourceData, meta interface
 
 // Deleting a DynamoDB Global Table is represented by removing all replicas.
 func resourceAwsDynamoDbGlobalTableDelete(d *schema.ResourceData, meta interface{}) error {
-	dynamodbconn := meta.(*AWSClient).dynamodbconn
+	conn := meta.(*conns.AWSClient).DynamoDBConn
 
 	input := &dynamodb.UpdateGlobalTableInput{
 		GlobalTableName: aws.String(d.Id()),
 		ReplicaUpdates:  expandAwsDynamoDbReplicaUpdateDeleteReplicas(d.Get("replica").(*schema.Set).List()),
 	}
 	log.Printf("[DEBUG] Deleting DynamoDB Global Table: %#v", input)
-	if _, err := dynamodbconn.UpdateGlobalTable(input); err != nil {
+	if _, err := conn.UpdateGlobalTable(input); err != nil {
 		return err
 	}
 
@@ -195,7 +196,7 @@ func resourceAwsDynamoDbGlobalTableDelete(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsDynamoDbGlobalTableRetrieve(d *schema.ResourceData, meta interface{}) (*dynamodb.GlobalTableDescription, error) {
-	dynamodbconn := meta.(*AWSClient).dynamodbconn
+	conn := meta.(*conns.AWSClient).DynamoDBConn
 
 	input := &dynamodb.DescribeGlobalTableInput{
 		GlobalTableName: aws.String(d.Id()),
@@ -203,7 +204,7 @@ func resourceAwsDynamoDbGlobalTableRetrieve(d *schema.ResourceData, meta interfa
 
 	log.Printf("[DEBUG] Retrieving DynamoDB Global Table: %#v", input)
 
-	output, err := dynamodbconn.DescribeGlobalTable(input)
+	output, err := conn.DescribeGlobalTable(input)
 	if err != nil {
 		if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeGlobalTableNotFoundException, "") {
 			return nil, nil
