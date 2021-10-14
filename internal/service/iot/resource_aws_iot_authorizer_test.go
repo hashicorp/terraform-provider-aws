@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfiot "github.com/hashicorp/terraform-provider-aws/internal/service/iot"
 )
 
 func TestAccAWSIoTAuthorizer_basic(t *testing.T) {
@@ -160,7 +161,7 @@ func testAccCheckAWSIoTAuthorizerExists(n string, v *iot.AuthorizerDescription) 
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn
 
-		output, err := finder.AuthorizerByName(conn, rs.Primary.ID)
+		output, err := tfiot.AuthorizerByName(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -180,7 +181,7 @@ func testAccCheckAWSIoTAuthorizerDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.AuthorizerByName(conn, rs.Primary.ID)
+		_, err := tfiot.AuthorizerByName(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
