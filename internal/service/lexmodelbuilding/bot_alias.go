@@ -32,7 +32,7 @@ func ResourceBotAlias() *schema.Resource {
 		Update: resourceBotAliasUpdate,
 		Delete: resourceBotAliasDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsLexBotAliasImport,
+			State: resourceBotAliasImport,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -295,7 +295,7 @@ func resourceBotAliasDelete(d *schema.ResourceData, meta interface{}) error {
 	return err
 }
 
-func resourceAwsLexBotAliasImport(d *schema.ResourceData, _ interface{}) ([]*schema.ResourceData, error) {
+func resourceBotAliasImport(d *schema.ResourceData, _ interface{}) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), ":")
 	if len(parts) != 2 {
 		return nil, fmt.Errorf("invalid Lex Bot Alias resource id '%s', expected BOT_NAME:BOT_ALIAS_NAME", d.Id())
