@@ -162,7 +162,7 @@ func TestAccAwsSecretsManagerSecretPolicy_disappears(t *testing.T) {
 				Config: testAccAwsSecretsManagerSecretPolicyBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSecretsManagerSecretPolicyExists(resourceName, &policy),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceSecretPolicy(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfsecretsmanager.ResourceSecretPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

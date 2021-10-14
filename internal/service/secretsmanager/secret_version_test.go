@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfsecretsmanager "github.com/hashicorp/terraform-provider-aws/internal/service/secretsmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -138,7 +139,7 @@ func testAccCheckAwsSecretsManagerSecretVersionDestroy(s *terraform.State) error
 			continue
 		}
 
-		secretID, versionID, err := decodeSecretsManagerSecretVersionID(rs.Primary.ID)
+		secretID, versionID, err := tfsecretsmanager.DecodeSecretVersionID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -186,7 +187,7 @@ func testAccCheckAwsSecretsManagerSecretVersionExists(resourceName string, versi
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		secretID, versionID, err := decodeSecretsManagerSecretVersionID(rs.Primary.ID)
+		secretID, versionID, err := tfsecretsmanager.DecodeSecretVersionID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
