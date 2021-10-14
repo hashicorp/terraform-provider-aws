@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -41,7 +42,7 @@ func testSweepGlueJobs(region string) error {
 			name := aws.StringValue(job.Name)
 
 			log.Printf("[INFO] Deleting Glue Job: %s", name)
-			err := deleteGlueJob(conn, name)
+			err := tfglue.DeleteJob(conn, name)
 			if err != nil {
 				log.Printf("[ERROR] Failed to delete Glue Job %s: %s", name, err)
 			}
@@ -677,7 +678,7 @@ func TestAccAWSGlueJob_disappears(t *testing.T) {
 				Config: testAccAWSGlueJobConfig_Required(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueJobExists(resourceName, &job),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceJob(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourceJob(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

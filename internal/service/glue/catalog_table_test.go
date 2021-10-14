@@ -599,8 +599,8 @@ func TestAccAWSGlueCatalogTable_disappears_database(t *testing.T) {
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlueCatalogTableExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceCatalogDatabase(), "aws_glue_catalog_database.test"),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceCatalogTable(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourceCatalogDatabase(), "aws_glue_catalog_database.test"),
+					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourceCatalogTable(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -653,8 +653,8 @@ func TestAccAWSGlueCatalogTable_disappears(t *testing.T) {
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlueCatalogTableExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceCatalogTable(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceCatalogTable(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourceCatalogTable(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourceCatalogTable(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -1115,7 +1115,7 @@ func testAccCheckGlueTableDestroy(s *terraform.State) error {
 			continue
 		}
 
-		catalogId, dbName, resourceName, err := readAwsGlueTableID(rs.Primary.ID)
+		catalogId, dbName, resourceName, err := tfglue.ReadTableID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -1144,7 +1144,7 @@ func testAccCheckGlueCatalogTableExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("No ID is set")
 		}
 
-		catalogId, dbName, resourceName, err := readAwsGlueTableID(rs.Primary.ID)
+		catalogId, dbName, resourceName, err := tfglue.ReadTableID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}

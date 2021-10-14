@@ -348,7 +348,7 @@ func ResourceCatalogTable() *schema.Resource {
 	}
 }
 
-func readAwsGlueTableID(id string) (catalogID string, dbName string, name string, error error) {
+func ReadTableID(id string) (catalogID string, dbName string, name string, error error) {
 	idParts := strings.Split(id, ":")
 	if len(idParts) != 3 {
 		return "", "", "", fmt.Errorf("expected ID in format catalog-id:database-name:table-name, received: %s", id)
@@ -383,7 +383,7 @@ func resourceCatalogTableCreate(d *schema.ResourceData, meta interface{}) error 
 func resourceCatalogTableRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 
-	catalogID, dbName, name, err := readAwsGlueTableID(d.Id())
+	catalogID, dbName, name, err := ReadTableID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -463,7 +463,7 @@ func resourceCatalogTableRead(d *schema.ResourceData, meta interface{}) error {
 func resourceCatalogTableUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 
-	catalogID, dbName, _, err := readAwsGlueTableID(d.Id())
+	catalogID, dbName, _, err := ReadTableID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -484,7 +484,7 @@ func resourceCatalogTableUpdate(d *schema.ResourceData, meta interface{}) error 
 func resourceCatalogTableDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 
-	catalogID, dbName, name, tableIdErr := readAwsGlueTableID(d.Id())
+	catalogID, dbName, name, tableIdErr := ReadTableID(d.Id())
 	if tableIdErr != nil {
 		return tableIdErr
 	}

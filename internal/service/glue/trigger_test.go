@@ -41,7 +41,7 @@ func testSweepGlueTriggers(region string) error {
 			name := aws.StringValue(trigger.Name)
 
 			log.Printf("[INFO] Deleting Glue Trigger: %s", name)
-			r := ResourceTrigger()
+			r := tfglue.ResourceTrigger()
 			d := r.Data(nil)
 			d.SetId(name)
 			err := r.Delete(d, client)
@@ -530,7 +530,7 @@ func TestAccAWSGlueTrigger_disappears(t *testing.T) {
 				Config: testAccAWSGlueTriggerConfig_OnDemand(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueTriggerExists(resourceName, &trigger),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceTrigger(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourceTrigger(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

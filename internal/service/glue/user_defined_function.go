@@ -113,7 +113,7 @@ func resourceUserDefinedFunctionCreate(d *schema.ResourceData, meta interface{})
 func resourceUserDefinedFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 
-	catalogID, dbName, funcName, err := readAwsGlueUDFID(d.Id())
+	catalogID, dbName, funcName, err := ReadUDFID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -135,7 +135,7 @@ func resourceUserDefinedFunctionUpdate(d *schema.ResourceData, meta interface{})
 func resourceUserDefinedFunctionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 
-	catalogID, dbName, funcName, err := readAwsGlueUDFID(d.Id())
+	catalogID, dbName, funcName, err := ReadUDFID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -187,7 +187,7 @@ func resourceUserDefinedFunctionRead(d *schema.ResourceData, meta interface{}) e
 
 func resourceUserDefinedFunctionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
-	catalogID, dbName, funcName, err := readAwsGlueUDFID(d.Id())
+	catalogID, dbName, funcName, err := ReadUDFID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -204,7 +204,7 @@ func resourceUserDefinedFunctionDelete(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
-func readAwsGlueUDFID(id string) (catalogID string, dbName string, funcName string, err error) {
+func ReadUDFID(id string) (catalogID string, dbName string, funcName string, err error) {
 	idParts := strings.Split(id, ":")
 	if len(idParts) != 3 {
 		return "", "", "", fmt.Errorf("unexpected format of ID (%q), expected CATALOG-ID:DATABASE-NAME:FUNCTION-NAME", id)

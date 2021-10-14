@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -48,7 +49,7 @@ func testSweepGlueSecurityConfigurations(region string) error {
 			name := aws.StringValue(securityConfiguration.Name)
 
 			log.Printf("[INFO] Deleting Glue Security Configuration: %s", name)
-			err := deleteGlueSecurityConfiguration(conn, name)
+			err := tfglue.DeleteSecurityConfiguration(conn, name)
 			if err != nil {
 				log.Printf("[ERROR] Failed to delete Glue Security Configuration %s: %s", name, err)
 			}

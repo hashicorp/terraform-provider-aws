@@ -42,7 +42,7 @@ func testSweepGlueRegistry(region string) error {
 	}
 	for _, registry := range listOutput.Registries {
 		arn := aws.StringValue(registry.RegistryArn)
-		r := ResourceRegistry()
+		r := tfglue.ResourceRegistry()
 		d := r.Data(nil)
 		d.SetId(arn)
 
@@ -181,7 +181,7 @@ func TestAccAWSGlueRegistry_disappears(t *testing.T) {
 				Config: testAccAWSGlueRegistryBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueRegistryExists(resourceName, &registry),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceRegistry(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourceRegistry(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

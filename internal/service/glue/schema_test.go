@@ -42,7 +42,7 @@ func testSweepGlueSchema(region string) error {
 	}
 	for _, schema := range listOutput.Schemas {
 		arn := aws.StringValue(schema.SchemaArn)
-		r := ResourceSchema()
+		r := tfglue.ResourceSchema()
 		d := r.Data(nil)
 		d.SetId(arn)
 
@@ -264,7 +264,7 @@ func TestAccAWSGlueSchema_disappears(t *testing.T) {
 				Config: testAccAWSGlueSchemaBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueSchemaExists(resourceName, &schema),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceSchema(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourceSchema(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -288,7 +288,7 @@ func TestAccAWSGlueSchema_disappears_registry(t *testing.T) {
 				Config: testAccAWSGlueSchemaBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueSchemaExists(resourceName, &schema),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceRegistry(), "aws_glue_registry.test"),
+					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourceRegistry(), "aws_glue_registry.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},

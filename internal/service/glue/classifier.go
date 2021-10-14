@@ -281,7 +281,7 @@ func resourceClassifierDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 
 	log.Printf("[DEBUG] Deleting Glue Classifier: %s", d.Id())
-	err := deleteGlueClassifier(conn, d.Id())
+	err := DeleteClassifier(conn, d.Id())
 	if err != nil {
 		return fmt.Errorf("error deleting Glue Classifier (%s): %s", d.Id(), err)
 	}
@@ -289,7 +289,7 @@ func resourceClassifierDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func deleteGlueClassifier(conn *glue.Glue, name string) error {
+func DeleteClassifier(conn *glue.Glue, name string) error {
 	input := &glue.DeleteClassifierInput{
 		Name: aws.String(name),
 	}

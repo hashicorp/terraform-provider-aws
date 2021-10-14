@@ -60,8 +60,8 @@ func TestAccAWSGluePartitionIndex_disappears(t *testing.T) {
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGluePartitionIndexExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourcePartitionIndex(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourcePartitionIndex(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourcePartitionIndex(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourcePartitionIndex(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -84,8 +84,8 @@ func TestAccAWSGluePartitionIndex_disappears_table(t *testing.T) {
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGluePartitionIndexExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceCatalogTable(), "aws_glue_catalog_table.test"),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourcePartitionIndex(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourceCatalogTable(), "aws_glue_catalog_table.test"),
+					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourcePartitionIndex(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -108,8 +108,8 @@ func TestAccAWSGluePartitionIndex_disappears_database(t *testing.T) {
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGluePartitionIndexExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceCatalogDatabase(), "aws_glue_catalog_database.test"),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourcePartitionIndex(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourceCatalogDatabase(), "aws_glue_catalog_database.test"),
+					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourcePartitionIndex(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

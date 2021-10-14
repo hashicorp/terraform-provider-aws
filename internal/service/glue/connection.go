@@ -137,7 +137,7 @@ func resourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	catalogID, connectionName, err := decodeGlueConnectionID(d.Id())
+	catalogID, connectionName, err := DecodeConnectionID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -200,7 +200,7 @@ func resourceConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
-		catalogID, connectionName, err := decodeGlueConnectionID(d.Id())
+		catalogID, connectionName, err := DecodeConnectionID(d.Id())
 		if err != nil {
 			return err
 		}
@@ -231,13 +231,13 @@ func resourceConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceConnectionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 
-	catalogID, connectionName, err := decodeGlueConnectionID(d.Id())
+	catalogID, connectionName, err := DecodeConnectionID(d.Id())
 	if err != nil {
 		return err
 	}
 
 	log.Printf("[DEBUG] Deleting Glue Connection: %s", d.Id())
-	err = deleteGlueConnection(conn, catalogID, connectionName)
+	err = DeleteConnection(conn, catalogID, connectionName)
 	if err != nil {
 		return fmt.Errorf("error deleting Glue Connection (%s): %w", d.Id(), err)
 	}
@@ -245,7 +245,7 @@ func resourceConnectionDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func decodeGlueConnectionID(id string) (string, string, error) {
+func DecodeConnectionID(id string) (string, string, error) {
 	idParts := strings.Split(id, ":")
 	if len(idParts) != 2 {
 		return "", "", fmt.Errorf("expected ID in format CATALOG-ID:NAME, provided: %s", id)
@@ -253,7 +253,7 @@ func decodeGlueConnectionID(id string) (string, string, error) {
 	return idParts[0], idParts[1], nil
 }
 
-func deleteGlueConnection(conn *glue.Glue, catalogID, connectionName string) error {
+func DeleteConnection(conn *glue.Glue, catalogID, connectionName string) error {
 	input := &glue.DeleteConnectionInput{
 		CatalogId:      aws.String(catalogID),
 		ConnectionName: aws.String(connectionName),

@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -40,7 +41,7 @@ func testSweepGlueWorkflow(region string) error {
 		return fmt.Errorf("Error retrieving Glue Workflow: %s", err)
 	}
 	for _, workflowName := range listOutput.Workflows {
-		err := deleteWorkflow(conn, *workflowName)
+		err := tfglue.DeleteWorkflow(conn, *workflowName)
 		if err != nil {
 			log.Printf("[ERROR] Failed to delete Glue Workflow %s: %s", *workflowName, err)
 		}
@@ -246,7 +247,7 @@ func TestAccAWSGlueWorkflow_disappears(t *testing.T) {
 				Config: testAccAWSGlueWorkflowConfig_Required(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueWorkflowExists(resourceName, &workflow),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceWorkflow(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourceWorkflow(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

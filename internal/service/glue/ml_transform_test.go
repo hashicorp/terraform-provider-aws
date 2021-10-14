@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -43,7 +44,7 @@ func testSweepGlueMLTransforms(region string) error {
 			id := aws.StringValue(transforms.TransformId)
 
 			log.Printf("[INFO] Deleting Glue ML Transform: %s", id)
-			r := ResourceMLTransform()
+			r := tfglue.ResourceMLTransform()
 			d := r.Data(nil)
 			d.SetId(id)
 			err := r.Delete(d, client)
@@ -456,7 +457,7 @@ func TestAccAWSGlueMLTransform_disappears(t *testing.T) {
 				Config: testAccAWSGlueMLTransformBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueMLTransformExists(resourceName, &transform),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceMLTransform(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourceMLTransform(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
