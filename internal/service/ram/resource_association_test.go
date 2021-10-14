@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfram "github.com/hashicorp/terraform-provider-aws/internal/service/ram"
 )
 
 func TestAccAwsRamResourceAssociation_basic(t *testing.T) {
@@ -76,7 +77,7 @@ func testAccCheckAwsRamResourceAssociationDisappears(resourceShareAssociation *r
 			return err
 		}
 
-		return waitForRamResourceShareResourceDisassociation(conn, aws.StringValue(resourceShareAssociation.ResourceShareArn), aws.StringValue(resourceShareAssociation.AssociatedEntity))
+		return tfram.WaitForResourceShareResourceDisassociation(conn, aws.StringValue(resourceShareAssociation.ResourceShareArn), aws.StringValue(resourceShareAssociation.AssociatedEntity))
 	}
 }
 
@@ -90,13 +91,13 @@ func testAccCheckAwsRamResourceAssociationExists(resourceName string, associatio
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		resourceShareARN, resourceARN, err := decodeRamResourceAssociationID(rs.Primary.ID)
+		resourceShareARN, resourceARN, err := tfram.DecodeResourceAssociationID(rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		resourceShareAssociation, err := getRamResourceShareAssociation(conn, resourceShareARN, resourceARN)
+		resourceShareAssociation, err := tfram.GetResourceShareAssociation(conn, resourceShareARN, resourceARN)
 
 		if err != nil {
 			return fmt.Errorf("error reading RAM Resource Share (%s) Resource Association (%s): %s", resourceShareARN, resourceARN, err)
@@ -124,13 +125,13 @@ func testAccCheckAwsRamResourceAssociationDestroy(s *terraform.State) error {
 			continue
 		}
 
-		resourceShareARN, resourceARN, err := decodeRamResourceAssociationID(rs.Primary.ID)
+		resourceShareARN, resourceARN, err := tfram.DecodeResourceAssociationID(rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		resourceShareAssociation, err := getRamResourceShareAssociation(conn, resourceShareARN, resourceARN)
+		resourceShareAssociation, err := tfram.GetResourceShareAssociation(conn, resourceShareARN, resourceARN)
 
 		if err != nil {
 			return err

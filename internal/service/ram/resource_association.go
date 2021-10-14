@@ -69,12 +69,12 @@ func resourceResourceAssociationCreate(d *schema.ResourceData, meta interface{})
 func resourceResourceAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RAMConn
 
-	resourceShareARN, resourceARN, err := decodeRamResourceAssociationID(d.Id())
+	resourceShareARN, resourceARN, err := DecodeResourceAssociationID(d.Id())
 	if err != nil {
 		return err
 	}
 
-	resourceShareAssociation, err := getRamResourceShareAssociation(conn, resourceShareARN, resourceARN)
+	resourceShareAssociation, err := GetResourceShareAssociation(conn, resourceShareARN, resourceARN)
 
 	if err != nil {
 		return fmt.Errorf("error reading RAM Resource Share (%s) Resource Association (%s): %s", resourceShareARN, resourceARN, err)
@@ -101,7 +101,7 @@ func resourceResourceAssociationRead(d *schema.ResourceData, meta interface{}) e
 func resourceResourceAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RAMConn
 
-	resourceShareARN, resourceARN, err := decodeRamResourceAssociationID(d.Id())
+	resourceShareARN, resourceARN, err := DecodeResourceAssociationID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -122,14 +122,14 @@ func resourceResourceAssociationDelete(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("error disassociating RAM Resource Share (%s) Resource Association (%s): %s", resourceShareARN, resourceARN, err)
 	}
 
-	if err := waitForRamResourceShareResourceDisassociation(conn, resourceShareARN, resourceARN); err != nil {
+	if err := WaitForResourceShareResourceDisassociation(conn, resourceShareARN, resourceARN); err != nil {
 		return fmt.Errorf("error waiting for RAM Resource Share (%s) Resource Association (%s) disassociation: %s", resourceShareARN, resourceARN, err)
 	}
 
 	return nil
 }
 
-func decodeRamResourceAssociationID(id string) (string, string, error) {
+func DecodeResourceAssociationID(id string) (string, string, error) {
 	idFormatErr := fmt.Errorf("unexpected format of ID (%s), expected SHARE,RESOURCE", id)
 
 	parts := strings.SplitN(id, ",", 2)
@@ -140,7 +140,7 @@ func decodeRamResourceAssociationID(id string) (string, string, error) {
 	return parts[0], parts[1], nil
 }
 
-func getRamResourceShareAssociation(conn *ram.RAM, resourceShareARN, resourceARN string) (*ram.ResourceShareAssociation, error) {
+func GetResourceShareAssociation(conn *ram.RAM, resourceShareARN, resourceARN string) (*ram.ResourceShareAssociation, error) {
 	input := &ram.GetResourceShareAssociationsInput{
 		AssociationType:   aws.String(ram.ResourceShareAssociationTypeResource),
 		ResourceArn:       aws.String(resourceARN),
@@ -166,7 +166,7 @@ func getRamResourceShareAssociation(conn *ram.RAM, resourceShareARN, resourceARN
 
 func ramResourceAssociationStateRefreshFunc(conn *ram.RAM, resourceShareARN, resourceARN string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		resourceShareAssociation, err := getRamResourceShareAssociation(conn, resourceShareARN, resourceARN)
+		resourceShareAssociation, err := GetResourceShareAssociation(conn, resourceShareARN, resourceARN)
 
 		if err != nil {
 			return nil, ram.ResourceShareAssociationStatusFailed, err
@@ -198,7 +198,7 @@ func waitForRamResourceShareResourceAssociation(conn *ram.RAM, resourceShareARN,
 	return err
 }
 
-func waitForRamResourceShareResourceDisassociation(conn *ram.RAM, resourceShareARN, resourceARN string) error {
+func WaitForResourceShareResourceDisassociation(conn *ram.RAM, resourceShareARN, resourceARN string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ram.ResourceShareAssociationStatusAssociated, ram.ResourceShareAssociationStatusDisassociating},
 		Target:  []string{ram.ResourceShareAssociationStatusDisassociated},

@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfram "github.com/hashicorp/terraform-provider-aws/internal/service/ram"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -74,7 +75,7 @@ func TestAccAwsRamResourceShareAccepter_disappears(t *testing.T) {
 				Config: testAccAwsRamResourceShareAccepterBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsRamResourceShareAccepterExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceResourceShareAccepter(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfram.ResourceResourceShareAccepter(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
