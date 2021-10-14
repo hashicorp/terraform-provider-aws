@@ -239,9 +239,9 @@ func resourceClusterInstanceCreate(d *schema.ResourceData, meta interface{}) err
 
 	// reuse db_instance refresh func
 	stateConf := &resource.StateChangeConf{
-		Pending:    resourceAwsDocDBClusterInstanceCreateUpdatePendingStates,
+		Pending:    resourceClusterInstanceCreateUpdatePendingStates,
 		Target:     []string{"available"},
-		Refresh:    resourceAwsDocDBInstanceStateRefreshFunc(d.Id(), conn),
+		Refresh:    resourceInstanceStateRefreshFunc(d.Id(), conn),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -261,7 +261,7 @@ func resourceClusterInstanceRead(d *schema.ResourceData, meta interface{}) error
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	db, err := resourceAwsDocDBInstanceRetrieve(d.Id(), conn)
+	db, err := resourceInstanceRetrieve(d.Id(), conn)
 	// Errors from this helper are always reportable
 	if err != nil {
 		return fmt.Errorf("Error on retrieving DocDB Cluster Instance (%s): %s", d.Id(), err)
@@ -402,9 +402,9 @@ func resourceClusterInstanceUpdate(d *schema.ResourceData, meta interface{}) err
 
 		// reuse db_instance refresh func
 		stateConf := &resource.StateChangeConf{
-			Pending:    resourceAwsDocDBClusterInstanceCreateUpdatePendingStates,
+			Pending:    resourceClusterInstanceCreateUpdatePendingStates,
 			Target:     []string{"available"},
-			Refresh:    resourceAwsDocDBInstanceStateRefreshFunc(d.Id(), conn),
+			Refresh:    resourceInstanceStateRefreshFunc(d.Id(), conn),
 			Timeout:    d.Timeout(schema.TimeoutUpdate),
 			MinTimeout: 10 * time.Second,
 			Delay:      30 * time.Second, // Wait 30 secs before starting
@@ -445,9 +445,9 @@ func resourceClusterInstanceDelete(d *schema.ResourceData, meta interface{}) err
 	// re-uses db_instance refresh func
 	log.Println("[INFO] Waiting for DocDB Cluster Instance to be destroyed")
 	stateConf := &resource.StateChangeConf{
-		Pending:    resourceAwsDocDBClusterInstanceDeletePendingStates,
+		Pending:    resourceClusterInstanceDeletePendingStates,
 		Target:     []string{},
-		Refresh:    resourceAwsDocDBInstanceStateRefreshFunc(d.Id(), conn),
+		Refresh:    resourceInstanceStateRefreshFunc(d.Id(), conn),
 		Timeout:    d.Timeout(schema.TimeoutDelete),
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second, // Wait 30 secs before starting
@@ -461,9 +461,9 @@ func resourceClusterInstanceDelete(d *schema.ResourceData, meta interface{}) err
 
 }
 
-func resourceAwsDocDBInstanceStateRefreshFunc(id string, conn *docdb.DocDB) resource.StateRefreshFunc {
+func resourceInstanceStateRefreshFunc(id string, conn *docdb.DocDB) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		v, err := resourceAwsDocDBInstanceRetrieve(id, conn)
+		v, err := resourceInstanceRetrieve(id, conn)
 
 		if err != nil {
 			log.Printf("Error on retrieving DocDB Instance when waiting: %s", err)
@@ -482,11 +482,11 @@ func resourceAwsDocDBInstanceStateRefreshFunc(id string, conn *docdb.DocDB) reso
 	}
 }
 
-// resourceAwsDocDBInstanceRetrieve fetches DBInstance information from the AWS
+// resourceInstanceRetrieve fetches DBInstance information from the AWS
 // API. It returns an error if there is a communication problem or unexpected
 // error with AWS. When the DBInstance is not found, it returns no error and a
 // nil pointer.
-func resourceAwsDocDBInstanceRetrieve(id string, conn *docdb.DocDB) (*docdb.DBInstance, error) {
+func resourceInstanceRetrieve(id string, conn *docdb.DocDB) (*docdb.DBInstance, error) {
 	opts := docdb.DescribeDBInstancesInput{
 		DBInstanceIdentifier: aws.String(id),
 	}
@@ -508,7 +508,7 @@ func resourceAwsDocDBInstanceRetrieve(id string, conn *docdb.DocDB) (*docdb.DBIn
 	return resp.DBInstances[0], nil
 }
 
-var resourceAwsDocDBClusterInstanceCreateUpdatePendingStates = []string{
+var resourceClusterInstanceCreateUpdatePendingStates = []string{
 	"backing-up",
 	"configuring-enhanced-monitoring",
 	"configuring-log-exports",
@@ -522,7 +522,7 @@ var resourceAwsDocDBClusterInstanceCreateUpdatePendingStates = []string{
 	"upgrading",
 }
 
-var resourceAwsDocDBClusterInstanceDeletePendingStates = []string{
+var resourceClusterInstanceDeletePendingStates = []string{
 	"configuring-log-exports",
 	"modifying",
 	"deleting",

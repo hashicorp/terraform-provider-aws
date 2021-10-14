@@ -107,7 +107,7 @@ func resourceClusterSnapshotCreate(d *schema.ResourceData, meta interface{}) err
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"creating"},
 		Target:     []string{"available"},
-		Refresh:    resourceAwsDocDBClusterSnapshotStateRefreshFunc(d.Id(), conn),
+		Refresh:    resourceClusterSnapshotStateRefreshFunc(d.Id(), conn),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
 		MinTimeout: 10 * time.Second,
 		Delay:      5 * time.Second,
@@ -182,7 +182,7 @@ func resourceClusterSnapshotDelete(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func resourceAwsDocDBClusterSnapshotStateRefreshFunc(dbClusterSnapshotIdentifier string, conn *docdb.DocDB) resource.StateRefreshFunc {
+func resourceClusterSnapshotStateRefreshFunc(dbClusterSnapshotIdentifier string, conn *docdb.DocDB) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		opts := &docdb.DescribeDBClusterSnapshotsInput{
 			DBClusterSnapshotIdentifier: aws.String(dbClusterSnapshotIdentifier),
