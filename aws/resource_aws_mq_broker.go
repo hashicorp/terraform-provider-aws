@@ -385,13 +385,13 @@ func resourceAwsMqBrokerCreate(d *schema.ResourceData, meta interface{}) error {
 		input.MaintenanceWindowStartTime = expandMqWeeklyStartTime(v.([]interface{}))
 	}
 	if v, ok := d.GetOk("security_groups"); ok && v.(*schema.Set).Len() > 0 {
-		input.SecurityGroups = expandStringSet(v.(*schema.Set))
+		input.SecurityGroups = flex.ExpandStringSet(v.(*schema.Set))
 	}
 	if v, ok := d.GetOk("storage_type"); ok {
 		input.StorageType = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("subnet_ids"); ok {
-		input.SubnetIds = expandStringSet(v.(*schema.Set))
+		input.SubnetIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 	if len(tags) > 0 {
 		input.Tags = tags.IgnoreAws().MqTags()
@@ -507,7 +507,7 @@ func resourceAwsMqBrokerUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("security_groups") {
 		_, err := conn.UpdateBroker(&mq.UpdateBrokerRequest{
 			BrokerId:       aws.String(d.Id()),
-			SecurityGroups: expandStringSet(d.Get("security_groups").(*schema.Set)),
+			SecurityGroups: flex.ExpandStringSet(d.Get("security_groups").(*schema.Set)),
 		})
 		if err != nil {
 			return fmt.Errorf("error updating MQ Broker (%s) security groups: %w", d.Id(), err)
@@ -687,7 +687,7 @@ func diffAwsMqBrokerUsers(bId string, oldUsers, newUsers []interface{}) (
 				ur = append(ur, &mq.UpdateUserRequest{
 					BrokerId:      aws.String(bId),
 					ConsoleAccess: aws.Bool(newUserMap["console_access"].(bool)),
-					Groups:        expandStringList(ng),
+					Groups:        flex.ExpandStringList(ng),
 					Password:      aws.String(newUserMap["password"].(string)),
 					Username:      aws.String(username),
 				})
@@ -703,7 +703,7 @@ func diffAwsMqBrokerUsers(bId string, oldUsers, newUsers []interface{}) (
 				Username:      aws.String(username),
 			}
 			if len(ng) > 0 {
-				cur.Groups = expandStringList(ng)
+				cur.Groups = flex.ExpandStringList(ng)
 			}
 			cr = append(cr, cur)
 		}
@@ -787,7 +787,7 @@ func expandMqUsers(cfg []interface{}) []*mq.User {
 			user.ConsoleAccess = aws.Bool(v.(bool))
 		}
 		if v, ok := u["groups"]; ok {
-			user.Groups = expandStringSet(v.(*schema.Set))
+			user.Groups = flex.ExpandStringSet(v.(*schema.Set))
 		}
 		users[i] = &user
 	}
@@ -848,7 +848,7 @@ func flattenMqUsers(users []*mq.User, cfgUsers []interface{}) *schema.Set {
 			m["console_access"] = aws.BoolValue(u.ConsoleAccess)
 		}
 		if len(u.Groups) > 0 {
-			m["groups"] = flattenStringSet(u.Groups)
+			m["groups"] = flex.FlattenStringSet(u.Groups)
 		}
 		out = append(out, m)
 	}
@@ -1033,7 +1033,7 @@ func expandMQLDAPServerMetadata(tfList []interface{}) *mq.LdapServerMetadataInpu
 	tfMap := tfList[0].(map[string]interface{})
 
 	if v, ok := tfMap["hosts"]; ok && len(v.([]interface{})) > 0 {
-		apiObject.Hosts = expandStringList(v.([]interface{}))
+		apiObject.Hosts = flex.ExpandStringList(v.([]interface{}))
 	}
 	if v, ok := tfMap["role_base"].(string); ok && v != "" {
 		apiObject.RoleBase = aws.String(v)
