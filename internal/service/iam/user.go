@@ -93,7 +93,7 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(tags) > 0 {
-		request.Tags = tags.IgnoreAws().IamTags()
+		request.Tags = Tags(tags.IgnoreAws())
 	}
 
 	log.Println("[DEBUG] Create IAM User request:", request)
@@ -160,7 +160,7 @@ func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("unique_id", output.User.UserId)
 
-	tags := tftags.IamKeyValueTags(output.User.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(output.User.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

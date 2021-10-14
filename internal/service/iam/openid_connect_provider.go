@@ -71,7 +71,7 @@ func resourceOpenIDConnectProviderCreate(d *schema.ResourceData, meta interface{
 		Url:            aws.String(d.Get("url").(string)),
 		ClientIDList:   flex.ExpandStringList(d.Get("client_id_list").([]interface{})),
 		ThumbprintList: flex.ExpandStringList(d.Get("thumbprint_list").([]interface{})),
-		Tags:           tags.IgnoreAws().IamTags(),
+		Tags:           Tags(tags.IgnoreAws()),
 	}
 
 	out, err := conn.CreateOpenIDConnectProvider(input)
@@ -107,7 +107,7 @@ func resourceOpenIDConnectProviderRead(d *schema.ResourceData, meta interface{})
 	d.Set("client_id_list", flex.FlattenStringList(out.ClientIDList))
 	d.Set("thumbprint_list", flex.FlattenStringList(out.ThumbprintList))
 
-	tags := tftags.IamKeyValueTags(out.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(out.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

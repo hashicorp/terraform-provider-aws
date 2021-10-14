@@ -97,7 +97,7 @@ func resourceInstanceProfileCreate(d *schema.ResourceData, meta interface{}) err
 	request := &iam.CreateInstanceProfileInput{
 		InstanceProfileName: aws.String(name),
 		Path:                aws.String(d.Get("path").(string)),
-		Tags:                tags.IgnoreAws().IamTags(),
+		Tags:                Tags(tags.IgnoreAws()),
 	}
 
 	var err error
@@ -291,7 +291,7 @@ func instanceProfileReadResult(d *schema.ResourceData, result *iam.InstanceProfi
 		d.Set("role", result.Roles[0].RoleName) //there will only be 1 role returned
 	}
 
-	tags := tftags.IamKeyValueTags(result.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(result.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

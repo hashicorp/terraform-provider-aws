@@ -64,7 +64,7 @@ func resourceSamlProviderCreate(d *schema.ResourceData, meta interface{}) error 
 	input := &iam.CreateSAMLProviderInput{
 		Name:                 aws.String(d.Get("name").(string)),
 		SAMLMetadataDocument: aws.String(d.Get("saml_metadata_document").(string)),
-		Tags:                 tags.IgnoreAws().IamTags(),
+		Tags:                 Tags(tags.IgnoreAws()),
 	}
 
 	out, err := conn.CreateSAMLProvider(input)
@@ -104,7 +104,7 @@ func resourceSamlProviderRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("valid_until", out.ValidUntil.Format(time.RFC1123))
 	d.Set("saml_metadata_document", out.SAMLMetadataDocument)
 
-	tags := tftags.IamKeyValueTags(out.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(out.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

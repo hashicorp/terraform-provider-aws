@@ -188,7 +188,7 @@ func resourceRoleCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(tags) > 0 {
-		request.Tags = tags.IgnoreAws().IamTags()
+		request.Tags = Tags(tags.IgnoreAws())
 	}
 
 	outputRaw, err := tfresource.RetryWhen(
@@ -264,7 +264,7 @@ func resourceRoleRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("unique_id", role.RoleId)
 
-	tags := tftags.IamKeyValueTags(role.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(role.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
