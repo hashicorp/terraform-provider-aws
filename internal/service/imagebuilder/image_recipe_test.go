@@ -51,7 +51,7 @@ func testSweepImageBuilderImageRecipes(region string) error {
 
 			arn := aws.StringValue(imageRecipeSummary.Arn)
 
-			r := ResourceImageRecipe()
+			r := tfimagebuilder.ResourceImageRecipe()
 			d := r.Data(nil)
 			d.SetId(arn)
 
@@ -130,7 +130,7 @@ func TestAccAwsImageBuilderImageRecipe_disappears(t *testing.T) {
 				Config: testAccAwsImageBuilderImageRecipeConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsImageBuilderImageRecipeExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceImageRecipe(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfimagebuilder.ResourceImageRecipe(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

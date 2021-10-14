@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfimagebuilder "github.com/hashicorp/terraform-provider-aws/internal/service/imagebuilder"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -65,7 +66,7 @@ func testSweepImageBuilderComponents(region string) error {
 
 					arn := aws.StringValue(componentSummary.Arn)
 
-					r := ResourceComponent()
+					r := tfimagebuilder.ResourceComponent()
 					d := r.Data(nil)
 					d.SetId(arn)
 
@@ -158,7 +159,7 @@ func TestAccAwsImageBuilderComponent_disappears(t *testing.T) {
 				Config: testAccAwsImageBuilderComponentConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsImageBuilderComponentExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceComponent(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfimagebuilder.ResourceComponent(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

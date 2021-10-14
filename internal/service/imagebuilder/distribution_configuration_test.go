@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfimagebuilder "github.com/hashicorp/terraform-provider-aws/internal/service/imagebuilder"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -47,7 +48,7 @@ func testSweepImageBuilderDistributionConfigurations(region string) error {
 
 			arn := aws.StringValue(distributionConfigurationSummary.Arn)
 
-			r := ResourceDistributionConfiguration()
+			r := tfimagebuilder.ResourceDistributionConfiguration()
 			d := r.Data(nil)
 			d.SetId(arn)
 
@@ -121,7 +122,7 @@ func TestAccAwsImageBuilderDistributionConfiguration_disappears(t *testing.T) {
 				Config: testAccAwsImageBuilderDistributionConfigurationConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsImageBuilderDistributionConfigurationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceDistributionConfiguration(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfimagebuilder.ResourceDistributionConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
