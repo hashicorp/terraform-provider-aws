@@ -26,12 +26,12 @@ func TestAccAWSDbInstanceRoleAssociation_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDbInstanceRoleAssociationDestroy,
+		CheckDestroy: testAccCheckInstanceRoleAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDbInstanceRoleAssociationConfig(rName),
+				Config: testAccInstanceRoleAssociationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDbInstanceRoleAssociationExists(resourceName, &dbInstanceRole1),
+					testAccCheckInstanceRoleAssociationExists(resourceName, &dbInstanceRole1),
 					resource.TestCheckResourceAttrPair(resourceName, "db_instance_identifier", dbInstanceResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "feature_name", "S3_INTEGRATION"),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", iamRoleResourceName, "arn"),
@@ -57,14 +57,14 @@ func TestAccAWSDbInstanceRoleAssociation_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDbInstanceRoleAssociationDestroy,
+		CheckDestroy: testAccCheckInstanceRoleAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDbInstanceRoleAssociationConfig(rName),
+				Config: testAccInstanceRoleAssociationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBInstanceExists(dbInstanceResourceName, &dbInstance1),
-					testAccCheckAWSDbInstanceRoleAssociationExists(resourceName, &dbInstanceRole1),
-					testAccCheckAWSDbInstanceRoleAssociationDisappears(&dbInstance1, &dbInstanceRole1),
+					testAccCheckInstanceExists(dbInstanceResourceName, &dbInstance1),
+					testAccCheckInstanceRoleAssociationExists(resourceName, &dbInstanceRole1),
+					testAccCheckInstanceRoleAssociationDisappears(&dbInstance1, &dbInstanceRole1),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -72,7 +72,7 @@ func TestAccAWSDbInstanceRoleAssociation_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSDbInstanceRoleAssociationExists(resourceName string, dbInstanceRole *rds.DBInstanceRole) resource.TestCheckFunc {
+func testAccCheckInstanceRoleAssociationExists(resourceName string, dbInstanceRole *rds.DBInstanceRole) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 
@@ -108,7 +108,7 @@ func testAccCheckAWSDbInstanceRoleAssociationExists(resourceName string, dbInsta
 	}
 }
 
-func testAccCheckAWSDbInstanceRoleAssociationDestroy(s *terraform.State) error {
+func testAccCheckInstanceRoleAssociationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -142,7 +142,7 @@ func testAccCheckAWSDbInstanceRoleAssociationDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSDbInstanceRoleAssociationDisappears(dbInstance *rds.DBInstance, dbInstanceRole *rds.DBInstanceRole) resource.TestCheckFunc {
+func testAccCheckInstanceRoleAssociationDisappears(dbInstance *rds.DBInstance, dbInstanceRole *rds.DBInstanceRole) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
@@ -162,7 +162,7 @@ func testAccCheckAWSDbInstanceRoleAssociationDisappears(dbInstance *rds.DBInstan
 	}
 }
 
-func testAccAWSDbInstanceRoleAssociationConfig(rName string) string {
+func testAccInstanceRoleAssociationConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 

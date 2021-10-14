@@ -18,7 +18,7 @@ func TestAccAWSDbInstanceDataSource_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBInstanceDataSourceConfig(rInt),
+				Config: testAccInstanceDataSourceConfig(rInt),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.aws_db_instance.bar", "address"),
 					resource.TestCheckResourceAttrSet("data.aws_db_instance.bar", "allocated_storage"),
@@ -52,7 +52,7 @@ func TestAccAWSDbInstanceDataSource_ec2Classic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBInstanceDataSourceConfig_ec2Classic(rInt),
+				Config: testAccInstanceDataSourceConfig_ec2Classic(rInt),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_db_instance.bar", "db_subnet_group", ""),
 				),
@@ -61,7 +61,7 @@ func TestAccAWSDbInstanceDataSource_ec2Classic(t *testing.T) {
 	})
 }
 
-func testAccAWSDBInstanceDataSourceConfig(rInt int) string {
+func testAccInstanceDataSourceConfig(rInt int) string {
 	return fmt.Sprintf(`
 data "aws_rds_orderable_db_instance" "test" {
   engine                     = "mariadb"
@@ -97,7 +97,7 @@ data "aws_db_instance" "bar" {
 `, rInt)
 }
 
-func testAccAWSDBInstanceDataSourceConfig_ec2Classic(rInt int) string {
+func testAccInstanceDataSourceConfig_ec2Classic(rInt int) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigEC2ClassicRegionProvider(),
 		fmt.Sprintf(`

@@ -22,9 +22,9 @@ func TestAccAWSDbClusterSnapshotDataSource_DbClusterSnapshotIdentifier(t *testin
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsDbClusterSnapshotDataSourceConfig_DbClusterSnapshotIdentifier(rName),
+				Config: testAccCheckClusterSnapshotDataSourceConfig_DbClusterSnapshotIdentifier(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDbClusterSnapshotDataSourceExists(dataSourceName),
+					testAccCheckClusterSnapshotExistsDataSource(dataSourceName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "allocated_storage", resourceName, "allocated_storage"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "availability_zones.#", resourceName, "availability_zones.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_cluster_identifier", resourceName, "db_cluster_identifier"),
@@ -59,9 +59,9 @@ func TestAccAWSDbClusterSnapshotDataSource_DbClusterIdentifier(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsDbClusterSnapshotDataSourceConfig_DbClusterIdentifier(rName),
+				Config: testAccCheckClusterSnapshotDataSourceConfig_DbClusterIdentifier(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDbClusterSnapshotDataSourceExists(dataSourceName),
+					testAccCheckClusterSnapshotExistsDataSource(dataSourceName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "allocated_storage", resourceName, "allocated_storage"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "availability_zones.#", resourceName, "availability_zones.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_cluster_identifier", resourceName, "db_cluster_identifier"),
@@ -96,9 +96,9 @@ func TestAccAWSDbClusterSnapshotDataSource_MostRecent(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsDbClusterSnapshotDataSourceConfig_MostRecent(rName),
+				Config: testAccCheckClusterSnapshotDataSourceConfig_MostRecent(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDbClusterSnapshotDataSourceExists(dataSourceName),
+					testAccCheckClusterSnapshotExistsDataSource(dataSourceName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_cluster_snapshot_arn", resourceName, "db_cluster_snapshot_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_cluster_snapshot_identifier", resourceName, "db_cluster_snapshot_identifier"),
 				),
@@ -107,7 +107,7 @@ func TestAccAWSDbClusterSnapshotDataSource_MostRecent(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsDbClusterSnapshotDataSourceExists(dataSourceName string) resource.TestCheckFunc {
+func testAccCheckClusterSnapshotExistsDataSource(dataSourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[dataSourceName]
 		if !ok {
@@ -121,7 +121,7 @@ func testAccCheckAwsDbClusterSnapshotDataSourceExists(dataSourceName string) res
 	}
 }
 
-func testAccCheckAwsDbClusterSnapshotDataSourceConfig_DbClusterSnapshotIdentifier(rName string) string {
+func testAccCheckClusterSnapshotDataSourceConfig_DbClusterSnapshotIdentifier(rName string) string {
 	return acctest.ConfigAvailableAZsNoOptIn() + fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "192.168.0.0/16"
@@ -171,7 +171,7 @@ data "aws_db_cluster_snapshot" "test" {
 `, rName)
 }
 
-func testAccCheckAwsDbClusterSnapshotDataSourceConfig_DbClusterIdentifier(rName string) string {
+func testAccCheckClusterSnapshotDataSourceConfig_DbClusterIdentifier(rName string) string {
 	return acctest.ConfigAvailableAZsNoOptIn() + fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "192.168.0.0/16"
@@ -221,7 +221,7 @@ data "aws_db_cluster_snapshot" "test" {
 `, rName)
 }
 
-func testAccCheckAwsDbClusterSnapshotDataSourceConfig_MostRecent(rName string) string {
+func testAccCheckClusterSnapshotDataSourceConfig_MostRecent(rName string) string {
 	return acctest.ConfigAvailableAZsNoOptIn() + fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "192.168.0.0/16"

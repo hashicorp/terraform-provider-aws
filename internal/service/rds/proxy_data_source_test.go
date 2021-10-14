@@ -21,7 +21,7 @@ func TestAccAWSDBProxyDataSource_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBProxyDataSourceConfig(rName),
+				Config: testAccProxyDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "auth", resourceName, "auth"),
@@ -40,7 +40,7 @@ func TestAccAWSDBProxyDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccAWSDBProxyDataSourceConfig(rName string) string {
+func testAccProxyDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 # Secrets Manager setup
 

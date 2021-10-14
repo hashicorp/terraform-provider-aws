@@ -23,12 +23,12 @@ func TestAccAWSDBProxyTarget_Instance(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); testAccDBProxyPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDBProxyTargetDestroy,
+		CheckDestroy: testAccCheckProxyTargetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBProxyTargetConfig_Instance(rName),
+				Config: testAccProxyTargetConfig_Instance(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBProxyTargetExists(resourceName, &dbProxyTarget),
+					testAccCheckProxyTargetExists(resourceName, &dbProxyTarget),
 					resource.TestCheckResourceAttrPair(resourceName, "endpoint", "aws_db_instance.test", "address"),
 					resource.TestCheckResourceAttrPair(resourceName, "port", "aws_db_instance.test", "port"),
 					resource.TestCheckResourceAttr(resourceName, "rds_resource_id", rName),
@@ -55,12 +55,12 @@ func TestAccAWSDBProxyTarget_Cluster(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); testAccDBProxyPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDBProxyTargetDestroy,
+		CheckDestroy: testAccCheckProxyTargetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBProxyTargetConfig_Cluster(rName),
+				Config: testAccProxyTargetConfig_Cluster(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBProxyTargetExists(resourceName, &dbProxyTarget),
+					testAccCheckProxyTargetExists(resourceName, &dbProxyTarget),
 					resource.TestCheckResourceAttr(resourceName, "endpoint", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "port", "aws_rds_cluster.test", "port"),
 					resource.TestCheckResourceAttr(resourceName, "rds_resource_id", rName),
@@ -87,12 +87,12 @@ func TestAccAWSDBProxyTarget_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); testAccDBProxyPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDBProxyTargetDestroy,
+		CheckDestroy: testAccCheckProxyTargetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBProxyTargetConfig_Instance(rName),
+				Config: testAccProxyTargetConfig_Instance(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBProxyTargetExists(resourceName, &dbProxyTarget),
+					testAccCheckProxyTargetExists(resourceName, &dbProxyTarget),
 					acctest.CheckResourceDisappears(acctest.Provider, tfrds.ResourceProxyTarget(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -101,7 +101,7 @@ func TestAccAWSDBProxyTarget_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSDBProxyTargetDestroy(s *terraform.State) error {
+func testAccCheckProxyTargetDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -141,7 +141,7 @@ func testAccCheckAWSDBProxyTargetDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSDBProxyTargetExists(n string, v *rds.DBProxyTarget) resource.TestCheckFunc {
+func testAccCheckProxyTargetExists(n string, v *rds.DBProxyTarget) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -176,7 +176,7 @@ func testAccCheckAWSDBProxyTargetExists(n string, v *rds.DBProxyTarget) resource
 	}
 }
 
-func testAccAWSDBProxyTargetConfigBase(rName string) string {
+func testAccProxyTargetBaseConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_db_proxy" "test" {
   depends_on = [
@@ -307,8 +307,8 @@ resource "aws_subnet" "test" {
 `, rName)
 }
 
-func testAccAWSDBProxyTargetConfig_Instance(rName string) string {
-	return testAccAWSDBProxyTargetConfigBase(rName) + fmt.Sprintf(`
+func testAccProxyTargetConfig_Instance(rName string) string {
+	return testAccProxyTargetBaseConfig(rName) + fmt.Sprintf(`
 data "aws_rds_engine_version" "test" {
   engine             = "mysql"
   preferred_versions = ["5.7.31", "5.7.30"]
@@ -345,8 +345,8 @@ resource "aws_db_proxy_target" "test" {
 `, rName)
 }
 
-func testAccAWSDBProxyTargetConfig_Cluster(rName string) string {
-	return testAccAWSDBProxyTargetConfigBase(rName) + fmt.Sprintf(`
+func testAccProxyTargetConfig_Cluster(rName string) string {
+	return testAccProxyTargetBaseConfig(rName) + fmt.Sprintf(`
 data "aws_rds_engine_version" "test" {
   engine = "aurora-mysql"
 }

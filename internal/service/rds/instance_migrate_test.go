@@ -8,7 +8,7 @@ import (
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 )
 
-func TestResourceAwsDbInstanceStateUpgradeV0(t *testing.T) {
+func TestInstanceStateUpgradeV0(t *testing.T) {
 	testCases := []struct {
 		Description   string
 		InputState    map[string]interface{}

@@ -20,13 +20,13 @@ func TestAccAWSRdsOrderableDbInstanceDataSource_basic(t *testing.T) {
 	storageType := "standard"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccAWSRdsOrderableDbInstancePreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccOrderableInstancePreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRdsOrderableDbInstanceDataSourceConfig_basic(class, engine, engineVersion, licenseModel, storageType),
+				Config: testAccOrderableInstanceDataSourceConfig_basic(class, engine, engineVersion, licenseModel, storageType),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "instance_class", class),
 					resource.TestCheckResourceAttr(dataSourceName, "engine", engine),
@@ -44,13 +44,13 @@ func TestAccAWSRdsOrderableDbInstanceDataSource_preferredClass(t *testing.T) {
 	preferredClass := "db.t2.micro"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccAWSRdsOrderableDbInstancePreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccOrderableInstancePreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRdsOrderableDbInstanceDataSourceConfig_preferredClass(preferredClass),
+				Config: testAccOrderableInstanceDataSourceConfig_preferredClass(preferredClass),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "instance_class", preferredClass),
 				),
@@ -64,13 +64,13 @@ func TestAccAWSRdsOrderableDbInstanceDataSource_preferredVersion(t *testing.T) {
 	preferredVersion := "5.7.22"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccAWSRdsOrderableDbInstancePreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccOrderableInstancePreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRdsOrderableDbInstanceDataSourceConfig_preferredVersion(preferredVersion),
+				Config: testAccOrderableInstanceDataSourceConfig_preferredVersion(preferredVersion),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "engine_version", preferredVersion),
 				),
@@ -85,13 +85,13 @@ func TestAccAWSRdsOrderableDbInstanceDataSource_preferredClassAndVersion(t *test
 	preferredVersion := "5.7.22"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccAWSRdsOrderableDbInstancePreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccOrderableInstancePreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRdsOrderableDbInstanceDataSourceConfig_preferredClassAndVersion(preferredClass, preferredVersion),
+				Config: testAccOrderableInstanceDataSourceConfig_preferredClassAndVersion(preferredClass, preferredVersion),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "instance_class", preferredClass),
 					resource.TestCheckResourceAttr(dataSourceName, "engine_version", preferredVersion),
@@ -105,13 +105,13 @@ func TestAccAWSRdsOrderableDbInstanceDataSource_supportsEnhancedMonitoring(t *te
 	dataSourceName := "data.aws_rds_orderable_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccAWSRdsOrderableDbInstancePreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccOrderableInstancePreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRdsOrderableDbInstanceDataSourceConfig_supportsEnhancedMonitoring(),
+				Config: testAccOrderableInstanceDataSourceConfig_supportsEnhancedMonitoring(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "supports_enhanced_monitoring", "true"),
 				),
@@ -124,13 +124,13 @@ func TestAccAWSRdsOrderableDbInstanceDataSource_supportsIAMDatabaseAuthenticatio
 	dataSourceName := "data.aws_rds_orderable_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccAWSRdsOrderableDbInstancePreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccOrderableInstancePreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRdsOrderableDbInstanceDataSourceConfig_supportsIAMDatabaseAuthentication(),
+				Config: testAccOrderableInstanceDataSourceConfig_supportsIAMDatabaseAuthentication(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "supports_iam_database_authentication", "true"),
 				),
@@ -143,13 +143,13 @@ func TestAccAWSRdsOrderableDbInstanceDataSource_supportsIops(t *testing.T) {
 	dataSourceName := "data.aws_rds_orderable_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccAWSRdsOrderableDbInstancePreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccOrderableInstancePreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRdsOrderableDbInstanceDataSourceConfig_supportsIops(),
+				Config: testAccOrderableInstanceDataSourceConfig_supportsIops(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "supports_iops", "true"),
 				),
@@ -162,13 +162,13 @@ func TestAccAWSRdsOrderableDbInstanceDataSource_supportsKerberosAuthentication(t
 	dataSourceName := "data.aws_rds_orderable_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccAWSRdsOrderableDbInstancePreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccOrderableInstancePreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRdsOrderableDbInstanceDataSourceConfig_supportsKerberosAuthentication(),
+				Config: testAccOrderableInstanceDataSourceConfig_supportsKerberosAuthentication(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "supports_kerberos_authentication", "true"),
 				),
@@ -183,7 +183,7 @@ func TestAccAWSRdsOrderableDbInstanceDataSource_supportsPerformanceInsights(t *t
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccAWSRdsOrderableDbInstancePreCheck(t)
+			testAccOrderableInstancePreCheck(t)
 			testAccRDSPerformanceInsightsDefaultVersionPreCheck(t, "mysql")
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
@@ -191,7 +191,7 @@ func TestAccAWSRdsOrderableDbInstanceDataSource_supportsPerformanceInsights(t *t
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRdsOrderableDbInstanceDataSourceConfig_supportsPerformanceInsights(),
+				Config: testAccOrderableInstanceDataSourceConfig_supportsPerformanceInsights(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "supports_performance_insights", "true"),
 				),
@@ -204,13 +204,13 @@ func TestAccAWSRdsOrderableDbInstanceDataSource_supportsStorageAutoscaling(t *te
 	dataSourceName := "data.aws_rds_orderable_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccAWSRdsOrderableDbInstancePreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccOrderableInstancePreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRdsOrderableDbInstanceDataSourceConfig_supportsStorageAutoscaling(),
+				Config: testAccOrderableInstanceDataSourceConfig_supportsStorageAutoScaling(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "supports_storage_autoscaling", "true"),
 				),
@@ -223,13 +223,13 @@ func TestAccAWSRdsOrderableDbInstanceDataSource_supportsStorageEncryption(t *tes
 	dataSourceName := "data.aws_rds_orderable_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccAWSRdsOrderableDbInstancePreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccOrderableInstancePreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRdsOrderableDbInstanceDataSourceConfig_supportsStorageEncryption(),
+				Config: testAccOrderableInstanceDataSourceConfig_supportsStorageEncryption(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "supports_storage_encryption", "true"),
 				),
@@ -238,7 +238,7 @@ func TestAccAWSRdsOrderableDbInstanceDataSource_supportsStorageEncryption(t *tes
 	})
 }
 
-func testAccAWSRdsOrderableDbInstancePreCheck(t *testing.T) {
+func testAccOrderableInstancePreCheck(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 	input := &rds.DescribeOrderableDBInstanceOptionsInput{
@@ -258,7 +258,7 @@ func testAccAWSRdsOrderableDbInstancePreCheck(t *testing.T) {
 	}
 }
 
-func testAccAWSRdsOrderableDbInstanceDataSourceConfig_basic(class, engine, version, license, storage string) string {
+func testAccOrderableInstanceDataSourceConfig_basic(class, engine, version, license, storage string) string {
 	return fmt.Sprintf(`
 data "aws_rds_orderable_db_instance" "test" {
   instance_class = %q
@@ -270,7 +270,7 @@ data "aws_rds_orderable_db_instance" "test" {
 `, class, engine, version, license, storage)
 }
 
-func testAccAWSRdsOrderableDbInstanceDataSourceConfig_preferredClass(preferredClass string) string {
+func testAccOrderableInstanceDataSourceConfig_preferredClass(preferredClass string) string {
 	return fmt.Sprintf(`
 data "aws_rds_orderable_db_instance" "test" {
   engine         = "mysql"
@@ -286,7 +286,7 @@ data "aws_rds_orderable_db_instance" "test" {
 `, preferredClass)
 }
 
-func testAccAWSRdsOrderableDbInstanceDataSourceConfig_preferredVersion(preferredVersion string) string {
+func testAccOrderableInstanceDataSourceConfig_preferredVersion(preferredVersion string) string {
 	return fmt.Sprintf(`
 data "aws_rds_orderable_db_instance" "test" {
   engine        = "mysql"
@@ -302,7 +302,7 @@ data "aws_rds_orderable_db_instance" "test" {
 `, preferredVersion)
 }
 
-func testAccAWSRdsOrderableDbInstanceDataSourceConfig_preferredClassAndVersion(preferredClass, preferredVersion string) string {
+func testAccOrderableInstanceDataSourceConfig_preferredClassAndVersion(preferredClass, preferredVersion string) string {
 	return fmt.Sprintf(`
 data "aws_rds_orderable_db_instance" "test" {
   engine        = "mysql"
@@ -322,7 +322,7 @@ data "aws_rds_orderable_db_instance" "test" {
 `, preferredClass, preferredVersion)
 }
 
-func testAccAWSRdsOrderableDbInstanceDataSourceConfig_supportsEnhancedMonitoring() string {
+func testAccOrderableInstanceDataSourceConfig_supportsEnhancedMonitoring() string {
 	return `
 data "aws_rds_orderable_db_instance" "test" {
   engine                       = "mysql"
@@ -336,7 +336,7 @@ data "aws_rds_orderable_db_instance" "test" {
 `
 }
 
-func testAccAWSRdsOrderableDbInstanceDataSourceConfig_supportsIAMDatabaseAuthentication() string {
+func testAccOrderableInstanceDataSourceConfig_supportsIAMDatabaseAuthentication() string {
 	return `
 data "aws_rds_orderable_db_instance" "test" {
   engine                               = "mysql"
@@ -350,7 +350,7 @@ data "aws_rds_orderable_db_instance" "test" {
 `
 }
 
-func testAccAWSRdsOrderableDbInstanceDataSourceConfig_supportsIops() string {
+func testAccOrderableInstanceDataSourceConfig_supportsIops() string {
 	return `
 data "aws_rds_orderable_db_instance" "test" {
   engine        = "mysql"
@@ -363,7 +363,7 @@ data "aws_rds_orderable_db_instance" "test" {
 `
 }
 
-func testAccAWSRdsOrderableDbInstanceDataSourceConfig_supportsKerberosAuthentication() string {
+func testAccOrderableInstanceDataSourceConfig_supportsKerberosAuthentication() string {
 	return `
 data "aws_rds_orderable_db_instance" "test" {
   engine                           = "postgres"
@@ -377,7 +377,7 @@ data "aws_rds_orderable_db_instance" "test" {
 `
 }
 
-func testAccAWSRdsOrderableDbInstanceDataSourceConfig_supportsPerformanceInsights() string {
+func testAccOrderableInstanceDataSourceConfig_supportsPerformanceInsights() string {
 	return `
 data "aws_rds_orderable_db_instance" "test" {
   engine                        = "mysql"
@@ -390,7 +390,7 @@ data "aws_rds_orderable_db_instance" "test" {
 `
 }
 
-func testAccAWSRdsOrderableDbInstanceDataSourceConfig_supportsStorageAutoscaling() string {
+func testAccOrderableInstanceDataSourceConfig_supportsStorageAutoScaling() string {
 	return `
 data "aws_rds_orderable_db_instance" "test" {
   engine                       = "mysql"
@@ -403,7 +403,7 @@ data "aws_rds_orderable_db_instance" "test" {
 `
 }
 
-func testAccAWSRdsOrderableDbInstanceDataSourceConfig_supportsStorageEncryption() string {
+func testAccOrderableInstanceDataSourceConfig_supportsStorageEncryption() string {
 	return `
 data "aws_rds_orderable_db_instance" "test" {
   engine                      = "mysql"

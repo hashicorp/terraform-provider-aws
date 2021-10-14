@@ -19,13 +19,13 @@ func TestAccAWSRDSEngineVersionDataSource_basic(t *testing.T) {
 	paramGroup := "oracle-ee-19"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccAWSRDSEngineVersionPreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccEngineVersionPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRDSEngineVersionDataSourceBasicConfig(engine, version, paramGroup),
+				Config: testAccEngineVersionBasicDataSourceConfig(engine, version, paramGroup),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "engine", engine),
 					resource.TestCheckResourceAttr(dataSourceName, "version", version),
@@ -54,13 +54,13 @@ func TestAccAWSRDSEngineVersionDataSource_upgradeTargets(t *testing.T) {
 	dataSourceName := "data.aws_rds_engine_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccAWSRDSEngineVersionPreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccEngineVersionPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRDSEngineVersionDataSourceUpgradeTargetsConfig(),
+				Config: testAccEngineVersionUpgradeTargetsDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, "valid_upgrade_targets.#", regexp.MustCompile(`^[1-9][0-9]*`)),
 				),
@@ -73,13 +73,13 @@ func TestAccAWSRDSEngineVersionDataSource_preferred(t *testing.T) {
 	dataSourceName := "data.aws_rds_engine_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccAWSRDSEngineVersionPreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccEngineVersionPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRDSEngineVersionDataSourcePreferredConfig(),
+				Config: testAccEngineVersionPreferredDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "version", "5.7.19"),
 				),
@@ -92,13 +92,13 @@ func TestAccAWSRDSEngineVersionDataSource_defaultOnly(t *testing.T) {
 	dataSourceName := "data.aws_rds_engine_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccAWSRDSEngineVersionPreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccEngineVersionPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRDSEngineVersionDataSourceDefaultOnlyConfig(),
+				Config: testAccEngineVersionDefaultOnlyDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "version"),
 				),
@@ -107,7 +107,7 @@ func TestAccAWSRDSEngineVersionDataSource_defaultOnly(t *testing.T) {
 	})
 }
 
-func testAccAWSRDSEngineVersionPreCheck(t *testing.T) {
+func testAccEngineVersionPreCheck(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 	input := &rds.DescribeDBEngineVersionsInput{
@@ -126,7 +126,7 @@ func testAccAWSRDSEngineVersionPreCheck(t *testing.T) {
 	}
 }
 
-func testAccAWSRDSEngineVersionDataSourceBasicConfig(engine, version, paramGroup string) string {
+func testAccEngineVersionBasicDataSourceConfig(engine, version, paramGroup string) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "test" {
   engine                 = %q
@@ -136,7 +136,7 @@ data "aws_rds_engine_version" "test" {
 `, engine, version, paramGroup)
 }
 
-func testAccAWSRDSEngineVersionDataSourceUpgradeTargetsConfig() string {
+func testAccEngineVersionUpgradeTargetsDataSourceConfig() string {
 	return `
 data "aws_rds_engine_version" "test" {
   engine  = "mysql"
@@ -145,7 +145,7 @@ data "aws_rds_engine_version" "test" {
 `
 }
 
-func testAccAWSRDSEngineVersionDataSourcePreferredConfig() string {
+func testAccEngineVersionPreferredDataSourceConfig() string {
 	return `
 data "aws_rds_engine_version" "test" {
   engine             = "mysql"
@@ -154,7 +154,7 @@ data "aws_rds_engine_version" "test" {
 `
 }
 
-func testAccAWSRDSEngineVersionDataSourceDefaultOnlyConfig() string {
+func testAccEngineVersionDefaultOnlyDataSourceConfig() string {
 	return `
 data "aws_rds_engine_version" "test" {
   engine = "mysql"

@@ -25,12 +25,12 @@ func TestAccAWSDBProxyDefaultTargetGroup_Basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); testAccDBProxyPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDBProxyTargetGroupDestroy,
+		CheckDestroy: testAccCheckProxyTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBProxyDefaultTargetGroupConfig_Basic(rName),
+				Config: testAccProxyDefaultTargetGroupConfig_Basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBProxyTargetGroupExists(resourceName, &dbProxyTargetGroup),
+					testAccCheckProxyTargetGroupExists(resourceName, &dbProxyTargetGroup),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(`target-group:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "connection_pool_config.*", map[string]string{
@@ -60,12 +60,12 @@ func TestAccAWSDBProxyDefaultTargetGroup_EmptyConnectionPoolConfig(t *testing.T)
 		PreCheck:     func() { acctest.PreCheck(t); testAccDBProxyPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDBProxyTargetGroupDestroy,
+		CheckDestroy: testAccCheckProxyTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBProxyDefaultTargetGroupConfig_EmptyConnectionPoolConfig(rName),
+				Config: testAccProxyDefaultTargetGroupConfig_EmptyConnectionPoolConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBProxyTargetGroupExists(resourceName, &dbProxyTargetGroup),
+					testAccCheckProxyTargetGroupExists(resourceName, &dbProxyTargetGroup),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(`target-group:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "connection_pool_config.*", map[string]string{
@@ -95,12 +95,12 @@ func TestAccAWSDBProxyDefaultTargetGroup_ConnectionBorrowTimeout(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); testAccDBProxyPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDBProxyTargetGroupDestroy,
+		CheckDestroy: testAccCheckProxyTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBProxyDefaultTargetGroupConfig_ConnectionBorrowTimeout(rName, 120),
+				Config: testAccProxyDefaultTargetGroupConfig_ConnectionBorrowTimeout(rName, 120),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBProxyTargetGroupExists(resourceName, &dbProxyTargetGroup),
+					testAccCheckProxyTargetGroupExists(resourceName, &dbProxyTargetGroup),
 					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.0.connection_borrow_timeout", "120"),
 				),
 			},
@@ -110,9 +110,9 @@ func TestAccAWSDBProxyDefaultTargetGroup_ConnectionBorrowTimeout(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSDBProxyDefaultTargetGroupConfig_ConnectionBorrowTimeout(rName, 90),
+				Config: testAccProxyDefaultTargetGroupConfig_ConnectionBorrowTimeout(rName, 90),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBProxyTargetGroupExists(resourceName, &dbProxyTargetGroup),
+					testAccCheckProxyTargetGroupExists(resourceName, &dbProxyTargetGroup),
 					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.0.connection_borrow_timeout", "90"),
 				),
 			},
@@ -129,12 +129,12 @@ func TestAccAWSDBProxyDefaultTargetGroup_InitQuery(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); testAccDBProxyPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDBProxyTargetGroupDestroy,
+		CheckDestroy: testAccCheckProxyTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBProxyDefaultTargetGroupConfig_InitQuery(rName, "SET x=1, y=2"),
+				Config: testAccProxyDefaultTargetGroupConfig_InitQuery(rName, "SET x=1, y=2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBProxyTargetGroupExists(resourceName, &dbProxyTargetGroup),
+					testAccCheckProxyTargetGroupExists(resourceName, &dbProxyTargetGroup),
 					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.0.init_query", "SET x=1, y=2"),
 				),
 			},
@@ -144,9 +144,9 @@ func TestAccAWSDBProxyDefaultTargetGroup_InitQuery(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSDBProxyDefaultTargetGroupConfig_InitQuery(rName, "SET a=2, b=1"),
+				Config: testAccProxyDefaultTargetGroupConfig_InitQuery(rName, "SET a=2, b=1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBProxyTargetGroupExists(resourceName, &dbProxyTargetGroup),
+					testAccCheckProxyTargetGroupExists(resourceName, &dbProxyTargetGroup),
 					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.0.init_query", "SET a=2, b=1"),
 				),
 			},
@@ -163,12 +163,12 @@ func TestAccAWSDBProxyDefaultTargetGroup_MaxConnectionsPercent(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); testAccDBProxyPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDBProxyTargetGroupDestroy,
+		CheckDestroy: testAccCheckProxyTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBProxyDefaultTargetGroupConfig_MaxConnectionsPercent(rName, 100),
+				Config: testAccProxyDefaultTargetGroupConfig_MaxConnectionsPercent(rName, 100),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBProxyTargetGroupExists(resourceName, &dbProxyTargetGroup),
+					testAccCheckProxyTargetGroupExists(resourceName, &dbProxyTargetGroup),
 					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.0.max_connections_percent", "100"),
 				),
 			},
@@ -178,9 +178,9 @@ func TestAccAWSDBProxyDefaultTargetGroup_MaxConnectionsPercent(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSDBProxyDefaultTargetGroupConfig_MaxConnectionsPercent(rName, 75),
+				Config: testAccProxyDefaultTargetGroupConfig_MaxConnectionsPercent(rName, 75),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBProxyTargetGroupExists(resourceName, &dbProxyTargetGroup),
+					testAccCheckProxyTargetGroupExists(resourceName, &dbProxyTargetGroup),
 					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.0.max_connections_percent", "75"),
 				),
 			},
@@ -197,12 +197,12 @@ func TestAccAWSDBProxyDefaultTargetGroup_MaxIdleConnectionsPercent(t *testing.T)
 		PreCheck:     func() { acctest.PreCheck(t); testAccDBProxyPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDBProxyTargetGroupDestroy,
+		CheckDestroy: testAccCheckProxyTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBProxyDefaultTargetGroupConfig_MaxIdleConnectionsPercent(rName, 50),
+				Config: testAccProxyDefaultTargetGroupConfig_MaxIdleConnectionsPercent(rName, 50),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBProxyTargetGroupExists(resourceName, &dbProxyTargetGroup),
+					testAccCheckProxyTargetGroupExists(resourceName, &dbProxyTargetGroup),
 					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.0.max_idle_connections_percent", "50"),
 				),
 			},
@@ -212,9 +212,9 @@ func TestAccAWSDBProxyDefaultTargetGroup_MaxIdleConnectionsPercent(t *testing.T)
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSDBProxyDefaultTargetGroupConfig_MaxIdleConnectionsPercent(rName, 33),
+				Config: testAccProxyDefaultTargetGroupConfig_MaxIdleConnectionsPercent(rName, 33),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBProxyTargetGroupExists(resourceName, &dbProxyTargetGroup),
+					testAccCheckProxyTargetGroupExists(resourceName, &dbProxyTargetGroup),
 					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.0.max_idle_connections_percent", "33"),
 				),
 			},
@@ -232,12 +232,12 @@ func TestAccAWSDBProxyDefaultTargetGroup_SessionPinningFilters(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); testAccDBProxyPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDBProxyTargetGroupDestroy,
+		CheckDestroy: testAccCheckProxyTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBProxyDefaultTargetGroupConfig_Basic(rName),
+				Config: testAccProxyDefaultTargetGroupConfig_Basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBProxyTargetGroupExists(resourceName, &dbProxyTargetGroup),
+					testAccCheckProxyTargetGroupExists(resourceName, &dbProxyTargetGroup),
 					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.0.session_pinning_filters.#", "0"),
 				),
 			},
@@ -247,9 +247,9 @@ func TestAccAWSDBProxyDefaultTargetGroup_SessionPinningFilters(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSDBProxyDefaultTargetGroupConfig_SessionPinningFilters(rName, sessionPinningFilters),
+				Config: testAccProxyDefaultTargetGroupConfig_SessionPinningFilters(rName, sessionPinningFilters),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBProxyTargetGroupExists(resourceName, &dbProxyTargetGroup),
+					testAccCheckProxyTargetGroupExists(resourceName, &dbProxyTargetGroup),
 					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.0.session_pinning_filters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.0.session_pinning_filters.0", sessionPinningFilters),
 				),
@@ -267,12 +267,12 @@ func TestAccAWSDBProxyDefaultTargetGroup_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); testAccDBProxyPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDBProxyTargetGroupDestroy,
+		CheckDestroy: testAccCheckProxyTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBProxyDefaultTargetGroupConfig_Basic(rName),
+				Config: testAccProxyDefaultTargetGroupConfig_Basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBProxyExists(resourceName, &v),
+					testAccCheckProxyExists(resourceName, &v),
 					// DB Proxy default Target Group implicitly exists so it cannot be removed.
 					// Verify disappearance handling for DB Proxy removal instead.
 					acctest.CheckResourceDisappears(acctest.Provider, tfrds.ResourceProxy(), dbProxyResourceName),
@@ -283,7 +283,7 @@ func TestAccAWSDBProxyDefaultTargetGroup_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSDBProxyTargetGroupDestroy(s *terraform.State) error {
+func testAccCheckProxyTargetGroupDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -313,7 +313,7 @@ func testAccCheckAWSDBProxyTargetGroupDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSDBProxyTargetGroupExists(n string, v *rds.DBProxyTargetGroup) resource.TestCheckFunc {
+func testAccCheckProxyTargetGroupExists(n string, v *rds.DBProxyTargetGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -348,7 +348,7 @@ func testAccCheckAWSDBProxyTargetGroupExists(n string, v *rds.DBProxyTargetGroup
 	}
 }
 
-func testAccAWSDBProxyDefaultTargetGroupConfigBase(rName string) string {
+func testAccProxyDefaultTargetGroupBaseConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_db_proxy" "test" {
   depends_on = [
@@ -464,16 +464,16 @@ resource "aws_subnet" "test" {
 `, rName)
 }
 
-func testAccAWSDBProxyDefaultTargetGroupConfig_Basic(rName string) string {
-	return testAccAWSDBProxyDefaultTargetGroupConfigBase(rName) + `
+func testAccProxyDefaultTargetGroupConfig_Basic(rName string) string {
+	return testAccProxyDefaultTargetGroupBaseConfig(rName) + `
 resource "aws_db_proxy_default_target_group" "test" {
   db_proxy_name = aws_db_proxy.test.name
 }
 `
 }
 
-func testAccAWSDBProxyDefaultTargetGroupConfig_EmptyConnectionPoolConfig(rName string) string {
-	return testAccAWSDBProxyDefaultTargetGroupConfigBase(rName) + `
+func testAccProxyDefaultTargetGroupConfig_EmptyConnectionPoolConfig(rName string) string {
+	return testAccProxyDefaultTargetGroupBaseConfig(rName) + `
 resource "aws_db_proxy_default_target_group" "test" {
   db_proxy_name = aws_db_proxy.test.name
 
@@ -483,8 +483,8 @@ resource "aws_db_proxy_default_target_group" "test" {
 `
 }
 
-func testAccAWSDBProxyDefaultTargetGroupConfig_ConnectionBorrowTimeout(rName string, connectionBorrowTimeout int) string {
-	return testAccAWSDBProxyDefaultTargetGroupConfigBase(rName) + fmt.Sprintf(`
+func testAccProxyDefaultTargetGroupConfig_ConnectionBorrowTimeout(rName string, connectionBorrowTimeout int) string {
+	return testAccProxyDefaultTargetGroupBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_db_proxy_default_target_group" "test" {
   db_proxy_name = aws_db_proxy.test.name
 
@@ -495,8 +495,8 @@ resource "aws_db_proxy_default_target_group" "test" {
 `, rName, connectionBorrowTimeout)
 }
 
-func testAccAWSDBProxyDefaultTargetGroupConfig_InitQuery(rName, initQuery string) string {
-	return testAccAWSDBProxyDefaultTargetGroupConfigBase(rName) + fmt.Sprintf(`
+func testAccProxyDefaultTargetGroupConfig_InitQuery(rName, initQuery string) string {
+	return testAccProxyDefaultTargetGroupBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_db_proxy_default_target_group" "test" {
   db_proxy_name = aws_db_proxy.test.name
 
@@ -507,8 +507,8 @@ resource "aws_db_proxy_default_target_group" "test" {
 `, rName, initQuery)
 }
 
-func testAccAWSDBProxyDefaultTargetGroupConfig_MaxConnectionsPercent(rName string, maxConnectionsPercent int) string {
-	return testAccAWSDBProxyDefaultTargetGroupConfigBase(rName) + fmt.Sprintf(`
+func testAccProxyDefaultTargetGroupConfig_MaxConnectionsPercent(rName string, maxConnectionsPercent int) string {
+	return testAccProxyDefaultTargetGroupBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_db_proxy_default_target_group" "test" {
   db_proxy_name = aws_db_proxy.test.name
 
@@ -519,8 +519,8 @@ resource "aws_db_proxy_default_target_group" "test" {
 `, rName, maxConnectionsPercent)
 }
 
-func testAccAWSDBProxyDefaultTargetGroupConfig_MaxIdleConnectionsPercent(rName string, maxIdleConnectionsPercent int) string {
-	return testAccAWSDBProxyDefaultTargetGroupConfigBase(rName) + fmt.Sprintf(`
+func testAccProxyDefaultTargetGroupConfig_MaxIdleConnectionsPercent(rName string, maxIdleConnectionsPercent int) string {
+	return testAccProxyDefaultTargetGroupBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_db_proxy_default_target_group" "test" {
   db_proxy_name = aws_db_proxy.test.name
 
@@ -531,8 +531,8 @@ resource "aws_db_proxy_default_target_group" "test" {
 `, rName, maxIdleConnectionsPercent)
 }
 
-func testAccAWSDBProxyDefaultTargetGroupConfig_SessionPinningFilters(rName, sessionPinningFilters string) string {
-	return testAccAWSDBProxyDefaultTargetGroupConfigBase(rName) + fmt.Sprintf(`
+func testAccProxyDefaultTargetGroupConfig_SessionPinningFilters(rName, sessionPinningFilters string) string {
+	return testAccProxyDefaultTargetGroupBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_db_proxy_default_target_group" "test" {
   db_proxy_name = aws_db_proxy.test.name
 

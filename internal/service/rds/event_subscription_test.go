@@ -21,11 +21,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_db_event_subscription", &resource.Sweeper{
 		Name: "aws_db_event_subscription",
-		F:    testSweepDbEventSubscriptions,
+		F:    sweepEventSubscriptions,
 	})
 }
 
-func testSweepDbEventSubscriptions(region string) error {
+func sweepEventSubscriptions(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -77,12 +77,12 @@ func TestAccAWSDBEventSubscription_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDBEventSubscriptionDestroy,
+		CheckDestroy: testAccCheckEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBEventSubscriptionConfigBasic(rName),
+				Config: testAccEventSubscriptionBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBEventSubscriptionExists(resourceName, &v),
+					testAccCheckEventSubscriptionExists(resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "rds", fmt.Sprintf("es:%s", rName)),
 					acctest.CheckResourceAttrAccountID(resourceName, "customer_aws_id"),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
@@ -112,12 +112,12 @@ func TestAccAWSDBEventSubscription_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDBEventSubscriptionDestroy,
+		CheckDestroy: testAccCheckEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBEventSubscriptionConfigBasic(rName),
+				Config: testAccEventSubscriptionBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBEventSubscriptionExists(resourceName, &eventSubscription),
+					testAccCheckEventSubscriptionExists(resourceName, &eventSubscription),
 					acctest.CheckResourceDisappears(acctest.Provider, tfrds.ResourceEventSubscription(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -135,12 +135,12 @@ func TestAccAWSDBEventSubscription_Name_Generated(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDBEventSubscriptionDestroy,
+		CheckDestroy: testAccCheckEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBEventSubscriptionConfigNameGenerated(rName),
+				Config: testAccEventSubscriptionNameGeneratedConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBEventSubscriptionExists(resourceName, &v),
+					testAccCheckEventSubscriptionExists(resourceName, &v),
 					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 				),
@@ -163,12 +163,12 @@ func TestAccAWSDBEventSubscription_NamePrefix(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDBEventSubscriptionDestroy,
+		CheckDestroy: testAccCheckEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBEventSubscriptionConfigNamePrefix(rName, "tf-acc-test-prefix-"),
+				Config: testAccEventSubscriptionNamePrefixConfig(rName, "tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBEventSubscriptionExists(resourceName, &v),
+					testAccCheckEventSubscriptionExists(resourceName, &v),
 					create.TestCheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
 				),
@@ -191,12 +191,12 @@ func TestAccAWSDBEventSubscription_Tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDBEventSubscriptionDestroy,
+		CheckDestroy: testAccCheckEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBEventSubscriptionConfigTags1(rName, "key1", "value1"),
+				Config: testAccEventSubscriptionTags1Config(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBEventSubscriptionExists(resourceName, &eventSubscription),
+					testAccCheckEventSubscriptionExists(resourceName, &eventSubscription),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -207,18 +207,18 @@ func TestAccAWSDBEventSubscription_Tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSDBEventSubscriptionConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccEventSubscriptionTags2Config(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBEventSubscriptionExists(resourceName, &eventSubscription),
+					testAccCheckEventSubscriptionExists(resourceName, &eventSubscription),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccAWSDBEventSubscriptionConfigTags1(rName, "key2", "value2"),
+				Config: testAccEventSubscriptionTags1Config(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBEventSubscriptionExists(resourceName, &eventSubscription),
+					testAccCheckEventSubscriptionExists(resourceName, &eventSubscription),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -237,12 +237,12 @@ func TestAccAWSDBEventSubscription_Categories(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDBEventSubscriptionDestroy,
+		CheckDestroy: testAccCheckEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBEventSubscriptionConfigCategories(rName),
+				Config: testAccEventSubscriptionCategoriesConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBEventSubscriptionExists(resourceName, &v),
+					testAccCheckEventSubscriptionExists(resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "rds", fmt.Sprintf("es:%s", rName)),
 					acctest.CheckResourceAttrAccountID(resourceName, "customer_aws_id"),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
@@ -266,9 +266,9 @@ func TestAccAWSDBEventSubscription_Categories(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSDBEventSubscriptionConfigCategoriesUpdated(rName),
+				Config: testAccEventSubscriptionCategoriesUpdatedConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBEventSubscriptionExists(resourceName, &v),
+					testAccCheckEventSubscriptionExists(resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "rds", fmt.Sprintf("es:%s", rName)),
 					acctest.CheckResourceAttrAccountID(resourceName, "customer_aws_id"),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
@@ -298,12 +298,12 @@ func TestAccAWSDBEventSubscription_SourceIDs(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDBEventSubscriptionDestroy,
+		CheckDestroy: testAccCheckEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBEventSubscriptionConfigSourceIDs(rName),
+				Config: testAccEventSubscriptionSourceIDsConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBEventSubscriptionExists(resourceName, &v),
+					testAccCheckEventSubscriptionExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "source_ids.#", "2"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "source_ids.*", paramGroup1ResourceName, "id"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "source_ids.*", paramGroup2ResourceName, "id"),
@@ -315,9 +315,9 @@ func TestAccAWSDBEventSubscription_SourceIDs(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSDBEventSubscriptionConfigSourceIDsUpdated(rName),
+				Config: testAccEventSubscriptionSourceIDsUpdatedConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBEventSubscriptionExists(resourceName, &v),
+					testAccCheckEventSubscriptionExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "source_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "source_ids.*", paramGroup3ResourceName, "id"),
 				),
@@ -326,7 +326,7 @@ func TestAccAWSDBEventSubscription_SourceIDs(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSDBEventSubscriptionExists(n string, v *rds.EventSubscription) resource.TestCheckFunc {
+func testAccCheckEventSubscriptionExists(n string, v *rds.EventSubscription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -351,7 +351,7 @@ func testAccCheckAWSDBEventSubscriptionExists(n string, v *rds.EventSubscription
 	}
 }
 
-func testAccCheckAWSDBEventSubscriptionDestroy(s *terraform.State) error {
+func testAccCheckEventSubscriptionDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -375,7 +375,7 @@ func testAccCheckAWSDBEventSubscriptionDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSDBEventSubscriptionConfigBasic(rName string) string {
+func testAccEventSubscriptionBasicConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q
@@ -388,7 +388,7 @@ resource "aws_db_event_subscription" "test" {
 `, rName)
 }
 
-func testAccAWSDBEventSubscriptionConfigNameGenerated(rName string) string {
+func testAccEventSubscriptionNameGeneratedConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q
@@ -400,7 +400,7 @@ resource "aws_db_event_subscription" "test" {
 `, rName)
 }
 
-func testAccAWSDBEventSubscriptionConfigNamePrefix(rName, namePrefix string) string {
+func testAccEventSubscriptionNamePrefixConfig(rName, namePrefix string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q
@@ -413,7 +413,7 @@ resource "aws_db_event_subscription" "test" {
 `, rName, namePrefix)
 }
 
-func testAccAWSDBEventSubscriptionConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccEventSubscriptionTags1Config(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q
@@ -430,7 +430,7 @@ resource "aws_db_event_subscription" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccAWSDBEventSubscriptionConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccEventSubscriptionTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q
@@ -448,7 +448,7 @@ resource "aws_db_event_subscription" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccAWSDBEventSubscriptionConfigCategories(rName string) string {
+func testAccEventSubscriptionCategoriesConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q
@@ -471,7 +471,7 @@ resource "aws_db_event_subscription" "test" {
 `, rName)
 }
 
-func testAccAWSDBEventSubscriptionConfigCategoriesUpdated(rName string) string {
+func testAccEventSubscriptionCategoriesUpdatedConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q
@@ -490,7 +490,7 @@ resource "aws_db_event_subscription" "test" {
 `, rName)
 }
 
-func testAccAWSDBEventSubscriptionConfigSourceIDsBase(rName string) string {
+func testAccEventSubscriptionSourceIDsBaseConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q
@@ -513,8 +513,8 @@ resource "aws_db_parameter_group" "test3" {
 `, rName)
 }
 
-func testAccAWSDBEventSubscriptionConfigSourceIDs(rName string) string {
-	return acctest.ConfigCompose(testAccAWSDBEventSubscriptionConfigSourceIDsBase(rName), fmt.Sprintf(`
+func testAccEventSubscriptionSourceIDsConfig(rName string) string {
+	return acctest.ConfigCompose(testAccEventSubscriptionSourceIDsBaseConfig(rName), fmt.Sprintf(`
 resource "aws_db_event_subscription" "test" {
   name        = %[1]q
   sns_topic   = aws_sns_topic.test.arn
@@ -532,8 +532,8 @@ resource "aws_db_event_subscription" "test" {
 `, rName))
 }
 
-func testAccAWSDBEventSubscriptionConfigSourceIDsUpdated(rName string) string {
-	return acctest.ConfigCompose(testAccAWSDBEventSubscriptionConfigSourceIDsBase(rName), fmt.Sprintf(`
+func testAccEventSubscriptionSourceIDsUpdatedConfig(rName string) string {
+	return acctest.ConfigCompose(testAccEventSubscriptionSourceIDsBaseConfig(rName), fmt.Sprintf(`
 resource "aws_db_event_subscription" "test" {
   name        = %[1]q
   sns_topic   = aws_sns_topic.test.arn

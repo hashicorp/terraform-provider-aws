@@ -24,12 +24,12 @@ func TestAccAWSDBProxyEndpoint_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); testAccDBProxyEndpointPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDBProxyEndpointDestroy,
+		CheckDestroy: testAccCheckProxyEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBProxyEndpointConfig(rName),
+				Config: testAccProxyEndpointConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBProxyEndpointExists(resourceName, &v),
+					testAccCheckProxyEndpointExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "db_proxy_endpoint_name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "db_proxy_name", "aws_db_proxy.test", "name"),
 					resource.TestCheckResourceAttr(resourceName, "target_role", "READ_WRITE"),
@@ -62,12 +62,12 @@ func TestAccAWSDBProxyEndpoint_targetRole(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); testAccDBProxyEndpointPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDBProxyEndpointDestroy,
+		CheckDestroy: testAccCheckProxyEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBProxyEndpointConfigTargetRole(rName),
+				Config: testAccProxyEndpointTargetRoleConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBProxyEndpointExists(resourceName, &v),
+					testAccCheckProxyEndpointExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "target_role", "READ_ONLY"),
 				),
 			},
@@ -89,12 +89,12 @@ func TestAccAWSDBProxyEndpoint_vpcSecurityGroupIds(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); testAccDBProxyEndpointPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDBProxyEndpointDestroy,
+		CheckDestroy: testAccCheckProxyEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBProxyEndpointConfigVpcSecurityGroupIds1(rName),
+				Config: testAccProxyEndpointVPCSecurityGroupIds1Config(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBProxyEndpointExists(resourceName, &dbProxy),
+					testAccCheckProxyEndpointExists(resourceName, &dbProxy),
 					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_security_group_ids.*", "aws_security_group.test", "id"),
 				),
@@ -105,9 +105,9 @@ func TestAccAWSDBProxyEndpoint_vpcSecurityGroupIds(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSDBProxyEndpointConfigVpcSecurityGroupIds2(rName),
+				Config: testAccProxyEndpointVPCSecurityGroupIds2Config(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBProxyEndpointExists(resourceName, &dbProxy),
+					testAccCheckProxyEndpointExists(resourceName, &dbProxy),
 					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "2"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_security_group_ids.*", "aws_security_group.test", "id"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_security_group_ids.*", "aws_security_group.test2", "id"),
@@ -126,12 +126,12 @@ func TestAccAWSDBProxyEndpoint_tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); testAccDBProxyEndpointPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDBProxyEndpointDestroy,
+		CheckDestroy: testAccCheckProxyEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBProxyEndpointConfigTags1(rName, "key1", "value1"),
+				Config: testAccProxyEndpointTags1Config(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBProxyEndpointExists(resourceName, &dbProxy),
+					testAccCheckProxyEndpointExists(resourceName, &dbProxy),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -142,18 +142,18 @@ func TestAccAWSDBProxyEndpoint_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSDBProxyEndpointConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccProxyEndpointTags2Config(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBProxyEndpointExists(resourceName, &dbProxy),
+					testAccCheckProxyEndpointExists(resourceName, &dbProxy),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccAWSDBProxyEndpointConfigTags1(rName, "key2", "value2"),
+				Config: testAccProxyEndpointTags1Config(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBProxyEndpointExists(resourceName, &dbProxy),
+					testAccCheckProxyEndpointExists(resourceName, &dbProxy),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -170,12 +170,12 @@ func TestAccAWSDBProxyEndpoint_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); testAccDBProxyEndpointPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDBProxyEndpointDestroy,
+		CheckDestroy: testAccCheckProxyEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBProxyEndpointConfig(rName),
+				Config: testAccProxyEndpointConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBProxyEndpointExists(resourceName, &v),
+					testAccCheckProxyEndpointExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfrds.ResourceProxyEndpoint(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -192,12 +192,12 @@ func TestAccAWSDBProxyEndpoint_disappears_proxy(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); testAccDBProxyEndpointPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDBProxyEndpointDestroy,
+		CheckDestroy: testAccCheckProxyEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBProxyEndpointConfig(rName),
+				Config: testAccProxyEndpointConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBProxyEndpointExists(resourceName, &v),
+					testAccCheckProxyEndpointExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfrds.ResourceProxy(), "aws_db_proxy.test"),
 				),
 				ExpectNonEmptyPlan: true,
@@ -221,7 +221,7 @@ func testAccDBProxyEndpointPreCheck(t *testing.T) {
 	}
 }
 
-func testAccCheckAWSDBProxyEndpointDestroy(s *terraform.State) error {
+func testAccCheckProxyEndpointDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -247,7 +247,7 @@ func testAccCheckAWSDBProxyEndpointDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSDBProxyEndpointExists(n string, v *rds.DBProxyEndpoint) resource.TestCheckFunc {
+func testAccCheckProxyEndpointExists(n string, v *rds.DBProxyEndpoint) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -276,7 +276,7 @@ func testAccCheckAWSDBProxyEndpointExists(n string, v *rds.DBProxyEndpoint) reso
 	}
 }
 
-func testAccAWSDBProxyEndpointConfigBase(rName string) string {
+func testAccProxyEndpointBaseConfig(rName string) string {
 	return fmt.Sprintf(`
 # Secrets Manager setup
 
@@ -388,8 +388,8 @@ resource "aws_db_proxy" "test" {
 `, rName)
 }
 
-func testAccAWSDBProxyEndpointConfig(rName string) string {
-	return testAccAWSDBProxyEndpointConfigBase(rName) + fmt.Sprintf(`
+func testAccProxyEndpointConfig(rName string) string {
+	return testAccProxyEndpointBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_db_proxy_endpoint" "test" {
   db_proxy_name          = aws_db_proxy.test.name
   db_proxy_endpoint_name = %[1]q
@@ -398,8 +398,8 @@ resource "aws_db_proxy_endpoint" "test" {
 `, rName)
 }
 
-func testAccAWSDBProxyEndpointConfigTargetRole(rName string) string {
-	return testAccAWSDBProxyEndpointConfigBase(rName) + fmt.Sprintf(`
+func testAccProxyEndpointTargetRoleConfig(rName string) string {
+	return testAccProxyEndpointBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_db_proxy_endpoint" "test" {
   db_proxy_name          = aws_db_proxy.test.name
   db_proxy_endpoint_name = %[1]q
@@ -409,8 +409,8 @@ resource "aws_db_proxy_endpoint" "test" {
 `, rName)
 }
 
-func testAccAWSDBProxyEndpointConfigVpcSecurityGroupIds1(rName string) string {
-	return testAccAWSDBProxyEndpointConfigBase(rName) + fmt.Sprintf(`
+func testAccProxyEndpointVPCSecurityGroupIds1Config(rName string) string {
+	return testAccProxyEndpointBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_db_proxy_endpoint" "test" {
   db_proxy_name          = aws_db_proxy.test.name
   db_proxy_endpoint_name = %[1]q
@@ -420,8 +420,8 @@ resource "aws_db_proxy_endpoint" "test" {
 `, rName)
 }
 
-func testAccAWSDBProxyEndpointConfigVpcSecurityGroupIds2(rName string) string {
-	return testAccAWSDBProxyEndpointConfigBase(rName) + fmt.Sprintf(`
+func testAccProxyEndpointVPCSecurityGroupIds2Config(rName string) string {
+	return testAccProxyEndpointBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_db_proxy_endpoint" "test" {
   db_proxy_name          = aws_db_proxy.test.name
   db_proxy_endpoint_name = %[1]q
@@ -436,8 +436,8 @@ resource "aws_security_group" "test2" {
 `, rName)
 }
 
-func testAccAWSDBProxyEndpointConfigTags1(rName, key1, value1 string) string {
-	return testAccAWSDBProxyEndpointConfigBase(rName) + fmt.Sprintf(`
+func testAccProxyEndpointTags1Config(rName, key1, value1 string) string {
+	return testAccProxyEndpointBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_db_proxy_endpoint" "test" {
   db_proxy_name          = aws_db_proxy.test.name
   db_proxy_endpoint_name = %[1]q
@@ -450,8 +450,8 @@ resource "aws_db_proxy_endpoint" "test" {
 `, rName, key1, value1)
 }
 
-func testAccAWSDBProxyEndpointConfigTags2(rName, key1, value1, key2, value2 string) string {
-	return testAccAWSDBProxyEndpointConfigBase(rName) + fmt.Sprintf(`
+func testAccProxyEndpointTags2Config(rName, key1, value1, key2, value2 string) string {
+	return testAccProxyEndpointBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_db_proxy_endpoint" "test" {
   db_proxy_name          = aws_db_proxy.test.name
   db_proxy_endpoint_name = %[1]q

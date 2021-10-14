@@ -26,12 +26,12 @@ func TestAccAWSRDSClusterRoleAssociation_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSRDSClusterRoleAssociationDestroy,
+		CheckDestroy: testAccCheckClusterRoleAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRDSClusterRoleAssociationConfig(rName),
+				Config: testAccClusterRoleAssociationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRDSClusterRoleAssociationExists(resourceName, &dbClusterRole),
+					testAccCheckClusterRoleAssociationExists(resourceName, &dbClusterRole),
 					resource.TestCheckResourceAttrPair(resourceName, "db_cluster_identifier", dbClusterResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "feature_name", "s3Import"),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", iamRoleResourceName, "arn"),
@@ -55,12 +55,12 @@ func TestAccAWSRDSClusterRoleAssociation_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSRDSClusterRoleAssociationDestroy,
+		CheckDestroy: testAccCheckClusterRoleAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRDSClusterRoleAssociationConfig(rName),
+				Config: testAccClusterRoleAssociationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRDSClusterRoleAssociationExists(resourceName, &dbClusterRole),
+					testAccCheckClusterRoleAssociationExists(resourceName, &dbClusterRole),
 					acctest.CheckResourceDisappears(acctest.Provider, tfrds.ResourceClusterRoleAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -79,12 +79,12 @@ func TestAccAWSRDSClusterRoleAssociation_disappears_cluster(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSRDSClusterRoleAssociationDestroy,
+		CheckDestroy: testAccCheckClusterRoleAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRDSClusterRoleAssociationConfig(rName),
+				Config: testAccClusterRoleAssociationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRDSClusterRoleAssociationExists(resourceName, &dbClusterRole),
+					testAccCheckClusterRoleAssociationExists(resourceName, &dbClusterRole),
 					acctest.CheckResourceDisappears(acctest.Provider, tfrds.ResourceCluster(), clusterResourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -103,12 +103,12 @@ func TestAccAWSRDSClusterRoleAssociation_disappears_role(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSRDSClusterRoleAssociationDestroy,
+		CheckDestroy: testAccCheckClusterRoleAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRDSClusterRoleAssociationConfig(rName),
+				Config: testAccClusterRoleAssociationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRDSClusterRoleAssociationExists(resourceName, &dbClusterRole),
+					testAccCheckClusterRoleAssociationExists(resourceName, &dbClusterRole),
 					acctest.CheckResourceDisappears(acctest.Provider, iam.ResourceRole(), roleResourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -117,7 +117,7 @@ func TestAccAWSRDSClusterRoleAssociation_disappears_role(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSRDSClusterRoleAssociationExists(resourceName string, v *rds.DBClusterRole) resource.TestCheckFunc {
+func testAccCheckClusterRoleAssociationExists(resourceName string, v *rds.DBClusterRole) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 
@@ -145,7 +145,7 @@ func testAccCheckAWSRDSClusterRoleAssociationExists(resourceName string, v *rds.
 	}
 }
 
-func testAccCheckAWSRDSClusterRoleAssociationDestroy(s *terraform.State) error {
+func testAccCheckClusterRoleAssociationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -175,7 +175,7 @@ func testAccCheckAWSRDSClusterRoleAssociationDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSRDSClusterRoleAssociationConfig(rName string) string {
+func testAccClusterRoleAssociationConfig(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 data "aws_iam_policy_document" "rds_assume_role_policy" {
   statement {

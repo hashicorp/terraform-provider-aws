@@ -14,13 +14,13 @@ func TestAccAWSRDSCertificateDataSource_Id(t *testing.T) {
 	dataSourceName := "data.aws_rds_certificate.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccAWSRDSCertificatePreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccCertificatePreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRDSCertificateDataSourceConfigId(),
+				Config: testAccCertificateIDDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "id", "data.aws_rds_certificate.latest", "id"),
 				),
@@ -33,13 +33,13 @@ func TestAccAWSRDSCertificateDataSource_LatestValidTill(t *testing.T) {
 	dataSourceName := "data.aws_rds_certificate.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccAWSRDSCertificatePreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccCertificatePreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRDSCertificateDataSourceConfigLatestValidTill(),
+				Config: testAccCertificateLatestValidTillDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.MatchResourceAttrRegionalARNNoAccount(dataSourceName, "arn", "rds", regexp.MustCompile(`cert:rds-ca-[0-9]{4}`)),
 					resource.TestCheckResourceAttr(dataSourceName, "certificate_type", "CA"),
@@ -55,7 +55,7 @@ func TestAccAWSRDSCertificateDataSource_LatestValidTill(t *testing.T) {
 	})
 }
 
-func testAccAWSRDSCertificatePreCheck(t *testing.T) {
+func testAccCertificatePreCheck(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 	input := &rds.DescribeCertificatesInput{}
@@ -71,7 +71,7 @@ func testAccAWSRDSCertificatePreCheck(t *testing.T) {
 	}
 }
 
-func testAccAWSRDSCertificateDataSourceConfigId() string {
+func testAccCertificateIDDataSourceConfig() string {
 	return `
 data "aws_rds_certificate" "latest" {
   latest_valid_till = true
@@ -83,7 +83,7 @@ data "aws_rds_certificate" "test" {
 `
 }
 
-func testAccAWSRDSCertificateDataSourceConfigLatestValidTill() string {
+func testAccCertificateLatestValidTillDataSourceConfig() string {
 	return `
 data "aws_rds_certificate" "test" {
   latest_valid_till = true

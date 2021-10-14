@@ -21,7 +21,7 @@ func TestAccDataSourceAWSRDSCluster_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsRdsClusterConfigBasic(rName),
+				Config: testAccClusterBasicDataSourceConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "backtrack_window", resourceName, "backtrack_window"),
@@ -39,7 +39,7 @@ func TestAccDataSourceAWSRDSCluster_basic(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAwsRdsClusterConfigBasic(rName string) string {
+func testAccClusterBasicDataSourceConfig(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
   cluster_identifier              = %[1]q

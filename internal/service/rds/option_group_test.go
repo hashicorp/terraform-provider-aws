@@ -23,11 +23,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_db_option_group", &resource.Sweeper{
 		Name: "aws_db_option_group",
-		F:    testSweepDbOptionGroups,
+		F:    sweepOptionGroups,
 	})
 }
 
-func testSweepDbOptionGroups(region string) error {
+func sweepOptionGroups(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -83,12 +83,12 @@ func TestAccAWSDBOptionGroup_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDBOptionGroupDestroy,
+		CheckDestroy: testAccCheckOptionGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBOptionGroupBasicConfig(rName),
+				Config: testAccOptionGroupBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBOptionGroupExists("aws_db_option_group.bar", &v),
+					testAccCheckOptionGroupExists("aws_db_option_group.bar", &v),
 					acctest.MatchResourceAttrRegionalARN("aws_db_option_group.bar", "arn", "rds", regexp.MustCompile(`og:.+`)),
 					resource.TestCheckResourceAttr("aws_db_option_group.bar", "engine_name", "mysql"),
 					resource.TestCheckResourceAttr("aws_db_option_group.bar", "major_engine_version", "5.6"),
@@ -116,12 +116,12 @@ func TestAccAWSDBOptionGroup_timeoutBlock(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDBOptionGroupDestroy,
+		CheckDestroy: testAccCheckOptionGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBOptionGroupBasicConfigTimeoutBlock(rName),
+				Config: testAccOptionGroupBasicTimeoutBlockConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBOptionGroupExists("aws_db_option_group.bar", &v),
+					testAccCheckOptionGroupExists("aws_db_option_group.bar", &v),
 					resource.TestCheckResourceAttr(
 						"aws_db_option_group.bar", "name", rName),
 				),
@@ -143,12 +143,12 @@ func TestAccAWSDBOptionGroup_namePrefix(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDBOptionGroupDestroy,
+		CheckDestroy: testAccCheckOptionGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBOptionGroup_namePrefix,
+				Config: testAccOptionGroup_namePrefix,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBOptionGroupExists("aws_db_option_group.test", &v),
+					testAccCheckOptionGroupExists("aws_db_option_group.test", &v),
 					resource.TestMatchResourceAttr(
 						"aws_db_option_group.test", "name", regexp.MustCompile("^tf-test-")),
 				),
@@ -170,12 +170,12 @@ func TestAccAWSDBOptionGroup_generatedName(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDBOptionGroupDestroy,
+		CheckDestroy: testAccCheckOptionGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBOptionGroup_generatedName,
+				Config: testAccOptionGroup_generatedName,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBOptionGroupExists("aws_db_option_group.test", &v),
+					testAccCheckOptionGroupExists("aws_db_option_group.test", &v),
 				),
 			},
 			{
@@ -197,12 +197,12 @@ func TestAccAWSDBOptionGroup_OptionGroupDescription(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDBOptionGroupDestroy,
+		CheckDestroy: testAccCheckOptionGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBOptionGroupConfigOptionGroupDescription(rName, "description1"),
+				Config: testAccOptionGroupOptionGroupDescriptionConfig(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBOptionGroupExists(resourceName, &optionGroup1),
+					testAccCheckOptionGroupExists(resourceName, &optionGroup1),
 					resource.TestCheckResourceAttr(resourceName, "option_group_description", "description1"),
 				),
 			},
@@ -223,10 +223,10 @@ func TestAccAWSDBOptionGroup_basicDestroyWithInstance(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDBOptionGroupDestroy,
+		CheckDestroy: testAccCheckOptionGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBOptionGroupBasicDestroyConfig(rName),
+				Config: testAccOptionGroupBasicDestroyConfig(rName),
 			},
 			{
 				ResourceName:            "aws_db_option_group.bar",
@@ -246,12 +246,12 @@ func TestAccAWSDBOptionGroup_Option_OptionSettings(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDBOptionGroupDestroy,
+		CheckDestroy: testAccCheckOptionGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBOptionGroupOptionSettings(rName),
+				Config: testAccOptionGroupOptionSettings(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBOptionGroupExists("aws_db_option_group.bar", &v),
+					testAccCheckOptionGroupExists("aws_db_option_group.bar", &v),
 					resource.TestCheckResourceAttr(
 						"aws_db_option_group.bar", "name", rName),
 					resource.TestCheckResourceAttr(
@@ -270,9 +270,9 @@ func TestAccAWSDBOptionGroup_Option_OptionSettings(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"name_prefix", "option"},
 			},
 			{
-				Config: testAccAWSDBOptionGroupOptionSettings_update(rName),
+				Config: testAccOptionGroupOptionSettings_update(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBOptionGroupExists("aws_db_option_group.bar", &v),
+					testAccCheckOptionGroupExists("aws_db_option_group.bar", &v),
 					resource.TestCheckResourceAttr(
 						"aws_db_option_group.bar", "name", rName),
 					resource.TestCheckResourceAttr(
@@ -301,17 +301,17 @@ func TestAccAWSDBOptionGroup_Option_OptionSettings_IAMRole(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDBOptionGroupDestroy,
+		CheckDestroy: testAccCheckOptionGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBOptionGroupOptionSettingsIAMRole(rName),
+				Config: testAccOptionGroupOptionSettingsIAMRole(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBOptionGroupExists("aws_db_option_group.bar", &v),
+					testAccCheckOptionGroupExists("aws_db_option_group.bar", &v),
 					resource.TestCheckResourceAttr(
 						"aws_db_option_group.bar", "name", rName),
 					resource.TestCheckResourceAttr(
 						"aws_db_option_group.bar", "option.#", "1"),
-					testAccCheckAWSDBOptionGroupOptionSettingsIAMRole(&v),
+					testAccCheckOptionGroupOptionSettingsIAMRole(&v),
 				),
 			},
 			{
@@ -332,12 +332,12 @@ func TestAccAWSDBOptionGroup_sqlServerOptionsUpdate(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDBOptionGroupDestroy,
+		CheckDestroy: testAccCheckOptionGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBOptionGroupSqlServerEEOptions(rName),
+				Config: testAccOptionGroupSQLServerEEOptions(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBOptionGroupExists("aws_db_option_group.bar", &v),
+					testAccCheckOptionGroupExists("aws_db_option_group.bar", &v),
 					resource.TestCheckResourceAttr(
 						"aws_db_option_group.bar", "name", rName),
 				),
@@ -349,9 +349,9 @@ func TestAccAWSDBOptionGroup_sqlServerOptionsUpdate(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"name_prefix"},
 			},
 			{
-				Config: testAccAWSDBOptionGroupSqlServerEEOptions_update(rName),
+				Config: testAccOptionGroupSQLServerEEOptions_update(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBOptionGroupExists("aws_db_option_group.bar", &v),
+					testAccCheckOptionGroupExists("aws_db_option_group.bar", &v),
 					resource.TestCheckResourceAttr(
 						"aws_db_option_group.bar", "name", rName),
 					resource.TestCheckResourceAttr(
@@ -370,17 +370,17 @@ func TestAccAWSDBOptionGroup_OracleOptionsUpdate(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDBOptionGroupDestroy,
+		CheckDestroy: testAccCheckOptionGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBOptionGroupOracleEEOptionSettings(rName, "13.2.0.0.v2"),
+				Config: testAccOptionGroupOracleEEOptionSettings(rName, "13.2.0.0.v2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBOptionGroupExists("aws_db_option_group.bar", &v),
+					testAccCheckOptionGroupExists("aws_db_option_group.bar", &v),
 					resource.TestCheckResourceAttr(
 						"aws_db_option_group.bar", "name", rName),
 					resource.TestCheckResourceAttr(
 						"aws_db_option_group.bar", "option.#", "1"),
-					testAccCheckAWSDBOptionGroupOptionVersionAttribute(&v, "13.2.0.0.v2"),
+					testAccCheckOptionGroupOptionVersionAttribute(&v, "13.2.0.0.v2"),
 				),
 			},
 			{
@@ -391,14 +391,14 @@ func TestAccAWSDBOptionGroup_OracleOptionsUpdate(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"name_prefix", "option"},
 			},
 			{
-				Config: testAccAWSDBOptionGroupOracleEEOptionSettings(rName, "13.3.0.0.v2"),
+				Config: testAccOptionGroupOracleEEOptionSettings(rName, "13.3.0.0.v2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBOptionGroupExists("aws_db_option_group.bar", &v),
+					testAccCheckOptionGroupExists("aws_db_option_group.bar", &v),
 					resource.TestCheckResourceAttr(
 						"aws_db_option_group.bar", "name", rName),
 					resource.TestCheckResourceAttr(
 						"aws_db_option_group.bar", "option.#", "1"),
-					testAccCheckAWSDBOptionGroupOptionVersionAttribute(&v, "13.3.0.0.v2"),
+					testAccCheckOptionGroupOptionVersionAttribute(&v, "13.3.0.0.v2"),
 				),
 			},
 		},
@@ -415,12 +415,12 @@ func TestAccAWSDBOptionGroup_Option_OptionSettings_MultipleNonDefault(t *testing
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDBOptionGroupDestroy,
+		CheckDestroy: testAccCheckOptionGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBOptionGroupConfigOptionOptionSettingsMultiple(rName, "example1"),
+				Config: testAccOptionGroupOptionOptionSettingsMultipleConfig(rName, "example1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBOptionGroupExists(resourceName, &optionGroup1),
+					testAccCheckOptionGroupExists(resourceName, &optionGroup1),
 					resource.TestCheckResourceAttr(resourceName, "option.#", "1"),
 				),
 			},
@@ -431,9 +431,9 @@ func TestAccAWSDBOptionGroup_Option_OptionSettings_MultipleNonDefault(t *testing
 				ImportStateVerifyIgnore: []string{"name_prefix"},
 			},
 			{
-				Config: testAccAWSDBOptionGroupConfigOptionOptionSettingsMultiple(rName, "example1,example2"),
+				Config: testAccOptionGroupOptionOptionSettingsMultipleConfig(rName, "example1,example2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBOptionGroupExists(resourceName, &optionGroup2),
+					testAccCheckOptionGroupExists(resourceName, &optionGroup2),
 					resource.TestCheckResourceAttr(resourceName, "option.#", "1"),
 				),
 			},
@@ -449,12 +449,12 @@ func TestAccAWSDBOptionGroup_multipleOptions(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDBOptionGroupDestroy,
+		CheckDestroy: testAccCheckOptionGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBOptionGroupMultipleOptions(rName),
+				Config: testAccOptionGroupMultipleOptions(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBOptionGroupExists("aws_db_option_group.bar", &v),
+					testAccCheckOptionGroupExists("aws_db_option_group.bar", &v),
 					resource.TestCheckResourceAttr(
 						"aws_db_option_group.bar", "name", rName),
 					resource.TestCheckResourceAttr(
@@ -480,12 +480,12 @@ func TestAccAWSDBOptionGroup_Tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDBOptionGroupDestroy,
+		CheckDestroy: testAccCheckOptionGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBOptionGroupConfigTags1(rName, "key1", "value1"),
+				Config: testAccOptionGroupTags1Config(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBOptionGroupExists(resourceName, &optionGroup1),
+					testAccCheckOptionGroupExists(resourceName, &optionGroup1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -497,18 +497,18 @@ func TestAccAWSDBOptionGroup_Tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"name_prefix"},
 			},
 			{
-				Config: testAccAWSDBOptionGroupConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccOptionGroupTags2Config(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBOptionGroupExists(resourceName, &optionGroup2),
+					testAccCheckOptionGroupExists(resourceName, &optionGroup2),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccAWSDBOptionGroupConfigTags1(rName, "key2", "value2"),
+				Config: testAccOptionGroupTags1Config(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBOptionGroupExists(resourceName, &optionGroup3),
+					testAccCheckOptionGroupExists(resourceName, &optionGroup3),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -527,12 +527,12 @@ func TestAccAWSDBOptionGroup_Tags_WithOptions(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDBOptionGroupDestroy,
+		CheckDestroy: testAccCheckOptionGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBOptionGroupConfigTagsWithOption1(rName, "key1", "value1"),
+				Config: testAccOptionGroupTagsWithOption1Config(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBOptionGroupExists(resourceName, &optionGroup1),
+					testAccCheckOptionGroupExists(resourceName, &optionGroup1),
 					resource.TestCheckResourceAttr(resourceName, "option.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
@@ -545,9 +545,9 @@ func TestAccAWSDBOptionGroup_Tags_WithOptions(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"name_prefix"},
 			},
 			{
-				Config: testAccAWSDBOptionGroupConfigTagsWithOption2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccOptionGroupTagsWithOption2Config(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBOptionGroupExists(resourceName, &optionGroup2),
+					testAccCheckOptionGroupExists(resourceName, &optionGroup2),
 					resource.TestCheckResourceAttr(resourceName, "option.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
@@ -555,9 +555,9 @@ func TestAccAWSDBOptionGroup_Tags_WithOptions(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSDBOptionGroupConfigTagsWithOption1(rName, "key2", "value2"),
+				Config: testAccOptionGroupTagsWithOption1Config(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBOptionGroupExists(resourceName, &optionGroup3),
+					testAccCheckOptionGroupExists(resourceName, &optionGroup3),
 					resource.TestCheckResourceAttr(resourceName, "option.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -567,7 +567,7 @@ func TestAccAWSDBOptionGroup_Tags_WithOptions(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSDBOptionGroupOptionSettingsIAMRole(optionGroup *rds.OptionGroup) resource.TestCheckFunc {
+func testAccCheckOptionGroupOptionSettingsIAMRole(optionGroup *rds.OptionGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if optionGroup == nil {
 			return errors.New("Option Group does not exist")
@@ -593,7 +593,7 @@ func testAccCheckAWSDBOptionGroupOptionSettingsIAMRole(optionGroup *rds.OptionGr
 	}
 }
 
-func testAccCheckAWSDBOptionGroupOptionVersionAttribute(optionGroup *rds.OptionGroup, optionVersion string) resource.TestCheckFunc {
+func testAccCheckOptionGroupOptionVersionAttribute(optionGroup *rds.OptionGroup, optionVersion string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if optionGroup == nil {
 			return errors.New("Option Group does not exist")
@@ -609,7 +609,7 @@ func testAccCheckAWSDBOptionGroupOptionVersionAttribute(optionGroup *rds.OptionG
 	}
 }
 
-func testAccCheckAWSDBOptionGroupExists(n string, v *rds.OptionGroup) resource.TestCheckFunc {
+func testAccCheckOptionGroupExists(n string, v *rds.OptionGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -643,7 +643,7 @@ func testAccCheckAWSDBOptionGroupExists(n string, v *rds.OptionGroup) resource.T
 	}
 }
 
-func testAccCheckAWSDBOptionGroupDestroy(s *terraform.State) error {
+func testAccCheckOptionGroupDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -672,7 +672,7 @@ func testAccCheckAWSDBOptionGroupDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSDBOptionGroupBasicConfigTimeoutBlock(r string) string {
+func testAccOptionGroupBasicTimeoutBlockConfig(r string) string {
 	return fmt.Sprintf(`
 resource "aws_db_option_group" "bar" {
   name                     = "%s"
@@ -687,7 +687,7 @@ resource "aws_db_option_group" "bar" {
 `, r)
 }
 
-func testAccAWSDBOptionGroupBasicConfig(r string) string {
+func testAccOptionGroupBasicConfig(r string) string {
 	return fmt.Sprintf(`
 resource "aws_db_option_group" "bar" {
   name                 = "%s"
@@ -697,7 +697,7 @@ resource "aws_db_option_group" "bar" {
 `, r)
 }
 
-func testAccAWSDBOptionGroupBasicDestroyConfig(r string) string {
+func testAccOptionGroupBasicDestroyConfig(r string) string {
 	return fmt.Sprintf(`
 resource "aws_db_instance" "bar" {
   allocated_storage = 10
@@ -728,7 +728,7 @@ resource "aws_db_option_group" "bar" {
 `, r)
 }
 
-func testAccAWSDBOptionGroupOptionSettings(r string) string {
+func testAccOptionGroupOptionSettings(r string) string {
 	return fmt.Sprintf(`
 resource "aws_db_option_group" "bar" {
   name                     = "%s"
@@ -748,7 +748,7 @@ resource "aws_db_option_group" "bar" {
 `, r)
 }
 
-func testAccAWSDBOptionGroupOptionSettingsIAMRole(r string) string {
+func testAccOptionGroupOptionSettingsIAMRole(r string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -786,7 +786,7 @@ resource "aws_db_option_group" "bar" {
 `, r)
 }
 
-func testAccAWSDBOptionGroupOptionSettings_update(r string) string {
+func testAccOptionGroupOptionSettings_update(r string) string {
 	return fmt.Sprintf(`
 resource "aws_db_option_group" "bar" {
   name                     = "%s"
@@ -806,7 +806,7 @@ resource "aws_db_option_group" "bar" {
 `, r)
 }
 
-func testAccAWSDBOptionGroupSqlServerEEOptions(r string) string {
+func testAccOptionGroupSQLServerEEOptions(r string) string {
 	return fmt.Sprintf(`
 resource "aws_db_option_group" "bar" {
   name                     = "%s"
@@ -817,7 +817,7 @@ resource "aws_db_option_group" "bar" {
 `, r)
 }
 
-func testAccAWSDBOptionGroupSqlServerEEOptions_update(r string) string {
+func testAccOptionGroupSQLServerEEOptions_update(r string) string {
 	return fmt.Sprintf(`
 resource "aws_db_option_group" "bar" {
   name                     = "%s"
@@ -832,7 +832,7 @@ resource "aws_db_option_group" "bar" {
 `, r)
 }
 
-func testAccAWSDBOptionGroupOracleEEOptionSettings(r, optionVersion string) string {
+func testAccOptionGroupOracleEEOptionSettings(r, optionVersion string) string {
 	return fmt.Sprintf(`
 resource "aws_security_group" "foo" {
   name = "%[1]s"
@@ -870,7 +870,7 @@ resource "aws_db_option_group" "bar" {
 `, r, optionVersion)
 }
 
-func testAccAWSDBOptionGroupMultipleOptions(r string) string {
+func testAccOptionGroupMultipleOptions(r string) string {
 	return fmt.Sprintf(`
 resource "aws_db_option_group" "bar" {
   name                     = "%s"
@@ -889,7 +889,7 @@ resource "aws_db_option_group" "bar" {
 `, r)
 }
 
-const testAccAWSDBOptionGroup_namePrefix = `
+const testAccOptionGroup_namePrefix = `
 resource "aws_db_option_group" "test" {
   name_prefix              = "tf-test-"
   option_group_description = "Test option group for terraform"
@@ -898,7 +898,7 @@ resource "aws_db_option_group" "test" {
 }
 `
 
-const testAccAWSDBOptionGroup_generatedName = `
+const testAccOptionGroup_generatedName = `
 resource "aws_db_option_group" "test" {
   option_group_description = "Test option group for terraform"
   engine_name              = "mysql"
@@ -906,7 +906,7 @@ resource "aws_db_option_group" "test" {
 }
 `
 
-func testAccAWSDBOptionGroupConfigOptionGroupDescription(rName, optionGroupDescription string) string {
+func testAccOptionGroupOptionGroupDescriptionConfig(rName, optionGroupDescription string) string {
 	return fmt.Sprintf(`
 resource "aws_db_option_group" "test" {
   engine_name              = "mysql"
@@ -917,7 +917,7 @@ resource "aws_db_option_group" "test" {
 `, rName, optionGroupDescription)
 }
 
-func testAccAWSDBOptionGroupConfigOptionOptionSettingsMultiple(rName, value string) string {
+func testAccOptionGroupOptionOptionSettingsMultipleConfig(rName, value string) string {
 	return fmt.Sprintf(`
 resource "aws_db_option_group" "test" {
   engine_name          = "mysql"
@@ -946,7 +946,7 @@ resource "aws_db_option_group" "test" {
 `, rName, value)
 }
 
-func testAccAWSDBOptionGroupConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccOptionGroupTags1Config(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_db_option_group" "test" {
   engine_name          = "mysql"
@@ -960,7 +960,7 @@ resource "aws_db_option_group" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccAWSDBOptionGroupConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccOptionGroupTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_db_option_group" "test" {
   engine_name          = "mysql"
@@ -975,7 +975,7 @@ resource "aws_db_option_group" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccAWSDBOptionGroupConfigTagsWithOption1(rName, tagKey1, tagValue1 string) string {
+func testAccOptionGroupTagsWithOption1Config(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_db_option_group" "test" {
   engine_name          = "mysql"
@@ -998,7 +998,7 @@ resource "aws_db_option_group" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccAWSDBOptionGroupConfigTagsWithOption2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccOptionGroupTagsWithOption2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_db_option_group" "test" {
   engine_name          = "mysql"

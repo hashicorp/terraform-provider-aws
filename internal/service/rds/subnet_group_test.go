@@ -20,14 +20,14 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_db_subnet_group", &resource.Sweeper{
 		Name: "aws_db_subnet_group",
-		F:    testSweepRdsDbSubnetGroups,
+		F:    sweepSubnetGroups,
 		Dependencies: []string{
 			"aws_db_instance",
 		},
 	})
 }
 
-func testSweepRdsDbSubnetGroups(region string) error {
+func sweepSubnetGroups(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {

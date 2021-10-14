@@ -19,16 +19,16 @@ func TestAccAWSDbSnapshotDataSource_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsDbSnapshotDataSourceConfig(rInt),
+				Config: testAccCheckSnapshotDataSourceConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDbSnapshotDataSourceID("data.aws_db_snapshot.snapshot"),
+					testAccCheckSnapshotIDDataSource("data.aws_db_snapshot.snapshot"),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckAwsDbSnapshotDataSourceID(n string) resource.TestCheckFunc {
+func testAccCheckSnapshotIDDataSource(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -42,7 +42,7 @@ func testAccCheckAwsDbSnapshotDataSourceID(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckAwsDbSnapshotDataSourceConfig(rInt int) string {
+func testAccCheckSnapshotDataSourceConfig(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_db_instance" "bar" {
   allocated_storage   = 10

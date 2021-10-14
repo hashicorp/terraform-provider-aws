@@ -22,7 +22,7 @@ func TestAccAWSDbSubnetGroupDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBSubnetGroupDataSourceConfig(rName),
+				Config: testAccSubnetGroupDataSourceConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "description", dataSourceName, "description"),
@@ -43,20 +43,20 @@ func TestAccAWSDbSubnetGroupDataSource_nonexistent(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAWSDBSubnetGroupDataSourceConfig_NonExistent,
+				Config:      testAccSubnetGroupDataSourceConfig_NonExistent,
 				ExpectError: regexp.MustCompile(`error reading DB SubnetGroup \(tf-acc-test-does-not-exist\)`),
 			},
 		},
 	})
 }
 
-const testAccAWSDBSubnetGroupDataSourceConfig_NonExistent = `
+const testAccSubnetGroupDataSourceConfig_NonExistent = `
 data "aws_db_subnet_group" "test" {
   name = "tf-acc-test-does-not-exist"
 }
 `
 
-func testAccAWSDBSubnetGroupDataSourceConfig(rName string) string {
+func testAccSubnetGroupDataSourceConfig(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`

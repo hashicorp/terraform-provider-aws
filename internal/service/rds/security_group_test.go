@@ -23,13 +23,13 @@ func TestAccAWSDBSecurityGroup_basic(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckEC2Classic(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAWSDBSecurityGroupDestroy,
+		CheckDestroy:      testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBSecurityGroupConfig(rName),
+				Config: testAccSecurityGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBSecurityGroupExists(resourceName, &v),
-					testAccCheckAWSDBSecurityGroupAttributes(&v),
+					testAccCheckSecurityGroupExists(resourceName, &v),
+					testAccCheckSecurityGroupAttributes(&v),
 					acctest.CheckResourceAttrRegionalARNEC2Classic(resourceName, "arn", "rds", fmt.Sprintf("secgrp:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
@@ -49,7 +49,7 @@ func TestAccAWSDBSecurityGroup_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSDBSecurityGroupDestroy(s *terraform.State) error {
+func testAccCheckSecurityGroupDestroy(s *terraform.State) error {
 	conn := acctest.ProviderEC2Classic.Meta().(*conns.AWSClient).RDSConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -83,7 +83,7 @@ func testAccCheckAWSDBSecurityGroupDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSDBSecurityGroupAttributes(group *rds.DBSecurityGroup) resource.TestCheckFunc {
+func testAccCheckSecurityGroupAttributes(group *rds.DBSecurityGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if len(group.IPRanges) == 0 {
 			return fmt.Errorf("no cidr: %#v", group.IPRanges)
@@ -106,7 +106,7 @@ func testAccCheckAWSDBSecurityGroupAttributes(group *rds.DBSecurityGroup) resour
 	}
 }
 
-func testAccCheckAWSDBSecurityGroupExists(n string, v *rds.DBSecurityGroup) resource.TestCheckFunc {
+func testAccCheckSecurityGroupExists(n string, v *rds.DBSecurityGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -140,7 +140,7 @@ func testAccCheckAWSDBSecurityGroupExists(n string, v *rds.DBSecurityGroup) reso
 	}
 }
 
-func testAccAWSDBSecurityGroupConfig(name string) string {
+func testAccSecurityGroupConfig(name string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigEC2ClassicRegionProvider(),
 		fmt.Sprintf(`
