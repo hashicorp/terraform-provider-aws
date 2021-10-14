@@ -1,4 +1,4 @@
-package aws
+package appmesh_test
 
 import (
 	"fmt"

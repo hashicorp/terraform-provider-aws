@@ -1,4 +1,4 @@
-package aws
+package appmesh
 
 import (
 	"fmt"
@@ -12,16 +12,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/appmesh/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/appmesh/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfappmesh "github.com/hashicorp/terraform-provider-aws/internal/service/appmesh"
-	tfappmesh "github.com/hashicorp/terraform-provider-aws/internal/service/appmesh"
-	tfappmesh "github.com/hashicorp/terraform-provider-aws/internal/service/appmesh"
 )
 
 func ResourceVirtualGateway() *schema.Resource {
@@ -725,10 +720,10 @@ func resourceVirtualGatewayRead(d *schema.ResourceData, meta interface{}) error 
 
 	var virtualGateway *appmesh.VirtualGatewayData
 
-	err := resource.Retry(tfappmesh.propagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 
-		virtualGateway, err = tfappmesh.FindVirtualGateway(conn, d.Get("mesh_name").(string), d.Get("name").(string), d.Get("mesh_owner").(string))
+		virtualGateway, err = FindVirtualGateway(conn, d.Get("mesh_name").(string), d.Get("name").(string), d.Get("mesh_owner").(string))
 
 		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
 			return resource.RetryableError(err)
@@ -742,7 +737,7 @@ func resourceVirtualGatewayRead(d *schema.ResourceData, meta interface{}) error 
 	})
 
 	if tfresource.TimedOut(err) {
-		virtualGateway, err = tfappmesh.FindVirtualGateway(conn, d.Get("mesh_name").(string), d.Get("name").(string), d.Get("mesh_owner").(string))
+		virtualGateway, err = FindVirtualGateway(conn, d.Get("mesh_name").(string), d.Get("name").(string), d.Get("mesh_owner").(string))
 	}
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
@@ -873,7 +868,7 @@ func resourceAwsAppmeshVirtualGatewayImport(d *schema.ResourceData, meta interfa
 
 	conn := meta.(*conns.AWSClient).AppMeshConn
 
-	virtualGateway, err := tfappmesh.FindVirtualGateway(conn, mesh, name, "")
+	virtualGateway, err := FindVirtualGateway(conn, mesh, name, "")
 
 	if err != nil {
 		return nil, err
