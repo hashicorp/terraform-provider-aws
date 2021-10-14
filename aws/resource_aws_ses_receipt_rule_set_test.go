@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
 func init() {
@@ -24,7 +25,7 @@ func init() {
 }
 
 func testSweepSesReceiptRuleSets(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
@@ -34,7 +35,7 @@ func testSweepSesReceiptRuleSets(region string) error {
 	// Setting the name of the receipt rule set to make active to null disables all email receiving.
 	log.Printf("[INFO] Disabling any currently active SES Receipt Rule Set")
 	_, err = conn.SetActiveReceiptRuleSet(&ses.SetActiveReceiptRuleSetInput{})
-	if testSweepSkipSweepError(err) {
+	if sweep.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping SES Receipt Rule Sets sweep for %s: %s", region, err)
 		return nil
 	}
@@ -47,7 +48,7 @@ func testSweepSesReceiptRuleSets(region string) error {
 
 	for {
 		output, err := conn.ListReceiptRuleSets(input)
-		if testSweepSkipSweepError(err) {
+		if sweep.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping SES Receipt Rule Sets sweep for %s: %s", region, err)
 			return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 		}

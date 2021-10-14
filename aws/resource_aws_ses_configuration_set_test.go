@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
 func init() {
@@ -24,7 +25,7 @@ func init() {
 }
 
 func testSweepSesConfigurationSets(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
@@ -34,7 +35,7 @@ func testSweepSesConfigurationSets(region string) error {
 
 	for {
 		output, err := conn.ListConfigurationSets(input)
-		if testSweepSkipSweepError(err) {
+		if sweep.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping SES Configuration Sets sweep for %s: %s", region, err)
 			return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 		}
