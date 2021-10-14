@@ -157,7 +157,7 @@ func dlmLifecyclePolicyDestroy(s *terraform.State) error {
 
 		out, err := conn.GetLifecyclePolicy(&input)
 
-		if isAWSErr(err, dlm.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, dlm.ErrCodeResourceNotFoundException, "") {
 			return nil
 		}
 
