@@ -108,7 +108,7 @@ func dataSourceResourceShareRead(d *schema.ResourceData, meta interface{}) error
 				d.Set("owning_account_id", r.OwningAccountId)
 				d.Set("status", r.Status)
 
-				if err := d.Set("tags", tftags.RamKeyValueTags(r.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+				if err := d.Set("tags", KeyValueTags(r.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 					return fmt.Errorf("error setting tags: %w", err)
 				}
 
