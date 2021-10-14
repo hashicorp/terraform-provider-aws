@@ -1,4 +1,4 @@
-package aws
+package efs
 
 import (
 	"fmt"
@@ -8,30 +8,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/efs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/efs/waiter"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
-	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
-	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
-	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
-	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
-	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
-	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
-	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
-	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
-	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
-	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
-	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
-	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
-	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
-	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
-	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
-	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
-	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
-	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
 )
 
 func ResourceAccessPoint() *schema.Resource {
@@ -170,7 +150,7 @@ func resourceAccessPointCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(aws.StringValue(ap.AccessPointId))
 
-	if _, err := tfefs.waitAccessPointCreated(conn, d.Id()); err != nil {
+	if _, err := waitAccessPointCreated(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for EFS access point (%s) to be available: %w", d.Id(), err)
 	}
 
@@ -265,7 +245,7 @@ func resourceAccessPointDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting EFS Access Point (%s): %w", d.Id(), err)
 	}
 
-	if _, err := tfefs.waitAccessPointDeleted(conn, d.Id()); err != nil {
+	if _, err := waitAccessPointDeleted(conn, d.Id()); err != nil {
 		if tfawserr.ErrMessageContains(err, efs.ErrCodeAccessPointNotFound, "") {
 			return nil
 		}

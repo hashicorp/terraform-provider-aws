@@ -1,4 +1,4 @@
-package aws
+package efs
 
 import (
 	"fmt"
@@ -9,34 +9,10 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/efs/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/efs/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
-	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
-	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
-	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
-	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
-	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
-	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
-	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
-	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
-	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
-	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
-	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
-	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
-	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
-	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
-	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
-	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
-	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
-	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
-	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
-	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
-	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
 )
 
 func ResourceBackupPolicy() *schema.Resource {
@@ -94,7 +70,7 @@ func resourceBackupPolicyCreate(d *schema.ResourceData, meta interface{}) error 
 func resourceBackupPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EFSConn
 
-	output, err := tfefs.FindBackupPolicyByID(conn, d.Id())
+	output, err := FindBackupPolicyByID(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EFS Backup Policy (%s) not found, removing from state", d.Id())
@@ -159,11 +135,11 @@ func efsBackupPolicyPut(conn *efs.EFS, fsID string, tfMap map[string]interface{}
 	}
 
 	if aws.StringValue(input.BackupPolicy.Status) == efs.StatusEnabled {
-		if _, err := tfefs.waitBackupPolicyEnabled(conn, fsID); err != nil {
+		if _, err := waitBackupPolicyEnabled(conn, fsID); err != nil {
 			return fmt.Errorf("error waiting for EFS Backup Policy (%s) to enable: %w", fsID, err)
 		}
 	} else {
-		if _, err := tfefs.waitBackupPolicyDisabled(conn, fsID); err != nil {
+		if _, err := waitBackupPolicyDisabled(conn, fsID); err != nil {
 			return fmt.Errorf("error waiting for EFS Backup Policy (%s) to disable: %w", fsID, err)
 		}
 	}

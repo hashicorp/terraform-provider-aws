@@ -1,4 +1,4 @@
-package aws
+package efs
 
 import (
 	"fmt"
