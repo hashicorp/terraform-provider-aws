@@ -19,7 +19,7 @@ func TestAccAWSBeanstalkConfigurationTemplate_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckBeanstalkConfigurationTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -38,7 +38,7 @@ func TestAccAWSBeanstalkConfigurationTemplate_VPC(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckBeanstalkConfigurationTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -57,7 +57,7 @@ func TestAccAWSBeanstalkConfigurationTemplate_Setting(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckBeanstalkConfigurationTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -76,7 +76,7 @@ func TestAccAWSBeanstalkConfigurationTemplate_Setting(t *testing.T) {
 }
 
 func testAccCheckBeanstalkConfigurationTemplateDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).elasticbeanstalkconn
+	conn := acctest.Provider.Meta().(*AWSClient).elasticbeanstalkconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_elastic_beanstalk_configuration_template" {
@@ -119,7 +119,7 @@ func testAccCheckBeanstalkConfigurationTemplateDestroy(s *terraform.State) error
 
 func testAccCheckBeanstalkConfigurationTemplateExists(n string, config *elasticbeanstalk.ConfigurationSettingsDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).elasticbeanstalkconn
+		conn := acctest.Provider.Meta().(*AWSClient).elasticbeanstalkconn
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)

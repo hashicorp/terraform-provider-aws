@@ -17,7 +17,7 @@ func TestAccAWSDataSourceElasticBeanstalkHostedZone_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAwsElasticBeanstalkHostedZoneDataSource_currentRegion,
@@ -35,7 +35,7 @@ func TestAccAWSDataSourceElasticBeanstalkHostedZone_Region(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAwsElasticBeanstalkHostedZoneDataSource_byRegion("ap-southeast-2"), //lintignore:AWSAT003 // passes in GovCloud
