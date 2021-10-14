@@ -18,66 +18,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_cloudformation_stack", &resource.Sweeper{
-		Name: "aws_cloudformation_stack",
-		Dependencies: []string{
-			"aws_cloudformation_stack_set_instance",
-		},
-		F: sweepStacks,
-	})
-}
 
-func sweepStacks(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
 
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
 
-	conn := client.(*conns.AWSClient).CloudFormationConn
-	input := &cloudformation.ListStacksInput{
-		StackStatusFilter: aws.StringSlice([]string{
-			cloudformation.StackStatusCreateComplete,
-			cloudformation.StackStatusImportComplete,
-			cloudformation.StackStatusRollbackComplete,
-			cloudformation.StackStatusUpdateComplete,
-		}),
-	}
-	var sweeperErrs *multierror.Error
-
-	err = conn.ListStacksPages(input, func(page *cloudformation.ListStacksOutput, lastPage bool) bool {
-		for _, stack := range page.StackSummaries {
-			input := &cloudformation.DeleteStackInput{
-				StackName: stack.StackName,
-			}
-			name := aws.StringValue(stack.StackName)
-
-			log.Printf("[INFO] Deleting CloudFormation Stack: %s", name)
-			_, err := conn.DeleteStack(input)
-
-			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting CloudFormation Stack (%s): %w", name, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
-		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping CloudFormation Stack sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing CloudFormation Stacks: %s", err)
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func TestAccCloudFormationStack_basic(t *testing.T) {
 	var stack cloudformation.Stack
