@@ -75,7 +75,7 @@ func sweepScalingPlans(region string) error {
 	return nil
 }
 
-func TestAccAwsAutoScalingPlansScalingPlan_basicDynamicScaling(t *testing.T) {
+func TestAccAutoScalingPlansScalingPlan_basicDynamicScaling(t *testing.T) {
 	var scalingPlan autoscalingplans.ScalingPlan
 	resourceName := "aws_autoscalingplans_scaling_plan.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -131,7 +131,7 @@ func TestAccAwsAutoScalingPlansScalingPlan_basicDynamicScaling(t *testing.T) {
 	})
 }
 
-func TestAccAwsAutoScalingPlansScalingPlan_basicPredictiveScaling(t *testing.T) {
+func TestAccAutoScalingPlansScalingPlan_basicPredictiveScaling(t *testing.T) {
 	var scalingPlan autoscalingplans.ScalingPlan
 	resourceName := "aws_autoscalingplans_scaling_plan.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -193,7 +193,7 @@ func TestAccAwsAutoScalingPlansScalingPlan_basicPredictiveScaling(t *testing.T) 
 	})
 }
 
-func TestAccAwsAutoScalingPlansScalingPlan_basicUpdate(t *testing.T) {
+func TestAccAutoScalingPlansScalingPlan_basicUpdate(t *testing.T) {
 	var scalingPlan autoscalingplans.ScalingPlan
 	resourceName := "aws_autoscalingplans_scaling_plan.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -289,7 +289,7 @@ func TestAccAwsAutoScalingPlansScalingPlan_basicUpdate(t *testing.T) {
 	})
 }
 
-func TestAccAwsAutoScalingPlansScalingPlan_disappears(t *testing.T) {
+func TestAccAutoScalingPlansScalingPlan_disappears(t *testing.T) {
 	var scalingPlan autoscalingplans.ScalingPlan
 	resourceName := "aws_autoscalingplans_scaling_plan.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -312,7 +312,7 @@ func TestAccAwsAutoScalingPlansScalingPlan_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAwsAutoScalingPlansScalingPlan_dynamicScaling_CustomizedScalingMetricSpecification(t *testing.T) {
+func TestAccAutoScalingPlansScalingPlan_DynamicScaling_customizedScalingMetricSpecification(t *testing.T) {
 	var scalingPlan autoscalingplans.ScalingPlan
 	resourceName := "aws_autoscalingplans_scaling_plan.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
