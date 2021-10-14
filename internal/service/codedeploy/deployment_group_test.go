@@ -19,7 +19,7 @@ import (
 	tfcodedeploy "github.com/hashicorp/terraform-provider-aws/internal/service/codedeploy"
 )
 
-func TestAccAWSCodeDeployDeploymentGroup_basic(t *testing.T) {
+func TestAccCodeDeployDeploymentGroup_basic(t *testing.T) {
 	var group codedeploy.DeploymentGroupInfo
 	resourceName := "aws_codedeploy_deployment_group.test"
 
@@ -92,7 +92,7 @@ func TestAccAWSCodeDeployDeploymentGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeDeployDeploymentGroup_basic_tagSet(t *testing.T) {
+func TestAccCodeDeployDeploymentGroup_Basic_tagSet(t *testing.T) {
 	var group codedeploy.DeploymentGroupInfo
 	resourceName := "aws_codedeploy_deployment_group.test"
 
@@ -164,7 +164,7 @@ func TestAccAWSCodeDeployDeploymentGroup_basic_tagSet(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeDeployDeploymentGroup_onPremiseTag(t *testing.T) {
+func TestAccCodeDeployDeploymentGroup_onPremiseTag(t *testing.T) {
 	var group codedeploy.DeploymentGroupInfo
 	resourceName := "aws_codedeploy_deployment_group.test"
 	rName := sdkacctest.RandString(5)
@@ -205,7 +205,7 @@ func TestAccAWSCodeDeployDeploymentGroup_onPremiseTag(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeDeployDeploymentGroup_disappears(t *testing.T) {
+func TestAccCodeDeployDeploymentGroup_disappears(t *testing.T) {
 	var group codedeploy.DeploymentGroupInfo
 	resourceName := "aws_codedeploy_deployment_group.test"
 	rName := sdkacctest.RandString(5)
@@ -228,7 +228,7 @@ func TestAccAWSCodeDeployDeploymentGroup_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeDeployDeploymentGroup_disappears_app(t *testing.T) {
+func TestAccCodeDeployDeploymentGroup_Disappears_app(t *testing.T) {
 	var group codedeploy.DeploymentGroupInfo
 	resourceName := "aws_codedeploy_deployment_group.test"
 	rName := sdkacctest.RandString(5)
@@ -251,7 +251,7 @@ func TestAccAWSCodeDeployDeploymentGroup_disappears_app(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeDeployDeploymentGroup_tags(t *testing.T) {
+func TestAccCodeDeployDeploymentGroup_tags(t *testing.T) {
 	var group codedeploy.DeploymentGroupInfo
 	resourceName := "aws_codedeploy_deployment_group.test"
 
@@ -298,7 +298,7 @@ func TestAccAWSCodeDeployDeploymentGroup_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeDeployDeploymentGroup_triggerConfiguration_basic(t *testing.T) {
+func TestAccCodeDeployDeploymentGroup_Trigger_basic(t *testing.T) {
 	var group codedeploy.DeploymentGroupInfo
 	resourceName := "aws_codedeploy_deployment_group.test"
 
@@ -347,7 +347,7 @@ func TestAccAWSCodeDeployDeploymentGroup_triggerConfiguration_basic(t *testing.T
 	})
 }
 
-func TestAccAWSCodeDeployDeploymentGroup_triggerConfiguration_multiple(t *testing.T) {
+func TestAccCodeDeployDeploymentGroup_Trigger_multiple(t *testing.T) {
 	var group codedeploy.DeploymentGroupInfo
 	resourceName := "aws_codedeploy_deployment_group.test"
 
@@ -408,7 +408,7 @@ func TestAccAWSCodeDeployDeploymentGroup_triggerConfiguration_multiple(t *testin
 	})
 }
 
-func TestAccAWSCodeDeployDeploymentGroup_autoRollbackConfiguration_create(t *testing.T) {
+func TestAccCodeDeployDeploymentGroup_AutoRollback_create(t *testing.T) {
 	var group codedeploy.DeploymentGroupInfo
 	resourceName := "aws_codedeploy_deployment_group.test"
 
@@ -443,7 +443,7 @@ func TestAccAWSCodeDeployDeploymentGroup_autoRollbackConfiguration_create(t *tes
 	})
 }
 
-func TestAccAWSCodeDeployDeploymentGroup_autoRollbackConfiguration_update(t *testing.T) {
+func TestAccCodeDeployDeploymentGroup_AutoRollback_update(t *testing.T) {
 	var group codedeploy.DeploymentGroupInfo
 	resourceName := "aws_codedeploy_deployment_group.test"
 
@@ -492,7 +492,7 @@ func TestAccAWSCodeDeployDeploymentGroup_autoRollbackConfiguration_update(t *tes
 	})
 }
 
-func TestAccAWSCodeDeployDeploymentGroup_autoRollbackConfiguration_delete(t *testing.T) {
+func TestAccCodeDeployDeploymentGroup_AutoRollback_delete(t *testing.T) {
 	var group codedeploy.DeploymentGroupInfo
 	resourceName := "aws_codedeploy_deployment_group.test"
 
@@ -535,7 +535,7 @@ func TestAccAWSCodeDeployDeploymentGroup_autoRollbackConfiguration_delete(t *tes
 	})
 }
 
-func TestAccAWSCodeDeployDeploymentGroup_autoRollbackConfiguration_disable(t *testing.T) {
+func TestAccCodeDeployDeploymentGroup_AutoRollback_disable(t *testing.T) {
 	var group codedeploy.DeploymentGroupInfo
 	resourceName := "aws_codedeploy_deployment_group.test"
 
@@ -583,7 +583,7 @@ func TestAccAWSCodeDeployDeploymentGroup_autoRollbackConfiguration_disable(t *te
 	})
 }
 
-func TestAccAWSCodeDeployDeploymentGroup_alarmConfiguration_create(t *testing.T) {
+func TestAccCodeDeployDeploymentGroup_Alarm_create(t *testing.T) {
 	var group codedeploy.DeploymentGroupInfo
 	resourceName := "aws_codedeploy_deployment_group.test"
 
@@ -620,7 +620,7 @@ func TestAccAWSCodeDeployDeploymentGroup_alarmConfiguration_create(t *testing.T)
 	})
 }
 
-func TestAccAWSCodeDeployDeploymentGroup_alarmConfiguration_update(t *testing.T) {
+func TestAccCodeDeployDeploymentGroup_Alarm_update(t *testing.T) {
 	var group codedeploy.DeploymentGroupInfo
 	resourceName := "aws_codedeploy_deployment_group.test"
 
@@ -673,7 +673,7 @@ func TestAccAWSCodeDeployDeploymentGroup_alarmConfiguration_update(t *testing.T)
 	})
 }
 
-func TestAccAWSCodeDeployDeploymentGroup_alarmConfiguration_delete(t *testing.T) {
+func TestAccCodeDeployDeploymentGroup_Alarm_delete(t *testing.T) {
 	var group codedeploy.DeploymentGroupInfo
 	resourceName := "aws_codedeploy_deployment_group.test"
 
@@ -718,7 +718,7 @@ func TestAccAWSCodeDeployDeploymentGroup_alarmConfiguration_delete(t *testing.T)
 	})
 }
 
-func TestAccAWSCodeDeployDeploymentGroup_alarmConfiguration_disable(t *testing.T) {
+func TestAccCodeDeployDeploymentGroup_Alarm_disable(t *testing.T) {
 	var group codedeploy.DeploymentGroupInfo
 	resourceName := "aws_codedeploy_deployment_group.test"
 
@@ -771,7 +771,7 @@ func TestAccAWSCodeDeployDeploymentGroup_alarmConfiguration_disable(t *testing.T
 }
 
 // When no configuration is provided, a deploymentStyle object with default values is computed
-func TestAccAWSCodeDeployDeploymentGroup_deploymentStyle_default(t *testing.T) {
+func TestAccCodeDeployDeploymentGroup_DeploymentStyle_default(t *testing.T) {
 	var group codedeploy.DeploymentGroupInfo
 	resourceName := "aws_codedeploy_deployment_group.test"
 
@@ -805,7 +805,7 @@ func TestAccAWSCodeDeployDeploymentGroup_deploymentStyle_default(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeDeployDeploymentGroup_deploymentStyle_create(t *testing.T) {
+func TestAccCodeDeployDeploymentGroup_DeploymentStyle_create(t *testing.T) {
 	var group codedeploy.DeploymentGroupInfo
 	resourceName := "aws_codedeploy_deployment_group.test"
 
@@ -847,7 +847,7 @@ func TestAccAWSCodeDeployDeploymentGroup_deploymentStyle_create(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeDeployDeploymentGroup_deploymentStyle_update(t *testing.T) {
+func TestAccCodeDeployDeploymentGroup_DeploymentStyle_update(t *testing.T) {
 	var group codedeploy.DeploymentGroupInfo
 	resourceName := "aws_codedeploy_deployment_group.test"
 
@@ -894,7 +894,7 @@ func TestAccAWSCodeDeployDeploymentGroup_deploymentStyle_update(t *testing.T) {
 }
 
 // Delete reverts to default configuration. It does not remove the deployment_style block
-func TestAccAWSCodeDeployDeploymentGroup_deploymentStyle_delete(t *testing.T) {
+func TestAccCodeDeployDeploymentGroup_DeploymentStyle_delete(t *testing.T) {
 	var group codedeploy.DeploymentGroupInfo
 	resourceName := "aws_codedeploy_deployment_group.test"
 
@@ -940,7 +940,7 @@ func TestAccAWSCodeDeployDeploymentGroup_deploymentStyle_delete(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeDeployDeploymentGroup_loadBalancerInfo_create(t *testing.T) {
+func TestAccCodeDeployDeploymentGroup_LoadBalancerInfo_create(t *testing.T) {
 	var group codedeploy.DeploymentGroupInfo
 	resourceName := "aws_codedeploy_deployment_group.test"
 
@@ -975,7 +975,7 @@ func TestAccAWSCodeDeployDeploymentGroup_loadBalancerInfo_create(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeDeployDeploymentGroup_loadBalancerInfo_update(t *testing.T) {
+func TestAccCodeDeployDeploymentGroup_LoadBalancerInfo_update(t *testing.T) {
 	var group codedeploy.DeploymentGroupInfo
 	resourceName := "aws_codedeploy_deployment_group.test"
 
@@ -1023,7 +1023,7 @@ func TestAccAWSCodeDeployDeploymentGroup_loadBalancerInfo_update(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeDeployDeploymentGroup_loadBalancerInfo_delete(t *testing.T) {
+func TestAccCodeDeployDeploymentGroup_LoadBalancerInfo_delete(t *testing.T) {
 	var group codedeploy.DeploymentGroupInfo
 	resourceName := "aws_codedeploy_deployment_group.test"
 
@@ -1066,7 +1066,7 @@ func TestAccAWSCodeDeployDeploymentGroup_loadBalancerInfo_delete(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeDeployDeploymentGroup_loadBalancerInfo_targetGroupInfo_create(t *testing.T) {
+func TestAccCodeDeployDeploymentGroup_LoadBalancerInfoTargetGroupInfo_create(t *testing.T) {
 	var group codedeploy.DeploymentGroupInfo
 	resourceName := "aws_codedeploy_deployment_group.test"
 
@@ -1102,7 +1102,7 @@ func TestAccAWSCodeDeployDeploymentGroup_loadBalancerInfo_targetGroupInfo_create
 	})
 }
 
-func TestAccAWSCodeDeployDeploymentGroup_loadBalancerInfo_targetGroupInfo_update(t *testing.T) {
+func TestAccCodeDeployDeploymentGroup_LoadBalancerInfoTargetGroupInfo_update(t *testing.T) {
 	var group codedeploy.DeploymentGroupInfo
 	resourceName := "aws_codedeploy_deployment_group.test"
 
@@ -1150,7 +1150,7 @@ func TestAccAWSCodeDeployDeploymentGroup_loadBalancerInfo_targetGroupInfo_update
 	})
 }
 
-func TestAccAWSCodeDeployDeploymentGroup_loadBalancerInfo_targetGroupInfo_delete(t *testing.T) {
+func TestAccCodeDeployDeploymentGroup_LoadBalancerInfoTargetGroupInfo_delete(t *testing.T) {
 	var group codedeploy.DeploymentGroupInfo
 	resourceName := "aws_codedeploy_deployment_group.test"
 
@@ -1193,7 +1193,7 @@ func TestAccAWSCodeDeployDeploymentGroup_loadBalancerInfo_targetGroupInfo_delete
 	})
 }
 
-func TestAccAWSCodeDeployDeploymentGroup_inPlaceDeploymentWithTrafficControl_create(t *testing.T) {
+func TestAccCodeDeployDeploymentGroup_InPlaceDeploymentWithTrafficControl_create(t *testing.T) {
 	var group codedeploy.DeploymentGroupInfo
 	resourceName := "aws_codedeploy_deployment_group.test"
 
@@ -1235,7 +1235,7 @@ func TestAccAWSCodeDeployDeploymentGroup_inPlaceDeploymentWithTrafficControl_cre
 	})
 }
 
-func TestAccAWSCodeDeployDeploymentGroup_inPlaceDeploymentWithTrafficControl_update(t *testing.T) {
+func TestAccCodeDeployDeploymentGroup_InPlaceDeploymentWithTrafficControl_update(t *testing.T) {
 	var group codedeploy.DeploymentGroupInfo
 	resourceName := "aws_codedeploy_deployment_group.test"
 
@@ -1311,7 +1311,7 @@ func TestAccAWSCodeDeployDeploymentGroup_inPlaceDeploymentWithTrafficControl_upd
 	})
 }
 
-func TestAccAWSCodeDeployDeploymentGroup_blueGreenDeploymentConfiguration_create(t *testing.T) {
+func TestAccCodeDeployDeploymentGroup_BlueGreenDeployment_create(t *testing.T) {
 	var group codedeploy.DeploymentGroupInfo
 	resourceName := "aws_codedeploy_deployment_group.test"
 
@@ -1367,7 +1367,7 @@ func TestAccAWSCodeDeployDeploymentGroup_blueGreenDeploymentConfiguration_create
 	})
 }
 
-func TestAccAWSCodeDeployDeploymentGroup_blueGreenDeploymentConfiguration_update_with_asg(t *testing.T) {
+func TestAccCodeDeployDeploymentGroup_BlueGreenDeployment_updateWithASG(t *testing.T) {
 	var group codedeploy.DeploymentGroupInfo
 	resourceName := "aws_codedeploy_deployment_group.test"
 
@@ -1435,7 +1435,7 @@ func TestAccAWSCodeDeployDeploymentGroup_blueGreenDeploymentConfiguration_update
 	})
 }
 
-func TestAccAWSCodeDeployDeploymentGroup_blueGreenDeploymentConfiguration_update(t *testing.T) {
+func TestAccCodeDeployDeploymentGroup_BlueGreenDeployment_update(t *testing.T) {
 	var group codedeploy.DeploymentGroupInfo
 	resourceName := "aws_codedeploy_deployment_group.test"
 
@@ -1517,7 +1517,7 @@ func TestAccAWSCodeDeployDeploymentGroup_blueGreenDeploymentConfiguration_update
 
 // Without "Computed: true" on blue_green_deployment_config, removing the resource
 // from configuration causes an error, because the remote resource still exists.
-func TestAccAWSCodeDeployDeploymentGroup_blueGreenDeploymentConfiguration_delete(t *testing.T) {
+func TestAccCodeDeployDeploymentGroup_BlueGreenDeployment_delete(t *testing.T) {
 	var group codedeploy.DeploymentGroupInfo
 	resourceName := "aws_codedeploy_deployment_group.test"
 
@@ -1585,7 +1585,7 @@ func TestAccAWSCodeDeployDeploymentGroup_blueGreenDeploymentConfiguration_delete
 	})
 }
 
-func TestAccAWSCodeDeployDeploymentGroup_blueGreenDeployment_complete(t *testing.T) {
+func TestAccCodeDeployDeploymentGroup_BlueGreenDeployment_complete(t *testing.T) {
 	var group codedeploy.DeploymentGroupInfo
 	resourceName := "aws_codedeploy_deployment_group.test"
 
@@ -1689,7 +1689,7 @@ func TestAccAWSCodeDeployDeploymentGroup_blueGreenDeployment_complete(t *testing
 	})
 }
 
-func TestAccAWSCodeDeployDeploymentGroup_ECS_BlueGreen(t *testing.T) {
+func TestAccCodeDeployDeploymentGroup_ECS_blueGreen(t *testing.T) {
 	var group codedeploy.DeploymentGroupInfo
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(5))
 	ecsClusterResourceName := "aws_ecs_cluster.test"

@@ -73,7 +73,7 @@ func sweepApps(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func TestAccAWSCodeDeployApp_basic(t *testing.T) {
+func TestAccCodeDeployApp_basic(t *testing.T) {
 	var application1 codedeploy.ApplicationInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codedeploy_app.test"
@@ -113,7 +113,7 @@ func TestAccAWSCodeDeployApp_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeDeployApp_computePlatform(t *testing.T) {
+func TestAccCodeDeployApp_computePlatform(t *testing.T) {
 	var application1, application2 codedeploy.ApplicationInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codedeploy_app.test"
@@ -143,7 +143,7 @@ func TestAccAWSCodeDeployApp_computePlatform(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeDeployApp_computePlatform_ECS(t *testing.T) {
+func TestAccCodeDeployApp_ComputePlatform_ecs(t *testing.T) {
 	var application1 codedeploy.ApplicationInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codedeploy_app.test"
@@ -170,7 +170,7 @@ func TestAccAWSCodeDeployApp_computePlatform_ECS(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeDeployApp_computePlatform_Lambda(t *testing.T) {
+func TestAccCodeDeployApp_ComputePlatform_lambda(t *testing.T) {
 	var application1 codedeploy.ApplicationInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codedeploy_app.test"
@@ -197,7 +197,7 @@ func TestAccAWSCodeDeployApp_computePlatform_Lambda(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeDeployApp_name(t *testing.T) {
+func TestAccCodeDeployApp_name(t *testing.T) {
 	var application1, application2 codedeploy.ApplicationInfo
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -232,7 +232,7 @@ func TestAccAWSCodeDeployApp_name(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeDeployApp_tags(t *testing.T) {
+func TestAccCodeDeployApp_tags(t *testing.T) {
 	var application codedeploy.ApplicationInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codedeploy_app.test"
@@ -277,7 +277,7 @@ func TestAccAWSCodeDeployApp_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeDeployApp_disappears(t *testing.T) {
+func TestAccCodeDeployApp_disappears(t *testing.T) {
 	var application1 codedeploy.ApplicationInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codedeploy_app.test"
