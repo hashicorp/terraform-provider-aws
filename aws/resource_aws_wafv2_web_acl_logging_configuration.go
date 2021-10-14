@@ -191,7 +191,7 @@ func resourceAwsWafv2WebACLLoggingConfigurationPut(d *schema.ResourceData, meta 
 	resourceArn := d.Get("resource_arn").(string)
 
 	config := &wafv2.LoggingConfiguration{
-		LogDestinationConfigs: expandStringSet(d.Get("log_destination_configs").(*schema.Set)),
+		LogDestinationConfigs: flex.ExpandStringSet(d.Get("log_destination_configs").(*schema.Set)),
 		ResourceArn:           aws.String(resourceArn),
 	}
 
@@ -254,7 +254,7 @@ func resourceAwsWafv2WebACLLoggingConfigurationRead(d *schema.ResourceData, meta
 
 	loggingConfig := output.LoggingConfiguration
 
-	if err := d.Set("log_destination_configs", flattenStringList(loggingConfig.LogDestinationConfigs)); err != nil {
+	if err := d.Set("log_destination_configs", flex.FlattenStringList(loggingConfig.LogDestinationConfigs)); err != nil {
 		return fmt.Errorf("error setting log_destination_configs: %w", err)
 	}
 
