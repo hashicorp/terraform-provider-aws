@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/naming"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
@@ -168,7 +168,7 @@ func resourceAwsIamRoleCreate(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
-	name := naming.Generate(d.Get("name").(string), d.Get("name_prefix").(string))
+	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	request := &iam.CreateRoleInput{
 		Path:                     aws.String(d.Get("path").(string)),
 		RoleName:                 aws.String(name),
@@ -257,7 +257,7 @@ func resourceAwsIamRoleRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("description", role.Description)
 	d.Set("max_session_duration", role.MaxSessionDuration)
 	d.Set("name", role.RoleName)
-	d.Set("name_prefix", naming.NamePrefixFromName(aws.StringValue(role.RoleName)))
+	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(role.RoleName)))
 	d.Set("path", role.Path)
 	if role.PermissionsBoundary != nil {
 		d.Set("permissions_boundary", role.PermissionsBoundary.PermissionsBoundaryArn)

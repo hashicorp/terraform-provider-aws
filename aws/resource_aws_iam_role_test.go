@@ -14,7 +14,7 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/naming"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -244,7 +244,7 @@ func TestAccAWSIAMRole_NameGenerated(t *testing.T) {
 				Config: testAccAWSIAMRoleConfigNameGenerated(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRoleExists(resourceName, &conf),
-					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 				),
 			},
@@ -272,7 +272,7 @@ func TestAccAWSIAMRole_NamePrefix(t *testing.T) {
 				Config: testAccAWSIAMRoleConfigNamePrefix(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRoleExists(resourceName, &conf),
-					naming.TestCheckResourceAttrNameFromPrefix(resourceName, "name", rName),
+					create.TestCheckResourceAttrNameFromPrefix(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", rName),
 				),
 			},
