@@ -8,10 +8,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/qldb"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -64,12 +65,12 @@ func testSweepQLDBLedgers(region string) error {
 
 func TestAccAWSQLDBLedger_basic(t *testing.T) {
 	var qldbCluster qldb.DescribeLedgerOutput
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	resourceName := "aws_qldb_ledger.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(qldb.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, qldb.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(qldb.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, qldb.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSQLDBLedgerDestroy,
 		Steps: []resource.TestStep{
@@ -77,7 +78,7 @@ func TestAccAWSQLDBLedger_basic(t *testing.T) {
 				Config: testAccAWSQLDBLedgerConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSQLDBLedgerExists(resourceName, &qldbCluster),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "qldb", regexp.MustCompile(`ledger/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "qldb", regexp.MustCompile(`ledger/.+`)),
 					resource.TestMatchResourceAttr(resourceName, "name", regexp.MustCompile("test-ledger-[0-9]+")),
 					resource.TestCheckResourceAttr(resourceName, "permissions_mode", "ALLOW_ALL"),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
@@ -95,12 +96,12 @@ func TestAccAWSQLDBLedger_basic(t *testing.T) {
 
 func TestAccAWSQLDBLedger_update(t *testing.T) {
 	var qldbCluster qldb.DescribeLedgerOutput
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	resourceName := "aws_qldb_ledger.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(qldb.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, qldb.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(qldb.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, qldb.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSQLDBLedgerDestroy,
 		Steps: []resource.TestStep{
@@ -115,7 +116,7 @@ func TestAccAWSQLDBLedger_update(t *testing.T) {
 				Config: testAccAWSQLDBLedgerConfig_update(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSQLDBLedgerExists(resourceName, &qldbCluster),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "qldb", regexp.MustCompile(`ledger/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "qldb", regexp.MustCompile(`ledger/.+`)),
 					resource.TestMatchResourceAttr(resourceName, "name", regexp.MustCompile("test-ledger-[0-9]+")),
 					resource.TestCheckResourceAttr(resourceName, "permissions_mode", "STANDARD"),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
@@ -220,12 +221,12 @@ resource "aws_qldb_ledger" "test" {
 
 func TestAccAWSQLDBLedger_Tags(t *testing.T) {
 	var cluster1, cluster2, cluster3 qldb.DescribeLedgerOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_qldb_ledger.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(qldb.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, qldb.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(qldb.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, qldb.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSQLDBLedgerDestroy,
 		Steps: []resource.TestStep{
