@@ -154,7 +154,7 @@ func testAccCheckAWSLBTargetGroupAttachmentDisappears(n string) resource.TestChe
 		}
 
 		_, err := conn.DeregisterTargets(params)
-		if err != nil && !isAWSErr(err, elbv2.ErrCodeTargetGroupNotFoundException, "") {
+		if err != nil && !tfawserr.ErrMessageContains(err, elbv2.ErrCodeTargetGroupNotFoundException, "") {
 			return fmt.Errorf("Error deregistering Targets: %s", err)
 		}
 
@@ -233,7 +233,7 @@ func testAccCheckAWSLBTargetGroupAttachmentDestroy(s *terraform.State) error {
 		}
 
 		// Verify the error
-		if isAWSErr(err, elbv2.ErrCodeTargetGroupNotFoundException, "") || isAWSErr(err, elbv2.ErrCodeInvalidTargetException, "") {
+		if tfawserr.ErrMessageContains(err, elbv2.ErrCodeTargetGroupNotFoundException, "") || tfawserr.ErrMessageContains(err, elbv2.ErrCodeInvalidTargetException, "") {
 			return nil
 		} else {
 			return fmt.Errorf("Unexpected error checking LB destroyed: %s", err)

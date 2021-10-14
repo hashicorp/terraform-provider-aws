@@ -186,7 +186,7 @@ func testAccCheckAwsLbListenerCertificateDestroy(s *terraform.State) error {
 
 		resp, err := conn.DescribeListenerCertificates(input)
 		if err != nil {
-			if isAWSErr(err, elbv2.ErrCodeListenerNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, elbv2.ErrCodeListenerNotFoundException, "") {
 				return nil
 			}
 			return err

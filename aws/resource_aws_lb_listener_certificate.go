@@ -59,7 +59,7 @@ func resourceAwsLbListenerCertificateCreate(d *schema.ResourceData, meta interfa
 		_, err := conn.AddListenerCertificates(params)
 
 		// Retry for IAM Server Certificate eventual consistency
-		if isAWSErr(err, elbv2.ErrCodeCertificateNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, elbv2.ErrCodeCertificateNotFoundException, "") {
 			return resource.RetryableError(err)
 		}
 
@@ -70,7 +70,7 @@ func resourceAwsLbListenerCertificateCreate(d *schema.ResourceData, meta interfa
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.AddListenerCertificates(params)
 	}
 
@@ -111,7 +111,7 @@ func resourceAwsLbListenerCertificateRead(d *schema.ResourceData, meta interface
 
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		certificate, err = findAwsLbListenerCertificate(certificateArn, listenerArn, true, nil, conn)
 	}
 	if err != nil {
@@ -148,10 +148,10 @@ func resourceAwsLbListenerCertificateDelete(d *schema.ResourceData, meta interfa
 
 	_, err := conn.RemoveListenerCertificates(params)
 	if err != nil {
-		if isAWSErr(err, elbv2.ErrCodeCertificateNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, elbv2.ErrCodeCertificateNotFoundException, "") {
 			return nil
 		}
-		if isAWSErr(err, elbv2.ErrCodeListenerNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, elbv2.ErrCodeListenerNotFoundException, "") {
 			return nil
 		}
 		return fmt.Errorf("Error removing LB Listener Certificate: %w", err)

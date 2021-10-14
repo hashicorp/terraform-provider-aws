@@ -71,7 +71,7 @@ func resourceAwsLbAttachmentCreate(d *schema.ResourceData, meta interface{}) err
 	err := resource.Retry(10*time.Minute, func() *resource.RetryError {
 		_, err := elbconn.RegisterTargets(params)
 
-		if isAWSErr(err, "InvalidTarget", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidTarget", "") {
 			return resource.RetryableError(fmt.Errorf("Error attaching instance to LB, retrying: %s", err))
 		}
 
@@ -81,7 +81,7 @@ func resourceAwsLbAttachmentCreate(d *schema.ResourceData, meta interface{}) err
 
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = elbconn.RegisterTargets(params)
 	}
 	if err != nil {
@@ -115,7 +115,7 @@ func resourceAwsLbAttachmentDelete(d *schema.ResourceData, meta interface{}) err
 	}
 
 	_, err := elbconn.DeregisterTargets(params)
-	if err != nil && !isAWSErr(err, elbv2.ErrCodeTargetGroupNotFoundException, "") {
+	if err != nil && !tfawserr.ErrMessageContains(err, elbv2.ErrCodeTargetGroupNotFoundException, "") {
 		return fmt.Errorf("Error deregistering Targets: %s", err)
 	}
 
@@ -145,12 +145,12 @@ func resourceAwsLbAttachmentRead(d *schema.ResourceData, meta interface{}) error
 	})
 
 	if err != nil {
-		if isAWSErr(err, elbv2.ErrCodeTargetGroupNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, elbv2.ErrCodeTargetGroupNotFoundException, "") {
 			log.Printf("[WARN] Target group does not exist, removing target attachment %s", d.Id())
 			d.SetId("")
 			return nil
 		}
-		if isAWSErr(err, elbv2.ErrCodeInvalidTargetException, "") {
+		if tfawserr.ErrMessageContains(err, elbv2.ErrCodeInvalidTargetException, "") {
 			log.Printf("[WARN] Target does not exist, removing target attachment %s", d.Id())
 			d.SetId("")
 			return nil
