@@ -1,4 +1,4 @@
-package aws
+package serverlessapprepo_test
 
 import (
 	"fmt"
