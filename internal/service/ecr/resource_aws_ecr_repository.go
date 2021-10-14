@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfecr "github.com/hashicorp/terraform-provider-aws/internal/service/ecr"
 )
 
 func ResourceRepository() *schema.Resource {
@@ -157,7 +158,7 @@ func resourceRepositoryRead(d *schema.ResourceData, meta interface{}) error {
 		RepositoryNames: aws.StringSlice([]string{d.Id()}),
 	}
 
-	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(tfecr.propagationTimeout, func() *resource.RetryError {
 		var err error
 
 		out, err = conn.DescribeRepositories(input)

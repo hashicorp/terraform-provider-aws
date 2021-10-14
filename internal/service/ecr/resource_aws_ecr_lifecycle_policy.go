@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfecr "github.com/hashicorp/terraform-provider-aws/internal/service/ecr"
 )
 
 func ResourceLifecyclePolicy() *schema.Resource {
@@ -74,7 +75,7 @@ func resourceLifecyclePolicyRead(d *schema.ResourceData, meta interface{}) error
 
 	var resp *ecr.GetLifecyclePolicyOutput
 
-	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(tfecr.propagationTimeout, func() *resource.RetryError {
 		var err error
 
 		resp, err = conn.GetLifecyclePolicy(input)
