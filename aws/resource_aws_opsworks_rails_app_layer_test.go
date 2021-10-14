@@ -5,9 +5,10 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/opsworks"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 // These tests assume the existence of predefined Opsworks IAM roles named `aws-opsworks-ec2-role`
@@ -15,11 +16,11 @@ import (
 
 func TestAccAWSOpsworksRailsAppLayer_basic(t *testing.T) {
 	var opslayer opsworks.Layer
-	stackName := acctest.RandomWithPrefix("tf-acc-test")
+	stackName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_opsworks_rails_app_layer.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(opsworks.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, opsworks.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsOpsworksRailsAppLayerDestroy,
 		Steps: []resource.TestStep{
@@ -45,11 +46,11 @@ func TestAccAWSOpsworksRailsAppLayer_basic(t *testing.T) {
 
 func TestAccAWSOpsworksRailsAppLayer_tags(t *testing.T) {
 	var opslayer opsworks.Layer
-	stackName := acctest.RandomWithPrefix("tf-acc-test")
+	stackName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_opsworks_rails_app_layer.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(opsworks.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, opsworks.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsOpsworksRailsAppLayerDestroy,
 		Steps: []resource.TestStep{

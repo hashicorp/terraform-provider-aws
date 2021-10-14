@@ -6,16 +6,17 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elb"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSProxyProtocolPolicy_basic(t *testing.T) {
-	lbName := fmt.Sprintf("tf-test-lb-%s", acctest.RandString(5))
+	lbName := fmt.Sprintf("tf-test-lb-%s", sdkacctest.RandString(5))
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elb.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elb.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckProxyProtocolPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -71,7 +72,7 @@ func testAccCheckProxyProtocolPolicyDestroy(s *terraform.State) error {
 }
 
 func testAccProxyProtocolPolicyConfig(rName string) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_elb" "lb" {
   name               = "%s"
   availability_zones = [data.aws_availability_zones.available.names[0]]
@@ -99,7 +100,7 @@ resource "aws_proxy_protocol_policy" "smtp" {
 }
 
 func testAccProxyProtocolPolicyConfigUpdate(rName string) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_elb" "lb" {
   name               = "%s"
   availability_zones = [data.aws_availability_zones.available.names[0]]
