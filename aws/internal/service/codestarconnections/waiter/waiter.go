@@ -10,19 +10,19 @@ import (
 
 const (
 	// Maximum amount of time to wait for a Host to be created
-	HostCreationTimeout = 30 * time.Minute
+	hostCreationTimeout = 30 * time.Minute
 )
 
-// HostPendingOrAvailable waits for a Host to return PENDING or AVAILABLE
-func HostPendingOrAvailable(conn *codestarconnections.CodeStarConnections, hostARN string) (*codestarconnections.Host, error) {
+// waitHostPendingOrAvailable waits for a Host to return PENDING or AVAILABLE
+func waitHostPendingOrAvailable(conn *codestarconnections.CodeStarConnections, hostARN string) (*codestarconnections.Host, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"VPC_CONFIG_INITIALIZING"},
 		Target: []string{
 			"AVAILABLE",
 			"PENDING",
 		},
-		Refresh: HostStatus(conn, hostARN),
-		Timeout: HostCreationTimeout,
+		Refresh: statusHost(conn, hostARN),
+		Timeout: hostCreationTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()

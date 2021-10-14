@@ -6,8 +6,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// ConnectionByArn returns the Connection corresponding to the specified Arn.
-func ConnectionByArn(conn *codestarconnections.CodeStarConnections, arn string) (*codestarconnections.Connection, error) {
+// findConnectionByARN returns the Connection corresponding to the specified Arn.
+func findConnectionByARN(conn *codestarconnections.CodeStarConnections, arn string) (*codestarconnections.Connection, error) {
 	output, err := conn.GetConnection(&codestarconnections.GetConnectionInput{
 		ConnectionArn: aws.String(arn),
 	})

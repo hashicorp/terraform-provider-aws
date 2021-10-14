@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfcodestarconnections "github.com/hashicorp/terraform-provider-aws/internal/service/codestarconnections"
 )
 
 func ResourceConnection() *schema.Resource {
@@ -104,7 +105,7 @@ func resourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	connection, err := finder.ConnectionByArn(conn, d.Id())
+	connection, err := tfcodestarconnections.findConnectionByARN(conn, d.Id())
 	if tfawserr.ErrCodeEquals(err, codestarconnections.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] CodeStar connection (%s) not found, removing from state", d.Id())
 		d.SetId("")

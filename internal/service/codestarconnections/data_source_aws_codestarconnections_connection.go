@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfcodestarconnections "github.com/hashicorp/terraform-provider-aws/internal/service/codestarconnections"
 )
 
 func DataSourceConnection() *schema.Resource {
@@ -54,7 +55,7 @@ func dataSourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
 	arn := d.Get("arn").(string)
 
 	log.Printf("[DEBUG] Getting CodeStar Connection")
-	connection, err := finder.ConnectionByArn(conn, arn)
+	connection, err := tfcodestarconnections.findConnectionByARN(conn, arn)
 	if err != nil {
 		return fmt.Errorf("error getting CodeStar Connection (%s): %w", arn, err)
 	}

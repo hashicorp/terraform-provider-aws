@@ -13,6 +13,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfcodestarconnections "github.com/hashicorp/terraform-provider-aws/internal/service/codestarconnections"
+	tfcodestarconnections "github.com/hashicorp/terraform-provider-aws/internal/service/codestarconnections"
+	tfcodestarconnections "github.com/hashicorp/terraform-provider-aws/internal/service/codestarconnections"
 )
 
 func ResourceHost() *schema.Resource {
@@ -100,7 +103,7 @@ func resourceHostCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(aws.StringValue(resp.HostArn))
 
-	if _, err := waiter.HostPendingOrAvailable(conn, d.Id()); err != nil {
+	if _, err := tfcodestarconnections.waitHostPendingOrAvailable(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for CodeStar Connections Host (%s) creation: %w", d.Id(), err)
 	}
 
@@ -156,7 +159,7 @@ func resourceHostUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error updating CodeStar Connections Host (%s): %w", d.Id(), err)
 		}
 
-		if _, err := waiter.HostPendingOrAvailable(conn, d.Id()); err != nil {
+		if _, err := tfcodestarconnections.waitHostPendingOrAvailable(conn, d.Id()); err != nil {
 			return fmt.Errorf("error waiting for CodeStar Connections Host (%s) update: %w", d.Id(), err)
 		}
 	}
