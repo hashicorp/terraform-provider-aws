@@ -16,12 +16,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsEcrRepositoryPolicy() *schema.Resource {
+func ResourceRepositoryPolicy() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsEcrRepositoryPolicyPut,
-		Read:   resourceAwsEcrRepositoryPolicyRead,
+		Read:   resourceRepositoryPolicyRead,
 		Update: resourceAwsEcrRepositoryPolicyPut,
-		Delete: resourceAwsEcrRepositoryPolicyDelete,
+		Delete: resourceRepositoryPolicyDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -81,10 +81,10 @@ func resourceAwsEcrRepositoryPolicyPut(d *schema.ResourceData, meta interface{})
 
 	d.SetId(aws.StringValue(out.RepositoryName))
 
-	return resourceAwsEcrRepositoryPolicyRead(d, meta)
+	return resourceRepositoryPolicyRead(d, meta)
 }
 
-func resourceAwsEcrRepositoryPolicyRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRepositoryPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ECRConn
 
 	input := &ecr.GetRepositoryPolicyInput{
@@ -146,7 +146,7 @@ func resourceAwsEcrRepositoryPolicyRead(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceAwsEcrRepositoryPolicyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceRepositoryPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ECRConn
 
 	_, err := conn.DeleteRepositoryPolicy(&ecr.DeleteRepositoryPolicyInput{

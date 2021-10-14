@@ -17,12 +17,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsEcrRepository() *schema.Resource {
+func ResourceRepository() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEcrRepositoryCreate,
-		Read:   resourceAwsEcrRepositoryRead,
-		Update: resourceAwsEcrRepositoryUpdate,
-		Delete: resourceAwsEcrRepositoryDelete,
+		Create: resourceRepositoryCreate,
+		Read:   resourceRepositoryRead,
+		Update: resourceRepositoryUpdate,
+		Delete: resourceRepositoryDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -106,7 +106,7 @@ func resourceAwsEcrRepository() *schema.Resource {
 	}
 }
 
-func resourceAwsEcrRepositoryCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceRepositoryCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ECRConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -141,10 +141,10 @@ func resourceAwsEcrRepositoryCreate(d *schema.ResourceData, meta interface{}) er
 
 	d.SetId(aws.StringValue(repository.RepositoryName))
 
-	return resourceAwsEcrRepositoryRead(d, meta)
+	return resourceRepositoryRead(d, meta)
 }
 
-func resourceAwsEcrRepositoryRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRepositoryRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ECRConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -269,7 +269,7 @@ func flattenEcrRepositoryEncryptionConfiguration(ec *ecr.EncryptionConfiguration
 	}
 }
 
-func resourceAwsEcrRepositoryUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceRepositoryUpdate(d *schema.ResourceData, meta interface{}) error {
 	arn := d.Get("arn").(string)
 	conn := meta.(*conns.AWSClient).ECRConn
 
@@ -293,10 +293,10 @@ func resourceAwsEcrRepositoryUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
-	return resourceAwsEcrRepositoryRead(d, meta)
+	return resourceRepositoryRead(d, meta)
 }
 
-func resourceAwsEcrRepositoryDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceRepositoryDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ECRConn
 
 	_, err := conn.DeleteRepository(&ecr.DeleteRepositoryInput{

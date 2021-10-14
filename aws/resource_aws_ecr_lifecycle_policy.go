@@ -15,11 +15,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsEcrLifecyclePolicy() *schema.Resource {
+func ResourceLifecyclePolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEcrLifecyclePolicyCreate,
-		Read:   resourceAwsEcrLifecyclePolicyRead,
-		Delete: resourceAwsEcrLifecyclePolicyDelete,
+		Create: resourceLifecyclePolicyCreate,
+		Read:   resourceLifecyclePolicyRead,
+		Delete: resourceLifecyclePolicyDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -46,7 +46,7 @@ func resourceAwsEcrLifecyclePolicy() *schema.Resource {
 	}
 }
 
-func resourceAwsEcrLifecyclePolicyCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceLifecyclePolicyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ECRConn
 
 	input := &ecr.PutLifecyclePolicyInput{
@@ -60,10 +60,10 @@ func resourceAwsEcrLifecyclePolicyCreate(d *schema.ResourceData, meta interface{
 	}
 	d.SetId(aws.StringValue(resp.RepositoryName))
 	d.Set("registry_id", resp.RegistryId)
-	return resourceAwsEcrLifecyclePolicyRead(d, meta)
+	return resourceLifecyclePolicyRead(d, meta)
 }
 
-func resourceAwsEcrLifecyclePolicyRead(d *schema.ResourceData, meta interface{}) error {
+func resourceLifecyclePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ECRConn
 
 	input := &ecr.GetLifecyclePolicyInput{
@@ -123,7 +123,7 @@ func resourceAwsEcrLifecyclePolicyRead(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
-func resourceAwsEcrLifecyclePolicyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceLifecyclePolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ECRConn
 
 	input := &ecr.DeleteLifecyclePolicyInput{
