@@ -1,17 +1,9 @@
 package cloudwatchevents
 
-
 import (
-	"regexp"
-	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/cognitoidentity"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/provider"
-	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func TestValidCustomEventBusEventSourceName(t *testing.T) {
@@ -157,4 +149,3 @@ func TestValidRuleName(t *testing.T) {
 		}
 	}
 }
-

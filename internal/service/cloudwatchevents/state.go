@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	events "github.com/aws/aws-sdk-go/service/cloudwatchevents"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // RuleEnabledFromState infers from its state whether or not a rule is enabled.

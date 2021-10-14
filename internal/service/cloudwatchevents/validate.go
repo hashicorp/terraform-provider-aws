@@ -1,29 +1,12 @@
 package cloudwatchevents
 
-
 import (
-	"errors"
 	"fmt"
-	"net"
-	"net/url"
 	"regexp"
-	"strconv"
-	"strings"
-	"time"
 
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/aws/aws-sdk-go/service/cognitoidentity"
-	"github.com/aws/aws-sdk-go/service/configservice"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tfnet "github.com/hashicorp/terraform-provider-aws/internal/net"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func validateCloudWatchEventRuleName(v interface{}, k string) (ws []string, errors []error) {
@@ -101,7 +84,6 @@ var validArchiveName = validation.All(
 	validation.StringMatch(regexp.MustCompile(`^[\.\-_A-Za-z0-9]+`), ""),
 )
 
-
 var validBusNameOrARN = validation.Any(
 	verify.ValidARN,
 	validation.All(
@@ -110,17 +92,13 @@ var validBusNameOrARN = validation.Any(
 	),
 )
 
-
 var validCustomEventBusEventSourceName = validation.All(
 	validation.StringLenBetween(1, 256),
 	validation.StringMatch(regexp.MustCompile(`^aws\.partner(/[\.\-_A-Za-z0-9]+){2,}$`), ""),
 )
-
 
 var validCustomEventBusName = validation.All(
 	validation.StringLenBetween(1, 256),
 	validation.StringMatch(regexp.MustCompile(`^[/\.\-_A-Za-z0-9]+$`), ""),
 	validation.StringDoesNotMatch(regexp.MustCompile(`^default$`), "cannot be 'default'"),
 )
-
-
