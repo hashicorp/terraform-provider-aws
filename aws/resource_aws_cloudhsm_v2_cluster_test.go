@@ -74,7 +74,7 @@ func testAccAWSCloudHsmV2Cluster_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudhsmv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCloudHsmV2ClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -109,16 +109,16 @@ func testAccAWSCloudHsmV2Cluster_disappears(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudhsmv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCloudHsmV2ClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCloudHsmV2ClusterConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCloudHsmV2ClusterExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsCloudHsmV2Cluster(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsCloudHsmV2Cluster(), resourceName),
 					// Verify Delete error handling
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsCloudHsmV2Cluster(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsCloudHsmV2Cluster(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -132,7 +132,7 @@ func testAccAWSCloudHsmV2Cluster_Tags(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudhsmv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCloudHsmV2ClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -233,7 +233,7 @@ resource "aws_cloudhsm_v2_cluster" "test" {
 }
 
 func testAccCheckAWSCloudHsmV2ClusterDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).cloudhsmv2conn
+	conn := acctest.Provider.Meta().(*AWSClient).cloudhsmv2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudhsm_v2_cluster" {
@@ -255,7 +255,7 @@ func testAccCheckAWSCloudHsmV2ClusterDestroy(s *terraform.State) error {
 
 func testAccCheckAWSCloudHsmV2ClusterExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).cloudhsmv2conn
+		conn := acctest.Provider.Meta().(*AWSClient).cloudhsmv2conn
 		it, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
