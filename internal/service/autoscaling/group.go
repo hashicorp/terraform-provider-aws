@@ -774,7 +774,7 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if twoPhases {
 		for _, hook := range generatePutLifecycleHookInputs(asgName, initialLifecycleHooks) {
-			if err = resourceAwsAutoscalingLifecycleHookPutOp(conn, &hook); err != nil {
+			if err = resourceLifecycleHookPutOp(conn, &hook); err != nil {
 				return fmt.Errorf("Error creating initial lifecycle hooks: %s", err)
 			}
 		}
@@ -822,7 +822,7 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AutoScalingConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	g, err := getAwsAutoscalingGroup(d.Id(), conn)
+	g, err := getGroup(d.Id(), conn)
 	if err != nil {
 		return err
 	}
@@ -1303,7 +1303,7 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		// No warm pool exists in new config. Delete it.
 		if len(w) == 0 || w[0] == nil {
-			g, err := getAwsAutoscalingGroup(d.Id(), conn)
+			g, err := getGroup(d.Id(), conn)
 			if err != nil {
 				return err
 			}
@@ -1351,7 +1351,7 @@ func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	// Read the Auto Scaling Group first. If it doesn't exist, we're done.
 	// We need the group in order to check if there are instances attached.
 	// If so, we need to remove those first.
-	g, err := getAwsAutoscalingGroup(d.Id(), conn)
+	g, err := getGroup(d.Id(), conn)
 	if err != nil {
 		return err
 	}
@@ -1366,7 +1366,7 @@ func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(g.Instances) > 0 || aws.Int64Value(g.DesiredCapacity) > 0 {
-		if err := resourceAwsAutoscalingGroupDrain(d, meta); err != nil {
+		if err := resourceGroupDrain(d, meta); err != nil {
 			return err
 		}
 	}
@@ -1410,7 +1410,7 @@ func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
 
 	var group *autoscaling.Group
 	err = resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
-		group, err = getAwsAutoscalingGroup(d.Id(), conn)
+		group, err = getGroup(d.Id(), conn)
 
 		if group != nil {
 			return resource.RetryableError(fmt.Errorf("Auto Scaling Group still exists"))
@@ -1418,7 +1418,7 @@ func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		group, err = getAwsAutoscalingGroup(d.Id(), conn)
+		group, err = getGroup(d.Id(), conn)
 		if group != nil {
 			return fmt.Errorf("Auto Scaling Group still exists")
 		}
@@ -1439,7 +1439,7 @@ func resourceAutoScalingGroupWarmPoolDelete(g *autoscaling.Group, d *schema.Reso
 
 	log.Printf("[INFO] Auto Scaling Group has a Warm Pool. First deleting it.")
 
-	if err := resourceAwsAutoscalingGroupWarmPoolDrain(d, meta); err != nil {
+	if err := resourceGroupWarmPoolDrain(d, meta); err != nil {
 		return err
 	}
 
@@ -1506,7 +1506,7 @@ func waitForWarmPoolDeletion(conn *autoscaling.AutoScaling, d *schema.ResourceDa
 
 func asgWarmPoolStateRefreshFunc(conn *autoscaling.AutoScaling, asgName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		g, err := getAwsAutoscalingGroup(asgName, conn)
+		g, err := getGroup(asgName, conn)
 
 		if err != nil {
 			return nil, "", fmt.Errorf("error describing Auto Scaling Group (%s): %s", asgName, err)
@@ -1519,7 +1519,7 @@ func asgWarmPoolStateRefreshFunc(conn *autoscaling.AutoScaling, asgName string) 
 	}
 }
 
-func getAwsAutoscalingGroupWarmPool(asgName string, conn *autoscaling.AutoScaling) (*autoscaling.DescribeWarmPoolOutput, error) {
+func getGroupWarmPool(asgName string, conn *autoscaling.AutoScaling) (*autoscaling.DescribeWarmPoolOutput, error) {
 	describeOpts := autoscaling.DescribeWarmPoolInput{
 		AutoScalingGroupName: aws.String(asgName),
 	}
@@ -1538,7 +1538,7 @@ func getAwsAutoscalingGroupWarmPool(asgName string, conn *autoscaling.AutoScalin
 	return describeWarmPoolOutput, nil
 }
 
-func resourceAwsAutoscalingGroupWarmPoolDrain(d *schema.ResourceData, meta interface{}) error {
+func resourceGroupWarmPoolDrain(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AutoScalingConn
 
 	if d.Get("force_delete").(bool) || d.Get("force_delete_warm_pool").(bool) {
@@ -1561,7 +1561,7 @@ func resourceAwsAutoscalingGroupWarmPoolDrain(d *schema.ResourceData, meta inter
 	log.Printf("[DEBUG] Waiting for warm pool to have zero instances")
 	var p *autoscaling.DescribeWarmPoolOutput
 	err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
-		p, err := getAwsAutoscalingGroupWarmPool(d.Id(), conn)
+		p, err := getGroupWarmPool(d.Id(), conn)
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
@@ -1575,7 +1575,7 @@ func resourceAwsAutoscalingGroupWarmPoolDrain(d *schema.ResourceData, meta inter
 	})
 
 	if tfresource.TimedOut(err) {
-		p, err = getAwsAutoscalingGroupWarmPool(d.Id(), conn)
+		p, err = getGroupWarmPool(d.Id(), conn)
 		if err != nil {
 			return fmt.Errorf("error getting Warm Pool info when draining Auto Scaling Group %s: %s", d.Id(), err)
 		}
@@ -1591,7 +1591,7 @@ func resourceAwsAutoscalingGroupWarmPoolDrain(d *schema.ResourceData, meta inter
 
 // TODO: make this a finder
 // TODO: this should return a NotFoundError if not found
-func getAwsAutoscalingGroup(asgName string, conn *autoscaling.AutoScaling) (*autoscaling.Group, error) {
+func getGroup(asgName string, conn *autoscaling.AutoScaling) (*autoscaling.Group, error) {
 	describeOpts := autoscaling.DescribeAutoScalingGroupsInput{
 		AutoScalingGroupNames: []*string{aws.String(asgName)},
 	}
@@ -1621,7 +1621,7 @@ func getAwsAutoscalingGroup(asgName string, conn *autoscaling.AutoScaling) (*aut
 	return nil, nil
 }
 
-func resourceAwsAutoscalingGroupDrain(d *schema.ResourceData, meta interface{}) error {
+func resourceGroupDrain(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AutoScalingConn
 
 	if d.Get("force_delete").(bool) {
@@ -1645,7 +1645,7 @@ func resourceAwsAutoscalingGroupDrain(d *schema.ResourceData, meta interface{}) 
 	log.Printf("[DEBUG] Waiting for group to have zero instances")
 	var g *autoscaling.Group
 	err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
-		g, err := getAwsAutoscalingGroup(d.Id(), conn)
+		g, err := getGroup(d.Id(), conn)
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
@@ -1663,7 +1663,7 @@ func resourceAwsAutoscalingGroupDrain(d *schema.ResourceData, meta interface{}) 
 			fmt.Errorf("Group still has %d instances", len(g.Instances)))
 	})
 	if tfresource.TimedOut(err) {
-		g, err = getAwsAutoscalingGroup(d.Id(), conn)
+		g, err = getGroup(d.Id(), conn)
 		if err != nil {
 			return fmt.Errorf("Error getting Auto Scaling Group info when draining: %s", err)
 		}

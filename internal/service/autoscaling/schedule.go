@@ -22,7 +22,7 @@ func ResourceSchedule() *schema.Resource {
 		Update: resourceScheduleCreate,
 		Delete: resourceScheduleDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsAutoscalingScheduleImport,
+			State: resourceScheduleImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -81,7 +81,7 @@ func ResourceSchedule() *schema.Resource {
 	}
 }
 
-func resourceAwsAutoscalingScheduleImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceScheduleImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	splitId := strings.Split(d.Id(), "/")
 	if len(splitId) != 2 {
 		return []*schema.ResourceData{}, fmt.Errorf("wrong format of resource: %s. Please follow 'asg-name/action-name'", d.Id())
@@ -164,7 +164,7 @@ func resourceScheduleCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceScheduleRead(d *schema.ResourceData, meta interface{}) error {
-	sa, exists, err := resourceAwsASGScheduledActionRetrieve(d, meta)
+	sa, exists, err := resourceASGScheduledActionRetrieve(d, meta)
 	if err != nil {
 		return err
 	}
@@ -228,7 +228,7 @@ func resourceScheduleDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsASGScheduledActionRetrieve(d *schema.ResourceData, meta interface{}) (*autoscaling.ScheduledUpdateGroupAction, bool, error) {
+func resourceASGScheduledActionRetrieve(d *schema.ResourceData, meta interface{}) (*autoscaling.ScheduledUpdateGroupAction, bool, error) {
 	conn := meta.(*conns.AWSClient).AutoScalingConn
 
 	params := &autoscaling.DescribeScheduledActionsInput{

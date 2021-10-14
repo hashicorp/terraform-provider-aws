@@ -24,7 +24,7 @@ func ResourcePolicy() *schema.Resource {
 		Update: resourcePolicyUpdate,
 		Delete: resourcePolicyDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsAutoscalingPolicyImport,
+			State: resourcePolicyImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -219,7 +219,7 @@ func ResourcePolicy() *schema.Resource {
 						},
 					},
 				},
-				Set: resourceAwsAutoscalingScalingAdjustmentHash,
+				Set: resourceScalingAdjustmentHash,
 			},
 			"target_tracking_configuration": {
 				Type:     schema.TypeList,
@@ -306,7 +306,7 @@ func ResourcePolicy() *schema.Resource {
 func resourcePolicyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AutoScalingConn
 
-	params, err := getAwsAutoscalingPutScalingPolicyInput(d)
+	params, err := getPutScalingPolicyInput(d)
 	log.Printf("[DEBUG] AutoScaling PutScalingPolicy on Create: %#v", params)
 	if err != nil {
 		return err
@@ -325,7 +325,7 @@ func resourcePolicyCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
-	p, err := getAwsAutoscalingPolicy(d, meta)
+	p, err := getPolicy(d, meta)
 	if err != nil {
 		return err
 	}
@@ -365,7 +365,7 @@ func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 func resourcePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AutoScalingConn
 
-	params, inputErr := getAwsAutoscalingPutScalingPolicyInput(d)
+	params, inputErr := getPutScalingPolicyInput(d)
 	log.Printf("[DEBUG] AutoScaling PutScalingPolicy on Update: %#v", params)
 	if inputErr != nil {
 		return inputErr
@@ -381,7 +381,7 @@ func resourcePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 
 func resourcePolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AutoScalingConn
-	p, err := getAwsAutoscalingPolicy(d, meta)
+	p, err := getPolicy(d, meta)
 	if err != nil {
 		return err
 	}
@@ -401,7 +401,7 @@ func resourcePolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsAutoscalingPolicyImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourcePolicyImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	idParts := strings.SplitN(d.Id(), "/", 2)
 	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 		return nil, fmt.Errorf("unexpected format (%q), expected <asg-name>/<policy-name>", d.Id())
@@ -420,7 +420,7 @@ func resourceAwsAutoscalingPolicyImport(d *schema.ResourceData, meta interface{}
 // PutScalingPolicy can safely resend all parameters without destroying the
 // resource, so create and update can share this common function. It will error
 // if certain mutually exclusive values are set.
-func getAwsAutoscalingPutScalingPolicyInput(d *schema.ResourceData) (autoscaling.PutScalingPolicyInput, error) {
+func getPutScalingPolicyInput(d *schema.ResourceData) (autoscaling.PutScalingPolicyInput, error) {
 	var params = autoscaling.PutScalingPolicyInput{
 		AutoScalingGroupName: aws.String(d.Get("autoscaling_group_name").(string)),
 		PolicyName:           aws.String(d.Get("name").(string)),
@@ -510,7 +510,7 @@ func getAwsAutoscalingPutScalingPolicyInput(d *schema.ResourceData) (autoscaling
 	return params, nil
 }
 
-func getAwsAutoscalingPolicy(d *schema.ResourceData, meta interface{}) (*autoscaling.ScalingPolicy, error) {
+func getPolicy(d *schema.ResourceData, meta interface{}) (*autoscaling.ScalingPolicy, error) {
 	conn := meta.(*conns.AWSClient).AutoScalingConn
 
 	params := autoscaling.DescribePoliciesInput{
@@ -547,7 +547,7 @@ func getAwsAutoscalingPolicy(d *schema.ResourceData, meta interface{}) (*autosca
 	return nil, nil
 }
 
-func resourceAwsAutoscalingScalingAdjustmentHash(v interface{}) int {
+func resourceScalingAdjustmentHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 	if v, ok := m["metric_interval_lower_bound"]; ok {

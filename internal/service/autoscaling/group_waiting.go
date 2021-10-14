@@ -38,7 +38,7 @@ func waitForASGCapacity(
 	log.Printf("[DEBUG] Waiting on %s for capacity...", d.Id())
 
 	err = resource.Retry(wait, func() *resource.RetryError {
-		g, err := getAwsAutoscalingGroup(d.Id(), meta.(*conns.AWSClient).AutoScalingConn)
+		g, err := getGroup(d.Id(), meta.(*conns.AWSClient).AutoScalingConn)
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
@@ -56,7 +56,7 @@ func waitForASGCapacity(
 		return resource.RetryableError(fmt.Errorf("%q: Waiting up to %s: %s", d.Id(), wait, reason))
 	})
 	if tfresource.TimedOut(err) {
-		g, err := getAwsAutoscalingGroup(d.Id(), meta.(*conns.AWSClient).AutoScalingConn)
+		g, err := getGroup(d.Id(), meta.(*conns.AWSClient).AutoScalingConn)
 
 		if err != nil {
 			return fmt.Errorf("Error getting Auto Scaling Group info: %s", err)
