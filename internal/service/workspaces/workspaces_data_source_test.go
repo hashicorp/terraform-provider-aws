@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestAccDataSourceAwsWorkspaces_serial(t *testing.T) {
+func TestAccWorkSpacesDataSource_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Bundle": {
 			"basic":                   testAccWorkspaceBundleDataSource_basic,

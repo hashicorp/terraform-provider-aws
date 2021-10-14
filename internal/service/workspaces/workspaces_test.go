@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestAccAWSWorkspaces_serial(t *testing.T) {
+func TestAccWorkSpaces_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Directory": {
 			"basic":                       testAccDirectory_basic,
