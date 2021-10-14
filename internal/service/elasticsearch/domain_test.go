@@ -23,94 +23,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_elasticsearch_domain", &resource.Sweeper{
-		Name: "aws_elasticsearch_domain",
-		F:    sweepDomains,
-	})
-}
 
-func sweepDomains(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
 
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
 
-	conn := client.(*conns.AWSClient).ElasticSearchConn
-	sweepResources := make([]*sweep.SweepResource, 0)
-	var errs *multierror.Error
-
-	input := &elasticsearch.ListDomainNamesInput{}
-
-	// ListDomainNames has no pagination support whatsoever
-	output, err := conn.ListDomainNames(input)
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Elasticsearch Domain sweep for %s: %s", region, err)
-		return errs.ErrorOrNil()
-	}
-
-	if err != nil {
-		sweeperErr := fmt.Errorf("error listing Elasticsearch Domains: %w", err)
-		log.Printf("[ERROR] %s", sweeperErr)
-		errs = multierror.Append(errs, sweeperErr)
-		return errs.ErrorOrNil()
-	}
-
-	if output == nil {
-		log.Printf("[WARN] Skipping Elasticsearch Domain sweep for %s: empty response", region)
-		return errs.ErrorOrNil()
-	}
-
-	for _, domainInfo := range output.DomainNames {
-		if domainInfo == nil {
-			continue
-		}
-
-		name := aws.StringValue(domainInfo.DomainName)
-
-		// Elasticsearch Domains have regularly gotten stuck in a "being deleted" state
-		// e.g. Deleted and Processing are both true for days in the API
-		// Filter out domains that are Deleted already.
-
-		input := &elasticsearch.DescribeElasticsearchDomainInput{
-			DomainName: domainInfo.DomainName,
-		}
-
-		output, err := conn.DescribeElasticsearchDomain(input)
-
-		if err != nil {
-			sweeperErr := fmt.Errorf("error describing Elasticsearch Domain (%s): %w", name, err)
-			log.Printf("[ERROR] %s", sweeperErr)
-			errs = multierror.Append(errs, sweeperErr)
-			continue
-		}
-
-		if output != nil && output.DomainStatus != nil && aws.BoolValue(output.DomainStatus.Deleted) {
-			log.Printf("[INFO] Skipping Elasticsearch Domain (%s) with deleted status", name)
-			continue
-		}
-
-		r := tfelasticsearch.ResourceDomain()
-		d := r.Data(nil)
-		d.SetId(name)
-		d.Set("domain_name", name)
-
-		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-	}
-
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping ElasticSearch Domains for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping Elasticsearch Domain sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
-}
 
 func TestAccElasticSearchDomain_basic(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
