@@ -19,65 +19,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_msk_configuration", &resource.Sweeper{
-		Name: "aws_msk_configuration",
-		F:    sweepConfigurations,
-		Dependencies: []string{
-			"aws_msk_cluster",
-		},
-	})
-}
 
-func sweepConfigurations(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).KafkaConn
-	var sweeperErrs *multierror.Error
 
-	input := &kafka.ListConfigurationsInput{}
 
-	err = conn.ListConfigurationsPages(input, func(page *kafka.ListConfigurationsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, configuration := range page.Configurations {
-			if configuration == nil {
-				continue
-			}
-
-			arn := aws.StringValue(configuration.Arn)
-			log.Printf("[INFO] Deleting MSK Configuration: %s", arn)
-
-			r := tfkafka.ResourceConfiguration()
-			d := r.Data(nil)
-			d.SetId(arn)
-			err := r.Delete(d, client)
-
-			if err != nil {
-				log.Printf("[ERROR] %s", err)
-				sweeperErrs = multierror.Append(sweeperErrs, err)
-				continue
-			}
-		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping MSK Configurations sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-	}
-
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving MSK Configurations: %w", err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func TestAccKafkaConfiguration_basic(t *testing.T) {
 	var configuration1 kafka.DescribeConfigurationOutput

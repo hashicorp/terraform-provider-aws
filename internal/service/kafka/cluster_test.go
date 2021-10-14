@@ -19,55 +19,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_msk_cluster", &resource.Sweeper{
-		Name: "aws_msk_cluster",
-		F:    sweepClusters,
-	})
-}
 
-func sweepClusters(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).KafkaConn
-	input := &kafka.ListClustersInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
 
-	err = conn.ListClustersPages(input, func(page *kafka.ListClustersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
 
-		for _, cluster := range page.ClusterInfoList {
-			r := tfkafka.ResourceCluster()
-			d := r.Data(nil)
-			d.SetId(aws.StringValue(cluster.ClusterArn))
-
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping MSK Cluster sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing MSK Clusters (%s): %w", region, err)
-	}
-
-	err = sweep.SweepOrchestrator(sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping MSK Clusters (%s): %w", region, err)
-	}
-
-	return nil
-}
 
 const (
 	mskClusterPortPlaintext = 9092
