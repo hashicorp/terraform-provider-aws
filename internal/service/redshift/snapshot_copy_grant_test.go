@@ -22,12 +22,12 @@ func TestAccAWSRedshiftSnapshotCopyGrant_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSRedshiftSnapshotCopyGrantDestroy,
+		CheckDestroy: testAccCheckSnapshotCopyGrantDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRedshiftSnapshotCopyGrant_Basic(rName),
+				Config: testAccSnapshotCopyGrant_Basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRedshiftSnapshotCopyGrantExists(resourceName),
+					testAccCheckSnapshotCopyGrantExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_copy_grant_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "kms_key_id"),
@@ -50,28 +50,28 @@ func TestAccAWSRedshiftSnapshotCopyGrant_Update(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSRedshiftSnapshotCopyGrantDestroy,
+		CheckDestroy: testAccCheckSnapshotCopyGrantDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRedshiftSnapshotCopyGrantWithTags(rName),
+				Config: testAccSnapshotCopyGrantWithTags(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRedshiftSnapshotCopyGrantExists(resourceName),
+					testAccCheckSnapshotCopyGrantExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.Env", "Test"),
 				),
 			},
 			{
-				Config: testAccAWSRedshiftSnapshotCopyGrant_Basic(rName),
+				Config: testAccSnapshotCopyGrant_Basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRedshiftSnapshotCopyGrantExists(resourceName),
+					testAccCheckSnapshotCopyGrantExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
-				Config: testAccAWSRedshiftSnapshotCopyGrantWithTags(rName),
+				Config: testAccSnapshotCopyGrantWithTags(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRedshiftSnapshotCopyGrantExists(resourceName),
+					testAccCheckSnapshotCopyGrantExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.Env", "Test"),
@@ -94,12 +94,12 @@ func TestAccAWSRedshiftSnapshotCopyGrant_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSRedshiftSnapshotCopyGrantDestroy,
+		CheckDestroy: testAccCheckSnapshotCopyGrantDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRedshiftSnapshotCopyGrant_Basic(rName),
+				Config: testAccSnapshotCopyGrant_Basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRedshiftSnapshotCopyGrantExists(resourceName),
+					testAccCheckSnapshotCopyGrantExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfredshift.ResourceSnapshotCopyGrant(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -108,7 +108,7 @@ func TestAccAWSRedshiftSnapshotCopyGrant_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSRedshiftSnapshotCopyGrantDestroy(s *terraform.State) error {
+func testAccCheckSnapshotCopyGrantDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -123,7 +123,7 @@ func testAccCheckAWSRedshiftSnapshotCopyGrantDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSRedshiftSnapshotCopyGrantExists(name string) resource.TestCheckFunc {
+func testAccCheckSnapshotCopyGrantExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -159,7 +159,7 @@ func testAccCheckAWSRedshiftSnapshotCopyGrantExists(name string) resource.TestCh
 	}
 }
 
-func testAccAWSRedshiftSnapshotCopyGrant_Basic(rName string) string {
+func testAccSnapshotCopyGrant_Basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_redshift_snapshot_copy_grant" "test" {
   snapshot_copy_grant_name = %[1]q
@@ -167,7 +167,7 @@ resource "aws_redshift_snapshot_copy_grant" "test" {
 `, rName)
 }
 
-func testAccAWSRedshiftSnapshotCopyGrantWithTags(rName string) string {
+func testAccSnapshotCopyGrantWithTags(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_redshift_snapshot_copy_grant" "test" {
   snapshot_copy_grant_name = %[1]q

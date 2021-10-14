@@ -23,12 +23,12 @@ func TestAccAWSRedshiftSecurityGroup_basic(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckEC2Classic(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, redshift.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAWSRedshiftSecurityGroupDestroy,
+		CheckDestroy:      testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRedshiftSecurityGroupConfig_ingressCidr(rInt),
+				Config: testAccSecurityGroupConfig_ingressCIDR(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRedshiftSecurityGroupExists(resourceName, &v),
+					testAccCheckSecurityGroupExists(resourceName, &v),
 				),
 			},
 			{
@@ -49,12 +49,12 @@ func TestAccAWSRedshiftSecurityGroup_ingressCidr(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckEC2Classic(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, redshift.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAWSRedshiftSecurityGroupDestroy,
+		CheckDestroy:      testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRedshiftSecurityGroupConfig_ingressCidr(rInt),
+				Config: testAccSecurityGroupConfig_ingressCIDR(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRedshiftSecurityGroupExists(resourceName, &v),
+					testAccCheckSecurityGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(
 						resourceName, "name", fmt.Sprintf("redshift-sg-terraform-%d", rInt)),
 					resource.TestCheckResourceAttr(
@@ -84,12 +84,12 @@ func TestAccAWSRedshiftSecurityGroup_updateIngressCidr(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckEC2Classic(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, redshift.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAWSRedshiftSecurityGroupDestroy,
+		CheckDestroy:      testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRedshiftSecurityGroupConfig_ingressCidr(rInt),
+				Config: testAccSecurityGroupConfig_ingressCIDR(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRedshiftSecurityGroupExists(resourceName, &v),
+					testAccCheckSecurityGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(
 						resourceName, "ingress.#", "1"),
 				),
@@ -100,17 +100,17 @@ func TestAccAWSRedshiftSecurityGroup_updateIngressCidr(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSRedshiftSecurityGroupConfig_ingressCidrAdd(rInt),
+				Config: testAccSecurityGroupConfig_ingressCIDRAdd(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRedshiftSecurityGroupExists(resourceName, &v),
+					testAccCheckSecurityGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(
 						resourceName, "ingress.#", "3"),
 				),
 			},
 			{
-				Config: testAccAWSRedshiftSecurityGroupConfig_ingressCidrReduce(rInt),
+				Config: testAccSecurityGroupConfig_ingressCIDRReduce(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRedshiftSecurityGroupExists(resourceName, &v),
+					testAccCheckSecurityGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(
 						resourceName, "ingress.#", "2"),
 				),
@@ -128,12 +128,12 @@ func TestAccAWSRedshiftSecurityGroup_ingressSecurityGroup(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckEC2Classic(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, redshift.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAWSRedshiftSecurityGroupDestroy,
+		CheckDestroy:      testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRedshiftSecurityGroupConfig_ingressSgId(rInt),
+				Config: testAccSecurityGroupConfig_ingressSgID(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRedshiftSecurityGroupExists(resourceName, &v),
+					testAccCheckSecurityGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(
 						resourceName, "name", fmt.Sprintf("redshift-sg-terraform-%d", rInt)),
 					resource.TestCheckResourceAttr(
@@ -160,12 +160,12 @@ func TestAccAWSRedshiftSecurityGroup_updateIngressSecurityGroup(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckEC2Classic(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, redshift.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAWSRedshiftSecurityGroupDestroy,
+		CheckDestroy:      testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRedshiftSecurityGroupConfig_ingressSgId(rInt),
+				Config: testAccSecurityGroupConfig_ingressSgID(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRedshiftSecurityGroupExists(resourceName, &v),
+					testAccCheckSecurityGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(
 						resourceName, "ingress.#", "1"),
 				),
@@ -176,17 +176,17 @@ func TestAccAWSRedshiftSecurityGroup_updateIngressSecurityGroup(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSRedshiftSecurityGroupConfig_ingressSgIdAdd(rInt),
+				Config: testAccSecurityGroupConfig_ingressSgIdAdd(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRedshiftSecurityGroupExists(resourceName, &v),
+					testAccCheckSecurityGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(
 						resourceName, "ingress.#", "3"),
 				),
 			},
 			{
-				Config: testAccAWSRedshiftSecurityGroupConfig_ingressSgIdReduce(rInt),
+				Config: testAccSecurityGroupConfig_ingressSgIdReduce(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRedshiftSecurityGroupExists(resourceName, &v),
+					testAccCheckSecurityGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(
 						resourceName, "ingress.#", "2"),
 				),
@@ -195,7 +195,7 @@ func TestAccAWSRedshiftSecurityGroup_updateIngressSecurityGroup(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSRedshiftSecurityGroupExists(n string, v *redshift.ClusterSecurityGroup) resource.TestCheckFunc {
+func testAccCheckSecurityGroupExists(n string, v *redshift.ClusterSecurityGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -229,7 +229,7 @@ func testAccCheckAWSRedshiftSecurityGroupExists(n string, v *redshift.ClusterSec
 	}
 }
 
-func testAccCheckAWSRedshiftSecurityGroupDestroy(s *terraform.State) error {
+func testAccCheckSecurityGroupDestroy(s *terraform.State) error {
 	conn := acctest.ProviderEC2Classic.Meta().(*conns.AWSClient).RedshiftConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -263,7 +263,7 @@ func testAccCheckAWSRedshiftSecurityGroupDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSRedshiftSecurityGroupConfig_ingressCidr(rInt int) string {
+func testAccSecurityGroupConfig_ingressCIDR(rInt int) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigEC2ClassicRegionProvider(),
 		fmt.Sprintf(`
@@ -277,7 +277,7 @@ resource "aws_redshift_security_group" "test" {
 `, rInt))
 }
 
-func testAccAWSRedshiftSecurityGroupConfig_ingressCidrAdd(rInt int) string {
+func testAccSecurityGroupConfig_ingressCIDRAdd(rInt int) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigEC2ClassicRegionProvider(),
 		fmt.Sprintf(`
@@ -300,7 +300,7 @@ resource "aws_redshift_security_group" "test" {
 `, rInt))
 }
 
-func testAccAWSRedshiftSecurityGroupConfig_ingressCidrReduce(rInt int) string {
+func testAccSecurityGroupConfig_ingressCIDRReduce(rInt int) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigEC2ClassicRegionProvider(),
 		fmt.Sprintf(`
@@ -319,7 +319,7 @@ resource "aws_redshift_security_group" "test" {
 `, rInt))
 }
 
-func testAccAWSRedshiftSecurityGroupConfig_ingressSgId(rInt int) string {
+func testAccSecurityGroupConfig_ingressSgID(rInt int) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigEC2ClassicRegionProvider(),
 		fmt.Sprintf(`
@@ -347,7 +347,7 @@ resource "aws_redshift_security_group" "test" {
 `, rInt, rInt))
 }
 
-func testAccAWSRedshiftSecurityGroupConfig_ingressSgIdAdd(rInt int) string {
+func testAccSecurityGroupConfig_ingressSgIdAdd(rInt int) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigEC2ClassicRegionProvider(),
 		fmt.Sprintf(`
@@ -409,7 +409,7 @@ resource "aws_redshift_security_group" "test" {
 `, rInt, rInt, rInt, rInt))
 }
 
-func testAccAWSRedshiftSecurityGroupConfig_ingressSgIdReduce(rInt int) string {
+func testAccSecurityGroupConfig_ingressSgIdReduce(rInt int) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigEC2ClassicRegionProvider(),
 		fmt.Sprintf(`

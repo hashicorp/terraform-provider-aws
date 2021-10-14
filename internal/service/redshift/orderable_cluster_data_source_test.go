@@ -15,13 +15,13 @@ func TestAccAWSRedshiftOrderableClusterDataSource_ClusterType(t *testing.T) {
 	dataSourceName := "data.aws_redshift_orderable_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccAWSRedshiftOrderableClusterPreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccOrderableClusterPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRedshiftOrderableClusterDataSourceConfig_ClusterType("multi-node"),
+				Config: testAccOrderableClusterDataSourceConfig_ClusterType("multi-node"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "cluster_type", "multi-node"),
 				),
@@ -34,13 +34,13 @@ func TestAccAWSRedshiftOrderableClusterDataSource_ClusterVersion(t *testing.T) {
 	dataSourceName := "data.aws_redshift_orderable_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccAWSRedshiftOrderableClusterPreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccOrderableClusterPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRedshiftOrderableClusterDataSourceConfig_ClusterVersion("1.0"),
+				Config: testAccOrderableClusterDataSourceConfig_ClusterVersion("1.0"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "cluster_version", "1.0"),
 				),
@@ -54,13 +54,13 @@ func TestAccAWSRedshiftOrderableClusterDataSource_NodeType(t *testing.T) {
 	nodeType := "dc2.8xlarge"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccAWSRedshiftOrderableClusterPreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccOrderableClusterPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRedshiftOrderableClusterDataSourceConfig_NodeType(nodeType),
+				Config: testAccOrderableClusterDataSourceConfig_NodeType(nodeType),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "node_type", nodeType),
 				),
@@ -74,13 +74,13 @@ func TestAccAWSRedshiftOrderableClusterDataSource_PreferredNodeTypes(t *testing.
 	preferredNodeType := "dc2.8xlarge"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccAWSRedshiftOrderableClusterPreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccOrderableClusterPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRedshiftOrderableClusterDataSourceConfig_PreferredNodeTypes(preferredNodeType),
+				Config: testAccOrderableClusterDataSourceConfig_PreferredNodeTypes(preferredNodeType),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "node_type", preferredNodeType),
 				),
@@ -89,7 +89,7 @@ func TestAccAWSRedshiftOrderableClusterDataSource_PreferredNodeTypes(t *testing.
 	})
 }
 
-func testAccAWSRedshiftOrderableClusterPreCheck(t *testing.T) {
+func testAccOrderableClusterPreCheck(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
 
 	input := &redshift.DescribeOrderableClusterOptionsInput{
@@ -107,7 +107,7 @@ func testAccAWSRedshiftOrderableClusterPreCheck(t *testing.T) {
 	}
 }
 
-func testAccAWSRedshiftOrderableClusterDataSourceConfig_ClusterType(clusterType string) string {
+func testAccOrderableClusterDataSourceConfig_ClusterType(clusterType string) string {
 	return fmt.Sprintf(`
 data "aws_redshift_orderable_cluster" "test" {
   cluster_type         = %[1]q
@@ -116,7 +116,7 @@ data "aws_redshift_orderable_cluster" "test" {
 `, clusterType)
 }
 
-func testAccAWSRedshiftOrderableClusterDataSourceConfig_ClusterVersion(clusterVersion string) string {
+func testAccOrderableClusterDataSourceConfig_ClusterVersion(clusterVersion string) string {
 	return fmt.Sprintf(`
 data "aws_redshift_orderable_cluster" "test" {
   cluster_version      = %[1]q
@@ -125,7 +125,7 @@ data "aws_redshift_orderable_cluster" "test" {
 `, clusterVersion)
 }
 
-func testAccAWSRedshiftOrderableClusterDataSourceConfig_NodeType(nodeType string) string {
+func testAccOrderableClusterDataSourceConfig_NodeType(nodeType string) string {
 	return fmt.Sprintf(`
 data "aws_redshift_orderable_cluster" "test" {
   node_type            = %[1]q
@@ -134,7 +134,7 @@ data "aws_redshift_orderable_cluster" "test" {
 `, nodeType)
 }
 
-func testAccAWSRedshiftOrderableClusterDataSourceConfig_PreferredNodeTypes(preferredNodeType string) string {
+func testAccOrderableClusterDataSourceConfig_PreferredNodeTypes(preferredNodeType string) string {
 	return fmt.Sprintf(`
 data "aws_redshift_orderable_cluster" "test" {
   preferred_node_types = [

@@ -21,14 +21,14 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_redshift_subnet_group", &resource.Sweeper{
 		Name: "aws_redshift_subnet_group",
-		F:    testSweepRedshiftSubnetGroups,
+		F:    sweepSubnetGroups,
 		Dependencies: []string{
 			"aws_redshift_cluster",
 		},
 	})
 }
 
-func testSweepRedshiftSubnetGroups(region string) error {
+func sweepSubnetGroups(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {

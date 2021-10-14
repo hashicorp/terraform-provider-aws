@@ -24,11 +24,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_redshift_cluster", &resource.Sweeper{
 		Name: "aws_redshift_cluster",
-		F:    testSweepRedshiftClusters,
+		F:    sweepClusters,
 	})
 }
 
-func testSweepRedshiftClusters(region string) error {
+func sweepClusters(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
@@ -78,18 +78,18 @@ func TestAccAWSRedshiftCluster_basic(t *testing.T) {
 	var v redshift.Cluster
 
 	ri := sdkacctest.RandInt()
-	config := testAccAWSRedshiftClusterConfig_basic(ri)
+	config := testAccClusterConfig_basic(ri)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSRedshiftClusterDestroy,
+		CheckDestroy: testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRedshiftClusterExists("aws_redshift_cluster.default", &v),
+					testAccCheckClusterExists("aws_redshift_cluster.default", &v),
 					resource.TestCheckResourceAttr("aws_redshift_cluster.default", "cluster_nodes.#", "1"),
 					resource.TestCheckResourceAttrSet("aws_redshift_cluster.default", "cluster_nodes.0.public_ip_address"),
 					resource.TestCheckResourceAttr("aws_redshift_cluster.default", "cluster_type", "single-node"),
@@ -120,12 +120,12 @@ func TestAccAWSRedshiftCluster_withFinalSnapshot(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSRedshiftClusterSnapshot(rInt),
+		CheckDestroy: testAccCheckClusterSnapshot(rInt),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRedshiftClusterConfigWithFinalSnapshot(rInt),
+				Config: testAccClusterWithFinalSnapshotConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRedshiftClusterExists("aws_redshift_cluster.default", &v),
+					testAccCheckClusterExists("aws_redshift_cluster.default", &v),
 				),
 			},
 			{
@@ -154,12 +154,12 @@ func TestAccAWSRedshiftCluster_kmsKey(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSRedshiftClusterDestroy,
+		CheckDestroy: testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRedshiftClusterConfig_kmsKey(ri),
+				Config: testAccClusterConfig_kmsKey(ri),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRedshiftClusterExists(resourceName, &v),
+					testAccCheckClusterExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "cluster_type", "single-node"),
 					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "true"),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsResourceName, "arn"),
@@ -183,19 +183,19 @@ func TestAccAWSRedshiftCluster_enhancedVpcRoutingEnabled(t *testing.T) {
 	var v redshift.Cluster
 
 	ri := sdkacctest.RandInt()
-	preConfig := testAccAWSRedshiftClusterConfig_enhancedVpcRoutingEnabled(ri)
-	postConfig := testAccAWSRedshiftClusterConfig_enhancedVpcRoutingDisabled(ri)
+	preConfig := testAccClusterConfig_enhancedVPCRoutingEnabled(ri)
+	postConfig := testAccClusterConfig_enhancedVPCRoutingDisabled(ri)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSRedshiftClusterDestroy,
+		CheckDestroy: testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: preConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRedshiftClusterExists("aws_redshift_cluster.default", &v),
+					testAccCheckClusterExists("aws_redshift_cluster.default", &v),
 					resource.TestCheckResourceAttr(
 						"aws_redshift_cluster.default", "enhanced_vpc_routing", "true"),
 				),
@@ -213,7 +213,7 @@ func TestAccAWSRedshiftCluster_enhancedVpcRoutingEnabled(t *testing.T) {
 			{
 				Config: postConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRedshiftClusterExists("aws_redshift_cluster.default", &v),
+					testAccCheckClusterExists("aws_redshift_cluster.default", &v),
 					resource.TestCheckResourceAttr(
 						"aws_redshift_cluster.default", "enhanced_vpc_routing", "false"),
 				),
@@ -230,12 +230,12 @@ func TestAccAWSRedshiftCluster_loggingEnabled(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSRedshiftClusterDestroy,
+		CheckDestroy: testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRedshiftClusterConfig_loggingEnabled(rInt),
+				Config: testAccClusterConfig_loggingEnabled(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRedshiftClusterExists("aws_redshift_cluster.default", &v),
+					testAccCheckClusterExists("aws_redshift_cluster.default", &v),
 					resource.TestCheckResourceAttr(
 						"aws_redshift_cluster.default", "logging.0.enable", "true"),
 					resource.TestCheckResourceAttr(
@@ -253,9 +253,9 @@ func TestAccAWSRedshiftCluster_loggingEnabled(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccAWSRedshiftClusterConfig_loggingDisabled(rInt),
+				Config: testAccClusterConfig_loggingDisabled(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRedshiftClusterExists("aws_redshift_cluster.default", &v),
+					testAccCheckClusterExists("aws_redshift_cluster.default", &v),
 					resource.TestCheckResourceAttr(
 						"aws_redshift_cluster.default", "logging.0.enable", "false"),
 				),
@@ -276,12 +276,12 @@ func TestAccAWSRedshiftCluster_snapshotCopy(t *testing.T) {
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, redshift.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckAWSRedshiftClusterDestroy,
+		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRedshiftClusterConfig_snapshotCopyEnabled(rInt),
+				Config: testAccClusterConfig_snapshotCopyEnabled(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRedshiftClusterExists("aws_redshift_cluster.default", &v),
+					testAccCheckClusterExists("aws_redshift_cluster.default", &v),
 					resource.TestCheckResourceAttrPair("aws_redshift_cluster.default",
 						"snapshot_copy.0.destination_region", "data.aws_region.alternate", "name"),
 					resource.TestCheckResourceAttr(
@@ -290,9 +290,9 @@ func TestAccAWSRedshiftCluster_snapshotCopy(t *testing.T) {
 			},
 
 			{
-				Config: testAccAWSRedshiftClusterConfig_snapshotCopyDisabled(rInt),
+				Config: testAccClusterConfig_snapshotCopyDisabled(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRedshiftClusterExists("aws_redshift_cluster.default", &v),
+					testAccCheckClusterExists("aws_redshift_cluster.default", &v),
 					resource.TestCheckResourceAttr("aws_redshift_cluster.default", "snapshot_copy.#", "0"),
 				),
 			},
@@ -304,19 +304,19 @@ func TestAccAWSRedshiftCluster_iamRoles(t *testing.T) {
 	var v redshift.Cluster
 
 	ri := sdkacctest.RandInt()
-	preConfig := testAccAWSRedshiftClusterConfig_iamRoles(ri)
-	postConfig := testAccAWSRedshiftClusterConfig_updateIamRoles(ri)
+	preConfig := testAccClusterConfig_iamRoles(ri)
+	postConfig := testAccClusterConfig_updateIAMRoles(ri)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSRedshiftClusterDestroy,
+		CheckDestroy: testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: preConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRedshiftClusterExists("aws_redshift_cluster.default", &v),
+					testAccCheckClusterExists("aws_redshift_cluster.default", &v),
 					resource.TestCheckResourceAttr(
 						"aws_redshift_cluster.default", "iam_roles.#", "2"),
 				),
@@ -325,7 +325,7 @@ func TestAccAWSRedshiftCluster_iamRoles(t *testing.T) {
 			{
 				Config: postConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRedshiftClusterExists("aws_redshift_cluster.default", &v),
+					testAccCheckClusterExists("aws_redshift_cluster.default", &v),
 					resource.TestCheckResourceAttr(
 						"aws_redshift_cluster.default", "iam_roles.#", "1"),
 				),
@@ -342,21 +342,21 @@ func TestAccAWSRedshiftCluster_publiclyAccessible(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSRedshiftClusterDestroy,
+		CheckDestroy: testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRedshiftClusterConfig_notPubliclyAccessible(rInt),
+				Config: testAccClusterConfig_notPubliclyAccessible(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRedshiftClusterExists("aws_redshift_cluster.default", &v),
+					testAccCheckClusterExists("aws_redshift_cluster.default", &v),
 					resource.TestCheckResourceAttr(
 						"aws_redshift_cluster.default", "publicly_accessible", "false"),
 				),
 			},
 
 			{
-				Config: testAccAWSRedshiftClusterConfig_updatePubliclyAccessible(rInt),
+				Config: testAccClusterConfig_updatePubliclyAccessible(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRedshiftClusterExists("aws_redshift_cluster.default", &v),
+					testAccCheckClusterExists("aws_redshift_cluster.default", &v),
 					resource.TestCheckResourceAttr(
 						"aws_redshift_cluster.default", "publicly_accessible", "true"),
 				),
@@ -369,19 +369,19 @@ func TestAccAWSRedshiftCluster_updateNodeCount(t *testing.T) {
 	var v redshift.Cluster
 
 	ri := sdkacctest.RandInt()
-	preConfig := testAccAWSRedshiftClusterConfig_basic(ri)
-	postConfig := testAccAWSRedshiftClusterConfig_updateNodeCount(ri)
+	preConfig := testAccClusterConfig_basic(ri)
+	postConfig := testAccClusterConfig_updateNodeCount(ri)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSRedshiftClusterDestroy,
+		CheckDestroy: testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: preConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRedshiftClusterExists("aws_redshift_cluster.default", &v),
+					testAccCheckClusterExists("aws_redshift_cluster.default", &v),
 					resource.TestCheckResourceAttr(
 						"aws_redshift_cluster.default", "number_of_nodes", "1"),
 				),
@@ -390,7 +390,7 @@ func TestAccAWSRedshiftCluster_updateNodeCount(t *testing.T) {
 			{
 				Config: postConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRedshiftClusterExists("aws_redshift_cluster.default", &v),
+					testAccCheckClusterExists("aws_redshift_cluster.default", &v),
 					resource.TestCheckResourceAttr(
 						"aws_redshift_cluster.default", "number_of_nodes", "2"),
 					resource.TestCheckResourceAttr(
@@ -407,19 +407,19 @@ func TestAccAWSRedshiftCluster_updateNodeType(t *testing.T) {
 	var v redshift.Cluster
 
 	ri := sdkacctest.RandInt()
-	preConfig := testAccAWSRedshiftClusterConfig_basic(ri)
-	postConfig := testAccAWSRedshiftClusterConfig_updateNodeType(ri)
+	preConfig := testAccClusterConfig_basic(ri)
+	postConfig := testAccClusterConfig_updateNodeType(ri)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSRedshiftClusterDestroy,
+		CheckDestroy: testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: preConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRedshiftClusterExists("aws_redshift_cluster.default", &v),
+					testAccCheckClusterExists("aws_redshift_cluster.default", &v),
 					resource.TestCheckResourceAttr(
 						"aws_redshift_cluster.default", "node_type", "dc1.large"),
 				),
@@ -428,7 +428,7 @@ func TestAccAWSRedshiftCluster_updateNodeType(t *testing.T) {
 			{
 				Config: postConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRedshiftClusterExists("aws_redshift_cluster.default", &v),
+					testAccCheckClusterExists("aws_redshift_cluster.default", &v),
 					resource.TestCheckResourceAttr(
 						"aws_redshift_cluster.default", "number_of_nodes", "1"),
 					resource.TestCheckResourceAttr(
@@ -445,19 +445,19 @@ func TestAccAWSRedshiftCluster_tags(t *testing.T) {
 	var v redshift.Cluster
 
 	ri := sdkacctest.RandInt()
-	preConfig := testAccAWSRedshiftClusterConfig_tags(ri)
-	postConfig := testAccAWSRedshiftClusterConfig_updatedTags(ri)
+	preConfig := testAccClusterConfig_tags(ri)
+	postConfig := testAccClusterConfig_updatedTags(ri)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSRedshiftClusterDestroy,
+		CheckDestroy: testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: preConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRedshiftClusterExists("aws_redshift_cluster.default", &v),
+					testAccCheckClusterExists("aws_redshift_cluster.default", &v),
 					resource.TestCheckResourceAttr(
 						"aws_redshift_cluster.default", "tags.%", "3"),
 					resource.TestCheckResourceAttr("aws_redshift_cluster.default", "tags.environment", "Production"),
@@ -467,7 +467,7 @@ func TestAccAWSRedshiftCluster_tags(t *testing.T) {
 			{
 				Config: postConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRedshiftClusterExists("aws_redshift_cluster.default", &v),
+					testAccCheckClusterExists("aws_redshift_cluster.default", &v),
 					resource.TestCheckResourceAttr(
 						"aws_redshift_cluster.default", "tags.%", "1"),
 					resource.TestCheckResourceAttr("aws_redshift_cluster.default", "tags.environment", "Production"),
@@ -481,20 +481,20 @@ func TestAccAWSRedshiftCluster_forceNewUsername(t *testing.T) {
 	var first, second redshift.Cluster
 
 	ri := sdkacctest.RandInt()
-	preConfig := testAccAWSRedshiftClusterConfig_basic(ri)
-	postConfig := testAccAWSRedshiftClusterConfig_updatedUsername(ri)
+	preConfig := testAccClusterConfig_basic(ri)
+	postConfig := testAccClusterConfig_updatedUsername(ri)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSRedshiftClusterDestroy,
+		CheckDestroy: testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: preConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRedshiftClusterExists("aws_redshift_cluster.default", &first),
-					testAccCheckAWSRedshiftClusterMasterUsername(&first, "foo_test"),
+					testAccCheckClusterExists("aws_redshift_cluster.default", &first),
+					testAccCheckClusterMasterUsername(&first, "foo_test"),
 					resource.TestCheckResourceAttr("aws_redshift_cluster.default", "master_username", "foo_test"),
 				),
 			},
@@ -502,8 +502,8 @@ func TestAccAWSRedshiftCluster_forceNewUsername(t *testing.T) {
 			{
 				Config: postConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRedshiftClusterExists("aws_redshift_cluster.default", &second),
-					testAccCheckAWSRedshiftClusterMasterUsername(&second, "new_username"),
+					testAccCheckClusterExists("aws_redshift_cluster.default", &second),
+					testAccCheckClusterMasterUsername(&second, "new_username"),
 					resource.TestCheckResourceAttr("aws_redshift_cluster.default", "master_username", "new_username"),
 				),
 			},
@@ -515,19 +515,19 @@ func TestAccAWSRedshiftCluster_changeAvailabilityZone(t *testing.T) {
 	var first, second redshift.Cluster
 
 	ri := sdkacctest.RandInt()
-	preConfig := testAccAWSRedshiftClusterConfig_basic(ri)
-	postConfig := testAccAWSRedshiftClusterConfig_updatedAvailabilityZone(ri)
+	preConfig := testAccClusterConfig_basic(ri)
+	postConfig := testAccClusterConfig_updatedAvailabilityZone(ri)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSRedshiftClusterDestroy,
+		CheckDestroy: testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: preConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRedshiftClusterExists("aws_redshift_cluster.default", &first),
+					testAccCheckClusterExists("aws_redshift_cluster.default", &first),
 					resource.TestCheckResourceAttrPair("aws_redshift_cluster.default", "availability_zone", "data.aws_availability_zones.available", "names.0"),
 				),
 			},
@@ -535,7 +535,7 @@ func TestAccAWSRedshiftCluster_changeAvailabilityZone(t *testing.T) {
 			{
 				Config: postConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRedshiftClusterExists("aws_redshift_cluster.default", &second),
+					testAccCheckClusterExists("aws_redshift_cluster.default", &second),
 					resource.TestCheckResourceAttrPair("aws_redshift_cluster.default", "availability_zone", "data.aws_availability_zones.available", "names.1"),
 				),
 			},
@@ -547,19 +547,19 @@ func TestAccAWSRedshiftCluster_changeEncryption1(t *testing.T) {
 	var cluster1, cluster2 redshift.Cluster
 
 	ri := sdkacctest.RandInt()
-	preConfig := testAccAWSRedshiftClusterConfig_basic(ri)
-	postConfig := testAccAWSRedshiftClusterConfig_encrypted(ri)
+	preConfig := testAccClusterConfig_basic(ri)
+	postConfig := testAccClusterConfig_encrypted(ri)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSRedshiftClusterDestroy,
+		CheckDestroy: testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: preConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRedshiftClusterExists("aws_redshift_cluster.default", &cluster1),
+					testAccCheckClusterExists("aws_redshift_cluster.default", &cluster1),
 					resource.TestCheckResourceAttr("aws_redshift_cluster.default", "encrypted", "false"),
 				),
 			},
@@ -567,8 +567,8 @@ func TestAccAWSRedshiftCluster_changeEncryption1(t *testing.T) {
 			{
 				Config: postConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRedshiftClusterExists("aws_redshift_cluster.default", &cluster2),
-					testAccCheckAWSRedshiftClusterNotRecreated(&cluster1, &cluster2),
+					testAccCheckClusterExists("aws_redshift_cluster.default", &cluster2),
+					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
 					resource.TestCheckResourceAttr("aws_redshift_cluster.default", "encrypted", "true"),
 				),
 			},
@@ -580,27 +580,27 @@ func TestAccAWSRedshiftCluster_changeEncryption2(t *testing.T) {
 	var cluster1, cluster2 redshift.Cluster
 
 	ri := sdkacctest.RandInt()
-	preConfig := testAccAWSRedshiftClusterConfig_encrypted(ri)
-	postConfig := testAccAWSRedshiftClusterConfig_unencrypted(ri)
+	preConfig := testAccClusterConfig_encrypted(ri)
+	postConfig := testAccClusterConfig_unencrypted(ri)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSRedshiftClusterDestroy,
+		CheckDestroy: testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: preConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRedshiftClusterExists("aws_redshift_cluster.default", &cluster1),
+					testAccCheckClusterExists("aws_redshift_cluster.default", &cluster1),
 					resource.TestCheckResourceAttr("aws_redshift_cluster.default", "encrypted", "true"),
 				),
 			},
 			{
 				Config: postConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRedshiftClusterExists("aws_redshift_cluster.default", &cluster2),
-					testAccCheckAWSRedshiftClusterNotRecreated(&cluster1, &cluster2),
+					testAccCheckClusterExists("aws_redshift_cluster.default", &cluster2),
+					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
 					resource.TestCheckResourceAttr("aws_redshift_cluster.default", "encrypted", "false"),
 				),
 			},
@@ -608,7 +608,7 @@ func TestAccAWSRedshiftCluster_changeEncryption2(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSRedshiftClusterDestroy(s *terraform.State) error {
+func testAccCheckClusterDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -632,7 +632,7 @@ func testAccCheckAWSRedshiftClusterDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSRedshiftClusterSnapshot(rInt int) resource.TestCheckFunc {
+func testAccCheckClusterSnapshot(rInt int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_redshift_cluster" {
@@ -670,7 +670,7 @@ func testAccCheckAWSRedshiftClusterSnapshot(rInt int) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckAWSRedshiftClusterExists(n string, v *redshift.Cluster) resource.TestCheckFunc {
+func testAccCheckClusterExists(n string, v *redshift.Cluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -695,7 +695,7 @@ func testAccCheckAWSRedshiftClusterExists(n string, v *redshift.Cluster) resourc
 	}
 }
 
-func testAccCheckAWSRedshiftClusterMasterUsername(c *redshift.Cluster, value string) resource.TestCheckFunc {
+func testAccCheckClusterMasterUsername(c *redshift.Cluster, value string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if *c.MasterUsername != value {
 			return fmt.Errorf("Expected cluster's MasterUsername: %q, given: %q", value, *c.MasterUsername)
@@ -704,7 +704,7 @@ func testAccCheckAWSRedshiftClusterMasterUsername(c *redshift.Cluster, value str
 	}
 }
 
-func testAccCheckAWSRedshiftClusterNotRecreated(i, j *redshift.Cluster) resource.TestCheckFunc {
+func testAccCheckClusterNotRecreated(i, j *redshift.Cluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// In lieu of some other uniquely identifying attribute from the API that always changes
 		// when a cluster is destroyed and recreated with the same identifier, we use the SSH key
@@ -719,7 +719,7 @@ func testAccCheckAWSRedshiftClusterNotRecreated(i, j *redshift.Cluster) resource
 	}
 }
 
-func testAccAWSRedshiftClusterConfig_updateNodeCount(rInt int) string {
+func testAccClusterConfig_updateNodeCount(rInt int) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
 resource "aws_redshift_cluster" "default" {
   cluster_identifier                  = "tf-redshift-cluster-%[1]d"
@@ -736,7 +736,7 @@ resource "aws_redshift_cluster" "default" {
 `, rInt))
 }
 
-func testAccAWSRedshiftClusterConfig_updateNodeType(rInt int) string {
+func testAccClusterConfig_updateNodeType(rInt int) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
 resource "aws_redshift_cluster" "default" {
   cluster_identifier                  = "tf-redshift-cluster-%[1]d"
@@ -753,7 +753,7 @@ resource "aws_redshift_cluster" "default" {
 `, rInt))
 }
 
-func testAccAWSRedshiftClusterConfig_basic(rInt int) string {
+func testAccClusterConfig_basic(rInt int) string {
 	// "InvalidVPCNetworkStateFault: The requested AZ us-west-2a is not a valid AZ."
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
 resource "aws_redshift_cluster" "default" {
@@ -770,7 +770,7 @@ resource "aws_redshift_cluster" "default" {
 `, rInt))
 }
 
-func testAccAWSRedshiftClusterConfig_encrypted(rInt int) string {
+func testAccClusterConfig_encrypted(rInt int) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
 resource "aws_kms_key" "foo" {
   description = "Terraform acc test %[1]d"
@@ -811,8 +811,8 @@ resource "aws_redshift_cluster" "default" {
 `, rInt))
 }
 
-func testAccAWSRedshiftClusterConfig_unencrypted(rInt int) string {
-	// This is used along with the terraform config created testAccAWSRedshiftClusterConfig_encrypted, to test removal of encryption.
+func testAccClusterConfig_unencrypted(rInt int) string {
+	// This is used along with the terraform config created testAccClusterConfig_encrypted, to test removal of encryption.
 	//Removing the kms key here causes the key to be deleted before the redshift cluster is unencrypted, resulting in an unstable cluster. This is to be kept for the time-being unti we find a better way to handle this.
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
 resource "aws_kms_key" "foo" {
@@ -852,7 +852,7 @@ resource "aws_redshift_cluster" "default" {
 `, rInt))
 }
 
-func testAccAWSRedshiftClusterConfigWithFinalSnapshot(rInt int) string {
+func testAccClusterWithFinalSnapshotConfig(rInt int) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
 resource "aws_redshift_cluster" "default" {
   cluster_identifier                  = "tf-redshift-cluster-%[1]d"
@@ -869,7 +869,7 @@ resource "aws_redshift_cluster" "default" {
 `, rInt))
 }
 
-func testAccAWSRedshiftClusterConfig_kmsKey(rInt int) string {
+func testAccClusterConfig_kmsKey(rInt int) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
 resource "aws_kms_key" "foo" {
   description = "Terraform acc test %[1]d"
@@ -909,7 +909,7 @@ resource "aws_redshift_cluster" "default" {
 `, rInt))
 }
 
-func testAccAWSRedshiftClusterConfig_enhancedVpcRoutingEnabled(rInt int) string {
+func testAccClusterConfig_enhancedVPCRoutingEnabled(rInt int) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
 resource "aws_redshift_cluster" "default" {
   cluster_identifier                  = "tf-redshift-cluster-%[1]d"
@@ -926,7 +926,7 @@ resource "aws_redshift_cluster" "default" {
 `, rInt))
 }
 
-func testAccAWSRedshiftClusterConfig_enhancedVpcRoutingDisabled(rInt int) string {
+func testAccClusterConfig_enhancedVPCRoutingDisabled(rInt int) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
 resource "aws_redshift_cluster" "default" {
   cluster_identifier                  = "tf-redshift-cluster-%[1]d"
@@ -943,7 +943,7 @@ resource "aws_redshift_cluster" "default" {
 `, rInt))
 }
 
-func testAccAWSRedshiftClusterConfig_loggingDisabled(rInt int) string {
+func testAccClusterConfig_loggingDisabled(rInt int) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
 resource "aws_redshift_cluster" "default" {
   cluster_identifier                  = "tf-redshift-cluster-%[1]d"
@@ -964,7 +964,7 @@ resource "aws_redshift_cluster" "default" {
 `, rInt))
 }
 
-func testAccAWSRedshiftClusterConfig_loggingEnabled(rInt int) string {
+func testAccClusterConfig_loggingEnabled(rInt int) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -1021,7 +1021,7 @@ resource "aws_redshift_cluster" "default" {
 `, rInt))
 }
 
-func testAccAWSRedshiftClusterConfig_snapshotCopyDisabled(rInt int) string {
+func testAccClusterConfig_snapshotCopyDisabled(rInt int) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(2),
 		acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"),
@@ -1040,7 +1040,7 @@ resource "aws_redshift_cluster" "default" {
 `, rInt))
 }
 
-func testAccAWSRedshiftClusterConfig_snapshotCopyEnabled(rInt int) string {
+func testAccClusterConfig_snapshotCopyEnabled(rInt int) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(2),
 		acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"),
@@ -1069,7 +1069,7 @@ resource "aws_redshift_cluster" "default" {
 `, rInt))
 }
 
-func testAccAWSRedshiftClusterConfig_tags(rInt int) string {
+func testAccClusterConfig_tags(rInt int) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
 resource "aws_redshift_cluster" "default" {
   cluster_identifier                  = "tf-redshift-cluster-%[1]d"
@@ -1091,7 +1091,7 @@ resource "aws_redshift_cluster" "default" {
 `, rInt))
 }
 
-func testAccAWSRedshiftClusterConfig_updatedTags(rInt int) string {
+func testAccClusterConfig_updatedTags(rInt int) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
 resource "aws_redshift_cluster" "default" {
   cluster_identifier                  = "tf-redshift-cluster-%[1]d"
@@ -1111,7 +1111,7 @@ resource "aws_redshift_cluster" "default" {
 `, rInt))
 }
 
-func testAccAWSRedshiftClusterConfig_notPubliclyAccessible(rInt int) string {
+func testAccClusterConfig_notPubliclyAccessible(rInt int) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
@@ -1183,7 +1183,7 @@ resource "aws_redshift_cluster" "default" {
 `, rInt))
 }
 
-func testAccAWSRedshiftClusterConfig_updatePubliclyAccessible(rInt int) string {
+func testAccClusterConfig_updatePubliclyAccessible(rInt int) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
@@ -1255,7 +1255,7 @@ resource "aws_redshift_cluster" "default" {
 `, rInt))
 }
 
-func testAccAWSRedshiftClusterConfig_iamRoles(rInt int) string {
+func testAccClusterConfig_iamRoles(rInt int) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
 resource "aws_iam_role" "ec2-role" {
   name = "test-role-ec2-%[1]d"
@@ -1320,7 +1320,7 @@ resource "aws_redshift_cluster" "default" {
 `, rInt))
 }
 
-func testAccAWSRedshiftClusterConfig_updateIamRoles(rInt int) string {
+func testAccClusterConfig_updateIAMRoles(rInt int) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
 resource "aws_iam_role" "ec2-role" {
   name = "test-role-ec2-%[1]d"
@@ -1385,7 +1385,7 @@ resource "aws_redshift_cluster" "default" {
 `, rInt))
 }
 
-func testAccAWSRedshiftClusterConfig_updatedUsername(rInt int) string {
+func testAccClusterConfig_updatedUsername(rInt int) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
 resource "aws_redshift_cluster" "default" {
   cluster_identifier                  = "tf-redshift-cluster-%[1]d"
@@ -1401,7 +1401,7 @@ resource "aws_redshift_cluster" "default" {
 `, rInt))
 }
 
-func testAccAWSRedshiftClusterConfig_updatedAvailabilityZone(rInt int) string {
+func testAccClusterConfig_updatedAvailabilityZone(rInt int) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
 resource "aws_redshift_cluster" "default" {
   cluster_identifier                  = "tf-redshift-cluster-%[1]d"

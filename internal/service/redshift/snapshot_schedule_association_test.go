@@ -25,12 +25,12 @@ func TestAccAWSRedshiftSnapshotScheduleAssociation_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSRedshiftSnapshotScheduleAssociationDestroy,
+		CheckDestroy: testAccCheckSnapshotScheduleAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRedshiftSnapshotScheduleAssociationConfig(rInt, rName, "rate(12 hours)"),
+				Config: testAccSnapshotScheduleAssociationConfig(rInt, rName, "rate(12 hours)"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRedshiftSnapshotScheduleAssociationExists(resourceName),
+					testAccCheckSnapshotScheduleAssociationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "schedule_identifier", snapshotScheduleResourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "cluster_identifier", clusterResourceName, "id"),
 				),
@@ -44,7 +44,7 @@ func TestAccAWSRedshiftSnapshotScheduleAssociation_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSRedshiftSnapshotScheduleAssociationDestroy(s *terraform.State) error {
+func testAccCheckSnapshotScheduleAssociationDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_redshift_snapshot_schedule_association" {
 			continue
@@ -75,7 +75,7 @@ func testAccCheckAWSRedshiftSnapshotScheduleAssociationDestroy(s *terraform.Stat
 	return nil
 }
 
-func testAccCheckAWSRedshiftSnapshotScheduleAssociationExists(n string) resource.TestCheckFunc {
+func testAccCheckSnapshotScheduleAssociationExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -109,7 +109,7 @@ func testAccCheckAWSRedshiftSnapshotScheduleAssociationExists(n string) resource
 	}
 }
 
-func testAccAWSRedshiftSnapshotScheduleAssociationConfig(rInt int, rName, definition string) string {
+func testAccSnapshotScheduleAssociationConfig(rInt int, rName, definition string) string {
 	return fmt.Sprintf(`
 %s
 %s
@@ -118,5 +118,5 @@ resource "aws_redshift_snapshot_schedule_association" "default" {
   schedule_identifier = aws_redshift_snapshot_schedule.default.id
   cluster_identifier  = aws_redshift_cluster.default.id
 }
-`, testAccAWSRedshiftClusterConfig_basic(rInt), testAccAWSRedshiftSnapshotScheduleConfig(rName, definition))
+`, testAccClusterConfig_basic(rInt), testAccSnapshotScheduleConfig(rName, definition))
 }

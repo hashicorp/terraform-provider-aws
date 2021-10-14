@@ -20,7 +20,7 @@ func TestAccAWSRedshiftServiceAccount_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsRedshiftServiceAccountConfig,
+				Config: testAccCheckAWSRedshiftServiceAccountConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "id", expectedAccountID),
 					acctest.CheckResourceAttrGlobalARNAccountID(dataSourceName, "arn", expectedAccountID, "iam", "user/logs"),
@@ -41,7 +41,7 @@ func TestAccAWSRedshiftServiceAccount_Region(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsRedshiftServiceAccountExplicitRegionConfig,
+				Config: testAccCheckAWSRedshiftServiceAccountExplicitRegionConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "id", expectedAccountID),
 					acctest.CheckResourceAttrGlobalARNAccountID(dataSourceName, "arn", expectedAccountID, "iam", "user/logs"),
@@ -51,11 +51,11 @@ func TestAccAWSRedshiftServiceAccount_Region(t *testing.T) {
 	})
 }
 
-const testAccCheckAwsRedshiftServiceAccountConfig = `
+const testAccCheckAWSRedshiftServiceAccountConfig = `
 data "aws_redshift_service_account" "main" {}
 `
 
-const testAccCheckAwsRedshiftServiceAccountExplicitRegionConfig = `
+const testAccCheckAWSRedshiftServiceAccountExplicitRegionConfig = `
 data "aws_region" "current" {}
 
 data "aws_redshift_service_account" "regional" {

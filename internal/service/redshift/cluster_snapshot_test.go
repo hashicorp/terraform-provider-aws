@@ -15,14 +15,14 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_redshift_cluster_snapshot", &resource.Sweeper{
 		Name: "aws_redshift_cluster_snapshot",
-		F:    testSweepRedshiftClusterSnapshots,
+		F:    sweepClusterSnapshots,
 		Dependencies: []string{
 			"aws_redshift_cluster",
 		},
 	})
 }
 
-func testSweepRedshiftClusterSnapshots(region string) error {
+func sweepClusterSnapshots(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)

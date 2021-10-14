@@ -18,7 +18,7 @@ func TestAccAWSDataSourceRedshiftCluster_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDataSourceRedshiftClusterConfig(rInt),
+				Config: testAccClusterDataSourceConfig(rInt),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.aws_redshift_cluster.test", "allow_version_upgrade"),
 					resource.TestCheckResourceAttrSet("data.aws_redshift_cluster.test", "automated_snapshot_retention_period"),
@@ -52,7 +52,7 @@ func TestAccAWSDataSourceRedshiftCluster_vpc(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDataSourceRedshiftClusterConfigWithVpc(rInt),
+				Config: testAccClusterWithVPCDataSourceConfig(rInt),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.aws_redshift_cluster.test", "vpc_id"),
 					resource.TestCheckResourceAttr("data.aws_redshift_cluster.test", "vpc_security_group_ids.#", "1"),
@@ -72,7 +72,7 @@ func TestAccAWSDataSourceRedshiftCluster_logging(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDataSourceRedshiftClusterConfigWithLogging(rInt),
+				Config: testAccClusterWithLoggingDataSourceConfig(rInt),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_redshift_cluster.test", "enable_logging", "true"),
 					resource.TestCheckResourceAttr("data.aws_redshift_cluster.test", "bucket_name", fmt.Sprintf("tf-test-redshift-logging-%d", rInt)),
@@ -83,7 +83,7 @@ func TestAccAWSDataSourceRedshiftCluster_logging(t *testing.T) {
 	})
 }
 
-func testAccAWSDataSourceRedshiftClusterConfig(rInt int) string {
+func testAccClusterDataSourceConfig(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_redshift_cluster" "test" {
   cluster_identifier = "tf-redshift-cluster-%d"
@@ -102,7 +102,7 @@ data "aws_redshift_cluster" "test" {
 `, rInt)
 }
 
-func testAccAWSDataSourceRedshiftClusterConfigWithVpc(rInt int) string {
+func testAccClusterWithVPCDataSourceConfig(rInt int) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -151,7 +151,7 @@ data "aws_redshift_cluster" "test" {
 `, rInt))
 }
 
-func testAccAWSDataSourceRedshiftClusterConfigWithLogging(rInt int) string {
+func testAccClusterWithLoggingDataSourceConfig(rInt int) string {
 	return fmt.Sprintf(`
 data "aws_redshift_service_account" "test" {}
 
