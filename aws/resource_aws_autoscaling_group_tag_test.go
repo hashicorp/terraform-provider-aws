@@ -20,7 +20,7 @@ func TestAccAWSAutoscalingGroupTag_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAutoscalingGroupTagDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -46,14 +46,14 @@ func TestAccAWSAutoscalingGroupTag_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAutoscalingGroupTagDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAutoscalingGroupTagConfig("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAutoscalingGroupTagExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsAutoscalingGroupTag(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsAutoscalingGroupTag(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -67,7 +67,7 @@ func TestAccAWSAutoscalingGroupTag_Value(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAutoscalingGroupTagDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -96,7 +96,7 @@ func TestAccAWSAutoscalingGroupTag_Value(t *testing.T) {
 }
 
 func testAccCheckAutoscalingGroupTagDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).autoscalingconn
+	conn := acctest.Provider.Meta().(*AWSClient).autoscalingconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_autoscaling_group_tag" {
@@ -142,7 +142,7 @@ func testAccCheckAutoscalingGroupTagExists(n string) resource.TestCheckFunc {
 			return err
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).autoscalingconn
+		conn := acctest.Provider.Meta().(*AWSClient).autoscalingconn
 
 		_, err = keyvaluetags.AutoscalingGetTag(conn, identifier, tfautoscaling.TagResourceTypeAutoScalingGroup, key)
 
