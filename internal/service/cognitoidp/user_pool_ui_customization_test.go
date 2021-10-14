@@ -27,12 +27,12 @@ func TestAccAWSCognitoUserPoolUICustomization_AllClients_CSS(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCognitoUserPoolUICustomizationDestroy,
+		CheckDestroy: testAccCheckUserPoolUICustomizationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCognitoUserPoolUICustomizationConfig_AllClients_CSS(rName, css),
+				Config: testAccUserPoolUICustomizationConfig_AllClients_CSS(rName, css),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCognitoUserPoolUICustomizationExists(resourceName),
+					testAccCheckUserPoolUICustomizationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "css", css),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "css_version"),
@@ -47,9 +47,9 @@ func TestAccAWSCognitoUserPoolUICustomization_AllClients_CSS(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSCognitoUserPoolUICustomizationConfig_AllClients_CSS(rName, cssUpdated),
+				Config: testAccUserPoolUICustomizationConfig_AllClients_CSS(rName, cssUpdated),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCognitoUserPoolUICustomizationExists(resourceName),
+					testAccCheckUserPoolUICustomizationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "css", cssUpdated),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "css_version"),
@@ -74,15 +74,15 @@ func TestAccAWSCognitoUserPoolUICustomization_AllClients_Disappears(t *testing.T
 	css := ".label-customizable {font-weight: 400;}"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCognitoUserPoolUICustomizationDestroy,
+		CheckDestroy: testAccCheckUserPoolUICustomizationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCognitoUserPoolUICustomizationConfig_AllClients_CSS(rName, css),
+				Config: testAccUserPoolUICustomizationConfig_AllClients_CSS(rName, css),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCognitoUserPoolUICustomizationExists(resourceName),
+					testAccCheckUserPoolUICustomizationExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcognitoidp.ResourceUserPoolUICustomization(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -103,12 +103,12 @@ func TestAccAWSCognitoUserPoolUICustomization_AllClients_ImageFile(t *testing.T)
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCognitoUserPoolUICustomizationDestroy,
+		CheckDestroy: testAccCheckUserPoolUICustomizationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCognitoUserPoolUICustomizationConfig_AllClients_Image(rName, filename),
+				Config: testAccUserPoolUICustomizationConfig_AllClients_Image(rName, filename),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCognitoUserPoolUICustomizationExists(resourceName),
+					testAccCheckUserPoolUICustomizationExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
 					resource.TestCheckResourceAttr(resourceName, "client_id", "ALL"),
 					resource.TestCheckResourceAttrSet(resourceName, "image_url"),
@@ -123,9 +123,9 @@ func TestAccAWSCognitoUserPoolUICustomization_AllClients_ImageFile(t *testing.T)
 				ImportStateVerifyIgnore: []string{"image_file"},
 			},
 			{
-				Config: testAccAWSCognitoUserPoolUICustomizationConfig_AllClients_Image(rName, updatedFilename),
+				Config: testAccUserPoolUICustomizationConfig_AllClients_Image(rName, updatedFilename),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCognitoUserPoolUICustomizationExists(resourceName),
+					testAccCheckUserPoolUICustomizationExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
 					resource.TestCheckResourceAttr(resourceName, "client_id", "ALL"),
 					resource.TestCheckResourceAttrSet(resourceName, "image_url"),
@@ -156,12 +156,12 @@ func TestAccAWSCognitoUserPoolUICustomization_AllClients_CSSAndImageFile(t *test
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCognitoUserPoolUICustomizationDestroy,
+		CheckDestroy: testAccCheckUserPoolUICustomizationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCognitoUserPoolUICustomizationConfig_AllClients_CSSAndImage(rName, css, filename),
+				Config: testAccUserPoolUICustomizationConfig_AllClients_CSSAndImage(rName, css, filename),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCognitoUserPoolUICustomizationExists(resourceName),
+					testAccCheckUserPoolUICustomizationExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
 					resource.TestCheckResourceAttr(resourceName, "client_id", "ALL"),
 					resource.TestCheckResourceAttr(resourceName, "css", css),
@@ -178,9 +178,9 @@ func TestAccAWSCognitoUserPoolUICustomization_AllClients_CSSAndImageFile(t *test
 				ImportStateVerifyIgnore: []string{"image_file"},
 			},
 			{
-				Config: testAccAWSCognitoUserPoolUICustomizationConfig_AllClients_CSS(rName, css),
+				Config: testAccUserPoolUICustomizationConfig_AllClients_CSS(rName, css),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCognitoUserPoolUICustomizationExists(resourceName),
+					testAccCheckUserPoolUICustomizationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "css", css),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "css_version"),
@@ -190,9 +190,9 @@ func TestAccAWSCognitoUserPoolUICustomization_AllClients_CSSAndImageFile(t *test
 				),
 			},
 			{
-				Config: testAccAWSCognitoUserPoolUICustomizationConfig_AllClients_Image(rName, updatedFilename),
+				Config: testAccUserPoolUICustomizationConfig_AllClients_Image(rName, updatedFilename),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCognitoUserPoolUICustomizationExists(resourceName),
+					testAccCheckUserPoolUICustomizationExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
 					resource.TestCheckResourceAttr(resourceName, "client_id", "ALL"),
 					resource.TestCheckResourceAttrSet(resourceName, "image_url"),
@@ -223,12 +223,12 @@ func TestAccAWSCognitoUserPoolUICustomization_Client_CSS(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCognitoUserPoolUICustomizationDestroy,
+		CheckDestroy: testAccCheckUserPoolUICustomizationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCognitoUserPoolUICustomizationConfig_Client_CSS(rName, css),
+				Config: testAccUserPoolUICustomizationConfig_Client_CSS(rName, css),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCognitoUserPoolUICustomizationExists(resourceName),
+					testAccCheckUserPoolUICustomizationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "css", css),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "css_version"),
@@ -243,9 +243,9 @@ func TestAccAWSCognitoUserPoolUICustomization_Client_CSS(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSCognitoUserPoolUICustomizationConfig_Client_CSS(rName, cssUpdated),
+				Config: testAccUserPoolUICustomizationConfig_Client_CSS(rName, cssUpdated),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCognitoUserPoolUICustomizationExists(resourceName),
+					testAccCheckUserPoolUICustomizationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "css", cssUpdated),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "css_version"),
@@ -270,15 +270,15 @@ func TestAccAWSCognitoUserPoolUICustomization_Client_Disappears(t *testing.T) {
 	css := ".label-customizable {font-weight: 400;}"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCognitoUserPoolUICustomizationDestroy,
+		CheckDestroy: testAccCheckUserPoolUICustomizationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCognitoUserPoolUICustomizationConfig_Client_CSS(rName, css),
+				Config: testAccUserPoolUICustomizationConfig_Client_CSS(rName, css),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCognitoUserPoolUICustomizationExists(resourceName),
+					testAccCheckUserPoolUICustomizationExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcognitoidp.ResourceUserPoolUICustomization(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -300,12 +300,12 @@ func TestAccAWSCognitoUserPoolUICustomization_Client_Image(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCognitoUserPoolUICustomizationDestroy,
+		CheckDestroy: testAccCheckUserPoolUICustomizationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCognitoUserPoolUICustomizationConfig_Client_Image(rName, filename),
+				Config: testAccUserPoolUICustomizationConfig_Client_Image(rName, filename),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCognitoUserPoolUICustomizationExists(resourceName),
+					testAccCheckUserPoolUICustomizationExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
 					resource.TestCheckResourceAttrPair(resourceName, "client_id", clientResourceName, "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "image_url"),
@@ -320,9 +320,9 @@ func TestAccAWSCognitoUserPoolUICustomization_Client_Image(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"image_file"},
 			},
 			{
-				Config: testAccAWSCognitoUserPoolUICustomizationConfig_Client_Image(rName, updatedFilename),
+				Config: testAccUserPoolUICustomizationConfig_Client_Image(rName, updatedFilename),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCognitoUserPoolUICustomizationExists(resourceName),
+					testAccCheckUserPoolUICustomizationExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
 					resource.TestCheckResourceAttrPair(resourceName, "client_id", clientResourceName, "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "image_url"),
@@ -355,14 +355,14 @@ func TestAccAWSCognitoUserPoolUICustomization_ClientAndAll_CSS(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCognitoUserPoolUICustomizationDestroy,
+		CheckDestroy: testAccCheckUserPoolUICustomizationDestroy,
 		Steps: []resource.TestStep{
 			{
 				// Test UI Customization settings shared by ALL and a specific client
-				Config: testAccAWSCognitoUserPoolUICustomizationConfig_ClientAndAllCustomizations_CSS(rName, allCSS, allCSS),
+				Config: testAccUserPoolUICustomizationConfig_ClientAndAllCustomizations_CSS(rName, allCSS, allCSS),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCognitoUserPoolUICustomizationExists(resourceName),
-					testAccCheckAWSCognitoUserPoolUICustomizationExists(clientUIResourceName),
+					testAccCheckUserPoolUICustomizationExists(resourceName),
+					testAccCheckUserPoolUICustomizationExists(clientUIResourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
 					resource.TestCheckResourceAttr(resourceName, "css", allCSS),
 					resource.TestCheckResourceAttrSet(resourceName, "last_modified_date"),
@@ -386,10 +386,10 @@ func TestAccAWSCognitoUserPoolUICustomization_ClientAndAll_CSS(t *testing.T) {
 			},
 			{
 				// Test UI Customization settings overridden for the client
-				Config: testAccAWSCognitoUserPoolUICustomizationConfig_ClientAndAllCustomizations_CSS(rName, allCSS, clientCSS),
+				Config: testAccUserPoolUICustomizationConfig_ClientAndAllCustomizations_CSS(rName, allCSS, clientCSS),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCognitoUserPoolUICustomizationExists(resourceName),
-					testAccCheckAWSCognitoUserPoolUICustomizationExists(clientUIResourceName),
+					testAccCheckUserPoolUICustomizationExists(resourceName),
+					testAccCheckUserPoolUICustomizationExists(clientUIResourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
 					resource.TestCheckResourceAttr(resourceName, "css", allCSS),
 					resource.TestCheckResourceAttrSet(resourceName, "last_modified_date"),
@@ -427,20 +427,20 @@ func TestAccAWSCognitoUserPoolUICustomization_UpdateClientToAll_CSS(t *testing.T
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCognitoUserPoolUICustomizationDestroy,
+		CheckDestroy: testAccCheckUserPoolUICustomizationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCognitoUserPoolUICustomizationConfig_Client_CSS(rName, css),
+				Config: testAccUserPoolUICustomizationConfig_Client_CSS(rName, css),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCognitoUserPoolUICustomizationExists(resourceName),
+					testAccCheckUserPoolUICustomizationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "css", css),
 					resource.TestCheckResourceAttrPair(resourceName, "client_id", clientResourceName, "id"),
 				),
 			},
 			{
-				Config: testAccAWSCognitoUserPoolUICustomizationConfig_AllClients_CSS(rName, cssUpdated),
+				Config: testAccUserPoolUICustomizationConfig_AllClients_CSS(rName, cssUpdated),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCognitoUserPoolUICustomizationExists(resourceName),
+					testAccCheckUserPoolUICustomizationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "css", cssUpdated),
 					resource.TestCheckResourceAttr(resourceName, "client_id", "ALL"),
 				),
@@ -466,20 +466,20 @@ func TestAccAWSCognitoUserPoolUICustomization_UpdateAllToClient_CSS(t *testing.T
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCognitoUserPoolUICustomizationDestroy,
+		CheckDestroy: testAccCheckUserPoolUICustomizationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCognitoUserPoolUICustomizationConfig_AllClients_CSS(rName, css),
+				Config: testAccUserPoolUICustomizationConfig_AllClients_CSS(rName, css),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCognitoUserPoolUICustomizationExists(resourceName),
+					testAccCheckUserPoolUICustomizationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "css", css),
 					resource.TestCheckResourceAttr(resourceName, "client_id", "ALL"),
 				),
 			},
 			{
-				Config: testAccAWSCognitoUserPoolUICustomizationConfig_Client_CSS(rName, cssUpdated),
+				Config: testAccUserPoolUICustomizationConfig_Client_CSS(rName, cssUpdated),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCognitoUserPoolUICustomizationExists(resourceName),
+					testAccCheckUserPoolUICustomizationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "css", cssUpdated),
 					resource.TestCheckResourceAttrPair(resourceName, "client_id", clientResourceName, "id"),
 				),
@@ -493,7 +493,7 @@ func TestAccAWSCognitoUserPoolUICustomization_UpdateAllToClient_CSS(t *testing.T
 	})
 }
 
-func testAccCheckAWSCognitoUserPoolUICustomizationDestroy(s *terraform.State) error {
+func testAccCheckUserPoolUICustomizationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -523,7 +523,7 @@ func testAccCheckAWSCognitoUserPoolUICustomizationDestroy(s *terraform.State) er
 			return err
 		}
 
-		if testAccAWSCognitoUserPoolUICustomizationExists(output) {
+		if testAccUserPoolUICustomizationExists(output) {
 			return fmt.Errorf("Cognito User Pool UI Customization (UserPoolId: %s, ClientId: %s) still exists", userPoolId, clientId)
 		}
 	}
@@ -531,7 +531,7 @@ func testAccCheckAWSCognitoUserPoolUICustomizationDestroy(s *terraform.State) er
 	return nil
 }
 
-func testAccCheckAWSCognitoUserPoolUICustomizationExists(name string) resource.TestCheckFunc {
+func testAccCheckUserPoolUICustomizationExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -564,7 +564,7 @@ func testAccCheckAWSCognitoUserPoolUICustomizationExists(name string) resource.T
 	}
 }
 
-func testAccAWSCognitoUserPoolUICustomizationConfig_AllClients_CSS(rName, css string) string {
+func testAccUserPoolUICustomizationConfig_AllClients_CSS(rName, css string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
   name = %[1]q
@@ -585,7 +585,7 @@ resource "aws_cognito_user_pool_ui_customization" "test" {
 `, rName, css)
 }
 
-func testAccAWSCognitoUserPoolUICustomizationConfig_AllClients_Image(rName, filename string) string {
+func testAccUserPoolUICustomizationConfig_AllClients_Image(rName, filename string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
   name = %[1]q
@@ -606,7 +606,7 @@ resource "aws_cognito_user_pool_ui_customization" "test" {
 `, rName, filename)
 }
 
-func testAccAWSCognitoUserPoolUICustomizationConfig_AllClients_CSSAndImage(rName, css, filename string) string {
+func testAccUserPoolUICustomizationConfig_AllClients_CSSAndImage(rName, css, filename string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
   name = %[1]q
@@ -628,7 +628,7 @@ resource "aws_cognito_user_pool_ui_customization" "test" {
 `, rName, css, filename)
 }
 
-func testAccAWSCognitoUserPoolUICustomizationConfig_Client_CSS(rName, css string) string {
+func testAccUserPoolUICustomizationConfig_Client_CSS(rName, css string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
   name = %[1]q
@@ -655,7 +655,7 @@ resource "aws_cognito_user_pool_ui_customization" "test" {
 `, rName, css)
 }
 
-func testAccAWSCognitoUserPoolUICustomizationConfig_Client_Image(rName, filename string) string {
+func testAccUserPoolUICustomizationConfig_Client_Image(rName, filename string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
   name = %[1]q
@@ -682,7 +682,7 @@ resource "aws_cognito_user_pool_ui_customization" "test" {
 `, rName, filename)
 }
 
-func testAccAWSCognitoUserPoolUICustomizationConfig_ClientAndAllCustomizations_CSS(rName, allCSS, clientCSS string) string {
+func testAccUserPoolUICustomizationConfig_ClientAndAllCustomizations_CSS(rName, allCSS, clientCSS string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
   name = %[1]q
@@ -717,11 +717,11 @@ resource "aws_cognito_user_pool_ui_customization" "ui_client" {
 `, rName, allCSS, clientCSS)
 }
 
-// testAccAWSCognitoUserPoolUICustomizationExists validates the API object such that
+// testAccUserPoolUICustomizationExists validates the API object such that
 // we define resource existence when the object is non-nil and
 // at least one of the object's fields are non-nil with the exception of CSSVersion
 // which remains as an artifact even after UI customization removal
-func testAccAWSCognitoUserPoolUICustomizationExists(ui *cognitoidentityprovider.UICustomizationType) bool {
+func testAccUserPoolUICustomizationExists(ui *cognitoidentityprovider.UICustomizationType) bool {
 	if ui == nil {
 		return false
 	}

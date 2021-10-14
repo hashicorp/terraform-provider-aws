@@ -21,15 +21,15 @@ func TestAccAWSCognitoIdentityProvider_basic(t *testing.T) {
 	userPoolName := fmt.Sprintf("tf-acc-cognito-user-pool-%s", sdkacctest.RandString(7))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCognitoIdentityProviderDestroy,
+		CheckDestroy: testAccCheckIdentityProviderDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCognitoIdentityProviderConfig_basic(userPoolName),
+				Config: testAccIdentityProviderConfig_basic(userPoolName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCognitoIdentityProviderExists(resourceName, &identityProvider),
+					testAccCheckIdentityProviderExists(resourceName, &identityProvider),
 					resource.TestCheckResourceAttr(resourceName, "attribute_mapping.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "attribute_mapping.username", "sub"),
 					resource.TestCheckResourceAttr(resourceName, "provider_details.%", "9"),
@@ -47,9 +47,9 @@ func TestAccAWSCognitoIdentityProvider_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSCognitoIdentityProviderConfig_basicUpdated(userPoolName),
+				Config: testAccIdentityProviderConfig_basicUpdated(userPoolName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCognitoIdentityProviderExists(resourceName, &identityProvider),
+					testAccCheckIdentityProviderExists(resourceName, &identityProvider),
 					resource.TestCheckResourceAttr(resourceName, "attribute_mapping.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "attribute_mapping.username", "sub"),
 					resource.TestCheckResourceAttr(resourceName, "attribute_mapping.email", "email"),
@@ -82,15 +82,15 @@ func TestAccAWSCognitoIdentityProvider_idpIdentifiers(t *testing.T) {
 	userPoolName := fmt.Sprintf("tf-acc-cognito-user-pool-%s", sdkacctest.RandString(7))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCognitoIdentityProviderDestroy,
+		CheckDestroy: testAccCheckIdentityProviderDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCognitoIdentityProviderIDPIdentifierConfig(userPoolName, "test"),
+				Config: testAccIdentityProviderIDPIdentifierConfig(userPoolName, "test"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCognitoIdentityProviderExists(resourceName, &identityProvider),
+					testAccCheckIdentityProviderExists(resourceName, &identityProvider),
 					resource.TestCheckResourceAttr(resourceName, "idp_identifiers.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "idp_identifiers.0", "test"),
 				),
@@ -101,9 +101,9 @@ func TestAccAWSCognitoIdentityProvider_idpIdentifiers(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSCognitoIdentityProviderIDPIdentifierConfig(userPoolName, "test2"),
+				Config: testAccIdentityProviderIDPIdentifierConfig(userPoolName, "test2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCognitoIdentityProviderExists(resourceName, &identityProvider),
+					testAccCheckIdentityProviderExists(resourceName, &identityProvider),
 					resource.TestCheckResourceAttr(resourceName, "idp_identifiers.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "idp_identifiers.0", "test2"),
 				),
@@ -118,15 +118,15 @@ func TestAccAWSCognitoIdentityProvider_disappears(t *testing.T) {
 	userPoolName := fmt.Sprintf("tf-acc-cognito-user-pool-%s", sdkacctest.RandString(7))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCognitoIdentityProviderDestroy,
+		CheckDestroy: testAccCheckIdentityProviderDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCognitoIdentityProviderConfig_basic(userPoolName),
+				Config: testAccIdentityProviderConfig_basic(userPoolName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCognitoIdentityProviderExists(resourceName, &identityProvider),
+					testAccCheckIdentityProviderExists(resourceName, &identityProvider),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcognitoidp.ResourceIdentityProvider(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -141,15 +141,15 @@ func TestAccAWSCognitoIdentityProvider_disappears_userPool(t *testing.T) {
 	userPoolName := fmt.Sprintf("tf-acc-cognito-user-pool-%s", sdkacctest.RandString(7))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCognitoIdentityProviderDestroy,
+		CheckDestroy: testAccCheckIdentityProviderDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCognitoIdentityProviderConfig_basic(userPoolName),
+				Config: testAccIdentityProviderConfig_basic(userPoolName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCognitoIdentityProviderExists(resourceName, &identityProvider),
+					testAccCheckIdentityProviderExists(resourceName, &identityProvider),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcognitoidp.ResourceUserPool(), "aws_cognito_user_pool.test"),
 				),
 				ExpectNonEmptyPlan: true,
@@ -158,7 +158,7 @@ func TestAccAWSCognitoIdentityProvider_disappears_userPool(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSCognitoIdentityProviderDestroy(s *terraform.State) error {
+func testAccCheckIdentityProviderDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -187,7 +187,7 @@ func testAccCheckAWSCognitoIdentityProviderDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSCognitoIdentityProviderExists(resourceName string, identityProvider *cognitoidentityprovider.IdentityProviderType) resource.TestCheckFunc {
+func testAccCheckIdentityProviderExists(resourceName string, identityProvider *cognitoidentityprovider.IdentityProviderType) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -222,7 +222,7 @@ func testAccCheckAWSCognitoIdentityProviderExists(resourceName string, identityP
 	}
 }
 
-func testAccAWSCognitoIdentityProviderConfig_basic(userPoolName string) string {
+func testAccIdentityProviderConfig_basic(userPoolName string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
   name                     = "%s"
@@ -249,7 +249,7 @@ resource "aws_cognito_identity_provider" "test" {
 `, userPoolName)
 }
 
-func testAccAWSCognitoIdentityProviderConfig_basicUpdated(userPoolName string) string {
+func testAccIdentityProviderConfig_basicUpdated(userPoolName string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
   name                     = "%s"
@@ -281,7 +281,7 @@ resource "aws_cognito_identity_provider" "test" {
 `, userPoolName)
 }
 
-func testAccAWSCognitoIdentityProviderIDPIdentifierConfig(userPoolName, attribute string) string {
+func testAccIdentityProviderIDPIdentifierConfig(userPoolName, attribute string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
   name                     = %[1]q

@@ -22,15 +22,15 @@ func TestAccAWSCognitoUserGroup_basic(t *testing.T) {
 	resourceName := "aws_cognito_user_group.main"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCognitoUserGroupDestroy,
+		CheckDestroy: testAccCheckUserGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCognitoUserGroupConfig_basic(poolName, groupName),
+				Config: testAccUserGroupConfig_basic(poolName, groupName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCognitoUserGroupExists(resourceName),
+					testAccCheckUserGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", groupName),
 				),
 			},
@@ -40,9 +40,9 @@ func TestAccAWSCognitoUserGroup_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSCognitoUserGroupConfig_basic(poolName, updatedGroupName),
+				Config: testAccUserGroupConfig_basic(poolName, updatedGroupName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCognitoUserGroupExists(resourceName),
+					testAccCheckUserGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", updatedGroupName),
 				),
 			},
@@ -57,15 +57,15 @@ func TestAccAWSCognitoUserGroup_complex(t *testing.T) {
 	resourceName := "aws_cognito_user_group.main"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCognitoUserGroupDestroy,
+		CheckDestroy: testAccCheckUserGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCognitoUserGroupConfig_complex(poolName, groupName, "This is the user group description", 1),
+				Config: testAccUserGroupConfig_complex(poolName, groupName, "This is the user group description", 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCognitoUserGroupExists(resourceName),
+					testAccCheckUserGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", groupName),
 					resource.TestCheckResourceAttr(resourceName, "description", "This is the user group description"),
 					resource.TestCheckResourceAttr(resourceName, "precedence", "1"),
@@ -78,9 +78,9 @@ func TestAccAWSCognitoUserGroup_complex(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSCognitoUserGroupConfig_complex(poolName, updatedGroupName, "This is the updated user group description", 42),
+				Config: testAccUserGroupConfig_complex(poolName, updatedGroupName, "This is the updated user group description", 42),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCognitoUserGroupExists(resourceName),
+					testAccCheckUserGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", updatedGroupName),
 					resource.TestCheckResourceAttr(resourceName, "description", "This is the updated user group description"),
 					resource.TestCheckResourceAttr(resourceName, "precedence", "42"),
@@ -96,15 +96,15 @@ func TestAccAWSCognitoUserGroup_RoleArn(t *testing.T) {
 	resourceName := "aws_cognito_user_group.main"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCognitoUserGroupDestroy,
+		CheckDestroy: testAccCheckUserGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCognitoUserGroupConfig_RoleArn(rName),
+				Config: testAccUserGroupConfig_RoleARN(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCognitoUserGroupExists(resourceName),
+					testAccCheckUserGroupExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "role_arn"),
 				),
 			},
@@ -114,9 +114,9 @@ func TestAccAWSCognitoUserGroup_RoleArn(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSCognitoUserGroupConfig_RoleArn_Updated(rName),
+				Config: testAccUserGroupConfig_RoleARN_Updated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCognitoUserGroupExists(resourceName),
+					testAccCheckUserGroupExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "role_arn"),
 				),
 			},
@@ -124,7 +124,7 @@ func TestAccAWSCognitoUserGroup_RoleArn(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSCognitoUserGroupExists(name string) resource.TestCheckFunc {
+func testAccCheckUserGroupExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -159,7 +159,7 @@ func testAccCheckAWSCognitoUserGroupExists(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckAWSCognitoUserGroupDestroy(s *terraform.State) error {
+func testAccCheckUserGroupDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -185,7 +185,7 @@ func testAccCheckAWSCognitoUserGroupDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSCognitoUserGroupConfig_basic(poolName, groupName string) string {
+func testAccUserGroupConfig_basic(poolName, groupName string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "main" {
   name = "%s"
@@ -198,7 +198,7 @@ resource "aws_cognito_user_group" "main" {
 `, poolName, groupName)
 }
 
-func testAccAWSCognitoUserGroupConfig_complex(poolName, groupName, groupDescription string, precedence int) string {
+func testAccUserGroupConfig_complex(poolName, groupName, groupDescription string, precedence int) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "main" {
   name = "%[1]s"
@@ -244,7 +244,7 @@ resource "aws_cognito_user_group" "main" {
 `, poolName, groupName, groupDescription, precedence)
 }
 
-func testAccAWSCognitoUserGroupConfig_RoleArn(rName string) string {
+func testAccUserGroupConfig_RoleARN(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "main" {
   name = "%[1]s"
@@ -278,7 +278,7 @@ resource "aws_cognito_user_group" "main" {
 `, rName)
 }
 
-func testAccAWSCognitoUserGroupConfig_RoleArn_Updated(rName string) string {
+func testAccUserGroupConfig_RoleARN_Updated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "main" {
   name = "%[1]s"
