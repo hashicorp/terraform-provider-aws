@@ -12,9 +12,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsQLDBLedger() *schema.Resource {
+func DataSourceLedger() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsQLDBLedgerRead,
+		Read: dataSourceLedgerRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -43,7 +43,7 @@ func dataSourceAwsQLDBLedger() *schema.Resource {
 	}
 }
 
-func dataSourceAwsQLDBLedgerRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceLedgerRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).QLDBConn
 
 	target := d.Get("name")
