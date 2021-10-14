@@ -142,7 +142,7 @@ func resourceNotificationRuleCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if len(tags) > 0 {
-		params.Tags = tags.IgnoreAws().CodestarnotificationsTags()
+		params.Tags = Tags(tags.IgnoreAws())
 	}
 
 	res, err := conn.CreateNotificationRule(params)
@@ -283,7 +283,7 @@ func resourceNotificationRuleUpdate(d *schema.ResourceData, meta interface{}) er
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.CodestarnotificationsUpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating codestar notification rule tags: %s", err)
 		}
 	}
