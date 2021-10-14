@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	tfmacie2 "github.com/hashicorp/terraform-provider-aws/internal/service/macie2"
 )
 
 func testAccAwsMacie2FindingsFilter_basic(t *testing.T) {
@@ -115,7 +116,7 @@ func testAccAwsMacie2FindingsFilter_disappears(t *testing.T) {
 					testAccCheckAwsMacie2FindingsFilterExists(resourceName, &macie2Output),
 					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceAccount(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfmacie2.ResourceAccount(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
