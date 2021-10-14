@@ -12,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsChimeVoiceConnectorStreaming() *schema.Resource {
+func ResourceVoiceConnectorStreaming() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceAwsChimeVoiceConnectorStreamingCreate,
-		ReadWithoutTimeout:   resourceAwsChimeVoiceConnectorStreamingRead,
-		UpdateWithoutTimeout: resourceAwsChimeVoiceConnectorStreamingUpdate,
-		DeleteWithoutTimeout: resourceAwsChimeVoiceConnectorStreamingDelete,
+		CreateWithoutTimeout: resourceVoiceConnectorStreamingCreate,
+		ReadWithoutTimeout:   resourceVoiceConnectorStreamingRead,
+		UpdateWithoutTimeout: resourceVoiceConnectorStreamingUpdate,
+		DeleteWithoutTimeout: resourceVoiceConnectorStreamingDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -53,7 +53,7 @@ func resourceAwsChimeVoiceConnectorStreaming() *schema.Resource {
 	}
 }
 
-func resourceAwsChimeVoiceConnectorStreamingCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceConnectorStreamingCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ChimeConn
 
 	vcId := d.Get("voice_connector_id").(string)
@@ -78,10 +78,10 @@ func resourceAwsChimeVoiceConnectorStreamingCreate(ctx context.Context, d *schem
 
 	d.SetId(vcId)
 
-	return resourceAwsChimeVoiceConnectorStreamingRead(ctx, d, meta)
+	return resourceVoiceConnectorStreamingRead(ctx, d, meta)
 }
 
-func resourceAwsChimeVoiceConnectorStreamingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceConnectorStreamingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ChimeConn
 
 	input := &chime.GetVoiceConnectorStreamingConfigurationInput{
@@ -114,7 +114,7 @@ func resourceAwsChimeVoiceConnectorStreamingRead(ctx context.Context, d *schema.
 	return nil
 }
 
-func resourceAwsChimeVoiceConnectorStreamingUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceConnectorStreamingUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ChimeConn
 
 	vcId := d.Get("voice_connector_id").(string)
@@ -145,10 +145,10 @@ func resourceAwsChimeVoiceConnectorStreamingUpdate(ctx context.Context, d *schem
 		}
 	}
 
-	return resourceAwsChimeVoiceConnectorStreamingRead(ctx, d, meta)
+	return resourceVoiceConnectorStreamingRead(ctx, d, meta)
 }
 
-func resourceAwsChimeVoiceConnectorStreamingDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceConnectorStreamingDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ChimeConn
 
 	input := &chime.DeleteVoiceConnectorStreamingConfigurationInput{

@@ -11,12 +11,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsChimeVoiceConnectorLogging() *schema.Resource {
+func ResourceVoiceConnectorLogging() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceAwsChimeVoiceConnectorLoggingCreate,
-		ReadWithoutTimeout:   resourceAwsChimeVoiceConnectorLoggingRead,
-		UpdateWithoutTimeout: resourceAwsChimeVoiceConnectorLoggingUpdate,
-		DeleteWithoutTimeout: resourceAwsChimeVoiceConnectorLoggingDelete,
+		CreateWithoutTimeout: resourceVoiceConnectorLoggingCreate,
+		ReadWithoutTimeout:   resourceVoiceConnectorLoggingRead,
+		UpdateWithoutTimeout: resourceVoiceConnectorLoggingUpdate,
+		DeleteWithoutTimeout: resourceVoiceConnectorLoggingDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -37,7 +37,7 @@ func resourceAwsChimeVoiceConnectorLogging() *schema.Resource {
 	}
 }
 
-func resourceAwsChimeVoiceConnectorLoggingCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceConnectorLoggingCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ChimeConn
 
 	vcId := d.Get("voice_connector_id").(string)
@@ -53,10 +53,10 @@ func resourceAwsChimeVoiceConnectorLoggingCreate(ctx context.Context, d *schema.
 	}
 
 	d.SetId(vcId)
-	return resourceAwsChimeVoiceConnectorLoggingRead(ctx, d, meta)
+	return resourceVoiceConnectorLoggingRead(ctx, d, meta)
 }
 
-func resourceAwsChimeVoiceConnectorLoggingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceConnectorLoggingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ChimeConn
 
 	input := &chime.GetVoiceConnectorLoggingConfigurationInput{
@@ -80,7 +80,7 @@ func resourceAwsChimeVoiceConnectorLoggingRead(ctx context.Context, d *schema.Re
 	return nil
 }
 
-func resourceAwsChimeVoiceConnectorLoggingUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceConnectorLoggingUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ChimeConn
 
 	if d.HasChange("enable_sip_logs") {
@@ -101,10 +101,10 @@ func resourceAwsChimeVoiceConnectorLoggingUpdate(ctx context.Context, d *schema.
 		}
 	}
 
-	return resourceAwsChimeVoiceConnectorLoggingRead(ctx, d, meta)
+	return resourceVoiceConnectorLoggingRead(ctx, d, meta)
 }
 
-func resourceAwsChimeVoiceConnectorLoggingDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceConnectorLoggingDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ChimeConn
 
 	input := &chime.PutVoiceConnectorLoggingConfigurationInput{

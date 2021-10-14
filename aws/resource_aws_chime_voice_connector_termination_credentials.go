@@ -12,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsChimeVoiceConnectorTerminationCredentials() *schema.Resource {
+func ResourceVoiceConnectorTerminationCredentials() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceAwsChimeVoiceConnectorTerminationCredentialsCreate,
-		ReadWithoutTimeout:   resourceAwsChimeVoiceConnectorTerminationCredentialsRead,
-		UpdateWithoutTimeout: resourceAwsChimeVoiceConnectorTerminationCredentialsUpdate,
-		DeleteWithoutTimeout: resourceAwsChimeVoiceConnectorTerminationCredentialsDelete,
+		CreateWithoutTimeout: resourceVoiceConnectorTerminationCredentialsCreate,
+		ReadWithoutTimeout:   resourceVoiceConnectorTerminationCredentialsRead,
+		UpdateWithoutTimeout: resourceVoiceConnectorTerminationCredentialsUpdate,
+		DeleteWithoutTimeout: resourceVoiceConnectorTerminationCredentialsDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -54,7 +54,7 @@ func resourceAwsChimeVoiceConnectorTerminationCredentials() *schema.Resource {
 	}
 }
 
-func resourceAwsChimeVoiceConnectorTerminationCredentialsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceConnectorTerminationCredentialsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ChimeConn
 
 	vcId := d.Get("voice_connector_id").(string)
@@ -71,10 +71,10 @@ func resourceAwsChimeVoiceConnectorTerminationCredentialsCreate(ctx context.Cont
 
 	d.SetId(vcId)
 
-	return resourceAwsChimeVoiceConnectorTerminationCredentialsRead(ctx, d, meta)
+	return resourceVoiceConnectorTerminationCredentialsRead(ctx, d, meta)
 }
 
-func resourceAwsChimeVoiceConnectorTerminationCredentialsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceConnectorTerminationCredentialsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ChimeConn
 
 	input := &chime.ListVoiceConnectorTerminationCredentialsInput{
@@ -97,7 +97,7 @@ func resourceAwsChimeVoiceConnectorTerminationCredentialsRead(ctx context.Contex
 	return nil
 }
 
-func resourceAwsChimeVoiceConnectorTerminationCredentialsUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceConnectorTerminationCredentialsUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ChimeConn
 
 	if d.HasChanges("credentials") {
@@ -113,10 +113,10 @@ func resourceAwsChimeVoiceConnectorTerminationCredentialsUpdate(ctx context.Cont
 		}
 	}
 
-	return resourceAwsChimeVoiceConnectorTerminationCredentialsRead(ctx, d, meta)
+	return resourceVoiceConnectorTerminationCredentialsRead(ctx, d, meta)
 }
 
-func resourceAwsChimeVoiceConnectorTerminationCredentialsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceConnectorTerminationCredentialsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ChimeConn
 
 	input := &chime.DeleteVoiceConnectorTerminationCredentialsInput{
