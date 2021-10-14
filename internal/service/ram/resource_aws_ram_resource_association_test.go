@@ -1,4 +1,4 @@
-package aws
+package ram_test
 
 import (
 	"fmt"

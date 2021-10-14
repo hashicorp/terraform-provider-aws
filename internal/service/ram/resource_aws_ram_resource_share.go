@@ -1,4 +1,4 @@
-package aws
+package ram
 
 import (
 	"fmt"
@@ -8,27 +8,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ram"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ram/waiter"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfram "github.com/hashicorp/terraform-provider-aws/internal/service/ram"
-	tfram "github.com/hashicorp/terraform-provider-aws/internal/service/ram"
-	tfram "github.com/hashicorp/terraform-provider-aws/internal/service/ram"
-	tfram "github.com/hashicorp/terraform-provider-aws/internal/service/ram"
-	tfram "github.com/hashicorp/terraform-provider-aws/internal/service/ram"
-	tfram "github.com/hashicorp/terraform-provider-aws/internal/service/ram"
-	tfram "github.com/hashicorp/terraform-provider-aws/internal/service/ram"
-	tfram "github.com/hashicorp/terraform-provider-aws/internal/service/ram"
-	tfram "github.com/hashicorp/terraform-provider-aws/internal/service/ram"
-	tfram "github.com/hashicorp/terraform-provider-aws/internal/service/ram"
-	tfram "github.com/hashicorp/terraform-provider-aws/internal/service/ram"
-	tfram "github.com/hashicorp/terraform-provider-aws/internal/service/ram"
-	tfram "github.com/hashicorp/terraform-provider-aws/internal/service/ram"
-	tfram "github.com/hashicorp/terraform-provider-aws/internal/service/ram"
-	tfram "github.com/hashicorp/terraform-provider-aws/internal/service/ram"
-	tfram "github.com/hashicorp/terraform-provider-aws/internal/service/ram"
 )
 
 func ResourceResourceShare() *schema.Resource {
@@ -94,7 +77,7 @@ func resourceResourceShareCreate(d *schema.ResourceData, meta interface{}) error
 
 	d.SetId(aws.StringValue(createResp.ResourceShare.ResourceShareArn))
 
-	_, err = tfram.WaitResourceShareOwnedBySelfActive(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
+	_, err = WaitResourceShareOwnedBySelfActive(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 	if err != nil {
 		return fmt.Errorf("Error waiting for RAM resource share (%s) to become ready: %s", d.Id(), err)
 	}
@@ -203,7 +186,7 @@ func resourceResourceShareDelete(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("Error deleting RAM resource share %s: %s", d.Id(), err)
 	}
 
-	_, err = tfram.WaitResourceShareOwnedBySelfDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
+	_, err = WaitResourceShareOwnedBySelfDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
 
 	if err != nil {
 		return fmt.Errorf("Error waiting for RAM resource share (%s) to become ready: %s", d.Id(), err)
