@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kinesisanalyticsv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ListApplicationsPages(conn *kinesisanalyticsv2.KinesisAnalyticsV2, input *kinesisanalyticsv2.ListApplicationsInput, fn func(*kinesisanalyticsv2.ListApplicationsOutput, bool) bool) error {

@@ -3,6 +3,7 @@ package kinesisanalyticsv2
 import (
 	"fmt"
 	"strings"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const applicationSnapshotIDSeparator = "/"
