@@ -18,60 +18,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_codeartifact_repository", &resource.Sweeper{
-		Name: "aws_codeartifact_repository",
-		F:    sweepRepositories,
-	})
-}
 
-func sweepRepositories(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-	conn := client.(*conns.AWSClient).CodeArtifactConn
-	input := &codeartifact.ListRepositoriesInput{}
-	var sweeperErrs *multierror.Error
 
-	err = conn.ListRepositoriesPages(input, func(page *codeartifact.ListRepositoriesOutput, lastPage bool) bool {
-		for _, repositoryPtr := range page.Repositories {
-			if repositoryPtr == nil {
-				continue
-			}
 
-			repository := aws.StringValue(repositoryPtr.Name)
-			input := &codeartifact.DeleteRepositoryInput{
-				Repository:  repositoryPtr.Name,
-				Domain:      repositoryPtr.DomainName,
-				DomainOwner: repositoryPtr.DomainOwner,
-			}
-
-			log.Printf("[INFO] Deleting CodeArtifact Repository: %s", repository)
-
-			_, err := conn.DeleteRepository(input)
-
-			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting CodeArtifact Repository (%s): %w", repository, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-			}
-		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping CodeArtifact Repository sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing CodeArtifact Repositories: %w", err)
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func TestAccCodeArtifactRepository_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
