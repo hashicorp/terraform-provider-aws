@@ -84,7 +84,7 @@ func sweepConnections(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func TestAccAwsAppRunnerConnection_basic(t *testing.T) {
+func TestAccAppRunnerConnection_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_apprunner_connection.test"
 
@@ -114,7 +114,7 @@ func TestAccAwsAppRunnerConnection_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsAppRunnerConnection_disappears(t *testing.T) {
+func TestAccAppRunnerConnection_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_apprunner_connection.test"
 
@@ -136,7 +136,7 @@ func TestAccAwsAppRunnerConnection_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAwsAppRunnerConnection_tags(t *testing.T) {
+func TestAccAppRunnerConnection_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_apprunner_connection.test"
 

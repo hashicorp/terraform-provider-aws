@@ -88,7 +88,7 @@ func sweepAutoScalingConfigurationVersions(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func TestAccAwsAppRunnerAutoScalingConfigurationVersion_basic(t *testing.T) {
+func TestAccAppRunnerAutoScalingConfigurationVersion_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_apprunner_auto_scaling_configuration_version.test"
 
@@ -121,7 +121,7 @@ func TestAccAwsAppRunnerAutoScalingConfigurationVersion_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsAppRunnerAutoScalingConfigurationVersion_complex(t *testing.T) {
+func TestAccAppRunnerAutoScalingConfigurationVersion_complex(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_apprunner_auto_scaling_configuration_version.test"
 
@@ -189,7 +189,7 @@ func TestAccAwsAppRunnerAutoScalingConfigurationVersion_complex(t *testing.T) {
 	})
 }
 
-func TestAccAwsAppRunnerAutoScalingConfigurationVersion_MultipleVersions(t *testing.T) {
+func TestAccAppRunnerAutoScalingConfigurationVersion_multipleVersions(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_apprunner_auto_scaling_configuration_version.test"
 	otherResourceName := "aws_apprunner_auto_scaling_configuration_version.other"
@@ -247,7 +247,7 @@ func TestAccAwsAppRunnerAutoScalingConfigurationVersion_MultipleVersions(t *test
 	})
 }
 
-func TestAccAwsAppRunnerAutoScalingConfigurationVersion_UpdateMultipleVersions(t *testing.T) {
+func TestAccAppRunnerAutoScalingConfigurationVersion_updateMultipleVersions(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_apprunner_auto_scaling_configuration_version.test"
 	otherResourceName := "aws_apprunner_auto_scaling_configuration_version.other"
@@ -302,7 +302,7 @@ func TestAccAwsAppRunnerAutoScalingConfigurationVersion_UpdateMultipleVersions(t
 	})
 }
 
-func TestAccAwsAppRunnerAutoScalingConfigurationVersion_disappears(t *testing.T) {
+func TestAccAppRunnerAutoScalingConfigurationVersion_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_apprunner_auto_scaling_configuration_version.test"
 
@@ -324,7 +324,7 @@ func TestAccAwsAppRunnerAutoScalingConfigurationVersion_disappears(t *testing.T)
 	})
 }
 
-func TestAccAwsAppRunnerAutoScalingConfigurationVersion_tags(t *testing.T) {
+func TestAccAppRunnerAutoScalingConfigurationVersion_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_apprunner_auto_scaling_configuration_version.test"
 
