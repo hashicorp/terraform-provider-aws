@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfdatapipeline "github.com/hashicorp/terraform-provider-aws/internal/service/datapipeline"
 )
 
 func TestAccAWSDataPipelinePipeline_basic(t *testing.T) {
@@ -168,7 +169,7 @@ func testAccCheckAWSDataPipelinePipelineDisappears(conf *datapipeline.PipelineDe
 		if err != nil {
 			return err
 		}
-		return waitForDataPipelineDeletion(conn, *conf.PipelineId)
+		return tfdatapipeline.WaitForDeletion(conn, *conf.PipelineId)
 	}
 }
 
@@ -180,7 +181,7 @@ func testAccCheckAWSDataPipelinePipelineDestroy(s *terraform.State) error {
 			continue
 		}
 		// Try to find the Pipeline
-		pipelineDescription, err := resourceAwsDataPipelinePipelineRetrieve(rs.Primary.ID, conn)
+		pipelineDescription, err := tfdatapipeline.PipelineRetrieve(rs.Primary.ID, conn)
 		if tfawserr.ErrMessageContains(err, datapipeline.ErrCodePipelineNotFoundException, "") {
 			continue
 		} else if tfawserr.ErrMessageContains(err, datapipeline.ErrCodePipelineDeletedException, "") {
@@ -211,7 +212,7 @@ func testAccCheckAWSDataPipelinePipelineExists(n string, v *datapipeline.Pipelin
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DataPipelineConn
 
-		pipelineDescription, err := resourceAwsDataPipelinePipelineRetrieve(rs.Primary.ID, conn)
+		pipelineDescription, err := tfdatapipeline.PipelineRetrieve(rs.Primary.ID, conn)
 
 		if err != nil {
 			return err
