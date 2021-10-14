@@ -8,19 +8,20 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codestarconnections"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSCodeStarConnectionsConnection_Basic(t *testing.T) {
 	var v codestarconnections.Connection
 	resourceName := "aws_codestarconnections_connection.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(codestarconnections.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, codestarconnections.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codestarconnections.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeStarConnectionsConnectionDestroy,
 		Steps: []resource.TestStep{
@@ -28,8 +29,8 @@ func TestAccAWSCodeStarConnectionsConnection_Basic(t *testing.T) {
 				Config: testAccAWSCodeStarConnectionsConnectionConfigBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCodeStarConnectionsConnectionExists(resourceName, &v),
-					testAccMatchResourceAttrRegionalARN(resourceName, "id", "codestar-connections", regexp.MustCompile("connection/.+")),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "codestar-connections", regexp.MustCompile("connection/.+")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "id", "codestar-connections", regexp.MustCompile("connection/.+")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codestar-connections", regexp.MustCompile("connection/.+")),
 					resource.TestCheckResourceAttr(resourceName, "provider_type", codestarconnections.ProviderTypeBitbucket),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "connection_status", codestarconnections.ConnectionStatusPending),
@@ -47,11 +48,11 @@ func TestAccAWSCodeStarConnectionsConnection_Basic(t *testing.T) {
 func TestAccAWSCodeStarConnectionsConnection_HostArn(t *testing.T) {
 	var v codestarconnections.Connection
 	resourceName := "aws_codestarconnections_connection.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(codestarconnections.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, codestarconnections.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codestarconnections.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeStarConnectionsConnectionDestroy,
 		Steps: []resource.TestStep{
@@ -59,9 +60,9 @@ func TestAccAWSCodeStarConnectionsConnection_HostArn(t *testing.T) {
 				Config: testAccAWSCodeStarConnectionsConnectionConfigHostArn(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCodeStarConnectionsConnectionExists(resourceName, &v),
-					testAccMatchResourceAttrRegionalARN(resourceName, "id", "codestar-connections", regexp.MustCompile("connection/.+")),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "codestar-connections", regexp.MustCompile("connection/.+")),
-					testAccMatchResourceAttrRegionalARN(resourceName, "host_arn", "codestar-connections", regexp.MustCompile("host/.+")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "id", "codestar-connections", regexp.MustCompile("connection/.+")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codestar-connections", regexp.MustCompile("connection/.+")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "host_arn", "codestar-connections", regexp.MustCompile("host/.+")),
 					resource.TestCheckResourceAttr(resourceName, "provider_type", codestarconnections.ProviderTypeGitHubEnterpriseServer),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "connection_status", codestarconnections.ConnectionStatusPending),
@@ -79,11 +80,11 @@ func TestAccAWSCodeStarConnectionsConnection_HostArn(t *testing.T) {
 func TestAccAWSCodeStarConnectionsConnection_disappears(t *testing.T) {
 	var v codestarconnections.Connection
 	resourceName := "aws_codestarconnections_connection.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(codestarconnections.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, codestarconnections.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codestarconnections.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeStarConnectionsConnectionDestroy,
 		Steps: []resource.TestStep{
@@ -91,7 +92,7 @@ func TestAccAWSCodeStarConnectionsConnection_disappears(t *testing.T) {
 				Config: testAccAWSCodeStarConnectionsConnectionConfigBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCodeStarConnectionsConnectionExists(resourceName, &v),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsCodeStarConnectionsConnection(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsCodeStarConnectionsConnection(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -102,11 +103,11 @@ func TestAccAWSCodeStarConnectionsConnection_disappears(t *testing.T) {
 func TestAccAWSCodeStarConnectionsConnection_Tags(t *testing.T) {
 	var v codestarconnections.Connection
 	resourceName := "aws_codestarconnections_connection.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(codestarconnections.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, codestarconnections.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codestarconnections.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeStarConnectionsConnectionDestroy,
 		Steps: []resource.TestStep{

@@ -5,18 +5,19 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/codestarconnections"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccDataSourceAwsCodeStarConnectionsConnection_basic(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_codestarconnections_connection.test"
 	resourceName := "aws_codestarconnections_connection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(codestarconnections.EndpointsID, t) },
-		ErrorCheck: testAccErrorCheck(t, codestarconnections.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t) },
+		ErrorCheck: acctest.ErrorCheck(t, codestarconnections.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -35,13 +36,13 @@ func TestAccDataSourceAwsCodeStarConnectionsConnection_basic(t *testing.T) {
 }
 
 func TestAccDataSourceAwsCodeStarConnectionsConnection_tags(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_codestarconnections_connection.test"
 	resourceName := "aws_codestarconnections_connection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(codestarconnections.EndpointsID, t) },
-		ErrorCheck: testAccErrorCheck(t, codestarconnections.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t) },
+		ErrorCheck: acctest.ErrorCheck(t, codestarconnections.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
