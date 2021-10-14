@@ -140,7 +140,7 @@ func testAccCheckAWSSNSTopicPolicyDestroy(s *terraform.State) error {
 		}
 		_, err := conn.GetTopicAttributes(params)
 		if err != nil {
-			if isAWSErr(err, sns.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, sns.ErrCodeNotFoundException, "") {
 				return nil
 			}
 			return err

@@ -44,7 +44,7 @@ func testSweepSnsPlatformApplications(region string) error {
 			_, err := conn.DeletePlatformApplication(&sns.DeletePlatformApplicationInput{
 				PlatformApplicationArn: aws.String(arn),
 			})
-			if isAWSErr(err, sns.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, sns.ErrCodeNotFoundException, "") {
 				continue
 			}
 			if err != nil {
@@ -437,7 +437,7 @@ func testAccCheckAWSSNSPlatformApplicationDestroy(s *terraform.State) error {
 		log.Printf("[DEBUG] Reading SNS Platform Application attributes: %s", input)
 		_, err := conn.GetPlatformApplicationAttributes(input)
 		if err != nil {
-			if isAWSErr(err, sns.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, sns.ErrCodeNotFoundException, "") {
 				return nil
 			}
 			return err

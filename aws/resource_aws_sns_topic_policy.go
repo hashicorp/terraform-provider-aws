@@ -73,7 +73,7 @@ func resourceAwsSnsTopicPolicyRead(d *schema.ResourceData, meta interface{}) err
 		TopicArn: aws.String(d.Id()),
 	})
 	if err != nil {
-		if isAWSErr(err, sns.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, sns.ErrCodeNotFoundException, "") {
 			log.Printf("[WARN] SNS Topic (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil

@@ -498,7 +498,7 @@ func resourceAwsSnsTopicRead(d *schema.ResourceData, meta interface{}) error {
 		TopicArn: aws.String(d.Id()),
 	})
 
-	if isAWSErr(err, sns.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, sns.ErrCodeNotFoundException, "") {
 		log.Printf("[WARN] SNS Topic (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -635,7 +635,7 @@ func resourceAwsSnsTopicDelete(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err != nil {
-		if isAWSErr(err, sns.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, sns.ErrCodeNotFoundException, "") {
 			return nil
 		}
 		return fmt.Errorf("error deleting SNS Topic (%s): %w", d.Id(), err)
