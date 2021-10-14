@@ -3,9 +3,10 @@ package ssm_test
 import (
 	"context"
 	"fmt"
-	tfssm "github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
 	"reflect"
 	"testing"
+
+	tfssm "github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
 )
 
 func testResourceAwsSsmPatchGroupStateDataV0() map[string]interface{} {
