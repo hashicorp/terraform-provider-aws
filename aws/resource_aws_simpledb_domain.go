@@ -11,11 +11,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSimpleDBDomain() *schema.Resource {
+func ResourceDomain() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSimpleDBDomainCreate,
-		Read:   resourceAwsSimpleDBDomainRead,
-		Delete: resourceAwsSimpleDBDomainDelete,
+		Create: resourceDomainCreate,
+		Read:   resourceDomainRead,
+		Delete: resourceDomainDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -30,7 +30,7 @@ func resourceAwsSimpleDBDomain() *schema.Resource {
 	}
 }
 
-func resourceAwsSimpleDBDomainCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SimpleDBConn
 
 	name := d.Get("name").(string)
@@ -46,7 +46,7 @@ func resourceAwsSimpleDBDomainCreate(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func resourceAwsSimpleDBDomainRead(d *schema.ResourceData, meta interface{}) error {
+func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SimpleDBConn
 
 	input := &simpledb.DomainMetadataInput{
@@ -68,7 +68,7 @@ func resourceAwsSimpleDBDomainRead(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func resourceAwsSimpleDBDomainDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDomainDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SimpleDBConn
 
 	input := &simpledb.DeleteDomainInput{
