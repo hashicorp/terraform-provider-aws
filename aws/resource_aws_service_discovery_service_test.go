@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
 func init() {
@@ -26,13 +27,13 @@ func init() {
 }
 
 func testSweepServiceDiscoveryServices(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.(*conns.AWSClient).ServiceDiscoveryConn
 	input := &servicediscovery.ListServicesInput{}
-	sweepResources := make([]*testSweepResource, 0)
+	sweepResources := make([]*sweep.SweepResource, 0)
 
 	err = conn.ListServicesPages(input, func(page *servicediscovery.ListServicesOutput, lastPage bool) bool {
 		if page == nil {
@@ -45,13 +46,13 @@ func testSweepServiceDiscoveryServices(region string) error {
 			d.SetId(aws.StringValue(service.Id))
 			d.Set("force_destroy", true)
 
-			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
+	if sweep.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Service Discovery Services sweep for %s: %s", region, err)
 		return nil
 	}
@@ -60,7 +61,7 @@ func testSweepServiceDiscoveryServices(region string) error {
 		return fmt.Errorf("error listing Service Discovery Services (%s): %w", region, err)
 	}
 
-	err = testSweepResourceOrchestrator(sweepResources)
+	err = sweep.SweepOrchestrator(sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Service Discovery Services (%s): %w", region, err)
