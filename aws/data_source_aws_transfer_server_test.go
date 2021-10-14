@@ -17,7 +17,7 @@ func TestAccDataSourceAwsTransferServer_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckAWSTransfer(t) },
 		ErrorCheck: acctest.ErrorCheck(t, transfer.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsTransferServerConfig_basic,
@@ -41,7 +41,7 @@ func TestAccDataSourceAwsTransferServer_service_managed(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckAWSTransfer(t) },
 		ErrorCheck: acctest.ErrorCheck(t, transfer.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsTransferServerConfig_service_managed(rName),
@@ -70,7 +70,7 @@ func TestAccDataSourceAwsTransferServer_apigateway(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckAWSTransfer(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck: acctest.ErrorCheck(t, transfer.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsTransferServerConfig_apigateway(rName),

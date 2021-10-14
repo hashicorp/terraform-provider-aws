@@ -82,12 +82,12 @@ func testAccAWSTransferServer_basic(t *testing.T) {
 	var conf transfer.DescribedServer
 	resourceName := "aws_transfer_server.test"
 	iamRoleResourceName := "aws_iam_role.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSTransfer(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, transfer.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSTransferServerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -152,7 +152,7 @@ func testAccAWSTransferServer_domain(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSTransfer(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, transfer.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSTransferServerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -179,14 +179,14 @@ func testAccAWSTransferServer_disappears(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSTransfer(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, transfer.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSTransferServerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSTransferServerBasicConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSTransferServerExists(resourceName, &conf),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsTransferServer(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsTransferServer(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -201,7 +201,7 @@ func testAccAWSTransferServer_securityPolicy(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSTransfer(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, transfer.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSTransferServerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -234,12 +234,12 @@ func testAccAWSTransferServer_vpc(t *testing.T) {
 	defaultSecurityGroupResourceName := "aws_default_security_group.test"
 	subnetResourceName := "aws_subnet.test"
 	vpcResourceName := "aws_vpc.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSTransfer(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, transfer.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSTransferServerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -303,12 +303,12 @@ func testAccAWSTransferServer_vpcAddressAllocationIds(t *testing.T) {
 	defaultSecurityGroupResourceName := "aws_default_security_group.test"
 	subnetResourceName := "aws_subnet.test"
 	vpcResourceName := "aws_vpc.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSTransfer(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, transfer.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSTransferServerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -373,12 +373,12 @@ func testAccAWSTransferServer_vpcSecurityGroupIds(t *testing.T) {
 	securityGroup1ResourceName := "aws_security_group.test"
 	securityGroup2ResourceName := "aws_security_group.test2"
 	vpcResourceName := "aws_vpc.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSTransfer(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, transfer.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSTransferServerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -428,12 +428,12 @@ func testAccAWSTransferServer_vpcAddressAllocationIds_securityGroupIds(t *testin
 	securityGroup2ResourceName := "aws_security_group.test2"
 	subnetResourceName := "aws_subnet.test"
 	vpcResourceName := "aws_vpc.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSTransfer(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, transfer.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSTransferServerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -481,12 +481,12 @@ func testAccAWSTransferServer_vpcAddressAllocationIds_securityGroupIds(t *testin
 func testAccAWSTransferServer_updateEndpointType_publicToVpc(t *testing.T) {
 	var conf transfer.DescribedServer
 	resourceName := "aws_transfer_server.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSTransfer(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, transfer.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSTransferServerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -518,12 +518,12 @@ func testAccAWSTransferServer_updateEndpointType_publicToVpc(t *testing.T) {
 func testAccAWSTransferServer_updateEndpointType_publicToVpc_addressAllocationIds(t *testing.T) {
 	var conf transfer.DescribedServer
 	resourceName := "aws_transfer_server.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSTransfer(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, transfer.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSTransferServerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -555,12 +555,12 @@ func testAccAWSTransferServer_updateEndpointType_publicToVpc_addressAllocationId
 func testAccAWSTransferServer_updateEndpointType_vpcEndpointToVpc(t *testing.T) {
 	var conf transfer.DescribedServer
 	resourceName := "aws_transfer_server.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSTransfer(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, transfer.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSTransferServerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -592,12 +592,12 @@ func testAccAWSTransferServer_updateEndpointType_vpcEndpointToVpc(t *testing.T) 
 func testAccAWSTransferServer_updateEndpointType_vpcEndpointToVpc_addressAllocationIds(t *testing.T) {
 	var conf transfer.DescribedServer
 	resourceName := "aws_transfer_server.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSTransfer(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, transfer.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSTransferServerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -629,12 +629,12 @@ func testAccAWSTransferServer_updateEndpointType_vpcEndpointToVpc_addressAllocat
 func testAccAWSTransferServer_updateEndpointType_vpcEndpointToVpc_securityGroupIds(t *testing.T) {
 	var conf transfer.DescribedServer
 	resourceName := "aws_transfer_server.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSTransfer(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, transfer.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSTransferServerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -666,12 +666,12 @@ func testAccAWSTransferServer_updateEndpointType_vpcEndpointToVpc_securityGroupI
 func testAccAWSTransferServer_updateEndpointType_vpcToPublic(t *testing.T) {
 	var conf transfer.DescribedServer
 	resourceName := "aws_transfer_server.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSTransfer(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, transfer.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSTransferServerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -706,12 +706,12 @@ func testAccAWSTransferServer_protocols(t *testing.T) {
 	resourceName := "aws_transfer_server.test"
 	acmCAResourceName := "aws_acmpca_certificate_authority.test"
 	acmCertificateResourceName := "aws_acm_certificate.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t); testAccPreCheckAWSTransfer(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, transfer.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSTransferServerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -766,12 +766,12 @@ func testAccAWSTransferServer_protocols(t *testing.T) {
 func testAccAWSTransferServer_apiGateway(t *testing.T) {
 	var conf transfer.DescribedServer
 	resourceName := "aws_transfer_server.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t); testAccPreCheckAWSTransfer(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, transfer.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSTransferServerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -795,12 +795,12 @@ func testAccAWSTransferServer_apiGateway(t *testing.T) {
 func testAccAWSTransferServer_apiGateway_forceDestroy(t *testing.T) {
 	var conf transfer.DescribedServer
 	resourceName := "aws_transfer_server.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t); testAccPreCheckAWSTransfer(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, transfer.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSTransferServerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -824,7 +824,7 @@ func testAccAWSTransferServer_apiGateway_forceDestroy(t *testing.T) {
 func testAccAWSTransferServer_directoryService(t *testing.T) {
 	var conf transfer.DescribedServer
 	resourceName := "aws_transfer_server.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -834,7 +834,7 @@ func testAccAWSTransferServer_directoryService(t *testing.T) {
 			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, transfer.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSTransferServerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -861,9 +861,9 @@ func testAccAWSTransferServer_forceDestroy(t *testing.T) {
 	resourceName := "aws_transfer_server.test"
 	userResourceName := "aws_transfer_user.test"
 	sshKeyResourceName := "aws_transfer_ssh_key.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	publicKey, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
@@ -871,7 +871,7 @@ func testAccAWSTransferServer_forceDestroy(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSTransfer(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, transfer.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSTransferServerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -901,7 +901,7 @@ func testAccAWSTransferServer_hostKey(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, transfer.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSTransferServerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -925,7 +925,7 @@ func testAccAWSTransferServer_vpcEndpointId(t *testing.T) {
 	var conf transfer.DescribedServer
 	resourceName := "aws_transfer_server.test"
 	vpcEndpointResourceName := "aws_vpc_endpoint.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	if acctest.Partition() == "aws-us-gov" {
 		t.Skip("Transfer Server VPC_ENDPOINT endpoint type is not supported in GovCloud partition")
@@ -934,7 +934,7 @@ func testAccAWSTransferServer_vpcEndpointId(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSTransfer(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, transfer.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSTransferServerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -971,7 +971,7 @@ func testAccCheckAWSTransferServerExists(n string, v *transfer.DescribedServer) 
 			return fmt.Errorf("No Transfer Server ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).transferconn
+		conn := acctest.Provider.Meta().(*AWSClient).transferconn
 
 		output, err := finder.ServerByID(conn, rs.Primary.ID)
 
@@ -986,7 +986,7 @@ func testAccCheckAWSTransferServerExists(n string, v *transfer.DescribedServer) 
 }
 
 func testAccCheckAWSTransferServerDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).transferconn
+	conn := acctest.Provider.Meta().(*AWSClient).transferconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_transfer_server" {
@@ -1010,7 +1010,7 @@ func testAccCheckAWSTransferServerDestroy(s *terraform.State) error {
 }
 
 func testAccPreCheckAWSTransfer(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).transferconn
+	conn := acctest.Provider.Meta().(*AWSClient).transferconn
 
 	input := &transfer.ListServersInput{}
 

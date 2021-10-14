@@ -22,7 +22,7 @@ func testAccAWSTransferUser_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSTransfer(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, transfer.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSTransferUserDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -52,7 +52,7 @@ func testAccAWSTransferUser_posix(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSTransfer(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, transfer.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSTransferUserDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -92,7 +92,7 @@ func testAccAWSTransferUser_modifyWithOptions(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSTransfer(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, transfer.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSTransferUserDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -139,7 +139,7 @@ func testAccAWSTransferUser_disappears(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSTransfer(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, transfer.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSTransferUserDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -147,7 +147,7 @@ func testAccAWSTransferUser_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSTransferServerExists("aws_transfer_server.test", &serverConf),
 					testAccCheckAWSTransferUserExists("aws_transfer_user.test", &userConf),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsTransferUser(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsTransferUser(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -159,7 +159,7 @@ func testAccAWSTransferUser_UserName_Validation(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSTransfer(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, transfer.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSTransferUserDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -200,7 +200,7 @@ func testAccAWSTransferUser_homeDirectoryMappings(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSTransfer(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, transfer.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSTransferUserDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -237,7 +237,7 @@ func testAccCheckAWSTransferUserExists(n string, res *transfer.DescribedUser) re
 			return fmt.Errorf("No Transfer User ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).transferconn
+		conn := acctest.Provider.Meta().(*AWSClient).transferconn
 
 		userName := rs.Primary.Attributes["user_name"]
 		serverID := rs.Primary.Attributes["server_id"]
@@ -255,7 +255,7 @@ func testAccCheckAWSTransferUserExists(n string, res *transfer.DescribedUser) re
 }
 
 func testAccCheckAWSTransferUserDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).transferconn
+	conn := acctest.Provider.Meta().(*AWSClient).transferconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_transfer_user" {
