@@ -19,15 +19,15 @@ func TestAccAWSMediaPackageChannel_basic(t *testing.T) {
 	resourceName := "aws_media_package_channel.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSMediaPackage(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, mediapackage.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsMediaPackageChannelDestroy,
+		CheckDestroy: testAccCheckChannelDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMediaPackageChannelConfig(sdkacctest.RandString(5)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsMediaPackageChannelExists(resourceName),
+					testAccCheckChannelExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "mediapackage", regexp.MustCompile(`channels/.+`)),
 					resource.TestMatchResourceAttr(resourceName, "hls_ingest.0.ingest_endpoints.0.password", regexp.MustCompile("^[0-9a-f]*$")),
 					resource.TestMatchResourceAttr(resourceName, "hls_ingest.0.ingest_endpoints.0.url", regexp.MustCompile("^https://")),
@@ -51,15 +51,15 @@ func TestAccAWSMediaPackageChannel_description(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSMediaPackage(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, mediapackage.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsMediaPackageChannelDestroy,
+		CheckDestroy: testAccCheckChannelDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMediaPackageChannelConfigDescription(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsMediaPackageChannelExists(resourceName),
+					testAccCheckChannelExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
 				),
 			},
@@ -71,7 +71,7 @@ func TestAccAWSMediaPackageChannel_description(t *testing.T) {
 			{
 				Config: testAccMediaPackageChannelConfigDescription(rName, "description2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsMediaPackageChannelExists(resourceName),
+					testAccCheckChannelExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
 				),
 			},
@@ -84,15 +84,15 @@ func TestAccAWSMediaPackageChannel_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSMediaPackage(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, mediapackage.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsMediaPackageChannelDestroy,
+		CheckDestroy: testAccCheckChannelDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMediaPackageChannelConfigWithTags(rName, "Environment", "test"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsMediaPackageChannelExists(resourceName),
+					testAccCheckChannelExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "test"),
@@ -106,7 +106,7 @@ func TestAccAWSMediaPackageChannel_tags(t *testing.T) {
 			{
 				Config: testAccMediaPackageChannelConfigWithTags(rName, "Environment", "test1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsMediaPackageChannelExists(resourceName),
+					testAccCheckChannelExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "test1"),
 				),
@@ -114,7 +114,7 @@ func TestAccAWSMediaPackageChannel_tags(t *testing.T) {
 			{
 				Config: testAccMediaPackageChannelConfigWithTags(rName, "Update", "true"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsMediaPackageChannelExists(resourceName),
+					testAccCheckChannelExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Update", "true"),
 				),
@@ -123,7 +123,7 @@ func TestAccAWSMediaPackageChannel_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsMediaPackageChannelDestroy(s *terraform.State) error {
+func testAccCheckChannelDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaPackageConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -148,7 +148,7 @@ func testAccCheckAwsMediaPackageChannelDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAwsMediaPackageChannelExists(name string) resource.TestCheckFunc {
+func testAccCheckChannelExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -167,7 +167,7 @@ func testAccCheckAwsMediaPackageChannelExists(name string) resource.TestCheckFun
 	}
 }
 
-func testAccPreCheckAWSMediaPackage(t *testing.T) {
+func testAccPreCheck(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaPackageConn
 
 	input := &mediapackage.ListChannelsInput{}
