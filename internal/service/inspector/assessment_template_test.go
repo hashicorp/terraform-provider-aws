@@ -24,12 +24,12 @@ func TestAccAWSInspectorTemplate_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, inspector.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSInspectorTemplateDestroy,
+		CheckDestroy: testAccCheckTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSInspectorTemplateAssessmentBasic(rName),
+				Config: testAccTemplateAssessmentBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSInspectorTemplateExists(resourceName, &v),
+					testAccCheckTemplateExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "inspector", regexp.MustCompile(`target/.+/template/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "duration", "3600"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -56,13 +56,13 @@ func TestAccAWSInspectorTemplate_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, inspector.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSInspectorTemplateDestroy,
+		CheckDestroy: testAccCheckTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSInspectorTemplateAssessmentBasic(rName),
+				Config: testAccTemplateAssessmentBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSInspectorTemplateExists(resourceName, &v),
-					testAccCheckAWSInspectorTemplateDisappears(&v),
+					testAccCheckTemplateExists(resourceName, &v),
+					testAccCheckTemplateDisappears(&v),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -79,12 +79,12 @@ func TestAccAWSInspectorTemplate_tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, inspector.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSInspectorTemplateDestroy,
+		CheckDestroy: testAccCheckTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSInspectorTemplateAssessmentTags1(rName, "key1", "value1"),
+				Config: testAccTemplateAssessmentTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSInspectorTemplateExists(resourceName, &v),
+					testAccCheckTemplateExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -95,26 +95,26 @@ func TestAccAWSInspectorTemplate_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSInspectorTemplateAssessmentTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccTemplateAssessmentTags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSInspectorTemplateExists(resourceName, &v),
+					testAccCheckTemplateExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccAWSInspectorTemplateAssessmentTags1(rName, "key2", "value2"),
+				Config: testAccTemplateAssessmentTags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSInspectorTemplateExists(resourceName, &v),
+					testAccCheckTemplateExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccAWSInspectorTemplateAssessmentBasic(rName),
+				Config: testAccTemplateAssessmentBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSInspectorTemplateExists(resourceName, &v),
+					testAccCheckTemplateExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -122,7 +122,7 @@ func TestAccAWSInspectorTemplate_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSInspectorTemplateDestroy(s *terraform.State) error {
+func testAccCheckTemplateDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -152,7 +152,7 @@ func testAccCheckAWSInspectorTemplateDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSInspectorTemplateDisappears(v *inspector.AssessmentTemplate) resource.TestCheckFunc {
+func testAccCheckTemplateDisappears(v *inspector.AssessmentTemplate) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorConn
 
@@ -167,7 +167,7 @@ func testAccCheckAWSInspectorTemplateDisappears(v *inspector.AssessmentTemplate)
 	}
 }
 
-func testAccCheckAWSInspectorTemplateExists(name string, v *inspector.AssessmentTemplate) resource.TestCheckFunc {
+func testAccCheckTemplateExists(name string, v *inspector.AssessmentTemplate) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -197,7 +197,7 @@ func testAccCheckAWSInspectorTemplateExists(name string, v *inspector.Assessment
 	}
 }
 
-func testAccAWSInspectorTemplateAssessmentBase(rName string) string {
+func testAccTemplateAssessmentBase(rName string) string {
 	return fmt.Sprintf(`
 data "aws_inspector_rules_packages" "available" {}
 
@@ -214,8 +214,8 @@ resource "aws_inspector_assessment_target" "test" {
 `, rName)
 }
 
-func testAccAWSInspectorTemplateAssessmentBasic(rName string) string {
-	return testAccAWSInspectorTemplateAssessmentBase(rName) + fmt.Sprintf(`
+func testAccTemplateAssessmentBasic(rName string) string {
+	return testAccTemplateAssessmentBase(rName) + fmt.Sprintf(`
 resource "aws_inspector_assessment_template" "test" {
   name       = %[1]q
   target_arn = aws_inspector_assessment_target.test.arn
@@ -226,8 +226,8 @@ resource "aws_inspector_assessment_template" "test" {
 `, rName)
 }
 
-func testAccAWSInspectorTemplateAssessmentTags1(rName, tagKey1, tagValue1 string) string {
-	return testAccAWSInspectorTemplateAssessmentBase(rName) + fmt.Sprintf(`
+func testAccTemplateAssessmentTags1(rName, tagKey1, tagValue1 string) string {
+	return testAccTemplateAssessmentBase(rName) + fmt.Sprintf(`
 resource "aws_inspector_assessment_template" "test" {
   name       = %[1]q
   target_arn = aws_inspector_assessment_target.test.arn
@@ -242,8 +242,8 @@ resource "aws_inspector_assessment_template" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccAWSInspectorTemplateAssessmentTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return testAccAWSInspectorTemplateAssessmentBase(rName) + fmt.Sprintf(`
+func testAccTemplateAssessmentTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return testAccTemplateAssessmentBase(rName) + fmt.Sprintf(`
 resource "aws_inspector_assessment_template" "test" {
   name       = %[1]q
   target_arn = aws_inspector_assessment_target.test.arn

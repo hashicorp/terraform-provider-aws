@@ -23,12 +23,12 @@ func TestAccAWSInspectorTarget_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, inspector.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSInspectorTargetAssessmentDestroy,
+		CheckDestroy: testAccCheckTargetAssessmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSInspectorTargetAssessmentConfig(rName),
+				Config: testAccTargetAssessmentConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSInspectorTargetExists(resourceName, &assessmentTarget1),
+					testAccCheckTargetExists(resourceName, &assessmentTarget1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "inspector", regexp.MustCompile(`target/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "resource_group_arn", ""),
@@ -52,13 +52,13 @@ func TestAccAWSInspectorTarget_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, inspector.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSInspectorTargetAssessmentDestroy,
+		CheckDestroy: testAccCheckTargetAssessmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSInspectorTargetAssessmentConfig(rName),
+				Config: testAccTargetAssessmentConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSInspectorTargetExists(resourceName, &assessmentTarget1),
-					testAccCheckAWSInspectorTargetDisappears(&assessmentTarget1),
+					testAccCheckTargetExists(resourceName, &assessmentTarget1),
+					testAccCheckTargetDisappears(&assessmentTarget1),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -76,12 +76,12 @@ func TestAccAWSInspectorTarget_Name(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, inspector.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSInspectorTargetAssessmentDestroy,
+		CheckDestroy: testAccCheckTargetAssessmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSInspectorTargetAssessmentConfig(rName1),
+				Config: testAccTargetAssessmentConfig(rName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSInspectorTargetExists(resourceName, &assessmentTarget1),
+					testAccCheckTargetExists(resourceName, &assessmentTarget1),
 					resource.TestCheckResourceAttr(resourceName, "name", rName1),
 				),
 			},
@@ -91,9 +91,9 @@ func TestAccAWSInspectorTarget_Name(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSInspectorTargetAssessmentConfig(rName2),
+				Config: testAccTargetAssessmentConfig(rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSInspectorTargetExists(resourceName, &assessmentTarget2),
+					testAccCheckTargetExists(resourceName, &assessmentTarget2),
 					resource.TestCheckResourceAttr(resourceName, "name", rName2),
 				),
 			},
@@ -112,12 +112,12 @@ func TestAccAWSInspectorTarget_ResourceGroupArn(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, inspector.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSInspectorTargetAssessmentDestroy,
+		CheckDestroy: testAccCheckTargetAssessmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSInspectorTargetAssessmentConfigResourceGroupArn(rName, inspectorResourceGroupResourceName1),
+				Config: testAccTargetAssessmentResourceGroupARNConfig(rName, inspectorResourceGroupResourceName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSInspectorTargetExists(resourceName, &assessmentTarget1),
+					testAccCheckTargetExists(resourceName, &assessmentTarget1),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_group_arn", inspectorResourceGroupResourceName1, "arn"),
 				),
 			},
@@ -127,23 +127,23 @@ func TestAccAWSInspectorTarget_ResourceGroupArn(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSInspectorTargetAssessmentConfigResourceGroupArn(rName, inspectorResourceGroupResourceName2),
+				Config: testAccTargetAssessmentResourceGroupARNConfig(rName, inspectorResourceGroupResourceName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSInspectorTargetExists(resourceName, &assessmentTarget2),
+					testAccCheckTargetExists(resourceName, &assessmentTarget2),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_group_arn", inspectorResourceGroupResourceName2, "arn"),
 				),
 			},
 			{
-				Config: testAccAWSInspectorTargetAssessmentConfig(rName),
+				Config: testAccTargetAssessmentConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSInspectorTargetExists(resourceName, &assessmentTarget3),
+					testAccCheckTargetExists(resourceName, &assessmentTarget3),
 					resource.TestCheckResourceAttr(resourceName, "resource_group_arn", ""),
 				),
 			},
 			{
-				Config: testAccAWSInspectorTargetAssessmentConfigResourceGroupArn(rName, inspectorResourceGroupResourceName1),
+				Config: testAccTargetAssessmentResourceGroupARNConfig(rName, inspectorResourceGroupResourceName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSInspectorTargetExists(resourceName, &assessmentTarget4),
+					testAccCheckTargetExists(resourceName, &assessmentTarget4),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_group_arn", inspectorResourceGroupResourceName1, "arn"),
 				),
 			},
@@ -151,7 +151,7 @@ func TestAccAWSInspectorTarget_ResourceGroupArn(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSInspectorTargetAssessmentDestroy(s *terraform.State) error {
+func testAccCheckTargetAssessmentDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -173,7 +173,7 @@ func testAccCheckAWSInspectorTargetAssessmentDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSInspectorTargetExists(name string, target *inspector.AssessmentTarget) resource.TestCheckFunc {
+func testAccCheckTargetExists(name string, target *inspector.AssessmentTarget) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -198,7 +198,7 @@ func testAccCheckAWSInspectorTargetExists(name string, target *inspector.Assessm
 	}
 }
 
-func testAccCheckAWSInspectorTargetDisappears(assessmentTarget *inspector.AssessmentTarget) resource.TestCheckFunc {
+func testAccCheckTargetDisappears(assessmentTarget *inspector.AssessmentTarget) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorConn
 
@@ -212,7 +212,7 @@ func testAccCheckAWSInspectorTargetDisappears(assessmentTarget *inspector.Assess
 	}
 }
 
-func testAccAWSInspectorTargetAssessmentConfig(rName string) string {
+func testAccTargetAssessmentConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_inspector_assessment_target" "test" {
   name = %q
@@ -220,7 +220,7 @@ resource "aws_inspector_assessment_target" "test" {
 `, rName)
 }
 
-func testAccAWSInspectorTargetAssessmentConfigResourceGroupArn(rName, inspectorResourceGroupResourceName string) string {
+func testAccTargetAssessmentResourceGroupARNConfig(rName, inspectorResourceGroupResourceName string) string {
 	return fmt.Sprintf(`
 resource "aws_inspector_resource_group" "test1" {
   tags = {

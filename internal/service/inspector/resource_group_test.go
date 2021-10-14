@@ -24,27 +24,27 @@ func TestAccAWSInspectorResourceGroup_basic(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSInspectorResourceGroup,
+				Config: testAccResourceGroup,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSInspectorResourceGroupExists(resourceName, &v1),
+					testAccCheckResourceGroupExists(resourceName, &v1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "inspector", regexp.MustCompile(`resourcegroup/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "foo"),
 				),
 			},
 			{
-				Config: testAccCheckAWSInspectorResourceGroupModified,
+				Config: testAccCheckResourceGroupModified,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSInspectorResourceGroupExists(resourceName, &v2),
+					testAccCheckResourceGroupExists(resourceName, &v2),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "inspector", regexp.MustCompile(`resourcegroup/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "bar"),
-					testAccCheckAWSInspectorResourceGroupRecreated(&v1, &v2),
+					testAccCheckResourceGroupRecreated(&v1, &v2),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckAWSInspectorResourceGroupExists(name string, rg *inspector.ResourceGroup) resource.TestCheckFunc {
+func testAccCheckResourceGroupExists(name string, rg *inspector.ResourceGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorConn
 
@@ -72,7 +72,7 @@ func testAccCheckAWSInspectorResourceGroupExists(name string, rg *inspector.Reso
 	}
 }
 
-func testAccCheckAWSInspectorResourceGroupRecreated(v1, v2 *inspector.ResourceGroup) resource.TestCheckFunc {
+func testAccCheckResourceGroupRecreated(v1, v2 *inspector.ResourceGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if v2.CreatedAt.Equal(*v1.CreatedAt) {
 			return fmt.Errorf("Inspector resource group not recreated when changing tags")
@@ -82,7 +82,7 @@ func testAccCheckAWSInspectorResourceGroupRecreated(v1, v2 *inspector.ResourceGr
 	}
 }
 
-var testAccAWSInspectorResourceGroup = `
+var testAccResourceGroup = `
 resource "aws_inspector_resource_group" "test" {
   tags = {
     Name = "foo"
@@ -90,7 +90,7 @@ resource "aws_inspector_resource_group" "test" {
 }
 `
 
-var testAccCheckAWSInspectorResourceGroupModified = `
+var testAccCheckResourceGroupModified = `
 resource "aws_inspector_resource_group" "test" {
   tags = {
     Name = "bar"
