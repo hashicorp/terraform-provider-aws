@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsGlacierVaultLock() *schema.Resource {
@@ -52,7 +53,7 @@ func resourceAwsGlacierVaultLock() *schema.Resource {
 }
 
 func resourceAwsGlacierVaultLockCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glacierconn
+	conn := meta.(*conns.AWSClient).GlacierConn
 	vaultName := d.Get("vault_name").(string)
 
 	input := &glacier.InitiateVaultLockInput{
@@ -93,7 +94,7 @@ func resourceAwsGlacierVaultLockCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsGlacierVaultLockRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glacierconn
+	conn := meta.(*conns.AWSClient).GlacierConn
 
 	input := &glacier.GetVaultLockInput{
 		AccountId: aws.String("-"),
@@ -127,7 +128,7 @@ func resourceAwsGlacierVaultLockRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsGlacierVaultLockDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glacierconn
+	conn := meta.(*conns.AWSClient).GlacierConn
 
 	input := &glacier.AbortVaultLockInput{
 		VaultName: aws.String(d.Id()),
