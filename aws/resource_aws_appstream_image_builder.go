@@ -355,10 +355,10 @@ func expandAppStreamImageBuilderVpcConfig(tfList []interface{}) *appstream.VpcCo
 	apiObject := &appstream.VpcConfig{}
 
 	if v, ok := tfMap["security_group_ids"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.SecurityGroupIds = expandStringSet(v)
+		apiObject.SecurityGroupIds = flex.ExpandStringSet(v)
 	}
 	if v, ok := tfMap["subnet_ids"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.SubnetIds = expandStringSet(v)
+		apiObject.SubnetIds = flex.ExpandStringSet(v)
 	}
 
 	return apiObject

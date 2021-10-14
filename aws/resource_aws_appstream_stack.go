@@ -210,7 +210,7 @@ func resourceAwsAppStreamStackCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	if v, ok := d.GetOk("embed_host_domains"); ok {
-		input.EmbedHostDomains = expandStringList(v.([]interface{}))
+		input.EmbedHostDomains = flex.ExpandStringList(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("feedback_url"); ok {
@@ -289,7 +289,7 @@ func resourceAwsAppStreamStackRead(ctx context.Context, d *schema.ResourceData, 
 		d.Set("created_time", aws.TimeValue(v.CreatedTime).Format(time.RFC3339))
 		d.Set("description", v.Description)
 		d.Set("display_name", v.DisplayName)
-		if err = d.Set("embed_host_domains", flattenStringList(v.EmbedHostDomains)); err != nil {
+		if err = d.Set("embed_host_domains", flex.FlattenStringList(v.EmbedHostDomains)); err != nil {
 			return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream Stack (%s): %w", "user_settings", d.Id(), err))
 		}
 		d.Set("feedback_url", v.FeedbackURL)
@@ -540,7 +540,7 @@ func expandStorageConnector(tfMap map[string]interface{}) *appstream.StorageConn
 		ConnectorType: aws.String(tfMap["connector_type"].(string)),
 	}
 	if v, ok := tfMap["domains"]; ok && len(v.([]interface{})) > 0 {
-		apiObject.Domains = expandStringList(v.([]interface{}))
+		apiObject.Domains = flex.ExpandStringList(v.([]interface{}))
 	}
 	if v, ok := tfMap["resource_identifier"]; ok && v.(string) != "" {
 		apiObject.ResourceIdentifier = aws.String(v.(string))

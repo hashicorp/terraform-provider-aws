@@ -574,10 +574,10 @@ func expandVpcConfig(tfList []interface{}) *appstream.VpcConfig {
 
 	tfMap := tfList[0].(map[string]interface{})
 	if v, ok := tfMap["security_group_ids"]; ok {
-		apiObject.SecurityGroupIds = expandStringList(v.([]interface{}))
+		apiObject.SecurityGroupIds = flex.ExpandStringList(v.([]interface{}))
 	}
 	if v, ok := tfMap["subnet_ids"]; ok {
-		apiObject.SubnetIds = expandStringList(v.([]interface{}))
+		apiObject.SubnetIds = flex.ExpandStringList(v.([]interface{}))
 	}
 
 	return apiObject
