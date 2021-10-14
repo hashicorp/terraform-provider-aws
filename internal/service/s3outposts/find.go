@@ -3,7 +3,6 @@ package s3outposts
 import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3outposts"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // FindEndpoint returns matching FindEndpoint by ARN.
