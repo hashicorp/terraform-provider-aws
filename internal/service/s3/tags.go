@@ -1,7 +1,7 @@
 //go:build !generate
 // +build !generate
 
-package keyvaluetags
+package s3
 
 import (
 	"fmt"
@@ -12,15 +12,19 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	tfs3 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/s3"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+)
+
+const (
+	ErrCodeNoSuchTagSet = "NoSuchTagSet"
 )
 
 // Custom S3 tag service update functions using the same format as generated code.
 
-// S3BucketListTags lists S3 bucket tags.
+// bucketListTags lists S3 bucket tags.
 // The identifier is the bucket name.
-func S3BucketListTags(conn *s3.S3, identifier string) (KeyValueTags, error) {
+func bucketListTags(conn *s3.S3, identifier string) (tftags.KeyValueTags, error) {
 	input := &s3.GetBucketTaggingInput{
 		Bucket: aws.String(identifier),
 	}
@@ -30,25 +34,25 @@ func S3BucketListTags(conn *s3.S3, identifier string) (KeyValueTags, error) {
 	// S3 API Reference (https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketTagging.html)
 	// lists the special error as NoSuchTagSetError, however the existing logic used NoSuchTagSet
 	// and the AWS Go SDK has neither as a constant.
-	if tfawserr.ErrCodeEquals(err, tfs3.ErrCodeNoSuchTagSet) {
-		return New(nil), nil
+	if tfawserr.ErrCodeEquals(err, ErrCodeNoSuchTagSet) {
+		return tftags.New(nil), nil
 	}
 
 	if err != nil {
-		return New(nil), err
+		return tftags.New(nil), err
 	}
 
 	return S3KeyValueTags(output.TagSet), nil
 }
 
-// S3BucketUpdateTags updates S3 bucket tags.
+// bucketUpdateTags updates S3 bucket tags.
 // The identifier is the bucket name.
-func S3BucketUpdateTags(conn *s3.S3, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
-	oldTags := New(oldTagsMap)
-	newTags := New(newTagsMap)
+func bucketUpdateTags(conn *s3.S3, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := tftags.New(oldTagsMap)
+	newTags := tftags.New(newTagsMap)
 
 	// We need to also consider any existing ignored tags.
-	allTags, err := S3BucketListTags(conn, identifier)
+	allTags, err := bucketListTags(conn, identifier)
 
 	if err != nil {
 		return fmt.Errorf("error listing resource tags (%s): %w", identifier, err)
@@ -84,8 +88,8 @@ func S3BucketUpdateTags(conn *s3.S3, identifier string, oldTagsMap interface{}, 
 	return nil
 }
 
-// S3ObjectListTags lists S3 object tags.
-func S3ObjectListTags(conn *s3.S3, bucket, key string) (KeyValueTags, error) {
+// objectListTags lists S3 object tags.
+func objectListTags(conn *s3.S3, bucket, key string) (tftags.KeyValueTags, error) {
 	input := &s3.GetObjectTaggingInput{
 		Bucket: aws.String(bucket),
 		Key:    aws.String(key),
@@ -113,24 +117,24 @@ func S3ObjectListTags(conn *s3.S3, bucket, key string) (KeyValueTags, error) {
 		output, err = conn.GetObjectTagging(input)
 	}
 
-	if tfawserr.ErrCodeEquals(err, tfs3.ErrCodeNoSuchTagSet) {
-		return New(nil), nil
+	if tfawserr.ErrCodeEquals(err, ErrCodeNoSuchTagSet) {
+		return tftags.New(nil), nil
 	}
 
 	if err != nil {
-		return New(nil), err
+		return tftags.New(nil), err
 	}
 
 	return S3KeyValueTags(output.TagSet), nil
 }
 
-// S3ObjectUpdateTags updates S3 object tags.
-func S3ObjectUpdateTags(conn *s3.S3, bucket, key string, oldTagsMap interface{}, newTagsMap interface{}) error {
-	oldTags := New(oldTagsMap)
-	newTags := New(newTagsMap)
+// objectUpdateTags updates S3 object tags.
+func objectUpdateTags(conn *s3.S3, bucket, key string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := tftags.New(oldTagsMap)
+	newTags := tftags.New(newTagsMap)
 
 	// We need to also consider any existing ignored tags.
-	allTags, err := S3ObjectListTags(conn, bucket, key)
+	allTags, err := objectListTags(conn, bucket, key)
 
 	if err != nil {
 		return fmt.Errorf("error listing resource tags (%s/%s): %w", bucket, key, err)

@@ -6,6 +6,5 @@ package s3
 const (
 	ErrCodeNoSuchConfiguration                  = "NoSuchConfiguration"
 	ErrCodeNoSuchPublicAccessBlockConfiguration = "NoSuchPublicAccessBlockConfiguration"
-	ErrCodeNoSuchTagSet                         = "NoSuchTagSet"
 	ErrCodeOperationAborted                     = "OperationAborted"
 )

@@ -20,11 +20,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func init() {
@@ -1619,7 +1620,7 @@ func testAccCheckAWSS3BucketObjectUpdateTags(n string, oldTags, newTags map[stri
 		rs := s.RootModule().Resources[n]
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
 
-		return keyvaluetags.S3ObjectUpdateTags(conn, rs.Primary.Attributes["bucket"], rs.Primary.Attributes["key"], oldTags, newTags)
+		return objectUpdateTags(conn, rs.Primary.Attributes["bucket"], rs.Primary.Attributes["key"], oldTags, newTags)
 	}
 }
 
@@ -1628,12 +1629,12 @@ func testAccCheckAWSS3BucketObjectCheckTags(n string, expectedTags map[string]st
 		rs := s.RootModule().Resources[n]
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
 
-		got, err := keyvaluetags.S3ObjectListTags(conn, rs.Primary.Attributes["bucket"], rs.Primary.Attributes["key"])
+		got, err := objectListTags(conn, rs.Primary.Attributes["bucket"], rs.Primary.Attributes["key"])
 		if err != nil {
 			return err
 		}
 
-		want := keyvaluetags.New(expectedTags)
+		want := tftags.New(expectedTags)
 		if !reflect.DeepEqual(want, got) {
 			return fmt.Errorf("Incorrect tags, want: %v got: %v", want, got)
 		}
