@@ -2,6 +2,7 @@ package aws
 
 import (
 	"testing"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSOrganizations_serial(t *testing.T) {
