@@ -102,7 +102,7 @@ func testAccErrorCheckSkipSNS(t *testing.T) resource.ErrorCheckFunc {
 	)
 }
 
-func TestAccAWSSNSTopic_basic(t *testing.T) {
+func TestAccSNSTopic_basic(t *testing.T) {
 	attributes := make(map[string]string)
 	resourceName := "aws_sns_topic.test"
 
@@ -131,7 +131,7 @@ func TestAccAWSSNSTopic_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSNSTopic_Name(t *testing.T) {
+func TestAccSNSTopic_name(t *testing.T) {
 	attributes := make(map[string]string)
 	resourceName := "aws_sns_topic.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -159,7 +159,7 @@ func TestAccAWSSNSTopic_Name(t *testing.T) {
 	})
 }
 
-func TestAccAWSSNSTopic_NamePrefix(t *testing.T) {
+func TestAccSNSTopic_namePrefix(t *testing.T) {
 	attributes := make(map[string]string)
 	resourceName := "aws_sns_topic.test"
 	rName := "tf-acc-test-prefix-"
@@ -188,7 +188,7 @@ func TestAccAWSSNSTopic_NamePrefix(t *testing.T) {
 	})
 }
 
-func TestAccAWSSNSTopic_policy(t *testing.T) {
+func TestAccSNSTopic_policy(t *testing.T) {
 	attributes := make(map[string]string)
 	resourceName := "aws_sns_topic.test"
 	rName := sdkacctest.RandString(10)
@@ -216,7 +216,7 @@ func TestAccAWSSNSTopic_policy(t *testing.T) {
 	})
 }
 
-func TestAccAWSSNSTopic_withIAMRole(t *testing.T) {
+func TestAccSNSTopic_withIAMRole(t *testing.T) {
 	attributes := make(map[string]string)
 	resourceName := "aws_sns_topic.test"
 	rName := sdkacctest.RandString(10)
@@ -242,7 +242,7 @@ func TestAccAWSSNSTopic_withIAMRole(t *testing.T) {
 	})
 }
 
-func TestAccAWSSNSTopic_withFakeIAMRole(t *testing.T) {
+func TestAccSNSTopic_withFakeIAMRole(t *testing.T) {
 	rName := sdkacctest.RandString(10)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -258,7 +258,7 @@ func TestAccAWSSNSTopic_withFakeIAMRole(t *testing.T) {
 	})
 }
 
-func TestAccAWSSNSTopic_withDeliveryPolicy(t *testing.T) {
+func TestAccSNSTopic_withDeliveryPolicy(t *testing.T) {
 	attributes := make(map[string]string)
 	resourceName := "aws_sns_topic.test"
 	rName := sdkacctest.RandString(10)
@@ -286,7 +286,7 @@ func TestAccAWSSNSTopic_withDeliveryPolicy(t *testing.T) {
 	})
 }
 
-func TestAccAWSSNSTopic_deliveryStatus(t *testing.T) {
+func TestAccSNSTopic_deliveryStatus(t *testing.T) {
 	attributes := make(map[string]string)
 	resourceName := "aws_sns_topic.test"
 	iamRoleResourceName := "aws_iam_role.example"
@@ -329,7 +329,7 @@ func TestAccAWSSNSTopic_deliveryStatus(t *testing.T) {
 	})
 }
 
-func TestAccAWSSNSTopic_Name_Generated_FIFOTopic(t *testing.T) {
+func TestAccSNSTopic_NameGenerated_fifoTopic(t *testing.T) {
 	attributes := make(map[string]string)
 	resourceName := "aws_sns_topic.test"
 
@@ -357,7 +357,7 @@ func TestAccAWSSNSTopic_Name_Generated_FIFOTopic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSNSTopic_Name_FIFOTopic(t *testing.T) {
+func TestAccSNSTopic_Name_fifoTopic(t *testing.T) {
 	attributes := make(map[string]string)
 	resourceName := "aws_sns_topic.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix) + tfsns.FIFOTopicNameSuffix
@@ -385,7 +385,7 @@ func TestAccAWSSNSTopic_Name_FIFOTopic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSNSTopic_NamePrefix_FIFOTopic(t *testing.T) {
+func TestAccSNSTopic_NamePrefix_fifoTopic(t *testing.T) {
 	attributes := make(map[string]string)
 	resourceName := "aws_sns_topic.test"
 	rName := "tf-acc-test-prefix-"
@@ -414,7 +414,7 @@ func TestAccAWSSNSTopic_NamePrefix_FIFOTopic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSNSTopic_FIFOWithContentBasedDeduplication(t *testing.T) {
+func TestAccSNSTopic_fifoWithContentBasedDeduplication(t *testing.T) {
 	attributes := make(map[string]string)
 	resourceName := "aws_sns_topic.test"
 	rName := sdkacctest.RandString(10)
@@ -450,7 +450,7 @@ func TestAccAWSSNSTopic_FIFOWithContentBasedDeduplication(t *testing.T) {
 	})
 }
 
-func TestAccAWSSNSTopic_FIFOExpectContentBasedDeduplicationError(t *testing.T) {
+func TestAccSNSTopic_fifoExpectContentBasedDeduplicationError(t *testing.T) {
 	rName := sdkacctest.RandString(10)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -466,7 +466,7 @@ func TestAccAWSSNSTopic_FIFOExpectContentBasedDeduplicationError(t *testing.T) {
 	})
 }
 
-func TestAccAWSSNSTopic_encryption(t *testing.T) {
+func TestAccSNSTopic_encryption(t *testing.T) {
 	attributes := make(map[string]string)
 	resourceName := "aws_sns_topic.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -500,7 +500,7 @@ func TestAccAWSSNSTopic_encryption(t *testing.T) {
 	})
 }
 
-func TestAccAWSSNSTopic_tags(t *testing.T) {
+func TestAccSNSTopic_tags(t *testing.T) {
 	attributes := make(map[string]string)
 	resourceName := "aws_sns_topic.test"
 	rName := sdkacctest.RandString(10)
@@ -545,7 +545,7 @@ func TestAccAWSSNSTopic_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSSNSTopic_disappears(t *testing.T) {
+func TestAccSNSTopic_disappears(t *testing.T) {
 	attributes := make(map[string]string)
 	resourceName := "aws_sns_topic.test"
 
