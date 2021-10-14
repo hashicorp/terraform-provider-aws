@@ -5,27 +5,28 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/transfer"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	tftransfer "github.com/hashicorp/terraform-provider-aws/aws/internal/service/transfer"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/transfer/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func testAccAWSTransferAccess_s3_basic(t *testing.T) {
 	var conf transfer.DescribedAccess
 	resourceName := "aws_transfer_access.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			acctest.PreCheck(t)
 			testAccPreCheckAWSTransfer(t)
-			testAccPreCheckAWSDirectoryService(t)
-			testAccPreCheckAWSDirectoryServiceSimpleDirectory(t)
+			acctest.PreCheckDirectoryService(t)
+			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, transfer.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, transfer.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSTransferAccessDestroy,
 		Steps: []resource.TestStep{
@@ -61,16 +62,16 @@ func testAccAWSTransferAccess_s3_basic(t *testing.T) {
 func testAccAWSTransferAccess_efs_basic(t *testing.T) {
 	var conf transfer.DescribedAccess
 	resourceName := "aws_transfer_access.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			acctest.PreCheck(t)
 			testAccPreCheckAWSTransfer(t)
-			testAccPreCheckAWSDirectoryService(t)
-			testAccPreCheckAWSDirectoryServiceSimpleDirectory(t)
+			acctest.PreCheckDirectoryService(t)
+			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, transfer.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, transfer.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSTransferAccessDestroy,
 		Steps: []resource.TestStep{
@@ -107,16 +108,16 @@ func testAccAWSTransferAccess_efs_basic(t *testing.T) {
 func testAccAWSTransferAccess_disappears(t *testing.T) {
 	var conf transfer.DescribedAccess
 	resourceName := "aws_transfer_access.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			acctest.PreCheck(t)
 			testAccPreCheckAWSTransfer(t)
-			testAccPreCheckAWSDirectoryService(t)
-			testAccPreCheckAWSDirectoryServiceSimpleDirectory(t)
+			acctest.PreCheckDirectoryService(t)
+			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, transfer.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, transfer.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSTransferAccessDestroy,
 		Steps: []resource.TestStep{
@@ -124,7 +125,7 @@ func testAccAWSTransferAccess_disappears(t *testing.T) {
 				Config: testAccAWSTransferAccessS3BasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSTransferAccessExists(resourceName, &conf),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsTransferAccess(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsTransferAccess(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -135,16 +136,16 @@ func testAccAWSTransferAccess_disappears(t *testing.T) {
 func testAccAWSTransferAccess_s3_policy(t *testing.T) {
 	var conf transfer.DescribedAccess
 	resourceName := "aws_transfer_access.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			acctest.PreCheck(t)
 			testAccPreCheckAWSTransfer(t)
-			testAccPreCheckAWSDirectoryService(t)
-			testAccPreCheckAWSDirectoryServiceSimpleDirectory(t)
+			acctest.PreCheckDirectoryService(t)
+			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, transfer.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, transfer.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSTransferAccessDestroy,
 		Steps: []resource.TestStep{
@@ -220,7 +221,7 @@ func testAccCheckAWSTransferAccessDestroy(s *terraform.State) error {
 }
 
 func testAccAWSTransferAccessConfigBase(rName string) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 resource "aws_vpc" "test" {
@@ -342,7 +343,7 @@ POLICY
 }
 
 func testAccAWSTransferAccessS3BasicConfig(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSTransferAccessConfigBase(rName),
 		testAccAWSTransferAccessConfigBase_S3(rName),
 		`
@@ -358,7 +359,7 @@ resource "aws_transfer_access" "test" {
 }
 
 func testAccAWSTransferAccessS3UpdatedConfig(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSTransferAccessConfigBase(rName),
 		testAccAWSTransferAccessConfigBase_S3(rName),
 		`
@@ -374,7 +375,7 @@ resource "aws_transfer_access" "test" {
 }
 
 func testAccAWSTransferAccessS3ScopeDownPolicyConfig(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSTransferAccessConfigBase(rName),
 		testAccAWSTransferAccessConfigBase_S3(rName),
 		`
@@ -453,7 +454,7 @@ POLICY
 }
 
 func testAccAWSTransferAccessEFSBasicConfig(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSTransferAccessConfigBase(rName),
 		testAccAWSTransferAccessConfigBase_efs(rName),
 		`
@@ -474,7 +475,7 @@ resource "aws_transfer_access" "test" {
 }
 
 func testAccAWSTransferAccessEFSUpdatedConfig(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSTransferAccessConfigBase(rName),
 		testAccAWSTransferAccessConfigBase_efs(rName),
 		`
