@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSIdentityStoreGroupDataSource_DisplayName(t *testing.T) {
+func TestAccIdentityStoreGroupDataSource_displayName(t *testing.T) {
 	dataSourceName := "data.aws_identitystore_group.test"
 	name := os.Getenv("AWS_IDENTITY_STORE_GROUP_NAME")
 
@@ -38,7 +38,7 @@ func TestAccAWSIdentityStoreGroupDataSource_DisplayName(t *testing.T) {
 	})
 }
 
-func TestAccAWSIdentityStoreGroupDataSource_GroupID(t *testing.T) {
+func TestAccIdentityStoreGroupDataSource_groupID(t *testing.T) {
 	dataSourceName := "data.aws_identitystore_group.test"
 	name := os.Getenv("AWS_IDENTITY_STORE_GROUP_NAME")
 	groupID := os.Getenv("AWS_IDENTITY_STORE_GROUP_ID")
@@ -65,7 +65,7 @@ func TestAccAWSIdentityStoreGroupDataSource_GroupID(t *testing.T) {
 	})
 }
 
-func TestAccAWSIdentityStoreGroupDataSource_NonExistent(t *testing.T) {
+func TestAccIdentityStoreGroupDataSource_nonExistent(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckSSOAdminInstances(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, identitystore.EndpointsID),

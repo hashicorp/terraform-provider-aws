@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSIdentityStoreUserDataSource_UserName(t *testing.T) {
+func TestAccIdentityStoreUserDataSource_userName(t *testing.T) {
 	dataSourceName := "data.aws_identitystore_user.test"
 	name := os.Getenv("AWS_IDENTITY_STORE_USER_NAME")
 
@@ -36,7 +36,7 @@ func TestAccAWSIdentityStoreUserDataSource_UserName(t *testing.T) {
 	})
 }
 
-func TestAccAWSIdentityStoreUserDataSource_UserID(t *testing.T) {
+func TestAccIdentityStoreUserDataSource_userID(t *testing.T) {
 	dataSourceName := "data.aws_identitystore_user.test"
 	name := os.Getenv("AWS_IDENTITY_STORE_USER_NAME")
 	userID := os.Getenv("AWS_IDENTITY_STORE_USER_ID")
@@ -63,7 +63,7 @@ func TestAccAWSIdentityStoreUserDataSource_UserID(t *testing.T) {
 	})
 }
 
-func TestAccAWSIdentityStoreUserDataSource_NonExistent(t *testing.T) {
+func TestAccIdentityStoreUserDataSource_nonExistent(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckSSOAdminInstances(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, identitystore.EndpointsID),
