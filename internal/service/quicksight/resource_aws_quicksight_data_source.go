@@ -1,4 +1,4 @@
-package aws
+package quicksight
 
 import (
 	"context"
@@ -12,16 +12,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/quicksight/waiter"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfquicksight "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
-	tfquicksight "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
-	tfquicksight "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
-	tfquicksight "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
-	tfquicksight "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
 )
 
 func ResourceDataSource() *schema.Resource {
@@ -655,7 +649,7 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	d.SetId(fmt.Sprintf("%s/%s", awsAccountId, id))
 
-	if _, err := tfquicksight.waitCreated(ctx, conn, awsAccountId, id); err != nil {
+	if _, err := waitCreated(ctx, conn, awsAccountId, id); err != nil {
 		return diag.Errorf("error waiting from QuickSight Data Source (%s) creation: %s", d.Id(), err)
 	}
 
@@ -784,7 +778,7 @@ func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 			return diag.Errorf("error updating QuickSight Data Source (%s): %s", d.Id(), err)
 		}
 
-		if _, err := tfquicksight.waitUpdated(ctx, conn, awsAccountId, dataSourceId); err != nil {
+		if _, err := waitUpdated(ctx, conn, awsAccountId, dataSourceId); err != nil {
 			return diag.Errorf("error waiting for QuickSight Data Source (%s) to update: %s", d.Id(), err)
 		}
 	}

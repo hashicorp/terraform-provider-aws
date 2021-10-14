@@ -1,4 +1,4 @@
-package aws
+package quicksight_test
 
 import (
 	"context"
