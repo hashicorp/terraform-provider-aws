@@ -18,7 +18,7 @@ import (
 	tfelastictranscoder "github.com/hashicorp/terraform-provider-aws/internal/service/elastictranscoder"
 )
 
-func TestAccAWSElasticTranscoderPipeline_basic(t *testing.T) {
+func TestAccElasticTranscoderPipeline_basic(t *testing.T) {
 	pipeline := &elastictranscoder.Pipeline{}
 	resourceName := "aws_elastictranscoder_pipeline.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -45,7 +45,7 @@ func TestAccAWSElasticTranscoderPipeline_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSElasticTranscoderPipeline_kmsKey(t *testing.T) {
+func TestAccElasticTranscoderPipeline_kmsKey(t *testing.T) {
 	pipeline := &elastictranscoder.Pipeline{}
 	resourceName := "aws_elastictranscoder_pipeline.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -73,7 +73,7 @@ func TestAccAWSElasticTranscoderPipeline_kmsKey(t *testing.T) {
 	})
 }
 
-func TestAccAWSElasticTranscoderPipeline_notifications(t *testing.T) {
+func TestAccElasticTranscoderPipeline_notifications(t *testing.T) {
 	pipeline := elastictranscoder.Pipeline{}
 	resourceName := "aws_elastictranscoder_pipeline.test"
 
@@ -143,7 +143,7 @@ func testAccCheckPipeline_notifications(
 	}
 }
 
-func TestAccAWSElasticTranscoderPipeline_withContentConfig(t *testing.T) {
+func TestAccElasticTranscoderPipeline_withContent(t *testing.T) {
 	pipeline := &elastictranscoder.Pipeline{}
 	resourceName := "aws_elastictranscoder_pipeline.test"
 
@@ -176,7 +176,7 @@ func TestAccAWSElasticTranscoderPipeline_withContentConfig(t *testing.T) {
 	})
 }
 
-func TestAccAWSElasticTranscoderPipeline_withPermissions(t *testing.T) {
+func TestAccElasticTranscoderPipeline_withPermissions(t *testing.T) {
 	pipeline := &elastictranscoder.Pipeline{}
 	resourceName := "aws_elastictranscoder_pipeline.test"
 
@@ -203,7 +203,7 @@ func TestAccAWSElasticTranscoderPipeline_withPermissions(t *testing.T) {
 	})
 }
 
-func TestAccAWSElasticTranscoderPipeline_disappears(t *testing.T) {
+func TestAccElasticTranscoderPipeline_disappears(t *testing.T) {
 	pipeline := &elastictranscoder.Pipeline{}
 	resourceName := "aws_elastictranscoder_pipeline.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
