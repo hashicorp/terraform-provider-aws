@@ -911,7 +911,7 @@ func expandProjectCache(s []interface{}) *codebuild.ProjectCache {
 	if cacheType := data["type"]; cacheType == codebuild.CacheTypeLocal {
 		if modes, modesOk := data["modes"]; modesOk {
 			modesStrings := modes.([]interface{})
-			projectCache.Modes = expandStringList(modesStrings)
+			projectCache.Modes = flex.ExpandStringList(modesStrings)
 		}
 	}
 
@@ -1059,7 +1059,7 @@ func expandCodeBuildBatchRestrictions(data map[string]interface{}) *codebuild.Ba
 
 	restrictions := &codebuild.BatchRestrictions{}
 	if v, ok := restrictionsData["compute_types_allowed"]; ok && len(v.([]interface{})) != 0 {
-		restrictions.ComputeTypesAllowed = expandStringList(v.([]interface{}))
+		restrictions.ComputeTypesAllowed = flex.ExpandStringList(v.([]interface{}))
 	}
 
 	if v, ok := restrictionsData["maximum_builds_allowed"]; ok && v != 0 {
@@ -1132,8 +1132,8 @@ func expandCodeBuildVpcConfig(rawVpcConfig []interface{}) *codebuild.VpcConfig {
 
 	data := rawVpcConfig[0].(map[string]interface{})
 	vpcConfig.VpcId = aws.String(data["vpc_id"].(string))
-	vpcConfig.Subnets = expandStringSet(data["subnets"].(*schema.Set))
-	vpcConfig.SecurityGroupIds = expandStringSet(data["security_group_ids"].(*schema.Set))
+	vpcConfig.Subnets = flex.ExpandStringSet(data["subnets"].(*schema.Set))
+	vpcConfig.SecurityGroupIds = flex.ExpandStringSet(data["security_group_ids"].(*schema.Set))
 
 	return &vpcConfig
 }
@@ -1741,8 +1741,8 @@ func flattenAwsCodeBuildVpcConfig(vpcConfig *codebuild.VpcConfig) []interface{} 
 		values := map[string]interface{}{}
 
 		values["vpc_id"] = aws.StringValue(vpcConfig.VpcId)
-		values["subnets"] = flattenStringSet(vpcConfig.Subnets)
-		values["security_group_ids"] = flattenStringSet(vpcConfig.SecurityGroupIds)
+		values["subnets"] = flex.FlattenStringSet(vpcConfig.Subnets)
+		values["security_group_ids"] = flex.FlattenStringSet(vpcConfig.SecurityGroupIds)
 
 		return []interface{}{values}
 	}
