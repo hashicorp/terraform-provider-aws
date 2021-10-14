@@ -1,4 +1,4 @@
-package aws
+package neptune_test
 
 import (
 	"errors"

@@ -5,13 +5,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	tfneptune "github.com/hashicorp/terraform-provider-aws/aws/internal/service/neptune"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfneptune "github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
 )
 
 func FindEndpointByID(conn *neptune.Neptune, id string) (*neptune.DBClusterEndpoint, error) {
-	clusterId, endpointId, err := tfneptune.readClusterEndpointID(id)
+	clusterId, endpointId, err := readClusterEndpointID(id)
 	if err != nil {
 		return nil, err
 	}

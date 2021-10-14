@@ -4,10 +4,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/neptune/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfneptune "github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
 )
 
 const (
@@ -74,7 +72,7 @@ func StatusCluster(conn *neptune.Neptune, id string) resource.StateRefreshFunc {
 // StatusDBClusterEndpoint fetches the DBClusterEndpoint and its Status
 func StatusDBClusterEndpoint(conn *neptune.Neptune, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := tfneptune.FindEndpointByID(conn, id)
+		output, err := FindEndpointByID(conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
