@@ -22,14 +22,14 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_route53_resolver_rule", &resource.Sweeper{
 		Name: "aws_route53_resolver_rule",
-		F:    testSweepRoute53ResolverRules,
+		F:    sweepRules,
 		Dependencies: []string{
 			"aws_route53_resolver_rule_association",
 		},
 	})
 }
 
-func testSweepRoute53ResolverRules(region string) error {
+func sweepRules(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -90,7 +90,7 @@ func TestAccAWSRoute53ResolverRule_basic(t *testing.T) {
 	resourceName := "aws_route53_resolver_rule.example"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53resolver.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53ResolverRuleDestroy,
@@ -120,7 +120,7 @@ func TestAccAWSRoute53ResolverRule_justDotDomainName(t *testing.T) {
 	resourceName := "aws_route53_resolver_rule.example"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53resolver.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53ResolverRuleDestroy,
@@ -150,7 +150,7 @@ func TestAccAWSRoute53ResolverRule_trailingDotDomainName(t *testing.T) {
 	resourceName := "aws_route53_resolver_rule.example"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53resolver.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53ResolverRuleDestroy,
@@ -180,7 +180,7 @@ func TestAccAWSRoute53ResolverRule_tags(t *testing.T) {
 	resourceName := "aws_route53_resolver_rule.example"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53resolver.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53ResolverRuleDestroy,
@@ -233,7 +233,7 @@ func TestAccAWSRoute53ResolverRule_updateName(t *testing.T) {
 	name2 := fmt.Sprintf("terraform-testacc-r53-resolver-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53resolver.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53ResolverRuleDestroy,
@@ -274,7 +274,7 @@ func TestAccAWSRoute53ResolverRule_forward(t *testing.T) {
 	name := fmt.Sprintf("terraform-testacc-r53-resolver-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53resolver.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53ResolverRuleDestroy,
@@ -350,7 +350,7 @@ func TestAccAWSRoute53ResolverRule_forwardEndpointRecreate(t *testing.T) {
 	name := fmt.Sprintf("terraform-testacc-r53-resolver-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53resolver.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53ResolverRuleDestroy,

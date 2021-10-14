@@ -22,14 +22,14 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_route53_resolver_endpoint", &resource.Sweeper{
 		Name: "aws_route53_resolver_endpoint",
-		F:    testSweepRoute53ResolverEndpoints,
+		F:    sweepEndpoints,
 		Dependencies: []string{
 			"aws_route53_resolver_rule",
 		},
 	})
 }
 
-func testSweepRoute53ResolverEndpoints(region string) error {
+func sweepEndpoints(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -86,7 +86,7 @@ func TestAccAWSRoute53ResolverEndpoint_basicInbound(t *testing.T) {
 	name := fmt.Sprintf("terraform-testacc-r53-resolver-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53resolver.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53ResolverEndpointDestroy,
@@ -119,7 +119,7 @@ func TestAccAWSRoute53ResolverEndpoint_updateOutbound(t *testing.T) {
 	updatedName := fmt.Sprintf("terraform-testacc-r53-rupdated-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53resolver.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53ResolverEndpointDestroy,
@@ -200,7 +200,7 @@ func testAccCheckRoute53ResolverEndpointExists(n string, ep *route53resolver.Res
 	}
 }
 
-func testAccPreCheckAWSRoute53Resolver(t *testing.T) {
+func testAccPreCheck(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn
 
 	input := &route53resolver.ListResolverEndpointsInput{}

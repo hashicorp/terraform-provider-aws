@@ -22,11 +22,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_route53_resolver_rule_association", &resource.Sweeper{
 		Name: "aws_route53_resolver_rule_association",
-		F:    testSweepRoute53ResolverRuleAssociations,
+		F:    sweepRuleAssociations,
 	})
 }
 
-func testSweepRoute53ResolverRuleAssociations(region string) error {
+func sweepRuleAssociations(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -89,7 +89,7 @@ func TestAccAWSRoute53ResolverRuleAssociation_basic(t *testing.T) {
 	name := fmt.Sprintf("terraform-testacc-r53-resolver-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53resolver.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53ResolverRuleAssociationDestroy,

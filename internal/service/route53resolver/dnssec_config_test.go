@@ -22,11 +22,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_route53_resolver_dnssec_config", &resource.Sweeper{
 		Name: "aws_route53_resolver_dnssec_config",
-		F:    testSweepRoute53ResolverDnssecConfig,
+		F:    sweepDNSSECConfig,
 	})
 }
 
-func testSweepRoute53ResolverDnssecConfig(region string) error {
+func sweepDNSSECConfig(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)

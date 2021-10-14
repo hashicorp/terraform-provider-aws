@@ -21,7 +21,7 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_route53_resolver_firewall_rule_group", &resource.Sweeper{
 		Name: "aws_route53_resolver_firewall_rule_group",
-		F:    testSweepRoute53ResolverFirewallRuleGroups,
+		F:    sweepFirewallRuleGroups,
 		Dependencies: []string{
 			"aws_route53_resolver_firewall_rule",
 			"aws_route53_resolver_firewall_rule_group_association",
@@ -29,7 +29,7 @@ func init() {
 	})
 }
 
-func testSweepRoute53ResolverFirewallRuleGroups(region string) error {
+func sweepFirewallRuleGroups(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -77,7 +77,7 @@ func TestAccAWSRoute53ResolverFirewallRuleGroup_basic(t *testing.T) {
 	resourceName := "aws_route53_resolver_firewall_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53resolver.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53ResolverFirewallRuleGroupDestroy,
@@ -107,7 +107,7 @@ func TestAccAWSRoute53ResolverFirewallRuleGroup_disappears(t *testing.T) {
 	resourceName := "aws_route53_resolver_firewall_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53resolver.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53ResolverFirewallRuleGroupDestroy,
@@ -130,7 +130,7 @@ func TestAccAWSRoute53ResolverFirewallRuleGroup_tags(t *testing.T) {
 	resourceName := "aws_route53_resolver_firewall_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53resolver.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53ResolverFirewallRuleGroupDestroy,

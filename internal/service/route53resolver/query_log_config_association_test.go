@@ -21,11 +21,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_route53_resolver_query_log_config_association", &resource.Sweeper{
 		Name: "aws_route53_resolver_query_log_config_association",
-		F:    testSweepRoute53ResolverQueryLogConfigAssociations,
+		F:    sweepQueryLogAssociationsConfig,
 	})
 }
 
-func testSweepRoute53ResolverQueryLogConfigAssociations(region string) error {
+func sweepQueryLogAssociationsConfig(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -78,7 +78,7 @@ func TestAccAWSRoute53ResolverQueryLogConfigAssociation_basic(t *testing.T) {
 	vpcResourceName := "aws_vpc.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53resolver.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53ResolverQueryLogConfigAssociationDestroy,
@@ -106,7 +106,7 @@ func TestAccAWSRoute53ResolverQueryLogConfigAssociation_disappears(t *testing.T)
 	resourceName := "aws_route53_resolver_query_log_config_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53resolver.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53ResolverQueryLogConfigAssociationDestroy,

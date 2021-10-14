@@ -21,14 +21,14 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_route53_resolver_firewall_config", &resource.Sweeper{
 		Name: "aws_route53_resolver_firewall_config",
-		F:    testSweepRoute53ResolverFirewallConfigs,
+		F:    sweepFirewallsConfig,
 		Dependencies: []string{
 			"aws_route53_resolver_firewall_config_association",
 		},
 	})
 }
 
-func testSweepRoute53ResolverFirewallConfigs(region string) error {
+func sweepFirewallsConfig(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -76,7 +76,7 @@ func TestAccAWSRoute53ResolverFirewallConfig_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53resolver.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53ResolverFirewallConfigDestroy,
@@ -104,7 +104,7 @@ func TestAccAWSRoute53ResolverFirewallConfig_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53resolver.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53ResolverFirewallConfigDestroy,

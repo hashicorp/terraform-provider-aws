@@ -21,14 +21,14 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_route53_resolver_query_log_config", &resource.Sweeper{
 		Name: "aws_route53_resolver_query_log_config",
-		F:    testSweepRoute53ResolverQueryLogConfigs,
+		F:    sweepQueryLogsConfig,
 		Dependencies: []string{
 			"aws_route53_resolver_query_log_config_association",
 		},
 	})
 }
 
-func testSweepRoute53ResolverQueryLogConfigs(region string) error {
+func sweepQueryLogsConfig(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -77,7 +77,7 @@ func TestAccAWSRoute53ResolverQueryLogConfig_basic(t *testing.T) {
 	s3BucketResourceName := "aws_s3_bucket.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53resolver.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53ResolverQueryLogConfigDestroy,
@@ -108,7 +108,7 @@ func TestAccAWSRoute53ResolverQueryLogConfig_disappears(t *testing.T) {
 	resourceName := "aws_route53_resolver_query_log_config.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53resolver.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53ResolverQueryLogConfigDestroy,
@@ -132,7 +132,7 @@ func TestAccAWSRoute53ResolverQueryLogConfig_tags(t *testing.T) {
 	cwLogGroupResourceName := "aws_cloudwatch_log_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53resolver.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53ResolverQueryLogConfigDestroy,

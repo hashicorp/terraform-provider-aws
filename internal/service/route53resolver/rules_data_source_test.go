@@ -14,12 +14,12 @@ func TestAccAWSRoute53ResolverRulesDataSource_basic(t *testing.T) {
 	dsResourceName := "data.aws_route53_resolver_rules.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
+		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, route53resolver.EndpointsID),
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsRoute53ResolverRules_basic,
+				Config: testAccRulesDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dsResourceName, "resolver_rule_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttr(dsResourceName, "resolver_rule_ids.*", "rslvr-autodefined-rr-internet-resolver"),
@@ -37,12 +37,12 @@ func TestAccAWSRoute53ResolverRulesDataSource_ResolverEndpointId(t *testing.T) {
 	ds3ResourceName := "data.aws_route53_resolver_rules.by_invalid_owner_id"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
+		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, route53resolver.EndpointsID),
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsRoute53ResolverRules_resolverEndpointId(rName1, rName2),
+				Config: testAccRulesDataSource_resolverEndpointID(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(ds1ResourceName, "resolver_rule_ids.#", "1"),
 					resource.TestCheckResourceAttr(ds2ResourceName, "resolver_rule_ids.#", "1"),
@@ -53,7 +53,7 @@ func TestAccAWSRoute53ResolverRulesDataSource_ResolverEndpointId(t *testing.T) {
 	})
 }
 
-const testAccDataSourceAwsRoute53ResolverRules_basic = `
+const testAccRulesDataSource_basic = `
 # The default Internet Resolver rule.
 data "aws_route53_resolver_rules" "test" {
   owner_id     = "Route 53 Resolver"
@@ -62,7 +62,7 @@ data "aws_route53_resolver_rules" "test" {
 }
 `
 
-func testAccDataSourceAwsRoute53ResolverRules_resolverEndpointId(rName1, rName2 string) string {
+func testAccRulesDataSource_resolverEndpointID(rName1, rName2 string) string {
 	return testAccRoute53ResolverRuleConfig_resolverEndpoint(rName1) + fmt.Sprintf(`
 resource "aws_route53_resolver_rule" "forward" {
   domain_name = "%[1]s.example.com"
