@@ -9,11 +9,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/fsx"
 	multierror "github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/fsx/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -76,8 +77,8 @@ func TestAccAWSFsxOntapFileSystem_basic(t *testing.T) {
 	resourceName := "aws_fsx_ontap_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(fsx.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, fsx.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckFsxOntapFileSystemDestroy,
 		Steps: []resource.TestStep{
@@ -85,9 +86,9 @@ func TestAccAWSFsxOntapFileSystem_basic(t *testing.T) {
 				Config: testAccAwsFsxOntapFileSystemConfigBasic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxOntapFileSystemExists(resourceName, &filesystem),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexp.MustCompile(`file-system/fs-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexp.MustCompile(`file-system/fs-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "2"),
-					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "1024"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test1", "id"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test2", "id"),
@@ -127,12 +128,12 @@ func TestAccAWSFsxOntapFileSystem_basic(t *testing.T) {
 func TestAccAWSFsxOntapFileSystem_fsxAdminPassword(t *testing.T) {
 	var filesystem1, filesystem2 fsx.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
-	pass := acctest.RandomWithPrefix("tf-acc-test")
-	pass2 := acctest.RandomWithPrefix("tf-acc-test")
+	pass := sdkacctest.RandomWithPrefix("tf-acc-test")
+	pass2 := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(fsx.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, fsx.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckFsxOntapFileSystemDestroy,
 		Steps: []resource.TestStep{
@@ -166,8 +167,8 @@ func TestAccAWSFsxOntapFileSystem_endpointIpAddressRange(t *testing.T) {
 	resourceName := "aws_fsx_ontap_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(fsx.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, fsx.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckFsxOntapFileSystemDestroy,
 		Steps: []resource.TestStep{
@@ -193,8 +194,8 @@ func TestAccAWSFsxOntapFileSystem_diskIopsConfiguration(t *testing.T) {
 	resourceName := "aws_fsx_ontap_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(fsx.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, fsx.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckFsxOntapFileSystemDestroy,
 		Steps: []resource.TestStep{
@@ -222,8 +223,8 @@ func TestAccAWSFsxOntapFileSystem_disappears(t *testing.T) {
 	resourceName := "aws_fsx_ontap_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(fsx.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, fsx.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckFsxOntapFileSystemDestroy,
 		Steps: []resource.TestStep{
@@ -231,7 +232,7 @@ func TestAccAWSFsxOntapFileSystem_disappears(t *testing.T) {
 				Config: testAccAwsFsxOntapFileSystemConfigBasic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxOntapFileSystemExists(resourceName, &filesystem),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsFsxOntapFileSystem(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsFsxOntapFileSystem(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -244,8 +245,8 @@ func TestAccAWSFsxOntapFileSystem_SecurityGroupIds(t *testing.T) {
 	resourceName := "aws_fsx_ontap_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(fsx.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, fsx.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckFsxOntapFileSystemDestroy,
 		Steps: []resource.TestStep{
@@ -279,8 +280,8 @@ func TestAccAWSFsxOntapFileSystem_routeTableIds(t *testing.T) {
 	resourceName := "aws_fsx_ontap_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(fsx.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, fsx.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckFsxOntapFileSystemDestroy,
 		Steps: []resource.TestStep{
@@ -307,8 +308,8 @@ func TestAccAWSFsxOntapFileSystem_tags(t *testing.T) {
 	resourceName := "aws_fsx_ontap_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(fsx.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, fsx.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckFsxOntapFileSystemDestroy,
 		Steps: []resource.TestStep{
@@ -354,8 +355,8 @@ func TestAccAWSFsxOntapFileSystem_weeklyMaintenanceStartTime(t *testing.T) {
 	resourceName := "aws_fsx_ontap_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(fsx.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, fsx.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckFsxOntapFileSystemDestroy,
 		Steps: []resource.TestStep{
@@ -389,8 +390,8 @@ func TestAccAWSFsxOntapFileSystem_automaticBackupRetentionDays(t *testing.T) {
 	resourceName := "aws_fsx_ontap_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(fsx.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, fsx.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckFsxOntapFileSystemDestroy,
 		Steps: []resource.TestStep{
@@ -431,8 +432,8 @@ func TestAccAWSFsxOntapFileSystem_kmsKeyId(t *testing.T) {
 	resourceName := "aws_fsx_ontap_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(fsx.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, fsx.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckFsxOntapFileSystemDestroy,
 		Steps: []resource.TestStep{
@@ -458,8 +459,8 @@ func TestAccAWSFsxOntapFileSystem_dailyAutomaticBackupStartTime(t *testing.T) {
 	resourceName := "aws_fsx_ontap_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(fsx.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, fsx.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckFsxLustreFileSystemDestroy,
 		Steps: []resource.TestStep{
@@ -553,7 +554,7 @@ func testAccCheckFsxOntapFileSystemRecreated(i, j *fsx.FileSystem) resource.Test
 }
 
 func testAccAwsFsxOntapFileSystemConfigBase() string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), `
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
 data "aws_partition" "current" {}
 
 resource "aws_vpc" "test" {
@@ -575,7 +576,7 @@ resource "aws_subnet" "test2" {
 }
 
 func testAccAwsFsxOntapFileSystemConfigBasic() string {
-	return composeConfig(testAccAwsFsxOntapFileSystemConfigBase(), `
+	return acctest.ConfigCompose(testAccAwsFsxOntapFileSystemConfigBase(), `
 resource "aws_fsx_ontap_file_system" "test" {
   storage_capacity    = 1024
   subnet_ids          = [aws_subnet.test1.id, aws_subnet.test2.id]
@@ -587,7 +588,7 @@ resource "aws_fsx_ontap_file_system" "test" {
 }
 
 func testAccAwsFsxOntapFileSystemConfigFsxAdminPassword(pass string) string {
-	return composeConfig(testAccAwsFsxOntapFileSystemConfigBase(), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAwsFsxOntapFileSystemConfigBase(), fmt.Sprintf(`
 resource "aws_fsx_ontap_file_system" "test" {
   storage_capacity    = 1024
   subnet_ids          = [aws_subnet.test1.id, aws_subnet.test2.id]
@@ -600,7 +601,7 @@ resource "aws_fsx_ontap_file_system" "test" {
 }
 
 func testAccAwsFsxOntapFileSystemConfigEndpointIpAddressRange() string {
-	return composeConfig(testAccAwsFsxOntapFileSystemConfigBase(), `
+	return acctest.ConfigCompose(testAccAwsFsxOntapFileSystemConfigBase(), `
 resource "aws_fsx_ontap_file_system" "test" {
   storage_capacity          = 1024
   subnet_ids                = [aws_subnet.test1.id, aws_subnet.test2.id]
@@ -613,7 +614,7 @@ resource "aws_fsx_ontap_file_system" "test" {
 }
 
 func testAccAwsFsxOntapFileSystemConfigDiskIopsConfiguration() string {
-	return composeConfig(testAccAwsFsxOntapFileSystemConfigBase(), `
+	return acctest.ConfigCompose(testAccAwsFsxOntapFileSystemConfigBase(), `
 resource "aws_fsx_ontap_file_system" "test" {
   storage_capacity    = 1024
   subnet_ids          = [aws_subnet.test1.id, aws_subnet.test2.id]
@@ -630,7 +631,7 @@ resource "aws_fsx_ontap_file_system" "test" {
 }
 
 func testAccAwsFsxOntapFileSystemConfigRouteTable() string {
-	return composeConfig(testAccAwsFsxOntapFileSystemConfigBase(), `
+	return acctest.ConfigCompose(testAccAwsFsxOntapFileSystemConfigBase(), `
 resource "aws_route_table" "test" {
   vpc_id = aws_vpc.test.id
 
@@ -651,7 +652,7 @@ resource "aws_fsx_ontap_file_system" "test" {
 }
 
 func testAccAwsFsxOntapFileSystemConfigSecurityGroupIds1() string {
-	return composeConfig(testAccAwsFsxOntapFileSystemConfigBase(), `
+	return acctest.ConfigCompose(testAccAwsFsxOntapFileSystemConfigBase(), `
 resource "aws_security_group" "test1" {
   description = "security group for FSx testing"
   vpc_id      = aws_vpc.test.id
@@ -683,7 +684,7 @@ resource "aws_fsx_ontap_file_system" "test" {
 }
 
 func testAccAwsFsxOntapFileSystemConfigSecurityGroupIds2() string {
-	return composeConfig(testAccAwsFsxOntapFileSystemConfigBase(), `
+	return acctest.ConfigCompose(testAccAwsFsxOntapFileSystemConfigBase(), `
 resource "aws_security_group" "test1" {
   description = "security group for FSx testing"
   vpc_id      = aws_vpc.test.id
@@ -734,7 +735,7 @@ resource "aws_fsx_ontap_file_system" "test" {
 }
 
 func testAccAwsFsxOntapFileSystemConfigTags1(tagKey1, tagValue1 string) string {
-	return composeConfig(testAccAwsFsxOntapFileSystemConfigBase(), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAwsFsxOntapFileSystemConfigBase(), fmt.Sprintf(`
 resource "aws_fsx_ontap_file_system" "test" {
   storage_capacity    = 1024
   subnet_ids          = [aws_subnet.test1.id, aws_subnet.test2.id]
@@ -750,7 +751,7 @@ resource "aws_fsx_ontap_file_system" "test" {
 }
 
 func testAccAwsFsxOntapFileSystemConfigTags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return composeConfig(testAccAwsFsxOntapFileSystemConfigBase(), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAwsFsxOntapFileSystemConfigBase(), fmt.Sprintf(`
 resource "aws_fsx_ontap_file_system" "test" {
   storage_capacity    = 1024
   subnet_ids          = [aws_subnet.test1.id, aws_subnet.test2.id]
@@ -767,7 +768,7 @@ resource "aws_fsx_ontap_file_system" "test" {
 }
 
 func testAccAwsFsxOntapFileSystemConfigWeeklyMaintenanceStartTime(weeklyMaintenanceStartTime string) string {
-	return composeConfig(testAccAwsFsxOntapFileSystemConfigBase(), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAwsFsxOntapFileSystemConfigBase(), fmt.Sprintf(`
 resource "aws_fsx_ontap_file_system" "test" {
   storage_capacity              = 1024
   subnet_ids                    = [aws_subnet.test1.id, aws_subnet.test2.id]
@@ -780,7 +781,7 @@ resource "aws_fsx_ontap_file_system" "test" {
 }
 
 func testAccAwsFsxOntapFileSystemConfigDailyAutomaticBackupStartTime(dailyAutomaticBackupStartTime string) string {
-	return composeConfig(testAccAwsFsxOntapFileSystemConfigBase(), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAwsFsxOntapFileSystemConfigBase(), fmt.Sprintf(`
 resource "aws_fsx_ontap_file_system" "test" {
   storage_capacity                  = 1024
   subnet_ids                        = [aws_subnet.test1.id, aws_subnet.test2.id]
@@ -794,7 +795,7 @@ resource "aws_fsx_ontap_file_system" "test" {
 }
 
 func testAccAwsFsxOntapFileSystemConfigAutomaticBackupRetentionDays(retention int) string {
-	return composeConfig(testAccAwsFsxOntapFileSystemConfigBase(), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAwsFsxOntapFileSystemConfigBase(), fmt.Sprintf(`
 resource "aws_fsx_ontap_file_system" "test" {
   storage_capacity                = 1024
   subnet_ids                      = [aws_subnet.test1.id, aws_subnet.test2.id]
@@ -807,7 +808,7 @@ resource "aws_fsx_ontap_file_system" "test" {
 }
 
 func testAccAwsFsxOntapFileSystemConfigKmsKeyId() string {
-	return composeConfig(testAccAwsFsxOntapFileSystemConfigBase(), `
+	return acctest.ConfigCompose(testAccAwsFsxOntapFileSystemConfigBase(), `
 resource "aws_kms_key" "test" {
   description             = "FSx KMS Testing key"
   deletion_window_in_days = 7
