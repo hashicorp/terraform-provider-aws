@@ -13,10 +13,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/elasticache/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceUserGroup() *schema.Resource {
@@ -28,7 +29,7 @@ func ResourceUserGroup() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -45,8 +46,8 @@ func ResourceUserGroup() *schema.Resource {
 					return strings.EqualFold(old, new)
 				},
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 			"user_group_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -68,7 +69,7 @@ var resourceAwsElasticacheUserGroupPendingStates = []string{
 func resourceUserGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElastiCacheConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &elasticache.CreateUserGroupInput{
 		Engine:      aws.String(d.Get("engine").(string)),
@@ -133,7 +134,7 @@ func resourceUserGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 	// Tags are currently only supported in AWS Commercial.
 	if meta.(*conns.AWSClient).Partition == endpoints.AwsPartitionID {
-		tags, err := keyvaluetags.ElasticacheListTags(conn, aws.StringValue(resp.ARN))
+		tags, err := tftags.ElasticacheListTags(conn, aws.StringValue(resp.ARN))
 
 		if err != nil {
 			return fmt.Errorf("error listing tags for ElastiCache User (%s): %w", aws.StringValue(resp.ARN), err)
@@ -207,7 +208,7 @@ func resourceUserGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") && meta.(*conns.AWSClient).Partition == endpoints.AwsPartitionID {
 		o, n := d.GetChange("tags_all")
 
-		if err := keyvaluetags.ElasticacheUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := tftags.ElasticacheUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating ElastiCache User Group (%s) tags: %w", d.Get("arn").(string), err)
 		}
 	}

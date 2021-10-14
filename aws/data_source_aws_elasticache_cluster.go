@@ -6,10 +6,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/elasticache/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceCluster() *schema.Resource {
@@ -145,7 +146,7 @@ func DataSourceCluster() *schema.Resource {
 				},
 			},
 
-			"tags": tagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -205,7 +206,7 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("arn", cluster.ARN)
 
-	tags, err := keyvaluetags.ElasticacheListTags(conn, aws.StringValue(cluster.ARN))
+	tags, err := tftags.ElasticacheListTags(conn, aws.StringValue(cluster.ARN))
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Elasticache Cluster (%s): %w", d.Id(), err)

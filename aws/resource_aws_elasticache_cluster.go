@@ -17,12 +17,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	tfelasticache "github.com/hashicorp/terraform-provider-aws/aws/internal/service/elasticache"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/elasticache/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/elasticache/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 const (
@@ -258,8 +259,8 @@ func ResourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -269,7 +270,7 @@ func ResourceCluster() *schema.Resource {
 			CustomizeDiffValidateClusterNumCacheNodes,
 			CustomizeDiffClusterMemcachedNodeType,
 			CustomizeDiffValidateClusterMemcachedSnapshotIdentifier,
-			SetTagsDiff,
+			verify.SetTagsDiff,
 		),
 	}
 }
@@ -277,7 +278,7 @@ func ResourceCluster() *schema.Resource {
 func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElastiCacheConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	req := &elasticache.CreateCacheClusterInput{}
 
@@ -431,7 +432,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("arn", c.ARN)
 
-	tags, err := keyvaluetags.ElasticacheListTags(conn, aws.StringValue(c.ARN))
+	tags, err := tftags.ElasticacheListTags(conn, aws.StringValue(c.ARN))
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for ElastiCache Cluster (%s): %w", d.Id(), err)
@@ -497,7 +498,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := keyvaluetags.ElasticacheUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := tftags.ElasticacheUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating ElastiCache Cluster (%s) tags: %w", d.Get("arn").(string), err)
 		}
 	}
