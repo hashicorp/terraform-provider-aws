@@ -21,7 +21,7 @@ func TestAccAWSDataPipelinePipeline_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSDataPipeline(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, datapipeline.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDataPipelinePipelineDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -56,7 +56,7 @@ func TestAccAWSDataPipelinePipeline_description(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSDataPipeline(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, datapipeline.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDataPipelinePipelineDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -91,7 +91,7 @@ func TestAccAWSDataPipelinePipeline_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSDataPipeline(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, datapipeline.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDataPipelinePipelineDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -114,7 +114,7 @@ func TestAccAWSDataPipelinePipeline_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSDataPipeline(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, datapipeline.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDataPipelinePipelineDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -157,7 +157,7 @@ func TestAccAWSDataPipelinePipeline_tags(t *testing.T) {
 
 func testAccCheckAWSDataPipelinePipelineDisappears(conf *datapipeline.PipelineDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).datapipelineconn
+		conn := acctest.Provider.Meta().(*AWSClient).datapipelineconn
 		params := &datapipeline.DeletePipelineInput{
 			PipelineId: conf.PipelineId,
 		}
@@ -171,7 +171,7 @@ func testAccCheckAWSDataPipelinePipelineDisappears(conf *datapipeline.PipelineDe
 }
 
 func testAccCheckAWSDataPipelinePipelineDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).datapipelineconn
+	conn := acctest.Provider.Meta().(*AWSClient).datapipelineconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_datapipeline_pipeline" {
@@ -207,7 +207,7 @@ func testAccCheckAWSDataPipelinePipelineExists(n string, v *datapipeline.Pipelin
 			return fmt.Errorf("No DataPipeline ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).datapipelineconn
+		conn := acctest.Provider.Meta().(*AWSClient).datapipelineconn
 
 		pipelineDescription, err := resourceAwsDataPipelinePipelineRetrieve(rs.Primary.ID, conn)
 
@@ -224,7 +224,7 @@ func testAccCheckAWSDataPipelinePipelineExists(n string, v *datapipeline.Pipelin
 }
 
 func testAccPreCheckAWSDataPipeline(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).datapipelineconn
+	conn := acctest.Provider.Meta().(*AWSClient).datapipelineconn
 
 	input := &datapipeline.ListPipelinesInput{}
 
