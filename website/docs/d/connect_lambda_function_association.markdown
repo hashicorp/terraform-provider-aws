@@ -25,6 +25,5 @@ The following arguments are supported:
 * `instance_id` - (Required) The identifier of the Amazon Connect instance. You can find the instanceId in the ARN of the instance.
 
 ## Attributes Reference
-In addition to all arguments above, the following attributes are exported:
 
-* `id` - The ID of the Lambda Function association.
+No additional attributes are exported.
