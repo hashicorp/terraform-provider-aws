@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestAccDataSourceCloudHsmV2_serial(t *testing.T) {
+func TestAccCloudHSMV2DataSource_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Cluster": {
 			"basic": testAccDataSourceCloudHsmV2Cluster_basic,
