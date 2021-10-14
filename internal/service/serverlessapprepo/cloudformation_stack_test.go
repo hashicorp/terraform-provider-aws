@@ -23,7 +23,7 @@ import (
 // Since aws_serverlessapplicationrepository_cloudformation_stack creates CloudFormation stacks,
 // the aws_cloudformation_stack sweeper will clean these up as well.
 
-func TestAccAwsServerlessApplicationRepositoryCloudFormationStack_basic(t *testing.T) {
+func TestAccServerlessAppRepoCloudFormationStack_basic(t *testing.T) {
 	var stack cloudformation.Stack
 	stackName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	appARN := testAccCloudFormationApplicationID()
@@ -74,7 +74,7 @@ func TestAccAwsServerlessApplicationRepositoryCloudFormationStack_basic(t *testi
 	})
 }
 
-func TestAccAwsServerlessApplicationRepositoryCloudFormationStack_disappears(t *testing.T) {
+func TestAccServerlessAppRepoCloudFormationStack_disappears(t *testing.T) {
 	var stack cloudformation.Stack
 	stackName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	appARN := testAccCloudFormationApplicationID()
@@ -98,7 +98,7 @@ func TestAccAwsServerlessApplicationRepositoryCloudFormationStack_disappears(t *
 	})
 }
 
-func TestAccAwsServerlessApplicationRepositoryCloudFormationStack_versioned(t *testing.T) {
+func TestAccServerlessAppRepoCloudFormationStack_versioned(t *testing.T) {
 	var stack1, stack2, stack3 cloudformation.Stack
 	stackName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	appARN := testAccCloudFormationApplicationID()
@@ -155,7 +155,7 @@ func TestAccAwsServerlessApplicationRepositoryCloudFormationStack_versioned(t *t
 	})
 }
 
-func TestAccAwsServerlessApplicationRepositoryCloudFormationStack_paired(t *testing.T) {
+func TestAccServerlessAppRepoCloudFormationStack_paired(t *testing.T) {
 	var stack cloudformation.Stack
 	stackName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	appARN := testAccCloudFormationApplicationID()
@@ -183,7 +183,7 @@ func TestAccAwsServerlessApplicationRepositoryCloudFormationStack_paired(t *test
 	})
 }
 
-func TestAccAwsServerlessApplicationRepositoryCloudFormationStack_Tags(t *testing.T) {
+func TestAccServerlessAppRepoCloudFormationStack_tags(t *testing.T) {
 	var stack cloudformation.Stack
 	stackName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	appARN := testAccCloudFormationApplicationID()
@@ -228,7 +228,7 @@ func TestAccAwsServerlessApplicationRepositoryCloudFormationStack_Tags(t *testin
 	})
 }
 
-func TestAccAwsServerlessApplicationRepositoryCloudFormationStack_update(t *testing.T) {
+func TestAccServerlessAppRepoCloudFormationStack_update(t *testing.T) {
 	var stack cloudformation.Stack
 	stackName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	initialName := sdkacctest.RandomWithPrefix("FuncName1")
