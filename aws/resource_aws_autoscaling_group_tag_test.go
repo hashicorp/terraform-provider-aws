@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tagresource"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSAutoscalingGroupTag_basic(t *testing.T) {
@@ -96,7 +97,7 @@ func TestAccAWSAutoscalingGroupTag_Value(t *testing.T) {
 }
 
 func testAccCheckAutoscalingGroupTagDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).autoscalingconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_autoscaling_group_tag" {
@@ -142,7 +143,7 @@ func testAccCheckAutoscalingGroupTagExists(n string) resource.TestCheckFunc {
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).autoscalingconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
 
 		_, err = keyvaluetags.AutoscalingGetTag(conn, identifier, tfautoscaling.TagResourceTypeAutoScalingGroup, key)
 

@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsAutoscalingGroup() *schema.Resource {
@@ -123,7 +124,7 @@ func dataSourceAwsAutoscalingGroup() *schema.Resource {
 }
 
 func dataSourceAwsAutoscalingGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).autoscalingconn
+	conn := meta.(*conns.AWSClient).AutoScalingConn
 
 	groupName := d.Get("name").(string)
 

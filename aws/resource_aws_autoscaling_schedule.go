@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 const awsAutoscalingScheduleTimeLayout = "2006-01-02T15:04:05Z"
@@ -102,7 +103,7 @@ func resourceAwsAutoscalingScheduleImport(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsAutoscalingScheduleCreate(d *schema.ResourceData, meta interface{}) error {
-	autoscalingconn := meta.(*AWSClient).autoscalingconn
+	conn := meta.(*conns.AWSClient).AutoScalingConn
 	params := &autoscaling.PutScheduledUpdateGroupActionInput{
 		AutoScalingGroupName: aws.String(d.Get("autoscaling_group_name").(string)),
 		ScheduledActionName:  aws.String(d.Get("scheduled_action_name").(string)),
@@ -152,7 +153,7 @@ func resourceAwsAutoscalingScheduleCreate(d *schema.ResourceData, meta interface
 	}
 
 	log.Printf("[INFO] Creating Autoscaling Scheduled Action: %s", d.Get("scheduled_action_name").(string))
-	_, err := autoscalingconn.PutScheduledUpdateGroupAction(params)
+	_, err := conn.PutScheduledUpdateGroupAction(params)
 	if err != nil {
 		return fmt.Errorf("Error Creating Autoscaling Scheduled Action: %s", err.Error())
 	}
@@ -211,7 +212,7 @@ func resourceAwsAutoscalingScheduleRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsAutoscalingScheduleDelete(d *schema.ResourceData, meta interface{}) error {
-	autoscalingconn := meta.(*AWSClient).autoscalingconn
+	conn := meta.(*conns.AWSClient).AutoScalingConn
 
 	params := &autoscaling.DeleteScheduledActionInput{
 		AutoScalingGroupName: aws.String(d.Get("autoscaling_group_name").(string)),
@@ -219,7 +220,7 @@ func resourceAwsAutoscalingScheduleDelete(d *schema.ResourceData, meta interface
 	}
 
 	log.Printf("[INFO] Deleting Autoscaling Scheduled Action: %s", d.Id())
-	_, err := autoscalingconn.DeleteScheduledAction(params)
+	_, err := conn.DeleteScheduledAction(params)
 	if err != nil {
 		return fmt.Errorf("Error deleting Autoscaling Scheduled Action: %s", err.Error())
 	}
@@ -228,7 +229,7 @@ func resourceAwsAutoscalingScheduleDelete(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsASGScheduledActionRetrieve(d *schema.ResourceData, meta interface{}) (*autoscaling.ScheduledUpdateGroupAction, bool, error) {
-	autoscalingconn := meta.(*AWSClient).autoscalingconn
+	conn := meta.(*conns.AWSClient).AutoScalingConn
 
 	params := &autoscaling.DescribeScheduledActionsInput{
 		AutoScalingGroupName: aws.String(d.Get("autoscaling_group_name").(string)),
@@ -236,7 +237,7 @@ func resourceAwsASGScheduledActionRetrieve(d *schema.ResourceData, meta interfac
 	}
 
 	log.Printf("[INFO] Describing Autoscaling Scheduled Action: %+v", params)
-	actions, err := autoscalingconn.DescribeScheduledActions(params)
+	actions, err := conn.DescribeScheduledActions(params)
 	if err != nil {
 		//A ValidationError here can mean that either the Schedule is missing OR the Autoscaling Group is missing
 		if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "ValidationError" {

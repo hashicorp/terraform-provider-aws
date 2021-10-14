@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/naming"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/elbv2/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -43,7 +44,7 @@ func testSweepAutoscalingGroups(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).autoscalingconn
+	conn := client.(*conns.AWSClient).AutoScalingConn
 
 	resp, err := conn.DescribeAutoScalingGroups(&autoscaling.DescribeAutoScalingGroupsInput{})
 	if err != nil {
@@ -1185,7 +1186,7 @@ func testAccCheckAWSAutoScalingGroupExists(n string, group *autoscaling.Group) r
 			return fmt.Errorf("No Auto Scaling Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).autoscalingconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
 
 		describeGroups, err := conn.DescribeAutoScalingGroups(
 			&autoscaling.DescribeAutoScalingGroupsInput{
@@ -1208,7 +1209,7 @@ func testAccCheckAWSAutoScalingGroupExists(n string, group *autoscaling.Group) r
 }
 
 func testAccCheckAWSAutoScalingGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).autoscalingconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_autoscaling_group" {
@@ -1417,7 +1418,7 @@ func autoscalingTagDescriptionsToMap(ts *[]*autoscaling.TagDescription) map[stri
 // sure that all instances in it are healthy.
 func testAccCheckAWSALBTargetGroupHealthy(res *elbv2.TargetGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).elbv2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn
 
 		resp, err := conn.DescribeTargetHealth(&elbv2.DescribeTargetHealthInput{
 			TargetGroupArn: res.TargetGroupArn,
@@ -4769,7 +4770,7 @@ resource "aws_autoscaling_group" "test" {
 
 func testAccCheckAutoScalingInstanceRefreshCount(group *autoscaling.Group, expected int) resource.TestCheckFunc {
 	return func(state *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).autoscalingconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
 
 		input := autoscaling.DescribeInstanceRefreshesInput{
 			AutoScalingGroupName: group.AutoScalingGroupName,
@@ -4788,7 +4789,7 @@ func testAccCheckAutoScalingInstanceRefreshCount(group *autoscaling.Group, expec
 
 func testAccCheckAutoScalingInstanceRefreshStatus(group *autoscaling.Group, offset int, expected ...string) resource.TestCheckFunc {
 	return func(state *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).autoscalingconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
 
 		input := autoscaling.DescribeInstanceRefreshesInput{
 			AutoScalingGroupName: group.AutoScalingGroupName,
@@ -5102,7 +5103,7 @@ func testAccCheckAWSLBTargetGroupExists(n string, res *elbv2.TargetGroup) resour
 			return errors.New("No Target Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).elbv2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn
 
 		targetGroup, err := finder.TargetGroupByARN(conn, rs.Primary.ID)
 

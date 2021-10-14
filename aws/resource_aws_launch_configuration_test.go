@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -34,9 +35,9 @@ func testSweepLaunchConfigurations(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	autoscalingconn := client.(*AWSClient).autoscalingconn
+	conn := client.(*conns.AWSClient).AutoScalingConn
 
-	resp, err := autoscalingconn.DescribeLaunchConfigurations(&autoscaling.DescribeLaunchConfigurationsInput{})
+	resp, err := conn.DescribeLaunchConfigurations(&autoscaling.DescribeLaunchConfigurationsInput{})
 	if err != nil {
 		if testSweepSkipSweepError(err) {
 			log.Printf("[WARN] Skipping AutoScaling Launch Configuration sweep for %s: %s", region, err)
@@ -54,7 +55,7 @@ func testSweepLaunchConfigurations(region string) error {
 		name := *lc.LaunchConfigurationName
 
 		log.Printf("[INFO] Deleting Launch Configuration: %s", name)
-		_, err := autoscalingconn.DeleteLaunchConfiguration(
+		_, err := conn.DeleteLaunchConfiguration(
 			&autoscaling.DeleteLaunchConfigurationInput{
 				LaunchConfigurationName: aws.String(name),
 			})
@@ -609,7 +610,7 @@ func testAccCheckAWSLaunchConfigurationWithEncryption(conf *autoscaling.LaunchCo
 }
 
 func testAccCheckAWSLaunchConfigurationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).autoscalingconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_launch_configuration" {
@@ -688,7 +689,7 @@ func testAccCheckAWSLaunchConfigurationExists(n string, res *autoscaling.LaunchC
 			return fmt.Errorf("No Launch Configuration ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).autoscalingconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
 
 		describeOpts := autoscaling.DescribeLaunchConfigurationsInput{
 			LaunchConfigurationNames: []*string{aws.String(rs.Primary.ID)},
@@ -1053,7 +1054,7 @@ func testAccCheckAmiExists(n string, ami *ec2.Image) resource.TestCheckFunc {
 			return fmt.Errorf("No AMI ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 		var resp *ec2.DescribeImagesOutput
 		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
@@ -1118,7 +1119,7 @@ func testAccCheckAWSSecurityGroupExists(n string, group *ec2.SecurityGroup) reso
 			return fmt.Errorf("No Security Group is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 		sg, err := finder.SecurityGroupByID(conn, rs.Primary.ID)
 		if tfresource.NotFound(err) {

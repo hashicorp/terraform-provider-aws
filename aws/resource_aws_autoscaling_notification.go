@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsAutoscalingNotification() *schema.Resource {
@@ -42,7 +43,7 @@ func resourceAwsAutoscalingNotification() *schema.Resource {
 }
 
 func resourceAwsAutoscalingNotificationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).autoscalingconn
+	conn := meta.(*conns.AWSClient).AutoScalingConn
 	gl := expandStringSet(d.Get("group_names").(*schema.Set))
 	nl := expandStringSet(d.Get("notifications").(*schema.Set))
 
@@ -58,7 +59,7 @@ func resourceAwsAutoscalingNotificationCreate(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsAutoscalingNotificationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).autoscalingconn
+	conn := meta.(*conns.AWSClient).AutoScalingConn
 	gl := expandStringSet(d.Get("group_names").(*schema.Set))
 
 	opts := &autoscaling.DescribeNotificationConfigurationsInput{
@@ -121,7 +122,7 @@ func resourceAwsAutoscalingNotificationRead(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsAutoscalingNotificationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).autoscalingconn
+	conn := meta.(*conns.AWSClient).AutoScalingConn
 
 	// Notifications API call is a PUT, so we don't need to diff the list, just
 	// push whatever it is and AWS sorts it out
@@ -193,7 +194,7 @@ func removeNotificationConfigToGroupsWithTopic(conn *autoscaling.AutoScaling, gr
 }
 
 func resourceAwsAutoscalingNotificationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).autoscalingconn
+	conn := meta.(*conns.AWSClient).AutoScalingConn
 
 	gl := expandStringSet(d.Get("group_names").(*schema.Set))
 

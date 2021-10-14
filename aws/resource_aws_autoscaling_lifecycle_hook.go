@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsAutoscalingLifecycleHook() *schema.Resource {
@@ -88,7 +89,7 @@ func resourceAwsAutoscalingLifecycleHookPutOp(conn *autoscaling.AutoScaling, par
 }
 
 func resourceAwsAutoscalingLifecycleHookPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).autoscalingconn
+	conn := meta.(*conns.AWSClient).AutoScalingConn
 	params := getAwsAutoscalingPutLifecycleHookInput(d)
 
 	if err := resourceAwsAutoscalingLifecycleHookPutOp(conn, &params); err != nil {
@@ -125,7 +126,7 @@ func resourceAwsAutoscalingLifecycleHookRead(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsAutoscalingLifecycleHookDelete(d *schema.ResourceData, meta interface{}) error {
-	autoscalingconn := meta.(*AWSClient).autoscalingconn
+	conn := meta.(*conns.AWSClient).AutoScalingConn
 	p, err := getAwsAutoscalingLifecycleHook(d, meta)
 	if err != nil {
 		return err
@@ -138,7 +139,7 @@ func resourceAwsAutoscalingLifecycleHookDelete(d *schema.ResourceData, meta inte
 		AutoScalingGroupName: aws.String(d.Get("autoscaling_group_name").(string)),
 		LifecycleHookName:    aws.String(d.Get("name").(string)),
 	}
-	if _, err := autoscalingconn.DeleteLifecycleHook(&params); err != nil {
+	if _, err := conn.DeleteLifecycleHook(&params); err != nil {
 		return fmt.Errorf("Autoscaling Lifecycle Hook: %s", err)
 	}
 
@@ -179,7 +180,7 @@ func getAwsAutoscalingPutLifecycleHookInput(d *schema.ResourceData) autoscaling.
 }
 
 func getAwsAutoscalingLifecycleHook(d *schema.ResourceData, meta interface{}) (*autoscaling.LifecycleHook, error) {
-	autoscalingconn := meta.(*AWSClient).autoscalingconn
+	conn := meta.(*conns.AWSClient).AutoScalingConn
 
 	params := autoscaling.DescribeLifecycleHooksInput{
 		AutoScalingGroupName: aws.String(d.Get("autoscaling_group_name").(string)),
@@ -187,7 +188,7 @@ func getAwsAutoscalingLifecycleHook(d *schema.ResourceData, meta interface{}) (*
 	}
 
 	log.Printf("[DEBUG] AutoScaling Lifecycle Hook Describe Params: %#v", params)
-	resp, err := autoscalingconn.DescribeLifecycleHooks(&params)
+	resp, err := conn.DescribeLifecycleHooks(&params)
 	if err != nil {
 		return nil, fmt.Errorf("Error retrieving lifecycle hooks: %s", err)
 	}

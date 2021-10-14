@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSAutoscalingLifecycleHook_basic(t *testing.T) {
@@ -74,7 +75,7 @@ func testAccCheckLifecycleHookExists(n string) resource.TestCheckFunc {
 }
 
 func checkLifecycleHookExistsByName(asgName, hookName string) error {
-	conn := acctest.Provider.Meta().(*AWSClient).autoscalingconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
 	params := &autoscaling.DescribeLifecycleHooksInput{
 		AutoScalingGroupName: aws.String(asgName),
 		LifecycleHookNames:   []*string{aws.String(hookName)},
@@ -91,7 +92,7 @@ func checkLifecycleHookExistsByName(asgName, hookName string) error {
 }
 
 func testAccCheckAWSAutoscalingLifecycleHookDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).autoscalingconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_autoscaling_group" {
