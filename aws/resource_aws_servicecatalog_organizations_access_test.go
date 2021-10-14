@@ -21,7 +21,7 @@ func TestAccAWSServiceCatalogOrganizationsAccess_basic(t *testing.T) {
 			acctest.PreCheckOrganizationManagementAccount(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsServiceCatalogOrganizationsAccessDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -36,7 +36,7 @@ func TestAccAWSServiceCatalogOrganizationsAccess_basic(t *testing.T) {
 }
 
 func testAccCheckAwsServiceCatalogOrganizationsAccessDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).scconn
+	conn := acctest.Provider.Meta().(*AWSClient).scconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_servicecatalog_organizations_access" {
@@ -67,7 +67,7 @@ func testAccCheckAwsServiceCatalogOrganizationsAccessExists(resourceName string)
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).scconn
+		conn := acctest.Provider.Meta().(*AWSClient).scconn
 
 		output, err := waiter.OrganizationsAccessStable(conn)
 

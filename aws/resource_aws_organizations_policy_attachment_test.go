@@ -15,7 +15,7 @@ import (
 )
 
 func testAccAwsOrganizationsPolicyAttachment_Account(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_organizations_policy_attachment.test"
 	policyIdResourceName := "aws_organizations_policy.test"
 	targetIdResourceName := "aws_organizations_organization.test"
@@ -26,7 +26,7 @@ func testAccAwsOrganizationsPolicyAttachment_Account(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, organizations.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsOrganizationsPolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -55,7 +55,7 @@ func testAccAwsOrganizationsPolicyAttachment_Account(t *testing.T) {
 }
 
 func testAccAwsOrganizationsPolicyAttachment_OrganizationalUnit(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_organizations_policy_attachment.test"
 	policyIdResourceName := "aws_organizations_policy.test"
 	targetIdResourceName := "aws_organizations_organizational_unit.test"
@@ -63,7 +63,7 @@ func testAccAwsOrganizationsPolicyAttachment_OrganizationalUnit(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, organizations.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsOrganizationsPolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -84,7 +84,7 @@ func testAccAwsOrganizationsPolicyAttachment_OrganizationalUnit(t *testing.T) {
 }
 
 func testAccAwsOrganizationsPolicyAttachment_Root(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_organizations_policy_attachment.test"
 	policyIdResourceName := "aws_organizations_policy.test"
 	targetIdResourceName := "aws_organizations_organization.test"
@@ -92,7 +92,7 @@ func testAccAwsOrganizationsPolicyAttachment_Root(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, organizations.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsOrganizationsPolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -113,7 +113,7 @@ func testAccAwsOrganizationsPolicyAttachment_Root(t *testing.T) {
 }
 
 func testAccCheckAwsOrganizationsPolicyAttachmentDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).organizationsconn
+	conn := acctest.Provider.Meta().(*AWSClient).organizationsconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_organizations_policy_attachment" {
@@ -172,7 +172,7 @@ func testAccCheckAwsOrganizationsPolicyAttachmentExists(resourceName string) res
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).organizationsconn
+		conn := acctest.Provider.Meta().(*AWSClient).organizationsconn
 
 		targetID, policyID, err := decodeAwsOrganizationsPolicyAttachmentID(rs.Primary.ID)
 		if err != nil {

@@ -66,7 +66,7 @@ func testAccAwsOrganizationsDelegatedAdministrator_disappears(t *testing.T) {
 				Config: testAccAwsOrganizationsDelegatedAdministratorConfig(servicePrincipal),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsOrganizationsDelegatedAdministratorExists(resourceName, &organization),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsOrganizationsDelegatedAdministrator(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsOrganizationsDelegatedAdministrator(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -75,7 +75,7 @@ func testAccAwsOrganizationsDelegatedAdministrator_disappears(t *testing.T) {
 }
 
 func testAccCheckAwsOrganizationsDelegatedAdministratorDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).organizationsconn
+	conn := acctest.Provider.Meta().(*AWSClient).organizationsconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_organizations_delegated_administrator" {
@@ -128,7 +128,7 @@ func testAccCheckAwsOrganizationsDelegatedAdministratorExists(n string, org *org
 		if err != nil {
 			return err
 		}
-		conn := testAccProvider.Meta().(*AWSClient).organizationsconn
+		conn := acctest.Provider.Meta().(*AWSClient).organizationsconn
 		input := &organizations.ListDelegatedAdministratorsInput{
 			ServicePrincipal: aws.String(servicePrincipal),
 		}

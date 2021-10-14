@@ -22,7 +22,7 @@ func testAccAwsOrganizationsOrganizationalUnit_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, organizations.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsOrganizationsOrganizationalUnitDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -54,14 +54,14 @@ func testAccAwsOrganizationsOrganizationalUnit_disappears(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, organizations.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsOrganizationsOrganizationalUnitDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsOrganizationsOrganizationalUnitConfig(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsOrganizationsOrganizationalUnitExists(resourceName, &unit),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsOrganizationsOrganizationalUnit(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsOrganizationsOrganizationalUnit(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -80,7 +80,7 @@ func testAccAwsOrganizationsOrganizationalUnit_Name(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, organizations.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsOrganizationsOrganizationalUnitDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -116,7 +116,7 @@ func testAccAwsOrganizationsOrganizationalUnit_Tags(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, organizations.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsOrganizationsOrganizationalUnitDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -153,7 +153,7 @@ func testAccAwsOrganizationsOrganizationalUnit_Tags(t *testing.T) {
 }
 
 func testAccCheckAwsOrganizationsOrganizationalUnitDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).organizationsconn
+	conn := acctest.Provider.Meta().(*AWSClient).organizationsconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_organizations_organizational_unit" {
@@ -192,7 +192,7 @@ func testAccCheckAwsOrganizationsOrganizationalUnitExists(n string, ou *organiza
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).organizationsconn
+		conn := acctest.Provider.Meta().(*AWSClient).organizationsconn
 		params := &organizations.DescribeOrganizationalUnitInput{
 			OrganizationalUnitId: &rs.Primary.ID,
 		}

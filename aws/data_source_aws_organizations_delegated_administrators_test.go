@@ -99,7 +99,7 @@ func TestAccDataSourceAwsOrganizationsDelegatedAdministrators_empty(t *testing.T
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, organizations.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsOrganizationsDelegatedAdministratorsEmptyConfig(servicePrincipal),
