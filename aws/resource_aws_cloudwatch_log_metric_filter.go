@@ -168,7 +168,7 @@ func lookupCloudWatchLogMetricFilter(conn *cloudwatchlogs.CloudWatchLogs,
 	log.Printf("[DEBUG] Reading CloudWatch Log Metric Filter: %s", input)
 	resp, err := conn.DescribeMetricFilters(&input)
 	if err != nil {
-		if isAWSErr(err, cloudwatchlogs.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, cloudwatchlogs.ErrCodeResourceNotFoundException, "") {
 			return nil, &resource.NotFoundError{
 				Message: fmt.Sprintf("CloudWatch Log Metric Filter %q / %q not found via"+
 					" initial DescribeMetricFilters call", name, logGroupName),
