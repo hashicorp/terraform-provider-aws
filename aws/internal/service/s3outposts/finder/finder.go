@@ -3,6 +3,7 @@ package finder
 import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3outposts"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Endpoint returns matching Endpoint by ARN.
