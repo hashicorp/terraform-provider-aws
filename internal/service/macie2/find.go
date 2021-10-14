@@ -3,7 +3,6 @@ package macie2
 import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/macie2"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // findMemberNotAssociated Return a list of members not associated and compare with account ID
