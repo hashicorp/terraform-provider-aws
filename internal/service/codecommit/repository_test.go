@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSCodeCommitRepository_basic(t *testing.T) {
+func TestAccCodeCommitRepository_basic(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_codecommit_repository.test"
 
@@ -39,7 +39,7 @@ func TestAccAWSCodeCommitRepository_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeCommitRepository_withChanges(t *testing.T) {
+func TestAccCodeCommitRepository_withChanges(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_codecommit_repository.test"
 
@@ -74,7 +74,7 @@ func TestAccAWSCodeCommitRepository_withChanges(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeCommitRepository_create_default_branch(t *testing.T) {
+func TestAccCodeCommitRepository_CreateDefault_branch(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_codecommit_repository.test"
 
@@ -102,7 +102,7 @@ func TestAccAWSCodeCommitRepository_create_default_branch(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeCommitRepository_create_and_update_default_branch(t *testing.T) {
+func TestAccCodeCommitRepository_CreateAndUpdateDefault_branch(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_codecommit_repository.test"
 
@@ -137,7 +137,7 @@ func TestAccAWSCodeCommitRepository_create_and_update_default_branch(t *testing.
 	})
 }
 
-func TestAccAWSCodeCommitRepository_tags(t *testing.T) {
+func TestAccCodeCommitRepository_tags(t *testing.T) {
 	rName := sdkacctest.RandString(10)
 	resourceName := "aws_codecommit_repository.test"
 
