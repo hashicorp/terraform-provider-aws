@@ -22,11 +22,11 @@ func TestAccDataSourceAwsWafWebAcl_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccDataSourceAwsWafWebAclConfig_NonExistent,
+				Config:      testAccWebACLDataSourceConfig_NonExistent,
 				ExpectError: regexp.MustCompile(`web ACLs not found`),
 			},
 			{
-				Config: testAccDataSourceAwsWafWebAclConfig_Name(name),
+				Config: testAccWebACLDataSourceConfig_Name(name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
@@ -36,7 +36,7 @@ func TestAccDataSourceAwsWafWebAcl_basic(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAwsWafWebAclConfig_Name(name string) string {
+func testAccWebACLDataSourceConfig_Name(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_web_acl" "web_acl" {
   name        = %[1]q
@@ -53,7 +53,7 @@ data "aws_waf_web_acl" "web_acl" {
 `, name)
 }
 
-const testAccDataSourceAwsWafWebAclConfig_NonExistent = `
+const testAccWebACLDataSourceConfig_NonExistent = `
 data "aws_waf_web_acl" "web_acl" {
   name = "tf-acc-test-does-not-exist"
 }

@@ -22,11 +22,11 @@ func TestAccDataSourceAwsWafRateBasedRule_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccDataSourceAwsWafRateBasedRuleConfig_NonExistent,
+				Config:      testAccRateBasedRuleDataSourceConfig_NonExistent,
 				ExpectError: regexp.MustCompile(`WAF Rate Based Rules not found`),
 			},
 			{
-				Config: testAccDataSourceAwsWafRateBasedRuleConfig_Name(name),
+				Config: testAccRateBasedRuleDataSourceConfig_Name(name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
@@ -36,7 +36,7 @@ func TestAccDataSourceAwsWafRateBasedRule_basic(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAwsWafRateBasedRuleConfig_Name(name string) string {
+func testAccRateBasedRuleDataSourceConfig_Name(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_rate_based_rule" "wafrule" {
   name        = %[1]q
@@ -51,7 +51,7 @@ data "aws_waf_rate_based_rule" "wafrule" {
 `, name)
 }
 
-const testAccDataSourceAwsWafRateBasedRuleConfig_NonExistent = `
+const testAccRateBasedRuleDataSourceConfig_NonExistent = `
 data "aws_waf_rate_based_rule" "wafrule" {
   name = "tf-acc-test-does-not-exist"
 }
