@@ -1,4 +1,4 @@
-package batch
+package batch_test
 
 import (
 	"testing"
