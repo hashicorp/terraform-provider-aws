@@ -84,7 +84,7 @@ func TestAccAWSSyntheticsCanary_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, synthetics.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsSyntheticsCanaryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -157,7 +157,7 @@ func TestAccAWSSyntheticsCanary_runtimeVersion(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, synthetics.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsSyntheticsCanaryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -192,7 +192,7 @@ func TestAccAWSSyntheticsCanary_startCanary(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, synthetics.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsSyntheticsCanaryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -240,7 +240,7 @@ func TestAccAWSSyntheticsCanary_startCanary_codeChanges(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, synthetics.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsSyntheticsCanaryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -281,7 +281,7 @@ func TestAccAWSSyntheticsCanary_s3(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, synthetics.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsSyntheticsCanaryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -325,7 +325,7 @@ func TestAccAWSSyntheticsCanary_runConfig(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, synthetics.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsSyntheticsCanaryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -371,7 +371,7 @@ func TestAccAWSSyntheticsCanary_runConfigTracing(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, synthetics.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsSyntheticsCanaryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -413,7 +413,7 @@ func TestAccAWSSyntheticsCanary_vpc(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, synthetics.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsSyntheticsCanaryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -462,7 +462,7 @@ func TestAccAWSSyntheticsCanary_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, synthetics.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsSyntheticsCanaryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -508,14 +508,14 @@ func TestAccAWSSyntheticsCanary_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, synthetics.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsSyntheticsCanaryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSyntheticsCanaryBasicConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSyntheticsCanary(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSyntheticsCanary(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -524,7 +524,7 @@ func TestAccAWSSyntheticsCanary_disappears(t *testing.T) {
 }
 
 func testAccCheckAwsSyntheticsCanaryDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).syntheticsconn
+	conn := acctest.Provider.Meta().(*AWSClient).syntheticsconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_synthetics_canary" {
@@ -558,7 +558,7 @@ func testAccCheckAwsSyntheticsCanaryExists(n string, canary *synthetics.Canary) 
 			return fmt.Errorf("No Synthetics Canary ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).syntheticsconn
+		conn := acctest.Provider.Meta().(*AWSClient).syntheticsconn
 
 		output, err := finder.CanaryByName(conn, rs.Primary.ID)
 
@@ -583,7 +583,7 @@ func testAccCheckAwsSyntheticsCanaryDeleteImplicitResources(n string) resource.T
 			return fmt.Errorf("synthetics Canary name not set")
 		}
 
-		lambdaConn := testAccProvider.Meta().(*AWSClient).lambdaconn
+		lambdaConn := acctest.Provider.Meta().(*AWSClient).lambdaconn
 
 		layerArn := rs.Primary.Attributes["source_location_arn"]
 		layerArnObj, err := arn.Parse(layerArn)
