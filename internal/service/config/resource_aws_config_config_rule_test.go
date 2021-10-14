@@ -1,4 +1,4 @@
-package aws
+package config_test
 
 import (
 	"fmt"
