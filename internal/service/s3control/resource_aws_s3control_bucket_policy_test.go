@@ -1,4 +1,4 @@
-package aws
+package s3control_test
 
 import (
 	"fmt"
