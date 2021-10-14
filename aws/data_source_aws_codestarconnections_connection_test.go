@@ -11,14 +11,14 @@ import (
 )
 
 func TestAccDataSourceAwsCodeStarConnectionsConnection_basic(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_codestarconnections_connection.test"
 	resourceName := "aws_codestarconnections_connection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t) },
 		ErrorCheck: acctest.ErrorCheck(t, codestarconnections.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAWSCodeStarConnectionsConnectionConfigBasic(rName),
@@ -36,14 +36,14 @@ func TestAccDataSourceAwsCodeStarConnectionsConnection_basic(t *testing.T) {
 }
 
 func TestAccDataSourceAwsCodeStarConnectionsConnection_tags(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_codestarconnections_connection.test"
 	resourceName := "aws_codestarconnections_connection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t) },
 		ErrorCheck: acctest.ErrorCheck(t, codestarconnections.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAWSCodeStarConnectionsConnectionConfigTags(rName),
