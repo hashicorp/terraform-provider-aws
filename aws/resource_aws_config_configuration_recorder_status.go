@@ -77,7 +77,7 @@ func resourceAwsConfigConfigurationRecorderStatusRead(d *schema.ResourceData, me
 	}
 	statusOut, err := conn.DescribeConfigurationRecorderStatus(&statusInput)
 	if err != nil {
-		if isAWSErr(err, configservice.ErrCodeNoSuchConfigurationRecorderException, "") {
+		if tfawserr.ErrMessageContains(err, configservice.ErrCodeNoSuchConfigurationRecorderException, "") {
 			log.Printf("[WARN] Configuration Recorder (status) %q is gone (NoSuchConfigurationRecorderException)", name)
 			d.SetId("")
 			return nil

@@ -187,7 +187,7 @@ func resourceAwsConfigConfigRulePut(d *schema.ResourceData, meta interface{}) er
 
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.PutConfigRule(&input)
 	}
 	if err != nil {
@@ -293,7 +293,7 @@ func resourceAwsConfigConfigRuleDelete(d *schema.ResourceData, meta interface{})
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.DeleteConfigRule(input)
 	}
 	if err != nil {

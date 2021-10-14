@@ -475,7 +475,7 @@ func testAccCheckLambdaFunctionEventInvokeConfigDestroy(s *terraform.State) erro
 
 		output, err := conn.GetFunctionEventInvokeConfig(input)
 
-		if isAWSErr(err, lambda.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, lambda.ErrCodeResourceNotFoundException, "") {
 			continue
 		}
 

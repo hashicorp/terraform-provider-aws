@@ -97,7 +97,7 @@ func resourceAwsConfigConfigurationRecorderRead(d *schema.ResourceData, meta int
 	}
 	out, err := conn.DescribeConfigurationRecorders(&input)
 	if err != nil {
-		if isAWSErr(err, configservice.ErrCodeNoSuchConfigurationRecorderException, "") {
+		if tfawserr.ErrMessageContains(err, configservice.ErrCodeNoSuchConfigurationRecorderException, "") {
 			log.Printf("[WARN] Configuration Recorder %q is gone (NoSuchConfigurationRecorderException)", d.Id())
 			d.SetId("")
 			return nil
@@ -140,7 +140,7 @@ func resourceAwsConfigConfigurationRecorderDelete(d *schema.ResourceData, meta i
 	}
 	_, err := conn.DeleteConfigurationRecorder(&input)
 	if err != nil {
-		if !isAWSErr(err, configservice.ErrCodeNoSuchConfigurationRecorderException, "") {
+		if !tfawserr.ErrMessageContains(err, configservice.ErrCodeNoSuchConfigurationRecorderException, "") {
 			return fmt.Errorf("Deleting Configuration Recorder failed: %s", err)
 		}
 	}

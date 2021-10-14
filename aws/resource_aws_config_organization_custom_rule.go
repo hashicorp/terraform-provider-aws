@@ -184,7 +184,7 @@ func resourceAwsConfigOrganizationCustomRuleRead(d *schema.ResourceData, meta in
 
 	rule, err := configDescribeOrganizationConfigRule(conn, d.Id())
 
-	if isAWSErr(err, configservice.ErrCodeNoSuchOrganizationConfigRuleException, "") {
+	if tfawserr.ErrMessageContains(err, configservice.ErrCodeNoSuchOrganizationConfigRuleException, "") {
 		log.Printf("[WARN] Config Organization Custom Rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil

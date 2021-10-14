@@ -432,7 +432,7 @@ func testAccCheckConfigOrganizationManagedRuleDestroy(s *terraform.State) error 
 
 		rule, err := configDescribeOrganizationConfigRule(conn, rs.Primary.ID)
 
-		if isAWSErr(err, configservice.ErrCodeNoSuchOrganizationConfigRuleException, "") {
+		if tfawserr.ErrMessageContains(err, configservice.ErrCodeNoSuchOrganizationConfigRuleException, "") {
 			continue
 		}
 

@@ -172,7 +172,7 @@ func testAccCheckLambdaProvisionedConcurrencyConfigDestroy(s *terraform.State) e
 
 		output, err := conn.GetProvisionedConcurrencyConfig(input)
 
-		if isAWSErr(err, lambda.ErrCodeProvisionedConcurrencyConfigNotFoundException, "") || isAWSErr(err, lambda.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, lambda.ErrCodeProvisionedConcurrencyConfigNotFoundException, "") || tfawserr.ErrMessageContains(err, lambda.ErrCodeResourceNotFoundException, "") {
 			continue
 		}
 

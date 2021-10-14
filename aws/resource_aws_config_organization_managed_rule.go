@@ -169,7 +169,7 @@ func resourceAwsConfigOrganizationManagedRuleRead(d *schema.ResourceData, meta i
 
 	rule, err := configDescribeOrganizationConfigRule(conn, d.Id())
 
-	if isAWSErr(err, configservice.ErrCodeNoSuchOrganizationConfigRuleException, "") {
+	if tfawserr.ErrMessageContains(err, configservice.ErrCodeNoSuchOrganizationConfigRuleException, "") {
 		log.Printf("[WARN] Config Organization Managed Rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
