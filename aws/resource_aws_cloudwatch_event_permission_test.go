@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
 func init() {
@@ -27,7 +28,7 @@ func init() {
 }
 
 func testSweepCloudWatchEventPermissions(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
 	}
@@ -35,7 +36,7 @@ func testSweepCloudWatchEventPermissions(region string) error {
 
 	output, err := conn.DescribeEventBus(&events.DescribeEventBusInput{})
 	if err != nil {
-		if testSweepSkipSweepError(err) {
+		if sweep.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping CloudWatch Event Permission sweep for %s: %s", region, err)
 			return nil
 		}
