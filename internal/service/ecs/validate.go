@@ -6,7 +6,7 @@ import (
 
 // Validates that ECS Placement Constraints are set correctly
 // Takes type, and expression as strings
-func validateAwsECSPlacementConstraint(constType, constExpr string) error {
+func validPlacementConstraint(constType, constExpr string) error {
 	switch constType {
 	case "distinctInstance":
 		// Expression can be nil for distinctInstance
@@ -23,7 +23,7 @@ func validateAwsECSPlacementConstraint(constType, constExpr string) error {
 
 // Validates that an Ecs placement strategy is set correctly
 // Takes type, and field as strings
-func validateAwsECSPlacementStrategy(stratType, stratField string) error {
+func validPlacementStrategy(stratType, stratField string) error {
 	switch stratType {
 	case "random":
 		// random requires the field attribute to be unset.

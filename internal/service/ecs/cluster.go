@@ -32,7 +32,7 @@ func ResourceCluster() *schema.Resource {
 		Update: resourceClusterUpdate,
 		Delete: resourceClusterDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsEcsClusterImport,
+			State: resourceClusterImport,
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -159,7 +159,7 @@ func ResourceCluster() *schema.Resource {
 	}
 }
 
-func resourceAwsEcsClusterImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceClusterImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	d.Set("name", d.Id())
 	d.SetId(arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,

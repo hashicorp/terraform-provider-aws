@@ -33,7 +33,7 @@ func TestValidPlacementConstraint(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		if err := validateAwsECSPlacementConstraint(tc.constType, tc.constExpr); err != nil && !tc.Err {
+		if err := validPlacementConstraint(tc.constType, tc.constExpr); err != nil && !tc.Err {
 			t.Fatalf("Unexpected validation error for \"%s:%s\": %s",
 				tc.constType, tc.constExpr, err)
 		}
@@ -80,7 +80,7 @@ func TestValidPlacementStrategy(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		if err := validateAwsECSPlacementStrategy(tc.stratType, tc.stratField); err != nil && !tc.Err {
+		if err := validPlacementStrategy(tc.stratType, tc.stratField); err != nil && !tc.Err {
 			t.Fatalf("Unexpected validation error for \"%s:%s\": %s",
 				tc.stratType, tc.stratField, err)
 		}

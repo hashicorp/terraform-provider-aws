@@ -24,7 +24,7 @@ func ResourceCapacityProvider() *schema.Resource {
 		Update: resourceCapacityProviderUpdate,
 		Delete: resourceCapacityProviderDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsEcsCapacityProviderImport,
+			State: resourceCapacityProviderImport,
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -244,7 +244,7 @@ func resourceCapacityProviderDelete(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func resourceAwsEcsCapacityProviderImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceCapacityProviderImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	d.Set("name", d.Id())
 	d.SetId(arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
