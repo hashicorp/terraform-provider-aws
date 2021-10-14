@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestAccAWSMacie2_serial(t *testing.T) {
+func TestAccMacie2_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Account": {
 			"basic":                        testAccAccount_basic,
