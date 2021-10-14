@@ -1,4 +1,4 @@
-package aws
+package synthetics
 
 import (
 	"fmt"
@@ -14,27 +14,15 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/synthetics/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/synthetics/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/mitchellh/go-homedir"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
-	tfsynthetics "github.com/hashicorp/terraform-provider-aws/internal/service/synthetics"
-	tfsynthetics "github.com/hashicorp/terraform-provider-aws/internal/service/synthetics"
-	tfsynthetics "github.com/hashicorp/terraform-provider-aws/internal/service/synthetics"
-	tfsynthetics "github.com/hashicorp/terraform-provider-aws/internal/service/synthetics"
-	tfsynthetics "github.com/hashicorp/terraform-provider-aws/internal/service/synthetics"
-	tfsynthetics "github.com/hashicorp/terraform-provider-aws/internal/service/synthetics"
-	tfsynthetics "github.com/hashicorp/terraform-provider-aws/internal/service/synthetics"
-	tfsynthetics "github.com/hashicorp/terraform-provider-aws/internal/service/synthetics"
-	tfsynthetics "github.com/hashicorp/terraform-provider-aws/internal/service/synthetics"
-	tfsynthetics "github.com/hashicorp/terraform-provider-aws/internal/service/synthetics"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 const awsMutexCanary = `aws_synthetics_canary`
@@ -300,9 +288,9 @@ func resourceCanaryCreate(d *schema.ResourceData, meta interface{}) error {
 	iamwaiterStopTime := time.Now().Add(tfiam.PropagationTimeout)
 
 	_, err = tfresource.RetryWhen(
-		tfiam.PropagationTimeout+tfsynthetics.canaryCreatedTimeout,
+		tfiam.PropagationTimeout+canaryCreatedTimeout,
 		func() (interface{}, error) {
-			return tfsynthetics.waitCanaryReady(conn, d.Id())
+			return waitCanaryReady(conn, d.Id())
 		},
 		func(err error) (bool, error) {
 			// Only retry IAM eventual consistency errors up to that timeout.
@@ -333,7 +321,7 @@ func resourceCanaryRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	canary, err := tfsynthetics.FindCanaryByName(conn, d.Id())
+	canary, err := FindCanaryByName(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Synthetics Canary (%s) not found, removing from state", d.Id())
@@ -456,11 +444,11 @@ func resourceCanaryUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if status != synthetics.CanaryStateReady {
-			if _, err := tfsynthetics.waitCanaryStopped(conn, d.Id()); err != nil {
+			if _, err := waitCanaryStopped(conn, d.Id()); err != nil {
 				return fmt.Errorf("error waiting for Synthetics Canary (%s) stop: %w", d.Id(), err)
 			}
 		} else {
-			if _, err := tfsynthetics.waitCanaryReady(conn, d.Id()); err != nil {
+			if _, err := waitCanaryReady(conn, d.Id()); err != nil {
 				return fmt.Errorf("error waiting for Synthetics Canary (%s) ready: %w", d.Id(), err)
 			}
 		}
@@ -522,7 +510,7 @@ func resourceCanaryDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting Synthetics Canary (%s): %w", d.Id(), err)
 	}
 
-	_, err = tfsynthetics.waitCanaryDeleted(conn, d.Id())
+	_, err = waitCanaryDeleted(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Synthetics Canary (%s) delete: %w", d.Id(), err)
@@ -686,7 +674,7 @@ func syntheticsStartCanary(name string, conn *synthetics.Synthetics) error {
 		return fmt.Errorf("error starting Synthetics Canary (%s): %w", name, err)
 	}
 
-	_, err = tfsynthetics.waitCanaryRunning(conn, name)
+	_, err = waitCanaryRunning(conn, name)
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Synthetics Canary (%s) start: %w", name, err)
@@ -705,7 +693,7 @@ func syntheticsStopCanary(name string, conn *synthetics.Synthetics) error {
 		return fmt.Errorf("error stopping Synthetics Canary (%s): %w", name, err)
 	}
 
-	_, err = tfsynthetics.waitCanaryStopped(conn, name)
+	_, err = waitCanaryStopped(conn, name)
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Synthetics Canary (%s) stop: %w", name, err)
