@@ -21,6 +21,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
 )
 
 func init() {
@@ -198,7 +200,7 @@ func testAccCheckAwsAppRunnerConnectionDestroy(s *terraform.State) error {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn
 
-		connection, err := finder.ConnectionSummaryByName(context.Background(), conn, rs.Primary.ID)
+		connection, err := tfapprunner.FindConnectionSummaryByName(context.Background(), conn, rs.Primary.ID)
 
 		if tfawserr.ErrCodeEquals(err, apprunner.ErrCodeResourceNotFoundException) {
 			continue
@@ -229,7 +231,7 @@ func testAccCheckAwsAppRunnerConnectionExists(n string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn
 
-		connection, err := finder.ConnectionSummaryByName(context.Background(), conn, rs.Primary.ID)
+		connection, err := tfapprunner.FindConnectionSummaryByName(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

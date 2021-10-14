@@ -20,6 +20,33 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 func ResourceService() *schema.Resource {
@@ -382,7 +409,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	var output *apprunner.CreateServiceOutput
 
-	err := resource.RetryContext(ctx, iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err := resource.RetryContext(ctx, tfiam.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		output, err = conn.CreateServiceWithContext(ctx, input)
 
@@ -411,7 +438,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.SetId(aws.StringValue(output.Service.ServiceArn))
 
-	if err := waiter.ServiceCreated(ctx, conn, d.Id()); err != nil {
+	if err := tfapprunner.WaitServiceCreated(ctx, conn, d.Id()); err != nil {
 		return diag.FromErr(fmt.Errorf("error waiting for App Runner Service (%s) creation: %w", d.Id(), err))
 	}
 
@@ -532,7 +559,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			return diag.FromErr(fmt.Errorf("error updating App Runner Service (%s): %w", d.Id(), err))
 		}
 
-		if err := waiter.ServiceUpdated(ctx, conn, d.Id()); err != nil {
+		if err := tfapprunner.WaitServiceUpdated(ctx, conn, d.Id()); err != nil {
 			return diag.FromErr(fmt.Errorf("error waiting for App Runner Service (%s) to update: %w", d.Id(), err))
 		}
 	}
@@ -565,7 +592,7 @@ func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.FromErr(fmt.Errorf("error deleting App Runner Service (%s): %w", d.Id(), err))
 	}
 
-	if err := waiter.ServiceDeleted(ctx, conn, d.Id()); err != nil {
+	if err := tfapprunner.WaitServiceDeleted(ctx, conn, d.Id()); err != nil {
 		if tfawserr.ErrCodeEquals(err, apprunner.ErrCodeResourceNotFoundException) {
 			return nil
 		}

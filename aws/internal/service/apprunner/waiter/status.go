@@ -8,6 +8,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/apprunner/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
 )
 
 const (
@@ -17,10 +19,10 @@ const (
 	CustomDomainAssociationStatusActive                          = "active"
 	CustomDomainAssociationStatusCreating                        = "creating"
 	CustomDomainAssociationStatusDeleting                        = "deleting"
-	CustomDomainAssociationStatusPendingCertificateDnsValidation = "pending_certificate_dns_validation"
+	CustomDomainAssociationStatusPendingCertificateDNSValidation = "pending_certificate_dns_validation"
 )
 
-func AutoScalingConfigurationStatus(ctx context.Context, conn *apprunner.AppRunner, arn string) resource.StateRefreshFunc {
+func StatusAutoScalingConfiguration(ctx context.Context, conn *apprunner.AppRunner, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &apprunner.DescribeAutoScalingConfigurationInput{
 			AutoScalingConfigurationArn: aws.String(arn),
@@ -40,9 +42,9 @@ func AutoScalingConfigurationStatus(ctx context.Context, conn *apprunner.AppRunn
 	}
 }
 
-func ConnectionStatus(ctx context.Context, conn *apprunner.AppRunner, name string) resource.StateRefreshFunc {
+func StatusConnection(ctx context.Context, conn *apprunner.AppRunner, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		c, err := finder.ConnectionSummaryByName(ctx, conn, name)
+		c, err := tfapprunner.FindConnectionSummaryByName(ctx, conn, name)
 
 		if err != nil {
 			return nil, "", err
@@ -56,9 +58,9 @@ func ConnectionStatus(ctx context.Context, conn *apprunner.AppRunner, name strin
 	}
 }
 
-func CustomDomainStatus(ctx context.Context, conn *apprunner.AppRunner, domainName, serviceArn string) resource.StateRefreshFunc {
+func StatusCustomDomain(ctx context.Context, conn *apprunner.AppRunner, domainName, serviceArn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		customDomain, err := finder.CustomDomain(ctx, conn, domainName, serviceArn)
+		customDomain, err := tfapprunner.FindCustomDomain(ctx, conn, domainName, serviceArn)
 
 		if err != nil {
 			return nil, "", err
@@ -72,7 +74,7 @@ func CustomDomainStatus(ctx context.Context, conn *apprunner.AppRunner, domainNa
 	}
 }
 
-func ServiceStatus(ctx context.Context, conn *apprunner.AppRunner, serviceArn string) resource.StateRefreshFunc {
+func StatusService(ctx context.Context, conn *apprunner.AppRunner, serviceArn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &apprunner.DescribeServiceInput{
 			ServiceArn: aws.String(serviceArn),

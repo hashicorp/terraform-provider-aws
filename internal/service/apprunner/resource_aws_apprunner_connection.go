@@ -17,6 +17,34 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
 )
 
 func ResourceConnection() *schema.Resource {
@@ -99,7 +127,7 @@ func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta in
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	c, err := finder.ConnectionSummaryByName(ctx, conn, d.Id())
+	c, err := tfapprunner.FindConnectionSummaryByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, apprunner.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] App Runner Connection (%s) not found, removing from state", d.Id())
@@ -177,7 +205,7 @@ func resourceConnectionDelete(ctx context.Context, d *schema.ResourceData, meta 
 		return diag.FromErr(fmt.Errorf("error deleting App Runner Connection (%s): %w", d.Id(), err))
 	}
 
-	if err := waiter.ConnectionDeleted(ctx, conn, d.Id()); err != nil {
+	if err := tfapprunner.WaitConnectionDeleted(ctx, conn, d.Id()); err != nil {
 		if tfawserr.ErrCodeEquals(err, apprunner.ErrCodeResourceNotFoundException) {
 			return nil
 		}

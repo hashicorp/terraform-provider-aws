@@ -16,6 +16,32 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
 )
 
 func ResourceAutoScalingConfigurationVersion() *schema.Resource {
@@ -119,7 +145,7 @@ func resourceAwsAppRunnerAutoScalingConfigurationCreate(ctx context.Context, d *
 
 	d.SetId(aws.StringValue(output.AutoScalingConfiguration.AutoScalingConfigurationArn))
 
-	if err := waiter.AutoScalingConfigurationActive(ctx, conn, d.Id()); err != nil {
+	if err := tfapprunner.WaitAutoScalingConfigurationActive(ctx, conn, d.Id()); err != nil {
 		return diag.FromErr(fmt.Errorf("error waiting for AutoScaling Configuration Version (%s) creation: %w", d.Id(), err))
 	}
 
@@ -151,7 +177,7 @@ func resourceAwsAppRunnerAutoScalingConfigurationRead(ctx context.Context, d *sc
 		return diag.FromErr(fmt.Errorf("error reading App Runner AutoScaling Configuration Version (%s): empty output", d.Id()))
 	}
 
-	if aws.StringValue(output.AutoScalingConfiguration.Status) == waiter.AutoScalingConfigurationStatusInactive {
+	if aws.StringValue(output.AutoScalingConfiguration.Status) == tfapprunner.AutoScalingConfigurationStatusInactive {
 		if d.IsNewResource() {
 			return diag.FromErr(fmt.Errorf("error reading App Runner AutoScaling Configuration Version (%s): %s after creation", d.Id(), aws.StringValue(output.AutoScalingConfiguration.Status)))
 		}
@@ -223,7 +249,7 @@ func resourceAwsAppRunnerAutoScalingConfigurationDelete(ctx context.Context, d *
 		return diag.FromErr(fmt.Errorf("error deleting App Runner AutoScaling Configuration Version (%s): %w", d.Id(), err))
 	}
 
-	if err := waiter.AutoScalingConfigurationInactive(ctx, conn, d.Id()); err != nil {
+	if err := tfapprunner.WaitAutoScalingConfigurationInactive(ctx, conn, d.Id()); err != nil {
 		if tfawserr.ErrCodeEquals(err, apprunner.ErrCodeResourceNotFoundException) {
 			return nil
 		}

@@ -19,6 +19,35 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
 )
 
 func TestAccAwsAppRunnerCustomDomainAssociation_basic(t *testing.T) {
@@ -45,7 +74,7 @@ func TestAccAwsAppRunnerCustomDomainAssociation_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "dns_target"),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", domain),
 					resource.TestCheckResourceAttr(resourceName, "enable_www_subdomain", "true"),
-					resource.TestCheckResourceAttr(resourceName, "status", waiter.CustomDomainAssociationStatusPendingCertificateDnsValidation),
+					resource.TestCheckResourceAttr(resourceName, "status", tfapprunner.CustomDomainAssociationStatusPendingCertificateDNSValidation),
 					resource.TestCheckResourceAttrPair(resourceName, "service_arn", serviceResourceName, "arn"),
 				),
 			},
@@ -100,7 +129,7 @@ func testAccCheckAwsAppRunnerCustomDomainAssociationDestroy(s *terraform.State) 
 			return err
 		}
 
-		customDomain, err := finder.CustomDomain(context.Background(), conn, domainName, serviceArn)
+		customDomain, err := tfapprunner.FindCustomDomain(context.Background(), conn, domainName, serviceArn)
 
 		if tfawserr.ErrCodeEquals(err, apprunner.ErrCodeResourceNotFoundException) {
 			continue
@@ -137,7 +166,7 @@ func testAccCheckAwsAppRunnerCustomDomainAssociationExists(n string) resource.Te
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn
 
-		customDomain, err := finder.CustomDomain(context.Background(), conn, domainName, serviceArn)
+		customDomain, err := tfapprunner.FindCustomDomain(context.Background(), conn, domainName, serviceArn)
 
 		if err != nil {
 			return err
