@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSDlmLifecyclePolicy_basic(t *testing.T) {
@@ -145,7 +146,7 @@ func TestAccAWSDlmLifecyclePolicy_Tags(t *testing.T) {
 }
 
 func dlmLifecyclePolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).dlmconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DLMConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_dlm_lifecycle_policy" {
@@ -181,7 +182,7 @@ func checkDlmLifecyclePolicyExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).dlmconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DLMConn
 
 		input := dlm.GetLifecyclePolicyInput{
 			PolicyId: aws.String(rs.Primary.ID),
@@ -198,7 +199,7 @@ func checkDlmLifecyclePolicyExists(name string) resource.TestCheckFunc {
 }
 
 func testAccPreCheckAWSDlm(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).dlmconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DLMConn
 
 	input := &dlm.GetLifecyclePoliciesInput{}
 

@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsDlmLifecyclePolicy() *schema.Resource {
@@ -146,8 +147,8 @@ func resourceAwsDlmLifecyclePolicy() *schema.Resource {
 }
 
 func resourceAwsDlmLifecyclePolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dlmconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).DLMConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := dlm.CreateLifecyclePolicyInput{
@@ -173,9 +174,9 @@ func resourceAwsDlmLifecyclePolicyCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsDlmLifecyclePolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dlmconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).DLMConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	log.Printf("[INFO] Reading DLM lifecycle policy: %s", d.Id())
 	out, err := conn.GetLifecyclePolicy(&dlm.GetLifecyclePolicyInput{
@@ -215,7 +216,7 @@ func resourceAwsDlmLifecyclePolicyRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsDlmLifecyclePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dlmconn
+	conn := meta.(*conns.AWSClient).DLMConn
 
 	input := dlm.UpdateLifecyclePolicyInput{
 		PolicyId: aws.String(d.Id()),
@@ -258,7 +259,7 @@ func resourceAwsDlmLifecyclePolicyUpdate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsDlmLifecyclePolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dlmconn
+	conn := meta.(*conns.AWSClient).DLMConn
 
 	log.Printf("[INFO] Deleting DLM lifecycle policy: %s", d.Id())
 	_, err := conn.DeleteLifecyclePolicy(&dlm.DeleteLifecyclePolicyInput{
