@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfappmesh "github.com/hashicorp/terraform-provider-aws/internal/service/appmesh"
 )
 
 func ResourceRoute() *schema.Resource {
@@ -746,7 +747,7 @@ func resourceRouteRead(d *schema.ResourceData, meta interface{}) error {
 
 	var resp *appmesh.DescribeRouteOutput
 
-	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(tfappmesh.propagationTimeout, func() *resource.RetryError {
 		var err error
 
 		resp, err = conn.DescribeRoute(req)

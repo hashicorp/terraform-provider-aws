@@ -6,9 +6,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// GatewayRoute returns the gateway route corresponding to the specified mesh name, virtual gateway name, gateway route name and optional mesh owner.
+// FindGatewayRoute returns the gateway route corresponding to the specified mesh name, virtual gateway name, gateway route name and optional mesh owner.
 // Returns an error if no gateway route is found.
-func GatewayRoute(conn *appmesh.AppMesh, meshName, virtualGatewayName, gatewayRouteName, meshOwner string) (*appmesh.GatewayRouteData, error) {
+func FindGatewayRoute(conn *appmesh.AppMesh, meshName, virtualGatewayName, gatewayRouteName, meshOwner string) (*appmesh.GatewayRouteData, error) {
 	input := &appmesh.DescribeGatewayRouteInput{
 		GatewayRouteName:   aws.String(gatewayRouteName),
 		MeshName:           aws.String(meshName),
@@ -30,9 +30,9 @@ func GatewayRoute(conn *appmesh.AppMesh, meshName, virtualGatewayName, gatewayRo
 	return output.GatewayRoute, nil
 }
 
-// VirtualGateway returns the virtual gateway corresponding to the specified mesh name, virtual gateway name and optional mesh owner.
+// FindVirtualGateway returns the virtual gateway corresponding to the specified mesh name, virtual gateway name and optional mesh owner.
 // Returns an error if no virtual gateway is found.
-func VirtualGateway(conn *appmesh.AppMesh, meshName, virtualGatewayName, meshOwner string) (*appmesh.VirtualGatewayData, error) {
+func FindVirtualGateway(conn *appmesh.AppMesh, meshName, virtualGatewayName, meshOwner string) (*appmesh.VirtualGatewayData, error) {
 	input := &appmesh.DescribeVirtualGatewayInput{
 		MeshName:           aws.String(meshName),
 		VirtualGatewayName: aws.String(virtualGatewayName),

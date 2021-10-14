@@ -20,6 +20,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfappmesh "github.com/hashicorp/terraform-provider-aws/internal/service/appmesh"
+	tfappmesh "github.com/hashicorp/terraform-provider-aws/internal/service/appmesh"
+	tfappmesh "github.com/hashicorp/terraform-provider-aws/internal/service/appmesh"
 )
 
 func ResourceGatewayRoute() *schema.Resource {
@@ -336,10 +339,10 @@ func resourceGatewayRouteRead(d *schema.ResourceData, meta interface{}) error {
 
 	var gatewayRoute *appmesh.GatewayRouteData
 
-	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(tfappmesh.propagationTimeout, func() *resource.RetryError {
 		var err error
 
-		gatewayRoute, err = finder.GatewayRoute(conn, d.Get("mesh_name").(string), d.Get("virtual_gateway_name").(string), d.Get("name").(string), d.Get("mesh_owner").(string))
+		gatewayRoute, err = tfappmesh.FindGatewayRoute(conn, d.Get("mesh_name").(string), d.Get("virtual_gateway_name").(string), d.Get("name").(string), d.Get("mesh_owner").(string))
 
 		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
 			return resource.RetryableError(err)
@@ -353,7 +356,7 @@ func resourceGatewayRouteRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if tfresource.TimedOut(err) {
-		gatewayRoute, err = finder.GatewayRoute(conn, d.Get("mesh_name").(string), d.Get("virtual_gateway_name").(string), d.Get("name").(string), d.Get("mesh_owner").(string))
+		gatewayRoute, err = tfappmesh.FindGatewayRoute(conn, d.Get("mesh_name").(string), d.Get("virtual_gateway_name").(string), d.Get("name").(string), d.Get("mesh_owner").(string))
 	}
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
@@ -488,7 +491,7 @@ func resourceAwsAppmeshGatewayRouteImport(d *schema.ResourceData, meta interface
 
 	conn := meta.(*conns.AWSClient).AppMeshConn
 
-	gatewayRoute, err := finder.GatewayRoute(conn, mesh, vgName, name, "")
+	gatewayRoute, err := tfappmesh.FindGatewayRoute(conn, mesh, vgName, name, "")
 
 	if err != nil {
 		return nil, err

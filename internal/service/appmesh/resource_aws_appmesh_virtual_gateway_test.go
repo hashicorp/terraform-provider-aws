@@ -19,6 +19,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfappmesh "github.com/hashicorp/terraform-provider-aws/internal/service/appmesh"
+	tfappmesh "github.com/hashicorp/terraform-provider-aws/internal/service/appmesh"
 )
 
 func init() {
@@ -811,7 +813,7 @@ func testAccCheckAppmeshVirtualGatewayDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.VirtualGateway(conn, rs.Primary.Attributes["mesh_name"], rs.Primary.Attributes["name"], rs.Primary.Attributes["mesh_owner"])
+		_, err := tfappmesh.FindVirtualGateway(conn, rs.Primary.Attributes["mesh_name"], rs.Primary.Attributes["name"], rs.Primary.Attributes["mesh_owner"])
 		if tfawserr.ErrMessageContains(err, appmesh.ErrCodeNotFoundException, "") {
 			continue
 		}
@@ -837,7 +839,7 @@ func testAccCheckAppmeshVirtualGatewayExists(name string, v *appmesh.VirtualGate
 			return fmt.Errorf("No App Mesh virtual gateway ID is set")
 		}
 
-		out, err := finder.VirtualGateway(conn, rs.Primary.Attributes["mesh_name"], rs.Primary.Attributes["name"], rs.Primary.Attributes["mesh_owner"])
+		out, err := tfappmesh.FindVirtualGateway(conn, rs.Primary.Attributes["mesh_name"], rs.Primary.Attributes["name"], rs.Primary.Attributes["mesh_owner"])
 		if err != nil {
 			return err
 		}

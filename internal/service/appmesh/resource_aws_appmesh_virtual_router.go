@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfappmesh "github.com/hashicorp/terraform-provider-aws/internal/service/appmesh"
 )
 
 func ResourceVirtualRouter() *schema.Resource {
@@ -169,7 +170,7 @@ func resourceVirtualRouterRead(d *schema.ResourceData, meta interface{}) error {
 
 	var resp *appmesh.DescribeVirtualRouterOutput
 
-	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(tfappmesh.propagationTimeout, func() *resource.RetryError {
 		var err error
 
 		resp, err = conn.DescribeVirtualRouter(req)
