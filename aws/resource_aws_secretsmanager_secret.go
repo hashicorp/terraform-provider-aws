@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceSecret() *schema.Resource {
@@ -56,7 +57,7 @@ func ResourceSecret() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc:  validateSecretManagerSecretName,
+				ValidateFunc:  validSecretName,
 			},
 			"name_prefix": {
 				Type:          schema.TypeString,
@@ -64,14 +65,14 @@ func ResourceSecret() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
-				ValidateFunc:  validateSecretManagerSecretNamePrefix,
+				ValidateFunc:  validSecretNamePrefix,
 			},
 			"policy": {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
 				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
+				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
 			},
 			"recovery_window_in_days": {
 				Type:     schema.TypeInt,
