@@ -53,7 +53,7 @@ func testSweepEksFargateProfiles(region string) error {
 				}
 
 				for _, profile := range page.FargateProfileNames {
-					r := ResourceFargateProfile()
+					r := tfeks.ResourceFargateProfile()
 					d := r.Data(nil)
 					d.SetId(tfeks.FargateProfileCreateResourceID(aws.StringValue(cluster), aws.StringValue(profile)))
 
@@ -144,7 +144,7 @@ func TestAccAWSEksFargateProfile_disappears(t *testing.T) {
 				Config: testAccAWSEksFargateProfileConfigFargateProfileName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksFargateProfileExists(resourceName, &fargateProfile),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceFargateProfile(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfeks.ResourceFargateProfile(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

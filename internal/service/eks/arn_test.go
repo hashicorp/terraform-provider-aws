@@ -10,6 +10,7 @@ package eks_test
 
 import (
 	"fmt"
+	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
 	"testing"
 )
 
@@ -29,13 +30,13 @@ var arnTests = []struct {
 
 func TestUserARN(t *testing.T) {
 	for _, tc := range arnTests {
-		actual, err := Canonicalize(tc.arn)
+		actual, err := tfeks.Canonicalize(tc.arn)
 		if err != nil && tc.err == nil || err == nil && tc.err != nil {
 			t.Errorf("Canoncialize(%s) expected err: %v, actual err: %v", tc.arn, tc.err, err)
 			continue
 		}
 		if actual != tc.expected {
-			t.Errorf("Canonicalize(%s) expected: %s, actual: %s", tc.arn, tc.expected, actual)
+			t.Errorf("tfeks.Canonicalize(%s) expected: %s, actual: %s", tc.arn, tc.expected, actual)
 		}
 	}
 }

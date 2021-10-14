@@ -56,7 +56,7 @@ func testSweepEksAddon(region string) error {
 				}
 
 				for _, addon := range page.Addons {
-					r := ResourceAddon()
+					r := tfeks.ResourceAddon()
 					d := r.Data(nil)
 					d.SetId(tfeks.AddonCreateResourceID(aws.StringValue(cluster), aws.StringValue(addon)))
 
@@ -147,7 +147,7 @@ func TestAccAWSEksAddon_disappears(t *testing.T) {
 				Config: testAccAWSEksAddon_Basic(rName, addonName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksAddonExists(ctx, resourceName, &addon),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceAddon(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfeks.ResourceAddon(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -173,7 +173,7 @@ func TestAccAWSEksAddon_disappears_Cluster(t *testing.T) {
 				Config: testAccAWSEksAddon_Basic(rName, addonName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksAddonExists(ctx, resourceName, &addon),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceCluster(), clusterResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfeks.ResourceCluster(), clusterResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

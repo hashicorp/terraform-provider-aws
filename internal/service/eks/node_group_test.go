@@ -55,7 +55,7 @@ func testSweepEksNodeGroups(region string) error {
 				}
 
 				for _, nodeGroup := range page.Nodegroups {
-					r := ResourceNodeGroup()
+					r := tfeks.ResourceNodeGroup()
 					d := r.Data(nil)
 					d.SetId(tfeks.NodeGroupCreateResourceID(aws.StringValue(cluster), aws.StringValue(nodeGroup)))
 
@@ -218,7 +218,7 @@ func TestAccAWSEksNodeGroup_disappears(t *testing.T) {
 				Config: testAccAWSEksNodeGroupConfigNodeGroupName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceNodeGroup(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfeks.ResourceNodeGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
