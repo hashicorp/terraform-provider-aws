@@ -20,7 +20,7 @@ func TestAccAWSS3OutpostsEndpoint_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3outposts.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3OutpostsEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -53,14 +53,14 @@ func TestAccAWSS3OutpostsEndpoint_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3outposts.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3OutpostsEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSS3OutpostsEndpointConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3OutpostsEndpointExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsS3OutpostsEndpoint(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsS3OutpostsEndpoint(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -69,7 +69,7 @@ func TestAccAWSS3OutpostsEndpoint_disappears(t *testing.T) {
 }
 
 func testAccCheckAWSS3OutpostsEndpointDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).s3outpostsconn
+	conn := acctest.Provider.Meta().(*AWSClient).s3outpostsconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_s3outposts_endpoint" {
@@ -101,7 +101,7 @@ func testAccCheckAWSS3OutpostsEndpointExists(resourceName string) resource.TestC
 			return fmt.Errorf("no resource ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).s3outpostsconn
+		conn := acctest.Provider.Meta().(*AWSClient).s3outpostsconn
 
 		endpoint, err := finder.Endpoint(conn, rs.Primary.ID)
 
