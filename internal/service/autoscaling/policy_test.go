@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSAutoscalingPolicy_basic(t *testing.T) {
+func TestAccAutoScalingPolicy_basic(t *testing.T) {
 	var policy autoscaling.ScalingPolicy
 
 	resourceSimpleName := "aws_autoscaling_policy.foobar_simple"
@@ -105,7 +105,7 @@ func TestAccAWSAutoscalingPolicy_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAutoscalingPolicy_predictiveScaling(t *testing.T) {
+func TestAccAutoScalingPolicy_predictiveScaling(t *testing.T) {
 	var policy autoscaling.ScalingPolicy
 
 	resourceSimpleName := "aws_autoscaling_policy.test"
@@ -143,7 +143,7 @@ func TestAccAWSAutoscalingPolicy_predictiveScaling(t *testing.T) {
 	})
 }
 
-func TestAccAWSAutoscalingPolicy_predictiveScalingRemoved(t *testing.T) {
+func TestAccAutoScalingPolicy_predictiveScalingRemoved(t *testing.T) {
 	var policy autoscaling.ScalingPolicy
 
 	resourceSimpleName := "aws_autoscaling_policy.test"
@@ -180,7 +180,7 @@ func TestAccAWSAutoscalingPolicy_predictiveScalingRemoved(t *testing.T) {
 	})
 }
 
-func TestAccAWSAutoscalingPolicy_predictiveScalingUpdated(t *testing.T) {
+func TestAccAutoScalingPolicy_predictiveScalingUpdated(t *testing.T) {
 	var policy autoscaling.ScalingPolicy
 
 	resourceSimpleName := "aws_autoscaling_policy.test"
@@ -233,7 +233,7 @@ func TestAccAWSAutoscalingPolicy_predictiveScalingUpdated(t *testing.T) {
 	})
 }
 
-func TestAccAWSAutoscalingPolicy_disappears(t *testing.T) {
+func TestAccAutoScalingPolicy_disappears(t *testing.T) {
 	var policy autoscaling.ScalingPolicy
 
 	resourceName := "aws_autoscaling_policy.foobar_simple"
@@ -295,7 +295,7 @@ func testAccCheckScalingPolicyDisappears(conf *autoscaling.ScalingPolicy) resour
 	}
 }
 
-func TestAccAWSAutoscalingPolicy_SimpleScalingStepAdjustment(t *testing.T) {
+func TestAccAutoScalingPolicy_simpleScalingStepAdjustment(t *testing.T) {
 	var policy autoscaling.ScalingPolicy
 
 	resourceName := "aws_autoscaling_policy.foobar_simple"
@@ -326,7 +326,7 @@ func TestAccAWSAutoscalingPolicy_SimpleScalingStepAdjustment(t *testing.T) {
 	})
 }
 
-func TestAccAWSAutoscalingPolicy_TargetTrack_Predefined(t *testing.T) {
+func TestAccAutoScalingPolicy_TargetTrack_predefined(t *testing.T) {
 	var policy autoscaling.ScalingPolicy
 
 	name := fmt.Sprintf("terraform-testacc-asp-%s", sdkacctest.RandString(5))
@@ -353,7 +353,7 @@ func TestAccAWSAutoscalingPolicy_TargetTrack_Predefined(t *testing.T) {
 	})
 }
 
-func TestAccAWSAutoscalingPolicy_TargetTrack_Custom(t *testing.T) {
+func TestAccAutoScalingPolicy_TargetTrack_custom(t *testing.T) {
 	var policy autoscaling.ScalingPolicy
 
 	name := fmt.Sprintf("terraform-testacc-asp-%s", sdkacctest.RandString(5))
@@ -380,7 +380,7 @@ func TestAccAWSAutoscalingPolicy_TargetTrack_Custom(t *testing.T) {
 	})
 }
 
-func TestAccAWSAutoscalingPolicy_zerovalue(t *testing.T) {
+func TestAccAutoScalingPolicy_zeroValue(t *testing.T) {
 	var simplepolicy autoscaling.ScalingPolicy
 	var steppolicy autoscaling.ScalingPolicy
 

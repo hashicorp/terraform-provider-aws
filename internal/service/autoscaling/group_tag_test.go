@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccAWSAutoscalingGroupTag_basic(t *testing.T) {
+func TestAccAutoScalingGroupTag_basic(t *testing.T) {
 	resourceName := "aws_autoscaling_group_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -40,7 +40,7 @@ func TestAccAWSAutoscalingGroupTag_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAutoscalingGroupTag_disappears(t *testing.T) {
+func TestAccAutoScalingGroupTag_disappears(t *testing.T) {
 	resourceName := "aws_autoscaling_group_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -61,7 +61,7 @@ func TestAccAWSAutoscalingGroupTag_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSAutoscalingGroupTag_Value(t *testing.T) {
+func TestAccAutoScalingGroupTag_value(t *testing.T) {
 	resourceName := "aws_autoscaling_group_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{

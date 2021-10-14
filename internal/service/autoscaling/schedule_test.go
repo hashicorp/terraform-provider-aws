@@ -16,7 +16,7 @@ import (
 	tfautoscaling "github.com/hashicorp/terraform-provider-aws/internal/service/autoscaling"
 )
 
-func TestAccAWSAutoscalingSchedule_basic(t *testing.T) {
+func TestAccAutoScalingSchedule_basic(t *testing.T) {
 	var schedule autoscaling.ScheduledUpdateGroupAction
 	rName := fmt.Sprintf("tf-test-%d", sdkacctest.RandInt())
 	start := testAccScheduleValidStart(t)
@@ -55,7 +55,7 @@ func TestAccAWSAutoscalingSchedule_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAutoscalingSchedule_disappears(t *testing.T) {
+func TestAccAutoScalingSchedule_disappears(t *testing.T) {
 	var schedule autoscaling.ScheduledUpdateGroupAction
 	rName := fmt.Sprintf("tf-test-%d", sdkacctest.RandInt())
 	start := testAccScheduleValidStart(t)
@@ -91,7 +91,7 @@ func testAccCheckScalingScheduleDisappears(schedule *autoscaling.ScheduledUpdate
 	}
 }
 
-func TestAccAWSAutoscalingSchedule_recurrence(t *testing.T) {
+func TestAccAutoScalingSchedule_recurrence(t *testing.T) {
 	var schedule autoscaling.ScheduledUpdateGroupAction
 
 	rName := fmt.Sprintf("tf-test-%d", sdkacctest.RandInt())
@@ -123,7 +123,7 @@ func TestAccAWSAutoscalingSchedule_recurrence(t *testing.T) {
 	})
 }
 
-func TestAccAWSAutoscalingSchedule_zeroValues(t *testing.T) {
+func TestAccAutoScalingSchedule_zeroValues(t *testing.T) {
 	var schedule autoscaling.ScheduledUpdateGroupAction
 
 	rName := fmt.Sprintf("tf-test-%d", sdkacctest.RandInt())
@@ -156,7 +156,7 @@ func TestAccAWSAutoscalingSchedule_zeroValues(t *testing.T) {
 	})
 }
 
-func TestAccAWSAutoscalingSchedule_negativeOne(t *testing.T) {
+func TestAccAutoScalingSchedule_negativeOne(t *testing.T) {
 	var schedule autoscaling.ScheduledUpdateGroupAction
 
 	rName := fmt.Sprintf("tf-test-%d", sdkacctest.RandInt())
