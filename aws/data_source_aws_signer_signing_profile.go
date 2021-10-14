@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsSignerSigningProfile() *schema.Resource {
+func DataSourceSigningProfile() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsSignerSigningProfileRead,
+		Read: dataSourceSigningProfileRead,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -84,7 +84,7 @@ func dataSourceAwsSignerSigningProfile() *schema.Resource {
 	}
 }
 
-func dataSourceAwsSignerSigningProfileRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceSigningProfileRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SignerConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

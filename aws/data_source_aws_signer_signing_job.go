@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsSignerSigningJob() *schema.Resource {
+func DataSourceSigningJob() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsSignerSigningJobRead,
+		Read: dataSourceSigningJobRead,
 
 		Schema: map[string]*schema.Schema{
 			"job_id": {
@@ -143,7 +143,7 @@ func dataSourceAwsSignerSigningJob() *schema.Resource {
 	}
 }
 
-func dataSourceAwsSignerSigningJobRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceSigningJobRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SignerConn
 	jobId := d.Get("job_id").(string)
 

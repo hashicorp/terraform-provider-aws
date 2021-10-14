@@ -17,11 +17,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSignerSigningProfilePermission() *schema.Resource {
+func ResourceSigningProfilePermission() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSignerSigningProfilePermissionCreate,
-		Read:   resourceAwsSignerSigningProfilePermissionRead,
-		Delete: resourceAwsSignerSigningProfilePermissionDelete,
+		Create: resourceSigningProfilePermissionCreate,
+		Read:   resourceSigningProfilePermissionRead,
+		Delete: resourceSigningProfilePermissionDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsSignerSigningProfilePermissionImport,
@@ -75,13 +75,13 @@ func resourceAwsSignerSigningProfilePermission() *schema.Resource {
 	}
 }
 
-func resourceAwsSignerSigningProfilePermissionCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceSigningProfilePermissionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SignerConn
 
 	profileName := d.Get("profile_name").(string)
 
-	awsMutexKV.Lock(profileName)
-	defer awsMutexKV.Unlock(profileName)
+	conns.GlobalMutexKV.Lock(profileName)
+	defer conns.GlobalMutexKV.Unlock(profileName)
 
 	listProfilePermissionsInput := &signer.ListProfilePermissionsInput{
 		ProfileName: aws.String(profileName),
@@ -137,7 +137,7 @@ func resourceAwsSignerSigningProfilePermissionCreate(d *schema.ResourceData, met
 
 	err = resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		// IAM is eventually consistent :/
-		err := resourceAwsSignerSigningProfilePermissionRead(d, meta)
+		err := resourceSigningProfilePermissionRead(d, meta)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, signer.ErrCodeResourceNotFoundException, "") {
 				return resource.RetryableError(
@@ -151,7 +151,7 @@ func resourceAwsSignerSigningProfilePermissionCreate(d *schema.ResourceData, met
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		err = resourceAwsSignerSigningProfilePermissionRead(d, meta)
+		err = resourceSigningProfilePermissionRead(d, meta)
 	}
 	if err != nil {
 		return fmt.Errorf("error reading new Signer permissions: %s", err)
@@ -163,7 +163,7 @@ func resourceAwsSignerSigningProfilePermissionCreate(d *schema.ResourceData, met
 	return nil
 }
 
-func resourceAwsSignerSigningProfilePermissionRead(d *schema.ResourceData, meta interface{}) error {
+func resourceSigningProfilePermissionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SignerConn
 
 	listProfilePermissionsInput := &signer.ListProfilePermissionsInput{
@@ -237,13 +237,13 @@ func getProfilePermission(permissions []*signer.Permission, statementId string) 
 	return nil
 }
 
-func resourceAwsSignerSigningProfilePermissionDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceSigningProfilePermissionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SignerConn
 
 	profileName := d.Get("profile_name").(string)
 
-	awsMutexKV.Lock(profileName)
-	defer awsMutexKV.Unlock(profileName)
+	conns.GlobalMutexKV.Lock(profileName)
+	defer conns.GlobalMutexKV.Unlock(profileName)
 
 	listProfilePermissionsInput := &signer.ListProfilePermissionsInput{
 		ProfileName: aws.String(profileName),
