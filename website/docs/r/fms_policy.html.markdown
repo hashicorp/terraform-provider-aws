@@ -36,6 +36,10 @@ resource "aws_fms_policy" "example" {
       overrideCustomerWebACLAssociation = false
     })
   }
+
+  tags = {
+    Name = "foobar-fms-policy"
+  }
 }
 
 resource "aws_wafregional_rule_group" "example" {
@@ -58,6 +62,7 @@ The following arguments are supported:
 * `resource_type` - (Optional) A resource type to protect. Conflicts with `resource_type_list`. See the [FMS API Reference](https://docs.aws.amazon.com/fms/2018-01-01/APIReference/API_Policy.html#fms-Type-Policy-ResourceType) for more information about supported values.
 * `resource_type_list` - (Optional) A list of resource types to protect. Conflicts with `resource_type`. See the [FMS API Reference](https://docs.aws.amazon.com/fms/2018-01-01/APIReference/API_Policy.html#fms-Type-Policy-ResourceType) for more information about supported values.
 * `security_service_policy_data` - (Required) The objects to include in Security Service Policy Data. Documented below.
+* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## `exclude_map` Configuration Block
 
@@ -84,6 +89,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The AWS account ID of the AWS Firewall Manager administrator account.
 * `policy_update_token` - A unique identifier for each update to the policy.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 
