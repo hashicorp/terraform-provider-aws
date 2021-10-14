@@ -188,7 +188,7 @@ func resourceAwsDaxClusterCreate(d *schema.ResourceData, meta interface{}) error
 	subnetGroupName := d.Get("subnet_group_name").(string)
 	securityIdSet := d.Get("security_group_ids").(*schema.Set)
 
-	securityIds := expandStringSet(securityIdSet)
+	securityIds := flex.ExpandStringSet(securityIdSet)
 
 	req := &dax.CreateClusterInput{
 		ClusterName:       aws.String(clusterName),
@@ -219,13 +219,13 @@ func resourceAwsDaxClusterCreate(d *schema.ResourceData, meta interface{}) error
 
 	preferredAZs := d.Get("availability_zones").(*schema.Set)
 	if preferredAZs.Len() > 0 {
-		req.AvailabilityZones = expandStringSet(preferredAZs)
+		req.AvailabilityZones = flex.ExpandStringSet(preferredAZs)
 	}
 
 	if v, ok := d.GetOk("server_side_encryption"); ok && len(v.([]interface{})) > 0 {
 		options := v.([]interface{})
 		s := options[0].(map[string]interface{})
-		req.SSESpecification = expandDaxEncryptAtRestOptions(s)
+		req.SSESpecification = expandEncryptAtRestOptions(s)
 	}
 
 	// IAM roles take some time to propagate
@@ -315,7 +315,7 @@ func resourceAwsDaxClusterRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("subnet_group_name", c.SubnetGroup)
-	d.Set("security_group_ids", flattenDaxSecurityGroupIds(c.SecurityGroups))
+	d.Set("security_group_ids", flattenDAXSecurityGroupIDs(c.SecurityGroups))
 
 	if c.ParameterGroup != nil {
 		d.Set("parameter_group_name", c.ParameterGroup.ParameterGroupName)
@@ -333,7 +333,7 @@ func resourceAwsDaxClusterRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	if err := d.Set("server_side_encryption", flattenDaxEncryptAtRestOptions(c.SSEDescription)); err != nil {
+	if err := d.Set("server_side_encryption", flattenDAXEncryptAtRestOptions(c.SSEDescription)); err != nil {
 		return fmt.Errorf("error setting server_side_encryption: %s", err)
 	}
 
@@ -381,7 +381,7 @@ func resourceAwsDaxClusterUpdate(d *schema.ResourceData, meta interface{}) error
 
 	if d.HasChange("security_group_ids") {
 		if attr := d.Get("security_group_ids").(*schema.Set); attr.Len() > 0 {
-			req.SecurityGroupIds = expandStringSet(attr)
+			req.SecurityGroupIds = flex.ExpandStringSet(attr)
 			requestUpdate = true
 		}
 	}
