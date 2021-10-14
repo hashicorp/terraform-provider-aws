@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/workspaces"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func DescribeIpGroupsPages(conn *workspaces.WorkSpaces, input *workspaces.DescribeIpGroupsInput, fn func(*workspaces.DescribeIpGroupsOutput, bool) bool) error {
