@@ -75,7 +75,7 @@ func sweepJobDefinitions(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSBatchJobDefinition_basic(t *testing.T) {
+func TestAccBatchJobDefinition_basic(t *testing.T) {
 	var jd batch.JobDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_job_definition.test"
@@ -112,7 +112,7 @@ func TestAccAWSBatchJobDefinition_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSBatchJobDefinition_disappears(t *testing.T) {
+func TestAccBatchJobDefinition_disappears(t *testing.T) {
 	var jd batch.JobDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_job_definition.test"
@@ -135,7 +135,7 @@ func TestAccAWSBatchJobDefinition_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSBatchJobDefinition_PlatformCapabilities_EC2(t *testing.T) {
+func TestAccBatchJobDefinition_PlatformCapabilities_ec2(t *testing.T) {
 	var jd batch.JobDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_job_definition.test"
@@ -173,7 +173,7 @@ func TestAccAWSBatchJobDefinition_PlatformCapabilities_EC2(t *testing.T) {
 	})
 }
 
-func TestAccAWSBatchJobDefinition_PlatformCapabilities_Fargate_ContainerPropertiesDefaults(t *testing.T) {
+func TestAccBatchJobDefinition_PlatformCapabilitiesFargate_containerPropertiesDefaults(t *testing.T) {
 	var jd batch.JobDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_job_definition.test"
@@ -211,7 +211,7 @@ func TestAccAWSBatchJobDefinition_PlatformCapabilities_Fargate_ContainerProperti
 	})
 }
 
-func TestAccAWSBatchJobDefinition_PlatformCapabilities_Fargate(t *testing.T) {
+func TestAccBatchJobDefinition_PlatformCapabilities_fargate(t *testing.T) {
 	var jd batch.JobDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_job_definition.test"
@@ -249,7 +249,7 @@ func TestAccAWSBatchJobDefinition_PlatformCapabilities_Fargate(t *testing.T) {
 	})
 }
 
-func TestAccAWSBatchJobDefinition_ContainerProperties_Advanced(t *testing.T) {
+func TestAccBatchJobDefinition_ContainerProperties_advanced(t *testing.T) {
 	var jd batch.JobDefinition
 	compare := batch.JobDefinition{
 		Parameters: map[string]*string{
@@ -315,7 +315,7 @@ func TestAccAWSBatchJobDefinition_ContainerProperties_Advanced(t *testing.T) {
 	})
 }
 
-func TestAccAWSBatchJobDefinition_updateForcesNewResource(t *testing.T) {
+func TestAccBatchJobDefinition_updateForcesNewResource(t *testing.T) {
 	var before, after batch.JobDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_job_definition.test"
@@ -349,7 +349,7 @@ func TestAccAWSBatchJobDefinition_updateForcesNewResource(t *testing.T) {
 	})
 }
 
-func TestAccAWSBatchJobDefinition_Tags(t *testing.T) {
+func TestAccBatchJobDefinition_tags(t *testing.T) {
 	var jd batch.JobDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_job_definition.test"
@@ -394,7 +394,7 @@ func TestAccAWSBatchJobDefinition_Tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSBatchJobDefinition_PropagateTags(t *testing.T) {
+func TestAccBatchJobDefinition_propagateTags(t *testing.T) {
 	var jd batch.JobDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_job_definition.test"
