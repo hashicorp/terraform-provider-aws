@@ -22,11 +22,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_glacier_vault", &resource.Sweeper{
 		Name: "aws_glacier_vault",
-		F:    testSweepGlacierVaults,
+		F:    sweepVaults,
 	})
 }
 
-func testSweepGlacierVaults(region string) error {
+func sweepVaults(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
