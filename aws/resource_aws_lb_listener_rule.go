@@ -736,7 +736,7 @@ func resourceAwsLbListenerRuleRead(d *schema.ResourceData, meta interface{}) err
 		case "host-header":
 			conditionMap["host_header"] = []interface{}{
 				map[string]interface{}{
-					"values": flattenStringSet(condition.HostHeaderConfig.Values),
+					"values": flex.FlattenStringSet(condition.HostHeaderConfig.Values),
 				},
 			}
 
@@ -744,21 +744,21 @@ func resourceAwsLbListenerRuleRead(d *schema.ResourceData, meta interface{}) err
 			conditionMap["http_header"] = []interface{}{
 				map[string]interface{}{
 					"http_header_name": aws.StringValue(condition.HttpHeaderConfig.HttpHeaderName),
-					"values":           flattenStringSet(condition.HttpHeaderConfig.Values),
+					"values":           flex.FlattenStringSet(condition.HttpHeaderConfig.Values),
 				},
 			}
 
 		case "http-request-method":
 			conditionMap["http_request_method"] = []interface{}{
 				map[string]interface{}{
-					"values": flattenStringSet(condition.HttpRequestMethodConfig.Values),
+					"values": flex.FlattenStringSet(condition.HttpRequestMethodConfig.Values),
 				},
 			}
 
 		case "path-pattern":
 			conditionMap["path_pattern"] = []interface{}{
 				map[string]interface{}{
-					"values": flattenStringSet(condition.PathPatternConfig.Values),
+					"values": flex.FlattenStringSet(condition.PathPatternConfig.Values),
 				},
 			}
 
@@ -775,7 +775,7 @@ func resourceAwsLbListenerRuleRead(d *schema.ResourceData, meta interface{}) err
 		case "source-ip":
 			conditionMap["source_ip"] = []interface{}{
 				map[string]interface{}{
-					"values": flattenStringSet(condition.SourceIpConfig.Values),
+					"values": flex.FlattenStringSet(condition.SourceIpConfig.Values),
 				},
 			}
 		}
@@ -957,7 +957,7 @@ func lbListenerRuleConditions(conditions []interface{}) ([]*elbv2.RuleCondition,
 			values := hostHeader[0].(map[string]interface{})["values"].(*schema.Set)
 
 			elbConditions[i].HostHeaderConfig = &elbv2.HostHeaderConditionConfig{
-				Values: expandStringSet(values),
+				Values: flex.ExpandStringSet(values),
 			}
 		}
 
@@ -969,7 +969,7 @@ func lbListenerRuleConditions(conditions []interface{}) ([]*elbv2.RuleCondition,
 
 			elbConditions[i].HttpHeaderConfig = &elbv2.HttpHeaderConditionConfig{
 				HttpHeaderName: aws.String(httpHeaderMap["http_header_name"].(string)),
-				Values:         expandStringSet(values),
+				Values:         flex.ExpandStringSet(values),
 			}
 		}
 
@@ -979,7 +979,7 @@ func lbListenerRuleConditions(conditions []interface{}) ([]*elbv2.RuleCondition,
 			values := httpRequestMethod[0].(map[string]interface{})["values"].(*schema.Set)
 
 			elbConditions[i].HttpRequestMethodConfig = &elbv2.HttpRequestMethodConditionConfig{
-				Values: expandStringSet(values),
+				Values: flex.ExpandStringSet(values),
 			}
 		}
 
@@ -989,7 +989,7 @@ func lbListenerRuleConditions(conditions []interface{}) ([]*elbv2.RuleCondition,
 			values := pathPattern[0].(map[string]interface{})["values"].(*schema.Set)
 
 			elbConditions[i].PathPatternConfig = &elbv2.PathPatternConditionConfig{
-				Values: expandStringSet(values),
+				Values: flex.ExpandStringSet(values),
 			}
 		}
 
@@ -1019,7 +1019,7 @@ func lbListenerRuleConditions(conditions []interface{}) ([]*elbv2.RuleCondition,
 			values := sourceIp[0].(map[string]interface{})["values"].(*schema.Set)
 
 			elbConditions[i].SourceIpConfig = &elbv2.SourceIpConditionConfig{
-				Values: expandStringSet(values),
+				Values: flex.ExpandStringSet(values),
 			}
 		}
 

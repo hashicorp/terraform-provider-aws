@@ -740,7 +740,7 @@ func expandLbListenerAuthenticateCognitoConfig(l []interface{}) *elbv2.Authentic
 	}
 
 	config := &elbv2.AuthenticateCognitoActionConfig{
-		AuthenticationRequestExtraParams: expandStringMap(tfMap["authentication_request_extra_params"].(map[string]interface{})),
+		AuthenticationRequestExtraParams: flex.ExpandStringMap(tfMap["authentication_request_extra_params"].(map[string]interface{})),
 		UserPoolArn:                      aws.String(tfMap["user_pool_arn"].(string)),
 		UserPoolClientId:                 aws.String(tfMap["user_pool_client_id"].(string)),
 		UserPoolDomain:                   aws.String(tfMap["user_pool_domain"].(string)),
@@ -777,7 +777,7 @@ func expandLbListenerAuthenticateOidcConfig(l []interface{}) *elbv2.Authenticate
 	}
 
 	config := &elbv2.AuthenticateOidcActionConfig{
-		AuthenticationRequestExtraParams: expandStringMap(tfMap["authentication_request_extra_params"].(map[string]interface{})),
+		AuthenticationRequestExtraParams: flex.ExpandStringMap(tfMap["authentication_request_extra_params"].(map[string]interface{})),
 		AuthorizationEndpoint:            aws.String(tfMap["authorization_endpoint"].(string)),
 		ClientId:                         aws.String(tfMap["client_id"].(string)),
 		ClientSecret:                     aws.String(tfMap["client_secret"].(string)),
