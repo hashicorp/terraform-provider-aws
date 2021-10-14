@@ -19,70 +19,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_dx_lag", &resource.Sweeper{
-		Name:         "aws_dx_lag",
-		F:            sweepLags,
-		Dependencies: []string{"aws_dx_connection"},
-	})
-}
 
-func sweepLags(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
 
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
 
-	conn := client.(*conns.AWSClient).DirectConnectConn
-
-	var sweeperErrs *multierror.Error
-
-	input := &directconnect.DescribeLagsInput{}
-
-	// DescribeLags has no pagination support
-	output, err := conn.DescribeLags(input)
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Direct Connect LAG sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil()
-	}
-
-	if err != nil {
-		sweeperErr := fmt.Errorf("error listing Direct Connect LAGs for %s: %w", region, err)
-		log.Printf("[ERROR] %s", sweeperErr)
-		sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-		return sweeperErrs.ErrorOrNil()
-	}
-
-	if output == nil {
-		log.Printf("[WARN] Skipping Direct Connect LAG sweep for %s: empty response", region)
-		return sweeperErrs.ErrorOrNil()
-	}
-
-	for _, lag := range output.Lags {
-		if lag == nil {
-			continue
-		}
-
-		id := aws.StringValue(lag.LagId)
-
-		r := tfdirectconnect.ResourceLag()
-		d := r.Data(nil)
-		d.SetId(id)
-
-		err = r.Delete(d, client)
-
-		if err != nil {
-			sweeperErr := fmt.Errorf("error deleting Direct Connect LAG (%s): %w", id, err)
-			log.Printf("[ERROR] %s", sweeperErr)
-			sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-			continue
-		}
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func TestAccDirectConnectLag_basic(t *testing.T) {
 	var lag directconnect.Lag

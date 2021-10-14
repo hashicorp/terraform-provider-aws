@@ -19,69 +19,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_dx_connection", &resource.Sweeper{
-		Name: "aws_dx_connection",
-		F:    sweepConnections,
-	})
-}
 
-func sweepConnections(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
 
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
 
-	conn := client.(*conns.AWSClient).DirectConnectConn
-
-	var sweeperErrs *multierror.Error
-
-	input := &directconnect.DescribeConnectionsInput{}
-
-	// DescribeConnections has no pagination support
-	output, err := conn.DescribeConnections(input)
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Direct Connect Connection sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil()
-	}
-
-	if err != nil {
-		sweeperErr := fmt.Errorf("error listing Direct Connect Connections for %s: %w", region, err)
-		log.Printf("[ERROR] %s", sweeperErr)
-		sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-		return sweeperErrs.ErrorOrNil()
-	}
-
-	if output == nil {
-		log.Printf("[WARN] Skipping Direct Connect Connection sweep for %s: empty response", region)
-		return sweeperErrs.ErrorOrNil()
-	}
-
-	for _, connection := range output.Connections {
-		if connection == nil {
-			continue
-		}
-
-		id := aws.StringValue(connection.ConnectionId)
-
-		r := tfdirectconnect.ResourceConnection()
-		d := r.Data(nil)
-		d.SetId(id)
-
-		err = r.Delete(d, client)
-
-		if err != nil {
-			sweeperErr := fmt.Errorf("error deleting Direct Connect Connection (%s): %w", id, err)
-			log.Printf("[ERROR] %s", sweeperErr)
-			sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-			continue
-		}
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func TestAccDirectConnectConnection_basic(t *testing.T) {
 	var connection directconnect.Connection
