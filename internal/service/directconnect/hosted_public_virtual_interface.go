@@ -22,9 +22,9 @@ func ResourceHostedPublicVirtualInterface() *schema.Resource {
 		Read:   resourceHostedPublicVirtualInterfaceRead,
 		Delete: resourceHostedPublicVirtualInterfaceDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsDxHostedPublicVirtualInterfaceImport,
+			State: resourceHostedPublicVirtualInterfaceImport,
 		},
-		CustomizeDiff: resourceAwsDxHostedPublicVirtualInterfaceCustomizeDiff,
+		CustomizeDiff: resourceHostedPublicVirtualInterfaceCustomizeDiff,
 
 		Schema: map[string]*schema.Schema{
 			"address_family": {
@@ -193,7 +193,7 @@ func resourceHostedPublicVirtualInterfaceDelete(d *schema.ResourceData, meta int
 	return dxVirtualInterfaceDelete(d, meta)
 }
 
-func resourceAwsDxHostedPublicVirtualInterfaceImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceHostedPublicVirtualInterfaceImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	vif, err := dxVirtualInterfaceRead(d.Id(), conn)
@@ -211,7 +211,7 @@ func resourceAwsDxHostedPublicVirtualInterfaceImport(d *schema.ResourceData, met
 	return []*schema.ResourceData{d}, nil
 }
 
-func resourceAwsDxHostedPublicVirtualInterfaceCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+func resourceHostedPublicVirtualInterfaceCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
 	if diff.Id() == "" {
 		// New resource.
 		if addressFamily := diff.Get("address_family").(string); addressFamily == directconnect.AddressFamilyIpv4 {

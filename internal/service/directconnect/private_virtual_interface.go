@@ -23,7 +23,7 @@ func ResourcePrivateVirtualInterface() *schema.Resource {
 		Update: resourcePrivateVirtualInterfaceUpdate,
 		Delete: resourcePrivateVirtualInterfaceDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsDxPrivateVirtualInterfaceImport,
+			State: resourcePrivateVirtualInterfaceImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -253,7 +253,7 @@ func resourcePrivateVirtualInterfaceDelete(d *schema.ResourceData, meta interfac
 	return dxVirtualInterfaceDelete(d, meta)
 }
 
-func resourceAwsDxPrivateVirtualInterfaceImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourcePrivateVirtualInterfaceImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	vif, err := dxVirtualInterfaceRead(d.Id(), conn)

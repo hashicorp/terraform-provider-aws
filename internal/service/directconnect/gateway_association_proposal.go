@@ -23,7 +23,7 @@ func ResourceGatewayAssociationProposal() *schema.Resource {
 		Delete: resourceGatewayAssociationProposalDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsDxGatewayAssociationProposalImport,
+			State: resourceGatewayAssociationProposalImport,
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -232,7 +232,7 @@ func flattenDirectConnectRouteFilterPrefixes(apiObjects []*directconnect.RouteFi
 	return tfList
 }
 
-func resourceAwsDxGatewayAssociationProposalImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceGatewayAssociationProposalImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	switch parts := strings.Split(strings.ToLower(d.Id()), "/"); len(parts) {
 	case 1:
 		break

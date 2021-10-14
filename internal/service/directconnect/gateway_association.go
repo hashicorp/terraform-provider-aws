@@ -23,13 +23,13 @@ func ResourceGatewayAssociation() *schema.Resource {
 		Delete: resourceGatewayAssociationDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsDxGatewayAssociationImport,
+			State: resourceGatewayAssociationImport,
 		},
 
 		SchemaVersion: 1,
 		StateUpgraders: []schema.StateUpgrader{
 			{
-				Type:    resourceAwsDxGatewayAssociationResourceV0().CoreConfigSchema().ImpliedType(),
+				Type:    resourceGatewayAssociationResourceV0().CoreConfigSchema().ImpliedType(),
 				Upgrade: GatewayAssociationStateUpgradeV0,
 				Version: 0,
 			},
@@ -257,7 +257,7 @@ func resourceGatewayAssociationDelete(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func resourceAwsDxGatewayAssociationImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceGatewayAssociationImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	parts := strings.Split(d.Id(), "/")

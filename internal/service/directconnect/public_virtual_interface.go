@@ -25,10 +25,10 @@ func ResourcePublicVirtualInterface() *schema.Resource {
 		Update: resourcePublicVirtualInterfaceUpdate,
 		Delete: resourcePublicVirtualInterfaceDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsDxPublicVirtualInterfaceImport,
+			State: resourcePublicVirtualInterfaceImport,
 		},
 		CustomizeDiff: customdiff.Sequence(
-			resourceAwsDxPublicVirtualInterfaceCustomizeDiff,
+			resourcePublicVirtualInterfaceCustomizeDiff,
 			verify.SetTagsDiff,
 		),
 
@@ -225,7 +225,7 @@ func resourcePublicVirtualInterfaceDelete(d *schema.ResourceData, meta interface
 	return dxVirtualInterfaceDelete(d, meta)
 }
 
-func resourceAwsDxPublicVirtualInterfaceImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourcePublicVirtualInterfaceImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	vif, err := dxVirtualInterfaceRead(d.Id(), conn)
@@ -243,7 +243,7 @@ func resourceAwsDxPublicVirtualInterfaceImport(d *schema.ResourceData, meta inte
 	return []*schema.ResourceData{d}, nil
 }
 
-func resourceAwsDxPublicVirtualInterfaceCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+func resourcePublicVirtualInterfaceCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
 	if diff.Id() == "" {
 		// New resource.
 		if addressFamily := diff.Get("address_family").(string); addressFamily == directconnect.AddressFamilyIpv4 {

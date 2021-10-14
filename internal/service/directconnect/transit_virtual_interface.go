@@ -23,7 +23,7 @@ func ResourceTransitVirtualInterface() *schema.Resource {
 		Update: resourceTransitVirtualInterfaceUpdate,
 		Delete: resourceTransitVirtualInterfaceDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsDxTransitVirtualInterfaceImport,
+			State: resourceTransitVirtualInterfaceImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -233,7 +233,7 @@ func resourceTransitVirtualInterfaceDelete(d *schema.ResourceData, meta interfac
 	return dxVirtualInterfaceDelete(d, meta)
 }
 
-func resourceAwsDxTransitVirtualInterfaceImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceTransitVirtualInterfaceImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	vif, err := dxVirtualInterfaceRead(d.Id(), conn)

@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func resourceAwsDxGatewayAssociationResourceV0() *schema.Resource {
+func resourceGatewayAssociationResourceV0() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
 			"allowed_prefixes": {
