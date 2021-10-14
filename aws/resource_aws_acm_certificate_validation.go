@@ -15,11 +15,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsAcmCertificateValidation() *schema.Resource {
+func ResourceCertificateValidation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAcmCertificateValidationCreate,
-		Read:   resourceAwsAcmCertificateValidationRead,
-		Delete: resourceAwsAcmCertificateValidationDelete,
+		Create: resourceCertificateValidationCreate,
+		Read:   resourceCertificateValidationRead,
+		Delete: resourceCertificateValidationDelete,
 
 		Schema: map[string]*schema.Schema{
 			"certificate_arn": {
@@ -41,7 +41,7 @@ func resourceAwsAcmCertificateValidation() *schema.Resource {
 	}
 }
 
-func resourceAwsAcmCertificateValidationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceCertificateValidationCreate(d *schema.ResourceData, meta interface{}) error {
 	certificate_arn := d.Get("certificate_arn").(string)
 
 	conn := meta.(*conns.AWSClient).ACMConn
@@ -84,7 +84,7 @@ func resourceAwsAcmCertificateValidationCreate(d *schema.ResourceData, meta inte
 		}
 
 		log.Printf("[INFO] ACM Certificate validation for %s done, certificate was issued", certificate_arn)
-		if err := resourceAwsAcmCertificateValidationRead(d, meta); err != nil {
+		if err := resourceCertificateValidationRead(d, meta); err != nil {
 			return resource.NonRetryableError(err)
 		}
 		return nil
@@ -170,7 +170,7 @@ func resourceAwsAcmCertificateCheckValidationRecords(validationRecordFqdns []int
 	return nil
 }
 
-func resourceAwsAcmCertificateValidationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceCertificateValidationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ACMConn
 
 	params := &acm.DescribeCertificateInput{
@@ -208,7 +208,7 @@ func resourceAwsAcmCertificateValidationRead(d *schema.ResourceData, meta interf
 	return nil
 }
 
-func resourceAwsAcmCertificateValidationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceCertificateValidationDelete(d *schema.ResourceData, meta interface{}) error {
 	// No need to do anything, certificate will be deleted when acm_certificate is deleted
 	return nil
 }

@@ -34,12 +34,12 @@ const (
 	AcmCertificateDnsValidationAssignmentTimeout = 5 * time.Minute
 )
 
-func resourceAwsAcmCertificate() *schema.Resource {
+func ResourceCertificate() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAcmCertificateCreate,
-		Read:   resourceAwsAcmCertificateRead,
-		Update: resourceAwsAcmCertificateUpdate,
-		Delete: resourceAwsAcmCertificateDelete,
+		Create: resourceCertificateCreate,
+		Read:   resourceCertificateRead,
+		Update: resourceCertificateUpdate,
+		Delete: resourceCertificateDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -210,7 +210,7 @@ func resourceAwsAcmCertificate() *schema.Resource {
 	}
 }
 
-func resourceAwsAcmCertificateCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceCertificateCreate(d *schema.ResourceData, meta interface{}) error {
 	if _, ok := d.GetOk("domain_name"); ok {
 		if _, ok := d.GetOk("certificate_authority_arn"); ok {
 			return resourceAwsAcmCertificateCreateRequested(d, meta)
@@ -255,7 +255,7 @@ func resourceAwsAcmCertificateCreateImported(d *schema.ResourceData, meta interf
 
 	d.SetId(aws.StringValue(output.CertificateArn))
 
-	return resourceAwsAcmCertificateRead(d, meta)
+	return resourceCertificateRead(d, meta)
 }
 
 func resourceAwsAcmCertificateCreateRequested(d *schema.ResourceData, meta interface{}) error {
@@ -298,10 +298,10 @@ func resourceAwsAcmCertificateCreateRequested(d *schema.ResourceData, meta inter
 
 	d.SetId(aws.StringValue(resp.CertificateArn))
 
-	return resourceAwsAcmCertificateRead(d, meta)
+	return resourceCertificateRead(d, meta)
 }
 
-func resourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) error {
+func resourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ACMConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -395,7 +395,7 @@ func resourceAwsAcmCertificateValidationMethod(certificate *acm.CertificateDetai
 	return "NONE"
 }
 
-func resourceAwsAcmCertificateUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceCertificateUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ACMConn
 
 	if d.HasChanges("private_key", "certificate_body", "certificate_chain") {
@@ -430,7 +430,7 @@ func resourceAwsAcmCertificateUpdate(d *schema.ResourceData, meta interface{}) e
 			return fmt.Errorf("error updating tags: %s", err)
 		}
 	}
-	return resourceAwsAcmCertificateRead(d, meta)
+	return resourceCertificateRead(d, meta)
 }
 
 func cleanUpSubjectAlternativeNames(cert *acm.CertificateDetail) []string {
@@ -483,7 +483,7 @@ func convertValidationOptions(certificate *acm.CertificateDetail) ([]map[string]
 	return domainValidationResult, emailValidationResult, nil
 }
 
-func resourceAwsAcmCertificateDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceCertificateDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ACMConn
 
 	log.Printf("[INFO] Deleting ACM Certificate: %s", d.Id())
