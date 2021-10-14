@@ -78,7 +78,7 @@ func sweepCanaries(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSSyntheticsCanary_basic(t *testing.T) {
+func TestAccSyntheticsCanary_basic(t *testing.T) {
 	var conf1, conf2 synthetics.Canary
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
 	resourceName := "aws_synthetics_canary.test"
@@ -151,7 +151,7 @@ func TestAccAWSSyntheticsCanary_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSyntheticsCanary_runtimeVersion(t *testing.T) {
+func TestAccSyntheticsCanary_runtimeVersion(t *testing.T) {
 	var conf1 synthetics.Canary
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
 	resourceName := "aws_synthetics_canary.test"
@@ -186,7 +186,7 @@ func TestAccAWSSyntheticsCanary_runtimeVersion(t *testing.T) {
 	})
 }
 
-func TestAccAWSSyntheticsCanary_startCanary(t *testing.T) {
+func TestAccSyntheticsCanary_startCanary(t *testing.T) {
 	var conf1, conf2, conf3 synthetics.Canary
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
 	resourceName := "aws_synthetics_canary.test"
@@ -234,7 +234,7 @@ func TestAccAWSSyntheticsCanary_startCanary(t *testing.T) {
 	})
 }
 
-func TestAccAWSSyntheticsCanary_startCanary_codeChanges(t *testing.T) {
+func TestAccSyntheticsCanary_StartCanary_codeChanges(t *testing.T) {
 	var conf1, conf2 synthetics.Canary
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
 	resourceName := "aws_synthetics_canary.test"
@@ -275,7 +275,7 @@ func TestAccAWSSyntheticsCanary_startCanary_codeChanges(t *testing.T) {
 	})
 }
 
-func TestAccAWSSyntheticsCanary_s3(t *testing.T) {
+func TestAccSyntheticsCanary_s3(t *testing.T) {
 	var conf synthetics.Canary
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
 	resourceName := "aws_synthetics_canary.test"
@@ -319,7 +319,7 @@ func TestAccAWSSyntheticsCanary_s3(t *testing.T) {
 	})
 }
 
-func TestAccAWSSyntheticsCanary_runConfig(t *testing.T) {
+func TestAccSyntheticsCanary_run(t *testing.T) {
 	var conf synthetics.Canary
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
 	resourceName := "aws_synthetics_canary.test"
@@ -365,7 +365,7 @@ func TestAccAWSSyntheticsCanary_runConfig(t *testing.T) {
 	})
 }
 
-func TestAccAWSSyntheticsCanary_runConfigTracing(t *testing.T) {
+func TestAccSyntheticsCanary_runTracing(t *testing.T) {
 	var conf synthetics.Canary
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
 	resourceName := "aws_synthetics_canary.test"
@@ -407,7 +407,7 @@ func TestAccAWSSyntheticsCanary_runConfigTracing(t *testing.T) {
 	})
 }
 
-func TestAccAWSSyntheticsCanary_vpc(t *testing.T) {
+func TestAccSyntheticsCanary_vpc(t *testing.T) {
 	var conf synthetics.Canary
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
 	resourceName := "aws_synthetics_canary.test"
@@ -456,7 +456,7 @@ func TestAccAWSSyntheticsCanary_vpc(t *testing.T) {
 	})
 }
 
-func TestAccAWSSyntheticsCanary_tags(t *testing.T) {
+func TestAccSyntheticsCanary_tags(t *testing.T) {
 	var conf synthetics.Canary
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
 	resourceName := "aws_synthetics_canary.test"
@@ -502,7 +502,7 @@ func TestAccAWSSyntheticsCanary_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSSyntheticsCanary_disappears(t *testing.T) {
+func TestAccSyntheticsCanary_disappears(t *testing.T) {
 	var conf synthetics.Canary
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
 	resourceName := "aws_synthetics_canary.test"
