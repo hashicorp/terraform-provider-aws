@@ -1,4 +1,4 @@
-package aws
+package servicediscovery_test
 
 import (
 	"fmt"

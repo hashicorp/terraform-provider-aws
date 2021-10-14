@@ -1,4 +1,4 @@
-package aws
+package servicediscovery
 
 import (
 	"context"
