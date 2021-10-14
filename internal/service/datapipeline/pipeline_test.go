@@ -22,23 +22,23 @@ func TestAccAWSDataPipelinePipeline_basic(t *testing.T) {
 	resourceName := "aws_datapipeline_pipeline.default"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSDataPipeline(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, datapipeline.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDataPipelinePipelineDestroy,
+		CheckDestroy: testAccCheckPipelineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDataPipelinePipelineConfig(rName1),
+				Config: testAccPipelineConfig(rName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDataPipelinePipelineExists(resourceName, &conf1),
+					testAccCheckPipelineExists(resourceName, &conf1),
 					resource.TestCheckResourceAttr(resourceName, "name", rName1),
 				),
 			},
 			{
-				Config: testAccAWSDataPipelinePipelineConfig(rName2),
+				Config: testAccPipelineConfig(rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDataPipelinePipelineExists(resourceName, &conf2),
-					testAccCheckAWSDataPipelinePipelineNotEqual(&conf1, &conf2),
+					testAccCheckPipelineExists(resourceName, &conf2),
+					testAccCheckPipelineNotEqual(&conf1, &conf2),
 					resource.TestCheckResourceAttr(resourceName, "name", rName2),
 				),
 			},
@@ -57,23 +57,23 @@ func TestAccAWSDataPipelinePipeline_description(t *testing.T) {
 	resourceName := "aws_datapipeline_pipeline.default"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSDataPipeline(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, datapipeline.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDataPipelinePipelineDestroy,
+		CheckDestroy: testAccCheckPipelineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDataPipelinePipelineConfigWithDescription(rName, "test description"),
+				Config: testAccPipelineWithDescriptionConfig(rName, "test description"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDataPipelinePipelineExists(resourceName, &conf1),
+					testAccCheckPipelineExists(resourceName, &conf1),
 					resource.TestCheckResourceAttr(resourceName, "description", "test description"),
 				),
 			},
 			{
-				Config: testAccAWSDataPipelinePipelineConfigWithDescription(rName, "update description"),
+				Config: testAccPipelineWithDescriptionConfig(rName, "update description"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDataPipelinePipelineExists(resourceName, &conf2),
-					testAccCheckAWSDataPipelinePipelineNotEqual(&conf1, &conf2),
+					testAccCheckPipelineExists(resourceName, &conf2),
+					testAccCheckPipelineNotEqual(&conf1, &conf2),
 					resource.TestCheckResourceAttr(resourceName, "description", "update description"),
 				),
 			},
@@ -92,16 +92,16 @@ func TestAccAWSDataPipelinePipeline_disappears(t *testing.T) {
 	resourceName := "aws_datapipeline_pipeline.default"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSDataPipeline(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, datapipeline.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDataPipelinePipelineDestroy,
+		CheckDestroy: testAccCheckPipelineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDataPipelinePipelineConfig(rName),
+				Config: testAccPipelineConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDataPipelinePipelineExists(resourceName, &conf),
-					testAccCheckAWSDataPipelinePipelineDisappears(&conf),
+					testAccCheckPipelineExists(resourceName, &conf),
+					testAccCheckPipelineDisappears(&conf),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -115,15 +115,15 @@ func TestAccAWSDataPipelinePipeline_tags(t *testing.T) {
 	resourceName := "aws_datapipeline_pipeline.default"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSDataPipeline(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, datapipeline.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDataPipelinePipelineDestroy,
+		CheckDestroy: testAccCheckPipelineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDataPipelinePipelineConfigWithTags(rName, "foo", "bar", "fizz", "buzz"),
+				Config: testAccPipelineWithTagsConfig(rName, "foo", "bar", "fizz", "buzz"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDataPipelinePipelineExists(resourceName, &conf),
+					testAccCheckPipelineExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(
 						resourceName, "tags.foo", "bar"),
@@ -132,9 +132,9 @@ func TestAccAWSDataPipelinePipeline_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSDataPipelinePipelineConfigWithTags(rName, "foo", "bar2", "fizz2", "buzz2"),
+				Config: testAccPipelineWithTagsConfig(rName, "foo", "bar2", "fizz2", "buzz2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDataPipelinePipelineExists(resourceName, &conf),
+					testAccCheckPipelineExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(
 						resourceName, "tags.foo", "bar2"),
@@ -148,9 +148,9 @@ func TestAccAWSDataPipelinePipeline_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSDataPipelinePipelineConfig(rName),
+				Config: testAccPipelineConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDataPipelinePipelineExists(resourceName, &conf),
+					testAccCheckPipelineExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -158,7 +158,7 @@ func TestAccAWSDataPipelinePipeline_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSDataPipelinePipelineDisappears(conf *datapipeline.PipelineDescription) resource.TestCheckFunc {
+func testAccCheckPipelineDisappears(conf *datapipeline.PipelineDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DataPipelineConn
 		params := &datapipeline.DeletePipelineInput{
@@ -173,7 +173,7 @@ func testAccCheckAWSDataPipelinePipelineDisappears(conf *datapipeline.PipelineDe
 	}
 }
 
-func testAccCheckAWSDataPipelinePipelineDestroy(s *terraform.State) error {
+func testAccCheckPipelineDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).DataPipelineConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -199,7 +199,7 @@ func testAccCheckAWSDataPipelinePipelineDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSDataPipelinePipelineExists(n string, v *datapipeline.PipelineDescription) resource.TestCheckFunc {
+func testAccCheckPipelineExists(n string, v *datapipeline.PipelineDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -226,7 +226,7 @@ func testAccCheckAWSDataPipelinePipelineExists(n string, v *datapipeline.Pipelin
 	}
 }
 
-func testAccPreCheckAWSDataPipeline(t *testing.T) {
+func testAccPreCheck(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).DataPipelineConn
 
 	input := &datapipeline.ListPipelinesInput{}
@@ -242,7 +242,7 @@ func testAccPreCheckAWSDataPipeline(t *testing.T) {
 	}
 }
 
-func testAccCheckAWSDataPipelinePipelineNotEqual(pipeline1, pipeline2 *datapipeline.PipelineDescription) resource.TestCheckFunc {
+func testAccCheckPipelineNotEqual(pipeline1, pipeline2 *datapipeline.PipelineDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.StringValue(pipeline1.PipelineId) == aws.StringValue(pipeline2.PipelineId) {
 			return fmt.Errorf("Pipeline IDs are equal")
@@ -252,7 +252,7 @@ func testAccCheckAWSDataPipelinePipelineNotEqual(pipeline1, pipeline2 *datapipel
 	}
 }
 
-func testAccAWSDataPipelinePipelineConfig(rName string) string {
+func testAccPipelineConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_datapipeline_pipeline" "default" {
   name = "%[1]s"
@@ -260,7 +260,7 @@ resource "aws_datapipeline_pipeline" "default" {
 
 }
 
-func testAccAWSDataPipelinePipelineConfigWithDescription(rName, description string) string {
+func testAccPipelineWithDescriptionConfig(rName, description string) string {
 	return fmt.Sprintf(`
 resource "aws_datapipeline_pipeline" "default" {
   name        = "%[1]s"
@@ -269,7 +269,7 @@ resource "aws_datapipeline_pipeline" "default" {
 
 }
 
-func testAccAWSDataPipelinePipelineConfigWithTags(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccPipelineWithTagsConfig(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_datapipeline_pipeline" "default" {
   name = "%[1]s"
