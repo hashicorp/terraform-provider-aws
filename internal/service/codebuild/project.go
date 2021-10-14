@@ -373,7 +373,7 @@ func ResourceProject() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateAwsCodeBuildProjectName,
+				ValidateFunc: ValidProjectName,
 			},
 			"secondary_artifacts": {
 				Type:     schema.TypeSet,
@@ -1859,7 +1859,7 @@ func sourceAuthToMap(sourceAuth *codebuild.SourceAuth) map[string]interface{} {
 	return auth
 }
 
-func validateAwsCodeBuildProjectName(v interface{}, k string) (ws []string, errors []error) {
+func ValidProjectName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if !regexp.MustCompile(`^[A-Za-z0-9]`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(

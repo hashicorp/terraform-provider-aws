@@ -42,7 +42,7 @@ func testSweepCodeBuildReportGroups(region string) error {
 
 		for _, arn := range page.ReportGroups {
 			id := aws.StringValue(arn)
-			r := ResourceReportGroup()
+			r := tfcodebuild.ResourceReportGroup()
 			d := r.Data(nil)
 			d.SetId(id)
 			d.Set("delete_reports", true)
@@ -242,7 +242,7 @@ func TestAccAWSCodeBuildReportGroup_disappears(t *testing.T) {
 				Config: testAccAWSCodeBuildReportGroupBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildReportGroupExists(resourceName, &reportGroup),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceReportGroup(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcodebuild.ResourceReportGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
