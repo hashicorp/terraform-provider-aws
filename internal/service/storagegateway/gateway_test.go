@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -701,7 +702,7 @@ func TestAccAWSStorageGatewayGateway_disappears(t *testing.T) {
 				Config: testAccAWSStorageGatewayGatewayConfig_GatewayType_Cached(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSStorageGatewayGatewayExists(resourceName, &gateway),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceGateway(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfstoragegateway.ResourceGateway(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -853,7 +854,7 @@ func testAccCheckAWSStorageGatewayGatewayDestroy(s *terraform.State) error {
 		_, err := conn.DescribeGatewayInformation(input)
 
 		if err != nil {
-			if isAWSErrStorageGatewayGatewayNotFound(err) {
+			if tfstoragegateway.IsErrGatewayNotFound(err) {
 				return nil
 			}
 			return err

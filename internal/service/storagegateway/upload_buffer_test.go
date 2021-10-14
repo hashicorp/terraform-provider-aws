@@ -54,7 +54,7 @@ func TestDecodeStorageGatewayUploadBufferID(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		gatewayARN, diskID, err := decodeStorageGatewayUploadBufferID(tc.Input)
+		gatewayARN, diskID, err := tfstoragegateway.DecodeUploadBufferID(tc.Input)
 		if tc.ErrCount == 0 && err != nil {
 			t.Fatalf("expected %q not to trigger an error, received: %s", tc.Input, err)
 		}
@@ -144,7 +144,7 @@ func testAccCheckAWSStorageGatewayUploadBufferExists(resourceName string) resour
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn
 
-		gatewayARN, diskID, err := decodeStorageGatewayUploadBufferID(rs.Primary.ID)
+		gatewayARN, diskID, err := tfstoragegateway.DecodeUploadBufferID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}

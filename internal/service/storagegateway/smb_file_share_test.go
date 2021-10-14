@@ -837,7 +837,7 @@ func TestAccAWSStorageGatewaySmbFileShare_disappears(t *testing.T) {
 				Config: testAccAWSStorageGatewaySmbFileShareConfig_Authentication_GuestAccess(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSStorageGatewaySmbFileShareExists(resourceName, &smbFileShare),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceSMBFileShare(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfstoragegateway.ResourceSMBFileShare(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
