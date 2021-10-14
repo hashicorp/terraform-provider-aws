@@ -20,7 +20,7 @@ func ResourceDeployment() *schema.Resource {
 		Update: resourceDeploymentUpdate,
 		Delete: resourceDeploymentDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsApiGatewayV2DeploymentImport,
+			State: resourceDeploymentImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -135,7 +135,7 @@ func resourceDeploymentDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsApiGatewayV2DeploymentImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceDeploymentImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 2 {
 		return []*schema.ResourceData{}, fmt.Errorf("Wrong format of resource: %s. Please follow 'api-id/deployment-id'", d.Id())

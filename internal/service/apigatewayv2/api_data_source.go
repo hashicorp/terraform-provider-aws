@@ -12,7 +12,7 @@ import (
 
 func DataSourceAPI() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsAwsApiGatewayV2ApiRead,
+		Read: dataSourceAPIRead,
 
 		Schema: map[string]*schema.Schema{
 			"api_endpoint": {
@@ -104,7 +104,7 @@ func DataSourceAPI() *schema.Resource {
 	}
 }
 
-func dataSourceAwsAwsApiGatewayV2ApiRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAPIRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 	apiID := d.Get("api_id").(string)

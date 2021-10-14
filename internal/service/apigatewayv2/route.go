@@ -22,7 +22,7 @@ func ResourceRoute() *schema.Resource {
 		Update: resourceRouteUpdate,
 		Delete: resourceRouteDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsApiGatewayV2RouteImport,
+			State: resourceRouteImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -291,7 +291,7 @@ func resourceRouteDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsApiGatewayV2RouteImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceRouteImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 2 {
 		return []*schema.ResourceData{}, fmt.Errorf("Wrong format of resource: %s. Please follow 'api-id/route-id'", d.Id())

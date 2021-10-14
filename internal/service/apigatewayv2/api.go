@@ -154,7 +154,7 @@ func ResourceAPI() *schema.Resource {
 	}
 }
 
-func resourceAwsAPIGatewayV2ImportOpenAPI(d *schema.ResourceData, meta interface{}) error {
+func resourceImportOpenAPI(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 
@@ -265,7 +265,7 @@ func resourceAPICreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(aws.StringValue(resp.ApiId))
 
-	err = resourceAwsAPIGatewayV2ImportOpenAPI(d, meta)
+	err = resourceImportOpenAPI(d, meta)
 	if err != nil {
 		return err
 	}
@@ -393,7 +393,7 @@ func resourceAPIUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("body") {
-		err := resourceAwsAPIGatewayV2ImportOpenAPI(d, meta)
+		err := resourceImportOpenAPI(d, meta)
 		if err != nil {
 			return err
 		}

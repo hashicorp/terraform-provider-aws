@@ -28,7 +28,7 @@ func ResourceStage() *schema.Resource {
 		Update: resourceStageUpdate,
 		Delete: resourceStageDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsApiGatewayV2StageImport,
+			State: resourceStageImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -443,7 +443,7 @@ func resourceStageDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsApiGatewayV2StageImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceStageImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 2 {
 		return []*schema.ResourceData{}, fmt.Errorf("Wrong format of resource: %s. Please follow 'api-id/stage-name'", d.Id())

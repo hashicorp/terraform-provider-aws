@@ -22,7 +22,7 @@ func ResourceIntegrationResponse() *schema.Resource {
 		Update: resourceIntegrationResponseUpdate,
 		Delete: resourceIntegrationResponseDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsApiGatewayV2IntegrationResponseImport,
+			State: resourceIntegrationResponseImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -167,7 +167,7 @@ func resourceIntegrationResponseDelete(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
-func resourceAwsApiGatewayV2IntegrationResponseImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceIntegrationResponseImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 3 {
 		return []*schema.ResourceData{}, fmt.Errorf("Wrong format of resource: %s. Please follow 'api-id/integration-id/integration-response-id'", d.Id())

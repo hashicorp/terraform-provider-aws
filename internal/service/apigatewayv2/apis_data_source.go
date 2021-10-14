@@ -13,7 +13,7 @@ import (
 
 func DataSourceAPIs() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsAwsApiGatewayV2ApisRead,
+		Read: dataSourceAPIsRead,
 
 		Schema: map[string]*schema.Schema{
 			"ids": {
@@ -35,7 +35,7 @@ func DataSourceAPIs() *schema.Resource {
 	}
 }
 
-func dataSourceAwsAwsApiGatewayV2ApisRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAPIsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
