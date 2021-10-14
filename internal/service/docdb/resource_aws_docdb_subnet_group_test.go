@@ -1,4 +1,4 @@
-package aws
+package docdb_test
 
 import (
 	"fmt"
