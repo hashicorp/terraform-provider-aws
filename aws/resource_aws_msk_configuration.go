@@ -91,7 +91,7 @@ func resourceAwsMskConfigurationRead(d *schema.ResourceData, meta interface{}) e
 
 	configurationOutput, err := conn.DescribeConfiguration(configurationInput)
 
-	if isAWSErr(err, kafka.ErrCodeBadRequestException, "Configuration ARN does not exist") {
+	if tfawserr.ErrMessageContains(err, kafka.ErrCodeBadRequestException, "Configuration ARN does not exist") {
 		log.Printf("[WARN] MSK Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
