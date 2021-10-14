@@ -134,7 +134,7 @@ func resourceAwsDxPublicVirtualInterfaceCreate(d *schema.ResourceData, meta inte
 		req.NewPublicVirtualInterface.CustomerAddress = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("route_filter_prefixes"); ok {
-		req.NewPublicVirtualInterface.RouteFilterPrefixes = expandDxRouteFilterPrefixes(v.(*schema.Set))
+		req.NewPublicVirtualInterface.RouteFilterPrefixes = expandRouteFilterPrefixes(v.(*schema.Set))
 	}
 	if len(tags) > 0 {
 		req.NewPublicVirtualInterface.Tags = tags.IgnoreAws().DirectconnectTags()
@@ -187,7 +187,7 @@ func resourceAwsDxPublicVirtualInterfaceRead(d *schema.ResourceData, meta interf
 	d.Set("customer_address", vif.CustomerAddress)
 	d.Set("connection_id", vif.ConnectionId)
 	d.Set("name", vif.VirtualInterfaceName)
-	if err := d.Set("route_filter_prefixes", flattenDxRouteFilterPrefixes(vif.RouteFilterPrefixes)); err != nil {
+	if err := d.Set("route_filter_prefixes", flattenRouteFilterPrefixes(vif.RouteFilterPrefixes)); err != nil {
 		return fmt.Errorf("error setting route_filter_prefixes: %s", err)
 	}
 	d.Set("vlan", vif.Vlan)
