@@ -13,10 +13,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsAcmpcaCertificateAuthorityCertificate() *schema.Resource {
+func ResourceCertificateAuthorityCertificate() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAcmpcaCertificateAuthorityCertificateCreate,
-		Read:   resourceAwsAcmpcaCertificateAuthorityCertificateRead,
+		Create: resourceCertificateAuthorityCertificateCreate,
+		Read:   resourceCertificateAuthorityCertificateRead,
 		Delete: schema.Noop,
 
 		Importer: &schema.ResourceImporter{
@@ -46,7 +46,7 @@ func resourceAwsAcmpcaCertificateAuthorityCertificate() *schema.Resource {
 	}
 }
 
-func resourceAwsAcmpcaCertificateAuthorityCertificateCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceCertificateAuthorityCertificateCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ACMPCAConn
 
 	certificateAuthorityArn := d.Get("certificate_authority_arn").(string)
@@ -66,10 +66,10 @@ func resourceAwsAcmpcaCertificateAuthorityCertificateCreate(d *schema.ResourceDa
 
 	d.SetId(certificateAuthorityArn)
 
-	return resourceAwsAcmpcaCertificateAuthorityCertificateRead(d, meta)
+	return resourceCertificateAuthorityCertificateRead(d, meta)
 }
 
-func resourceAwsAcmpcaCertificateAuthorityCertificateRead(d *schema.ResourceData, meta interface{}) error {
+func resourceCertificateAuthorityCertificateRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ACMPCAConn
 
 	output, err := finder.CertificateAuthorityCertificateByARN(conn, d.Id())

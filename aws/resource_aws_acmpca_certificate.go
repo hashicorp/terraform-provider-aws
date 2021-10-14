@@ -21,10 +21,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsAcmpcaCertificate() *schema.Resource {
+func ResourceCertificate() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAcmpcaCertificateCreate,
-		Read:   resourceAwsAcmpcaCertificateRead,
+		Create: resourceCertificateCreate,
+		Read:   resourceCertificateRead,
 		Delete: resourceAwsAcmpcaCertificateRevoke,
 
 		Importer: &schema.ResourceImporter{
@@ -104,7 +104,7 @@ func resourceAwsAcmpcaCertificate() *schema.Resource {
 	}
 }
 
-func resourceAwsAcmpcaCertificateCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceCertificateCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ACMPCAConn
 
 	certificateAuthorityArn := d.Get("certificate_authority_arn").(string)
@@ -156,10 +156,10 @@ func resourceAwsAcmpcaCertificateCreate(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("error waiting for ACM PCA Certificate Authority (%s) to issue Certificate (%s), error: %w", certificateAuthorityArn, d.Id(), err)
 	}
 
-	return resourceAwsAcmpcaCertificateRead(d, meta)
+	return resourceCertificateRead(d, meta)
 }
 
-func resourceAwsAcmpcaCertificateRead(d *schema.ResourceData, meta interface{}) error {
+func resourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ACMPCAConn
 
 	getCertificateInput := &acmpca.GetCertificateInput{
