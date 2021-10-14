@@ -1,4 +1,4 @@
-package aws
+package emr
 
 import (
 	"encoding/json"

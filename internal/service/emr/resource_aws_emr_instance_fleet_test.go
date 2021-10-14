@@ -1,4 +1,4 @@
-package aws
+package emr_test
 
 import (
 	"fmt"
