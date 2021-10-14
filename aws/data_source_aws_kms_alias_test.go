@@ -18,7 +18,7 @@ func TestAccDataSourceAwsKmsAlias_AwsService(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsKmsAliasConfig(rName),
@@ -34,14 +34,14 @@ func TestAccDataSourceAwsKmsAlias_AwsService(t *testing.T) {
 }
 
 func TestAccDataSourceAwsKmsAlias_CMK(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	aliasResourceName := "aws_kms_alias.test"
 	datasourceAliasResourceName := "data.aws_kms_alias.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsKmsAliasConfigCMK(rName),

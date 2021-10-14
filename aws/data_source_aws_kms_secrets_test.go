@@ -23,7 +23,7 @@ func TestAccAWSKmsSecretsDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAwsKmsSecretsDataSourceKey,
@@ -40,7 +40,7 @@ func TestAccAWSKmsSecretsDataSource_basic(t *testing.T) {
 
 func testAccDataSourceAwsKmsSecretsEncrypt(key *kms.KeyMetadata, plaintext string, encryptedPayload *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		kmsconn := testAccProvider.Meta().(*AWSClient).kmsconn
+		kmsconn := acctest.Provider.Meta().(*AWSClient).kmsconn
 
 		input := &kms.EncryptInput{
 			KeyId:     key.Arn,
@@ -68,7 +68,7 @@ func testAccDataSourceAwsKmsSecretsDecrypt(t *testing.T, plaintext string, encry
 		resource.Test(t, resource.TestCase{
 			PreCheck:   func() { acctest.PreCheck(t) },
 			ErrorCheck: acctest.ErrorCheck(t, kms.EndpointsID),
-			Providers:  testAccProviders,
+			Providers:  acctest.Providers,
 			Steps: []resource.TestStep{
 				{
 					Config: testAccCheckAwsKmsSecretsDataSourceSecret(*encryptedPayload),
