@@ -22,6 +22,7 @@ import (
 	"strings"
 	"testing"
 	"time"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func validationErrorTest(t *testing.T, token string, expectedErr string) {

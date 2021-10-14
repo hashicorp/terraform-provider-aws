@@ -11,6 +11,7 @@ package token
 import (
 	"fmt"
 	"testing"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var arnTests = []struct {

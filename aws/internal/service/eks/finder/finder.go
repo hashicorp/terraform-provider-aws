@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	tfeks "github.com/hashicorp/terraform-provider-aws/aws/internal/service/eks"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func AddonByClusterNameAndAddonName(ctx context.Context, conn *eks.EKS, clusterName, addonName string) (*eks.Addon, error) {

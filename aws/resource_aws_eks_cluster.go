@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceCluster() *schema.Resource {
@@ -156,7 +157,7 @@ func ResourceCluster() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateEKSClusterName,
+				ValidateFunc: validClusterName,
 			},
 			"platform_version": {
 				Type:     schema.TypeString,
@@ -166,7 +167,7 @@ func ResourceCluster() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"status": {
 				Type:     schema.TypeString,
@@ -206,7 +207,7 @@ func ResourceCluster() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
-								ValidateFunc: validateCIDRNetworkAddress,
+								ValidateFunc: verify.ValidCIDRNetworkAddress,
 							},
 						},
 						"security_group_ids": {

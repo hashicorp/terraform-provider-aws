@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceNodeGroup() *schema.Resource {
@@ -64,7 +65,7 @@ func ResourceNodeGroup() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateEKSClusterName,
+				ValidateFunc: validClusterName,
 			},
 			"disk_size": {
 				Type:     schema.TypeInt,
@@ -100,7 +101,7 @@ func ResourceNodeGroup() *schema.Resource {
 							Computed:      true,
 							ForceNew:      true,
 							ConflictsWith: []string{"launch_template.0.name"},
-							ValidateFunc:  validateLaunchTemplateId,
+							ValidateFunc:  verify.ValidLaunchTemplateID,
 						},
 						"name": {
 							Type:          schema.TypeString,
@@ -108,7 +109,7 @@ func ResourceNodeGroup() *schema.Resource {
 							Computed:      true,
 							ForceNew:      true,
 							ConflictsWith: []string{"launch_template.0.id"},
-							ValidateFunc:  validateLaunchTemplateName,
+							ValidateFunc:  verify.ValidLaunchTemplateName,
 						},
 						"version": {
 							Type:         schema.TypeString,

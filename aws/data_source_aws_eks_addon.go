@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/eks/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func DataSourceAddon() *schema.Resource {
@@ -36,7 +37,7 @@ func DataSourceAddon() *schema.Resource {
 			"cluster_name": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateEKSClusterName,
+				ValidateFunc: validClusterName,
 			},
 			"created_at": {
 				Type:     schema.TypeString,
