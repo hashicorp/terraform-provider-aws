@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (
@@ -143,7 +144,7 @@ func ResourceCertificate() *schema.Resource {
 						// default to requested certs which can't be changed by the ImportCertificate API
 						return true
 					}
-					// behave just like suppressMissingOptionalConfigurationBlock() for requested certs
+					// behave just like verify.SuppressMissingOptionalConfigurationBlock() for requested certs
 					return old == "1" && new == "0"
 				},
 				Elem: &schema.Resource{
