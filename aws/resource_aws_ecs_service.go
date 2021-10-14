@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ecs/waiter"
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
@@ -1264,7 +1264,7 @@ func resourceAwsEcsLoadBalancerHash(v interface{}) int {
 		buf.WriteString(fmt.Sprintf("%s-", s))
 	}
 
-	return hashcode.String(buf.String())
+	return create.StringHashcode(buf.String())
 }
 
 func buildFamilyAndRevisionFromARN(arn string) string {
