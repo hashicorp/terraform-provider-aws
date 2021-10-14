@@ -8,18 +8,19 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/worklink"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSWorkLinkFleet_basic(t *testing.T) {
-	suffix := acctest.RandStringFromCharSet(20, acctest.CharSetAlpha)
+	suffix := sdkacctest.RandStringFromCharSet(20, sdkacctest.CharSetAlpha)
 	resourceName := "aws_worklink_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWorkLink(t) },
-		ErrorCheck:   testAccErrorCheck(t, worklink.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWorkLink(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, worklink.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWorkLinkFleetDestroy,
 		Steps: []resource.TestStep{
@@ -42,12 +43,12 @@ func TestAccAWSWorkLinkFleet_basic(t *testing.T) {
 }
 
 func TestAccAWSWorkLinkFleet_DisplayName(t *testing.T) {
-	suffix := acctest.RandStringFromCharSet(20, acctest.CharSetAlpha)
+	suffix := sdkacctest.RandStringFromCharSet(20, sdkacctest.CharSetAlpha)
 	resourceName := "aws_worklink_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWorkLink(t) },
-		ErrorCheck:   testAccErrorCheck(t, worklink.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWorkLink(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, worklink.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWorkLinkFleetDestroy,
 		Steps: []resource.TestStep{
@@ -75,12 +76,12 @@ func TestAccAWSWorkLinkFleet_DisplayName(t *testing.T) {
 }
 
 func TestAccAWSWorkLinkFleet_OptimizeForEndUserLocation(t *testing.T) {
-	suffix := acctest.RandStringFromCharSet(20, acctest.CharSetAlpha)
+	suffix := sdkacctest.RandStringFromCharSet(20, sdkacctest.CharSetAlpha)
 	resourceName := "aws_worklink_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWorkLink(t) },
-		ErrorCheck:   testAccErrorCheck(t, worklink.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWorkLink(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, worklink.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWorkLinkFleetDestroy,
 		Steps: []resource.TestStep{
@@ -108,12 +109,12 @@ func TestAccAWSWorkLinkFleet_OptimizeForEndUserLocation(t *testing.T) {
 }
 
 func TestAccAWSWorkLinkFleet_AuditStreamArn(t *testing.T) {
-	rName := acctest.RandStringFromCharSet(20, acctest.CharSetAlpha)
+	rName := sdkacctest.RandStringFromCharSet(20, sdkacctest.CharSetAlpha)
 	resourceName := "aws_worklink_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWorkLink(t) },
-		ErrorCheck:   testAccErrorCheck(t, worklink.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWorkLink(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, worklink.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWorkLinkFleetDestroy,
 		Steps: []resource.TestStep{
@@ -134,12 +135,12 @@ func TestAccAWSWorkLinkFleet_AuditStreamArn(t *testing.T) {
 }
 
 func TestAccAWSWorkLinkFleet_Network(t *testing.T) {
-	rName := acctest.RandStringFromCharSet(20, acctest.CharSetAlpha)
+	rName := sdkacctest.RandStringFromCharSet(20, sdkacctest.CharSetAlpha)
 	resourceName := "aws_worklink_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWorkLink(t) },
-		ErrorCheck:   testAccErrorCheck(t, worklink.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWorkLink(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, worklink.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWorkLinkFleetDestroy,
 		Steps: []resource.TestStep{
@@ -177,13 +178,13 @@ func TestAccAWSWorkLinkFleet_Network(t *testing.T) {
 }
 
 func TestAccAWSWorkLinkFleet_DeviceCaCertificate(t *testing.T) {
-	rName := acctest.RandStringFromCharSet(20, acctest.CharSetAlpha)
+	rName := sdkacctest.RandStringFromCharSet(20, sdkacctest.CharSetAlpha)
 	resourceName := "aws_worklink_fleet.test"
 	fName := "test-fixtures/worklink-device-ca-certificate.pem"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWorkLink(t) },
-		ErrorCheck:   testAccErrorCheck(t, worklink.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWorkLink(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, worklink.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWorkLinkFleetDestroy,
 		Steps: []resource.TestStep{
@@ -211,13 +212,13 @@ func TestAccAWSWorkLinkFleet_DeviceCaCertificate(t *testing.T) {
 }
 
 func TestAccAWSWorkLinkFleet_IdentityProvider(t *testing.T) {
-	rName := acctest.RandStringFromCharSet(20, acctest.CharSetAlpha)
+	rName := sdkacctest.RandStringFromCharSet(20, sdkacctest.CharSetAlpha)
 	resourceName := "aws_worklink_fleet.test"
 	fName := "test-fixtures/saml-metadata.xml"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWorkLink(t) },
-		ErrorCheck:   testAccErrorCheck(t, worklink.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWorkLink(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, worklink.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWorkLinkFleetDestroy,
 		Steps: []resource.TestStep{
@@ -243,12 +244,12 @@ func TestAccAWSWorkLinkFleet_IdentityProvider(t *testing.T) {
 }
 
 func TestAccAWSWorkLinkFleet_Disappears(t *testing.T) {
-	rName := acctest.RandStringFromCharSet(20, acctest.CharSetAlpha)
+	rName := sdkacctest.RandStringFromCharSet(20, sdkacctest.CharSetAlpha)
 	resourceName := "aws_worklink_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWorkLink(t) },
-		ErrorCheck:   testAccErrorCheck(t, worklink.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWorkLink(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, worklink.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWorkLinkFleetDestroy,
 		Steps: []resource.TestStep{
@@ -356,7 +357,7 @@ func testAccPreCheckAWSWorkLink(t *testing.T) {
 
 	_, err := conn.ListFleets(input)
 
-	if testAccPreCheckSkipError(err) {
+	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
