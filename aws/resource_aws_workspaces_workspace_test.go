@@ -71,7 +71,7 @@ func testAccAwsWorkspacesWorkspace_basic(t *testing.T) {
 			acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole")
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, workspaces.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsWorkspacesWorkspaceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -120,7 +120,7 @@ func testAccAwsWorkspacesWorkspace_tags(t *testing.T) {
 			acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole")
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, workspaces.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsWorkspacesWorkspaceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -173,7 +173,7 @@ func testAccAwsWorkspacesWorkspace_workspaceProperties(t *testing.T) {
 			acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole")
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, workspaces.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsWorkspacesWorkspaceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -227,7 +227,7 @@ func testAccAwsWorkspacesWorkspace_workspaceProperties(t *testing.T) {
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/13558
 func testAccAwsWorkspacesWorkspace_workspaceProperties_runningModeAlwaysOn(t *testing.T) {
 	var v1 workspaces.Workspace
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_workspaces_workspace.test"
 	domain := acctest.RandomDomainName()
 
@@ -239,7 +239,7 @@ func testAccAwsWorkspacesWorkspace_workspaceProperties_runningModeAlwaysOn(t *te
 			acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole")
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, workspaces.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsWorkspacesWorkspaceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -270,7 +270,7 @@ func testAccAwsWorkspacesWorkspace_validateRootVolumeSize(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, workspaces.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsWorkspacesWorkspaceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -288,7 +288,7 @@ func testAccAwsWorkspacesWorkspace_validateUserVolumeSize(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, workspaces.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsWorkspacesWorkspaceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -314,7 +314,7 @@ func testAccAwsWorkspacesWorkspace_recreate(t *testing.T) {
 			acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole")
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, workspaces.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsWorkspacesWorkspaceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -349,7 +349,7 @@ func testAccAwsWorkspacesWorkspace_timeout(t *testing.T) {
 			acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole")
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, workspaces.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsWorkspacesWorkspaceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -364,7 +364,7 @@ func testAccAwsWorkspacesWorkspace_timeout(t *testing.T) {
 }
 
 func testAccCheckAwsWorkspacesWorkspaceDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).workspacesconn
+	conn := acctest.Provider.Meta().(*AWSClient).workspacesconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_workspaces_workspace" {
@@ -398,7 +398,7 @@ func testAccCheckAwsWorkspacesWorkspaceExists(n string, v *workspaces.Workspace)
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).workspacesconn
+		conn := acctest.Provider.Meta().(*AWSClient).workspacesconn
 
 		output, err := conn.DescribeWorkspaces(&workspaces.DescribeWorkspacesInput{
 			WorkspaceIds: []*string{aws.String(rs.Primary.ID)},

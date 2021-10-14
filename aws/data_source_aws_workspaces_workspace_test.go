@@ -20,7 +20,7 @@ func testAccDataSourceAwsWorkspacesWorkspace_byWorkspaceID(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole") },
 		ErrorCheck: acctest.ErrorCheck(t, workspaces.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceWorkspacesWorkspaceConfig_byWorkspaceID(rName, domain),
@@ -55,7 +55,7 @@ func testAccDataSourceAwsWorkspacesWorkspace_byDirectoryID_userName(t *testing.T
 	resource.Test(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole") },
 		ErrorCheck: acctest.ErrorCheck(t, workspaces.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceWorkspacesWorkspaceConfig_byDirectoryID_userName(rName, domain),
@@ -84,7 +84,7 @@ func testAccDataSourceAwsWorkspacesWorkspace_workspaceIDAndDirectoryIDConflict(t
 	resource.Test(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole") },
 		ErrorCheck: acctest.ErrorCheck(t, workspaces.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDataSourceAwsWorkspacesWorkspaceConfig_workspaceIDAndDirectoryIDConflict(),
