@@ -55,7 +55,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Prefix List Entries can be imported using the `prefix_list_id` and `cidr` separated by a `,`, e.g.
+Prefix List Entries can be imported using the `prefix_list_id` and `cidr` separated by a `,`, e.g.,
 
 ```
 $ terraform import aws_ec2_managed_prefix_list_entry.default pl-0570a1d2d725c16be,10.0.3.0/24

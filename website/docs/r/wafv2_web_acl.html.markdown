@@ -307,7 +307,7 @@ The `override_action` block supports the following arguments:
 
 ~> **NOTE:** One of `count` or `none`, expressed as an empty configuration block `{}`, is required when specifying an `override_action`
 
-* `count` - (Optional) Override the rule action setting to count (i.e. only count matches). Configured as an empty block `{}`.
+* `count` - (Optional) Override the rule action setting to count (i.e., only count matches). Configured as an empty block `{}`.
 * `none` - (Optional) Don't override the rule action setting. Configured as an empty block `{}`.
 
 ### Allow
@@ -586,7 +586,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-WAFv2 Web ACLs can be imported using `ID/Name/Scope` e.g.
+WAFv2 Web ACLs can be imported using `ID/Name/Scope` e.g.,
 
 ```
 $ terraform import aws_wafv2_web_acl.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc/example/REGIONAL

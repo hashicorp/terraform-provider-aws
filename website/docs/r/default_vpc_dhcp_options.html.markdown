@@ -58,7 +58,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-VPC DHCP Options can be imported using the `dhcp options id`, e.g.
+VPC DHCP Options can be imported using the `dhcp options id`, e.g.,
 
 ```
 $ terraform import aws_default_vpc_dhcp_options.default_options dopt-d9070ebb

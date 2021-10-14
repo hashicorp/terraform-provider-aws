@@ -37,7 +37,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_kinesisanalyticsv2_application` can be imported by using `application_name` together with `snapshot_name`, e.g.
+`aws_kinesisanalyticsv2_application` can be imported by using `application_name` together with `snapshot_name`, e.g.,
 
 ```
 $ terraform import aws_kinesisanalyticsv2_application_snapshot.example example-application/example-snapshot

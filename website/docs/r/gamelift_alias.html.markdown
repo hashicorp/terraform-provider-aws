@@ -39,7 +39,7 @@ The following arguments are supported:
 
 * `fleet_id` - (Optional) ID of the Gamelift Fleet to point the alias to.
 * `message` - (Optional) Message text to be used with the `TERMINAL` routing strategy.
-* `type` - (Required) Type of routing strategy. e.g. `SIMPLE` or `TERMINAL`
+* `type` - (Required) Type of routing strategyE.g., `SIMPLE` or `TERMINAL`
 
 ## Attributes Reference
 
@@ -51,7 +51,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Gamelift Aliases can be imported using the ID, e.g.
+Gamelift Aliases can be imported using the ID, e.g.,
 
 ```
 $ terraform import aws_gamelift_alias.example <alias-id>
