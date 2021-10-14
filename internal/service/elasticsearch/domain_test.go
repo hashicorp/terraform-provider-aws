@@ -26,11 +26,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_elasticsearch_domain", &resource.Sweeper{
 		Name: "aws_elasticsearch_domain",
-		F:    testSweepElasticSearchDomains,
+		F:    sweepDomains,
 	})
 }
 
-func testSweepElasticSearchDomains(region string) error {
+func sweepDomains(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
@@ -260,7 +260,7 @@ func TestAccAWSElasticSearchDomain_ClusterConfig_ZoneAwarenessConfig(t *testing.
 				Config: testAccESDomainConfig_ClusterConfig_ZoneAwarenessConfig_AvailabilityZoneCount(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckESDomainExists(resourceName, &domain2),
-					testAccCheckAWSESDomainNotRecreated(&domain1, &domain2),
+					testAccCheckESDomainNotRecreated(&domain1, &domain2),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.0.availability_zone_count", "2"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_enabled", "true"),
@@ -270,7 +270,7 @@ func TestAccAWSElasticSearchDomain_ClusterConfig_ZoneAwarenessConfig(t *testing.
 				Config: testAccESDomainConfig_ClusterConfig_ZoneAwarenessEnabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckESDomainExists(resourceName, &domain3),
-					testAccCheckAWSESDomainNotRecreated(&domain2, &domain3),
+					testAccCheckESDomainNotRecreated(&domain2, &domain3),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.#", "0"),
 				),
@@ -279,7 +279,7 @@ func TestAccAWSElasticSearchDomain_ClusterConfig_ZoneAwarenessConfig(t *testing.
 				Config: testAccESDomainConfig_ClusterConfig_ZoneAwarenessConfig_AvailabilityZoneCount(rName, 3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckESDomainExists(resourceName, &domain4),
-					testAccCheckAWSESDomainNotRecreated(&domain3, &domain4),
+					testAccCheckESDomainNotRecreated(&domain3, &domain4),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.0.availability_zone_count", "3"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_enabled", "true"),
@@ -830,7 +830,7 @@ func TestAccAWSElasticSearchDomain_CognitoOptionsCreateAndRemove(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckAWSCognitoIdentityProvider(t)
+			testAccPreCheckCognitoIdentityProvider(t)
 			testAccPreCheckIamServiceLinkedRoleEs(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, elasticsearch.EndpointsID),
@@ -870,7 +870,7 @@ func TestAccAWSElasticSearchDomain_CognitoOptionsUpdate(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckAWSCognitoIdentityProvider(t)
+			testAccPreCheckCognitoIdentityProvider(t)
 			testAccPreCheckIamServiceLinkedRoleEs(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, elasticsearch.EndpointsID),
@@ -1026,7 +1026,7 @@ func TestAccAWSElasticSearchDomain_tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSELBDestroy,
+		CheckDestroy: testAccCheckELBDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccESDomainConfig(ri),
@@ -1199,7 +1199,7 @@ func TestAccAWSElasticSearchDomain_update_version(t *testing.T) {
 				Config: testAccESDomainConfig_ClusterUpdateVersion(ri, "5.6"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckESDomainExists(resourceName, &domain2),
-					testAccCheckAWSESDomainNotRecreated(&domain1, &domain2),
+					testAccCheckESDomainNotRecreated(&domain1, &domain2),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_version", "5.6"),
 				),
 			},
@@ -1207,7 +1207,7 @@ func TestAccAWSElasticSearchDomain_update_version(t *testing.T) {
 				Config: testAccESDomainConfig_ClusterUpdateVersion(ri, "6.3"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckESDomainExists(resourceName, &domain3),
-					testAccCheckAWSESDomainNotRecreated(&domain2, &domain3),
+					testAccCheckESDomainNotRecreated(&domain2, &domain3),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_version", "6.3"),
 				),
 			},
@@ -1383,7 +1383,7 @@ func testAccCheckESDomainExists(n string, domain *elasticsearch.ElasticsearchDom
 	}
 }
 
-func testAccCheckAWSESDomainNotRecreated(i, j *elasticsearch.ElasticsearchDomainStatus) resource.TestCheckFunc {
+func testAccCheckESDomainNotRecreated(i, j *elasticsearch.ElasticsearchDomainStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticSearchConn
 
@@ -2518,7 +2518,7 @@ resource "aws_elasticsearch_domain" "test" {
 `, randInt, cognitoOptions)
 }
 
-func testAccPreCheckAWSCognitoIdentityProvider(t *testing.T) {
+func testAccPreCheckCognitoIdentityProvider(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
 
 	input := &cognitoidentityprovider.ListUserPoolsInput{
@@ -2536,7 +2536,7 @@ func testAccPreCheckAWSCognitoIdentityProvider(t *testing.T) {
 	}
 }
 
-func testAccCheckAWSELBDestroy(s *terraform.State) error {
+func testAccCheckELBDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
 
 	for _, rs := range s.RootModule().Resources {

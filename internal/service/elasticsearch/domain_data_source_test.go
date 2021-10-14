@@ -21,7 +21,7 @@ func TestAccAWSDataElasticsearchDomain_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSElasticsearchDomainConfigWithDataSource(rInt),
+				Config: testAccDomainWithDataSourceConfig(rInt),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "processing", "false"),
 					resource.TestCheckResourceAttrPair(datasourceName, "elasticsearch_version", resourceName, "elasticsearch_version"),
@@ -54,7 +54,7 @@ func TestAccAWSDataElasticsearchDomain_advanced(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSElasticsearchDomainConfigAdvancedWithDataSource(rInt),
+				Config: testAccDomainAdvancedWithDataSourceConfig(rInt),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "elasticsearch_version", resourceName, "elasticsearch_version"),
 					resource.TestCheckResourceAttrPair(datasourceName, "cluster_config.#", resourceName, "cluster_config.#"),
@@ -78,7 +78,7 @@ func TestAccAWSDataElasticsearchDomain_advanced(t *testing.T) {
 	})
 }
 
-func testAccAWSElasticsearchDomainConfigWithDataSource(rInt int) string {
+func testAccDomainWithDataSourceConfig(rInt int) string {
 	return fmt.Sprintf(`
 locals {
   random_name = "test-es-%d"
@@ -144,7 +144,7 @@ data "aws_elasticsearch_domain" "test" {
 		`, rInt)
 }
 
-func testAccAWSElasticsearchDomainConfigAdvancedWithDataSource(rInt int) string {
+func testAccDomainAdvancedWithDataSourceConfig(rInt int) string {
 	return acctest.ConfigAvailableAZsNoOptIn() + fmt.Sprintf(`
 data "aws_partition" "current" {}
 

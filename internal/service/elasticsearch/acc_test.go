@@ -8,7 +8,7 @@ import (
 	awspolicy "github.com/jen20/awspolicyequivalence"
 )
 
-func testAccCheckAwsPolicyMatch(resource, attr, expectedPolicy string) resource.TestCheckFunc {
+func testAccCheckPolicyMatch(resource, attr, expectedPolicy string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resource]
 		if !ok {

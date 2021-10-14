@@ -64,7 +64,7 @@ func TestAccAWSElasticSearchDomainPolicy_basic(t *testing.T) {
 						}
 						expectedPolicy := fmt.Sprintf(expectedPolicyTpl, expectedArn)
 
-						return testAccCheckAwsPolicyMatch("aws_elasticsearch_domain_policy.main", "access_policies", expectedPolicy)(s)
+						return testAccCheckPolicyMatch("aws_elasticsearch_domain_policy.main", "access_policies", expectedPolicy)(s)
 					},
 				),
 			},
