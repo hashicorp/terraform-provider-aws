@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSDocDBCluster_basic(t *testing.T) {
+func TestAccDocDBCluster_basic(t *testing.T) {
 	var dbCluster docdb.DBCluster
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_docdb_cluster.default"
@@ -64,7 +64,7 @@ func TestAccAWSDocDBCluster_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDocDBCluster_namePrefix(t *testing.T) {
+func TestAccDocDBCluster_namePrefix(t *testing.T) {
 	var v docdb.DBCluster
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -97,7 +97,7 @@ func TestAccAWSDocDBCluster_namePrefix(t *testing.T) {
 	})
 }
 
-func TestAccAWSDocDBCluster_generatedName(t *testing.T) {
+func TestAccDocDBCluster_generatedName(t *testing.T) {
 	var v docdb.DBCluster
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -130,7 +130,7 @@ func TestAccAWSDocDBCluster_generatedName(t *testing.T) {
 	})
 }
 
-func TestAccAWSDocDBCluster_takeFinalSnapshot(t *testing.T) {
+func TestAccDocDBCluster_takeFinalSnapshot(t *testing.T) {
 	var v docdb.DBCluster
 	rInt := sdkacctest.RandInt()
 
@@ -164,7 +164,7 @@ func TestAccAWSDocDBCluster_takeFinalSnapshot(t *testing.T) {
 
 /// This is a regression test to make sure that we always cover the scenario as hightlighted in
 /// https://github.com/hashicorp/terraform/issues/11568
-func TestAccAWSDocDBCluster_missingUserNameCausesError(t *testing.T) {
+func TestAccDocDBCluster_missingUserNameCausesError(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, docdb.EndpointsID),
@@ -179,7 +179,7 @@ func TestAccAWSDocDBCluster_missingUserNameCausesError(t *testing.T) {
 	})
 }
 
-func TestAccAWSDocDBCluster_updateTags(t *testing.T) {
+func TestAccDocDBCluster_updateTags(t *testing.T) {
 	var v docdb.DBCluster
 	ri := sdkacctest.RandInt()
 
@@ -221,7 +221,7 @@ func TestAccAWSDocDBCluster_updateTags(t *testing.T) {
 	})
 }
 
-func TestAccAWSDocDBCluster_updateCloudwatchLogsExports(t *testing.T) {
+func TestAccDocDBCluster_updateCloudWatchLogsExports(t *testing.T) {
 	var v docdb.DBCluster
 	ri := sdkacctest.RandInt()
 
@@ -261,7 +261,7 @@ func TestAccAWSDocDBCluster_updateCloudwatchLogsExports(t *testing.T) {
 	})
 }
 
-func TestAccAWSDocDBCluster_kmsKey(t *testing.T) {
+func TestAccDocDBCluster_kmsKey(t *testing.T) {
 	var v docdb.DBCluster
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -293,7 +293,7 @@ func TestAccAWSDocDBCluster_kmsKey(t *testing.T) {
 	})
 }
 
-func TestAccAWSDocDBCluster_encrypted(t *testing.T) {
+func TestAccDocDBCluster_encrypted(t *testing.T) {
 	var v docdb.DBCluster
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -328,7 +328,7 @@ func TestAccAWSDocDBCluster_encrypted(t *testing.T) {
 	})
 }
 
-func TestAccAWSDocDBCluster_backupsUpdate(t *testing.T) {
+func TestAccDocDBCluster_backupsUpdate(t *testing.T) {
 	var v docdb.DBCluster
 
 	ri := sdkacctest.RandInt()
@@ -378,7 +378,7 @@ func TestAccAWSDocDBCluster_backupsUpdate(t *testing.T) {
 	})
 }
 
-func TestAccAWSDocDBCluster_Port(t *testing.T) {
+func TestAccDocDBCluster_port(t *testing.T) {
 	var dbCluster1, dbCluster2 docdb.DBCluster
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_docdb_cluster.test"
@@ -420,7 +420,7 @@ func TestAccAWSDocDBCluster_Port(t *testing.T) {
 	})
 }
 
-func TestAccAWSDocDBCluster_deleteProtection(t *testing.T) {
+func TestAccDocDBCluster_deleteProtection(t *testing.T) {
 	var dbCluster docdb.DBCluster
 	resourceName := "aws_docdb_cluster.default"
 

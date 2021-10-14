@@ -16,7 +16,7 @@ import (
 	tfdocdb "github.com/hashicorp/terraform-provider-aws/internal/service/docdb"
 )
 
-func TestAccAWSDocDBSubnetGroup_basic(t *testing.T) {
+func TestAccDocDBSubnetGroup_basic(t *testing.T) {
 	var v docdb.DBSubnetGroup
 
 	rName := fmt.Sprintf("tf-test-%d", sdkacctest.RandInt())
@@ -47,7 +47,7 @@ func TestAccAWSDocDBSubnetGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDocDBSubnetGroup_disappears(t *testing.T) {
+func TestAccDocDBSubnetGroup_disappears(t *testing.T) {
 	var v docdb.DBSubnetGroup
 
 	rName := fmt.Sprintf("tf-test-%d", sdkacctest.RandInt())
@@ -71,7 +71,7 @@ func TestAccAWSDocDBSubnetGroup_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSDocDBSubnetGroup_namePrefix(t *testing.T) {
+func TestAccDocDBSubnetGroup_namePrefix(t *testing.T) {
 	var v docdb.DBSubnetGroup
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -99,7 +99,7 @@ func TestAccAWSDocDBSubnetGroup_namePrefix(t *testing.T) {
 	})
 }
 
-func TestAccAWSDocDBSubnetGroup_generatedName(t *testing.T) {
+func TestAccDocDBSubnetGroup_generatedName(t *testing.T) {
 	var v docdb.DBSubnetGroup
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -124,7 +124,7 @@ func TestAccAWSDocDBSubnetGroup_generatedName(t *testing.T) {
 	})
 }
 
-func TestAccAWSDocDBSubnetGroup_updateDescription(t *testing.T) {
+func TestAccDocDBSubnetGroup_updateDescription(t *testing.T) {
 	var v docdb.DBSubnetGroup
 
 	rName := fmt.Sprintf("tf-test-%d", sdkacctest.RandInt())

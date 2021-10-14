@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSDocDBEngineVersionDataSource_basic(t *testing.T) {
+func TestAccDocDBEngineVersionDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_docdb_engine_version.test"
 	engine := "docdb"
 	version := "3.6.0"
@@ -40,7 +40,7 @@ func TestAccAWSDocDBEngineVersionDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDocDBEngineVersionDataSource_preferred(t *testing.T) {
+func TestAccDocDBEngineVersionDataSource_preferred(t *testing.T) {
 	dataSourceName := "data.aws_docdb_engine_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -59,7 +59,7 @@ func TestAccAWSDocDBEngineVersionDataSource_preferred(t *testing.T) {
 	})
 }
 
-func TestAccAWSDocDBEngineVersionDataSource_defaultOnly(t *testing.T) {
+func TestAccDocDBEngineVersionDataSource_defaultOnly(t *testing.T) {
 	dataSourceName := "data.aws_docdb_engine_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{

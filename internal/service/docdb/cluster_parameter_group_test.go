@@ -17,7 +17,7 @@ import (
 	tfdocdb "github.com/hashicorp/terraform-provider-aws/internal/service/docdb"
 )
 
-func TestAccAWSDocDBClusterParameterGroup_basic(t *testing.T) {
+func TestAccDocDBClusterParameterGroup_basic(t *testing.T) {
 	var v docdb.DBClusterParameterGroup
 	resourceName := "aws_docdb_cluster_parameter_group.bar"
 
@@ -51,7 +51,7 @@ func TestAccAWSDocDBClusterParameterGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDocDBClusterParameterGroup_systemParameter(t *testing.T) {
+func TestAccDocDBClusterParameterGroup_systemParameter(t *testing.T) {
 	var v docdb.DBClusterParameterGroup
 	resourceName := "aws_docdb_cluster_parameter_group.bar"
 
@@ -86,7 +86,7 @@ func TestAccAWSDocDBClusterParameterGroup_systemParameter(t *testing.T) {
 	})
 }
 
-func TestAccAWSDocDBClusterParameterGroup_namePrefix(t *testing.T) {
+func TestAccDocDBClusterParameterGroup_namePrefix(t *testing.T) {
 	var v docdb.DBClusterParameterGroup
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -112,7 +112,7 @@ func TestAccAWSDocDBClusterParameterGroup_namePrefix(t *testing.T) {
 	})
 }
 
-func TestAccAWSDocDBClusterParameterGroup_generatedName(t *testing.T) {
+func TestAccDocDBClusterParameterGroup_generatedName(t *testing.T) {
 	var v docdb.DBClusterParameterGroup
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -136,7 +136,7 @@ func TestAccAWSDocDBClusterParameterGroup_generatedName(t *testing.T) {
 	})
 }
 
-func TestAccAWSDocDBClusterParameterGroup_Description(t *testing.T) {
+func TestAccDocDBClusterParameterGroup_description(t *testing.T) {
 	var v docdb.DBClusterParameterGroup
 	resourceName := "aws_docdb_cluster_parameter_group.bar"
 
@@ -165,7 +165,7 @@ func TestAccAWSDocDBClusterParameterGroup_Description(t *testing.T) {
 	})
 }
 
-func TestAccAWSDocDBClusterParameterGroup_disappears(t *testing.T) {
+func TestAccDocDBClusterParameterGroup_disappears(t *testing.T) {
 	var v docdb.DBClusterParameterGroup
 	resourceName := "aws_docdb_cluster_parameter_group.bar"
 
@@ -189,7 +189,7 @@ func TestAccAWSDocDBClusterParameterGroup_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSDocDBClusterParameterGroup_Parameter(t *testing.T) {
+func TestAccDocDBClusterParameterGroup_parameter(t *testing.T) {
 	var v docdb.DBClusterParameterGroup
 	resourceName := "aws_docdb_cluster_parameter_group.bar"
 
@@ -236,7 +236,7 @@ func TestAccAWSDocDBClusterParameterGroup_Parameter(t *testing.T) {
 	})
 }
 
-func TestAccAWSDocDBClusterParameterGroup_Tags(t *testing.T) {
+func TestAccDocDBClusterParameterGroup_tags(t *testing.T) {
 	var v docdb.DBClusterParameterGroup
 	resourceName := "aws_docdb_cluster_parameter_group.bar"
 
