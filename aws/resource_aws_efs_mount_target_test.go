@@ -237,7 +237,7 @@ func testAccCheckEfsMountTargetDestroy(s *terraform.State) error {
 			MountTargetId: aws.String(rs.Primary.ID),
 		})
 		if err != nil {
-			if isAWSErr(err, efs.ErrCodeMountTargetNotFound, "") {
+			if tfawserr.ErrMessageContains(err, efs.ErrCodeMountTargetNotFound, "") {
 				// gone
 				return nil
 			}

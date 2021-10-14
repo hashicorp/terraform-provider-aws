@@ -316,7 +316,7 @@ func testAccCheckEfsAccessPointDestroy(s *terraform.State) error {
 			AccessPointId: aws.String(rs.Primary.ID),
 		})
 		if err != nil {
-			if isAWSErr(err, efs.ErrCodeAccessPointNotFound, "") {
+			if tfawserr.ErrMessageContains(err, efs.ErrCodeAccessPointNotFound, "") {
 				continue
 			}
 			return fmt.Errorf("Error describing EFS access point in tests: %s", err)
