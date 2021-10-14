@@ -3,6 +3,7 @@ package finder
 import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kinesis"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // StreamConsumerByARN returns the stream consumer corresponding to the specified ARN.
