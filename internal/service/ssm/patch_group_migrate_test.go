@@ -3,6 +3,7 @@ package ssm_test
 import (
 	"context"
 	"fmt"
+	tfssm "github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
 	"reflect"
 	"testing"
 )
@@ -26,7 +27,7 @@ func testResourceAwsSsmPatchGroupStateDataV1() map[string]interface{} {
 
 func TestResourceAWSSSMPatchGroupStateUpgradeV0(t *testing.T) {
 	expected := testResourceAwsSsmPatchGroupStateDataV1()
-	actual, err := resourceAwsSsmPatchGroupStateUpgradeV0(context.Background(), testResourceAwsSsmPatchGroupStateDataV0(), nil)
+	actual, err := tfssm.PatchGroupStateUpgradeV0(context.Background(), testResourceAwsSsmPatchGroupStateDataV0(), nil)
 	if err != nil {
 		t.Fatalf("error migrating state: %s", err)
 	}

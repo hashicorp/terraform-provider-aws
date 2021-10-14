@@ -24,7 +24,7 @@ func ResourceAssociation() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
-		MigrateState:  resourceAwsSsmAssociationMigrateState,
+		MigrateState:  AssociationMigrateState,
 		SchemaVersion: 1,
 
 		Schema: map[string]*schema.Schema{

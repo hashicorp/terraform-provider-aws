@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfssm "github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
 )
 
 func TestAccAWSSSMPatchBaseline_basic(t *testing.T) {
@@ -126,7 +127,7 @@ func TestAccAWSSSMPatchBaseline_disappears(t *testing.T) {
 				Config: testAccAWSSSMPatchBaselineBasicConfig(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMPatchBaselineExists(resourceName, &identity),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourcePatchBaseline(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfssm.ResourcePatchBaseline(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

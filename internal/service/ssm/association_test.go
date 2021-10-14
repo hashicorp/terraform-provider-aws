@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfssm "github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
 )
 
 func TestAccAWSSSMAssociation_basic(t *testing.T) {
@@ -54,7 +55,7 @@ func TestAccAWSSSMAssociation_disappears(t *testing.T) {
 				Config: testAccAWSSSMAssociationBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMAssociationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceAssociation(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfssm.ResourceAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

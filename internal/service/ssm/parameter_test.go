@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfssm "github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
 )
 
 func TestAccAWSSSMParameter_basic(t *testing.T) {
@@ -201,7 +202,7 @@ func TestAccAWSSSMParameter_disappears(t *testing.T) {
 				Config: testAccAWSSSMParameterBasicConfig(name, "String", "test2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMParameterExists(resourceName, &param),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceParameter(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfssm.ResourceParameter(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -854,29 +855,29 @@ resource "aws_kms_alias" "test_alias" {
 }
 
 func TestAWSSSMParameterShouldUpdate(t *testing.T) {
-	data := ResourceParameter().TestResourceData()
+	data := tfssm.ResourceParameter().TestResourceData()
 	failure := false
 
-	if !shouldUpdateSsmParameter(data) {
+	if !tfssm.ShouldUpdateParameter(data) {
 		t.Logf("Existing resources should be overwritten if the values don't match!")
 		failure = true
 	}
 
 	data.MarkNewResource()
-	if shouldUpdateSsmParameter(data) {
+	if tfssm.ShouldUpdateParameter(data) {
 		t.Logf("New resources must never be overwritten, this will overwrite parameters created outside of the system")
 		failure = true
 	}
 
-	data = ResourceParameter().TestResourceData()
+	data = tfssm.ResourceParameter().TestResourceData()
 	data.Set("overwrite", true)
-	if !shouldUpdateSsmParameter(data) {
+	if !tfssm.ShouldUpdateParameter(data) {
 		t.Logf("Resources should always be overwritten if the user requests it")
 		failure = true
 	}
 
 	data.Set("overwrite", false)
-	if shouldUpdateSsmParameter(data) {
+	if tfssm.ShouldUpdateParameter(data) {
 		t.Logf("Resources should never be overwritten if the user requests it")
 		failure = true
 	}

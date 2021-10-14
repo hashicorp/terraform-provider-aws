@@ -126,7 +126,7 @@ func resourceParameterCreate(d *schema.ResourceData, meta interface{}) error {
 		Type:           aws.String(d.Get("type").(string)),
 		Tier:           aws.String(d.Get("tier").(string)),
 		Value:          aws.String(d.Get("value").(string)),
-		Overwrite:      aws.Bool(shouldUpdateSsmParameter(d)),
+		Overwrite:      aws.Bool(ShouldUpdateParameter(d)),
 		AllowedPattern: aws.String(d.Get("allowed_pattern").(string)),
 	}
 
@@ -284,7 +284,7 @@ func resourceParameterUpdate(d *schema.ResourceData, meta interface{}) error {
 			Type:           aws.String(d.Get("type").(string)),
 			Tier:           aws.String(d.Get("tier").(string)),
 			Value:          aws.String(d.Get("value").(string)),
-			Overwrite:      aws.Bool(shouldUpdateSsmParameter(d)),
+			Overwrite:      aws.Bool(ShouldUpdateParameter(d)),
 			AllowedPattern: aws.String(d.Get("allowed_pattern").(string)),
 		}
 
@@ -341,7 +341,7 @@ func resourceParameterDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func shouldUpdateSsmParameter(d *schema.ResourceData) bool {
+func ShouldUpdateParameter(d *schema.ResourceData) bool {
 	// If the user has specified a preference, return their preference
 	if value, ok := d.GetOkExists("overwrite"); ok {
 		return value.(bool)
