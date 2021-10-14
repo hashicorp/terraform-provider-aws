@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -29,7 +30,7 @@ func testSweepSagemakerWorkteams(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).sagemakerconn
+	conn := client.(*conns.AWSClient).SageMakerConn
 	var sweeperErrs *multierror.Error
 
 	err = conn.ListWorkteamsPages(&sagemaker.ListWorkteamsInput{}, func(page *sagemaker.ListWorkteamsOutput, lastPage bool) bool {
@@ -312,7 +313,7 @@ func testAccAWSSagemakerWorkteam_disappears(t *testing.T) {
 }
 
 func testAccCheckAWSSagemakerWorkteamDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).sagemakerconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_sagemaker_workteam" {
@@ -346,7 +347,7 @@ func testAccCheckAWSSagemakerWorkteamExists(n string, workteam *sagemaker.Workte
 			return fmt.Errorf("No SageMaker Workteam ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).sagemakerconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
 
 		output, err := finder.WorkteamByName(conn, rs.Primary.ID)
 

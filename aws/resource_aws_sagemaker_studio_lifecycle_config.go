@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsSagemakerStudioLifecycleConfig() *schema.Resource {
@@ -60,8 +61,8 @@ func resourceAwsSagemakerStudioLifecycleConfig() *schema.Resource {
 }
 
 func resourceAwsSagemakerStudioLifecycleConfigCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).SageMakerConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("studio_lifecycle_config_name").(string)
@@ -88,9 +89,9 @@ func resourceAwsSagemakerStudioLifecycleConfigCreate(d *schema.ResourceData, met
 }
 
 func resourceAwsSagemakerStudioLifecycleConfigRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).SageMakerConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	image, err := finder.StudioLifecycleConfigByName(conn, d.Id())
 
@@ -131,7 +132,7 @@ func resourceAwsSagemakerStudioLifecycleConfigRead(d *schema.ResourceData, meta 
 }
 
 func resourceAwsSagemakerStudioLifecycleConfigUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -145,7 +146,7 @@ func resourceAwsSagemakerStudioLifecycleConfigUpdate(d *schema.ResourceData, met
 }
 
 func resourceAwsSagemakerStudioLifecycleConfigDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	input := &sagemaker.DeleteStudioLifecycleConfigInput{
 		StudioLifecycleConfigName: aws.String(d.Id()),

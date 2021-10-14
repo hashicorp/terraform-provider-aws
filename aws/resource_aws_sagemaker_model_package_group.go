@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsSagemakerModelPackageGroup() *schema.Resource {
@@ -54,8 +55,8 @@ func resourceAwsSagemakerModelPackageGroup() *schema.Resource {
 }
 
 func resourceAwsSagemakerModelPackageGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).SageMakerConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("model_package_group_name").(string)
@@ -86,9 +87,9 @@ func resourceAwsSagemakerModelPackageGroupCreate(d *schema.ResourceData, meta in
 }
 
 func resourceAwsSagemakerModelPackageGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).SageMakerConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	mpg, err := finder.ModelPackageGroupByName(conn, d.Id())
 	if err != nil {
@@ -127,7 +128,7 @@ func resourceAwsSagemakerModelPackageGroupRead(d *schema.ResourceData, meta inte
 }
 
 func resourceAwsSagemakerModelPackageGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -141,7 +142,7 @@ func resourceAwsSagemakerModelPackageGroupUpdate(d *schema.ResourceData, meta in
 }
 
 func resourceAwsSagemakerModelPackageGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	input := &sagemaker.DeleteModelPackageGroupInput{
 		ModelPackageGroupName: aws.String(d.Id()),

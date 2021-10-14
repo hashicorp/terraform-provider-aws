@@ -12,6 +12,7 @@ import (
 	tfsagemaker "github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsSagemakerModelPackageGroupPolicy() *schema.Resource {
@@ -41,7 +42,7 @@ func resourceAwsSagemakerModelPackageGroupPolicy() *schema.Resource {
 }
 
 func resourceAwsSagemakerModelPackageGroupPolicyPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	name := d.Get("model_package_group_name").(string)
 	input := &sagemaker.PutModelPackageGroupPolicyInput{
@@ -60,7 +61,7 @@ func resourceAwsSagemakerModelPackageGroupPolicyPut(d *schema.ResourceData, meta
 }
 
 func resourceAwsSagemakerModelPackageGroupPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	mpg, err := finder.ModelPackageGroupPolicyByName(conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -80,7 +81,7 @@ func resourceAwsSagemakerModelPackageGroupPolicyRead(d *schema.ResourceData, met
 }
 
 func resourceAwsSagemakerModelPackageGroupPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	input := &sagemaker.DeleteModelPackageGroupPolicyInput{
 		ModelPackageGroupName: aws.String(d.Id()),

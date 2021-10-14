@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsSagemakerImageVersion() *schema.Resource {
@@ -52,7 +53,7 @@ func resourceAwsSagemakerImageVersion() *schema.Resource {
 }
 
 func resourceAwsSagemakerImageVersionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	name := d.Get("image_name").(string)
 	input := &sagemaker.CreateImageVersionInput{
@@ -75,7 +76,7 @@ func resourceAwsSagemakerImageVersionCreate(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsSagemakerImageVersionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	image, err := finder.ImageVersionByName(conn, d.Id())
 	if err != nil {
@@ -99,7 +100,7 @@ func resourceAwsSagemakerImageVersionRead(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsSagemakerImageVersionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	input := &sagemaker.DeleteImageVersionInput{
 		ImageName: aws.String(d.Id()),

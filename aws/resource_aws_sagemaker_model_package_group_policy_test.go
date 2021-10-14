@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSSagemakerModelPackageGroupPolicy_basic(t *testing.T) {
@@ -89,7 +90,7 @@ func TestAccAWSSagemakerModelPackageGroupPolicy_disappears_modelPackageGroup(t *
 }
 
 func testAccCheckAWSSagemakerModelPackageGroupPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).sagemakerconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_sagemaker_model_package_group_policy" {
@@ -120,7 +121,7 @@ func testAccCheckAWSSagemakerModelPackageGroupPolicyExists(n string, mpg *sagema
 			return fmt.Errorf("No sagmaker Model Package Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).sagemakerconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
 		resp, err := finder.ModelPackageGroupPolicyByName(conn, rs.Primary.ID)
 		if err != nil {
 			return err

@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsSagemakerCodeRepository() *schema.Resource {
@@ -67,7 +68,7 @@ func resourceAwsSagemakerCodeRepository() *schema.Resource {
 }
 
 func resourceAwsSagemakerCodeRepositoryCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	name := d.Get("code_repository_name").(string)
 
@@ -88,7 +89,7 @@ func resourceAwsSagemakerCodeRepositoryCreate(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsSagemakerCodeRepositoryRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	codeRepository, err := finder.CodeRepositoryByName(conn, d.Id())
 	if err != nil {
@@ -112,7 +113,7 @@ func resourceAwsSagemakerCodeRepositoryRead(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsSagemakerCodeRepositoryUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	input := &sagemaker.UpdateCodeRepositoryInput{
 		CodeRepositoryName: aws.String(d.Id()),
@@ -129,7 +130,7 @@ func resourceAwsSagemakerCodeRepositoryUpdate(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsSagemakerCodeRepositoryDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	input := &sagemaker.DeleteCodeRepositoryInput{
 		CodeRepositoryName: aws.String(d.Id()),

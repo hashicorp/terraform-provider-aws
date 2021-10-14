@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -28,7 +29,7 @@ func testSweepSagemakerFeatureGroups(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).sagemakerconn
+	conn := client.(*conns.AWSClient).SageMakerConn
 
 	err = conn.ListFeatureGroupsPages(&sagemaker.ListFeatureGroupsInput{}, func(page *sagemaker.ListFeatureGroupsOutput, lastPage bool) bool {
 		for _, group := range page.FeatureGroupSummaries {
@@ -383,7 +384,7 @@ func TestAccAWSSagemakerFeatureGroup_disappears(t *testing.T) {
 }
 
 func testAccCheckAWSSagemakerFeatureGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).sagemakerconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_sagemaker_feature_group" {
@@ -417,7 +418,7 @@ func testAccCheckAWSSagemakerFeatureGroupExists(n string, v *sagemaker.DescribeF
 			return fmt.Errorf("No SageMaker Feature Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).sagemakerconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
 
 		output, err := finder.FeatureGroupByName(conn, rs.Primary.ID)
 

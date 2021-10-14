@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -28,7 +29,7 @@ func testSweepSagemakerDeviceFleets(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).sagemakerconn
+	conn := client.(*conns.AWSClient).SageMakerConn
 	var sweeperErrs *multierror.Error
 
 	err = conn.ListDeviceFleetsPages(&sagemaker.ListDeviceFleetsInput{}, func(page *sagemaker.ListDeviceFleetsOutput, lastPage bool) bool {
@@ -198,7 +199,7 @@ func TestAccAWSSagemakerDeviceFleet_disappears(t *testing.T) {
 }
 
 func testAccCheckAWSSagemakerDeviceFleetDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).sagemakerconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_sagemaker_device_fleet" {
@@ -233,7 +234,7 @@ func testAccCheckAWSSagemakerDeviceFleetExists(n string, device_fleet *sagemaker
 			return fmt.Errorf("No sagmaker Device Fleet ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).sagemakerconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
 		resp, err := finder.DeviceFleetByName(conn, rs.Primary.ID)
 		if err != nil {
 			return err

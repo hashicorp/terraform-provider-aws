@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsSagemakerUserProfile() *schema.Resource {
@@ -237,8 +238,8 @@ func resourceAwsSagemakerUserProfile() *schema.Resource {
 }
 
 func resourceAwsSagemakerUserProfileCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).SageMakerConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &sagemaker.CreateUserProfileInput{
@@ -284,9 +285,9 @@ func resourceAwsSagemakerUserProfileCreate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsSagemakerUserProfileRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).SageMakerConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	domainID, userProfileName, err := decodeSagemakerUserProfileName(d.Id())
 	if err != nil {
@@ -336,7 +337,7 @@ func resourceAwsSagemakerUserProfileRead(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsSagemakerUserProfileUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	if d.HasChange("user_settings") {
 		domainID := d.Get("domain_id").(string)
@@ -371,7 +372,7 @@ func resourceAwsSagemakerUserProfileUpdate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsSagemakerUserProfileDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	userProfileName := d.Get("user_profile_name").(string)
 	domainID := d.Get("domain_id").(string)

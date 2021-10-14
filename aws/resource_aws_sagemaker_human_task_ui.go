@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsSagemakerHumanTaskUi() *schema.Resource {
@@ -71,8 +72,8 @@ func resourceAwsSagemakerHumanTaskUi() *schema.Resource {
 }
 
 func resourceAwsSagemakerHumanTaskUiCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).SageMakerConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("human_task_ui_name").(string)
@@ -98,9 +99,9 @@ func resourceAwsSagemakerHumanTaskUiCreate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsSagemakerHumanTaskUiRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).SageMakerConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	humanTaskUi, err := finder.HumanTaskUiByName(conn, d.Id())
 
@@ -143,7 +144,7 @@ func resourceAwsSagemakerHumanTaskUiRead(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsSagemakerHumanTaskUiUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -157,7 +158,7 @@ func resourceAwsSagemakerHumanTaskUiUpdate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsSagemakerHumanTaskUiDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	log.Printf("[DEBUG] Deleting SageMaker HumanTaskUi: %s", d.Id())
 	_, err := conn.DeleteHumanTaskUi(&sagemaker.DeleteHumanTaskUiInput{

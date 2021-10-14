@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsSagemakerDomain() *schema.Resource {
@@ -277,8 +278,8 @@ func resourceAwsSagemakerDomain() *schema.Resource {
 }
 
 func resourceAwsSagemakerDomainCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).SageMakerConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &sagemaker.CreateDomainInput{
@@ -320,9 +321,9 @@ func resourceAwsSagemakerDomainCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsSagemakerDomainRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).SageMakerConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	domain, err := finder.DomainByName(conn, d.Id())
 	if err != nil {
@@ -374,7 +375,7 @@ func resourceAwsSagemakerDomainRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsSagemakerDomainUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	if d.HasChange("default_user_settings") {
 		input := &sagemaker.UpdateDomainInput{
@@ -405,7 +406,7 @@ func resourceAwsSagemakerDomainUpdate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsSagemakerDomainDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	input := &sagemaker.DeleteDomainInput{
 		DomainId: aws.String(d.Id()),

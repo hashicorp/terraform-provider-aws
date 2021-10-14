@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsSagemakerApp() *schema.Resource {
@@ -87,8 +88,8 @@ func resourceAwsSagemakerApp() *schema.Resource {
 }
 
 func resourceAwsSagemakerAppCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).SageMakerConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &sagemaker.CreateAppInput{
@@ -128,9 +129,9 @@ func resourceAwsSagemakerAppCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsSagemakerAppRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).SageMakerConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	domainID, userProfileName, appType, appName, err := decodeSagemakerAppID(d.Id())
 	if err != nil {
@@ -185,7 +186,7 @@ func resourceAwsSagemakerAppRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsSagemakerAppUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -199,7 +200,7 @@ func resourceAwsSagemakerAppUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsSagemakerAppDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	appName := d.Get("app_name").(string)
 	appType := d.Get("app_type").(string)
