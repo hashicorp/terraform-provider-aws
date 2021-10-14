@@ -73,7 +73,7 @@ func resourceAwsDocDBSubnetGroupCreate(d *schema.ResourceData, meta interface{})
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
-	subnetIds := expandStringSet(d.Get("subnet_ids").(*schema.Set))
+	subnetIds := flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set))
 
 	var groupName string
 	if v, ok := d.GetOk("name"); ok {
@@ -170,7 +170,7 @@ func resourceAwsDocDBSubnetGroupUpdate(d *schema.ResourceData, meta interface{})
 		if n == nil {
 			n = new(schema.Set)
 		}
-		sIds := expandStringSet(n.(*schema.Set))
+		sIds := flex.ExpandStringSet(n.(*schema.Set))
 
 		_, err := conn.ModifyDBSubnetGroup(&docdb.ModifyDBSubnetGroupInput{
 			DBSubnetGroupName:        aws.String(d.Id()),

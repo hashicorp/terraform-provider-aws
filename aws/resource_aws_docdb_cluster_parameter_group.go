@@ -168,7 +168,7 @@ func resourceAwsDocDBClusterParameterGroupRead(d *schema.ResourceData, meta inte
 		return fmt.Errorf("error reading DocDB Cluster Parameter Group (%s) parameters: %s", d.Id(), err)
 	}
 
-	if err := d.Set("parameter", flattenDocDBParameters(describeParametersResp.Parameters, d.Get("parameter").(*schema.Set).List())); err != nil {
+	if err := d.Set("parameter", flattenParameters(describeParametersResp.Parameters, d.Get("parameter").(*schema.Set).List())); err != nil {
 		return fmt.Errorf("error setting docdb cluster parameter: %s", err)
 	}
 
@@ -207,7 +207,7 @@ func resourceAwsDocDBClusterParameterGroupUpdate(d *schema.ResourceData, meta in
 		os := o.(*schema.Set)
 		ns := n.(*schema.Set)
 
-		parameters := expandDocDBParameters(ns.Difference(os).List())
+		parameters := expandParameters(ns.Difference(os).List())
 		if len(parameters) > 0 {
 			// We can only modify 20 parameters at a time, so walk them until
 			// we've got them all.
