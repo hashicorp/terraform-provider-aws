@@ -149,7 +149,7 @@ func resourceResourceSetCreate(d *schema.ResourceData, meta interface{}) error {
 	input := &route53recoveryreadiness.CreateResourceSetInput{
 		ResourceSetName: aws.String(d.Get("resource_set_name").(string)),
 		ResourceSetType: aws.String(d.Get("resource_set_type").(string)),
-		Resources:       expandAwsRoute53RecoveryReadinessResourceSetResources(d.Get("resources").([]interface{})),
+		Resources:       expandResourceSetResources(d.Get("resources").([]interface{})),
 	}
 
 	resp, err := conn.CreateResourceSet(input)
@@ -194,7 +194,7 @@ func resourceResourceSetRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("resource_set_name", resp.ResourceSetName)
 	d.Set("resource_set_type", resp.ResourceSetType)
 
-	if err := d.Set("resources", flattenAwsRoute53RecoveryReadinessResourceSetResources(resp.Resources)); err != nil {
+	if err := d.Set("resources", flattenResourceSetResources(resp.Resources)); err != nil {
 		return fmt.Errorf("Error setting AWS Route53 Recovery Readiness Resource Set resources: %s", err)
 	}
 
@@ -224,7 +224,7 @@ func resourceResourceSetUpdate(d *schema.ResourceData, meta interface{}) error {
 	input := &route53recoveryreadiness.UpdateResourceSetInput{
 		ResourceSetName: aws.String(d.Id()),
 		ResourceSetType: aws.String(d.Get("resource_set_type").(string)),
-		Resources:       expandAwsRoute53RecoveryReadinessResourceSetResources(d.Get("resources").([]interface{})),
+		Resources:       expandResourceSetResources(d.Get("resources").([]interface{})),
 	}
 
 	_, err := conn.UpdateResourceSet(input)
@@ -280,7 +280,7 @@ func resourceResourceSetDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func expandAwsRoute53RecoveryReadinessResourceSetResources(rs []interface{}) []*route53recoveryreadiness.Resource {
+func expandResourceSetResources(rs []interface{}) []*route53recoveryreadiness.Resource {
 	var resources []*route53recoveryreadiness.Resource
 
 	for _, r := range rs {
@@ -296,14 +296,14 @@ func expandAwsRoute53RecoveryReadinessResourceSetResources(rs []interface{}) []*
 			resource.ComponentId = aws.String(v.(string))
 		}
 		if v, ok := r["dns_target_resource"]; ok {
-			resource.DnsTargetResource = expandAwsRoute53RecoveryReadinessResourceSetDnsTargetResource(v.([]interface{}))
+			resource.DnsTargetResource = expandResourceSetDNSTargetResource(v.([]interface{}))
 		}
 		resources = append(resources, resource)
 	}
 	return resources
 }
 
-func flattenAwsRoute53RecoveryReadinessResourceSetResources(resources []*route53recoveryreadiness.Resource) []map[string]interface{} {
+func flattenResourceSetResources(resources []*route53recoveryreadiness.Resource) []map[string]interface{} {
 	rs := make([]map[string]interface{}, 0)
 	for _, resource := range resources {
 		r := map[string]interface{}{}
@@ -317,14 +317,14 @@ func flattenAwsRoute53RecoveryReadinessResourceSetResources(resources []*route53
 			r["component_id"] = v
 		}
 		if v := resource.DnsTargetResource; v != nil {
-			r["dns_target_resource"] = flattenAwsRoute53RecoveryReadinessResourceSetDnsTargetResource(v)
+			r["dns_target_resource"] = flattenResourceSetDNSTargetResource(v)
 		}
 		rs = append(rs, r)
 	}
 	return rs
 }
 
-func expandAwsRoute53RecoveryReadinessResourceSetDnsTargetResource(dtrs []interface{}) *route53recoveryreadiness.DNSTargetResource {
+func expandResourceSetDNSTargetResource(dtrs []interface{}) *route53recoveryreadiness.DNSTargetResource {
 	dtresource := &route53recoveryreadiness.DNSTargetResource{}
 	for _, dtr := range dtrs {
 		dtr := dtr.(map[string]interface{})
@@ -341,13 +341,13 @@ func expandAwsRoute53RecoveryReadinessResourceSetDnsTargetResource(dtrs []interf
 			dtresource.RecordType = aws.String(v.(string))
 		}
 		if v, ok := dtr["target_resource"]; ok {
-			dtresource.TargetResource = expandAwsRoute53RecoveryReadinessResourceSetTargetResource(v.([]interface{}))
+			dtresource.TargetResource = expandResourceSetTargetResource(v.([]interface{}))
 		}
 	}
 	return dtresource
 }
 
-func flattenAwsRoute53RecoveryReadinessResourceSetDnsTargetResource(dtresource *route53recoveryreadiness.DNSTargetResource) []map[string]interface{} {
+func flattenResourceSetDNSTargetResource(dtresource *route53recoveryreadiness.DNSTargetResource) []map[string]interface{} {
 	if dtresource == nil {
 		return nil
 	}
@@ -357,12 +357,12 @@ func flattenAwsRoute53RecoveryReadinessResourceSetDnsTargetResource(dtresource *
 	dtr["hosted_zone_arn"] = dtresource.HostedZoneArn
 	dtr["record_set_id"] = dtresource.RecordSetId
 	dtr["record_type"] = dtresource.RecordType
-	dtr["target_resource"] = flattenAwsRoute53RecoveryReadinessResourceSetTargetResource(dtresource.TargetResource)
+	dtr["target_resource"] = flattenResourceSetTargetResource(dtresource.TargetResource)
 	result := []map[string]interface{}{dtr}
 	return result
 }
 
-func expandAwsRoute53RecoveryReadinessResourceSetTargetResource(trs []interface{}) *route53recoveryreadiness.TargetResource {
+func expandResourceSetTargetResource(trs []interface{}) *route53recoveryreadiness.TargetResource {
 	if len(trs) == 0 {
 		return nil
 	}
@@ -373,28 +373,28 @@ func expandAwsRoute53RecoveryReadinessResourceSetTargetResource(trs []interface{
 		}
 		tr := tr.(map[string]interface{})
 		if v, ok := tr["nlb_resource"]; ok && len(v.([]interface{})) > 0 {
-			tresource.NLBResource = expandAwsRoute53RecoveryReadinessResourceSetNLBResource(v.([]interface{}))
+			tresource.NLBResource = expandResourceSetNLBResource(v.([]interface{}))
 		}
 		if v, ok := tr["r53_resource"]; ok && len(v.([]interface{})) > 0 {
-			tresource.R53Resource = expandAwsRoute53RecoveryReadinessResourceSetR53ResourceRecord(v.([]interface{}))
+			tresource.R53Resource = expandResourceSetR53ResourceRecord(v.([]interface{}))
 		}
 	}
 	return tresource
 }
 
-func flattenAwsRoute53RecoveryReadinessResourceSetTargetResource(tresource *route53recoveryreadiness.TargetResource) []map[string]interface{} {
+func flattenResourceSetTargetResource(tresource *route53recoveryreadiness.TargetResource) []map[string]interface{} {
 	if tresource == nil {
 		return nil
 	}
 
 	tr := make(map[string]interface{})
-	tr["nlb_resource"] = flattenAwsRoute53RecoveryReadinessResourceSetNLBResource(tresource.NLBResource)
-	tr["r53_resource"] = flattenAwsRoute53RecoveryReadinessResourceSetR53ResourceRecord(tresource.R53Resource)
+	tr["nlb_resource"] = flattenResourceSetNLBResource(tresource.NLBResource)
+	tr["r53_resource"] = flattenResourceSetR53ResourceRecord(tresource.R53Resource)
 	result := []map[string]interface{}{tr}
 	return result
 }
 
-func expandAwsRoute53RecoveryReadinessResourceSetNLBResource(nlbrs []interface{}) *route53recoveryreadiness.NLBResource {
+func expandResourceSetNLBResource(nlbrs []interface{}) *route53recoveryreadiness.NLBResource {
 	nlbresource := &route53recoveryreadiness.NLBResource{}
 	for _, nlbr := range nlbrs {
 		nlbr := nlbr.(map[string]interface{})
@@ -405,7 +405,7 @@ func expandAwsRoute53RecoveryReadinessResourceSetNLBResource(nlbrs []interface{}
 	return nlbresource
 }
 
-func flattenAwsRoute53RecoveryReadinessResourceSetNLBResource(nlbresource *route53recoveryreadiness.NLBResource) []map[string]interface{} {
+func flattenResourceSetNLBResource(nlbresource *route53recoveryreadiness.NLBResource) []map[string]interface{} {
 	if nlbresource == nil {
 		return nil
 	}
@@ -416,7 +416,7 @@ func flattenAwsRoute53RecoveryReadinessResourceSetNLBResource(nlbresource *route
 	return result
 }
 
-func expandAwsRoute53RecoveryReadinessResourceSetR53ResourceRecord(r53rs []interface{}) *route53recoveryreadiness.R53ResourceRecord {
+func expandResourceSetR53ResourceRecord(r53rs []interface{}) *route53recoveryreadiness.R53ResourceRecord {
 	r53resource := &route53recoveryreadiness.R53ResourceRecord{}
 	for _, r53r := range r53rs {
 		r53r := r53r.(map[string]interface{})
@@ -430,7 +430,7 @@ func expandAwsRoute53RecoveryReadinessResourceSetR53ResourceRecord(r53rs []inter
 	return r53resource
 }
 
-func flattenAwsRoute53RecoveryReadinessResourceSetR53ResourceRecord(r53resource *route53recoveryreadiness.R53ResourceRecord) []map[string]interface{} {
+func flattenResourceSetR53ResourceRecord(r53resource *route53recoveryreadiness.R53ResourceRecord) []map[string]interface{} {
 	if r53resource == nil {
 		return nil
 	}
