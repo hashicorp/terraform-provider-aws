@@ -58,7 +58,7 @@ func testAccAWSLakeFormationPermissions_disappears(t *testing.T) {
 				Config: testAccAWSLakeFormationPermissionsConfig_twcBasic(rName, "\"event\", \"timestamp\""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLakeFormationPermissionsExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourcePermissions(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tflakeformation.ResourcePermissions(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -699,7 +699,7 @@ func permissionCountForLakeFormationResource(conn *lakeformation.LakeFormation, 
 	}
 
 	if v, ok := rs.Primary.Attributes["catalog_resource"]; ok && v != "" && v == "true" {
-		input.Resource.Catalog = expandLakeFormationCatalogResource()
+		input.Resource.Catalog = tflakeformation.ExpandCatalogResource()
 
 		noResource = false
 	}
@@ -715,7 +715,7 @@ func permissionCountForLakeFormationResource(conn *lakeformation.LakeFormation, 
 			tfMap["arn"] = v
 		}
 
-		input.Resource.DataLocation = expandLakeFormationDataLocationResource(tfMap)
+		input.Resource.DataLocation = tflakeformation.ExpandDataLocationResource(tfMap)
 
 		noResource = false
 	}
@@ -731,7 +731,7 @@ func permissionCountForLakeFormationResource(conn *lakeformation.LakeFormation, 
 			tfMap["name"] = v
 		}
 
-		input.Resource.Database = expandLakeFormationDatabaseResource(tfMap)
+		input.Resource.Database = tflakeformation.ExpandDatabaseResource(tfMap)
 
 		noResource = false
 	}
@@ -759,7 +759,7 @@ func permissionCountForLakeFormationResource(conn *lakeformation.LakeFormation, 
 			tfMap["wildcard"] = true
 		}
 
-		input.Resource.Table = expandLakeFormationTableResource(tfMap)
+		input.Resource.Table = tflakeformation.ExpandTableResource(tfMap)
 
 		noResource = false
 	}
@@ -781,7 +781,7 @@ func permissionCountForLakeFormationResource(conn *lakeformation.LakeFormation, 
 			tfMap["name"] = v
 		}
 
-		input.Resource.Table = expandLakeFormationTableWithColumnsResourceAsTable(tfMap)
+		input.Resource.Table = tflakeformation.ExpandTableWithColumnsResourceAsTable(tfMap)
 
 		noResource = false
 	}

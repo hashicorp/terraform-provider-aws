@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
 )
 
 func TestAccAWSLakeFormationResource_basic(t *testing.T) {
@@ -53,7 +54,7 @@ func TestAccAWSLakeFormationResource_disappears(t *testing.T) {
 				Config: testAccAWSLakeFormationResourceConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLakeFormationResourceExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceResource(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tflakeformation.ResourceResource(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

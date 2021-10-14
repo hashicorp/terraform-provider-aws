@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
+	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
 )
 
 func TestStringSlicesEqualIgnoreOrder(t *testing.T) {
@@ -26,7 +27,7 @@ func TestStringSlicesEqualIgnoreOrder(t *testing.T) {
 		},
 	}
 	for _, v := range equal {
-		if !StringSlicesEqualIgnoreOrder(aws.StringSlice(v.([]interface{})[0].([]string)), aws.StringSlice(v.([]interface{})[1].([]string))) {
+		if !tflakeformation.StringSlicesEqualIgnoreOrder(aws.StringSlice(v.([]interface{})[0].([]string)), aws.StringSlice(v.([]interface{})[1].([]string))) {
 			t.Fatalf("%v should be equal: %v", v.([]interface{})[0].([]string), v.([]interface{})[1].([]string))
 		}
 	}
@@ -54,7 +55,7 @@ func TestStringSlicesEqualIgnoreOrder(t *testing.T) {
 		},
 	}
 	for _, v := range notEqual {
-		if StringSlicesEqualIgnoreOrder(aws.StringSlice(v.([]interface{})[0].([]string)), aws.StringSlice(v.([]interface{})[1].([]string))) {
+		if tflakeformation.StringSlicesEqualIgnoreOrder(aws.StringSlice(v.([]interface{})[0].([]string)), aws.StringSlice(v.([]interface{})[1].([]string))) {
 			t.Fatalf("%v should not be equal: %v", v.([]interface{})[0].([]string), v.([]interface{})[1].([]string))
 		}
 	}
@@ -84,7 +85,7 @@ func TestStringSlicesEqual(t *testing.T) {
 		},
 	}
 	for _, v := range equal {
-		if !StringSlicesEqual(aws.StringSlice(v.([]interface{})[0].([]string)), aws.StringSlice(v.([]interface{})[1].([]string))) {
+		if !tflakeformation.StringSlicesEqual(aws.StringSlice(v.([]interface{})[0].([]string)), aws.StringSlice(v.([]interface{})[1].([]string))) {
 			t.Fatalf("%v should be equal: %v", v.([]interface{})[0].([]string), v.([]interface{})[1].([]string))
 		}
 	}
@@ -112,7 +113,7 @@ func TestStringSlicesEqual(t *testing.T) {
 		},
 	}
 	for _, v := range notEqual {
-		if StringSlicesEqual(aws.StringSlice(v.([]interface{})[0].([]string)), aws.StringSlice(v.([]interface{})[1].([]string))) {
+		if tflakeformation.StringSlicesEqual(aws.StringSlice(v.([]interface{})[0].([]string)), aws.StringSlice(v.([]interface{})[1].([]string))) {
 			t.Fatalf("%v should not be equal: %v", v.([]interface{})[0].([]string), v.([]interface{})[1].([]string))
 		}
 	}

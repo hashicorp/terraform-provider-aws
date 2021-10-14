@@ -184,27 +184,27 @@ func dataSourcePermissionsRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if _, ok := d.GetOk("catalog_resource"); ok {
-		input.Resource.Catalog = expandLakeFormationCatalogResource()
+		input.Resource.Catalog = ExpandCatalogResource()
 	}
 
 	if v, ok := d.GetOk("data_location"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Resource.DataLocation = expandLakeFormationDataLocationResource(v.([]interface{})[0].(map[string]interface{}))
+		input.Resource.DataLocation = ExpandDataLocationResource(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("database"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Resource.Database = expandLakeFormationDatabaseResource(v.([]interface{})[0].(map[string]interface{}))
+		input.Resource.Database = ExpandDatabaseResource(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	tableType := ""
 
 	if v, ok := d.GetOk("table"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Resource.Table = expandLakeFormationTableResource(v.([]interface{})[0].(map[string]interface{}))
+		input.Resource.Table = ExpandTableResource(v.([]interface{})[0].(map[string]interface{}))
 		tableType = TableTypeTable
 	}
 
 	if v, ok := d.GetOk("table_with_columns"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		// can't ListPermissions for TableWithColumns, so use Table instead
-		input.Resource.Table = expandLakeFormationTableWithColumnsResourceAsTable(v.([]interface{})[0].(map[string]interface{}))
+		input.Resource.Table = ExpandTableWithColumnsResourceAsTable(v.([]interface{})[0].(map[string]interface{}))
 		tableType = TableTypeTableWithColumns
 	}
 
