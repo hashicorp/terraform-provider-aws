@@ -19,7 +19,7 @@ func TestAccAWSSsmPatchBaselineDataSource_existingBaseline(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsSsmPatchBaselineDataSourceConfig_existingBaseline(),
+				Config: testAccCheckPatchBaselineDataSourceConfig_existingBaseline(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", "AWS-CentOSDefaultPatchBaseline"),
 					resource.TestCheckResourceAttr(resourceName, "description", "Default Patch Baseline for CentOS Provided by AWS."),
@@ -37,10 +37,10 @@ func TestAccAWSSsmPatchBaselineDataSource_newBaseline(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSSMPatchBaselineDestroy,
+		CheckDestroy: testAccCheckPatchBaselineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsSsmPatchBaselineDataSourceConfig_newBaseline(rName),
+				Config: testAccCheckPatchBaselineDataSourceConfig_newBaseline(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "name", "aws_ssm_patch_baseline.test_new", "name"),
 					resource.TestCheckResourceAttrPair(resourceName, "description", "aws_ssm_patch_baseline.test_new", "description"),
@@ -52,7 +52,7 @@ func TestAccAWSSsmPatchBaselineDataSource_newBaseline(t *testing.T) {
 }
 
 // Test against one of the default baselines created by AWS
-func testAccCheckAwsSsmPatchBaselineDataSourceConfig_existingBaseline() string {
+func testAccCheckPatchBaselineDataSourceConfig_existingBaseline() string {
 	return `
 data "aws_ssm_patch_baseline" "test_existing" {
   owner            = "AWS"
@@ -63,7 +63,7 @@ data "aws_ssm_patch_baseline" "test_existing" {
 }
 
 // Create a new baseline and pull it back
-func testAccCheckAwsSsmPatchBaselineDataSourceConfig_newBaseline(name string) string {
+func testAccCheckPatchBaselineDataSourceConfig_newBaseline(name string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_patch_baseline" "test_new" {
   name             = "%s"

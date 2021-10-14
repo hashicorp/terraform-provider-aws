@@ -24,12 +24,12 @@ func TestAccAWSSSMActivation_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSSMActivationDestroy,
+		CheckDestroy: testAccCheckActivationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSSMActivationBasicConfig(name, tag),
+				Config: testAccActivationBasicConfig(name, tag),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMActivationExists(resourceName, &ssmActivation),
+					testAccCheckActivationExists(resourceName, &ssmActivation),
 					resource.TestCheckResourceAttrSet(resourceName, "activation_code"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "expiration_date"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -56,12 +56,12 @@ func TestAccAWSSSMActivation_update(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSSMActivationDestroy,
+		CheckDestroy: testAccCheckActivationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSSMActivationBasicConfig(name, "My Activation"),
+				Config: testAccActivationBasicConfig(name, "My Activation"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMActivationExists(resourceName, &ssmActivation1),
+					testAccCheckActivationExists(resourceName, &ssmActivation1),
 					resource.TestCheckResourceAttrSet(resourceName, "activation_code"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "My Activation"),
@@ -76,13 +76,13 @@ func TestAccAWSSSMActivation_update(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccAWSSSMActivationBasicConfig(name, "Foo"),
+				Config: testAccActivationBasicConfig(name, "Foo"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMActivationExists(resourceName, &ssmActivation2),
+					testAccCheckActivationExists(resourceName, &ssmActivation2),
 					resource.TestCheckResourceAttrSet(resourceName, "activation_code"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Foo"),
-					testAccCheckAWSSSMActivationRecreated(t, &ssmActivation1, &ssmActivation2),
+					testAccCheckActivationRecreated(t, &ssmActivation1, &ssmActivation2),
 				),
 			},
 			{
@@ -108,12 +108,12 @@ func TestAccAWSSSMActivation_expirationDate(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSSMActivationDestroy,
+		CheckDestroy: testAccCheckActivationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSSMActivationConfig_expirationDate(rName, expirationDateS),
+				Config: testAccActivationConfig_expirationDate(rName, expirationDateS),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMActivationExists(resourceName, &ssmActivation),
+					testAccCheckActivationExists(resourceName, &ssmActivation),
 					resource.TestCheckResourceAttr(resourceName, "expiration_date", expirationDateS),
 				),
 			},
@@ -139,13 +139,13 @@ func TestAccAWSSSMActivation_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSSMActivationDestroy,
+		CheckDestroy: testAccCheckActivationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSSMActivationBasicConfig(name, tag),
+				Config: testAccActivationBasicConfig(name, tag),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMActivationExists(resourceName, &ssmActivation),
-					testAccCheckAWSSSMActivationDisappears(&ssmActivation),
+					testAccCheckActivationExists(resourceName, &ssmActivation),
+					testAccCheckActivationDisappears(&ssmActivation),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -153,7 +153,7 @@ func TestAccAWSSSMActivation_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSSSMActivationRecreated(t *testing.T, before, after *ssm.Activation) resource.TestCheckFunc {
+func testAccCheckActivationRecreated(t *testing.T, before, after *ssm.Activation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if *before.ActivationId == *after.ActivationId {
 			t.Fatalf("expected SSM activation Ids to be different but got %v == %v", before.ActivationId, after.ActivationId)
@@ -162,7 +162,7 @@ func testAccCheckAWSSSMActivationRecreated(t *testing.T, before, after *ssm.Acti
 	}
 }
 
-func testAccCheckAWSSSMActivationExists(n string, ssmActivation *ssm.Activation) resource.TestCheckFunc {
+func testAccCheckActivationExists(n string, ssmActivation *ssm.Activation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -197,7 +197,7 @@ func testAccCheckAWSSSMActivationExists(n string, ssmActivation *ssm.Activation)
 	}
 }
 
-func testAccCheckAWSSSMActivationDisappears(a *ssm.Activation) resource.TestCheckFunc {
+func testAccCheckActivationDisappears(a *ssm.Activation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn
 
@@ -210,7 +210,7 @@ func testAccCheckAWSSSMActivationDisappears(a *ssm.Activation) resource.TestChec
 	}
 }
 
-func testAccCheckAWSSSMActivationDestroy(s *terraform.State) error {
+func testAccCheckActivationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -247,7 +247,7 @@ func testAccCheckAWSSSMActivationDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSSSMActivationBasicConfigBase(rName string) string {
+func testAccActivationBasicBaseConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -278,8 +278,8 @@ resource "aws_iam_role_policy_attachment" "test_attach" {
 `, rName)
 }
 
-func testAccAWSSSMActivationBasicConfig(rName string, rTag string) string {
-	return testAccAWSSSMActivationBasicConfigBase(rName) + fmt.Sprintf(`
+func testAccActivationBasicConfig(rName string, rTag string) string {
+	return testAccActivationBasicBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_ssm_activation" "test" {
   name               = %[1]q
   description        = "Test"
@@ -294,8 +294,8 @@ resource "aws_ssm_activation" "test" {
 `, rName, rTag)
 }
 
-func testAccAWSSSMActivationConfig_expirationDate(rName, expirationDate string) string {
-	return testAccAWSSSMActivationBasicConfigBase(rName) + fmt.Sprintf(`
+func testAccActivationConfig_expirationDate(rName, expirationDate string) string {
+	return testAccActivationBasicBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_ssm_activation" "test" {
   name               = "test_ssm_activation-%[1]s"
   description        = "Test"

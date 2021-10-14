@@ -9,7 +9,7 @@ import (
 	tfssm "github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
 )
 
-func testResourceAwsSsmPatchGroupStateDataV0() map[string]interface{} {
+func testResourcePatchGroupStateDataV0() map[string]interface{} {
 	return map[string]interface{}{
 		"id":          "testgroup",
 		"baseline_id": "pb-0c4e592064EXAMPLE",
@@ -17,8 +17,8 @@ func testResourceAwsSsmPatchGroupStateDataV0() map[string]interface{} {
 	}
 }
 
-func testResourceAwsSsmPatchGroupStateDataV1() map[string]interface{} {
-	v0 := testResourceAwsSsmPatchGroupStateDataV0()
+func testResourcePatchGroupStateDataV1() map[string]interface{} {
+	v0 := testResourcePatchGroupStateDataV0()
 	return map[string]interface{}{
 		"id":          fmt.Sprintf("%s,%s", v0["patch_group"], v0["baseline_id"]),
 		"baseline_id": v0["baseline_id"],
@@ -26,9 +26,9 @@ func testResourceAwsSsmPatchGroupStateDataV1() map[string]interface{} {
 	}
 }
 
-func TestResourceAWSSSMPatchGroupStateUpgradeV0(t *testing.T) {
-	expected := testResourceAwsSsmPatchGroupStateDataV1()
-	actual, err := tfssm.PatchGroupStateUpgradeV0(context.Background(), testResourceAwsSsmPatchGroupStateDataV0(), nil)
+func TestPatchGroupStateUpgradeV0(t *testing.T) {
+	expected := testResourcePatchGroupStateDataV1()
+	actual, err := tfssm.PatchGroupStateUpgradeV0(context.Background(), testResourcePatchGroupStateDataV0(), nil)
 	if err != nil {
 		t.Fatalf("error migrating state: %s", err)
 	}

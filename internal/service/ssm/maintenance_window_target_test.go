@@ -24,12 +24,12 @@ func TestAccAWSSSMMaintenanceWindowTarget_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowTargetDestroy,
+		CheckDestroy: testAccCheckMaintenanceWindowTargetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSSMMaintenanceWindowTargetBasicConfig(rName),
+				Config: testAccMaintenanceWindowTargetBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMMaintenanceWindowTargetExists(resourceName, &maint),
+					testAccCheckMaintenanceWindowTargetExists(resourceName, &maint),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.key", "tag:Name"),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.values.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.values.0", "acceptance_test"),
@@ -44,7 +44,7 @@ func TestAccAWSSSMMaintenanceWindowTarget_basic(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccAWSSSMMaintenanceWindowTargetImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccMaintenanceWindowTargetImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -60,12 +60,12 @@ func TestAccAWSSSMMaintenanceWindowTarget_noNameOrDescription(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowTargetDestroy,
+		CheckDestroy: testAccCheckMaintenanceWindowTargetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSSMMaintenanceWindowTargetNoNameOrDescriptionConfig(rName),
+				Config: testAccMaintenanceWindowTargetNoNameOrDescriptionConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMMaintenanceWindowTargetExists(resourceName, &maint),
+					testAccCheckMaintenanceWindowTargetExists(resourceName, &maint),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.key", "tag:Name"),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.values.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.values.0", "acceptance_test"),
@@ -77,7 +77,7 @@ func TestAccAWSSSMMaintenanceWindowTarget_noNameOrDescription(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccAWSSSMMaintenanceWindowTargetImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccMaintenanceWindowTargetImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -91,18 +91,18 @@ func TestAccAWSSSMMaintenanceWindowTarget_validation(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowTargetDestroy,
+		CheckDestroy: testAccCheckMaintenanceWindowTargetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAWSSSMMaintenanceWindowTargetBasicConfigWithTarget(name, "Bäd Name!@#$%^", "good description"),
+				Config:      testAccMaintenanceWindowTargetBasicWithTargetConfig(name, "Bäd Name!@#$%^", "good description"),
 				ExpectError: regexp.MustCompile(`Only alphanumeric characters, hyphens, dots & underscores allowed`),
 			},
 			{
-				Config:      testAccAWSSSMMaintenanceWindowTargetBasicConfigWithTarget(name, "goodname", "bd"),
+				Config:      testAccMaintenanceWindowTargetBasicWithTargetConfig(name, "goodname", "bd"),
 				ExpectError: regexp.MustCompile(`expected length of [\w]+ to be in the range \(3 - 128\), got [\w]+`),
 			},
 			{
-				Config:      testAccAWSSSMMaintenanceWindowTargetBasicConfigWithTarget(name, "goodname", "This description is tooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo long"),
+				Config:      testAccMaintenanceWindowTargetBasicWithTargetConfig(name, "goodname", "This description is tooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo long"),
 				ExpectError: regexp.MustCompile(`expected length of [\w]+ to be in the range \(3 - 128\), got [\w]+`),
 			},
 		},
@@ -117,12 +117,12 @@ func TestAccAWSSSMMaintenanceWindowTarget_update(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowTargetDestroy,
+		CheckDestroy: testAccCheckMaintenanceWindowTargetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSSMMaintenanceWindowTargetBasicConfig(rName),
+				Config: testAccMaintenanceWindowTargetBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMMaintenanceWindowTargetExists(resourceName, &maint),
+					testAccCheckMaintenanceWindowTargetExists(resourceName, &maint),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.key", "tag:Name"),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.values.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.values.0", "acceptance_test"),
@@ -136,14 +136,14 @@ func TestAccAWSSSMMaintenanceWindowTarget_update(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccAWSSSMMaintenanceWindowTargetImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccMaintenanceWindowTargetImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSSSMMaintenanceWindowTargetBasicConfigUpdated(rName),
+				Config: testAccMaintenanceWindowTargetBasicUpdatedConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMMaintenanceWindowTargetExists(resourceName, &maint),
+					testAccCheckMaintenanceWindowTargetExists(resourceName, &maint),
 					resource.TestCheckResourceAttr(resourceName, "owner_information", "something"),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.key", "tag:Name"),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.values.#", "1"),
@@ -157,7 +157,7 @@ func TestAccAWSSSMMaintenanceWindowTarget_update(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccAWSSSMMaintenanceWindowTargetImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccMaintenanceWindowTargetImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -173,12 +173,12 @@ func TestAccAWSSSMMaintenanceWindowTarget_resourceGroup(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowTargetDestroy,
+		CheckDestroy: testAccCheckMaintenanceWindowTargetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSSMMaintenanceWindowTargetBasicResourceGroupConfig(rName),
+				Config: testAccMaintenanceWindowTargetBasicResourceGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMMaintenanceWindowTargetExists(resourceName, &maint),
+					testAccCheckMaintenanceWindowTargetExists(resourceName, &maint),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.key", "resource-groups:ResourceTypeFilters"),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.values.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.values.0", "AWS::EC2::Instance"),
@@ -192,7 +192,7 @@ func TestAccAWSSSMMaintenanceWindowTarget_resourceGroup(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccAWSSSMMaintenanceWindowTargetImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccMaintenanceWindowTargetImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -208,12 +208,12 @@ func TestAccAWSSSMMaintenanceWindowTarget_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowTargetDestroy,
+		CheckDestroy: testAccCheckMaintenanceWindowTargetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSSMMaintenanceWindowTargetBasicConfig(rName),
+				Config: testAccMaintenanceWindowTargetBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMMaintenanceWindowTargetExists(resourceName, &maint),
+					testAccCheckMaintenanceWindowTargetExists(resourceName, &maint),
 					acctest.CheckResourceDisappears(acctest.Provider, tfssm.ResourceMaintenanceWindowTarget(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -230,12 +230,12 @@ func TestAccAWSSSMMaintenanceWindowTarget_disappears_window(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowTargetDestroy,
+		CheckDestroy: testAccCheckMaintenanceWindowTargetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSSMMaintenanceWindowTargetBasicConfig(rName),
+				Config: testAccMaintenanceWindowTargetBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMMaintenanceWindowTargetExists(resourceName, &maint),
+					testAccCheckMaintenanceWindowTargetExists(resourceName, &maint),
 					acctest.CheckResourceDisappears(acctest.Provider, tfssm.ResourceMaintenanceWindow(), "aws_ssm_maintenance_window.test"),
 				),
 				ExpectNonEmptyPlan: true,
@@ -244,7 +244,7 @@ func TestAccAWSSSMMaintenanceWindowTarget_disappears_window(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSSSMMaintenanceWindowTargetExists(n string, mWindTarget *ssm.MaintenanceWindowTarget) resource.TestCheckFunc {
+func testAccCheckMaintenanceWindowTargetExists(n string, mWindTarget *ssm.MaintenanceWindowTarget) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -281,7 +281,7 @@ func testAccCheckAWSSSMMaintenanceWindowTargetExists(n string, mWindTarget *ssm.
 	}
 }
 
-func testAccCheckAWSSSMMaintenanceWindowTargetDestroy(s *terraform.State) error {
+func testAccCheckMaintenanceWindowTargetDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -317,7 +317,7 @@ func testAccCheckAWSSSMMaintenanceWindowTargetDestroy(s *terraform.State) error 
 	return nil
 }
 
-func testAccAWSSSMMaintenanceWindowTargetBasicConfig(rName string) string {
+func testAccMaintenanceWindowTargetBasicConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_maintenance_window" "test" {
   name     = %[1]q
@@ -345,7 +345,7 @@ resource "aws_ssm_maintenance_window_target" "test" {
 `, rName)
 }
 
-func testAccAWSSSMMaintenanceWindowTargetBasicResourceGroupConfig(rName string) string {
+func testAccMaintenanceWindowTargetBasicResourceGroupConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_maintenance_window" "test" {
   name     = %[1]q
@@ -373,7 +373,7 @@ resource "aws_ssm_maintenance_window_target" "test" {
 `, rName)
 }
 
-func testAccAWSSSMMaintenanceWindowTargetNoNameOrDescriptionConfig(rName string) string {
+func testAccMaintenanceWindowTargetNoNameOrDescriptionConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_maintenance_window" "test" {
   name     = %[1]q
@@ -399,7 +399,7 @@ resource "aws_ssm_maintenance_window_target" "test" {
 `, rName)
 }
 
-func testAccAWSSSMMaintenanceWindowTargetBasicConfigUpdated(rName string) string {
+func testAccMaintenanceWindowTargetBasicUpdatedConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_maintenance_window" "test" {
   name     = %[1]q
@@ -428,7 +428,7 @@ resource "aws_ssm_maintenance_window_target" "test" {
 `, rName)
 }
 
-func testAccAWSSSMMaintenanceWindowTargetBasicConfigWithTarget(rName, tName, tDesc string) string {
+func testAccMaintenanceWindowTargetBasicWithTargetConfig(rName, tName, tDesc string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_maintenance_window" "test" {
   name     = %[1]q
@@ -457,7 +457,7 @@ resource "aws_ssm_maintenance_window_target" "test" {
 `, rName, tName, tDesc)
 }
 
-func testAccAWSSSMMaintenanceWindowTargetImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccMaintenanceWindowTargetImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {

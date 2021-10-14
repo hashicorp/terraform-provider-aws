@@ -21,12 +21,12 @@ func TestAccAWSSSMPatchGroup_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSSMPatchGroupDestroy,
+		CheckDestroy: testAccCheckPatchGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSSMPatchGroupBasicConfig(rName),
+				Config: testAccPatchGroupBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMPatchGroupExists(resourceName),
+					testAccCheckPatchGroupExists(resourceName),
 				),
 			},
 		},
@@ -44,9 +44,9 @@ func TestAccAWSSSMPatchGroup_disappears(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSSMPatchGroupBasicConfig(rName),
+				Config: testAccPatchGroupBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMPatchGroupExists(resourceName),
+					testAccCheckPatchGroupExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfssm.ResourcePatchGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -65,21 +65,21 @@ func TestAccAWSSSMPatchGroup_multipleBaselines(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSSMPatchGroupDestroy,
+		CheckDestroy: testAccCheckPatchGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSSMPatchGroupConfigMultipleBaselines(rName),
+				Config: testAccPatchGroupMultipleBaselinesConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMPatchGroupExists(resourceName1),
-					testAccCheckAWSSSMPatchGroupExists(resourceName2),
-					testAccCheckAWSSSMPatchGroupExists(resourceName3),
+					testAccCheckPatchGroupExists(resourceName1),
+					testAccCheckPatchGroupExists(resourceName2),
+					testAccCheckPatchGroupExists(resourceName3),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckAWSSSMPatchGroupDestroy(s *terraform.State) error {
+func testAccCheckPatchGroupDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -106,7 +106,7 @@ func testAccCheckAWSSSMPatchGroupDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSSSMPatchGroupExists(n string) resource.TestCheckFunc {
+func testAccCheckPatchGroupExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -138,7 +138,7 @@ func testAccCheckAWSSSMPatchGroupExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccAWSSSMPatchGroupBasicConfig(rName string) string {
+func testAccPatchGroupBasicConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_patch_baseline" "foo" {
   name             = %[1]q
@@ -152,7 +152,7 @@ resource "aws_ssm_patch_group" "patchgroup" {
 `, rName)
 }
 
-func testAccAWSSSMPatchGroupConfigMultipleBaselines(rName string) string {
+func testAccPatchGroupMultipleBaselinesConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_patch_baseline" "test1" {
   approved_patches = ["KB123456"]

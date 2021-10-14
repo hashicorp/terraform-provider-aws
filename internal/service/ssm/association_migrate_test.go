@@ -7,7 +7,7 @@ import (
 	tfssm "github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
 )
 
-func TestAWSSsmAssociationRuleMigrateState(t *testing.T) {
+func TestAssociationRuleMigrateState(t *testing.T) {
 	cases := map[string]struct {
 		StateVersion int
 		ID           string

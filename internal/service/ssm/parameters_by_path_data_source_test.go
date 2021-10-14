@@ -21,7 +21,7 @@ func TestAccAWSSsmParametersByPathDataSource_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsSsmParametersByPathDataSourceConfig(rName1, rName2, false),
+				Config: testAccCheckParametersByPathDataSourceConfig(rName1, rName2, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "arns.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "names.#", "2"),
@@ -34,7 +34,7 @@ func TestAccAWSSsmParametersByPathDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsSsmParametersByPathDataSourceConfig(rName1, rName2 string, withDecryption bool) string {
+func testAccCheckParametersByPathDataSourceConfig(rName1, rName2 string, withDecryption bool) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_parameter" "test1" {
   name  = "/%[1]s/param-a"

@@ -23,12 +23,12 @@ func TestAccAWSSSMPatchBaseline_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSSMPatchBaselineDestroy,
+		CheckDestroy: testAccCheckPatchBaselineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSSMPatchBaselineBasicConfig(name),
+				Config: testAccPatchBaselineBasicConfig(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMPatchBaselineExists(resourceName, &before),
+					testAccCheckPatchBaselineExists(resourceName, &before),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ssm", regexp.MustCompile(`patchbaseline/pb-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "approved_patches.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "approved_patches.*", "KB123456"),
@@ -45,9 +45,9 @@ func TestAccAWSSSMPatchBaseline_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSSSMPatchBaselineBasicConfigUpdated(name),
+				Config: testAccPatchBaselineBasicUpdatedConfig(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMPatchBaselineExists(resourceName, &after),
+					testAccCheckPatchBaselineExists(resourceName, &after),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ssm", regexp.MustCompile(`patchbaseline/pb-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "approved_patches.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "approved_patches.*", "KB123456"),
@@ -76,12 +76,12 @@ func TestAccAWSSSMPatchBaseline_tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSSMPatchBaselineDestroy,
+		CheckDestroy: testAccCheckPatchBaselineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSSMPatchBaselineBasicConfigTags1(name, "key1", "value1"),
+				Config: testAccPatchBaselineBasicTags1Config(name, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMPatchBaselineExists(resourceName, &patch),
+					testAccCheckPatchBaselineExists(resourceName, &patch),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -92,18 +92,18 @@ func TestAccAWSSSMPatchBaseline_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSSSMPatchBaselineBasicConfigTags2(name, "key1", "value1updated", "key2", "value2"),
+				Config: testAccPatchBaselineBasicTags2Config(name, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMPatchBaselineExists(resourceName, &patch),
+					testAccCheckPatchBaselineExists(resourceName, &patch),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccAWSSSMPatchBaselineBasicConfigTags1(name, "key2", "value2"),
+				Config: testAccPatchBaselineBasicTags1Config(name, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMPatchBaselineExists(resourceName, &patch),
+					testAccCheckPatchBaselineExists(resourceName, &patch),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -121,12 +121,12 @@ func TestAccAWSSSMPatchBaseline_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSSMPatchBaselineDestroy,
+		CheckDestroy: testAccCheckPatchBaselineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSSMPatchBaselineBasicConfig(name),
+				Config: testAccPatchBaselineBasicConfig(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMPatchBaselineExists(resourceName, &identity),
+					testAccCheckPatchBaselineExists(resourceName, &identity),
 					acctest.CheckResourceDisappears(acctest.Provider, tfssm.ResourcePatchBaseline(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -143,12 +143,12 @@ func TestAccAWSSSMPatchBaseline_OperatingSystem(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSSMPatchBaselineDestroy,
+		CheckDestroy: testAccCheckPatchBaselineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSSMPatchBaselineConfigWithOperatingSystem(name),
+				Config: testAccPatchBaselineWithOperatingSystemConfig(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMPatchBaselineExists(resourceName, &before),
+					testAccCheckPatchBaselineExists(resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "approval_rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "approval_rule.0.approve_after_days", "7"),
 					resource.TestCheckResourceAttr(resourceName, "approval_rule.0.patch_filter.#", "2"),
@@ -163,15 +163,15 @@ func TestAccAWSSSMPatchBaseline_OperatingSystem(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSSSMPatchBaselineConfigWithOperatingSystemUpdated(name),
+				Config: testAccPatchBaselineWithOperatingSystemUpdatedConfig(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMPatchBaselineExists(resourceName, &after),
+					testAccCheckPatchBaselineExists(resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, "approval_rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "approval_rule.0.approve_after_days", "7"),
 					resource.TestCheckResourceAttr(resourceName, "approval_rule.0.patch_filter.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "approval_rule.0.compliance_level", ssm.PatchComplianceLevelInformational),
 					resource.TestCheckResourceAttr(resourceName, "operating_system", ssm.OperatingSystemWindows),
-					testAccCheckAwsSsmPatchBaselineRecreated(t, &before, &after),
+					testAccCheckPatchBaselineRecreated(t, &before, &after),
 				),
 			},
 		},
@@ -187,12 +187,12 @@ func TestAccAWSSSMPatchBaseline_ApproveUntilDateParam(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSSMPatchBaselineDestroy,
+		CheckDestroy: testAccCheckPatchBaselineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSSMPatchBaselineConfigWithApproveUntilDate(name),
+				Config: testAccPatchBaselineWithApproveUntilDateConfig(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMPatchBaselineExists(resourceName, &before),
+					testAccCheckPatchBaselineExists(resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "approval_rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "approval_rule.0.approve_until_date", "2020-01-01"),
 					resource.TestCheckResourceAttr(resourceName, "approval_rule.0.patch_filter.#", "2"),
@@ -207,9 +207,9 @@ func TestAccAWSSSMPatchBaseline_ApproveUntilDateParam(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSSSMPatchBaselineConfigWithApproveUntilDateUpdated(name),
+				Config: testAccPatchBaselineWithApproveUntilDateUpdatedConfig(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMPatchBaselineExists(resourceName, &after),
+					testAccCheckPatchBaselineExists(resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, "approval_rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "approval_rule.0.approve_until_date", "2020-02-02"),
 					resource.TestCheckResourceAttr(resourceName, "approval_rule.0.patch_filter.#", "2"),
@@ -236,12 +236,12 @@ func TestAccAWSSSMPatchBaseline_Sources(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSSMPatchBaselineDestroy,
+		CheckDestroy: testAccCheckPatchBaselineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSSMPatchBaselineConfigWithSource(name),
+				Config: testAccPatchBaselineWithSourceConfig(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMPatchBaselineExists(resourceName, &before),
+					testAccCheckPatchBaselineExists(resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.name", "My-AL2017.09"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.configuration", "[amzn-main] \nname=amzn-main-Base\nmirrorlist=http://repo./$awsregion./$awsdomain//$releasever/main/mirror.list //nmirrorlist_expire=300//nmetadata_expire=300 \npriority=10 \nfailovermethod=priority \nfastestmirror_enabled=0 \ngpgcheck=1 \ngpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-amazon-ga \nenabled=1 \nretries=3 \ntimeout=5\nreport_instanceid=yes"),
@@ -255,9 +255,9 @@ func TestAccAWSSSMPatchBaseline_Sources(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSSSMPatchBaselineConfigWithSourceUpdated(name),
+				Config: testAccPatchBaselineWithSourceUpdatedConfig(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMPatchBaselineExists(resourceName, &after),
+					testAccCheckPatchBaselineExists(resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, "source.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.name", "My-AL2017.09"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.configuration", "[amzn-main] \nname=amzn-main-Base\nmirrorlist=http://repo./$awsregion./$awsdomain//$releasever/main/mirror.list //nmirrorlist_expire=300//nmetadata_expire=300 \npriority=10 \nfailovermethod=priority \nfastestmirror_enabled=0 \ngpgcheck=1 \ngpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-amazon-ga \nenabled=1 \nretries=3 \ntimeout=5\nreport_instanceid=yes"),
@@ -288,12 +288,12 @@ func TestAccAWSSSMPatchBaseline_ApprovedPatchesNonSec(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSSMPatchBaselineDestroy,
+		CheckDestroy: testAccCheckPatchBaselineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSSMPatchBaselineBasicConfigApprovedPatchesNonSec(name),
+				Config: testAccPatchBaselineBasicApprovedPatchesNonSecConfig(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMPatchBaselineExists(resourceName, &ssmPatch),
+					testAccCheckPatchBaselineExists(resourceName, &ssmPatch),
 					resource.TestCheckResourceAttr(resourceName, "approved_patches_enable_non_security", "true"),
 				),
 			},
@@ -315,12 +315,12 @@ func TestAccAWSSSMPatchBaseline_RejectPatchesAction(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSSMPatchBaselineDestroy,
+		CheckDestroy: testAccCheckPatchBaselineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSSMPatchBaselineBasicConfigRejectPatchesAction(name),
+				Config: testAccPatchBaselineBasicRejectPatchesActionConfig(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMPatchBaselineExists(resourceName, &ssmPatch),
+					testAccCheckPatchBaselineExists(resourceName, &ssmPatch),
 					resource.TestCheckResourceAttr(resourceName, "rejected_patches_action", "ALLOW_AS_DEPENDENCY"),
 				),
 			},
@@ -333,7 +333,7 @@ func TestAccAWSSSMPatchBaseline_RejectPatchesAction(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsSsmPatchBaselineRecreated(t *testing.T,
+func testAccCheckPatchBaselineRecreated(t *testing.T,
 	before, after *ssm.PatchBaselineIdentity) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if *before.BaselineId == *after.BaselineId {
@@ -343,7 +343,7 @@ func testAccCheckAwsSsmPatchBaselineRecreated(t *testing.T,
 	}
 }
 
-func testAccCheckAWSSSMPatchBaselineExists(n string, patch *ssm.PatchBaselineIdentity) resource.TestCheckFunc {
+func testAccCheckPatchBaselineExists(n string, patch *ssm.PatchBaselineIdentity) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -379,7 +379,7 @@ func testAccCheckAWSSSMPatchBaselineExists(n string, patch *ssm.PatchBaselineIde
 	}
 }
 
-func testAccCheckAWSSSMPatchBaselineDestroy(s *terraform.State) error {
+func testAccCheckPatchBaselineDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -410,7 +410,7 @@ func testAccCheckAWSSSMPatchBaselineDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSSSMPatchBaselineBasicConfig(rName string) string {
+func testAccPatchBaselineBasicConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_patch_baseline" "test" {
   name                              = "patch-baseline-%s"
@@ -421,7 +421,7 @@ resource "aws_ssm_patch_baseline" "test" {
 `, rName)
 }
 
-func testAccAWSSSMPatchBaselineBasicConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccPatchBaselineBasicTags1Config(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_patch_baseline" "test" {
   name                              = %[1]q
@@ -436,7 +436,7 @@ resource "aws_ssm_patch_baseline" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccAWSSSMPatchBaselineBasicConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccPatchBaselineBasicTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_patch_baseline" "test" {
   name                              = %[1]q
@@ -452,7 +452,7 @@ resource "aws_ssm_patch_baseline" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccAWSSSMPatchBaselineBasicConfigUpdated(rName string) string {
+func testAccPatchBaselineBasicUpdatedConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_patch_baseline" "test" {
   name                              = "updated-patch-baseline-%s"
@@ -463,7 +463,7 @@ resource "aws_ssm_patch_baseline" "test" {
 `, rName)
 }
 
-func testAccAWSSSMPatchBaselineConfigWithOperatingSystem(rName string) string {
+func testAccPatchBaselineWithOperatingSystemConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_patch_baseline" "test" {
   name             = "patch-baseline-%s"
@@ -493,7 +493,7 @@ resource "aws_ssm_patch_baseline" "test" {
 `, rName)
 }
 
-func testAccAWSSSMPatchBaselineConfigWithOperatingSystemUpdated(rName string) string {
+func testAccPatchBaselineWithOperatingSystemUpdatedConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_patch_baseline" "test" {
   name             = "patch-baseline-%s"
@@ -522,7 +522,7 @@ resource "aws_ssm_patch_baseline" "test" {
 `, rName)
 }
 
-func testAccAWSSSMPatchBaselineConfigWithApproveUntilDate(rName string) string {
+func testAccPatchBaselineWithApproveUntilDateConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_patch_baseline" "test" {
   name             = %[1]q
@@ -552,7 +552,7 @@ resource "aws_ssm_patch_baseline" "test" {
 `, rName)
 }
 
-func testAccAWSSSMPatchBaselineConfigWithApproveUntilDateUpdated(rName string) string {
+func testAccPatchBaselineWithApproveUntilDateUpdatedConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_patch_baseline" "test" {
   name             = %[1]q
@@ -582,7 +582,7 @@ resource "aws_ssm_patch_baseline" "test" {
 `, rName)
 }
 
-func testAccAWSSSMPatchBaselineConfigWithSource(rName string) string {
+func testAccPatchBaselineWithSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_patch_baseline" "test" {
   name                              = %[1]q
@@ -600,7 +600,7 @@ resource "aws_ssm_patch_baseline" "test" {
 `, rName)
 }
 
-func testAccAWSSSMPatchBaselineConfigWithSourceUpdated(rName string) string {
+func testAccPatchBaselineWithSourceUpdatedConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_patch_baseline" "test" {
   name                              = %[1]q
@@ -624,7 +624,7 @@ resource "aws_ssm_patch_baseline" "test" {
 `, rName)
 }
 
-func testAccAWSSSMPatchBaselineBasicConfigApprovedPatchesNonSec(rName string) string {
+func testAccPatchBaselineBasicApprovedPatchesNonSecConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_patch_baseline" "test" {
   name                                 = %q
@@ -637,7 +637,7 @@ resource "aws_ssm_patch_baseline" "test" {
 `, rName)
 }
 
-func testAccAWSSSMPatchBaselineBasicConfigRejectPatchesAction(rName string) string {
+func testAccPatchBaselineBasicRejectPatchesActionConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_patch_baseline" "test" {
   name                              = "patch-baseline-%s"

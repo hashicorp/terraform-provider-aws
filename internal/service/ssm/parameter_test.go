@@ -24,12 +24,12 @@ func TestAccAWSSSMParameter_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSSMParameterDestroy,
+		CheckDestroy: testAccCheckParameterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSSMParameterBasicConfig(name, "String", "test2"),
+				Config: testAccParameterBasicConfig(name, "String", "test2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMParameterExists(resourceName, &param),
+					testAccCheckParameterExists(resourceName, &param),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "ssm", fmt.Sprintf("parameter/%s", name)),
 					resource.TestCheckResourceAttr(resourceName, "value", "test2"),
 					resource.TestCheckResourceAttr(resourceName, "type", "String"),
@@ -58,12 +58,12 @@ func TestAccAWSSSMParameter_Tier(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSSMParameterDestroy,
+		CheckDestroy: testAccCheckParameterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSSMParameterConfigTier(rName, ssm.ParameterTierAdvanced),
+				Config: testAccParameterTierConfig(rName, ssm.ParameterTierAdvanced),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMParameterExists(resourceName, &parameter1),
+					testAccCheckParameterExists(resourceName, &parameter1),
 					resource.TestCheckResourceAttr(resourceName, "tier", ssm.ParameterTierAdvanced),
 				),
 			},
@@ -74,16 +74,16 @@ func TestAccAWSSSMParameter_Tier(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"overwrite"},
 			},
 			{
-				Config: testAccAWSSSMParameterConfigTier(rName, ssm.ParameterTierStandard),
+				Config: testAccParameterTierConfig(rName, ssm.ParameterTierStandard),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMParameterExists(resourceName, &parameter2),
+					testAccCheckParameterExists(resourceName, &parameter2),
 					resource.TestCheckResourceAttr(resourceName, "tier", ssm.ParameterTierStandard),
 				),
 			},
 			{
-				Config: testAccAWSSSMParameterConfigTier(rName, ssm.ParameterTierAdvanced),
+				Config: testAccParameterTierConfig(rName, ssm.ParameterTierAdvanced),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMParameterExists(resourceName, &parameter3),
+					testAccCheckParameterExists(resourceName, &parameter3),
 					resource.TestCheckResourceAttr(resourceName, "tier", ssm.ParameterTierAdvanced),
 				),
 			},
@@ -100,12 +100,12 @@ func TestAccAWSSSMParameter_Tier_IntelligentTieringToStandard(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSSMParameterDestroy,
+		CheckDestroy: testAccCheckParameterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSSMParameterConfigTier(rName, ssm.ParameterTierIntelligentTiering),
+				Config: testAccParameterTierConfig(rName, ssm.ParameterTierIntelligentTiering),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMParameterExists(resourceName, &parameter),
+					testAccCheckParameterExists(resourceName, &parameter),
 					resource.TestCheckResourceAttr(resourceName, "tier", ssm.ParameterTierStandard),
 				),
 			},
@@ -116,16 +116,16 @@ func TestAccAWSSSMParameter_Tier_IntelligentTieringToStandard(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"overwrite"},
 			},
 			{
-				Config: testAccAWSSSMParameterConfigTier(rName, ssm.ParameterTierStandard),
+				Config: testAccParameterTierConfig(rName, ssm.ParameterTierStandard),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMParameterExists(resourceName, &parameter),
+					testAccCheckParameterExists(resourceName, &parameter),
 					resource.TestCheckResourceAttr(resourceName, "tier", ssm.ParameterTierStandard),
 				),
 			},
 			{
-				Config: testAccAWSSSMParameterConfigTier(rName, ssm.ParameterTierIntelligentTiering),
+				Config: testAccParameterTierConfig(rName, ssm.ParameterTierIntelligentTiering),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMParameterExists(resourceName, &parameter),
+					testAccCheckParameterExists(resourceName, &parameter),
 					resource.TestCheckResourceAttr(resourceName, "tier", ssm.ParameterTierStandard),
 				),
 			},
@@ -148,12 +148,12 @@ func TestAccAWSSSMParameter_Tier_IntelligentTieringToAdvanced(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSSMParameterDestroy,
+		CheckDestroy: testAccCheckParameterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSSMParameterConfigTier(rName, ssm.ParameterTierIntelligentTiering),
+				Config: testAccParameterTierConfig(rName, ssm.ParameterTierIntelligentTiering),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMParameterExists(resourceName, &parameter1),
+					testAccCheckParameterExists(resourceName, &parameter1),
 					resource.TestCheckResourceAttr(resourceName, "tier", ssm.ParameterTierStandard),
 				),
 			},
@@ -164,16 +164,16 @@ func TestAccAWSSSMParameter_Tier_IntelligentTieringToAdvanced(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"overwrite"},
 			},
 			{
-				Config: testAccAWSSSMParameterConfigTier(rName, ssm.ParameterTierAdvanced),
+				Config: testAccParameterTierConfig(rName, ssm.ParameterTierAdvanced),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMParameterExists(resourceName, &parameter1),
+					testAccCheckParameterExists(resourceName, &parameter1),
 					resource.TestCheckResourceAttr(resourceName, "tier", ssm.ParameterTierAdvanced),
 				),
 			},
 			{
-				Config: testAccAWSSSMParameterConfigTier(rName, ssm.ParameterTierIntelligentTiering),
+				Config: testAccParameterTierConfig(rName, ssm.ParameterTierIntelligentTiering),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMParameterExists(resourceName, &parameter2),
+					testAccCheckParameterExists(resourceName, &parameter2),
 					resource.TestCheckResourceAttr(resourceName, "tier", ssm.ParameterTierStandard),
 				),
 			},
@@ -196,12 +196,12 @@ func TestAccAWSSSMParameter_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSSMParameterDestroy,
+		CheckDestroy: testAccCheckParameterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSSMParameterBasicConfig(name, "String", "test2"),
+				Config: testAccParameterBasicConfig(name, "String", "test2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMParameterExists(resourceName, &param),
+					testAccCheckParameterExists(resourceName, &param),
 					acctest.CheckResourceDisappears(acctest.Provider, tfssm.ResourceParameter(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -219,10 +219,10 @@ func TestAccAWSSSMParameter_overwrite(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSSMParameterDestroy,
+		CheckDestroy: testAccCheckParameterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSSMParameterBasicConfig(name, "String", "test2"),
+				Config: testAccParameterBasicConfig(name, "String", "test2"),
 			},
 			{
 				ResourceName:            resourceName,
@@ -231,9 +231,9 @@ func TestAccAWSSSMParameter_overwrite(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"overwrite"},
 			},
 			{
-				Config: testAccAWSSSMParameterBasicConfigOverwrite(name, "String", "test3"),
+				Config: testAccParameterBasicOverwriteConfig(name, "String", "test3"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMParameterExists(resourceName, &param),
+					testAccCheckParameterExists(resourceName, &param),
 					resource.TestCheckResourceAttr(resourceName, "value", "test3"),
 					resource.TestCheckResourceAttr(resourceName, "type", "String"),
 				),
@@ -252,12 +252,12 @@ func TestAccAWSSSMParameter_overwriteWithTags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSSMParameterDestroy,
+		CheckDestroy: testAccCheckParameterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSSMParameterConfigOverwriteWithTags1(rName, true, "key1", "value1"),
+				Config: testAccParameterOverwriteWithTags1Config(rName, true, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMParameterExists(resourceName, &param),
+					testAccCheckParameterExists(resourceName, &param),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -282,12 +282,12 @@ func TestAccAWSSSMParameter_noOverwriteWithTags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSSMParameterDestroy,
+		CheckDestroy: testAccCheckParameterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSSMParameterConfigOverwriteWithTags1(rName, false, "key1", "value1"),
+				Config: testAccParameterOverwriteWithTags1Config(rName, false, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMParameterExists(resourceName, &param),
+					testAccCheckParameterExists(resourceName, &param),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -312,12 +312,12 @@ func TestAccAWSSSMParameter_updateToOverwriteWithTags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSSMParameterDestroy,
+		CheckDestroy: testAccCheckParameterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSSMParameterBasicConfigTags1(rName, "key1", "value1"),
+				Config: testAccParameterBasicTags1Config(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMParameterExists(resourceName, &param),
+					testAccCheckParameterExists(resourceName, &param),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -328,9 +328,9 @@ func TestAccAWSSSMParameter_updateToOverwriteWithTags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSSSMParameterConfigOverwriteWithTags1(rName, true, "key1", "value2"),
+				Config: testAccParameterOverwriteWithTags1Config(rName, true, "key1", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMParameterExists(resourceName, &param),
+					testAccCheckParameterExists(resourceName, &param),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value2"),
 				),
@@ -348,12 +348,12 @@ func TestAccAWSSSMParameter_tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSSMParameterDestroy,
+		CheckDestroy: testAccCheckParameterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSSMParameterBasicConfigTags1(rName, "key1", "value1"),
+				Config: testAccParameterBasicTags1Config(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMParameterExists(resourceName, &param),
+					testAccCheckParameterExists(resourceName, &param),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -365,18 +365,18 @@ func TestAccAWSSSMParameter_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"overwrite"},
 			},
 			{
-				Config: testAccAWSSSMParameterBasicConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccParameterBasicTags2Config(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMParameterExists(resourceName, &param),
+					testAccCheckParameterExists(resourceName, &param),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccAWSSSMParameterBasicConfigTags1(rName, "key2", "value2"),
+				Config: testAccParameterBasicTags1Config(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMParameterExists(resourceName, &param),
+					testAccCheckParameterExists(resourceName, &param),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -394,10 +394,10 @@ func TestAccAWSSSMParameter_updateType(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSSMParameterDestroy,
+		CheckDestroy: testAccCheckParameterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSSMParameterBasicConfig(name, "SecureString", "test2"),
+				Config: testAccParameterBasicConfig(name, "SecureString", "test2"),
 			},
 			{
 				ResourceName:            resourceName,
@@ -406,9 +406,9 @@ func TestAccAWSSSMParameter_updateType(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"overwrite"},
 			},
 			{
-				Config: testAccAWSSSMParameterBasicConfig(name, "String", "test2"),
+				Config: testAccParameterBasicConfig(name, "String", "test2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMParameterExists(resourceName, &param),
+					testAccCheckParameterExists(resourceName, &param),
 					resource.TestCheckResourceAttr(resourceName, "type", "String"),
 				),
 			},
@@ -425,10 +425,10 @@ func TestAccAWSSSMParameter_updateDescription(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSSMParameterDestroy,
+		CheckDestroy: testAccCheckParameterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSSMParameterBasicConfigOverwrite(name, "String", "test2"),
+				Config: testAccParameterBasicOverwriteConfig(name, "String", "test2"),
 			},
 			{
 				ResourceName:            resourceName,
@@ -437,9 +437,9 @@ func TestAccAWSSSMParameter_updateDescription(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"overwrite"},
 			},
 			{
-				Config: testAccAWSSSMParameterBasicConfigOverwriteWithoutDescription(name, "String", "test2"),
+				Config: testAccParameterBasicOverwriteWithoutDescriptionConfig(name, "String", "test2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMParameterExists(resourceName, &param),
+					testAccCheckParameterExists(resourceName, &param),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 				),
 			},
@@ -457,12 +457,12 @@ func TestAccAWSSSMParameter_changeNameForcesNew(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSSMParameterDestroy,
+		CheckDestroy: testAccCheckParameterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSSMParameterBasicConfig(before, "String", "test2"),
+				Config: testAccParameterBasicConfig(before, "String", "test2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMParameterExists(resourceName, &beforeParam),
+					testAccCheckParameterExists(resourceName, &beforeParam),
 				),
 			},
 			{
@@ -472,10 +472,10 @@ func TestAccAWSSSMParameter_changeNameForcesNew(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"overwrite"},
 			},
 			{
-				Config: testAccAWSSSMParameterBasicConfig(after, "String", "test2"),
+				Config: testAccParameterBasicConfig(after, "String", "test2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMParameterExists(resourceName, &afterParam),
-					testAccCheckAWSSSMParameterRecreated(t, &beforeParam, &afterParam),
+					testAccCheckParameterExists(resourceName, &afterParam),
+					testAccCheckParameterRecreated(t, &beforeParam, &afterParam),
 				),
 			},
 		},
@@ -491,12 +491,12 @@ func TestAccAWSSSMParameter_fullPath(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSSMParameterDestroy,
+		CheckDestroy: testAccCheckParameterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSSMParameterBasicConfig(name, "String", "test2"),
+				Config: testAccParameterBasicConfig(name, "String", "test2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMParameterExists(resourceName, &param),
+					testAccCheckParameterExists(resourceName, &param),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "ssm", fmt.Sprintf("parameter%s", name)),
 					resource.TestCheckResourceAttr(resourceName, "value", "test2"),
 					resource.TestCheckResourceAttr(resourceName, "type", "String"),
@@ -521,12 +521,12 @@ func TestAccAWSSSMParameter_secure(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSSMParameterDestroy,
+		CheckDestroy: testAccCheckParameterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSSMParameterBasicConfig(name, "SecureString", "secret"),
+				Config: testAccParameterBasicConfig(name, "SecureString", "secret"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMParameterExists(resourceName, &param),
+					testAccCheckParameterExists(resourceName, &param),
 					resource.TestCheckResourceAttr(resourceName, "value", "secret"),
 					resource.TestCheckResourceAttr(resourceName, "type", "SecureString"),
 					resource.TestCheckResourceAttr(resourceName, "key_id", "alias/aws/ssm"), // Default SSM key id
@@ -551,12 +551,12 @@ func TestAccAWSSSMParameter_DataType_AwsEc2Image(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSSMParameterDestroy,
+		CheckDestroy: testAccCheckParameterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSSMParameterConfigDataTypeAwsEc2Image(rName),
+				Config: testAccParameterDataTypeAwsEC2ImageConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMParameterExists(resourceName, &param),
+					testAccCheckParameterExists(resourceName, &param),
 					resource.TestCheckResourceAttr(resourceName, "data_type", "aws:ec2:image"),
 				),
 			},
@@ -580,12 +580,12 @@ func TestAccAWSSSMParameter_secure_with_key(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSSMParameterDestroy,
+		CheckDestroy: testAccCheckParameterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSSMParameterSecureConfigWithKey(name, "secret", randString),
+				Config: testAccParameterSecureWithKeyConfig(name, "secret", randString),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMParameterExists(resourceName, &param),
+					testAccCheckParameterExists(resourceName, &param),
 					resource.TestCheckResourceAttr(resourceName, "value", "secret"),
 					resource.TestCheckResourceAttr(resourceName, "type", "SecureString"),
 					resource.TestCheckResourceAttr(resourceName, "key_id", "alias/"+randString),
@@ -611,12 +611,12 @@ func TestAccAWSSSMParameter_secure_keyUpdate(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSSMParameterDestroy,
+		CheckDestroy: testAccCheckParameterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSSMParameterSecureConfig(name, "secret"),
+				Config: testAccParameterSecureConfig(name, "secret"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMParameterExists(resourceName, &param),
+					testAccCheckParameterExists(resourceName, &param),
 					resource.TestCheckResourceAttr(resourceName, "value", "secret"),
 					resource.TestCheckResourceAttr(resourceName, "type", "SecureString"),
 					resource.TestCheckResourceAttr(resourceName, "key_id", "alias/aws/ssm"), // Default SSM key id
@@ -629,9 +629,9 @@ func TestAccAWSSSMParameter_secure_keyUpdate(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"overwrite"},
 			},
 			{
-				Config: testAccAWSSSMParameterSecureConfigWithKey(name, "secret", randString),
+				Config: testAccParameterSecureWithKeyConfig(name, "secret", randString),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMParameterExists(resourceName, &param),
+					testAccCheckParameterExists(resourceName, &param),
 					resource.TestCheckResourceAttr(resourceName, "value", "secret"),
 					resource.TestCheckResourceAttr(resourceName, "type", "SecureString"),
 					resource.TestCheckResourceAttr(resourceName, "key_id", "alias/"+randString),
@@ -641,7 +641,7 @@ func TestAccAWSSSMParameter_secure_keyUpdate(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSSSMParameterRecreated(t *testing.T,
+func testAccCheckParameterRecreated(t *testing.T,
 	before, after *ssm.Parameter) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if *before.Name == *after.Name {
@@ -651,7 +651,7 @@ func testAccCheckAWSSSMParameterRecreated(t *testing.T,
 	}
 }
 
-func testAccCheckAWSSSMParameterExists(n string, param *ssm.Parameter) resource.TestCheckFunc {
+func testAccCheckParameterExists(n string, param *ssm.Parameter) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -686,7 +686,7 @@ func testAccCheckAWSSSMParameterExists(n string, param *ssm.Parameter) resource.
 	}
 }
 
-func testAccCheckAWSSSMParameterDestroy(s *terraform.State) error {
+func testAccCheckParameterDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -720,7 +720,7 @@ func testAccCheckAWSSSMParameterDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSSSMParameterBasicConfig(rName, pType, value string) string {
+func testAccParameterBasicConfig(rName, pType, value string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_parameter" "test" {
   name  = %[1]q
@@ -730,7 +730,7 @@ resource "aws_ssm_parameter" "test" {
 `, rName, pType, value)
 }
 
-func testAccAWSSSMParameterConfigTier(rName, tier string) string {
+func testAccParameterTierConfig(rName, tier string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_parameter" "test" {
   name  = %[1]q
@@ -741,7 +741,7 @@ resource "aws_ssm_parameter" "test" {
 `, rName, tier)
 }
 
-func testAccAWSSSMParameterConfigDataTypeAwsEc2Image(rName string) string {
+func testAccParameterDataTypeAwsEC2ImageConfig(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		fmt.Sprintf(`
@@ -754,7 +754,7 @@ resource "aws_ssm_parameter" "test" {
 `, rName))
 }
 
-func testAccAWSSSMParameterBasicConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccParameterBasicTags1Config(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_parameter" "test" {
   name  = %[1]q
@@ -768,7 +768,7 @@ resource "aws_ssm_parameter" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccAWSSSMParameterBasicConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccParameterBasicTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_parameter" "test" {
   name  = %[1]q
@@ -783,7 +783,7 @@ resource "aws_ssm_parameter" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccAWSSSMParameterBasicConfigOverwrite(rName, pType, value string) string {
+func testAccParameterBasicOverwriteConfig(rName, pType, value string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_parameter" "test" {
   name        = "test_parameter-%[1]s"
@@ -795,7 +795,7 @@ resource "aws_ssm_parameter" "test" {
 `, rName, pType, value)
 }
 
-func testAccAWSSSMParameterBasicConfigOverwriteWithoutDescription(rName, pType, value string) string {
+func testAccParameterBasicOverwriteWithoutDescriptionConfig(rName, pType, value string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_parameter" "test" {
   name      = "test_parameter-%[1]s"
@@ -806,7 +806,7 @@ resource "aws_ssm_parameter" "test" {
 `, rName, pType, value)
 }
 
-func testAccAWSSSMParameterConfigOverwriteWithTags1(rName string, overwrite bool, tagKey1, tagValue1 string) string {
+func testAccParameterOverwriteWithTags1Config(rName string, overwrite bool, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_parameter" "test" {
   name      = %[1]q
@@ -820,7 +820,7 @@ resource "aws_ssm_parameter" "test" {
 `, rName, overwrite, tagKey1, tagValue1)
 }
 
-func testAccAWSSSMParameterSecureConfig(rName string, value string) string {
+func testAccParameterSecureConfig(rName string, value string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_parameter" "secret_test" {
   name        = "test_secure_parameter-%[1]s"
@@ -831,7 +831,7 @@ resource "aws_ssm_parameter" "secret_test" {
 `, rName, value)
 }
 
-func testAccAWSSSMParameterSecureConfigWithKey(rName string, value string, keyAlias string) string {
+func testAccParameterSecureWithKeyConfig(rName string, value string, keyAlias string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_parameter" "secret_test" {
   name        = "test_secure_parameter-%[1]s"
@@ -854,7 +854,7 @@ resource "aws_kms_alias" "test_alias" {
 `, rName, value, keyAlias)
 }
 
-func TestAWSSSMParameterShouldUpdate(t *testing.T) {
+func TestParameterShouldUpdate(t *testing.T) {
 	data := tfssm.ResourceParameter().TestResourceData()
 	failure := false
 
