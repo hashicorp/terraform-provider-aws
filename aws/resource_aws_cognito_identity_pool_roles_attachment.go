@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourcePoolRolesAttachment() *schema.Resource {
@@ -55,7 +56,7 @@ func ResourcePoolRolesAttachment() *schema.Resource {
 									"claim": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateCognitoRoleMappingsRulesClaim,
+										ValidateFunc: validRoleMappingsRulesClaim,
 									},
 									"match_type": {
 										Type:     schema.TypeString,
@@ -70,7 +71,7 @@ func ResourcePoolRolesAttachment() *schema.Resource {
 									"role_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: verify.ValidARN,
 									},
 									"value": {
 										Type:         schema.TypeString,
@@ -98,7 +99,7 @@ func ResourcePoolRolesAttachment() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validateArn,
+					ValidateFunc: verify.ValidARN,
 				},
 			},
 		},
@@ -110,7 +111,7 @@ func resourcePoolRolesAttachmentCreate(d *schema.ResourceData, meta interface{})
 
 	// Validates role keys to be either authenticated or unauthenticated,
 	// since ValidateFunc validates only the value not the key.
-	if errors := validateCognitoRoles(d.Get("roles").(map[string]interface{})); len(errors) > 0 {
+	if errors := validRoles(d.Get("roles").(map[string]interface{})); len(errors) > 0 {
 		return fmt.Errorf("Error validating Roles: %v", errors)
 	}
 
@@ -174,7 +175,7 @@ func resourcePoolRolesAttachmentUpdate(d *schema.ResourceData, meta interface{})
 
 	// Validates role keys to be either authenticated or unauthenticated,
 	// since ValidateFunc validates only the value not the key.
-	if errors := validateCognitoRoles(d.Get("roles").(map[string]interface{})); len(errors) > 0 {
+	if errors := validRoles(d.Get("roles").(map[string]interface{})); len(errors) > 0 {
 		return fmt.Errorf("Error validating Roles: %v", errors)
 	}
 
@@ -239,13 +240,13 @@ func validateRoleMappings(roleMappings []interface{}) []error {
 
 		// If Type equals "Token" or "Rules", ambiguous_role_resolution must be defined.
 		// This should be removed as soon as we can have a ValidateFuncAgainst callable on the schema.
-		if err := validateCognitoRoleMappingsAmbiguousRoleResolutionAgainstType(rm); len(err) > 0 {
+		if err := validRoleMappingsAmbiguousRoleResolutionAgainstType(rm); len(err) > 0 {
 			errors = append(errors, fmt.Errorf("Role Mapping %q: %v", rm["identity_provider"].(string), err))
 		}
 
 		// Validating that Rules Configuration is defined when Type equals Rules
 		// but not defined when Type equals Token.
-		if err := validateCognitoRoleMappingsRulesConfiguration(rm); len(err) > 0 {
+		if err := validRoleMappingsRulesConfiguration(rm); len(err) > 0 {
 			errors = append(errors, fmt.Errorf("Role Mapping %q: %v", rm["identity_provider"].(string), err))
 		}
 	}
