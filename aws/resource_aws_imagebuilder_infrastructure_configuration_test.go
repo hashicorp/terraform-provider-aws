@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -46,7 +47,7 @@ func testSweepImageBuilderInfrastructureConfigurations(region string) error {
 
 			arn := aws.StringValue(infrastructureConfigurationSummary.Arn)
 
-			r := resourceAwsImageBuilderInfrastructureConfiguration()
+			r := ResourceInfrastructureConfiguration()
 			d := r.Data(nil)
 			d.SetId(arn)
 
@@ -130,7 +131,7 @@ func TestAccAwsImageBuilderInfrastructureConfiguration_disappears(t *testing.T) 
 				Config: testAccAwsImageBuilderInfrastructureConfigurationConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsImageBuilderInfrastructureConfigurationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsImageBuilderInfrastructureConfiguration(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceInfrastructureConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -46,7 +47,7 @@ func testSweepImageBuilderImagePipelines(region string) error {
 
 			arn := aws.StringValue(imagePipeline.Arn)
 
-			r := resourceAwsImageBuilderImagePipeline()
+			r := ResourceImagePipeline()
 			d := r.Data(nil)
 			d.SetId(arn)
 
@@ -134,7 +135,7 @@ func TestAccAwsImageBuilderImagePipeline_disappears(t *testing.T) {
 				Config: testAccAwsImageBuilderImagePipelineConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsImageBuilderImagePipelineExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsImageBuilderImagePipeline(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceImagePipeline(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

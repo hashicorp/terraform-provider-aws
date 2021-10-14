@@ -16,12 +16,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsImageBuilderImageRecipe() *schema.Resource {
+func ResourceImageRecipe() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsImageBuilderImageRecipeCreate,
-		Read:   resourceAwsImageBuilderImageRecipeRead,
-		Update: resourceAwsImageBuilderImageRecipeUpdate,
-		Delete: resourceAwsImageBuilderImageRecipeDelete,
+		Create: resourceImageRecipeCreate,
+		Read:   resourceImageRecipeRead,
+		Update: resourceImageRecipeUpdate,
+		Delete: resourceImageRecipeDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -186,7 +186,7 @@ func resourceAwsImageBuilderImageRecipe() *schema.Resource {
 	}
 }
 
-func resourceAwsImageBuilderImageRecipeCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceImageRecipeCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ImageBuilderConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -238,10 +238,10 @@ func resourceAwsImageBuilderImageRecipeCreate(d *schema.ResourceData, meta inter
 
 	d.SetId(aws.StringValue(output.ImageRecipeArn))
 
-	return resourceAwsImageBuilderImageRecipeRead(d, meta)
+	return resourceImageRecipeRead(d, meta)
 }
 
-func resourceAwsImageBuilderImageRecipeRead(d *schema.ResourceData, meta interface{}) error {
+func resourceImageRecipeRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ImageBuilderConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -293,7 +293,7 @@ func resourceAwsImageBuilderImageRecipeRead(d *schema.ResourceData, meta interfa
 	return nil
 }
 
-func resourceAwsImageBuilderImageRecipeUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceImageRecipeUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ImageBuilderConn
 
 	if d.HasChange("tags_all") {
@@ -304,10 +304,10 @@ func resourceAwsImageBuilderImageRecipeUpdate(d *schema.ResourceData, meta inter
 		}
 	}
 
-	return resourceAwsImageBuilderImageRecipeRead(d, meta)
+	return resourceImageRecipeRead(d, meta)
 }
 
-func resourceAwsImageBuilderImageRecipeDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceImageRecipeDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ImageBuilderConn
 
 	input := &imagebuilder.DeleteImageRecipeInput{

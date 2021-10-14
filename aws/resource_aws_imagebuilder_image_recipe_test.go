@@ -16,6 +16,7 @@ import (
 	tfimagebuilder "github.com/hashicorp/terraform-provider-aws/aws/internal/service/imagebuilder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -50,7 +51,7 @@ func testSweepImageBuilderImageRecipes(region string) error {
 
 			arn := aws.StringValue(imageRecipeSummary.Arn)
 
-			r := resourceAwsImageBuilderImageRecipe()
+			r := ResourceImageRecipe()
 			d := r.Data(nil)
 			d.SetId(arn)
 
@@ -129,7 +130,7 @@ func TestAccAwsImageBuilderImageRecipe_disappears(t *testing.T) {
 				Config: testAccAwsImageBuilderImageRecipeConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsImageBuilderImageRecipeExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsImageBuilderImageRecipe(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceImageRecipe(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

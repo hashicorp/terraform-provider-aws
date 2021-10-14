@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsImageBuilderImagePipeline() *schema.Resource {
+func DataSourceImagePipeline() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsImageBuilderImagePipelineRead,
+		Read: dataSourceImagePipelineRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -105,7 +105,7 @@ func dataSourceAwsImageBuilderImagePipeline() *schema.Resource {
 	}
 }
 
-func dataSourceAwsImageBuilderImagePipelineRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceImagePipelineRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ImageBuilderConn
 
 	input := &imagebuilder.GetImagePipelineInput{}

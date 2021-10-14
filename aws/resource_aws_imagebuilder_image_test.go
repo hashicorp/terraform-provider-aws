@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -50,7 +51,7 @@ func testSweepImageBuilderImages(region string) error {
 			}
 
 			// Retrieve the Image's Build Version ARNs required as input
-			// to the resourceAwsImageBuilderImage()'s Delete operation
+			// to the ResourceImage()'s Delete operation
 			// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/19851
 			imageVersionArn := aws.StringValue(imageVersion.Arn)
 
@@ -70,7 +71,7 @@ func testSweepImageBuilderImages(region string) error {
 
 					imageBuildVersionArn := aws.StringValue(imageSummary.Arn)
 
-					r := resourceAwsImageBuilderImage()
+					r := ResourceImage()
 					d := r.Data(nil)
 					d.SetId(imageBuildVersionArn)
 
@@ -160,7 +161,7 @@ func TestAccAwsImageBuilderImage_disappears(t *testing.T) {
 				Config: testAccAwsImageBuilderImageConfigRequired(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsImageBuilderImageExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsImageBuilderImage(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceImage(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
