@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudwatch/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -56,7 +57,7 @@ func testSweepCloudWatchCompositeAlarms(region string) error {
 
 			log.Printf("[INFO] Deleting CloudWatch Composite Alarm: %s", name)
 
-			r := resourceAwsCloudWatchCompositeAlarm()
+			r := ResourceCompositeAlarm()
 			d := r.Data(nil)
 			d.SetId(name)
 
@@ -133,7 +134,7 @@ func TestAccAwsCloudWatchCompositeAlarm_disappears(t *testing.T) {
 				Config: testAccAwsCloudWatchCompositeAlarmConfig_basic(suffix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsCloudWatchCompositeAlarmExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsCloudWatchCompositeAlarm(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceCompositeAlarm(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

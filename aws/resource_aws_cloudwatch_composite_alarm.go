@@ -16,12 +16,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsCloudWatchCompositeAlarm() *schema.Resource {
+func ResourceCompositeAlarm() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceAwsCloudWatchCompositeAlarmCreate,
-		ReadContext:   resourceAwsCloudWatchCompositeAlarmRead,
-		UpdateContext: resourceAwsCloudWatchCompositeAlarmUpdate,
-		DeleteContext: resourceAwsCloudWatchCompositeAlarmDelete,
+		CreateContext: resourceCompositeAlarmCreate,
+		ReadContext:   resourceCompositeAlarmRead,
+		UpdateContext: resourceCompositeAlarmUpdate,
+		DeleteContext: resourceCompositeAlarmDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -92,7 +92,7 @@ func resourceAwsCloudWatchCompositeAlarm() *schema.Resource {
 	}
 }
 
-func resourceAwsCloudWatchCompositeAlarmCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCompositeAlarmCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CloudWatchConn
 	name := d.Get("alarm_name").(string)
 
@@ -105,10 +105,10 @@ func resourceAwsCloudWatchCompositeAlarmCreate(ctx context.Context, d *schema.Re
 
 	d.SetId(name)
 
-	return resourceAwsCloudWatchCompositeAlarmRead(ctx, d, meta)
+	return resourceCompositeAlarmRead(ctx, d, meta)
 }
 
-func resourceAwsCloudWatchCompositeAlarmRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCompositeAlarmRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CloudWatchConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -173,7 +173,7 @@ func resourceAwsCloudWatchCompositeAlarmRead(ctx context.Context, d *schema.Reso
 	return nil
 }
 
-func resourceAwsCloudWatchCompositeAlarmUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCompositeAlarmUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CloudWatchConn
 	name := d.Id()
 
@@ -193,10 +193,10 @@ func resourceAwsCloudWatchCompositeAlarmUpdate(ctx context.Context, d *schema.Re
 		}
 	}
 
-	return resourceAwsCloudWatchCompositeAlarmRead(ctx, d, meta)
+	return resourceCompositeAlarmRead(ctx, d, meta)
 }
 
-func resourceAwsCloudWatchCompositeAlarmDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCompositeAlarmDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CloudWatchConn
 	name := d.Id()
 

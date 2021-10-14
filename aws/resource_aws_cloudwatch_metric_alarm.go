@@ -14,13 +14,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsCloudWatchMetricAlarm() *schema.Resource {
+func ResourceMetricAlarm() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
-		Create:        resourceAwsCloudWatchMetricAlarmCreate,
-		Read:          resourceAwsCloudWatchMetricAlarmRead,
-		Update:        resourceAwsCloudWatchMetricAlarmUpdate,
-		Delete:        resourceAwsCloudWatchMetricAlarmDelete,
+		Create:        resourceMetricAlarmCreate,
+		Read:          resourceMetricAlarmRead,
+		Update:        resourceMetricAlarmUpdate,
+		Delete:        resourceMetricAlarmDelete,
 		SchemaVersion: 1,
 		MigrateState:  resourceAwsCloudWatchMetricAlarmMigrateState,
 
@@ -281,7 +281,7 @@ func validateResourceAwsCloudWatchMetricAlarm(d *schema.ResourceData) error {
 	return nil
 }
 
-func resourceAwsCloudWatchMetricAlarmCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceMetricAlarmCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchConn
 
 	err := validateResourceAwsCloudWatchMetricAlarm(d)
@@ -298,10 +298,10 @@ func resourceAwsCloudWatchMetricAlarmCreate(d *schema.ResourceData, meta interfa
 	d.SetId(d.Get("alarm_name").(string))
 	log.Println("[INFO] CloudWatch Metric Alarm created")
 
-	return resourceAwsCloudWatchMetricAlarmRead(d, meta)
+	return resourceMetricAlarmRead(d, meta)
 }
 
-func resourceAwsCloudWatchMetricAlarmRead(d *schema.ResourceData, meta interface{}) error {
+func resourceMetricAlarmRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -378,7 +378,7 @@ func resourceAwsCloudWatchMetricAlarmRead(d *schema.ResourceData, meta interface
 	return nil
 }
 
-func resourceAwsCloudWatchMetricAlarmUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceMetricAlarmUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchConn
 	params := getAwsCloudWatchPutMetricAlarmInput(d, meta)
 
@@ -398,10 +398,10 @@ func resourceAwsCloudWatchMetricAlarmUpdate(d *schema.ResourceData, meta interfa
 		}
 	}
 
-	return resourceAwsCloudWatchMetricAlarmRead(d, meta)
+	return resourceMetricAlarmRead(d, meta)
 }
 
-func resourceAwsCloudWatchMetricAlarmDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceMetricAlarmDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchConn
 	params := cloudwatch.DeleteAlarmsInput{
 		AlarmNames: []*string{aws.String(d.Id())},

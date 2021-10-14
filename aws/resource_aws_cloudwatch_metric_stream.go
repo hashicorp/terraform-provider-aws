@@ -19,12 +19,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsCloudWatchMetricStream() *schema.Resource {
+func ResourceMetricStream() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceAwsCloudWatchMetricStreamCreate,
-		ReadContext:   resourceAwsCloudWatchMetricStreamRead,
-		UpdateContext: resourceAwsCloudWatchMetricStreamCreate,
-		DeleteContext: resourceAwsCloudWatchMetricStreamDelete,
+		CreateContext: resourceMetricStreamCreate,
+		ReadContext:   resourceMetricStreamRead,
+		UpdateContext: resourceMetricStreamCreate,
+		DeleteContext: resourceMetricStreamDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -119,7 +119,7 @@ func resourceAwsCloudWatchMetricStream() *schema.Resource {
 	}
 }
 
-func resourceAwsCloudWatchMetricStreamCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMetricStreamCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CloudWatchConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -150,10 +150,10 @@ func resourceAwsCloudWatchMetricStreamCreate(ctx context.Context, d *schema.Reso
 	d.SetId(name)
 	log.Println("[INFO] CloudWatch MetricStream put finished")
 
-	return resourceAwsCloudWatchMetricStreamRead(ctx, d, meta)
+	return resourceMetricStreamRead(ctx, d, meta)
 }
 
-func resourceAwsCloudWatchMetricStreamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMetricStreamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CloudWatchConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -216,7 +216,7 @@ func resourceAwsCloudWatchMetricStreamRead(ctx context.Context, d *schema.Resour
 	return nil
 }
 
-func resourceAwsCloudWatchMetricStreamDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMetricStreamDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Deleting CloudWatch MetricStream %s", d.Id())
 	conn := meta.(*conns.AWSClient).CloudWatchConn
 	params := cloudwatch.DeleteMetricStreamInput{
