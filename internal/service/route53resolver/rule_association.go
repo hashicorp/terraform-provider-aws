@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	route53ResolverRuleAssociationStatusDeleted = "DELETED"
+	RuleAssociationStatusDeleted = "DELETED"
 )
 
 func ResourceRuleAssociation() *schema.Resource {
@@ -76,7 +76,7 @@ func resourceRuleAssociationCreate(d *schema.ResourceData, meta interface{}) err
 
 	d.SetId(aws.StringValue(resp.ResolverRuleAssociation.Id))
 
-	err = route53ResolverRuleAssociationWaitUntilTargetState(conn, d.Id(), d.Timeout(schema.TimeoutCreate),
+	err = RuleAssociationWaitUntilTargetState(conn, d.Id(), d.Timeout(schema.TimeoutCreate),
 		[]string{route53resolver.ResolverRuleAssociationStatusCreating},
 		[]string{route53resolver.ResolverRuleAssociationStatusComplete})
 	if err != nil {
@@ -93,7 +93,7 @@ func resourceRuleAssociationRead(d *schema.ResourceData, meta interface{}) error
 	if err != nil {
 		return fmt.Errorf("error getting Route53 Resolver rule association (%s): %s", d.Id(), err)
 	}
-	if state == route53ResolverRuleAssociationStatusDeleted {
+	if state == RuleAssociationStatusDeleted {
 		log.Printf("[WARN] Route53 Resolver rule association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -123,9 +123,9 @@ func resourceRuleAssociationDelete(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("error deleting Route 53 Resolver rule association (%s): %s", d.Id(), err)
 	}
 
-	err = route53ResolverRuleAssociationWaitUntilTargetState(conn, d.Id(), d.Timeout(schema.TimeoutDelete),
+	err = RuleAssociationWaitUntilTargetState(conn, d.Id(), d.Timeout(schema.TimeoutDelete),
 		[]string{route53resolver.ResolverRuleAssociationStatusDeleting},
-		[]string{route53ResolverRuleAssociationStatusDeleted})
+		[]string{RuleAssociationStatusDeleted})
 	if err != nil {
 		return err
 	}
@@ -139,7 +139,7 @@ func route53ResolverRuleAssociationRefresh(conn *route53resolver.Route53Resolver
 			ResolverRuleAssociationId: aws.String(assocId),
 		})
 		if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
-			return "", route53ResolverRuleAssociationStatusDeleted, nil
+			return "", RuleAssociationStatusDeleted, nil
 		}
 		if err != nil {
 			return nil, "", err
@@ -153,7 +153,7 @@ func route53ResolverRuleAssociationRefresh(conn *route53resolver.Route53Resolver
 	}
 }
 
-func route53ResolverRuleAssociationWaitUntilTargetState(conn *route53resolver.Route53Resolver, assocId string, timeout time.Duration, pending, target []string) error {
+func RuleAssociationWaitUntilTargetState(conn *route53resolver.Route53Resolver, assocId string, timeout time.Duration, pending, target []string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    pending,
 		Target:     target,

@@ -46,7 +46,7 @@ func testSweepRoute53ResolverFirewallRuleGroups(region string) error {
 			id := aws.StringValue(firewallRuleGroup.Id)
 
 			log.Printf("[INFO] Deleting Route53 Resolver DNS Firewall rule group: %s", id)
-			r := ResourceFirewallRuleGroup()
+			r := tfroute53resolver.ResourceFirewallRuleGroup()
 			d := r.Data(nil)
 			d.SetId(id)
 			err := r.Delete(d, client)
@@ -116,7 +116,7 @@ func TestAccAWSRoute53ResolverFirewallRuleGroup_disappears(t *testing.T) {
 				Config: testAccRoute53ResolverFirewallRuleGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ResolverFirewallRuleGroupExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceFirewallRuleGroup(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfroute53resolver.ResourceFirewallRuleGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -45,7 +45,7 @@ func testSweepRoute53ResolverFirewallDomainLists(region string) error {
 			id := aws.StringValue(queryLogConfig.Id)
 
 			log.Printf("[INFO] Deleting Route53 Resolver DNS Firewall domain list: %s", id)
-			r := ResourceFirewallDomainList()
+			r := tfroute53resolver.ResourceFirewallDomainList()
 			d := r.Data(nil)
 			d.SetId(id)
 			err := r.Delete(d, client)
@@ -162,7 +162,7 @@ func TestAccAWSRoute53ResolverFirewallDomainList_disappears(t *testing.T) {
 				Config: testAccRoute53ResolverFirewallDomainListConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ResolverFirewallDomainListExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceFirewallDomainList(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfroute53resolver.ResourceFirewallDomainList(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -49,7 +49,7 @@ func testSweepRoute53ResolverDnssecConfig(region string) error {
 
 			log.Printf("[INFO] Deleting Route 53 Resolver Dnssec config: %s", id)
 
-			r := ResourceDNSSECConfig()
+			r := tfroute53resolver.ResourceDNSSECConfig()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(resolverDnssecConfig.Id))
 			d.Set("resource_id", resourceId)
@@ -123,7 +123,7 @@ func TestAccAWSRoute53ResolverDnssecConfig_disappear(t *testing.T) {
 				Config: testAccRoute53ResolverDnssecConfigConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ResolverDnssecConfigExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceDNSSECConfig(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfroute53resolver.ResourceDNSSECConfig(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

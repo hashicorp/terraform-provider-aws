@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	route53ResolverEndpointStatusDeleted = "DELETED"
+	EndpointStatusDeleted = "DELETED"
 )
 
 func ResourceEndpoint() *schema.Resource {
@@ -136,7 +136,7 @@ func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(aws.StringValue(resp.ResolverEndpoint.Id))
 
-	err = route53ResolverEndpointWaitUntilTargetState(conn, d.Id(), d.Timeout(schema.TimeoutCreate),
+	err = EndpointWaitUntilTargetState(conn, d.Id(), d.Timeout(schema.TimeoutCreate),
 		[]string{route53resolver.ResolverEndpointStatusCreating},
 		[]string{route53resolver.ResolverEndpointStatusOperational})
 	if err != nil {
@@ -155,7 +155,7 @@ func resourceEndpointRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("error getting Route53 Resolver endpoint (%s): %s", d.Id(), err)
 	}
-	if state == route53ResolverEndpointStatusDeleted {
+	if state == EndpointStatusDeleted {
 		log.Printf("[WARN] Route53 Resolver endpoint (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -226,7 +226,7 @@ func resourceEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error updating Route53 Resolver endpoint (%s): %s", d.Id(), err)
 		}
 
-		err = route53ResolverEndpointWaitUntilTargetState(conn, d.Id(), d.Timeout(schema.TimeoutUpdate),
+		err = EndpointWaitUntilTargetState(conn, d.Id(), d.Timeout(schema.TimeoutUpdate),
 			[]string{route53resolver.ResolverEndpointStatusUpdating},
 			[]string{route53resolver.ResolverEndpointStatusOperational})
 		if err != nil {
@@ -251,7 +251,7 @@ func resourceEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 				return fmt.Errorf("error associating Route53 Resolver endpoint (%s) IP address: %s", d.Id(), err)
 			}
 
-			err = route53ResolverEndpointWaitUntilTargetState(conn, d.Id(), d.Timeout(schema.TimeoutUpdate),
+			err = EndpointWaitUntilTargetState(conn, d.Id(), d.Timeout(schema.TimeoutUpdate),
 				[]string{route53resolver.ResolverEndpointStatusUpdating},
 				[]string{route53resolver.ResolverEndpointStatusOperational})
 			if err != nil {
@@ -268,7 +268,7 @@ func resourceEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 				return fmt.Errorf("error disassociating Route53 Resolver endpoint (%s) IP address: %s", d.Id(), err)
 			}
 
-			err = route53ResolverEndpointWaitUntilTargetState(conn, d.Id(), d.Timeout(schema.TimeoutUpdate),
+			err = EndpointWaitUntilTargetState(conn, d.Id(), d.Timeout(schema.TimeoutUpdate),
 				[]string{route53resolver.ResolverEndpointStatusUpdating},
 				[]string{route53resolver.ResolverEndpointStatusOperational})
 			if err != nil {
@@ -301,9 +301,9 @@ func resourceEndpointDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting Route53 Resolver endpoint (%s): %s", d.Id(), err)
 	}
 
-	err = route53ResolverEndpointWaitUntilTargetState(conn, d.Id(), d.Timeout(schema.TimeoutDelete),
+	err = EndpointWaitUntilTargetState(conn, d.Id(), d.Timeout(schema.TimeoutDelete),
 		[]string{route53resolver.ResolverEndpointStatusDeleting},
-		[]string{route53ResolverEndpointStatusDeleted})
+		[]string{EndpointStatusDeleted})
 	if err != nil {
 		return err
 	}
@@ -317,7 +317,7 @@ func route53ResolverEndpointRefresh(conn *route53resolver.Route53Resolver, epId 
 			ResolverEndpointId: aws.String(epId),
 		})
 		if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
-			return &route53resolver.ResolverEndpoint{}, route53ResolverEndpointStatusDeleted, nil
+			return &route53resolver.ResolverEndpoint{}, EndpointStatusDeleted, nil
 		}
 		if err != nil {
 			return nil, "", err
@@ -331,7 +331,7 @@ func route53ResolverEndpointRefresh(conn *route53resolver.Route53Resolver, epId 
 	}
 }
 
-func route53ResolverEndpointWaitUntilTargetState(conn *route53resolver.Route53Resolver, epId string, timeout time.Duration, pending, target []string) error {
+func EndpointWaitUntilTargetState(conn *route53resolver.Route53Resolver, epId string, timeout time.Duration, pending, target []string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    pending,
 		Target:     target,

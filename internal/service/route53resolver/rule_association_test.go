@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -58,9 +59,9 @@ func testSweepRoute53ResolverRuleAssociations(region string) error {
 				continue
 			}
 
-			err = route53ResolverRuleAssociationWaitUntilTargetState(conn, id, 10*time.Minute,
+			err = tfroute53resolver.RuleAssociationWaitUntilTargetState(conn, id, 10*time.Minute,
 				[]string{route53resolver.ResolverRuleAssociationStatusDeleting},
-				[]string{route53ResolverRuleAssociationStatusDeleted})
+				[]string{tfroute53resolver.RuleAssociationStatusDeleted})
 			if err != nil {
 				errors = multierror.Append(errors, err)
 				continue

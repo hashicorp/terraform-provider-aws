@@ -22,7 +22,7 @@ import (
 )
 
 const (
-	route53ResolverRuleStatusDeleted = "DELETED"
+	RuleStatusDeleted = "DELETED"
 )
 
 func ResourceRule() *schema.Resource {
@@ -149,7 +149,7 @@ func resourceRuleCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(aws.StringValue(resp.ResolverRule.Id))
 
-	err = route53ResolverRuleWaitUntilTargetState(conn, d.Id(), d.Timeout(schema.TimeoutCreate),
+	err = RuleWaitUntilTargetState(conn, d.Id(), d.Timeout(schema.TimeoutCreate),
 		[]string{}, // Should go straight to COMPLETE
 		[]string{route53resolver.ResolverRuleStatusComplete})
 	if err != nil {
@@ -168,7 +168,7 @@ func resourceRuleRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("error getting Route53 Resolver rule (%s): %s", d.Id(), err)
 	}
-	if state == route53ResolverRuleStatusDeleted {
+	if state == RuleStatusDeleted {
 		log.Printf("[WARN] Route53 Resolver rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -232,7 +232,7 @@ func resourceRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error updating Route 53 Resolver rule (%s): %s", d.Id(), err)
 		}
 
-		err = route53ResolverRuleWaitUntilTargetState(conn, d.Id(), d.Timeout(schema.TimeoutUpdate),
+		err = RuleWaitUntilTargetState(conn, d.Id(), d.Timeout(schema.TimeoutUpdate),
 			[]string{route53resolver.ResolverRuleStatusUpdating},
 			[]string{route53resolver.ResolverRuleStatusComplete})
 		if err != nil {
@@ -264,9 +264,9 @@ func resourceRuleDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting Route 53 Resolver rule (%s): %s", d.Id(), err)
 	}
 
-	err = route53ResolverRuleWaitUntilTargetState(conn, d.Id(), d.Timeout(schema.TimeoutDelete),
+	err = RuleWaitUntilTargetState(conn, d.Id(), d.Timeout(schema.TimeoutDelete),
 		[]string{route53resolver.ResolverRuleStatusDeleting},
-		[]string{route53ResolverRuleStatusDeleted})
+		[]string{RuleStatusDeleted})
 	if err != nil {
 		return err
 	}
@@ -294,7 +294,7 @@ func route53ResolverRuleRefresh(conn *route53resolver.Route53Resolver, ruleId st
 			ResolverRuleId: aws.String(ruleId),
 		})
 		if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
-			return "", route53ResolverRuleStatusDeleted, nil
+			return "", RuleStatusDeleted, nil
 		}
 		if err != nil {
 			return nil, "", err
@@ -308,7 +308,7 @@ func route53ResolverRuleRefresh(conn *route53resolver.Route53Resolver, ruleId st
 	}
 }
 
-func route53ResolverRuleWaitUntilTargetState(conn *route53resolver.Route53Resolver, ruleId string, timeout time.Duration, pending, target []string) error {
+func RuleWaitUntilTargetState(conn *route53resolver.Route53Resolver, ruleId string, timeout time.Duration, pending, target []string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    pending,
 		Target:     target,

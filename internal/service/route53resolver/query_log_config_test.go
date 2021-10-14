@@ -45,7 +45,7 @@ func testSweepRoute53ResolverQueryLogConfigs(region string) error {
 			id := aws.StringValue(queryLogConfig.Id)
 
 			log.Printf("[INFO] Deleting Route53 Resolver Query Log Config: %s", id)
-			r := ResourceQueryLogConfig()
+			r := tfroute53resolver.ResourceQueryLogConfig()
 			d := r.Data(nil)
 			d.SetId(id)
 			err := r.Delete(d, client)
@@ -117,7 +117,7 @@ func TestAccAWSRoute53ResolverQueryLogConfig_disappears(t *testing.T) {
 				Config: testAccRoute53ResolverQueryLogConfigConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ResolverQueryLogConfigExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceQueryLogConfig(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfroute53resolver.ResourceQueryLogConfig(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

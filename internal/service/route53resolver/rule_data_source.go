@@ -90,7 +90,7 @@ func dataSourceRuleRead(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error getting Route53 Resolver rule (%s): %w", v, err)
 		}
 
-		if state == route53ResolverRuleStatusDeleted {
+		if state == RuleStatusDeleted {
 			return fmt.Errorf("no Route53 Resolver rules matched found with the id (%q)", v)
 		}
 
