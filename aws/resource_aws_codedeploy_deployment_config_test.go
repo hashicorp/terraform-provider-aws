@@ -237,7 +237,7 @@ func testAccCheckAWSCodeDeployDeploymentConfigDestroy(s *terraform.State) error 
 			DeploymentConfigName: aws.String(rs.Primary.ID),
 		})
 
-		if isAWSErr(err, codedeploy.ErrCodeDeploymentConfigDoesNotExistException, "") {
+		if tfawserr.ErrMessageContains(err, codedeploy.ErrCodeDeploymentConfigDoesNotExistException, "") {
 			continue
 		}
 
