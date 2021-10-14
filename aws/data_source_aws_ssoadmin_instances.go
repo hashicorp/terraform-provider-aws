@@ -9,9 +9,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsSsoAdminInstances() *schema.Resource {
+func DataSourceInstances() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsSsoAdminInstancesRead,
+		Read: dataSourceInstancesRead,
 
 		Schema: map[string]*schema.Schema{
 			"arns": {
@@ -29,7 +29,7 @@ func dataSourceAwsSsoAdminInstances() *schema.Resource {
 	}
 }
 
-func dataSourceAwsSsoAdminInstancesRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceInstancesRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSOAdminConn
 
 	var instances []*ssoadmin.InstanceMetadata

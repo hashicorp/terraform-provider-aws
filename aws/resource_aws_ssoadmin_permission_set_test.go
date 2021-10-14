@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -38,7 +39,7 @@ func testSweepSsoAdminPermissionSets(region string) error {
 
 	// Need to Read the SSO Instance first; assumes the first instance returned
 	// is where the permission sets exist as AWS SSO currently supports only 1 instance
-	ds := dataSourceAwsSsoAdminInstances()
+	ds := DataSourceInstances()
 	dsData := ds.Data(nil)
 
 	err = ds.Read(dsData, client)
@@ -72,7 +73,7 @@ func testSweepSsoAdminPermissionSets(region string) error {
 
 			log.Printf("[INFO] Deleting SSO Permission Set: %s", arn)
 
-			r := resourceAwsSsoAdminPermissionSet()
+			r := ResourcePermissionSet()
 			d := r.Data(nil)
 			d.SetId(fmt.Sprintf("%s,%s", arn, instanceArn))
 

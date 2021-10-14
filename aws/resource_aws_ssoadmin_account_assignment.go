@@ -16,11 +16,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSsoAdminAccountAssignment() *schema.Resource {
+func ResourceAccountAssignment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSsoAdminAccountAssignmentCreate,
-		Read:   resourceAwsSsoAdminAccountAssignmentRead,
-		Delete: resourceAwsSsoAdminAccountAssignmentDelete,
+		Create: resourceAccountAssignmentCreate,
+		Read:   resourceAccountAssignmentRead,
+		Delete: resourceAccountAssignmentDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -75,7 +75,7 @@ func resourceAwsSsoAdminAccountAssignment() *schema.Resource {
 	}
 }
 
-func resourceAwsSsoAdminAccountAssignmentCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAccountAssignmentCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSOAdminConn
 
 	instanceArn := d.Get("instance_arn").(string)
@@ -124,10 +124,10 @@ func resourceAwsSsoAdminAccountAssignmentCreate(d *schema.ResourceData, meta int
 
 	d.SetId(fmt.Sprintf("%s,%s,%s,%s,%s,%s", principalID, principalType, targetID, targetType, permissionSetArn, instanceArn))
 
-	return resourceAwsSsoAdminAccountAssignmentRead(d, meta)
+	return resourceAccountAssignmentRead(d, meta)
 }
 
-func resourceAwsSsoAdminAccountAssignmentRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAccountAssignmentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSOAdminConn
 
 	idParts, err := parseSsoAdminAccountAssignmentID(d.Id())
@@ -174,7 +174,7 @@ func resourceAwsSsoAdminAccountAssignmentRead(d *schema.ResourceData, meta inter
 	return nil
 }
 
-func resourceAwsSsoAdminAccountAssignmentDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAccountAssignmentDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSOAdminConn
 
 	idParts, err := parseSsoAdminAccountAssignmentID(d.Id())

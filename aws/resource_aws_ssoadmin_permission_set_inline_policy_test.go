@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSSSOAdminPermissionSetInlinePolicy_basic(t *testing.T) {
@@ -91,7 +92,7 @@ func TestAccAWSSSOAdminPermissionSetInlinePolicy_disappears(t *testing.T) {
 				Config: testAccSSOAdminPermissionSetInlinePolicyBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSOAdminPermissionSetInlinePolicyExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSsoAdminPermissionSetInlinePolicy(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourcePermissionSetInlinePolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -114,7 +115,7 @@ func TestAccAWSSSOAdminPermissionSetInlinePolicy_disappears_permissionSet(t *tes
 				Config: testAccSSOAdminPermissionSetInlinePolicyBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSOAdminPermissionSetInlinePolicyExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSsoAdminPermissionSet(), permissionSetResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourcePermissionSet(), permissionSetResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

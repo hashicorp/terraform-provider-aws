@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ssoadmin/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -38,7 +39,7 @@ func testSweepSsoAdminAccountAssignments(region string) error {
 
 	// Need to Read the SSO Instance first; assumes the first instance returned
 	// is where the permission sets exist as AWS SSO currently supports only 1 instance
-	ds := dataSourceAwsSsoAdminInstances()
+	ds := DataSourceInstances()
 	dsData := ds.Data(nil)
 
 	err = ds.Read(dsData, client)
@@ -93,7 +94,7 @@ func testSweepSsoAdminAccountAssignments(region string) error {
 					targetID := aws.StringValue(a.AccountId)
 					targetType := ssoadmin.TargetTypeAwsAccount // only valid value currently accepted by API
 
-					r := resourceAwsSsoAdminAccountAssignment()
+					r := ResourceAccountAssignment()
 					d := r.Data(nil)
 					d.SetId(fmt.Sprintf("%s,%s,%s,%s,%s,%s", principalID, principalType, targetID, targetType, permissionSetArn, instanceArn))
 
@@ -219,7 +220,7 @@ func TestAccAWSSSOAdminAccountAssignment_Disappears(t *testing.T) {
 				Config: testAccAWSSSOAdminAccountAssignmentBasicGroupConfig(groupName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSOAdminAccountAssignmentExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSsoAdminAccountAssignment(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceAccountAssignment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -11,12 +11,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSsoAdminPermissionSetInlinePolicy() *schema.Resource {
+func ResourcePermissionSetInlinePolicy() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsSsoAdminPermissionSetInlinePolicyPut,
-		Read:   resourceAwsSsoAdminPermissionSetInlinePolicyRead,
+		Read:   resourcePermissionSetInlinePolicyRead,
 		Update: resourceAwsSsoAdminPermissionSetInlinePolicyPut,
-		Delete: resourceAwsSsoAdminPermissionSetInlinePolicyDelete,
+		Delete: resourcePermissionSetInlinePolicyDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -69,10 +69,10 @@ func resourceAwsSsoAdminPermissionSetInlinePolicyPut(d *schema.ResourceData, met
 		return err
 	}
 
-	return resourceAwsSsoAdminPermissionSetInlinePolicyRead(d, meta)
+	return resourcePermissionSetInlinePolicyRead(d, meta)
 }
 
-func resourceAwsSsoAdminPermissionSetInlinePolicyRead(d *schema.ResourceData, meta interface{}) error {
+func resourcePermissionSetInlinePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSOAdminConn
 
 	permissionSetArn, instanceArn, err := parseSsoAdminResourceID(d.Id())
@@ -108,7 +108,7 @@ func resourceAwsSsoAdminPermissionSetInlinePolicyRead(d *schema.ResourceData, me
 	return nil
 }
 
-func resourceAwsSsoAdminPermissionSetInlinePolicyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourcePermissionSetInlinePolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSOAdminConn
 
 	permissionSetArn, instanceArn, err := parseSsoAdminResourceID(d.Id())

@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ssoadmin/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSSSOAdminManagedPolicyAttachment_basic(t *testing.T) {
@@ -97,7 +98,7 @@ func TestAccAWSSSOAdminManagedPolicyAttachment_disappears(t *testing.T) {
 				Config: testAccSSOAdminManagedPolicyAttachmentBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSOAdminManagedPolicyAttachmentExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSsoAdminManagedPolicyAttachment(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceManagedPolicyAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -120,7 +121,7 @@ func TestAccAWSSSOAdminManagedPolicyAttachment_disappears_permissionSet(t *testi
 				Config: testAccSSOAdminManagedPolicyAttachmentBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSOAdminManagedPolicyAttachmentExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSsoAdminPermissionSet(), permissionSetResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourcePermissionSet(), permissionSetResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
