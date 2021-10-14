@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccAwsGlobalAcceleratorListener_basic(t *testing.T) {
+func TestAccGlobalAcceleratorListener_basic(t *testing.T) {
 	resourceName := "aws_globalaccelerator_listener.example"
 	rInt := sdkacctest.RandInt()
 
@@ -46,7 +46,7 @@ func TestAccAwsGlobalAcceleratorListener_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsGlobalAcceleratorListener_disappears(t *testing.T) {
+func TestAccGlobalAcceleratorListener_disappears(t *testing.T) {
 	resourceName := "aws_globalaccelerator_listener.example"
 	rInt := sdkacctest.RandInt()
 
@@ -68,7 +68,7 @@ func TestAccAwsGlobalAcceleratorListener_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAwsGlobalAcceleratorListener_update(t *testing.T) {
+func TestAccGlobalAcceleratorListener_update(t *testing.T) {
 	resourceName := "aws_globalaccelerator_listener.example"
 	rInt := sdkacctest.RandInt()
 

@@ -152,7 +152,7 @@ func sweepGlobalAcceleratorEndpointGroups(client interface{}, listenerArn *strin
 	return sweeperErrs
 }
 
-func TestAccAwsGlobalAcceleratorAccelerator_basic(t *testing.T) {
+func TestAccGlobalAcceleratorAccelerator_basic(t *testing.T) {
 	resourceName := "aws_globalaccelerator_accelerator.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	ipRegex := regexp.MustCompile(`\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}`)
@@ -193,7 +193,7 @@ func TestAccAwsGlobalAcceleratorAccelerator_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsGlobalAcceleratorAccelerator_disappears(t *testing.T) {
+func TestAccGlobalAcceleratorAccelerator_disappears(t *testing.T) {
 	resourceName := "aws_globalaccelerator_accelerator.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -215,7 +215,7 @@ func TestAccAwsGlobalAcceleratorAccelerator_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAwsGlobalAcceleratorAccelerator_update(t *testing.T) {
+func TestAccGlobalAcceleratorAccelerator_update(t *testing.T) {
 	resourceName := "aws_globalaccelerator_accelerator.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	newName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -259,7 +259,7 @@ func TestAccAwsGlobalAcceleratorAccelerator_update(t *testing.T) {
 	})
 }
 
-func TestAccAwsGlobalAcceleratorAccelerator_attributes(t *testing.T) {
+func TestAccGlobalAcceleratorAccelerator_attributes(t *testing.T) {
 	resourceName := "aws_globalaccelerator_accelerator.test"
 	s3BucketResourceName := "aws_s3_bucket.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -319,7 +319,7 @@ func TestAccAwsGlobalAcceleratorAccelerator_attributes(t *testing.T) {
 	})
 }
 
-func TestAccAwsGlobalAcceleratorAccelerator_tags(t *testing.T) {
+func TestAccGlobalAcceleratorAccelerator_tags(t *testing.T) {
 	resourceName := "aws_globalaccelerator_accelerator.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
