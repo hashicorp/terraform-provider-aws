@@ -9,14 +9,15 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/route53recoveryreadiness"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAwsRoute53RecoveryReadinessReadinessCheck_basic(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	rSetName := acctest.RandomWithPrefix("tf-acc-test-set")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rSetName := sdkacctest.RandomWithPrefix("tf-acc-test-set")
 	resourceName := "aws_route53recoveryreadiness_readiness_check.test"
 	cwArn := arn.ARN{
 		AccountID: "123456789012",
@@ -27,8 +28,8 @@ func TestAccAwsRoute53RecoveryReadinessReadinessCheck_basic(t *testing.T) {
 	}.String()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckAwsRoute53RecoveryReadiness(t) },
-		ErrorCheck:        testAccErrorCheck(t, route53recoveryreadiness.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckAwsRoute53RecoveryReadiness(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, route53recoveryreadiness.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsRoute53RecoveryReadinessReadinessCheckDestroy,
 		Steps: []resource.TestStep{
@@ -36,7 +37,7 @@ func TestAccAwsRoute53RecoveryReadinessReadinessCheck_basic(t *testing.T) {
 				Config: testAccAwsRoute53RecoveryReadinessReadinessCheckConfig(rName, rSetName, cwArn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsRoute53RecoveryReadinessReadinessCheckExists(resourceName),
-					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "route53-recovery-readiness", regexp.MustCompile(`readiness-check/.+`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "route53-recovery-readiness", regexp.MustCompile(`readiness-check/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "resource_set_name", rSetName),
 				),
 			},
@@ -50,8 +51,8 @@ func TestAccAwsRoute53RecoveryReadinessReadinessCheck_basic(t *testing.T) {
 }
 
 func TestAccAwsRoute53RecoveryReadinessReadinessCheck_disappears(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	rSetName := acctest.RandomWithPrefix("tf-acc-test-set")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rSetName := sdkacctest.RandomWithPrefix("tf-acc-test-set")
 	resourceName := "aws_route53recoveryreadiness_readiness_check.test"
 	cwArn := arn.ARN{
 		AccountID: "123456789012",
@@ -62,8 +63,8 @@ func TestAccAwsRoute53RecoveryReadinessReadinessCheck_disappears(t *testing.T) {
 	}.String()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckAwsRoute53RecoveryReadiness(t) },
-		ErrorCheck:        testAccErrorCheck(t, route53recoveryreadiness.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckAwsRoute53RecoveryReadiness(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, route53recoveryreadiness.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsRoute53RecoveryReadinessReadinessCheckDestroy,
 		Steps: []resource.TestStep{
@@ -71,7 +72,7 @@ func TestAccAwsRoute53RecoveryReadinessReadinessCheck_disappears(t *testing.T) {
 				Config: testAccAwsRoute53RecoveryReadinessReadinessCheckConfig(rName, rSetName, cwArn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsRoute53RecoveryReadinessReadinessCheckExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsRoute53RecoveryReadinessReadinessCheck(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsRoute53RecoveryReadinessReadinessCheck(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -80,7 +81,7 @@ func TestAccAwsRoute53RecoveryReadinessReadinessCheck_disappears(t *testing.T) {
 }
 
 func TestAccAwsRoute53RecoveryReadinessReadinessCheck_tags(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_route53recoveryreadiness_readiness_check.test"
 	cwArn := arn.ARN{
 		AccountID: "123456789012",
@@ -91,8 +92,8 @@ func TestAccAwsRoute53RecoveryReadinessReadinessCheck_tags(t *testing.T) {
 	}.String()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckAwsRoute53RecoveryReadiness(t) },
-		ErrorCheck:        testAccErrorCheck(t, route53recoveryreadiness.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckAwsRoute53RecoveryReadiness(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, route53recoveryreadiness.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsRoute53RecoveryReadinessReadinessCheckDestroy,
 		Steps: []resource.TestStep{
@@ -131,8 +132,8 @@ func TestAccAwsRoute53RecoveryReadinessReadinessCheck_tags(t *testing.T) {
 }
 
 func TestAccAwsRoute53RecoveryReadinessReadinessCheck_timeout(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	rSetName := acctest.RandomWithPrefix("tf-acc-test-set")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rSetName := sdkacctest.RandomWithPrefix("tf-acc-test-set")
 	resourceName := "aws_route53recoveryreadiness_readiness_check.test"
 	cwArn := arn.ARN{
 		AccountID: "123456789012",
@@ -143,8 +144,8 @@ func TestAccAwsRoute53RecoveryReadinessReadinessCheck_timeout(t *testing.T) {
 	}.String()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckAwsRoute53RecoveryReadiness(t) },
-		ErrorCheck:        testAccErrorCheck(t, route53recoveryreadiness.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckAwsRoute53RecoveryReadiness(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, route53recoveryreadiness.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsRoute53RecoveryReadinessReadinessCheckDestroy,
 		Steps: []resource.TestStep{
@@ -152,7 +153,7 @@ func TestAccAwsRoute53RecoveryReadinessReadinessCheck_timeout(t *testing.T) {
 				Config: testAccAwsRoute53RecoveryReadinessReadinessCheckConfig_Timeout(rName, rSetName, cwArn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsRoute53RecoveryReadinessReadinessCheckExists(resourceName),
-					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "route53-recovery-readiness", regexp.MustCompile(`readiness-check/.+`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "route53-recovery-readiness", regexp.MustCompile(`readiness-check/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "resource_set_name", rSetName),
 				),
 			},
@@ -219,7 +220,7 @@ resource "aws_route53recoveryreadiness_resource_set" "test" {
 }
 
 func testAccAwsRoute53RecoveryReadinessReadinessCheckConfig(rName, rSetName, cwArn string) string {
-	return composeConfig(testAccAwsRoute53RecoveryReadinessReadinessCheckConfig_ResourceSet(rSetName, cwArn), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAwsRoute53RecoveryReadinessReadinessCheckConfig_ResourceSet(rSetName, cwArn), fmt.Sprintf(`
 resource "aws_route53recoveryreadiness_readiness_check" "test" {
   readiness_check_name = %q
   resource_set_name    = aws_route53recoveryreadiness_resource_set.test.resource_set_name
@@ -228,7 +229,7 @@ resource "aws_route53recoveryreadiness_readiness_check" "test" {
 }
 
 func testAccAwsRoute53RecoveryReadinessReadinessCheckConfig_Tags1(rName, cwArn, tagKey1, tagValue1 string) string {
-	return composeConfig(testAccAwsRoute53RecoveryReadinessReadinessCheckConfig_ResourceSet("resource-set-for-testing", cwArn), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAwsRoute53RecoveryReadinessReadinessCheckConfig_ResourceSet("resource-set-for-testing", cwArn), fmt.Sprintf(`
 resource "aws_route53recoveryreadiness_readiness_check" "test" {
   readiness_check_name = %[1]q
   resource_set_name    = aws_route53recoveryreadiness_resource_set.test.resource_set_name
@@ -241,7 +242,7 @@ resource "aws_route53recoveryreadiness_readiness_check" "test" {
 }
 
 func testAccAwsRoute53RecoveryReadinessReadinessCheckConfig_Tags2(rName, cwArn, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return composeConfig(testAccAwsRoute53RecoveryReadinessReadinessCheckConfig_ResourceSet("resource-set-for-testing", cwArn), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAwsRoute53RecoveryReadinessReadinessCheckConfig_ResourceSet("resource-set-for-testing", cwArn), fmt.Sprintf(`
 resource "aws_route53recoveryreadiness_readiness_check" "test" {
   readiness_check_name = %[1]q
   resource_set_name    = aws_route53recoveryreadiness_resource_set.test.resource_set_name
@@ -255,7 +256,7 @@ resource "aws_route53recoveryreadiness_readiness_check" "test" {
 }
 
 func testAccAwsRoute53RecoveryReadinessReadinessCheckConfig_Timeout(rName, rSetName, cwArn string) string {
-	return composeConfig(testAccAwsRoute53RecoveryReadinessReadinessCheckConfig_ResourceSet(rSetName, cwArn), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAwsRoute53RecoveryReadinessReadinessCheckConfig_ResourceSet(rSetName, cwArn), fmt.Sprintf(`
 resource "aws_route53recoveryreadiness_readiness_check" "test" {
   readiness_check_name = %q
   resource_set_name    = aws_route53recoveryreadiness_resource_set.test.resource_set_name
