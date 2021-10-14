@@ -1,4 +1,4 @@
-package aws
+package cloudwatchlogs
 
 import (
 	"fmt"
@@ -6,11 +6,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	tfcloudwatchlogs "github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudwatchlogs"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfcloudwatchlogs "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchlogs"
 )
 
 func DataSourceGroups() *schema.Resource {
@@ -64,7 +62,7 @@ func dataSourceGroupsRead(d *schema.ResourceData, meta interface{}) error {
 	var arns, logGroupNames []string
 
 	for _, r := range results {
-		arns = append(arns, tfcloudwatchlogs.TrimLogGroupARNWildcardSuffix(aws.StringValue(r.Arn)))
+		arns = append(arns, TrimLogGroupARNWildcardSuffix(aws.StringValue(r.Arn)))
 		logGroupNames = append(logGroupNames, aws.StringValue(r.LogGroupName))
 	}
 

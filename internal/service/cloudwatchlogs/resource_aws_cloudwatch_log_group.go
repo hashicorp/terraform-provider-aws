@@ -1,4 +1,4 @@
-package aws
+package cloudwatchlogs
 
 import (
 	"fmt"
@@ -10,12 +10,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	tfcloudwatchlogs "github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudwatchlogs"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfcloudwatchlogs "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchlogs"
 )
 
 func ResourceGroup() *schema.Resource {
@@ -142,7 +140,7 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	d.Set("arn", tfcloudwatchlogs.TrimLogGroupARNWildcardSuffix(aws.StringValue(lg.Arn)))
+	d.Set("arn", TrimLogGroupARNWildcardSuffix(aws.StringValue(lg.Arn)))
 	d.Set("name", lg.LogGroupName)
 	d.Set("kms_key_id", lg.KmsKeyId)
 	d.Set("retention_in_days", lg.RetentionInDays)
