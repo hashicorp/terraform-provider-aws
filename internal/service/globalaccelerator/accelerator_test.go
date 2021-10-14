@@ -22,11 +22,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_globalaccelerator_accelerator", &resource.Sweeper{
 		Name: "aws_globalaccelerator_accelerator",
-		F:    testSweepGlobalAcceleratorAccelerators,
+		F:    sweepAccelerators,
 	})
 }
 
-func testSweepGlobalAcceleratorAccelerators(region string) error {
+func sweepAccelerators(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %s", err)
