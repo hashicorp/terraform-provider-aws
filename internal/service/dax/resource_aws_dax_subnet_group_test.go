@@ -1,4 +1,4 @@
-package aws
+package dax_test
 
 import (
 	"fmt"
