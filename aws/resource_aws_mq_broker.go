@@ -20,9 +20,10 @@ import (
 	"github.com/mitchellh/copystructure"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/experimental/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/mq/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceBroker() *schema.Resource {
@@ -279,8 +280,8 @@ func ResourceBroker() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 			"user": {
 				Type:     schema.TypeSet,
 				Required: true,
@@ -328,7 +329,7 @@ func ResourceBroker() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			SetTagsDiff,
+			verify.SetTagsDiff,
 			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 				if strings.EqualFold(diff.Get("engine_type").(string), mq.EngineTypeRabbitmq) {
 					if v, ok := diff.GetOk("logs.0.audit"); ok {
@@ -347,7 +348,7 @@ func ResourceBroker() *schema.Resource {
 func resourceBrokerCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).MQConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("broker_name").(string)
 	engineType := d.Get("engine_type").(string)
@@ -485,7 +486,7 @@ func resourceBrokerRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting user: %w", err)
 	}
 
-	tags := keyvaluetags.MqKeyValueTags(output.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := tftags.MqKeyValueTags(output.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -561,7 +562,7 @@ func resourceBrokerUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := keyvaluetags.MqUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := tftags.MqUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating MQ Broker (%s) tags: %w", d.Get("arn").(string), err)
 		}
 	}
