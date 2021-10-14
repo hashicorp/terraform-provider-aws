@@ -189,7 +189,7 @@ func resourceAwsIamUserUpdate(d *schema.ResourceData, meta interface{}) error {
 		log.Println("[DEBUG] Update IAM User request:", request)
 		_, err := iamconn.UpdateUser(request)
 		if err != nil {
-			if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+			if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 				log.Printf("[WARN] No IAM user by name (%s) found", d.Id())
 				d.SetId("")
 				return nil
@@ -275,7 +275,7 @@ func resourceAwsIamUserDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Println("[DEBUG] Delete IAM User request:", deleteUserInput)
 	_, err := iamconn.DeleteUser(deleteUserInput)
 
-	if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+	if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 		return nil
 	}
 
@@ -419,18 +419,18 @@ func deleteAwsIamUserLoginProfile(svc *iam.IAM, username string) error {
 	err = resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
 		_, err = svc.DeleteLoginProfile(input)
 		if err != nil {
-			if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+			if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 				return nil
 			}
 			// EntityTemporarilyUnmodifiable: Login Profile for User XXX cannot be modified while login profile is being created.
-			if isAWSErr(err, iam.ErrCodeEntityTemporarilyUnmodifiableException, "") {
+			if tfawserr.ErrMessageContains(err, iam.ErrCodeEntityTemporarilyUnmodifiableException, "") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = svc.DeleteLoginProfile(input)
 	}
 	if err != nil {

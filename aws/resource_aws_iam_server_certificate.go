@@ -149,7 +149,7 @@ func resourceAwsIAMServerCertificateRead(d *schema.ResourceData, meta interface{
 		ServerCertificateName: aws.String(d.Get("name").(string)),
 	})
 
-	if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+	if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 		log.Printf("[WARN] IAM Server Certificate (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -231,7 +231,7 @@ func resourceAwsIAMServerCertificateDelete(d *schema.ResourceData, meta interfac
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.DeleteServerCertificate(&iam.DeleteServerCertificateInput{
 			ServerCertificateName: aws.String(d.Get("name").(string)),
 		})
@@ -256,7 +256,7 @@ func currentlyInUseBy(awsErr string, conn *elb.ELB) {
 			LoadBalancerNames: []*string{aws.String(lbName)},
 		}
 		if _, err := conn.DescribeLoadBalancers(describeElbOpts); err != nil {
-			if isAWSErr(err, "LoadBalancerNotFound", "") {
+			if tfawserr.ErrMessageContains(err, "LoadBalancerNotFound", "") {
 				log.Printf("[WARN] Load Balancer (%s) causing delete conflict not found", lbName)
 			}
 		}

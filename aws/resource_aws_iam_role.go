@@ -519,7 +519,7 @@ func deleteIamRole(conn *iam.IAM, roleName string, forceDetach, hasInline, hasMa
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.DeleteRole(deleteRoleInput)
 	}
 

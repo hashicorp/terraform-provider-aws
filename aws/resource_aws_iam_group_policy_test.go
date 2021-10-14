@@ -181,7 +181,7 @@ func testAccCheckIAMGroupPolicyDestroy(s *terraform.State) error {
 
 		getResp, err := conn.GetGroupPolicy(request)
 		if err != nil {
-			if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+			if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 				// none found, that's good
 				continue
 			}

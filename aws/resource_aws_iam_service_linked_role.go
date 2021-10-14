@@ -120,7 +120,7 @@ func resourceAwsIamServiceLinkedRoleRead(d *schema.ResourceData, meta interface{
 	resp, err := conn.GetRole(params)
 
 	if err != nil {
-		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 			log.Printf("[WARN] IAM service linked role %s not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -218,7 +218,7 @@ func deleteIamServiceLinkedRole(conn *iam.IAM, roleName string) (string, error) 
 	resp, err := conn.DeleteServiceLinkedRole(params)
 
 	if err != nil {
-		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 			return "", nil
 		}
 		return "", err
@@ -238,7 +238,7 @@ func deleteIamServiceLinkedRoleWaiter(conn *iam.IAM, deletionTaskID string) erro
 
 	_, err := stateConf.WaitForState()
 	if err != nil {
-		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 			return nil
 		}
 		return err

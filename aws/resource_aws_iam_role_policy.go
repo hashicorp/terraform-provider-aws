@@ -160,7 +160,7 @@ func resourceAwsIamRolePolicyDelete(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if _, err := iamconn.DeleteRolePolicy(request); err != nil {
-		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 			return nil
 		}
 		return fmt.Errorf("Error deleting IAM role policy %s: %s", d.Id(), err)

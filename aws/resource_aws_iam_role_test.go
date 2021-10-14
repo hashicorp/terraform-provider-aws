@@ -141,7 +141,7 @@ func testSweepIamRoles(region string) error {
 		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			continue
 		}
-		if testSweepSkipResourceError(err) {
+		if tfawserr.ErrCodeContains(err, "AccessDenied") {
 			log.Printf("[WARN] Skipping IAM Role (%s): %s", roleName, err)
 			continue
 		}
