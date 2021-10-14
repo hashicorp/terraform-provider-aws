@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSEcrReplicationConfiguration_basic(t *testing.T) {
@@ -73,7 +74,7 @@ func testAccCheckAWSEcrReplicationConfigurationExists(name string) resource.Test
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).ecrconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn
 		out, err := conn.DescribeRegistry(&ecr.DescribeRegistryInput{})
 		if err != nil {
 			return fmt.Errorf("ECR replication rules not found: %w", err)
@@ -88,7 +89,7 @@ func testAccCheckAWSEcrReplicationConfigurationExists(name string) resource.Test
 }
 
 func testAccCheckAWSEcrReplicationConfigurationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).ecrconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ecr_replication_configuration" {

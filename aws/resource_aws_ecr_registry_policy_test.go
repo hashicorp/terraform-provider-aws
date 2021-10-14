@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSEcrRegistryPolicy_serial(t *testing.T) {
@@ -86,7 +87,7 @@ func testAccAWSEcrRegistryPolicy_disappears(t *testing.T) {
 }
 
 func testAccCheckAWSEcrRegistryPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).ecrconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ecr_registry_policy" {
@@ -116,7 +117,7 @@ func testAccCheckAWSEcrRegistryPolicyExists(name string, res *ecr.GetRegistryPol
 			return fmt.Errorf("No ECR registry policy ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).ecrconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn
 
 		output, err := conn.GetRegistryPolicy(&ecr.GetRegistryPolicyInput{})
 		if err != nil {

@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSEcrLifecyclePolicy_basic(t *testing.T) {
@@ -39,7 +40,7 @@ func TestAccAWSEcrLifecyclePolicy_basic(t *testing.T) {
 }
 
 func testAccCheckAWSEcrLifecyclePolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).ecrconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ecr_lifecycle_policy" {
@@ -72,7 +73,7 @@ func testAccCheckAWSEcrLifecyclePolicyExists(name string) resource.TestCheckFunc
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).ecrconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn
 
 		input := &ecr.GetLifecyclePolicyInput{
 			RepositoryName: aws.String(rs.Primary.ID),

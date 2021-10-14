@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ecr/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsEcrLifecyclePolicy() *schema.Resource {
@@ -46,7 +47,7 @@ func resourceAwsEcrLifecyclePolicy() *schema.Resource {
 }
 
 func resourceAwsEcrLifecyclePolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ecrconn
+	conn := meta.(*conns.AWSClient).ECRConn
 
 	input := &ecr.PutLifecyclePolicyInput{
 		RepositoryName:      aws.String(d.Get("repository").(string)),
@@ -63,7 +64,7 @@ func resourceAwsEcrLifecyclePolicyCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsEcrLifecyclePolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ecrconn
+	conn := meta.(*conns.AWSClient).ECRConn
 
 	input := &ecr.GetLifecyclePolicyInput{
 		RepositoryName: aws.String(d.Id()),
@@ -123,7 +124,7 @@ func resourceAwsEcrLifecyclePolicyRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsEcrLifecyclePolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ecrconn
+	conn := meta.(*conns.AWSClient).ECRConn
 
 	input := &ecr.DeleteLifecyclePolicyInput{
 		RepositoryName: aws.String(d.Id()),

@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsEcrRegistryPolicy() *schema.Resource {
@@ -37,7 +38,7 @@ func resourceAwsEcrRegistryPolicy() *schema.Resource {
 }
 
 func resourceAwsEcrRegistryPolicyPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ecrconn
+	conn := meta.(*conns.AWSClient).ECRConn
 
 	input := ecr.PutRegistryPolicyInput{
 		PolicyText: aws.String(d.Get("policy").(string)),
@@ -56,7 +57,7 @@ func resourceAwsEcrRegistryPolicyPut(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsEcrRegistryPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ecrconn
+	conn := meta.(*conns.AWSClient).ECRConn
 
 	log.Printf("[DEBUG] Reading registry policy %s", d.Id())
 	out, err := conn.GetRegistryPolicy(&ecr.GetRegistryPolicyInput{})
@@ -76,7 +77,7 @@ func resourceAwsEcrRegistryPolicyRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsEcrRegistryPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ecrconn
+	conn := meta.(*conns.AWSClient).ECRConn
 
 	_, err := conn.DeleteRegistryPolicy(&ecr.DeleteRegistryPolicyInput{})
 	if err != nil {
