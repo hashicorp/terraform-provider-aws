@@ -56,7 +56,7 @@ func resourcePipelineCreate(d *schema.ResourceData, meta interface{}) error {
 	input := datapipeline.CreatePipelineInput{
 		Name:     aws.String(d.Get("name").(string)),
 		UniqueId: aws.String(uniqueID),
-		Tags:     tags.IgnoreAws().DatapipelineTags(),
+		Tags:     Tags(tags.IgnoreAws()),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -91,7 +91,7 @@ func resourcePipelineRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("name", v.Name)
 	d.Set("description", v.Description)
-	tags := tftags.DatapipelineKeyValueTags(v.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(v.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -111,7 +111,7 @@ func resourcePipelineUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.DatapipelineUpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating Datapipeline Pipeline (%s) tags: %s", d.Id(), err)
 		}
 	}
