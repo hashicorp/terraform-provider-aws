@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func DataSourceRules() *schema.Resource {
@@ -21,7 +22,7 @@ func DataSourceRules() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ValidateFunc: validation.Any(
-					validateAwsAccountId,
+					verify.ValidAccountID,
 					// The owner of the default Internet Resolver rule.
 					validation.StringInSlice([]string{"Route 53 Resolver"}, false),
 				),
