@@ -83,7 +83,7 @@ func sweepLocationS3s(region string) error {
 	return nil
 }
 
-func TestAccAWSDataSyncLocationS3_basic(t *testing.T) {
+func TestAccDataSyncLocationS3_basic(t *testing.T) {
 	var locationS31 datasync.DescribeLocationS3Output
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	iamRoleResourceName := "aws_iam_role.test"
@@ -121,7 +121,7 @@ func TestAccAWSDataSyncLocationS3_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataSyncLocationS3_storageclass(t *testing.T) {
+func TestAccDataSyncLocationS3_storageClass(t *testing.T) {
 	var locationS31 datasync.DescribeLocationS3Output
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	iamRoleResourceName := "aws_iam_role.test"
@@ -157,7 +157,7 @@ func TestAccAWSDataSyncLocationS3_storageclass(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataSyncLocationS3_disappears(t *testing.T) {
+func TestAccDataSyncLocationS3_disappears(t *testing.T) {
 	var locationS31 datasync.DescribeLocationS3Output
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_datasync_location_s3.test"
@@ -180,7 +180,7 @@ func TestAccAWSDataSyncLocationS3_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataSyncLocationS3_Tags(t *testing.T) {
+func TestAccDataSyncLocationS3_tags(t *testing.T) {
 	var locationS31, locationS32, locationS33 datasync.DescribeLocationS3Output
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_datasync_location_s3.test"

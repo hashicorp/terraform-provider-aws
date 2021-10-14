@@ -81,7 +81,7 @@ func sweepAgents(region string) error {
 	return nil
 }
 
-func TestAccAWSDataSyncAgent_basic(t *testing.T) {
+func TestAccDataSyncAgent_basic(t *testing.T) {
 	var agent1 datasync.DescribeAgentOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_datasync_agent.test"
@@ -115,7 +115,7 @@ func TestAccAWSDataSyncAgent_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataSyncAgent_disappears(t *testing.T) {
+func TestAccDataSyncAgent_disappears(t *testing.T) {
 	var agent1 datasync.DescribeAgentOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_datasync_agent.test"
@@ -138,7 +138,7 @@ func TestAccAWSDataSyncAgent_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataSyncAgent_AgentName(t *testing.T) {
+func TestAccDataSyncAgent_agentName(t *testing.T) {
 	var agent1, agent2 datasync.DescribeAgentOutput
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -174,7 +174,7 @@ func TestAccAWSDataSyncAgent_AgentName(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataSyncAgent_Tags(t *testing.T) {
+func TestAccDataSyncAgent_tags(t *testing.T) {
 	var agent1, agent2, agent3 datasync.DescribeAgentOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_datasync_agent.test"
@@ -222,7 +222,7 @@ func TestAccAWSDataSyncAgent_Tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataSyncAgent_VpcEndpointId(t *testing.T) {
+func TestAccDataSyncAgent_vpcEndpointID(t *testing.T) {
 	var agent datasync.DescribeAgentOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_datasync_agent.test"

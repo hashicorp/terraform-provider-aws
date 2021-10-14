@@ -83,7 +83,7 @@ func sweepLocationNFSs(region string) error {
 	return nil
 }
 
-func TestAccAWSDataSyncLocationNfs_basic(t *testing.T) {
+func TestAccDataSyncLocationNFS_basic(t *testing.T) {
 	var locationNfs1 datasync.DescribeLocationNfsOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_datasync_location_nfs.test"
@@ -119,7 +119,7 @@ func TestAccAWSDataSyncLocationNfs_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataSyncLocationNfs_mountOptions(t *testing.T) {
+func TestAccDataSyncLocationNFS_mountOptions(t *testing.T) {
 	var locationNfs1 datasync.DescribeLocationNfsOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_datasync_location_nfs.test"
@@ -154,7 +154,7 @@ func TestAccAWSDataSyncLocationNfs_mountOptions(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataSyncLocationNfs_disappears(t *testing.T) {
+func TestAccDataSyncLocationNFS_disappears(t *testing.T) {
 	var locationNfs1 datasync.DescribeLocationNfsOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_datasync_location_nfs.test"
@@ -177,7 +177,7 @@ func TestAccAWSDataSyncLocationNfs_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataSyncLocationNfs_AgentARNs_Multple(t *testing.T) {
+func TestAccDataSyncLocationNFS_AgentARNs_multiple(t *testing.T) {
 	var locationNfs1 datasync.DescribeLocationNfsOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_datasync_location_nfs.test"
@@ -206,7 +206,7 @@ func TestAccAWSDataSyncLocationNfs_AgentARNs_Multple(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataSyncLocationNfs_Subdirectory(t *testing.T) {
+func TestAccDataSyncLocationNFS_subdirectory(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	var locationNfs1 datasync.DescribeLocationNfsOutput
 	resourceName := "aws_datasync_location_nfs.test"
@@ -241,7 +241,7 @@ func TestAccAWSDataSyncLocationNfs_Subdirectory(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataSyncLocationNfs_Tags(t *testing.T) {
+func TestAccDataSyncLocationNFS_tags(t *testing.T) {
 	var locationNfs1, locationNfs2, locationNfs3 datasync.DescribeLocationNfsOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_datasync_location_nfs.test"
