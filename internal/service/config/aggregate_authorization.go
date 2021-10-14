@@ -59,7 +59,7 @@ func resourceAwsConfigAggregateAuthorizationPut(d *schema.ResourceData, meta int
 	req := &configservice.PutAggregationAuthorizationInput{
 		AuthorizedAccountId: aws.String(accountId),
 		AuthorizedAwsRegion: aws.String(region),
-		Tags:                tags.IgnoreAws().ConfigserviceTags(),
+		Tags:                Tags(tags.IgnoreAws()),
 	}
 
 	_, err := conn.PutAggregationAuthorization(req)
@@ -106,7 +106,7 @@ func resourceAggregateAuthorizationRead(d *schema.ResourceData, meta interface{}
 
 	d.Set("arn", aggregationAuthorization.AggregationAuthorizationArn)
 
-	tags, err := tftags.ConfigserviceListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(conn, d.Get("arn").(string))
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Config Aggregate Authorization (%s): %s", d.Get("arn").(string), err)
@@ -132,7 +132,7 @@ func resourceAggregateAuthorizationUpdate(d *schema.ResourceData, meta interface
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.ConfigserviceUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating Config Aggregate Authorization (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
