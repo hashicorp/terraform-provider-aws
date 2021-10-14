@@ -18,70 +18,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_redshift_subnet_group", &resource.Sweeper{
-		Name: "aws_redshift_subnet_group",
-		F:    sweepSubnetGroups,
-		Dependencies: []string{
-			"aws_redshift_cluster",
-		},
-	})
-}
 
-func sweepSubnetGroups(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
 
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
 
-	conn := client.(*conns.AWSClient).RedshiftConn
-	sweepResources := make([]*sweep.SweepResource, 0)
-	var errs *multierror.Error
-
-	input := &redshift.DescribeClusterSubnetGroupsInput{}
-
-	err = conn.DescribeClusterSubnetGroupsPages(input, func(page *redshift.DescribeClusterSubnetGroupsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, clusterSubnetGroup := range page.ClusterSubnetGroups {
-			if clusterSubnetGroup == nil {
-				continue
-			}
-
-			name := aws.StringValue(clusterSubnetGroup.ClusterSubnetGroupName)
-
-			if name == "default" {
-				continue
-			}
-
-			r := tfredshift.ResourceSubnetGroup()
-			d := r.Data(nil)
-			d.SetId(name)
-
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error describing Redshift Subnet Groups: %w", err))
-	}
-
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping Redshift Subnet Groups for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping Redshift Subnet Group sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
-}
 
 func TestAccRedshiftSubnetGroup_basic(t *testing.T) {
 	var v redshift.ClusterSubnetGroup

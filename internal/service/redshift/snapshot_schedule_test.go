@@ -19,66 +19,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_redshift_snapshot_schedule", &resource.Sweeper{
-		Name: "aws_redshift_snapshot_schedule",
-		F:    sweepSnapshotSchedules,
-	})
-}
 
-func sweepSnapshotSchedules(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
 
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
 
-	conn := client.(*conns.AWSClient).RedshiftConn
-	sweepResources := make([]*sweep.SweepResource, 0)
-	var errs *multierror.Error
-
-	input := &redshift.DescribeSnapshotSchedulesInput{}
-	prefixesToSweep := []string{acctest.ResourcePrefix}
-
-	err = conn.DescribeSnapshotSchedulesPages(input, func(page *redshift.DescribeSnapshotSchedulesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, snapshotSchedules := range page.SnapshotSchedules {
-			id := aws.StringValue(snapshotSchedules.ScheduleIdentifier)
-
-			for _, prefix := range prefixesToSweep {
-				if strings.HasPrefix(id, prefix) {
-					r := tfredshift.ResourceSnapshotSchedule()
-					d := r.Data(nil)
-					d.SetId(id)
-
-					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-
-					break
-				}
-			}
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error describing Redshift Snapshot Schedules: %w", err))
-	}
-
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping Redshift Snapshot Schedules for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping Redshift Snapshot Schedules sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
-}
 
 func TestAccRedshiftSnapshotSchedule_basic(t *testing.T) {
 	var v redshift.SnapshotSchedule

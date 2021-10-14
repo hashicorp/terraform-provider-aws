@@ -21,58 +21,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_redshift_cluster", &resource.Sweeper{
-		Name: "aws_redshift_cluster",
-		F:    sweepClusters,
-	})
-}
 
-func sweepClusters(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
 
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
 
-	conn := client.(*conns.AWSClient).RedshiftConn
-	sweepResources := make([]*sweep.SweepResource, 0)
-	var errs *multierror.Error
-
-	err = conn.DescribeClustersPages(&redshift.DescribeClustersInput{}, func(resp *redshift.DescribeClustersOutput, lastPage bool) bool {
-		if len(resp.Clusters) == 0 {
-			log.Print("[DEBUG] No Redshift clusters to sweep")
-			return !lastPage
-		}
-
-		for _, c := range resp.Clusters {
-			r := tfredshift.ResourceCluster()
-			d := r.Data(nil)
-			d.Set("skip_final_snapshot", true)
-			d.SetId(aws.StringValue(c.ClusterIdentifier))
-
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error describing Redshift Clusters: %w", err))
-		// in case work can be done, don't jump out yet
-	}
-
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping Redshift Clusters for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping Redshift Cluster sweep for %s: %s", region, err)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
-}
 
 func TestAccRedshiftCluster_basic(t *testing.T) {
 	var v redshift.Cluster
