@@ -10,8 +10,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/codedeploy"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceApp() *schema.Resource {
@@ -83,18 +84,18 @@ func ResourceApp() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceAppCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodeDeployConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	application := d.Get("name").(string)
 	computePlatform := d.Get("compute_platform").(string)
@@ -167,7 +168,7 @@ func resourceAppRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("github_account_name", app.GitHubAccountName)
 	d.Set("linked_to_github", app.LinkedToGitHub)
 
-	tags, err := keyvaluetags.CodedeployListTags(conn, appArn)
+	tags, err := tftags.CodedeployListTags(conn, appArn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for CodeDeploy application (%s): %w", d.Id(), err)
@@ -206,7 +207,7 @@ func resourceAwsCodeDeployUpdate(d *schema.ResourceData, meta interface{}) error
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := keyvaluetags.CodedeployUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := tftags.CodedeployUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating CodeDeploy Application (%s) tags: %w", d.Get("arn").(string), err)
 		}
 	}
