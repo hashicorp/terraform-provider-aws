@@ -154,7 +154,7 @@ func ResourcePolicy() *schema.Resource {
 func resourcePolicyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).FMSConn
 
-	fmsPolicy := resourceAwsFmsPolicyExpandPolicy(d)
+	fmsPolicy := resourcePolicyExpandPolicy(d)
 
 	params := &fms.PutPolicyInput{
 		Policy: fmsPolicy,
@@ -193,10 +193,10 @@ func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	return resourceAwsFmsPolicyFlattenPolicy(d, resp)
+	return resourcePolicyFlattenPolicy(d, resp)
 }
 
-func resourceAwsFmsPolicyFlattenPolicy(d *schema.ResourceData, resp *fms.GetPolicyOutput) error {
+func resourcePolicyFlattenPolicy(d *schema.ResourceData, resp *fms.GetPolicyOutput) error {
 	d.Set("arn", resp.PolicyArn)
 
 	d.Set("name", resp.Policy.PolicyName)
@@ -228,7 +228,7 @@ func resourceAwsFmsPolicyFlattenPolicy(d *schema.ResourceData, resp *fms.GetPoli
 	return nil
 }
 
-func resourceAwsFmsPolicyExpandPolicy(d *schema.ResourceData) *fms.Policy {
+func resourcePolicyExpandPolicy(d *schema.ResourceData) *fms.Policy {
 	resourceType := aws.String("ResourceTypeList")
 	resourceTypeList := flex.ExpandStringSet(d.Get("resource_type_list").(*schema.Set))
 	if t, ok := d.GetOk("resource_type"); ok {
@@ -266,7 +266,7 @@ func resourceAwsFmsPolicyExpandPolicy(d *schema.ResourceData) *fms.Policy {
 func resourcePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).FMSConn
 
-	fmsPolicy := resourceAwsFmsPolicyExpandPolicy(d)
+	fmsPolicy := resourcePolicyExpandPolicy(d)
 
 	params := &fms.PutPolicyInput{Policy: fmsPolicy}
 	_, err := conn.PutPolicy(params)
