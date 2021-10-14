@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsLicenseManagerLicenseConfiguration() *schema.Resource {
@@ -77,8 +78,8 @@ func resourceAwsLicenseManagerLicenseConfiguration() *schema.Resource {
 }
 
 func resourceAwsLicenseManagerLicenseConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).licensemanagerconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).LicenseManagerConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	opts := &licensemanager.CreateLicenseConfigurationInput{
@@ -117,9 +118,9 @@ func resourceAwsLicenseManagerLicenseConfigurationCreate(d *schema.ResourceData,
 }
 
 func resourceAwsLicenseManagerLicenseConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).licensemanagerconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).LicenseManagerConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	resp, err := conn.GetLicenseConfiguration(&licensemanager.GetLicenseConfigurationInput{
 		LicenseConfigurationArn: aws.String(d.Id()),
@@ -160,7 +161,7 @@ func resourceAwsLicenseManagerLicenseConfigurationRead(d *schema.ResourceData, m
 }
 
 func resourceAwsLicenseManagerLicenseConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).licensemanagerconn
+	conn := meta.(*conns.AWSClient).LicenseManagerConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -191,7 +192,7 @@ func resourceAwsLicenseManagerLicenseConfigurationUpdate(d *schema.ResourceData,
 }
 
 func resourceAwsLicenseManagerLicenseConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).licensemanagerconn
+	conn := meta.(*conns.AWSClient).LicenseManagerConn
 
 	opts := &licensemanager.DeleteLicenseConfigurationInput{
 		LicenseConfigurationArn: aws.String(d.Id()),
