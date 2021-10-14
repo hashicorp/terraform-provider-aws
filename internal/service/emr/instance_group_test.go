@@ -16,7 +16,7 @@ import (
 	tfemr "github.com/hashicorp/terraform-provider-aws/internal/service/emr"
 )
 
-func TestAccAWSEMRInstanceGroup_basic(t *testing.T) {
+func TestAccEMRInstanceGroup_basic(t *testing.T) {
 	var ig emr.InstanceGroup
 	rInt := sdkacctest.RandInt()
 
@@ -47,7 +47,7 @@ func TestAccAWSEMRInstanceGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSEMRInstanceGroup_BidPrice(t *testing.T) {
+func TestAccEMRInstanceGroup_bidPrice(t *testing.T) {
 	var ig1, ig2 emr.InstanceGroup
 	rInt := sdkacctest.RandInt()
 
@@ -99,7 +99,7 @@ func TestAccAWSEMRInstanceGroup_BidPrice(t *testing.T) {
 	})
 }
 
-func TestAccAWSEMRInstanceGroup_ConfigurationsJson(t *testing.T) {
+func TestAccEMRInstanceGroup_sJSON(t *testing.T) {
 	var ig emr.InstanceGroup
 	rInt := sdkacctest.RandInt()
 
@@ -142,7 +142,7 @@ func TestAccAWSEMRInstanceGroup_ConfigurationsJson(t *testing.T) {
 	})
 }
 
-func TestAccAWSEMRInstanceGroup_AutoScalingPolicy(t *testing.T) {
+func TestAccEMRInstanceGroup_autoScalingPolicy(t *testing.T) {
 	var ig emr.InstanceGroup
 	rInt := sdkacctest.RandInt()
 
@@ -187,7 +187,7 @@ func TestAccAWSEMRInstanceGroup_AutoScalingPolicy(t *testing.T) {
 
 // Confirm we can scale down the instance count.
 // Regression test for https://github.com/hashicorp/terraform-provider-aws/issues/1264
-func TestAccAWSEMRInstanceGroup_InstanceCount(t *testing.T) {
+func TestAccEMRInstanceGroup_instanceCount(t *testing.T) {
 	var ig emr.InstanceGroup
 	rInt := sdkacctest.RandInt()
 
@@ -218,7 +218,7 @@ func TestAccAWSEMRInstanceGroup_InstanceCount(t *testing.T) {
 }
 
 // Regression test for https://github.com/hashicorp/terraform-provider-aws/issues/1355
-func TestAccAWSEMRInstanceGroup_disappears_EmrCluster(t *testing.T) {
+func TestAccEMRInstanceGroup_Disappears_emrCluster(t *testing.T) {
 	var cluster emr.Cluster
 	var ig emr.InstanceGroup
 	rInt := sdkacctest.RandInt()
@@ -244,7 +244,7 @@ func TestAccAWSEMRInstanceGroup_disappears_EmrCluster(t *testing.T) {
 	})
 }
 
-func TestAccAWSEMRInstanceGroup_EbsConfig_EbsOptimized(t *testing.T) {
+func TestAccEMRInstanceGroup_EBS_ebsOptimized(t *testing.T) {
 	var ig emr.InstanceGroup
 	rInt := sdkacctest.RandInt()
 
