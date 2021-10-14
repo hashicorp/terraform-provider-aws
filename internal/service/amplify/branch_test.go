@@ -78,7 +78,7 @@ func testAccAWSAmplifyBranch_disappears(t *testing.T) {
 				Config: testAccAWSAmplifyBranchConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAmplifyBranchExists(resourceName, &branch),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceBranch(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfamplify.ResourceBranch(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

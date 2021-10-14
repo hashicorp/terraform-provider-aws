@@ -78,7 +78,7 @@ func testAccAWSAmplifyDomainAssociation_disappears(t *testing.T) {
 				Config: testAccAWSAmplifyDomainAssociationConfig(rName, domainName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAmplifyDomainAssociationExists(resourceName, &domain),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceDomainAssociation(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfamplify.ResourceDomainAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

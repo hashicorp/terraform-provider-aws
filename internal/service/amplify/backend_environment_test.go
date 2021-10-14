@@ -64,7 +64,7 @@ func testAccAWSAmplifyBackendEnvironment_disappears(t *testing.T) {
 				Config: testAccAWSAmplifyBackendEnvironmentConfigBasic(rName, environmentName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAmplifyBackendEnvironmentExists(resourceName, &env),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceBackendEnvironment(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfamplify.ResourceBackendEnvironment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

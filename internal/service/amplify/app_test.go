@@ -43,7 +43,7 @@ func testSweepAmplifyApps(region string) error {
 		}
 
 		for _, app := range page.Apps {
-			r := ResourceApp()
+			r := tfamplify.ResourceApp()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(app.AppId))
 			err = r.Delete(d, client)
@@ -132,7 +132,7 @@ func testAccAWSAmplifyApp_disappears(t *testing.T) {
 				Config: testAccAWSAmplifyAppConfigName(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSAmplifyAppExists(resourceName, &app),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceApp(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfamplify.ResourceApp(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
