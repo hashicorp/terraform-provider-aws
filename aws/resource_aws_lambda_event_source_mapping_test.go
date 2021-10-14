@@ -7,7 +7,11 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/kafka"
 	"github.com/aws/aws-sdk-go/service/lambda"
+	"github.com/aws/aws-sdk-go/service/mq"
+	"github.com/aws/aws-sdk-go/service/secretsmanager"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -22,12 +26,12 @@ func TestAccAWSLambdaEventSourceMapping_Kinesis_basic(t *testing.T) {
 	functionResourceName := "aws_lambda_function.test"
 	functionResourceNameUpdated := "aws_lambda_function.test_update"
 	eventSourceResourceName := "aws_kinesis_stream.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -78,12 +82,12 @@ func TestAccAWSLambdaEventSourceMapping_SQS_basic(t *testing.T) {
 	functionResourceName := "aws_lambda_function.test"
 	functionResourceNameUpdated := "aws_lambda_function.test_update"
 	eventSourceResourceName := "aws_sqs_queue.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -132,12 +136,12 @@ func TestAccAWSLambdaEventSourceMapping_DynamoDB_basic(t *testing.T) {
 	resourceName := "aws_lambda_event_source_mapping.test"
 	functionResourceName := "aws_lambda_function.test"
 	eventSourceResourceName := "aws_dynamodb_table.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -174,12 +178,12 @@ func TestAccAWSLambdaEventSourceMapping_DynamoDB_basic(t *testing.T) {
 func TestAccAWSLambdaEventSourceMapping_DynamoDB_FunctionResponseTypes(t *testing.T) {
 	var conf lambda.EventSourceMappingConfiguration
 	resourceName := "aws_lambda_event_source_mapping.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -209,7 +213,7 @@ func TestAccAWSLambdaEventSourceMapping_DynamoDB_FunctionResponseTypes(t *testin
 
 func TestAccAWSLambdaEventSourceMapping_SQS_BatchWindow(t *testing.T) {
 	var conf lambda.EventSourceMappingConfiguration
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_event_source_mapping.test"
 	batchWindow := int64(0)
 	batchWindowUpdate := int64(100)
@@ -217,7 +221,7 @@ func TestAccAWSLambdaEventSourceMapping_SQS_BatchWindow(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -247,19 +251,19 @@ func TestAccAWSLambdaEventSourceMapping_SQS_BatchWindow(t *testing.T) {
 func TestAccAWSLambdaEventSourceMapping_disappears(t *testing.T) {
 	var conf lambda.EventSourceMappingConfiguration
 	resourceName := "aws_lambda_event_source_mapping.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSLambdaEventSourceMappingConfigSqsBatchSize(rName, "7"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLambdaEventSourceMappingExists(resourceName, &conf),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsLambdaEventSourceMapping(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsLambdaEventSourceMapping(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -270,12 +274,12 @@ func TestAccAWSLambdaEventSourceMapping_disappears(t *testing.T) {
 func TestAccAWSLambdaEventSourceMapping_SQS_changesInEnabledAreDetected(t *testing.T) {
 	var conf lambda.EventSourceMappingConfiguration
 	resourceName := "aws_lambda_event_source_mapping.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -292,14 +296,14 @@ func TestAccAWSLambdaEventSourceMapping_SQS_changesInEnabledAreDetected(t *testi
 
 func TestAccAWSLambdaEventSourceMapping_Kinesis_StartingPositionTimestamp(t *testing.T) {
 	var conf lambda.EventSourceMappingConfiguration
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_event_source_mapping.test"
 	startingPositionTimestamp := time.Now().UTC().Format(time.RFC3339)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -322,7 +326,7 @@ func TestAccAWSLambdaEventSourceMapping_Kinesis_StartingPositionTimestamp(t *tes
 
 func TestAccAWSLambdaEventSourceMapping_Kinesis_BatchWindow(t *testing.T) {
 	var conf lambda.EventSourceMappingConfiguration
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_event_source_mapping.test"
 	batchWindow := int64(5)
 	batchWindowUpdate := int64(10)
@@ -330,7 +334,7 @@ func TestAccAWSLambdaEventSourceMapping_Kinesis_BatchWindow(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -359,7 +363,7 @@ func TestAccAWSLambdaEventSourceMapping_Kinesis_BatchWindow(t *testing.T) {
 
 func TestAccAWSLambdaEventSourceMapping_Kinesis_ParallelizationFactor(t *testing.T) {
 	var conf lambda.EventSourceMappingConfiguration
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_event_source_mapping.test"
 	parallelizationFactor := int64(1)
 	parallelizationFactorUpdate := int64(5)
@@ -367,7 +371,7 @@ func TestAccAWSLambdaEventSourceMapping_Kinesis_ParallelizationFactor(t *testing
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -396,7 +400,7 @@ func TestAccAWSLambdaEventSourceMapping_Kinesis_ParallelizationFactor(t *testing
 
 func TestAccAWSLambdaEventSourceMapping_Kinesis_TumblingWindowInSeconds(t *testing.T) {
 	var conf lambda.EventSourceMappingConfiguration
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_event_source_mapping.test"
 	tumblingWindowInSeconds := int64(30)
 	tumblingWindowInSecondsUpdate := int64(300)
@@ -404,7 +408,7 @@ func TestAccAWSLambdaEventSourceMapping_Kinesis_TumblingWindowInSeconds(t *testi
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -433,7 +437,7 @@ func TestAccAWSLambdaEventSourceMapping_Kinesis_TumblingWindowInSeconds(t *testi
 
 func TestAccAWSLambdaEventSourceMapping_Kinesis_MaximumRetryAttempts(t *testing.T) {
 	var conf lambda.EventSourceMappingConfiguration
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_event_source_mapping.test"
 	maximumRetryAttempts := int64(10000)
 	maximumRetryAttemptsUpdate := int64(100)
@@ -441,7 +445,7 @@ func TestAccAWSLambdaEventSourceMapping_Kinesis_MaximumRetryAttempts(t *testing.
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -470,7 +474,7 @@ func TestAccAWSLambdaEventSourceMapping_Kinesis_MaximumRetryAttempts(t *testing.
 
 func TestAccAWSLambdaEventSourceMapping_Kinesis_MaximumRetryAttemptsZero(t *testing.T) {
 	var conf lambda.EventSourceMappingConfiguration
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_event_source_mapping.test"
 	maximumRetryAttempts := int64(0)
 	maximumRetryAttemptsUpdate := int64(100)
@@ -478,7 +482,7 @@ func TestAccAWSLambdaEventSourceMapping_Kinesis_MaximumRetryAttemptsZero(t *test
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -514,7 +518,7 @@ func TestAccAWSLambdaEventSourceMapping_Kinesis_MaximumRetryAttemptsZero(t *test
 
 func TestAccAWSLambdaEventSourceMapping_Kinesis_MaximumRetryAttemptsNegativeOne(t *testing.T) {
 	var conf lambda.EventSourceMappingConfiguration
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_event_source_mapping.test"
 	maximumRetryAttempts := int64(-1)
 	maximumRetryAttemptsUpdate := int64(100)
@@ -522,7 +526,7 @@ func TestAccAWSLambdaEventSourceMapping_Kinesis_MaximumRetryAttemptsNegativeOne(
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -558,7 +562,7 @@ func TestAccAWSLambdaEventSourceMapping_Kinesis_MaximumRetryAttemptsNegativeOne(
 
 func TestAccAWSLambdaEventSourceMapping_Kinesis_MaximumRecordAgeInSeconds(t *testing.T) {
 	var conf lambda.EventSourceMappingConfiguration
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_event_source_mapping.test"
 	maximumRecordAgeInSeconds := int64(604800)
 	maximumRecordAgeInSecondsUpdate := int64(3600)
@@ -566,7 +570,7 @@ func TestAccAWSLambdaEventSourceMapping_Kinesis_MaximumRecordAgeInSeconds(t *tes
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -595,7 +599,7 @@ func TestAccAWSLambdaEventSourceMapping_Kinesis_MaximumRecordAgeInSeconds(t *tes
 
 func TestAccAWSLambdaEventSourceMapping_Kinesis_MaximumRecordAgeInSecondsNegativeOne(t *testing.T) {
 	var conf lambda.EventSourceMappingConfiguration
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_event_source_mapping.test"
 	maximumRecordAgeInSeconds := int64(-1)
 	maximumRecordAgeInSecondsUpdate := int64(3600)
@@ -603,7 +607,7 @@ func TestAccAWSLambdaEventSourceMapping_Kinesis_MaximumRecordAgeInSecondsNegativ
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -632,7 +636,7 @@ func TestAccAWSLambdaEventSourceMapping_Kinesis_MaximumRecordAgeInSecondsNegativ
 
 func TestAccAWSLambdaEventSourceMapping_Kinesis_BisectBatch(t *testing.T) {
 	var conf lambda.EventSourceMappingConfiguration
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_event_source_mapping.test"
 	bisectBatch := false
 	bisectBatchUpdate := true
@@ -640,7 +644,7 @@ func TestAccAWSLambdaEventSourceMapping_Kinesis_BisectBatch(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -669,14 +673,14 @@ func TestAccAWSLambdaEventSourceMapping_Kinesis_BisectBatch(t *testing.T) {
 
 func TestAccAWSLambdaEventSourceMapping_Kinesis_DestinationConfig(t *testing.T) {
 	var conf lambda.EventSourceMappingConfiguration
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_event_source_mapping.test"
 	snsResourceName := "aws_sns_topic.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -711,12 +715,12 @@ func TestAccAWSLambdaEventSourceMapping_MSK(t *testing.T) {
 	var v lambda.EventSourceMappingConfiguration
 	resourceName := "aws_lambda_event_source_mapping.test"
 	eventSourceResourceName := "aws_msk_cluster.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSMsk(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID, "kafka"),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -761,12 +765,12 @@ func TestAccAWSLambdaEventSourceMapping_MSK(t *testing.T) {
 func TestAccAWSLambdaEventSourceMapping_SelfManagedKafka(t *testing.T) {
 	var v lambda.EventSourceMappingConfiguration
 	resourceName := "aws_lambda_event_source_mapping.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -798,7 +802,7 @@ func TestAccAWSLambdaEventSourceMapping_SelfManagedKafka(t *testing.T) {
 func TestAccAWSLambdaEventSourceMapping_ActiveMQ(t *testing.T) {
 	var v lambda.EventSourceMappingConfiguration
 	resourceName := "aws_lambda_event_source_mapping.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -808,7 +812,7 @@ func TestAccAWSLambdaEventSourceMapping_ActiveMQ(t *testing.T) {
 			testAccPreCheckAWSMq(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID, "mq", "secretsmanager"),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -836,7 +840,7 @@ func TestAccAWSLambdaEventSourceMapping_ActiveMQ(t *testing.T) {
 func TestAccAWSLambdaEventSourceMapping_RabbitMQ(t *testing.T) {
 	var v lambda.EventSourceMappingConfiguration
 	resourceName := "aws_lambda_event_source_mapping.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -846,7 +850,7 @@ func TestAccAWSLambdaEventSourceMapping_RabbitMQ(t *testing.T) {
 			testAccPreCheckAWSMq(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID, "mq", "secretsmanager"),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -873,7 +877,7 @@ func TestAccAWSLambdaEventSourceMapping_RabbitMQ(t *testing.T) {
 
 func testAccCheckAWSLambdaEventSourceMappingIsBeingDisabled(conf *lambda.EventSourceMappingConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).lambdaconn
+		conn := acctest.Provider.Meta().(*AWSClient).lambdaconn
 		// Disable enabled state
 		err := resource.Retry(10*time.Minute, func() *resource.RetryError {
 			params := &lambda.UpdateEventSourceMappingInput{
@@ -924,7 +928,7 @@ func testAccCheckAWSLambdaEventSourceMappingIsBeingDisabled(conf *lambda.EventSo
 }
 
 func testAccCheckLambdaEventSourceMappingDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).lambdaconn
+	conn := acctest.Provider.Meta().(*AWSClient).lambdaconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lambda_event_source_mapping" {
@@ -945,7 +949,6 @@ func testAccCheckLambdaEventSourceMappingDestroy(s *terraform.State) error {
 	}
 
 	return nil
-
 }
 
 func testAccCheckAwsLambdaEventSourceMappingExists(n string, v *lambda.EventSourceMappingConfiguration) resource.TestCheckFunc {
@@ -959,7 +962,7 @@ func testAccCheckAwsLambdaEventSourceMappingExists(n string, v *lambda.EventSour
 			return fmt.Errorf("no Lambda Event Source Mapping ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).lambdaconn
+		conn := acctest.Provider.Meta().(*AWSClient).lambdaconn
 
 		eventSourceMappingConfiguration, err := finder.EventSourceMappingConfigurationByID(conn, rs.Primary.ID)
 
@@ -1780,8 +1783,9 @@ resource "aws_lambda_event_source_mapping" "test" {
 }
 `, batchSize))
 }
+
 func testAccPreCheckAWSMq(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).mqconn
+	conn := acctest.Provider.Meta().(*AWSClient).mqconn
 
 	input := &mq.ListBrokersInput{}
 
@@ -1797,7 +1801,7 @@ func testAccPreCheckAWSMq(t *testing.T) {
 }
 
 func testAccPreCheckAWSMsk(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).kafkaconn
+	conn := acctest.Provider.Meta().(*AWSClient).kafkaconn
 
 	input := &kafka.ListClustersInput{}
 
@@ -1813,7 +1817,7 @@ func testAccPreCheckAWSMsk(t *testing.T) {
 }
 
 func testAccPreCheckAWSSecretsManager(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).secretsmanagerconn
+	conn := acctest.Provider.Meta().(*AWSClient).secretsmanagerconn
 
 	input := &secretsmanager.ListSecretsInput{}
 
@@ -1827,4 +1831,3 @@ func testAccPreCheckAWSSecretsManager(t *testing.T) {
 		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
-

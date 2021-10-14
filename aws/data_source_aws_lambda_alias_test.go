@@ -11,7 +11,7 @@ import (
 )
 
 func TestAccDataSourceAWSLambdaAlias_basic(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	dataSourceName := "data.aws_lambda_alias.test"
 	resourceName := "aws_lambda_alias.test"
@@ -19,7 +19,7 @@ func TestAccDataSourceAWSLambdaAlias_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAWSLambdaAliasConfigBasic(rName),
