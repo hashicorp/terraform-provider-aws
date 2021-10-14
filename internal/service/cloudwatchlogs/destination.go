@@ -18,8 +18,8 @@ import (
 
 func ResourceDestination() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCloudWatchLogDestinationPut,
-		Update: resourceAwsCloudWatchLogDestinationPut,
+		Create: resourceDestinationPut,
+		Update: resourceDestinationPut,
 		Read:   resourceDestinationRead,
 		Delete: resourceDestinationDelete,
 
@@ -61,7 +61,7 @@ func ResourceDestination() *schema.Resource {
 	}
 }
 
-func resourceAwsCloudWatchLogDestinationPut(d *schema.ResourceData, meta interface{}) error {
+func resourceDestinationPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
 
 	name := d.Get("name").(string)

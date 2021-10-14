@@ -13,9 +13,9 @@ import (
 
 func ResourceResourcePolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCloudWatchLogResourcePolicyPut,
+		Create: resourceResourcePolicyPut,
 		Read:   resourceResourcePolicyRead,
-		Update: resourceAwsCloudWatchLogResourcePolicyPut,
+		Update: resourceResourcePolicyPut,
 		Delete: resourceResourcePolicyDelete,
 
 		Importer: &schema.ResourceImporter{
@@ -41,7 +41,7 @@ func ResourceResourcePolicy() *schema.Resource {
 	}
 }
 
-func resourceAwsCloudWatchLogResourcePolicyPut(d *schema.ResourceData, meta interface{}) error {
+func resourceResourcePolicyPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
 
 	policyName := d.Get("policy_name").(string)

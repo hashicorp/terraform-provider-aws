@@ -24,7 +24,7 @@ func ResourceQueryDefinition() *schema.Resource {
 		UpdateWithoutTimeout: resourceQueryDefinitionUpdate,
 		DeleteWithoutTimeout: resourceQueryDefinitionDelete,
 		Importer: &schema.ResourceImporter{
-			StateContext: resourceAwsCloudWatchQueryDefinitionImport,
+			StateContext: resourceQueryDefinitionImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -59,7 +59,7 @@ func ResourceQueryDefinition() *schema.Resource {
 func resourceQueryDefinitionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
 
-	input := getAwsCloudWatchQueryDefinitionInput(d)
+	input := getQueryDefinitionInput(d)
 	r, err := conn.PutQueryDefinitionWithContext(ctx, input)
 	if err != nil {
 		return diag.FromErr(err)
@@ -71,7 +71,7 @@ func resourceQueryDefinitionCreate(ctx context.Context, d *schema.ResourceData, 
 	return resourceQueryDefinitionRead(ctx, d, meta)
 }
 
-func getAwsCloudWatchQueryDefinitionInput(d *schema.ResourceData) *cloudwatchlogs.PutQueryDefinitionInput {
+func getQueryDefinitionInput(d *schema.ResourceData) *cloudwatchlogs.PutQueryDefinitionInput {
 	result := &cloudwatchlogs.PutQueryDefinitionInput{
 		Name:          aws.String(d.Get("name").(string)),
 		LogGroupNames: flex.ExpandStringList(d.Get("log_group_names").([]interface{})),
@@ -113,7 +113,7 @@ func resourceQueryDefinitionRead(ctx context.Context, d *schema.ResourceData, me
 func resourceQueryDefinitionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
 
-	_, err := conn.PutQueryDefinitionWithContext(ctx, getAwsCloudWatchQueryDefinitionInput(d))
+	_, err := conn.PutQueryDefinitionWithContext(ctx, getQueryDefinitionInput(d))
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -135,7 +135,7 @@ func resourceQueryDefinitionDelete(ctx context.Context, d *schema.ResourceData, 
 	return nil
 }
 
-func resourceAwsCloudWatchQueryDefinitionImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceQueryDefinitionImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	arn, err := arn.Parse(d.Id())
 	if err != nil {
 		return nil, fmt.Errorf("unexpected format for ID (%s), expected a CloudWatch query definition ARN", d.Id())

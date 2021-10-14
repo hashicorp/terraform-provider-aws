@@ -25,7 +25,7 @@ func ResourceSubscriptionFilter() *schema.Resource {
 		Update: resourceSubscriptionFilterUpdate,
 		Delete: resourceSubscriptionFilterDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsCloudwatchLogSubscriptionFilterImport,
+			State: resourceSubscriptionFilterImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -65,7 +65,7 @@ func ResourceSubscriptionFilter() *schema.Resource {
 
 func resourceSubscriptionFilterCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
-	params := getAwsCloudWatchLogsSubscriptionFilterInput(d)
+	params := getSubscriptionFilterInput(d)
 	log.Printf("[DEBUG] Creating SubscriptionFilter %#v", params)
 
 	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
@@ -99,7 +99,7 @@ func resourceSubscriptionFilterCreate(d *schema.ResourceData, meta interface{}) 
 func resourceSubscriptionFilterUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
 
-	params := getAwsCloudWatchLogsSubscriptionFilterInput(d)
+	params := getSubscriptionFilterInput(d)
 
 	log.Printf("[DEBUG] Update SubscriptionFilter %#v", params)
 
@@ -130,7 +130,7 @@ func resourceSubscriptionFilterUpdate(d *schema.ResourceData, meta interface{}) 
 	return resourceSubscriptionFilterRead(d, meta)
 }
 
-func getAwsCloudWatchLogsSubscriptionFilterInput(d *schema.ResourceData) cloudwatchlogs.PutSubscriptionFilterInput {
+func getSubscriptionFilterInput(d *schema.ResourceData) cloudwatchlogs.PutSubscriptionFilterInput {
 	name := d.Get("name").(string)
 	destination_arn := d.Get("destination_arn").(string)
 	filter_pattern := d.Get("filter_pattern").(string)
@@ -214,7 +214,7 @@ func resourceSubscriptionFilterDelete(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func resourceAwsCloudwatchLogSubscriptionFilterImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceSubscriptionFilterImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	idParts := strings.Split(d.Id(), "|")
 	if len(idParts) < 2 {
 		return nil, fmt.Errorf("unexpected format of ID (%q), expected <log-group-name>|<filter-name>", d.Id())

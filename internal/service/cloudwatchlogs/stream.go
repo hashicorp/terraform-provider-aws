@@ -22,7 +22,7 @@ func ResourceStream() *schema.Resource {
 		Read:   resourceStreamRead,
 		Delete: resourceStreamDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsCloudWatchLogStreamImport,
+			State: resourceStreamImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -130,7 +130,7 @@ func resourceStreamDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsCloudWatchLogStreamImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceStreamImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), ":")
 	if len(parts) != 2 {
 		return []*schema.ResourceData{}, fmt.Errorf("Wrong format of resource: %s. Please follow 'log-group-name:log-stream-name'", d.Id())

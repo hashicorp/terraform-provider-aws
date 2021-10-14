@@ -25,7 +25,7 @@ func ResourceMetricFilter() *schema.Resource {
 		Update: resourceMetricFilterUpdate,
 		Delete: resourceMetricFilterDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsCloudWatchLogMetricFilterImport,
+			State: resourceMetricFilterImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -225,7 +225,7 @@ func resourceMetricFilterDelete(d *schema.ResourceData, meta interface{}) error 
 	return nil
 }
 
-func resourceAwsCloudWatchLogMetricFilterImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceMetricFilterImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	idParts := strings.Split(d.Id(), ":")
 	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 		return nil, fmt.Errorf("Unexpected format of ID (%q), expected <log_group_name>:<name>", d.Id())
