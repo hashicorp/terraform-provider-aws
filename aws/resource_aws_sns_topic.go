@@ -19,6 +19,7 @@ import (
 	tfsns "github.com/hashicorp/terraform-provider-aws/aws/internal/service/sns"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceTopic() *schema.Resource {
@@ -59,7 +60,7 @@ func ResourceTopic() *schema.Resource {
 				Optional:         true,
 				Computed:         true,
 				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
+				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
@@ -70,7 +71,7 @@ func ResourceTopic() *schema.Resource {
 				Optional:         true,
 				ForceNew:         false,
 				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: suppressEquivalentJsonDiffs,
+				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
@@ -79,7 +80,7 @@ func ResourceTopic() *schema.Resource {
 			"application_success_feedback_role_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"application_success_feedback_sample_rate": {
 				Type:         schema.TypeInt,
@@ -89,12 +90,12 @@ func ResourceTopic() *schema.Resource {
 			"application_failure_feedback_role_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"http_success_feedback_role_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"http_success_feedback_sample_rate": {
 				Type:         schema.TypeInt,
@@ -104,7 +105,7 @@ func ResourceTopic() *schema.Resource {
 			"http_failure_feedback_role_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"kms_master_key_id": {
 				Type:     schema.TypeString,
@@ -124,7 +125,7 @@ func ResourceTopic() *schema.Resource {
 			"firehose_success_feedback_role_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"firehose_success_feedback_sample_rate": {
 				Type:         schema.TypeInt,
@@ -134,12 +135,12 @@ func ResourceTopic() *schema.Resource {
 			"firehose_failure_feedback_role_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"lambda_success_feedback_role_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"lambda_success_feedback_sample_rate": {
 				Type:         schema.TypeInt,
@@ -149,12 +150,12 @@ func ResourceTopic() *schema.Resource {
 			"lambda_failure_feedback_role_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"sqs_success_feedback_role_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"sqs_success_feedback_sample_rate": {
 				Type:         schema.TypeInt,
@@ -164,7 +165,7 @@ func ResourceTopic() *schema.Resource {
 			"sqs_failure_feedback_role_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -699,7 +700,7 @@ func updateAwsSnsTopicAttribute(topicArn, name string, value interface{}, conn *
 	// Retry the update in the event of an eventually consistent style of
 	// error, where say an IAM resource is successfully created but not
 	// actually available. See https://github.com/hashicorp/terraform/issues/3660
-	_, err := retryOnAwsCode(sns.ErrCodeInvalidParameterException, func() (interface{}, error) {
+	_, err := verify.RetryOnAWSCode(sns.ErrCodeInvalidParameterException, func() (interface{}, error) {
 		return conn.SetTopicAttributes(&req)
 	})
 

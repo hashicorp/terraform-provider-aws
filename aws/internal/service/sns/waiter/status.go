@@ -5,6 +5,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sns/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func SubscriptionPendingConfirmation(conn *sns.SNS, id string) resource.StateRefreshFunc {
