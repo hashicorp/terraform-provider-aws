@@ -12,6 +12,7 @@ import (
 	tfglue "github.com/hashicorp/terraform-provider-aws/aws/internal/service/glue"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/glue/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourcePartition() *schema.Resource {

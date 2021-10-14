@@ -9,11 +9,12 @@ import (
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	tfglue "github.com/hashicorp/terraform-provider-aws/aws/internal/service/glue"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/glue/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/glue/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceSchema() *schema.Resource {
@@ -26,7 +27,7 @@ func ResourceSchema() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -87,8 +88,8 @@ func ResourceSchema() *schema.Resource {
 					validation.StringMatch(regexp.MustCompile(`[a-zA-Z0-9-_$#]+$`), ""),
 				),
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -96,7 +97,7 @@ func ResourceSchema() *schema.Resource {
 func resourceSchemaCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &glue.CreateSchemaInput{
 		SchemaName:       aws.String(d.Get("schema_name").(string)),
@@ -165,7 +166,7 @@ func resourceSchemaRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("registry_name", output.RegistryName)
 	d.Set("schema_checkpoint", output.SchemaCheckpoint)
 
-	tags, err := keyvaluetags.GlueListTags(conn, arn)
+	tags, err := tftags.GlueListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Glue Schema (%s): %w", arn, err)
@@ -228,7 +229,7 @@ func resourceSchemaUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := keyvaluetags.GlueUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := tftags.GlueUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)
 		}
 	}

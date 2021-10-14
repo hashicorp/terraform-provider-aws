@@ -9,10 +9,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/glue/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceConnection() *schema.Resource {
@@ -78,7 +79,7 @@ func DataSourceConnection() *schema.Resource {
 					},
 				},
 			},
-			"tags": tagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -128,7 +129,7 @@ func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta 
 		return diag.Errorf("error setting match_criteria: %s", err)
 	}
 
-	tags, err := keyvaluetags.GlueListTags(conn, connectionArn)
+	tags, err := tftags.GlueListTags(conn, connectionArn)
 
 	if err != nil {
 		return diag.Errorf("error listing tags for Glue Connection (%s): %s", connectionArn, err)
