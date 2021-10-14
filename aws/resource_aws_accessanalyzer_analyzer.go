@@ -24,12 +24,12 @@ const (
 	accessAnalyzerOrganizationCreationTimeout = 10 * time.Minute
 )
 
-func resourceAwsAccessAnalyzerAnalyzer() *schema.Resource {
+func ResourceAnalyzer() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAccessAnalyzerAnalyzerCreate,
-		Read:   resourceAwsAccessAnalyzerAnalyzerRead,
-		Update: resourceAwsAccessAnalyzerAnalyzerUpdate,
-		Delete: resourceAwsAccessAnalyzerAnalyzerDelete,
+		Create: resourceAnalyzerCreate,
+		Read:   resourceAnalyzerRead,
+		Update: resourceAnalyzerUpdate,
+		Delete: resourceAnalyzerDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -66,7 +66,7 @@ func resourceAwsAccessAnalyzerAnalyzer() *schema.Resource {
 	}
 }
 
-func resourceAwsAccessAnalyzerAnalyzerCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAnalyzerCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AccessAnalyzerConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -104,10 +104,10 @@ func resourceAwsAccessAnalyzerAnalyzerCreate(d *schema.ResourceData, meta interf
 
 	d.SetId(analyzerName)
 
-	return resourceAwsAccessAnalyzerAnalyzerRead(d, meta)
+	return resourceAnalyzerRead(d, meta)
 }
 
-func resourceAwsAccessAnalyzerAnalyzerRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAnalyzerRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AccessAnalyzerConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -151,7 +151,7 @@ func resourceAwsAccessAnalyzerAnalyzerRead(d *schema.ResourceData, meta interfac
 	return nil
 }
 
-func resourceAwsAccessAnalyzerAnalyzerUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAnalyzerUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AccessAnalyzerConn
 
 	if d.HasChange("tags_all") {
@@ -161,10 +161,10 @@ func resourceAwsAccessAnalyzerAnalyzerUpdate(d *schema.ResourceData, meta interf
 		}
 	}
 
-	return resourceAwsAccessAnalyzerAnalyzerRead(d, meta)
+	return resourceAnalyzerRead(d, meta)
 }
 
-func resourceAwsAccessAnalyzerAnalyzerDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAnalyzerDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AccessAnalyzerConn
 
 	input := &accessanalyzer.DeleteAnalyzerInput{
