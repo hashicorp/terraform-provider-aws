@@ -94,10 +94,10 @@ func ResourceTaskDefinition() *schema.Resource {
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					networkMode, ok := d.GetOk("network_mode")
 					isAWSVPC := ok && networkMode.(string) == ecs.NetworkModeAwsvpc
-					equal, _ := EcsContainerDefinitionsAreEquivalent(old, new, isAWSVPC)
+					equal, _ := ContainerDefinitionsAreEquivalent(old, new, isAWSVPC)
 					return equal
 				},
-				ValidateFunc: validateAwsEcsTaskDefinitionContainerDefinitions,
+				ValidateFunc: ValidTaskDefinitionContainerDefinitions,
 			},
 			"ephemeral_storage": {
 				Type:     schema.TypeList,
@@ -405,7 +405,7 @@ func ResourceTaskDefinition() *schema.Resource {
 	}
 }
 
-func validateAwsEcsTaskDefinitionContainerDefinitions(v interface{}, k string) (ws []string, errors []error) {
+func ValidTaskDefinitionContainerDefinitions(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	_, err := expandEcsContainerDefinitions(value)
 	if err != nil {

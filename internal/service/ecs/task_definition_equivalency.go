@@ -13,9 +13,9 @@ import (
 	"github.com/mitchellh/copystructure"
 )
 
-// EcsContainerDefinitionsAreEquivalent determines equality between two ECS container definition JSON strings
+// ContainerDefinitionsAreEquivalent determines equality between two ECS container definition JSON strings
 // Note: This function will be moved out of the aws package in the future.
-func EcsContainerDefinitionsAreEquivalent(def1, def2 string, isAWSVPC bool) (bool, error) {
+func ContainerDefinitionsAreEquivalent(def1, def2 string, isAWSVPC bool) (bool, error) {
 	var obj1 containerDefinitions
 	err := json.Unmarshal([]byte(def1), &obj1)
 	if err != nil {

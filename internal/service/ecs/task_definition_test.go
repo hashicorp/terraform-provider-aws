@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -808,7 +809,7 @@ func TestAccAWSEcsTaskDefinition_disappears(t *testing.T) {
 				Config: testAccAWSEcsTaskDefinition(tdName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsTaskDefinitionExists(resourceName, &def),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceTaskDefinition(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfecs.ResourceTaskDefinition(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -1054,7 +1055,7 @@ func TestValidateAwsEcsTaskDefinitionContainerDefinitions(t *testing.T) {
 		testValidateAwsEcsTaskDefinitionValidContainerDefinitions,
 	}
 	for _, v := range validDefinitions {
-		_, errors := validateAwsEcsTaskDefinitionContainerDefinitions(v, "container_definitions")
+		_, errors := tfecs.ValidTaskDefinitionContainerDefinitions(v, "container_definitions")
 		if len(errors) != 0 {
 			t.Fatalf("%q should be a valid AWS ECS Task Definition Container Definitions: %q", v, errors)
 		}
@@ -1064,7 +1065,7 @@ func TestValidateAwsEcsTaskDefinitionContainerDefinitions(t *testing.T) {
 		testValidateAwsEcsTaskDefinitionInvalidCommandContainerDefinitions,
 	}
 	for _, v := range invalidDefinitions {
-		_, errors := validateAwsEcsTaskDefinitionContainerDefinitions(v, "container_definitions")
+		_, errors := tfecs.ValidTaskDefinitionContainerDefinitions(v, "container_definitions")
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid AWS ECS Task Definition Container Definitions", v)
 		}
