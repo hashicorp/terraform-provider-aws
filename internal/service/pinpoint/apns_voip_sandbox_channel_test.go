@@ -90,7 +90,7 @@ func testAccAPNSVoIPSandboxChannelTokenConfigurationFromEnv(t *testing.T) *testA
 	return &conf
 }
 
-func TestAccAWSPinpointAPNSVoipSandboxChannel_basicCertificate(t *testing.T) {
+func TestAccPinpointAPNSVoIPSandboxChannel_basicCertificate(t *testing.T) {
 	var channel pinpoint.APNSVoipSandboxChannelResponse
 	resourceName := "aws_pinpoint_apns_voip_sandbox_channel.test_channel"
 
@@ -124,7 +124,7 @@ func TestAccAWSPinpointAPNSVoipSandboxChannel_basicCertificate(t *testing.T) {
 	})
 }
 
-func TestAccAWSPinpointAPNSVoipSandboxChannel_basicToken(t *testing.T) {
+func TestAccPinpointAPNSVoIPSandboxChannel_basicToken(t *testing.T) {
 	var channel pinpoint.APNSVoipSandboxChannelResponse
 	resourceName := "aws_pinpoint_apns_voip_sandbox_channel.test_channel"
 

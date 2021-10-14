@@ -20,7 +20,7 @@ import (
  GCM_API_KEY - Google Cloud Messaging Api Key
 **/
 
-func TestAccAWSPinpointGCMChannel_basic(t *testing.T) {
+func TestAccPinpointGCMChannel_basic(t *testing.T) {
 	var channel pinpoint.GCMChannelResponse
 	resourceName := "aws_pinpoint_gcm_channel.test_gcm_channel"
 

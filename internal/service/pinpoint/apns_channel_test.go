@@ -90,7 +90,7 @@ func testAccAPNSChannelTokenConfigurationFromEnv(t *testing.T) *testAccAWSPinpoi
 	return &conf
 }
 
-func TestAccAWSPinpointAPNSChannel_basicCertificate(t *testing.T) {
+func TestAccPinpointAPNSChannel_basicCertificate(t *testing.T) {
 	var channel pinpoint.APNSChannelResponse
 	resourceName := "aws_pinpoint_apns_channel.test_apns_channel"
 
@@ -124,7 +124,7 @@ func TestAccAWSPinpointAPNSChannel_basicCertificate(t *testing.T) {
 	})
 }
 
-func TestAccAWSPinpointAPNSChannel_basicToken(t *testing.T) {
+func TestAccPinpointAPNSChannel_basicToken(t *testing.T) {
 	var channel pinpoint.APNSChannelResponse
 	resourceName := "aws_pinpoint_apns_channel.test_apns_channel"
 

@@ -90,7 +90,7 @@ func testAccAPNSVoIPChannelTokenConfigurationFromEnv(t *testing.T) *testAccAWSPi
 	return &conf
 }
 
-func TestAccAWSPinpointAPNSVoipChannel_basicCertificate(t *testing.T) {
+func TestAccPinpointAPNSVoIPChannel_basicCertificate(t *testing.T) {
 	var channel pinpoint.APNSVoipChannelResponse
 	resourceName := "aws_pinpoint_apns_voip_channel.test_channel"
 
@@ -124,7 +124,7 @@ func TestAccAWSPinpointAPNSVoipChannel_basicCertificate(t *testing.T) {
 	})
 }
 
-func TestAccAWSPinpointAPNSVoipChannel_basicToken(t *testing.T) {
+func TestAccPinpointAPNSVoIPChannel_basicToken(t *testing.T) {
 	var channel pinpoint.APNSVoipChannelResponse
 	resourceName := "aws_pinpoint_apns_voip_channel.test_channel"
 

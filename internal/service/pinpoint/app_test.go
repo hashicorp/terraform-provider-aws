@@ -69,7 +69,7 @@ func sweepApps(region string) error {
 	return nil
 }
 
-func TestAccAWSPinpointApp_basic(t *testing.T) {
+func TestAccPinpointApp_basic(t *testing.T) {
 	var application pinpoint.ApplicationResponse
 	resourceName := "aws_pinpoint_app.test"
 
@@ -94,7 +94,7 @@ func TestAccAWSPinpointApp_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSPinpointApp_CampaignHookLambda(t *testing.T) {
+func TestAccPinpointApp_campaignHookLambda(t *testing.T) {
 	var application pinpoint.ApplicationResponse
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_pinpoint_app.test"
@@ -122,7 +122,7 @@ func TestAccAWSPinpointApp_CampaignHookLambda(t *testing.T) {
 	})
 }
 
-func TestAccAWSPinpointApp_Limits(t *testing.T) {
+func TestAccPinpointApp_limits(t *testing.T) {
 	var application pinpoint.ApplicationResponse
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_pinpoint_app.test"
@@ -150,7 +150,7 @@ func TestAccAWSPinpointApp_Limits(t *testing.T) {
 	})
 }
 
-func TestAccAWSPinpointApp_QuietTime(t *testing.T) {
+func TestAccPinpointApp_quietTime(t *testing.T) {
 	var application pinpoint.ApplicationResponse
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_pinpoint_app.test"
@@ -178,7 +178,7 @@ func TestAccAWSPinpointApp_QuietTime(t *testing.T) {
 	})
 }
 
-func TestAccAWSPinpointApp_Tags(t *testing.T) {
+func TestAccPinpointApp_tags(t *testing.T) {
 	var application pinpoint.ApplicationResponse
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_pinpoint_app.test"

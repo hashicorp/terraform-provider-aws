@@ -14,7 +14,7 @@ import (
 	tfpinpoint "github.com/hashicorp/terraform-provider-aws/internal/service/pinpoint"
 )
 
-func TestAccAWSPinpointSMSChannel_basic(t *testing.T) {
+func TestAccPinpointSMSChannel_basic(t *testing.T) {
 	var channel pinpoint.SMSChannelResponse
 	resourceName := "aws_pinpoint_sms_channel.test"
 
@@ -56,7 +56,7 @@ func TestAccAWSPinpointSMSChannel_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSPinpointSMSChannel_full(t *testing.T) {
+func TestAccPinpointSMSChannel_full(t *testing.T) {
 	var channel pinpoint.SMSChannelResponse
 	resourceName := "aws_pinpoint_sms_channel.test"
 	senderId := "1234"
@@ -109,7 +109,7 @@ func TestAccAWSPinpointSMSChannel_full(t *testing.T) {
 	})
 }
 
-func TestAccAWSPinpointSMSChannel_disappears(t *testing.T) {
+func TestAccPinpointSMSChannel_disappears(t *testing.T) {
 	var channel pinpoint.SMSChannelResponse
 	resourceName := "aws_pinpoint_sms_channel.test"
 
