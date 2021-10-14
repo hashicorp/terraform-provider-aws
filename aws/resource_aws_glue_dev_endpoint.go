@@ -416,14 +416,14 @@ func resourceAwsDevEndpointUpdate(d *schema.ResourceData, meta interface{}) erro
 		oldRaw, newRaw := d.GetChange("arguments")
 		old := oldRaw.(map[string]interface{})
 		new := newRaw.(map[string]interface{})
-		create, remove, _ := diffStringMaps(old, new)
+		add, remove, _ := diffStringMaps(old, new)
 
 		removeKeys := make([]*string, 0)
 		for k := range remove {
 			removeKeys = append(removeKeys, &k)
 		}
 
-		input.AddArguments = create
+		input.AddArguments = add
 		input.DeleteArguments = removeKeys
 
 		hasChanged = true
@@ -462,10 +462,10 @@ func resourceAwsDevEndpointUpdate(d *schema.ResourceData, meta interface{}) erro
 		os := o.(*schema.Set)
 		ns := n.(*schema.Set)
 		remove := os.Difference(ns)
-		create := ns.Difference(os)
+		add := ns.Difference(os)
 
-		input.AddPublicKeys = expandStringSet(create)
-		log.Printf("[DEBUG] expectedCreate public keys: %v", create)
+		input.AddPublicKeys = expandStringSet(add)
+		log.Printf("[DEBUG] expectedCreate public keys: %v", add)
 
 		input.DeletePublicKeys = expandStringSet(remove)
 		log.Printf("[DEBUG] remove public keys: %v", remove)
