@@ -170,7 +170,7 @@ func dataSourceCertificateAuthorityRead(d *schema.ResourceData, meta interface{}
 		d.Set("certificate_signing_request", getCertificateAuthorityCsrOutput.Csr)
 	}
 
-	tags, err := tftags.AcmpcaListTags(conn, certificateAuthorityArn)
+	tags, err := ListTags(conn, certificateAuthorityArn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for ACM PCA Certificate Authority (%s): %w", certificateAuthorityArn, err)
