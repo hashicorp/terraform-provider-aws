@@ -254,7 +254,7 @@ func resourceBudgetCreate(d *schema.ResourceData, meta interface{}) error {
 	notificationsRaw := d.Get("notification").(*schema.Set).List()
 	notifications, subscribers := expandBudgetNotificationsUnmarshal(notificationsRaw)
 
-	err = resourceAwsBudgetsBudgetNotificationsCreate(notifications, subscribers, *budget.BudgetName, accountID, meta)
+	err = resourceBudgetNotificationsCreate(notifications, subscribers, *budget.BudgetName, accountID, meta)
 
 	if err != nil {
 		return fmt.Errorf("error creating Budget (%s) Notifications: %s", d.Id(), err)
@@ -405,7 +405,7 @@ func resourceBudgetUpdate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("update budget failed: %v", err)
 	}
 
-	err = resourceAwsBudgetsBudgetNotificationsUpdate(d, meta)
+	err = resourceBudgetNotificationsUpdate(d, meta)
 
 	if err != nil {
 		return fmt.Errorf("update budget notification failed: %v", err)
@@ -440,7 +440,7 @@ func resourceBudgetDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsBudgetsBudgetNotificationsCreate(notifications []*budgets.Notification, subscribers [][]*budgets.Subscriber, budgetName string, accountID string, meta interface{}) error {
+func resourceBudgetNotificationsCreate(notifications []*budgets.Notification, subscribers [][]*budgets.Subscriber, budgetName string, accountID string, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BudgetsConn
 
 	for i, notification := range notifications {
@@ -463,7 +463,7 @@ func resourceAwsBudgetsBudgetNotificationsCreate(notifications []*budgets.Notifi
 	return nil
 }
 
-func resourceAwsBudgetsBudgetNotificationsUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceBudgetNotificationsUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BudgetsConn
 
 	accountID, budgetName, err := BudgetParseResourceID(d.Id())
@@ -494,7 +494,7 @@ func resourceAwsBudgetsBudgetNotificationsUpdate(d *schema.ResourceData, meta in
 			}
 		}
 
-		err = resourceAwsBudgetsBudgetNotificationsCreate(addNotifications, addSubscribers, budgetName, accountID, meta)
+		err = resourceBudgetNotificationsCreate(addNotifications, addSubscribers, budgetName, accountID, meta)
 
 		if err != nil {
 			return fmt.Errorf("error creating Budget (%s) Notifications: %s", d.Id(), err)

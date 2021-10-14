@@ -217,14 +217,14 @@ func resourceBudgetActionCreate(d *schema.ResourceData, meta interface{}) error 
 
 	input := &budgets.CreateBudgetActionInput{
 		AccountId:        aws.String(accountID),
-		ActionThreshold:  expandAwsBudgetsBudgetActionActionThreshold(d.Get("action_threshold").([]interface{})),
+		ActionThreshold:  expandBudgetActionActionThreshold(d.Get("action_threshold").([]interface{})),
 		ActionType:       aws.String(d.Get("action_type").(string)),
 		ApprovalModel:    aws.String(d.Get("approval_model").(string)),
 		BudgetName:       aws.String(d.Get("budget_name").(string)),
-		Definition:       expandAwsBudgetsBudgetActionActionDefinition(d.Get("definition").([]interface{})),
+		Definition:       expandBudgetActionActionDefinition(d.Get("definition").([]interface{})),
 		ExecutionRoleArn: aws.String(d.Get("execution_role_arn").(string)),
 		NotificationType: aws.String(d.Get("notification_type").(string)),
-		Subscribers:      expandAwsBudgetsBudgetActionSubscriber(d.Get("subscriber").(*schema.Set)),
+		Subscribers:      expandBudgetActionSubscriber(d.Get("subscriber").(*schema.Set)),
 	}
 
 	log.Printf("[DEBUG] Creating Budget Action: %s", input)
@@ -273,7 +273,7 @@ func resourceBudgetActionRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("account_id", accountID)
 	d.Set("action_id", actionID)
 
-	if err := d.Set("action_threshold", flattenAwsBudgetsBudgetActionActionThreshold(output.ActionThreshold)); err != nil {
+	if err := d.Set("action_threshold", flattenBudgetActionActionThreshold(output.ActionThreshold)); err != nil {
 		return fmt.Errorf("error setting action_threshold: %w", err)
 	}
 
@@ -281,7 +281,7 @@ func resourceBudgetActionRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("approval_model", output.ApprovalModel)
 	d.Set("budget_name", budgetName)
 
-	if err := d.Set("definition", flattenAwsBudgetsBudgetActionDefinition(output.Definition)); err != nil {
+	if err := d.Set("definition", flattenBudgetActionDefinition(output.Definition)); err != nil {
 		return fmt.Errorf("error setting definition: %w", err)
 	}
 
@@ -289,7 +289,7 @@ func resourceBudgetActionRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("notification_type", output.NotificationType)
 	d.Set("status", output.Status)
 
-	if err := d.Set("subscriber", flattenAwsBudgetsBudgetActionSubscriber(output.Subscribers)); err != nil {
+	if err := d.Set("subscriber", flattenBudgetActionSubscriber(output.Subscribers)); err != nil {
 		return fmt.Errorf("error setting subscriber: %w", err)
 	}
 
@@ -320,7 +320,7 @@ func resourceBudgetActionUpdate(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if d.HasChange("action_threshold") {
-		input.ActionThreshold = expandAwsBudgetsBudgetActionActionThreshold(d.Get("action_threshold").([]interface{}))
+		input.ActionThreshold = expandBudgetActionActionThreshold(d.Get("action_threshold").([]interface{}))
 	}
 
 	if d.HasChange("approval_model") {
@@ -328,7 +328,7 @@ func resourceBudgetActionUpdate(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if d.HasChange("definition") {
-		input.Definition = expandAwsBudgetsBudgetActionActionDefinition(d.Get("definition").([]interface{}))
+		input.Definition = expandBudgetActionActionDefinition(d.Get("definition").([]interface{}))
 	}
 
 	if d.HasChange("execution_role_arn") {
@@ -340,7 +340,7 @@ func resourceBudgetActionUpdate(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if d.HasChange("subscriber") {
-		input.Subscribers = expandAwsBudgetsBudgetActionSubscriber(d.Get("subscriber").(*schema.Set))
+		input.Subscribers = expandBudgetActionSubscriber(d.Get("subscriber").(*schema.Set))
 	}
 
 	log.Printf("[DEBUG] Updating Budget Action: %s", input)
@@ -384,7 +384,7 @@ func resourceBudgetActionDelete(d *schema.ResourceData, meta interface{}) error 
 	return nil
 }
 
-func expandAwsBudgetsBudgetActionActionThreshold(l []interface{}) *budgets.ActionThreshold {
+func expandBudgetActionActionThreshold(l []interface{}) *budgets.ActionThreshold {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -404,7 +404,7 @@ func expandAwsBudgetsBudgetActionActionThreshold(l []interface{}) *budgets.Actio
 	return config
 }
 
-func expandAwsBudgetsBudgetActionSubscriber(l *schema.Set) []*budgets.Subscriber {
+func expandBudgetActionSubscriber(l *schema.Set) []*budgets.Subscriber {
 	if l.Len() == 0 {
 		return []*budgets.Subscriber{}
 	}
@@ -429,7 +429,7 @@ func expandAwsBudgetsBudgetActionSubscriber(l *schema.Set) []*budgets.Subscriber
 	return items
 }
 
-func expandAwsBudgetsBudgetActionActionDefinition(l []interface{}) *budgets.Definition {
+func expandBudgetActionActionDefinition(l []interface{}) *budgets.Definition {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -439,21 +439,21 @@ func expandAwsBudgetsBudgetActionActionDefinition(l []interface{}) *budgets.Defi
 	config := &budgets.Definition{}
 
 	if v, ok := m["ssm_action_definition"].([]interface{}); ok && len(v) > 0 {
-		config.SsmActionDefinition = expandAwsBudgetsBudgetActionActionSsmActionDefinition(v)
+		config.SsmActionDefinition = expandBudgetActionActionSSMActionDefinition(v)
 	}
 
 	if v, ok := m["scp_action_definition"].([]interface{}); ok && len(v) > 0 {
-		config.ScpActionDefinition = expandAwsBudgetsBudgetActionActionScpActionDefinition(v)
+		config.ScpActionDefinition = expandBudgetActionActionScpActionDefinition(v)
 	}
 
 	if v, ok := m["iam_action_definition"].([]interface{}); ok && len(v) > 0 {
-		config.IamActionDefinition = expandAwsBudgetsBudgetActionActionIamActionDefinition(v)
+		config.IamActionDefinition = expandBudgetActionActionIAMActionDefinition(v)
 	}
 
 	return config
 }
 
-func expandAwsBudgetsBudgetActionActionScpActionDefinition(l []interface{}) *budgets.ScpActionDefinition {
+func expandBudgetActionActionScpActionDefinition(l []interface{}) *budgets.ScpActionDefinition {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -473,7 +473,7 @@ func expandAwsBudgetsBudgetActionActionScpActionDefinition(l []interface{}) *bud
 	return config
 }
 
-func expandAwsBudgetsBudgetActionActionSsmActionDefinition(l []interface{}) *budgets.SsmActionDefinition {
+func expandBudgetActionActionSSMActionDefinition(l []interface{}) *budgets.SsmActionDefinition {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -497,7 +497,7 @@ func expandAwsBudgetsBudgetActionActionSsmActionDefinition(l []interface{}) *bud
 	return config
 }
 
-func expandAwsBudgetsBudgetActionActionIamActionDefinition(l []interface{}) *budgets.IamActionDefinition {
+func expandBudgetActionActionIAMActionDefinition(l []interface{}) *budgets.IamActionDefinition {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -525,7 +525,7 @@ func expandAwsBudgetsBudgetActionActionIamActionDefinition(l []interface{}) *bud
 	return config
 }
 
-func flattenAwsBudgetsBudgetActionSubscriber(configured []*budgets.Subscriber) []map[string]interface{} {
+func flattenBudgetActionSubscriber(configured []*budgets.Subscriber) []map[string]interface{} {
 	dataResources := make([]map[string]interface{}, 0, len(configured))
 
 	for _, raw := range configured {
@@ -539,7 +539,7 @@ func flattenAwsBudgetsBudgetActionSubscriber(configured []*budgets.Subscriber) [
 	return dataResources
 }
 
-func flattenAwsBudgetsBudgetActionActionThreshold(lt *budgets.ActionThreshold) []map[string]interface{} {
+func flattenBudgetActionActionThreshold(lt *budgets.ActionThreshold) []map[string]interface{} {
 	if lt == nil {
 		return []map[string]interface{}{}
 	}
@@ -552,7 +552,7 @@ func flattenAwsBudgetsBudgetActionActionThreshold(lt *budgets.ActionThreshold) [
 	return []map[string]interface{}{attrs}
 }
 
-func flattenAwsBudgetsBudgetActionIamActionDefinition(lt *budgets.IamActionDefinition) []map[string]interface{} {
+func flattenBudgetActionIAMActionDefinition(lt *budgets.IamActionDefinition) []map[string]interface{} {
 	if lt == nil {
 		return []map[string]interface{}{}
 	}
@@ -576,7 +576,7 @@ func flattenAwsBudgetsBudgetActionIamActionDefinition(lt *budgets.IamActionDefin
 	return []map[string]interface{}{attrs}
 }
 
-func flattenAwsBudgetsBudgetActionScpActionDefinition(lt *budgets.ScpActionDefinition) []map[string]interface{} {
+func flattenBudgetActionScpActionDefinition(lt *budgets.ScpActionDefinition) []map[string]interface{} {
 	if lt == nil {
 		return []map[string]interface{}{}
 	}
@@ -592,7 +592,7 @@ func flattenAwsBudgetsBudgetActionScpActionDefinition(lt *budgets.ScpActionDefin
 	return []map[string]interface{}{attrs}
 }
 
-func flattenAwsBudgetsBudgetActionSsmActionDefinition(lt *budgets.SsmActionDefinition) []map[string]interface{} {
+func flattenBudgetActionSSMActionDefinition(lt *budgets.SsmActionDefinition) []map[string]interface{} {
 	if lt == nil {
 		return []map[string]interface{}{}
 	}
@@ -606,7 +606,7 @@ func flattenAwsBudgetsBudgetActionSsmActionDefinition(lt *budgets.SsmActionDefin
 	return []map[string]interface{}{attrs}
 }
 
-func flattenAwsBudgetsBudgetActionDefinition(lt *budgets.Definition) []map[string]interface{} {
+func flattenBudgetActionDefinition(lt *budgets.Definition) []map[string]interface{} {
 	if lt == nil {
 		return []map[string]interface{}{}
 	}
@@ -614,15 +614,15 @@ func flattenAwsBudgetsBudgetActionDefinition(lt *budgets.Definition) []map[strin
 	attrs := map[string]interface{}{}
 
 	if lt.SsmActionDefinition != nil {
-		attrs["ssm_action_definition"] = flattenAwsBudgetsBudgetActionSsmActionDefinition(lt.SsmActionDefinition)
+		attrs["ssm_action_definition"] = flattenBudgetActionSSMActionDefinition(lt.SsmActionDefinition)
 	}
 
 	if lt.IamActionDefinition != nil {
-		attrs["iam_action_definition"] = flattenAwsBudgetsBudgetActionIamActionDefinition(lt.IamActionDefinition)
+		attrs["iam_action_definition"] = flattenBudgetActionIAMActionDefinition(lt.IamActionDefinition)
 	}
 
 	if lt.ScpActionDefinition != nil {
-		attrs["scp_action_definition"] = flattenAwsBudgetsBudgetActionScpActionDefinition(lt.ScpActionDefinition)
+		attrs["scp_action_definition"] = flattenBudgetActionScpActionDefinition(lt.ScpActionDefinition)
 	}
 
 	return []map[string]interface{}{attrs}
