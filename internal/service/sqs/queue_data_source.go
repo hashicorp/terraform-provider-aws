@@ -58,7 +58,7 @@ func dataSourceQueueRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("url", queueURL)
 	d.SetId(queueURL)
 
-	tags, err := tftags.SqsListTags(conn, queueURL)
+	tags, err := ListTags(conn, queueURL)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for SQS Queue (%s): %w", queueURL, err)

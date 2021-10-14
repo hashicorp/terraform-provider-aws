@@ -212,7 +212,7 @@ func resourceQueueCreate(d *schema.ResourceData, meta interface{}) error {
 
 	// Tag-on-create is currently only supported in AWS Commercial
 	if len(tags) > 0 && meta.(*conns.AWSClient).Partition == endpoints.AwsPartitionID {
-		input.Tags = tags.IgnoreAws().SqsTags()
+		input.Tags = Tags(tags.IgnoreAws())
 	}
 
 	log.Printf("[DEBUG] Creating SQS Queue: %s", input)
@@ -251,7 +251,7 @@ func resourceQueueCreate(d *schema.ResourceData, meta interface{}) error {
 
 	// Tag-on-create is currently only supported in AWS Commercial
 	if len(tags) > 0 && meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID {
-		if err := tftags.SqsUpdateTags(conn, d.Id(), nil, tags); err != nil {
+		if err := UpdateTags(conn, d.Id(), nil, tags); err != nil {
 			return fmt.Errorf("error updating SQS Queue (%s) tags: %w", d.Id(), err)
 		}
 	}
@@ -301,7 +301,7 @@ func resourceQueueRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("url", d.Id())
 
-	tags, err := tftags.SqsListTags(conn, d.Id())
+	tags, err := ListTags(conn, d.Id())
 
 	if err != nil {
 		// Non-standard partitions (e.g. US Gov) and some local development
@@ -357,7 +357,7 @@ func resourceQueueUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.SqsUpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating SQS Queue (%s) tags: %w", d.Id(), err)
 		}
 	}
