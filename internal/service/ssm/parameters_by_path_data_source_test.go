@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSSsmParametersByPathDataSource_basic(t *testing.T) {
+func TestAccSSMParametersByPathDataSource_basic(t *testing.T) {
 	resourceName := "data.aws_ssm_parameters_by_path.test"
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

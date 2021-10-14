@@ -71,7 +71,7 @@ func sweepResourceDataSyncs(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func TestAccAWSSsmResourceDataSync_basic(t *testing.T) {
+func TestAccSSMResourceDataSync_basic(t *testing.T) {
 	resourceName := "aws_ssm_resource_data_sync.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -95,7 +95,7 @@ func TestAccAWSSsmResourceDataSync_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSsmResourceDataSync_update(t *testing.T) {
+func TestAccSSMResourceDataSync_update(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 	resourceName := "aws_ssm_resource_data_sync.test"
 

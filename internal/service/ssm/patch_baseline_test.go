@@ -15,7 +15,7 @@ import (
 	tfssm "github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
 )
 
-func TestAccAWSSSMPatchBaseline_basic(t *testing.T) {
+func TestAccSSMPatchBaseline_basic(t *testing.T) {
 	var before, after ssm.PatchBaselineIdentity
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_ssm_patch_baseline.test"
@@ -68,7 +68,7 @@ func TestAccAWSSSMPatchBaseline_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMPatchBaseline_tags(t *testing.T) {
+func TestAccSSMPatchBaseline_tags(t *testing.T) {
 	var patch ssm.PatchBaselineIdentity
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_ssm_patch_baseline.test"
@@ -112,7 +112,7 @@ func TestAccAWSSSMPatchBaseline_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMPatchBaseline_disappears(t *testing.T) {
+func TestAccSSMPatchBaseline_disappears(t *testing.T) {
 	var identity ssm.PatchBaselineIdentity
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_ssm_patch_baseline.test"
@@ -135,7 +135,7 @@ func TestAccAWSSSMPatchBaseline_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMPatchBaseline_OperatingSystem(t *testing.T) {
+func TestAccSSMPatchBaseline_operatingSystem(t *testing.T) {
 	var before, after ssm.PatchBaselineIdentity
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_ssm_patch_baseline.test"
@@ -178,7 +178,7 @@ func TestAccAWSSSMPatchBaseline_OperatingSystem(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMPatchBaseline_ApproveUntilDateParam(t *testing.T) {
+func TestAccSSMPatchBaseline_approveUntilDateParam(t *testing.T) {
 	var before, after ssm.PatchBaselineIdentity
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_ssm_patch_baseline.test"
@@ -227,7 +227,7 @@ func TestAccAWSSSMPatchBaseline_ApproveUntilDateParam(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMPatchBaseline_Sources(t *testing.T) {
+func TestAccSSMPatchBaseline_sources(t *testing.T) {
 	var before, after ssm.PatchBaselineIdentity
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_ssm_patch_baseline.test"
@@ -279,7 +279,7 @@ func TestAccAWSSSMPatchBaseline_Sources(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMPatchBaseline_ApprovedPatchesNonSec(t *testing.T) {
+func TestAccSSMPatchBaseline_approvedPatchesNonSec(t *testing.T) {
 	var ssmPatch ssm.PatchBaselineIdentity
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_ssm_patch_baseline.test"
@@ -306,7 +306,7 @@ func TestAccAWSSSMPatchBaseline_ApprovedPatchesNonSec(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMPatchBaseline_RejectPatchesAction(t *testing.T) {
+func TestAccSSMPatchBaseline_rejectPatchesAction(t *testing.T) {
 	var ssmPatch ssm.PatchBaselineIdentity
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_ssm_patch_baseline.test"

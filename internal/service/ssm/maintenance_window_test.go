@@ -80,7 +80,7 @@ func sweepMaintenanceWindows(region string) error {
 	return nil
 }
 
-func TestAccAWSSSMMaintenanceWindow_basic(t *testing.T) {
+func TestAccSSMMaintenanceWindow_basic(t *testing.T) {
 	var winId ssm.MaintenanceWindowIdentity
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ssm_maintenance_window.test"
@@ -116,7 +116,7 @@ func TestAccAWSSSMMaintenanceWindow_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMMaintenanceWindow_description(t *testing.T) {
+func TestAccSSMMaintenanceWindow_description(t *testing.T) {
 	var winId ssm.MaintenanceWindowIdentity
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ssm_maintenance_window.test"
@@ -152,7 +152,7 @@ func TestAccAWSSSMMaintenanceWindow_description(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMMaintenanceWindow_tags(t *testing.T) {
+func TestAccSSMMaintenanceWindow_tags(t *testing.T) {
 	var winId ssm.MaintenanceWindowIdentity
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ssm_maintenance_window.test"
@@ -197,7 +197,7 @@ func TestAccAWSSSMMaintenanceWindow_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMMaintenanceWindow_disappears(t *testing.T) {
+func TestAccSSMMaintenanceWindow_disappears(t *testing.T) {
 	var winId ssm.MaintenanceWindowIdentity
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ssm_maintenance_window.test"
@@ -220,7 +220,7 @@ func TestAccAWSSSMMaintenanceWindow_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMMaintenanceWindow_multipleUpdates(t *testing.T) {
+func TestAccSSMMaintenanceWindow_multipleUpdates(t *testing.T) {
 	var maintenanceWindow1, maintenanceWindow2 ssm.MaintenanceWindowIdentity
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -258,7 +258,7 @@ func TestAccAWSSSMMaintenanceWindow_multipleUpdates(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMMaintenanceWindow_Cutoff(t *testing.T) {
+func TestAccSSMMaintenanceWindow_cutoff(t *testing.T) {
 	var maintenanceWindow1, maintenanceWindow2 ssm.MaintenanceWindowIdentity
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ssm_maintenance_window.test"
@@ -292,7 +292,7 @@ func TestAccAWSSSMMaintenanceWindow_Cutoff(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMMaintenanceWindow_Duration(t *testing.T) {
+func TestAccSSMMaintenanceWindow_duration(t *testing.T) {
 	var maintenanceWindow1, maintenanceWindow2 ssm.MaintenanceWindowIdentity
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ssm_maintenance_window.test"
@@ -326,7 +326,7 @@ func TestAccAWSSSMMaintenanceWindow_Duration(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMMaintenanceWindow_Enabled(t *testing.T) {
+func TestAccSSMMaintenanceWindow_enabled(t *testing.T) {
 	var maintenanceWindow1, maintenanceWindow2 ssm.MaintenanceWindowIdentity
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ssm_maintenance_window.test"
@@ -360,7 +360,7 @@ func TestAccAWSSSMMaintenanceWindow_Enabled(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMMaintenanceWindow_EndDate(t *testing.T) {
+func TestAccSSMMaintenanceWindow_endDate(t *testing.T) {
 	var maintenanceWindow1, maintenanceWindow2, maintenanceWindow3 ssm.MaintenanceWindowIdentity
 	endDate1 := time.Now().UTC().Add(365 * 24 * time.Hour).Format(time.RFC3339)
 	endDate2 := time.Now().UTC().Add(730 * 24 * time.Hour).Format(time.RFC3339)
@@ -403,7 +403,7 @@ func TestAccAWSSSMMaintenanceWindow_EndDate(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMMaintenanceWindow_Schedule(t *testing.T) {
+func TestAccSSMMaintenanceWindow_schedule(t *testing.T) {
 	var maintenanceWindow1, maintenanceWindow2 ssm.MaintenanceWindowIdentity
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ssm_maintenance_window.test"
@@ -437,7 +437,7 @@ func TestAccAWSSSMMaintenanceWindow_Schedule(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMMaintenanceWindow_ScheduleTimezone(t *testing.T) {
+func TestAccSSMMaintenanceWindow_scheduleTimezone(t *testing.T) {
 	var maintenanceWindow1, maintenanceWindow2, maintenanceWindow3 ssm.MaintenanceWindowIdentity
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ssm_maintenance_window.test"
@@ -478,7 +478,7 @@ func TestAccAWSSSMMaintenanceWindow_ScheduleTimezone(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMMaintenanceWindow_ScheduleOffset(t *testing.T) {
+func TestAccSSMMaintenanceWindow_scheduleOffset(t *testing.T) {
 	var maintenanceWindow1, maintenanceWindow2 ssm.MaintenanceWindowIdentity
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ssm_maintenance_window.test"
@@ -512,7 +512,7 @@ func TestAccAWSSSMMaintenanceWindow_ScheduleOffset(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMMaintenanceWindow_StartDate(t *testing.T) {
+func TestAccSSMMaintenanceWindow_startDate(t *testing.T) {
 	var maintenanceWindow1, maintenanceWindow2, maintenanceWindow3 ssm.MaintenanceWindowIdentity
 	startDate1 := time.Now().UTC().Add(1 * time.Hour).Format(time.RFC3339)
 	startDate2 := time.Now().UTC().Add(2 * time.Hour).Format(time.RFC3339)
