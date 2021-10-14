@@ -14,9 +14,9 @@ import (
 
 func ResourcePermissionSetInlinePolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSsoAdminPermissionSetInlinePolicyPut,
+		Create: resourcePermissionSetInlinePolicyPut,
 		Read:   resourcePermissionSetInlinePolicyRead,
-		Update: resourceAwsSsoAdminPermissionSetInlinePolicyPut,
+		Update: resourcePermissionSetInlinePolicyPut,
 		Delete: resourcePermissionSetInlinePolicyDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -46,7 +46,7 @@ func ResourcePermissionSetInlinePolicy() *schema.Resource {
 	}
 }
 
-func resourceAwsSsoAdminPermissionSetInlinePolicyPut(d *schema.ResourceData, meta interface{}) error {
+func resourcePermissionSetInlinePolicyPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSOAdminConn
 
 	instanceArn := d.Get("instance_arn").(string)
