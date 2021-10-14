@@ -20,11 +20,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_dax_cluster", &resource.Sweeper{
 		Name: "aws_dax_cluster",
-		F:    testSweepDAXClusters,
+		F:    sweepClusters,
 	})
 }
 
-func testSweepDAXClusters(region string) error {
+func sweepClusters(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %s", err)
@@ -69,15 +69,15 @@ func TestAccAWSDAXCluster_basic(t *testing.T) {
 	resourceName := "aws_dax_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSDax(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dax.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDAXClusterDestroy,
+		CheckDestroy: testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDAXClusterConfig(rString),
+				Config: testAccClusterConfig(rString),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDAXClusterExists(resourceName, &dc),
+					testAccCheckClusterExists(resourceName, &dc),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "dax", regexp.MustCompile("cache/.+")),
 					resource.TestMatchResourceAttr(
 						resourceName, "cluster_name", regexp.MustCompile(`^tf-\w+$`)),
@@ -123,15 +123,15 @@ func TestAccAWSDAXCluster_resize(t *testing.T) {
 	resourceName := "aws_dax_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSDax(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dax.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDAXClusterDestroy,
+		CheckDestroy: testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDAXClusterConfigResize_singleNode(rString),
+				Config: testAccClusterResizeConfig_singleNode(rString),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDAXClusterExists(resourceName, &dc),
+					testAccCheckClusterExists(resourceName, &dc),
 					resource.TestCheckResourceAttr(
 						resourceName, "replication_factor", "1"),
 				),
@@ -142,17 +142,17 @@ func TestAccAWSDAXCluster_resize(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSDAXClusterConfigResize_multiNode(rString),
+				Config: testAccClusterResizeConfig_multiNode(rString),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDAXClusterExists(resourceName, &dc),
+					testAccCheckClusterExists(resourceName, &dc),
 					resource.TestCheckResourceAttr(
 						resourceName, "replication_factor", "2"),
 				),
 			},
 			{
-				Config: testAccAWSDAXClusterConfigResize_singleNode(rString),
+				Config: testAccClusterResizeConfig_singleNode(rString),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDAXClusterExists(resourceName, &dc),
+					testAccCheckClusterExists(resourceName, &dc),
 					resource.TestCheckResourceAttr(
 						resourceName, "replication_factor", "1"),
 				),
@@ -167,15 +167,15 @@ func TestAccAWSDAXCluster_encryption_disabled(t *testing.T) {
 	resourceName := "aws_dax_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSDax(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dax.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDAXClusterDestroy,
+		CheckDestroy: testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDAXClusterConfigWithEncryption(rString, false),
+				Config: testAccClusterWithEncryptionConfig(rString, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDAXClusterExists(resourceName, &dc),
+					testAccCheckClusterExists(resourceName, &dc),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "false"),
 				),
@@ -187,7 +187,7 @@ func TestAccAWSDAXCluster_encryption_disabled(t *testing.T) {
 			},
 			// Ensure it shows no difference when removing server_side_encryption configuration
 			{
-				Config:             testAccAWSDAXClusterConfig(rString),
+				Config:             testAccClusterConfig(rString),
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: false,
 			},
@@ -201,15 +201,15 @@ func TestAccAWSDAXCluster_encryption_enabled(t *testing.T) {
 	resourceName := "aws_dax_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSDax(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dax.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDAXClusterDestroy,
+		CheckDestroy: testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDAXClusterConfigWithEncryption(rString, true),
+				Config: testAccClusterWithEncryptionConfig(rString, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDAXClusterExists(resourceName, &dc),
+					testAccCheckClusterExists(resourceName, &dc),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
 				),
@@ -221,7 +221,7 @@ func TestAccAWSDAXCluster_encryption_enabled(t *testing.T) {
 			},
 			// Ensure it shows a difference when removing server_side_encryption configuration
 			{
-				Config:             testAccAWSDAXClusterConfig(rString),
+				Config:             testAccClusterConfig(rString),
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: true,
 			},
@@ -229,7 +229,7 @@ func TestAccAWSDAXCluster_encryption_enabled(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSDAXClusterDestroy(s *terraform.State) error {
+func testAccCheckClusterDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).DAXConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -253,7 +253,7 @@ func testAccCheckAWSDAXClusterDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSDAXClusterExists(n string, v *dax.Cluster) resource.TestCheckFunc {
+func testAccCheckClusterExists(n string, v *dax.Cluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -282,7 +282,7 @@ func testAccCheckAWSDAXClusterExists(n string, v *dax.Cluster) resource.TestChec
 	}
 }
 
-func testAccPreCheckAWSDax(t *testing.T) {
+func testAccPreCheck(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).DAXConn
 
 	input := &dax.DescribeClustersInput{}
@@ -334,7 +334,7 @@ EOF
 }
 `
 
-func testAccAWSDAXClusterConfig(rString string) string {
+func testAccClusterConfig(rString string) string {
 	return fmt.Sprintf(`%s
 resource "aws_dax_cluster" "test" {
   cluster_name       = "tf-%s"
@@ -350,7 +350,7 @@ resource "aws_dax_cluster" "test" {
 `, baseConfig, rString)
 }
 
-func testAccAWSDAXClusterConfigWithEncryption(rString string, enabled bool) string {
+func testAccClusterWithEncryptionConfig(rString string, enabled bool) string {
 	return fmt.Sprintf(`%s
 resource "aws_dax_cluster" "test" {
   cluster_name       = "tf-%s"
@@ -370,7 +370,7 @@ resource "aws_dax_cluster" "test" {
 `, baseConfig, rString, enabled)
 }
 
-func testAccAWSDAXClusterConfigResize_singleNode(rString string) string {
+func testAccClusterResizeConfig_singleNode(rString string) string {
 	return fmt.Sprintf(`%s
 resource "aws_dax_cluster" "test" {
   cluster_name       = "tf-%s"
@@ -381,7 +381,7 @@ resource "aws_dax_cluster" "test" {
 `, baseConfig, rString)
 }
 
-func testAccAWSDAXClusterConfigResize_multiNode(rString string) string {
+func testAccClusterResizeConfig_multiNode(rString string) string {
 	return fmt.Sprintf(`%s
 resource "aws_dax_cluster" "test" {
   cluster_name       = "tf-%s"

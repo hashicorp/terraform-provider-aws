@@ -19,15 +19,15 @@ func TestAccAwsDaxSubnetGroup_basic(t *testing.T) {
 	resourceName := "aws_dax_subnet_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSDax(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dax.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsDaxSubnetGroupDestroy,
+		CheckDestroy: testAccCheckSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDaxSubnetGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDaxSubnetGroupExists("aws_dax_subnet_group.test"),
+					testAccCheckSubnetGroupExists("aws_dax_subnet_group.test"),
 					resource.TestCheckResourceAttr("aws_dax_subnet_group.test", "subnet_ids.#", "2"),
 					resource.TestCheckResourceAttrSet("aws_dax_subnet_group.test", "vpc_id"),
 				),
@@ -35,7 +35,7 @@ func TestAccAwsDaxSubnetGroup_basic(t *testing.T) {
 			{
 				Config: testAccDaxSubnetGroupConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDaxSubnetGroupExists("aws_dax_subnet_group.test"),
+					testAccCheckSubnetGroupExists("aws_dax_subnet_group.test"),
 					resource.TestCheckResourceAttr("aws_dax_subnet_group.test", "description", "update"),
 					resource.TestCheckResourceAttr("aws_dax_subnet_group.test", "subnet_ids.#", "3"),
 					resource.TestCheckResourceAttrSet("aws_dax_subnet_group.test", "vpc_id"),
@@ -50,7 +50,7 @@ func TestAccAwsDaxSubnetGroup_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsDaxSubnetGroupDestroy(s *terraform.State) error {
+func testAccCheckSubnetGroupDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).DAXConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -71,7 +71,7 @@ func testAccCheckAwsDaxSubnetGroupDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAwsDaxSubnetGroupExists(name string) resource.TestCheckFunc {
+func testAccCheckSubnetGroupExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {

@@ -19,15 +19,15 @@ func TestAccAwsDaxParameterGroup_basic(t *testing.T) {
 	resourceName := "aws_dax_parameter_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSDax(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dax.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsDaxParameterGroupDestroy,
+		CheckDestroy: testAccCheckParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDaxParameterGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDaxParameterGroupExists(resourceName),
+					testAccCheckParameterGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "parameters.#", "2"),
 				),
 			},
@@ -39,7 +39,7 @@ func TestAccAwsDaxParameterGroup_basic(t *testing.T) {
 			{
 				Config: testAccDaxParameterGroupConfig_parameters(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDaxParameterGroupExists(resourceName),
+					testAccCheckParameterGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "parameters.#", "2"),
 				),
 			},
@@ -47,7 +47,7 @@ func TestAccAwsDaxParameterGroup_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsDaxParameterGroupDestroy(s *terraform.State) error {
+func testAccCheckParameterGroupDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).DAXConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -68,7 +68,7 @@ func testAccCheckAwsDaxParameterGroupDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAwsDaxParameterGroupExists(name string) resource.TestCheckFunc {
+func testAccCheckParameterGroupExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
