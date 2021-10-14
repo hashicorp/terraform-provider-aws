@@ -3,7 +3,6 @@ package rds_test
 import (
 	"errors"
 	"fmt"
-	"log"
 	"regexp"
 	"testing"
 
@@ -16,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
 func TestAccRDSGlobalCluster_basic(t *testing.T) {

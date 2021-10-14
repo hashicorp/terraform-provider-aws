@@ -2,7 +2,6 @@ package rds_test
 
 import (
 	"fmt"
-	"log"
 	"regexp"
 	"testing"
 
@@ -15,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
 func TestAccRDSProxy_basic(t *testing.T) {
