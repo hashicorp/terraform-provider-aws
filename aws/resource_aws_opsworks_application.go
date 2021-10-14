@@ -278,7 +278,7 @@ func resourceAwsOpsworksApplicationRead(d *schema.ResourceData, meta interface{}
 	d.Set("stack_id", app.StackId)
 	d.Set("type", app.Type)
 	d.Set("description", app.Description)
-	d.Set("domains", flattenStringList(app.Domains))
+	d.Set("domains", flex.FlattenStringList(app.Domains))
 	d.Set("enable_ssl", app.EnableSsl)
 	err = resourceAwsOpsworksSetApplicationSsl(d, app.SslConfiguration)
 	if err != nil {
@@ -309,7 +309,7 @@ func resourceAwsOpsworksApplicationCreate(d *schema.ResourceData, meta interface
 		StackId:          aws.String(d.Get("stack_id").(string)),
 		Type:             aws.String(d.Get("type").(string)),
 		Description:      aws.String(d.Get("description").(string)),
-		Domains:          expandStringList(d.Get("domains").([]interface{})),
+		Domains:          flex.ExpandStringList(d.Get("domains").([]interface{})),
 		EnableSsl:        aws.Bool(d.Get("enable_ssl").(bool)),
 		SslConfiguration: resourceAwsOpsworksApplicationSsl(d),
 		AppSource:        resourceAwsOpsworksApplicationSource(d),
@@ -342,7 +342,7 @@ func resourceAwsOpsworksApplicationUpdate(d *schema.ResourceData, meta interface
 		Name:             aws.String(d.Get("name").(string)),
 		Type:             aws.String(d.Get("type").(string)),
 		Description:      aws.String(d.Get("description").(string)),
-		Domains:          expandStringList(d.Get("domains").([]interface{})),
+		Domains:          flex.ExpandStringList(d.Get("domains").([]interface{})),
 		EnableSsl:        aws.Bool(d.Get("enable_ssl").(bool)),
 		SslConfiguration: resourceAwsOpsworksApplicationSsl(d),
 		AppSource:        resourceAwsOpsworksApplicationSource(d),
