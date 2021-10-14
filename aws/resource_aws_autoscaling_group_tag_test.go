@@ -7,13 +7,14 @@ import (
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	tfautoscaling "github.com/hashicorp/terraform-provider-aws/aws/internal/service/autoscaling"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tagresource"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func TestAccAWSAutoscalingGroupTag_basic(t *testing.T) {
@@ -105,13 +106,13 @@ func testAccCheckAutoscalingGroupTagDestroy(s *terraform.State) error {
 			continue
 		}
 
-		identifier, key, err := tagresource.GetResourceID(rs.Primary.ID)
+		identifier, key, err := tftags.GetResourceID(rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		_, err = keyvaluetags.AutoscalingGetTag(conn, identifier, tfautoscaling.TagResourceTypeAutoScalingGroup, key)
+		_, err = tftags.AutoscalingGetTag(conn, identifier, tfautoscaling.TagResourceTypeAutoScalingGroup, key)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -138,7 +139,7 @@ func testAccCheckAutoscalingGroupTagExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("%s: missing resource ID", n)
 		}
 
-		identifier, key, err := tagresource.GetResourceID(rs.Primary.ID)
+		identifier, key, err := tftags.GetResourceID(rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -146,7 +147,7 @@ func testAccCheckAutoscalingGroupTagExists(n string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
 
-		_, err = keyvaluetags.AutoscalingGetTag(conn, identifier, tfautoscaling.TagResourceTypeAutoScalingGroup, key)
+		_, err = tftags.AutoscalingGetTag(conn, identifier, tfautoscaling.TagResourceTypeAutoScalingGroup, key)
 
 		if err != nil {
 			return err
