@@ -17,12 +17,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsS3BucketMetric() *schema.Resource {
+func ResourceBucketMetric() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsS3BucketMetricPut,
-		Read:   resourceAwsS3BucketMetricRead,
+		Read:   resourceBucketMetricRead,
 		Update: resourceAwsS3BucketMetricPut,
-		Delete: resourceAwsS3BucketMetricDelete,
+		Delete: resourceBucketMetricDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -109,10 +109,10 @@ func resourceAwsS3BucketMetricPut(d *schema.ResourceData, meta interface{}) erro
 
 	d.SetId(fmt.Sprintf("%s:%s", bucket, name))
 
-	return resourceAwsS3BucketMetricRead(d, meta)
+	return resourceBucketMetricRead(d, meta)
 }
 
-func resourceAwsS3BucketMetricDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceBucketMetricDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3Conn
 
 	bucket, name, err := resourceAwsS3BucketMetricParseID(d.Id())
@@ -143,7 +143,7 @@ func resourceAwsS3BucketMetricDelete(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func resourceAwsS3BucketMetricRead(d *schema.ResourceData, meta interface{}) error {
+func resourceBucketMetricRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3Conn
 
 	bucket, name, err := resourceAwsS3BucketMetricParseID(d.Id())

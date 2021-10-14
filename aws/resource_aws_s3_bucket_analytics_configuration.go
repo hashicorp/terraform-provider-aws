@@ -18,12 +18,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsS3BucketAnalyticsConfiguration() *schema.Resource {
+func ResourceBucketAnalyticsConfiguration() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsS3BucketAnalyticsConfigurationPut,
-		Read:   resourceAwsS3BucketAnalyticsConfigurationRead,
+		Read:   resourceBucketAnalyticsConfigurationRead,
 		Update: resourceAwsS3BucketAnalyticsConfigurationPut,
-		Delete: resourceAwsS3BucketAnalyticsConfigurationDelete,
+		Delete: resourceBucketAnalyticsConfigurationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -170,10 +170,10 @@ func resourceAwsS3BucketAnalyticsConfigurationPut(d *schema.ResourceData, meta i
 
 	d.SetId(fmt.Sprintf("%s:%s", bucket, name))
 
-	return resourceAwsS3BucketAnalyticsConfigurationRead(d, meta)
+	return resourceBucketAnalyticsConfigurationRead(d, meta)
 }
 
-func resourceAwsS3BucketAnalyticsConfigurationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceBucketAnalyticsConfigurationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3Conn
 
 	bucket, name, err := resourceAwsS3BucketAnalyticsConfigurationParseID(d.Id())
@@ -223,7 +223,7 @@ func resourceAwsS3BucketAnalyticsConfigurationRead(d *schema.ResourceData, meta 
 	return nil
 }
 
-func resourceAwsS3BucketAnalyticsConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceBucketAnalyticsConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3Conn
 
 	bucket, name, err := resourceAwsS3BucketAnalyticsConfigurationParseID(d.Id())

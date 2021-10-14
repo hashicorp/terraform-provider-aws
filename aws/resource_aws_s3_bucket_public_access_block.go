@@ -16,12 +16,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsS3BucketPublicAccessBlock() *schema.Resource {
+func ResourceBucketPublicAccessBlock() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsS3BucketPublicAccessBlockCreate,
-		Read:   resourceAwsS3BucketPublicAccessBlockRead,
-		Update: resourceAwsS3BucketPublicAccessBlockUpdate,
-		Delete: resourceAwsS3BucketPublicAccessBlockDelete,
+		Create: resourceBucketPublicAccessBlockCreate,
+		Read:   resourceBucketPublicAccessBlockRead,
+		Update: resourceBucketPublicAccessBlockUpdate,
+		Delete: resourceBucketPublicAccessBlockDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -60,7 +60,7 @@ func resourceAwsS3BucketPublicAccessBlock() *schema.Resource {
 	}
 }
 
-func resourceAwsS3BucketPublicAccessBlockCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceBucketPublicAccessBlockCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3Conn
 	bucket := d.Get("bucket").(string)
 
@@ -96,10 +96,10 @@ func resourceAwsS3BucketPublicAccessBlockCreate(d *schema.ResourceData, meta int
 	}
 
 	d.SetId(bucket)
-	return resourceAwsS3BucketPublicAccessBlockRead(d, meta)
+	return resourceBucketPublicAccessBlockRead(d, meta)
 }
 
-func resourceAwsS3BucketPublicAccessBlockRead(d *schema.ResourceData, meta interface{}) error {
+func resourceBucketPublicAccessBlockRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3Conn
 
 	input := &s3.GetPublicAccessBlockInput{
@@ -160,7 +160,7 @@ func resourceAwsS3BucketPublicAccessBlockRead(d *schema.ResourceData, meta inter
 	return nil
 }
 
-func resourceAwsS3BucketPublicAccessBlockUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceBucketPublicAccessBlockUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3Conn
 
 	input := &s3.PutPublicAccessBlockInput{
@@ -205,7 +205,7 @@ func resourceAwsS3BucketPublicAccessBlockUpdate(d *schema.ResourceData, meta int
 	return nil
 }
 
-func resourceAwsS3BucketPublicAccessBlockDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceBucketPublicAccessBlockDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3Conn
 
 	input := &s3.DeletePublicAccessBlockInput{

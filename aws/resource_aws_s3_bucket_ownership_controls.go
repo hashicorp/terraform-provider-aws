@@ -12,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsS3BucketOwnershipControls() *schema.Resource {
+func ResourceBucketOwnershipControls() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsS3BucketOwnershipControlsCreate,
-		Read:   resourceAwsS3BucketOwnershipControlsRead,
-		Update: resourceAwsS3BucketOwnershipControlsUpdate,
-		Delete: resourceAwsS3BucketOwnershipControlsDelete,
+		Create: resourceBucketOwnershipControlsCreate,
+		Read:   resourceBucketOwnershipControlsRead,
+		Update: resourceBucketOwnershipControlsUpdate,
+		Delete: resourceBucketOwnershipControlsDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -49,7 +49,7 @@ func resourceAwsS3BucketOwnershipControls() *schema.Resource {
 	}
 }
 
-func resourceAwsS3BucketOwnershipControlsCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceBucketOwnershipControlsCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3Conn
 
 	bucket := d.Get("bucket").(string)
@@ -69,10 +69,10 @@ func resourceAwsS3BucketOwnershipControlsCreate(d *schema.ResourceData, meta int
 
 	d.SetId(bucket)
 
-	return resourceAwsS3BucketOwnershipControlsRead(d, meta)
+	return resourceBucketOwnershipControlsRead(d, meta)
 }
 
-func resourceAwsS3BucketOwnershipControlsRead(d *schema.ResourceData, meta interface{}) error {
+func resourceBucketOwnershipControlsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3Conn
 
 	input := &s3.GetBucketOwnershipControlsInput{
@@ -114,7 +114,7 @@ func resourceAwsS3BucketOwnershipControlsRead(d *schema.ResourceData, meta inter
 	return nil
 }
 
-func resourceAwsS3BucketOwnershipControlsUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceBucketOwnershipControlsUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3Conn
 
 	input := &s3.PutBucketOwnershipControlsInput{
@@ -130,10 +130,10 @@ func resourceAwsS3BucketOwnershipControlsUpdate(d *schema.ResourceData, meta int
 		return fmt.Errorf("error updating S3 Bucket (%s) Ownership Controls: %w", d.Id(), err)
 	}
 
-	return resourceAwsS3BucketOwnershipControlsRead(d, meta)
+	return resourceBucketOwnershipControlsRead(d, meta)
 }
 
-func resourceAwsS3BucketOwnershipControlsDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceBucketOwnershipControlsDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3Conn
 
 	input := &s3.DeleteBucketOwnershipControlsInput{

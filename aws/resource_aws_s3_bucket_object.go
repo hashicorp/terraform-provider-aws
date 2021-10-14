@@ -29,12 +29,12 @@ import (
 
 const s3BucketObjectCreationTimeout = 2 * time.Minute
 
-func resourceAwsS3BucketObject() *schema.Resource {
+func ResourceBucketObject() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsS3BucketObjectCreate,
-		Read:   resourceAwsS3BucketObjectRead,
-		Update: resourceAwsS3BucketObjectUpdate,
-		Delete: resourceAwsS3BucketObjectDelete,
+		Create: resourceBucketObjectCreate,
+		Read:   resourceBucketObjectRead,
+		Update: resourceBucketObjectUpdate,
+		Delete: resourceBucketObjectDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsS3BucketObjectImport,
@@ -323,14 +323,14 @@ func resourceAwsS3BucketObjectPut(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	d.SetId(key)
-	return resourceAwsS3BucketObjectRead(d, meta)
+	return resourceBucketObjectRead(d, meta)
 }
 
-func resourceAwsS3BucketObjectCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceBucketObjectCreate(d *schema.ResourceData, meta interface{}) error {
 	return resourceAwsS3BucketObjectPut(d, meta)
 }
 
-func resourceAwsS3BucketObjectRead(d *schema.ResourceData, meta interface{}) error {
+func resourceBucketObjectRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -444,7 +444,7 @@ func resourceAwsS3BucketObjectRead(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func resourceAwsS3BucketObjectUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceBucketObjectUpdate(d *schema.ResourceData, meta interface{}) error {
 	if hasS3BucketObjectContentChanges(d) {
 		return resourceAwsS3BucketObjectPut(d, meta)
 	}
@@ -512,10 +512,10 @@ func resourceAwsS3BucketObjectUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
-	return resourceAwsS3BucketObjectRead(d, meta)
+	return resourceBucketObjectRead(d, meta)
 }
 
-func resourceAwsS3BucketObjectDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceBucketObjectDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3Conn
 
 	bucket := d.Get("bucket").(string)

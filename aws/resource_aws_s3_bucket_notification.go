@@ -15,12 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsS3BucketNotification() *schema.Resource {
+func ResourceBucketNotification() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsS3BucketNotificationPut,
-		Read:   resourceAwsS3BucketNotificationRead,
+		Read:   resourceBucketNotificationRead,
 		Update: resourceAwsS3BucketNotificationPut,
-		Delete: resourceAwsS3BucketNotificationDelete,
+		Delete: resourceBucketNotificationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -334,10 +334,10 @@ func resourceAwsS3BucketNotificationPut(d *schema.ResourceData, meta interface{}
 
 	d.SetId(bucket)
 
-	return resourceAwsS3BucketNotificationRead(d, meta)
+	return resourceBucketNotificationRead(d, meta)
 }
 
-func resourceAwsS3BucketNotificationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceBucketNotificationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3Conn
 
 	i := &s3.PutBucketNotificationConfigurationInput{
@@ -355,7 +355,7 @@ func resourceAwsS3BucketNotificationDelete(d *schema.ResourceData, meta interfac
 	return nil
 }
 
-func resourceAwsS3BucketNotificationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceBucketNotificationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3Conn
 
 	notificationConfigs, err := conn.GetBucketNotificationConfiguration(&s3.GetBucketNotificationConfigurationRequest{

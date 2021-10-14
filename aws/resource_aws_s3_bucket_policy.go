@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsS3BucketPolicy() *schema.Resource {
+func ResourceBucketPolicy() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsS3BucketPolicyPut,
-		Read:   resourceAwsS3BucketPolicyRead,
+		Read:   resourceBucketPolicyRead,
 		Update: resourceAwsS3BucketPolicyPut,
-		Delete: resourceAwsS3BucketPolicyDelete,
+		Delete: resourceBucketPolicyDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -76,7 +76,7 @@ func resourceAwsS3BucketPolicyPut(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func resourceAwsS3BucketPolicyRead(d *schema.ResourceData, meta interface{}) error {
+func resourceBucketPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3Conn
 
 	log.Printf("[DEBUG] S3 bucket policy, read for bucket: %s", d.Id())
@@ -98,7 +98,7 @@ func resourceAwsS3BucketPolicyRead(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func resourceAwsS3BucketPolicyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceBucketPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3Conn
 
 	bucket := d.Get("bucket").(string)

@@ -17,12 +17,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsS3ObjectCopy() *schema.Resource {
+func ResourceObjectCopy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsS3ObjectCopyCreate,
-		Read:   resourceAwsS3ObjectCopyRead,
-		Update: resourceAwsS3ObjectCopyUpdate,
-		Delete: resourceAwsS3ObjectCopyDelete,
+		Create: resourceObjectCopyCreate,
+		Read:   resourceObjectCopyRead,
+		Update: resourceObjectCopyUpdate,
+		Delete: resourceObjectCopyDelete,
 
 		Schema: map[string]*schema.Schema{
 			"acl": {
@@ -289,11 +289,11 @@ func resourceAwsS3ObjectCopy() *schema.Resource {
 	}
 }
 
-func resourceAwsS3ObjectCopyCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceObjectCopyCreate(d *schema.ResourceData, meta interface{}) error {
 	return resourceAwsS3ObjectCopyDoCopy(d, meta)
 }
 
-func resourceAwsS3ObjectCopyRead(d *schema.ResourceData, meta interface{}) error {
+func resourceObjectCopyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -390,7 +390,7 @@ func resourceAwsS3ObjectCopyRead(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func resourceAwsS3ObjectCopyUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceObjectCopyUpdate(d *schema.ResourceData, meta interface{}) error {
 	// if any of these exist, let the API decide whether to copy
 	for _, key := range []string{
 		"copy_if_match",
@@ -446,7 +446,7 @@ func resourceAwsS3ObjectCopyUpdate(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func resourceAwsS3ObjectCopyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceObjectCopyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3Conn
 
 	bucket := d.Get("bucket").(string)
@@ -645,7 +645,7 @@ func resourceAwsS3ObjectCopyDoCopy(d *schema.ResourceData, meta interface{}) err
 	d.Set("version_id", output.VersionId)
 
 	d.SetId(d.Get("key").(string))
-	return resourceAwsS3BucketObjectRead(d, meta)
+	return resourceBucketObjectRead(d, meta)
 }
 
 type s3Grants struct {

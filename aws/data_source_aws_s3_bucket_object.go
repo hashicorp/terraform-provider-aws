@@ -15,9 +15,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsS3BucketObject() *schema.Resource {
+func DataSourceBucketObject() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsS3BucketObjectRead,
+		Read: dataSourceBucketObjectRead,
 
 		Schema: map[string]*schema.Schema{
 			"body": {
@@ -124,7 +124,7 @@ func dataSourceAwsS3BucketObject() *schema.Resource {
 	}
 }
 
-func dataSourceAwsS3BucketObjectRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceBucketObjectRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3Conn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

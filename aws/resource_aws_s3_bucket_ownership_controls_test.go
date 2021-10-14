@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSS3BucketOwnershipControls_basic(t *testing.T) {
@@ -56,7 +57,7 @@ func TestAccAWSS3BucketOwnershipControls_disappears(t *testing.T) {
 				Config: testAccAWSS3BucketOwnershipControlsConfig_Rule_ObjectOwnership(rName, s3.ObjectOwnershipBucketOwnerPreferred),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketOwnershipControlsExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsS3BucketOwnershipControls(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceBucketOwnershipControls(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -79,7 +80,7 @@ func TestAccAWSS3BucketOwnershipControls_disappears_Bucket(t *testing.T) {
 				Config: testAccAWSS3BucketOwnershipControlsConfig_Rule_ObjectOwnership(rName, s3.ObjectOwnershipBucketOwnerPreferred),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketOwnershipControlsExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsS3Bucket(), s3BucketResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceBucket(), s3BucketResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
