@@ -19,10 +19,10 @@ func TestAccAwsImageBuilderDistributionConfigurationDataSource_Arn(t *testing.T)
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAwsImageBuilderDistributionConfigurationDestroy,
+		CheckDestroy:      testAccCheckDistributionConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsImageBuilderDistributionConfigurationDataSourceConfigArn(rName),
+				Config: testAccDistributionConfigurationARNDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "date_created", resourceName, "date_created"),
@@ -37,7 +37,7 @@ func TestAccAwsImageBuilderDistributionConfigurationDataSource_Arn(t *testing.T)
 	})
 }
 
-func testAccAwsImageBuilderDistributionConfigurationDataSourceConfigArn(rName string) string {
+func testAccDistributionConfigurationARNDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 

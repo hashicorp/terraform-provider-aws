@@ -18,10 +18,10 @@ func TestAccAwsImageBuilderImageDataSource_Arn_Aws(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAwsImageBuilderImageDestroy,
+		CheckDestroy:      testAccCheckImageDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsImageBuilderImageDataSourceConfigArnAws(),
+				Config: testAccImageARNAwsDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.MatchResourceAttrRegionalARNAccountID(dataSourceName, "arn", "imagebuilder", "aws", regexp.MustCompile(`image/amazon-linux-2-x86/x.x.x`)),
 					acctest.MatchResourceAttrRegionalARNAccountID(dataSourceName, "build_version_arn", "imagebuilder", "aws", regexp.MustCompile(`image/amazon-linux-2-x86/\d+\.\d+\.\d+/\d+`)),
@@ -53,10 +53,10 @@ func TestAccAwsImageBuilderImageDataSource_Arn_Self(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAwsImageBuilderImageDestroy,
+		CheckDestroy:      testAccCheckImageDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsImageBuilderImageDataSourceConfigArnSelf(rName),
+				Config: testAccImageARNSelfDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "build_version_arn", resourceName, "arn"),
@@ -78,7 +78,7 @@ func TestAccAwsImageBuilderImageDataSource_Arn_Self(t *testing.T) {
 	})
 }
 
-func testAccAwsImageBuilderImageDataSourceConfigArnAws() string {
+func testAccImageARNAwsDataSourceConfig() string {
 	return `
 data "aws_partition" "current" {}
 
@@ -90,7 +90,7 @@ data "aws_imagebuilder_image" "test" {
 `
 }
 
-func testAccAwsImageBuilderImageDataSourceConfigArnSelf(rName string) string {
+func testAccImageARNSelfDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_imagebuilder_component" "update-linux" {
   arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/1.0.0"

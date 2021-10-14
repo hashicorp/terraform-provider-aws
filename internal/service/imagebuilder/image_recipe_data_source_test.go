@@ -19,10 +19,10 @@ func TestAccAwsImageBuilderImageRecipeDataSource_Arn(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAwsImageBuilderImageRecipeDestroy,
+		CheckDestroy:      testAccCheckImageRecipeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsImageBuilderImageRecipeDataSourceConfigArn(rName),
+				Config: testAccImageRecipeARNDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "block_device_mapping.#", resourceName, "block_device_mapping.#"),
@@ -42,7 +42,7 @@ func TestAccAwsImageBuilderImageRecipeDataSource_Arn(t *testing.T) {
 	})
 }
 
-func testAccAwsImageBuilderImageRecipeDataSourceConfigArn(rName string) string {
+func testAccImageRecipeARNDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 

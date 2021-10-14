@@ -19,10 +19,10 @@ func TestAccAwsImageBuilderImagePipelineDataSource_Arn(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAwsImageBuilderImagePipelineDestroy,
+		CheckDestroy:      testAccCheckImagePipelineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsImageBuilderImagePipelineDataSourceConfigArn(rName),
+				Config: testAccImagePipelineARNDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "date_created", resourceName, "date_created"),
@@ -46,7 +46,7 @@ func TestAccAwsImageBuilderImagePipelineDataSource_Arn(t *testing.T) {
 	})
 }
 
-func testAccAwsImageBuilderImagePipelineDataSourceConfigArn(rName string) string {
+func testAccImagePipelineARNDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 
