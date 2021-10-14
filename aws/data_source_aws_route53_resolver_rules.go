@@ -93,7 +93,7 @@ func dataSourceAwsRoute53ResolverRulesRead(d *schema.ResourceData, meta interfac
 
 	d.SetId(meta.(*conns.AWSClient).Region)
 
-	err = d.Set("resolver_rule_ids", flattenStringSet(resolverRuleIds))
+	err = d.Set("resolver_rule_ids", flex.FlattenStringSet(resolverRuleIds))
 	if err != nil {
 		return fmt.Errorf("error setting resolver_rule_ids: %w", err)
 	}
