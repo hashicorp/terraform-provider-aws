@@ -24,6 +24,21 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
+	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
+	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
+	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
+	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
+	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
+	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
+	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
+	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
+	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
+	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
+	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
+	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
+	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
+	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
 )
 
 func ResourceTargetGroup() *schema.Resource {
@@ -384,10 +399,10 @@ func resourceTargetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(aws.StringValue(resp.TargetGroups[0].TargetGroupArn))
 
-	err = resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err = resource.Retry(tfelbv2.propagationTimeout, func() *resource.RetryError {
 		var err error
 
-		_, err = finder.TargetGroupByARN(conn, d.Id())
+		_, err = tfelbv2.FindTargetGroupByARN(conn, d.Id())
 
 		if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeTargetGroupNotFoundException) {
 			return resource.RetryableError(err)
@@ -401,7 +416,7 @@ func resourceTargetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if tfresource.TimedOut(err) {
-		_, err = finder.TargetGroupByARN(conn, d.Id())
+		_, err = tfelbv2.FindTargetGroupByARN(conn, d.Id())
 	}
 
 	if err != nil {
@@ -521,10 +536,10 @@ func resourceTargetGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 	var targetGroup *elbv2.TargetGroup
 
-	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(tfelbv2.propagationTimeout, func() *resource.RetryError {
 		var err error
 
-		targetGroup, err = finder.TargetGroupByARN(conn, d.Id())
+		targetGroup, err = tfelbv2.FindTargetGroupByARN(conn, d.Id())
 
 		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, elbv2.ErrCodeTargetGroupNotFoundException) {
 			return resource.RetryableError(err)
@@ -544,7 +559,7 @@ func resourceTargetGroupRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if tfresource.TimedOut(err) {
-		targetGroup, err = finder.TargetGroupByARN(conn, d.Id())
+		targetGroup, err = tfelbv2.FindTargetGroupByARN(conn, d.Id())
 	}
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, elbv2.ErrCodeTargetGroupNotFoundException) {
@@ -576,7 +591,7 @@ func resourceTargetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		err := resource.Retry(waiter.LoadBalancerTagPropagationTimeout, func() *resource.RetryError {
+		err := resource.Retry(tfelbv2.loadBalancerTagPropagationTimeout, func() *resource.RetryError {
 			err := tftags.Elbv2UpdateTags(conn, d.Id(), o, n)
 
 			if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeTargetGroupNotFoundException) {
@@ -772,7 +787,7 @@ func resourceTargetGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Deleting Target Group (%s): %s", d.Id(), input)
-	err := resource.Retry(waiter.TargetGroupDeleteTimeout, func() *resource.RetryError {
+	err := resource.Retry(tfelbv2.targetGroupDeleteTimeout, func() *resource.RetryError {
 		_, err := conn.DeleteTargetGroup(input)
 
 		if tfawserr.ErrMessageContains(err, "ResourceInUse", "is currently in use by a listener or a rule") {

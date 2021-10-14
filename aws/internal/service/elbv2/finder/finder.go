@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ListenerByARN(conn *elbv2.ELBV2, arn string) (*elbv2.Listener, error) {
+func FindListenerByARN(conn *elbv2.ELBV2, arn string) (*elbv2.Listener, error) {
 	input := &elbv2.DescribeListenersInput{
 		ListenerArns: aws.StringSlice([]string{arn}),
 	}
@@ -35,7 +35,7 @@ func ListenerByARN(conn *elbv2.ELBV2, arn string) (*elbv2.Listener, error) {
 	return result, err
 }
 
-func LoadBalancerByARN(conn *elbv2.ELBV2, arn string) (*elbv2.LoadBalancer, error) {
+func FindLoadBalancerByARN(conn *elbv2.ELBV2, arn string) (*elbv2.LoadBalancer, error) {
 	input := &elbv2.DescribeLoadBalancersInput{
 		LoadBalancerArns: aws.StringSlice([]string{arn}),
 	}
@@ -64,7 +64,7 @@ func LoadBalancerByARN(conn *elbv2.ELBV2, arn string) (*elbv2.LoadBalancer, erro
 	return result, err
 }
 
-func TargetGroupByARN(conn *elbv2.ELBV2, arn string) (*elbv2.TargetGroup, error) {
+func FindTargetGroupByARN(conn *elbv2.ELBV2, arn string) (*elbv2.TargetGroup, error) {
 	input := &elbv2.DescribeTargetGroupsInput{
 		TargetGroupArns: aws.StringSlice([]string{arn}),
 	}

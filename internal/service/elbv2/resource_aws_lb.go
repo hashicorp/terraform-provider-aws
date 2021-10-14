@@ -28,6 +28,21 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
+	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
+	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
+	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
+	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
+	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
+	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
+	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
+	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
+	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
+	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
+	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
+	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
+	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
+	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
 )
 
 func ResourceLoadBalancer() *schema.Resource {
@@ -46,9 +61,9 @@ func ResourceLoadBalancer() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(waiter.LoadBalancerCreateTimeout),
-			Update: schema.DefaultTimeout(waiter.LoadBalancerUpdateTimeout),
-			Delete: schema.DefaultTimeout(waiter.LoadBalancerDeleteTimeout),
+			Create: schema.DefaultTimeout(tfelbv2.loadBalancerCreateTimeout),
+			Update: schema.DefaultTimeout(tfelbv2.loadBalancerUpdateTimeout),
+			Delete: schema.DefaultTimeout(tfelbv2.loadBalancerDeleteTimeout),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -349,7 +364,7 @@ func resourceLoadBalancerCreate(d *schema.ResourceData, meta interface{}) error 
 	d.SetId(aws.StringValue(lb.LoadBalancerArn))
 	log.Printf("[INFO] LB ID: %s", d.Id())
 
-	_, err = waiter.LoadBalancerActive(conn, aws.StringValue(lb.LoadBalancerArn), d.Timeout(schema.TimeoutCreate))
+	_, err = tfelbv2.waitLoadBalancerActive(conn, aws.StringValue(lb.LoadBalancerArn), d.Timeout(schema.TimeoutCreate))
 	if err != nil {
 		return fmt.Errorf("error waiting for Load Balancer (%s) to be active: %w", d.Get("name").(string), err)
 	}
@@ -360,7 +375,7 @@ func resourceLoadBalancerCreate(d *schema.ResourceData, meta interface{}) error 
 func resourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBV2Conn
 
-	lb, err := finder.LoadBalancerByARN(conn, d.Id())
+	lb, err := tfelbv2.FindLoadBalancerByARN(conn, d.Id())
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, elb.ErrCodeAccessPointNotFoundException) {
 		// The ALB is gone now, so just remove it from the state
@@ -391,7 +406,7 @@ func resourceLoadBalancerUpdate(d *schema.ResourceData, meta interface{}) error 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		err := resource.Retry(waiter.LoadBalancerTagPropagationTimeout, func() *resource.RetryError {
+		err := resource.Retry(tfelbv2.loadBalancerTagPropagationTimeout, func() *resource.RetryError {
 			err := tftags.Elbv2UpdateTags(conn, d.Id(), o, n)
 
 			if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeLoadBalancerNotFoundException) {
@@ -545,7 +560,7 @@ func resourceLoadBalancerUpdate(d *schema.ResourceData, meta interface{}) error 
 		}
 	}
 
-	_, err := waiter.LoadBalancerActive(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+	_, err := tfelbv2.waitLoadBalancerActive(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 	if err != nil {
 		return fmt.Errorf("error waiting for Load Balancer (%s) to be active: %w", d.Get("name").(string), err)
 	}
@@ -651,7 +666,7 @@ func waitForNLBNetworkInterfacesToDetach(conn *ec2.EC2, lbArn string) error {
 		},
 	}
 	var out *ec2.DescribeNetworkInterfacesOutput
-	err = resource.Retry(waiter.LoadBalancerNetworkInterfaceDetachTimeout, func() *resource.RetryError {
+	err = resource.Retry(tfelbv2.loadBalancerNetworkInterfaceDetachTimeout, func() *resource.RetryError {
 		var err error
 		out, err = conn.DescribeNetworkInterfaces(input)
 		if err != nil {

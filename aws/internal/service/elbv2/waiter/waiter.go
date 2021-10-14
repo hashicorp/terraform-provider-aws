@@ -10,36 +10,36 @@ import (
 
 const (
 	// Default maximum amount of time to wait for a Load Balancer to be created
-	LoadBalancerCreateTimeout = 10 * time.Minute
+	loadBalancerCreateTimeout = 10 * time.Minute
 
 	// Default maximum amount of time to wait for a Load Balancer to be updated
-	LoadBalancerUpdateTimeout = 10 * time.Minute
+	loadBalancerUpdateTimeout = 10 * time.Minute
 
 	// Default maximum amount of time to wait for a Load Balancer to be deleted
-	LoadBalancerDeleteTimeout = 10 * time.Minute
+	loadBalancerDeleteTimeout = 10 * time.Minute
 
 	// Default maximum amount of time to wait for Tag Propagation for a Load Balancer
-	LoadBalancerTagPropagationTimeout = 2 * time.Minute
+	loadBalancerTagPropagationTimeout = 2 * time.Minute
 
 	// Default maximum amount of time to wait for target group to delete
-	TargetGroupDeleteTimeout = 2 * time.Minute
+	targetGroupDeleteTimeout = 2 * time.Minute
 
 	// Default maximum amount of time to wait for network interfaces to propagate
-	LoadBalancerNetworkInterfaceDetachTimeout = 5 * time.Minute
+	loadBalancerNetworkInterfaceDetachTimeout = 5 * time.Minute
 
-	LoadBalancerListenerCreateTimeout = 5 * time.Minute
-	LoadBalancerListenerReadTimeout   = 2 * time.Minute
-	LoadBalancerListenerUpdateTimeout = 5 * time.Minute
+	loadBalancerListenerCreateTimeout = 5 * time.Minute
+	loadBalancerListenerReadTimeout   = 2 * time.Minute
+	loadBalancerListenerUpdateTimeout = 5 * time.Minute
 
-	PropagationTimeout = 2 * time.Minute
+	propagationTimeout = 2 * time.Minute
 )
 
-// LoadBalancerActive waits for a Load Balancer to return active
-func LoadBalancerActive(conn *elbv2.ELBV2, arn string, timeout time.Duration) (*elbv2.LoadBalancer, error) {
+// waitLoadBalancerActive waits for a Load Balancer to return active
+func waitLoadBalancerActive(conn *elbv2.ELBV2, arn string, timeout time.Duration) (*elbv2.LoadBalancer, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{elbv2.LoadBalancerStateEnumProvisioning, elbv2.LoadBalancerStateEnumFailed},
 		Target:     []string{elbv2.LoadBalancerStateEnumActive},
-		Refresh:    LoadBalancerState(conn, arn),
+		Refresh:    statusLoadBalancerState(conn, arn),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second, // Wait 30 secs before starting
