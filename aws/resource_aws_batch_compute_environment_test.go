@@ -157,14 +157,14 @@ func testSweepBatchComputeEnvironments(region string) error {
 
 func TestAccAWSBatchComputeEnvironment_basic(t *testing.T) {
 	var ce batch.ComputeEnvironmentDetail
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_compute_environment.test"
 	serviceRoleResourceName := "aws_iam_role.batch_service"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBatch(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -190,20 +190,20 @@ func TestAccAWSBatchComputeEnvironment_basic(t *testing.T) {
 
 func TestAccAWSBatchComputeEnvironment_disappears(t *testing.T) {
 	var ce batch.ComputeEnvironmentDetail
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_compute_environment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBatch(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSBatchComputeEnvironmentConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBatchComputeEnvironmentExists(resourceName, &ce),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsBatchComputeEnvironment(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsBatchComputeEnvironment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -213,13 +213,13 @@ func TestAccAWSBatchComputeEnvironment_disappears(t *testing.T) {
 
 func TestAccAWSBatchComputeEnvironment_NameGenerated(t *testing.T) {
 	var ce batch.ComputeEnvironmentDetail
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_compute_environment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBatch(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -241,13 +241,13 @@ func TestAccAWSBatchComputeEnvironment_NameGenerated(t *testing.T) {
 
 func TestAccAWSBatchComputeEnvironment_NamePrefix(t *testing.T) {
 	var ce batch.ComputeEnvironmentDetail
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_compute_environment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBatch(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -269,7 +269,7 @@ func TestAccAWSBatchComputeEnvironment_NamePrefix(t *testing.T) {
 
 func TestAccAWSBatchComputeEnvironment_createEc2(t *testing.T) {
 	var ce batch.ComputeEnvironmentDetail
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_compute_environment.test"
 	instanceProfileResourceName := "aws_iam_instance_profile.ecs_instance"
 	securityGroupResourceName := "aws_security_group.test"
@@ -279,7 +279,7 @@ func TestAccAWSBatchComputeEnvironment_createEc2(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBatch(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -336,8 +336,8 @@ func TestAccAWSBatchComputeEnvironment_createEc2_DesiredVcpus_Ec2KeyPair_ImageId
 	serviceRoleResourceName := "aws_iam_role.batch_service"
 	subnetResourceName := "aws_subnet.test"
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
-	publicKey, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
@@ -345,7 +345,7 @@ func TestAccAWSBatchComputeEnvironment_createEc2_DesiredVcpus_Ec2KeyPair_ImageId
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBatch(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -395,7 +395,7 @@ func TestAccAWSBatchComputeEnvironment_createEc2_DesiredVcpus_Ec2KeyPair_ImageId
 
 func TestAccAWSBatchComputeEnvironment_createSpot(t *testing.T) {
 	var ce batch.ComputeEnvironmentDetail
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_compute_environment.test"
 	instanceProfileResourceName := "aws_iam_instance_profile.ecs_instance"
 	securityGroupResourceName := "aws_security_group.test"
@@ -406,7 +406,7 @@ func TestAccAWSBatchComputeEnvironment_createSpot(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBatch(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -455,7 +455,7 @@ func TestAccAWSBatchComputeEnvironment_createSpot(t *testing.T) {
 
 func TestAccAWSBatchComputeEnvironment_createSpot_AllocationStrategy_BidPercentage(t *testing.T) {
 	var ce batch.ComputeEnvironmentDetail
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_compute_environment.test"
 	instanceProfileResourceName := "aws_iam_instance_profile.ecs_instance"
 	securityGroupResourceName := "aws_security_group.test"
@@ -466,7 +466,7 @@ func TestAccAWSBatchComputeEnvironment_createSpot_AllocationStrategy_BidPercenta
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBatch(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -515,7 +515,7 @@ func TestAccAWSBatchComputeEnvironment_createSpot_AllocationStrategy_BidPercenta
 
 func TestAccAWSBatchComputeEnvironment_createFargate(t *testing.T) {
 	var ce batch.ComputeEnvironmentDetail
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_compute_environment.test"
 	securityGroupResourceName := "aws_security_group.test"
 	serviceRoleResourceName := "aws_iam_role.batch_service"
@@ -524,7 +524,7 @@ func TestAccAWSBatchComputeEnvironment_createFargate(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBatch(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -572,7 +572,7 @@ func TestAccAWSBatchComputeEnvironment_createFargate(t *testing.T) {
 
 func TestAccAWSBatchComputeEnvironment_createFargateSpot(t *testing.T) {
 	var ce batch.ComputeEnvironmentDetail
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_compute_environment.test"
 	securityGroupResourceName := "aws_security_group.test"
 	serviceRoleResourceName := "aws_iam_role.batch_service"
@@ -581,7 +581,7 @@ func TestAccAWSBatchComputeEnvironment_createFargateSpot(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBatch(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -629,14 +629,14 @@ func TestAccAWSBatchComputeEnvironment_createFargateSpot(t *testing.T) {
 
 func TestAccAWSBatchComputeEnvironment_updateState(t *testing.T) {
 	var ce batch.ComputeEnvironmentDetail
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_compute_environment.test"
 	serviceRoleResourceName := "aws_iam_role.batch_service"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBatch(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -684,7 +684,7 @@ func TestAccAWSBatchComputeEnvironment_updateState(t *testing.T) {
 
 func TestAccAWSBatchComputeEnvironment_updateServiceRole(t *testing.T) {
 	var ce batch.ComputeEnvironmentDetail
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_compute_environment.test"
 	serviceRoleResourceName1 := "aws_iam_role.batch_service"
 	serviceRoleResourceName2 := "aws_iam_role.batch_service_2"
@@ -694,7 +694,7 @@ func TestAccAWSBatchComputeEnvironment_updateServiceRole(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBatch(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -776,7 +776,7 @@ func TestAccAWSBatchComputeEnvironment_updateServiceRole(t *testing.T) {
 
 func TestAccAWSBatchComputeEnvironment_defaultServiceRole(t *testing.T) {
 	var ce batch.ComputeEnvironmentDetail
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_compute_environment.test"
 	securityGroupResourceName := "aws_security_group.test"
 	subnetResourceName := "aws_subnet.test"
@@ -788,7 +788,7 @@ func TestAccAWSBatchComputeEnvironment_defaultServiceRole(t *testing.T) {
 			acctest.PreCheckIAMServiceLinkedRole(t, "/aws-service-role/batch")
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -836,7 +836,7 @@ func TestAccAWSBatchComputeEnvironment_defaultServiceRole(t *testing.T) {
 
 func TestAccAWSBatchComputeEnvironment_ComputeResources_MinVcpus(t *testing.T) {
 	var ce batch.ComputeEnvironmentDetail
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_compute_environment.test"
 	instanceProfileResourceName := "aws_iam_instance_profile.ecs_instance"
 	securityGroupResourceName := "aws_security_group.test"
@@ -846,7 +846,7 @@ func TestAccAWSBatchComputeEnvironment_ComputeResources_MinVcpus(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBatch(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -965,7 +965,7 @@ func TestAccAWSBatchComputeEnvironment_ComputeResources_MinVcpus(t *testing.T) {
 
 func TestAccAWSBatchComputeEnvironment_ComputeResources_MaxVcpus(t *testing.T) {
 	var ce batch.ComputeEnvironmentDetail
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_compute_environment.test"
 	instanceProfileResourceName := "aws_iam_instance_profile.ecs_instance"
 	securityGroupResourceName := "aws_security_group.test"
@@ -975,7 +975,7 @@ func TestAccAWSBatchComputeEnvironment_ComputeResources_MaxVcpus(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBatch(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1094,7 +1094,7 @@ func TestAccAWSBatchComputeEnvironment_ComputeResources_MaxVcpus(t *testing.T) {
 
 func TestAccAWSBatchComputeEnvironment_launchTemplate(t *testing.T) {
 	var ce batch.ComputeEnvironmentDetail
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_compute_environment.test"
 	instanceProfileResourceName := "aws_iam_instance_profile.ecs_instance"
 	launchTemplateResourceName := "aws_launch_template.test"
@@ -1106,7 +1106,7 @@ func TestAccAWSBatchComputeEnvironment_launchTemplate(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBatch(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1158,7 +1158,7 @@ func TestAccAWSBatchComputeEnvironment_launchTemplate(t *testing.T) {
 
 func TestAccAWSBatchComputeEnvironment_UpdateLaunchTemplate(t *testing.T) {
 	var ce batch.ComputeEnvironmentDetail
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_compute_environment.test"
 	instanceProfileResourceName := "aws_iam_instance_profile.ecs_instance"
 	launchTemplateResourceName := "aws_launch_template.test"
@@ -1170,7 +1170,7 @@ func TestAccAWSBatchComputeEnvironment_UpdateLaunchTemplate(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBatch(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1260,7 +1260,7 @@ func TestAccAWSBatchComputeEnvironment_UpdateLaunchTemplate(t *testing.T) {
 
 func TestAccAWSBatchComputeEnvironment_UpdateSecurityGroupsAndSubnets_Fargate(t *testing.T) {
 	var ce batch.ComputeEnvironmentDetail
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_compute_environment.test"
 	securityGroupResourceName1 := "aws_security_group.test"
 	securityGroupResourceName2 := "aws_security_group.test_2"
@@ -1272,7 +1272,7 @@ func TestAccAWSBatchComputeEnvironment_UpdateSecurityGroupsAndSubnets_Fargate(t 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBatch(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1355,13 +1355,13 @@ func TestAccAWSBatchComputeEnvironment_UpdateSecurityGroupsAndSubnets_Fargate(t 
 
 func TestAccAWSBatchComputeEnvironment_Tags(t *testing.T) {
 	var ce batch.ComputeEnvironmentDetail
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_compute_environment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBatch(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1400,14 +1400,14 @@ func TestAccAWSBatchComputeEnvironment_Tags(t *testing.T) {
 
 func TestAccAWSBatchComputeEnvironment_createUnmanagedWithComputeResources(t *testing.T) {
 	var ce batch.ComputeEnvironmentDetail
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_compute_environment.test"
 	serviceRoleResourceName := "aws_iam_role.batch_service"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBatch(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1435,12 +1435,12 @@ func TestAccAWSBatchComputeEnvironment_createUnmanagedWithComputeResources(t *te
 // Test plan time errors...
 
 func TestAccAWSBatchComputeEnvironment_createEc2WithoutComputeResources(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBatch(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1452,12 +1452,12 @@ func TestAccAWSBatchComputeEnvironment_createEc2WithoutComputeResources(t *testi
 }
 
 func TestAccAWSBatchComputeEnvironment_createSpotWithoutIamFleetRole(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBatch(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1469,7 +1469,7 @@ func TestAccAWSBatchComputeEnvironment_createSpotWithoutIamFleetRole(t *testing.
 }
 
 func testAccCheckBatchComputeEnvironmentDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).batchconn
+	conn := acctest.Provider.Meta().(*AWSClient).batchconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_batch_compute_environment" {
@@ -1502,7 +1502,7 @@ func testAccCheckAwsBatchComputeEnvironmentExists(n string, v *batch.ComputeEnvi
 			return fmt.Errorf("No Batch Compute Environment ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).batchconn
+		conn := acctest.Provider.Meta().(*AWSClient).batchconn
 
 		computeEnvironment, err := finder.ComputeEnvironmentDetailByName(conn, rs.Primary.ID)
 
@@ -1517,7 +1517,7 @@ func testAccCheckAwsBatchComputeEnvironmentExists(n string, v *batch.ComputeEnvi
 }
 
 func testAccPreCheckAWSBatch(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).batchconn
+	conn := acctest.Provider.Meta().(*AWSClient).batchconn
 
 	input := &batch.DescribeComputeEnvironmentsInput{}
 

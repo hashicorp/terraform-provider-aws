@@ -75,13 +75,13 @@ func testSweepBatchJobDefinitions(region string) error {
 
 func TestAccAWSBatchJobDefinition_basic(t *testing.T) {
 	var jd batch.JobDefinition
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_job_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBatch(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckBatchJobDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -112,20 +112,20 @@ func TestAccAWSBatchJobDefinition_basic(t *testing.T) {
 
 func TestAccAWSBatchJobDefinition_disappears(t *testing.T) {
 	var jd batch.JobDefinition
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_job_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBatch(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckBatchJobDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBatchJobDefinitionConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBatchJobDefinitionExists(resourceName, &jd),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsBatchJobDefinition(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsBatchJobDefinition(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -135,13 +135,13 @@ func TestAccAWSBatchJobDefinition_disappears(t *testing.T) {
 
 func TestAccAWSBatchJobDefinition_PlatformCapabilities_EC2(t *testing.T) {
 	var jd batch.JobDefinition
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_job_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBatch(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckBatchJobDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -173,13 +173,13 @@ func TestAccAWSBatchJobDefinition_PlatformCapabilities_EC2(t *testing.T) {
 
 func TestAccAWSBatchJobDefinition_PlatformCapabilities_Fargate_ContainerPropertiesDefaults(t *testing.T) {
 	var jd batch.JobDefinition
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_job_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBatch(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckBatchJobDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -211,13 +211,13 @@ func TestAccAWSBatchJobDefinition_PlatformCapabilities_Fargate_ContainerProperti
 
 func TestAccAWSBatchJobDefinition_PlatformCapabilities_Fargate(t *testing.T) {
 	var jd batch.JobDefinition
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_job_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBatch(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckBatchJobDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -288,13 +288,13 @@ func TestAccAWSBatchJobDefinition_ContainerProperties_Advanced(t *testing.T) {
 			},
 		},
 	}
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_job_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBatch(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckBatchJobDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -315,13 +315,13 @@ func TestAccAWSBatchJobDefinition_ContainerProperties_Advanced(t *testing.T) {
 
 func TestAccAWSBatchJobDefinition_updateForcesNewResource(t *testing.T) {
 	var before, after batch.JobDefinition
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_job_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBatch(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckBatchJobDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -349,13 +349,13 @@ func TestAccAWSBatchJobDefinition_updateForcesNewResource(t *testing.T) {
 
 func TestAccAWSBatchJobDefinition_Tags(t *testing.T) {
 	var jd batch.JobDefinition
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_job_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBatch(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckBatchJobDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -394,13 +394,13 @@ func TestAccAWSBatchJobDefinition_Tags(t *testing.T) {
 
 func TestAccAWSBatchJobDefinition_PropagateTags(t *testing.T) {
 	var jd batch.JobDefinition
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_job_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBatch(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckBatchJobDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -435,7 +435,7 @@ func testAccCheckBatchJobDefinitionExists(n string, jd *batch.JobDefinition) res
 			return fmt.Errorf("No Batch Job Queue ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).batchconn
+		conn := acctest.Provider.Meta().(*AWSClient).batchconn
 
 		jobDefinition, err := finder.JobDefinitionByARN(conn, rs.Primary.ID)
 
@@ -487,7 +487,7 @@ func testAccCheckJobDefinitionRecreated(t *testing.T, before, after *batch.JobDe
 }
 
 func testAccCheckBatchJobDefinitionDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).batchconn
+	conn := acctest.Provider.Meta().(*AWSClient).batchconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_batch_job_definition" {
