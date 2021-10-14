@@ -23,9 +23,9 @@ var (
 func ResourceQueuePolicy() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
-		Create: resourceAwsSqsQueuePolicyUpsert,
+		Create: resourceQueuePolicyUpsert,
 		Read:   resourceQueuePolicyRead,
-		Update: resourceAwsSqsQueuePolicyUpsert,
+		Update: resourceQueuePolicyUpsert,
 		Delete: resourceQueuePolicyDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -50,7 +50,7 @@ func ResourceQueuePolicy() *schema.Resource {
 	}
 }
 
-func resourceAwsSqsQueuePolicyUpsert(d *schema.ResourceData, meta interface{}) error {
+func resourceQueuePolicyUpsert(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SQSConn
 
 	policyAttributes := map[string]string{

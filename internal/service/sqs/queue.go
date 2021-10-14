@@ -176,7 +176,7 @@ func ResourceQueue() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		CustomizeDiff: customdiff.Sequence(
-			resourceAwsSqsQueueCustomizeDiff,
+			resourceQueueCustomizeDiff,
 			verify.SetTagsDiff,
 		),
 
@@ -390,7 +390,7 @@ func resourceQueueDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsSqsQueueCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+func resourceQueueCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
 	fifoQueue := diff.Get("fifo_queue").(bool)
 	contentBasedDeduplication := diff.Get("content_based_deduplication").(bool)
 
