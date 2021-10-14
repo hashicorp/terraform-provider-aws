@@ -33,9 +33,9 @@ func TestAccAWSAppConfigDeployment_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAppConfigApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAppConfigDeploymentConfigName(rName),
+				Config: testAccDeploymentNameConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAppConfigDeploymentExists(resourceName),
+					testAccCheckDeploymentExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appconfig", regexp.MustCompile(`application/[a-z0-9]{4,7}/environment/[a-z0-9]{4,7}/deployment/1`)),
 					resource.TestCheckResourceAttrPair(resourceName, "application_id", appResourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration_profile_id", confProfResourceName, "configuration_profile_id"),
@@ -71,9 +71,9 @@ func TestAccAWSAppConfigDeployment_PredefinedStrategy(t *testing.T) {
 		CheckDestroy: testAccCheckAppConfigApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAppConfigDeploymentConfig_PredefinedStrategy(rName, strategy),
+				Config: testAccDeploymentConfig_PredefinedStrategy(rName, strategy),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAppConfigDeploymentExists(resourceName),
+					testAccCheckDeploymentExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "deployment_strategy_id", strategy),
 				),
 			},
@@ -97,9 +97,9 @@ func TestAccAWSAppConfigDeployment_Tags(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAppConfigDeploymentTags1(rName, "key1", "value1"),
+				Config: testAccDeploymentTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAppConfigDeploymentExists(resourceName),
+					testAccCheckDeploymentExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -110,18 +110,18 @@ func TestAccAWSAppConfigDeployment_Tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSAppConfigDeploymentTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccDeploymentTags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAppConfigDeploymentExists(resourceName),
+					testAccCheckDeploymentExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccAWSAppConfigDeploymentTags1(rName, "key2", "value2"),
+				Config: testAccDeploymentTags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAppConfigDeploymentExists(resourceName),
+					testAccCheckDeploymentExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -130,7 +130,7 @@ func TestAccAWSAppConfigDeployment_Tags(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSAppConfigDeploymentExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckDeploymentExists(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -169,7 +169,7 @@ func testAccCheckAWSAppConfigDeploymentExists(resourceName string) resource.Test
 	}
 }
 
-func testAccAWSAppConfigDeploymentConfigBase(rName string) string {
+func testAccDeploymentBaseConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_appconfig_application" "test" {
   name = %[1]q
@@ -207,9 +207,9 @@ resource "aws_appconfig_hosted_configuration_version" "test" {
 `, rName)
 }
 
-func testAccAWSAppConfigDeploymentConfigName(rName string) string {
+func testAccDeploymentNameConfig(rName string) string {
 	return acctest.ConfigCompose(
-		testAccAWSAppConfigDeploymentConfigBase(rName),
+		testAccDeploymentBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_appconfig_deployment" "test"{
   application_id           = aws_appconfig_application.test.id
@@ -222,9 +222,9 @@ resource "aws_appconfig_deployment" "test"{
 `, rName))
 }
 
-func testAccAWSAppConfigDeploymentConfig_PredefinedStrategy(rName, strategy string) string {
+func testAccDeploymentConfig_PredefinedStrategy(rName, strategy string) string {
 	return acctest.ConfigCompose(
-		testAccAWSAppConfigDeploymentConfigBase(rName),
+		testAccDeploymentBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_appconfig_deployment" "test"{
   application_id           = aws_appconfig_application.test.id
@@ -237,9 +237,9 @@ resource "aws_appconfig_deployment" "test"{
 `, rName, strategy))
 }
 
-func testAccAWSAppConfigDeploymentTags1(rName, tagKey1, tagValue1 string) string {
+func testAccDeploymentTags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(
-		testAccAWSAppConfigDeploymentConfigBase(rName),
+		testAccDeploymentBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_appconfig_deployment" "test"{
   application_id           = aws_appconfig_application.test.id
@@ -255,9 +255,9 @@ resource "aws_appconfig_deployment" "test"{
 `, rName, tagKey1, tagValue1))
 }
 
-func testAccAWSAppConfigDeploymentTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccDeploymentTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(
-		testAccAWSAppConfigDeploymentConfigBase(rName),
+		testAccDeploymentBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_appconfig_deployment" "test"{
   application_id           = aws_appconfig_application.test.id

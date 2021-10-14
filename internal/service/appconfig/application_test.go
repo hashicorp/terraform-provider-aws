@@ -22,7 +22,7 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_appconfig_application", &resource.Sweeper{
 		Name: "aws_appconfig_application",
-		F:    testSweepAppConfigApplications,
+		F:    sweepApplications,
 		Dependencies: []string{
 			"aws_appconfig_configuration_profile",
 			"aws_appconfig_environment",
@@ -30,7 +30,7 @@ func init() {
 	})
 }
 
-func testSweepAppConfigApplications(region string) error {
+func sweepApplications(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
@@ -93,9 +93,9 @@ func TestAccAWSAppConfigApplication_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAppConfigApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAppConfigApplicationConfigName(rName),
+				Config: testAccApplicationNameConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAppConfigApplicationExists(resourceName),
+					testAccCheckApplicationExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appconfig", regexp.MustCompile(`application/[a-z0-9]{4,7}`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -121,9 +121,9 @@ func TestAccAWSAppConfigApplication_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckAppConfigApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAppConfigApplicationConfigName(rName),
+				Config: testAccApplicationNameConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAppConfigApplicationExists(resourceName),
+					testAccCheckApplicationExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfappconfig.ResourceApplication(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -144,15 +144,15 @@ func TestAccAWSAppConfigApplication_updateName(t *testing.T) {
 		CheckDestroy: testAccCheckAppConfigApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAppConfigApplicationConfigName(rName),
+				Config: testAccApplicationNameConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAppConfigApplicationExists(resourceName),
+					testAccCheckApplicationExists(resourceName),
 				),
 			},
 			{
-				Config: testAccAWSAppConfigApplicationConfigName(rNameUpdated),
+				Config: testAccApplicationNameConfig(rNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAppConfigApplicationExists(resourceName),
+					testAccCheckApplicationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
 				),
 			},
@@ -177,9 +177,9 @@ func TestAccAWSAppConfigApplication_updateDescription(t *testing.T) {
 		CheckDestroy: testAccCheckAppConfigApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAppConfigApplicationConfigDescription(rName, rName),
+				Config: testAccApplicationDescriptionConfig(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAppConfigApplicationExists(resourceName),
+					testAccCheckApplicationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", rName),
 				),
 			},
@@ -189,9 +189,9 @@ func TestAccAWSAppConfigApplication_updateDescription(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSAppConfigApplicationConfigDescription(rName, description),
+				Config: testAccApplicationDescriptionConfig(rName, description),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAppConfigApplicationExists(resourceName),
+					testAccCheckApplicationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
 				),
 			},
@@ -202,9 +202,9 @@ func TestAccAWSAppConfigApplication_updateDescription(t *testing.T) {
 			},
 			{
 				// Test Description Removal
-				Config: testAccAWSAppConfigApplicationConfigName(rName),
+				Config: testAccApplicationNameConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAppConfigApplicationExists(resourceName),
+					testAccCheckApplicationExists(resourceName),
 				),
 			},
 		},
@@ -222,9 +222,9 @@ func TestAccAWSAppConfigApplication_Tags(t *testing.T) {
 		CheckDestroy: testAccCheckAppConfigApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAppConfigApplicationTags1(rName, "key1", "value1"),
+				Config: testAccApplicationTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAppConfigApplicationExists(resourceName),
+					testAccCheckApplicationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -235,18 +235,18 @@ func TestAccAWSAppConfigApplication_Tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSAppConfigApplicationTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccApplicationTags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAppConfigApplicationExists(resourceName),
+					testAccCheckApplicationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccAWSAppConfigApplicationTags1(rName, "key2", "value2"),
+				Config: testAccApplicationTags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAppConfigApplicationExists(resourceName),
+					testAccCheckApplicationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -285,7 +285,7 @@ func testAccCheckAppConfigApplicationDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSAppConfigApplicationExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckApplicationExists(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -316,7 +316,7 @@ func testAccCheckAWSAppConfigApplicationExists(resourceName string) resource.Tes
 	}
 }
 
-func testAccAWSAppConfigApplicationConfigName(rName string) string {
+func testAccApplicationNameConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_appconfig_application" "test" {
   name = %[1]q
@@ -324,7 +324,7 @@ resource "aws_appconfig_application" "test" {
 `, rName)
 }
 
-func testAccAWSAppConfigApplicationConfigDescription(rName, description string) string {
+func testAccApplicationDescriptionConfig(rName, description string) string {
 	return fmt.Sprintf(`
 resource "aws_appconfig_application" "test" {
   name        = %q
@@ -333,7 +333,7 @@ resource "aws_appconfig_application" "test" {
 `, rName, description)
 }
 
-func testAccAWSAppConfigApplicationTags1(rName, tagKey1, tagValue1 string) string {
+func testAccApplicationTags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_appconfig_application" "test" {
   name = %[1]q
@@ -345,7 +345,7 @@ resource "aws_appconfig_application" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccAWSAppConfigApplicationTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccApplicationTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_appconfig_application" "test" {
   name = %[1]q

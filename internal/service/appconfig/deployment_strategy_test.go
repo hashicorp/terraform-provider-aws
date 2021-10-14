@@ -22,11 +22,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_appconfig_deployment_strategy", &resource.Sweeper{
 		Name: "aws_appconfig_deployment_strategy",
-		F:    testSweepAppConfigDeploymentStrategies,
+		F:    sweepDeploymentStrategies,
 	})
 }
 
-func testSweepAppConfigDeploymentStrategies(region string) error {
+func sweepDeploymentStrategies(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
@@ -95,9 +95,9 @@ func TestAccAWSAppConfigDeploymentStrategy_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAppConfigDeploymentStrategyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAppConfigDeploymentStrategyConfigName(rName),
+				Config: testAccDeploymentStrategyNameConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAppConfigDeploymentStrategyExists(resourceName),
+					testAccCheckDeploymentStrategyExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appconfig", regexp.MustCompile(`deploymentstrategy/[a-z0-9]{4,7}`)),
 					resource.TestCheckResourceAttr(resourceName, "deployment_duration_in_minutes", "3"),
 					resource.TestCheckResourceAttr(resourceName, "growth_factor", "10"),
@@ -127,16 +127,16 @@ func TestAccAWSAppConfigDeploymentStrategy_updateDescription(t *testing.T) {
 		CheckDestroy: testAccCheckAppConfigDeploymentStrategyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAppConfigDeploymentStrategyConfigDescription(rName, rName),
+				Config: testAccDeploymentStrategyDescriptionConfig(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAppConfigDeploymentStrategyExists(resourceName),
+					testAccCheckDeploymentStrategyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", rName),
 				),
 			},
 			{
-				Config: testAccAWSAppConfigDeploymentStrategyConfigDescription(rName, description),
+				Config: testAccDeploymentStrategyDescriptionConfig(rName, description),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAppConfigDeploymentStrategyExists(resourceName),
+					testAccCheckDeploymentStrategyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
 				),
 			},
@@ -160,9 +160,9 @@ func TestAccAWSAppConfigDeploymentStrategy_updateFinalBakeTime(t *testing.T) {
 		CheckDestroy: testAccCheckAppConfigDeploymentStrategyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAppConfigDeploymentStrategyConfigFinalBakeTime(rName, 60),
+				Config: testAccDeploymentStrategyFinalBakeTimeConfig(rName, 60),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAppConfigDeploymentStrategyExists(resourceName),
+					testAccCheckDeploymentStrategyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "final_bake_time_in_minutes", "60"),
 				),
 			},
@@ -172,9 +172,9 @@ func TestAccAWSAppConfigDeploymentStrategy_updateFinalBakeTime(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSAppConfigDeploymentStrategyConfigFinalBakeTime(rName, 30),
+				Config: testAccDeploymentStrategyFinalBakeTimeConfig(rName, 30),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAppConfigDeploymentStrategyExists(resourceName),
+					testAccCheckDeploymentStrategyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "final_bake_time_in_minutes", "30"),
 				),
 			},
@@ -185,9 +185,9 @@ func TestAccAWSAppConfigDeploymentStrategy_updateFinalBakeTime(t *testing.T) {
 			},
 			{
 				// Test FinalBakeTimeInMinutes Removal
-				Config: testAccAWSAppConfigDeploymentStrategyConfigName(rName),
+				Config: testAccDeploymentStrategyNameConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAppConfigDeploymentStrategyExists(resourceName),
+					testAccCheckDeploymentStrategyExists(resourceName),
 				),
 			},
 		},
@@ -205,9 +205,9 @@ func TestAccAWSAppConfigDeploymentStrategy_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckAppConfigDeploymentStrategyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAppConfigDeploymentStrategyConfigName(rName),
+				Config: testAccDeploymentStrategyNameConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAppConfigDeploymentStrategyExists(resourceName),
+					testAccCheckDeploymentStrategyExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfappconfig.ResourceDeploymentStrategy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -227,9 +227,9 @@ func TestAccAWSAppConfigDeploymentStrategy_Tags(t *testing.T) {
 		CheckDestroy: testAccCheckAppConfigDeploymentStrategyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAppConfigDeploymentStrategyTags1(rName, "key1", "value1"),
+				Config: testAccDeploymentStrategyTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAppConfigDeploymentStrategyExists(resourceName),
+					testAccCheckDeploymentStrategyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -240,18 +240,18 @@ func TestAccAWSAppConfigDeploymentStrategy_Tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSAppConfigDeploymentStrategyTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccDeploymentStrategyTags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAppConfigDeploymentStrategyExists(resourceName),
+					testAccCheckDeploymentStrategyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccAWSAppConfigDeploymentStrategyTags1(rName, "key2", "value2"),
+				Config: testAccDeploymentStrategyTags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAppConfigDeploymentStrategyExists(resourceName),
+					testAccCheckDeploymentStrategyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -290,7 +290,7 @@ func testAccCheckAppConfigDeploymentStrategyDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSAppConfigDeploymentStrategyExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckDeploymentStrategyExists(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -321,7 +321,7 @@ func testAccCheckAWSAppConfigDeploymentStrategyExists(resourceName string) resou
 	}
 }
 
-func testAccAWSAppConfigDeploymentStrategyConfigName(rName string) string {
+func testAccDeploymentStrategyNameConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_appconfig_deployment_strategy" "test" {
   name                           = %[1]q
@@ -332,7 +332,7 @@ resource "aws_appconfig_deployment_strategy" "test" {
 `, rName)
 }
 
-func testAccAWSAppConfigDeploymentStrategyConfigDescription(rName, description string) string {
+func testAccDeploymentStrategyDescriptionConfig(rName, description string) string {
 	return fmt.Sprintf(`
 resource "aws_appconfig_deployment_strategy" "test" {
   name                           = %[1]q
@@ -344,7 +344,7 @@ resource "aws_appconfig_deployment_strategy" "test" {
 `, rName, description)
 }
 
-func testAccAWSAppConfigDeploymentStrategyConfigFinalBakeTime(rName string, time int) string {
+func testAccDeploymentStrategyFinalBakeTimeConfig(rName string, time int) string {
 	return fmt.Sprintf(`
 resource "aws_appconfig_deployment_strategy" "test" {
   name                           = %[1]q
@@ -356,7 +356,7 @@ resource "aws_appconfig_deployment_strategy" "test" {
 `, rName, time)
 }
 
-func testAccAWSAppConfigDeploymentStrategyTags1(rName, tagKey1, tagValue1 string) string {
+func testAccDeploymentStrategyTags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_appconfig_deployment_strategy" "test" {
   name                           = %[1]q
@@ -371,7 +371,7 @@ resource "aws_appconfig_deployment_strategy" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccAWSAppConfigDeploymentStrategyTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccDeploymentStrategyTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_appconfig_deployment_strategy" "test" {
   name                           = %[1]q
