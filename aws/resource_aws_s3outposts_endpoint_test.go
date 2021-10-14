@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/s3outposts/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSS3OutpostsEndpoint_basic(t *testing.T) {
@@ -61,7 +62,7 @@ func TestAccAWSS3OutpostsEndpoint_disappears(t *testing.T) {
 				Config: testAccAWSS3OutpostsEndpointConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3OutpostsEndpointExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsS3OutpostsEndpoint(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceEndpoint(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -16,11 +16,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsS3OutpostsEndpoint() *schema.Resource {
+func ResourceEndpoint() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsS3OutpostsEndpointCreate,
-		Read:   resourceAwsS3OutpostsEndpointRead,
-		Delete: resourceAwsS3OutpostsEndpointDelete,
+		Create: resourceEndpointCreate,
+		Read:   resourceEndpointRead,
+		Delete: resourceEndpointDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsS3OutpostsEndpointImportState,
@@ -73,7 +73,7 @@ func resourceAwsS3OutpostsEndpoint() *schema.Resource {
 	}
 }
 
-func resourceAwsS3OutpostsEndpointCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3OutpostsConn
 
 	input := &s3outposts.CreateEndpointInput{
@@ -98,10 +98,10 @@ func resourceAwsS3OutpostsEndpointCreate(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("error waiting for S3 Outposts Endpoint (%s) to become available: %w", d.Id(), err)
 	}
 
-	return resourceAwsS3OutpostsEndpointRead(d, meta)
+	return resourceEndpointRead(d, meta)
 }
 
-func resourceAwsS3OutpostsEndpointRead(d *schema.ResourceData, meta interface{}) error {
+func resourceEndpointRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3OutpostsConn
 
 	endpoint, err := finder.Endpoint(conn, d.Id())
@@ -136,7 +136,7 @@ func resourceAwsS3OutpostsEndpointRead(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
-func resourceAwsS3OutpostsEndpointDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceEndpointDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3OutpostsConn
 
 	parsedArn, err := arn.Parse(d.Id())
