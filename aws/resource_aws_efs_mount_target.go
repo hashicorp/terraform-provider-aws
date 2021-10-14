@@ -116,7 +116,7 @@ func resourceAwsEfsMountTargetCreate(d *schema.ResourceData, meta interface{}) e
 		input.IpAddress = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("security_groups"); ok {
-		input.SecurityGroups = expandStringSet(v.(*schema.Set))
+		input.SecurityGroups = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	log.Printf("[DEBUG] Creating EFS mount target: %#v", input)
@@ -170,7 +170,7 @@ func resourceAwsEfsMountTargetUpdate(d *schema.ResourceData, meta interface{}) e
 	if d.HasChange("security_groups") {
 		input := efs.ModifyMountTargetSecurityGroupsInput{
 			MountTargetId:  aws.String(d.Id()),
-			SecurityGroups: expandStringSet(d.Get("security_groups").(*schema.Set)),
+			SecurityGroups: flex.ExpandStringSet(d.Get("security_groups").(*schema.Set)),
 		}
 		_, err := conn.ModifyMountTargetSecurityGroups(&input)
 		if err != nil {
@@ -230,7 +230,7 @@ func resourceAwsEfsMountTargetRead(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
-	err = d.Set("security_groups", flattenStringSet(sgResp.SecurityGroups))
+	err = d.Set("security_groups", flex.FlattenStringSet(sgResp.SecurityGroups))
 	if err != nil {
 		return err
 	}

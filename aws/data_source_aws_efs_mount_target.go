@@ -135,7 +135,7 @@ func dataSourceAwsEfsMountTargetRead(d *schema.ResourceData, meta interface{}) e
 	if err != nil {
 		return err
 	}
-	err = d.Set("security_groups", flattenStringSet(sgResp.SecurityGroups))
+	err = d.Set("security_groups", flex.FlattenStringSet(sgResp.SecurityGroups))
 	if err != nil {
 		return err
 	}
