@@ -64,7 +64,7 @@ func sweepSamlProvider(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSIAMSamlProvider_basic(t *testing.T) {
+func TestAccIAMSamlProvider_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_saml_provider.test"
 
@@ -102,7 +102,7 @@ func TestAccAWSIAMSamlProvider_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSIAMSamlProvider_tags(t *testing.T) {
+func TestAccIAMSamlProvider_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_saml_provider.test"
 
@@ -146,7 +146,7 @@ func TestAccAWSIAMSamlProvider_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSIAMSamlProvider_disappears(t *testing.T) {
+func TestAccIAMSamlProvider_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_saml_provider.test"
 

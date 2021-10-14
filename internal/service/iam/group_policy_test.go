@@ -16,7 +16,7 @@ import (
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
-func TestAccAWSIAMGroupPolicy_basic(t *testing.T) {
+func TestAccIAMGroupPolicy_basic(t *testing.T) {
 	var groupPolicy1, groupPolicy2 iam.GetGroupPolicyOutput
 	rInt := sdkacctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
@@ -60,7 +60,7 @@ func TestAccAWSIAMGroupPolicy_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSIAMGroupPolicy_disappears(t *testing.T) {
+func TestAccIAMGroupPolicy_disappears(t *testing.T) {
 	var out iam.GetGroupPolicyOutput
 	rInt := sdkacctest.RandInt()
 
@@ -86,7 +86,7 @@ func TestAccAWSIAMGroupPolicy_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSIAMGroupPolicy_namePrefix(t *testing.T) {
+func TestAccIAMGroupPolicy_namePrefix(t *testing.T) {
 	var groupPolicy1, groupPolicy2 iam.GetGroupPolicyOutput
 	rInt := sdkacctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
@@ -126,7 +126,7 @@ func TestAccAWSIAMGroupPolicy_namePrefix(t *testing.T) {
 	})
 }
 
-func TestAccAWSIAMGroupPolicy_generatedName(t *testing.T) {
+func TestAccIAMGroupPolicy_generatedName(t *testing.T) {
 	var groupPolicy1, groupPolicy2 iam.GetGroupPolicyOutput
 	rInt := sdkacctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{

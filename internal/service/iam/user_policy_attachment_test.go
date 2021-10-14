@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSUserPolicyAttachment_basic(t *testing.T) {
+func TestAccIAMUserPolicyAttachment_basic(t *testing.T) {
 	var out iam.ListAttachedUserPoliciesOutput
 	rName := sdkacctest.RandString(10)
 	policyName1 := fmt.Sprintf("test-policy-%s", sdkacctest.RandString(10))

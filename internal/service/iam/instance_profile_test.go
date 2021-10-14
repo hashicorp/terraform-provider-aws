@@ -84,7 +84,7 @@ func sweepInstanceProfile(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSIAMInstanceProfile_basic(t *testing.T) {
+func TestAccIAMInstanceProfile_basic(t *testing.T) {
 	var conf iam.GetInstanceProfileOutput
 	resourceName := "aws_iam_instance_profile.test"
 	rName := sdkacctest.RandString(5)
@@ -114,7 +114,7 @@ func TestAccAWSIAMInstanceProfile_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSIAMInstanceProfile_withoutRole(t *testing.T) {
+func TestAccIAMInstanceProfile_withoutRole(t *testing.T) {
 	var conf iam.GetInstanceProfileOutput
 	resourceName := "aws_iam_instance_profile.test"
 	rName := sdkacctest.RandString(5)
@@ -140,7 +140,7 @@ func TestAccAWSIAMInstanceProfile_withoutRole(t *testing.T) {
 	})
 }
 
-func TestAccAWSIAMInstanceProfile_tags(t *testing.T) {
+func TestAccIAMInstanceProfile_tags(t *testing.T) {
 	var conf iam.GetInstanceProfileOutput
 	resourceName := "aws_iam_instance_profile.test"
 	rName := sdkacctest.RandString(5)
@@ -186,7 +186,7 @@ func TestAccAWSIAMInstanceProfile_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSIAMInstanceProfile_namePrefix(t *testing.T) {
+func TestAccIAMInstanceProfile_namePrefix(t *testing.T) {
 	var conf iam.GetInstanceProfileOutput
 	rName := sdkacctest.RandString(5)
 	resourceName := "aws_iam_instance_profile.test"
@@ -215,7 +215,7 @@ func TestAccAWSIAMInstanceProfile_namePrefix(t *testing.T) {
 	})
 }
 
-func TestAccAWSIAMInstanceProfile_disappears(t *testing.T) {
+func TestAccIAMInstanceProfile_disappears(t *testing.T) {
 	var conf iam.GetInstanceProfileOutput
 	resourceName := "aws_iam_instance_profile.test"
 	rName := sdkacctest.RandString(5)
@@ -238,7 +238,7 @@ func TestAccAWSIAMInstanceProfile_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSIAMInstanceProfile_disappears_role(t *testing.T) {
+func TestAccIAMInstanceProfile_Disappears_role(t *testing.T) {
 	var conf iam.GetInstanceProfileOutput
 	resourceName := "aws_iam_instance_profile.test"
 	rName := sdkacctest.RandString(5)

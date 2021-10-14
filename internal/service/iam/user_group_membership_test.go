@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSUserGroupMembership_basic(t *testing.T) {
+func TestAccIAMUserGroupMembership_basic(t *testing.T) {
 	rString := sdkacctest.RandString(8)
 	userName1 := fmt.Sprintf("tf-acc-ugm-basic-user1-%s", rString)
 	userName2 := fmt.Sprintf("tf-acc-ugm-basic-user2-%s", rString)

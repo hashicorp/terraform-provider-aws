@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSIAMAccountAlias_serial(t *testing.T) {
+func TestAccIAMAccountAlias_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"DataSource": {
 			"basic": testAccAccountAliasDataSource_basic,

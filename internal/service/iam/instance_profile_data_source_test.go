@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSDataSourceIAMInstanceProfile_basic(t *testing.T) {
+func TestAccIAMInstanceProfileDataSource_basic(t *testing.T) {
 	resourceName := "data.aws_iam_instance_profile.test"
 
 	roleName := fmt.Sprintf("tf-acc-ds-instance-profile-role-%d", sdkacctest.RandInt())

@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSIAMUsersDataSource_nameRegex(t *testing.T) {
+func TestAccIAMUsersDataSource_nameRegex(t *testing.T) {
 	dataSourceName := "data.aws_iam_users.test"
 	rCount := strconv.Itoa(sdkacctest.RandIntRange(1, 4))
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -32,7 +32,7 @@ func TestAccAWSIAMUsersDataSource_nameRegex(t *testing.T) {
 	})
 }
 
-func TestAccAWSIAMUsersDataSource_pathPrefix(t *testing.T) {
+func TestAccIAMUsersDataSource_pathPrefix(t *testing.T) {
 	dataSourceName := "data.aws_iam_users.test"
 	rCount := strconv.Itoa(sdkacctest.RandIntRange(1, 4))
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -54,7 +54,7 @@ func TestAccAWSIAMUsersDataSource_pathPrefix(t *testing.T) {
 	})
 }
 
-func TestAccAWSIAMUsersDataSource_nonExistentNameRegex(t *testing.T) {
+func TestAccIAMUsersDataSource_nonExistentNameRegex(t *testing.T) {
 	dataSourceName := "data.aws_iam_users.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -73,7 +73,7 @@ func TestAccAWSIAMUsersDataSource_nonExistentNameRegex(t *testing.T) {
 	})
 }
 
-func TestAccAWSIAMUsersDataSource_nonExistentPathPrefix(t *testing.T) {
+func TestAccIAMUsersDataSource_nonExistentPathPrefix(t *testing.T) {
 	dataSourceName := "data.aws_iam_users.test"
 
 	resource.ParallelTest(t, resource.TestCase{

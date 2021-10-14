@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSDataSourceIAMGroup_basic(t *testing.T) {
+func TestAccIAMGroupDataSource_basic(t *testing.T) {
 	groupName := fmt.Sprintf("test-datasource-user-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -31,7 +31,7 @@ func TestAccAWSDataSourceIAMGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataSourceIAMGroup_users(t *testing.T) {
+func TestAccIAMGroupDataSource_users(t *testing.T) {
 	groupName := fmt.Sprintf("test-datasource-group-%d", sdkacctest.RandInt())
 	userName := fmt.Sprintf("test-datasource-user-%d", sdkacctest.RandInt())
 	groupMemberShipName := fmt.Sprintf("test-datasource-group-membership-%d", sdkacctest.RandInt())

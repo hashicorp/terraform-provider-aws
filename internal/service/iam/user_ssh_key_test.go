@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSUserSSHKey_basic(t *testing.T) {
+func TestAccIAMUserSSHKey_basic(t *testing.T) {
 	var conf iam.GetSSHPublicKeyOutput
 	resourceName := "aws_iam_user_ssh_key.user"
 
@@ -46,7 +46,7 @@ func TestAccAWSUserSSHKey_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSUserSSHKey_pemEncoding(t *testing.T) {
+func TestAccIAMUserSSHKey_pemEncoding(t *testing.T) {
 	var conf iam.GetSSHPublicKeyOutput
 
 	ri := sdkacctest.RandInt()

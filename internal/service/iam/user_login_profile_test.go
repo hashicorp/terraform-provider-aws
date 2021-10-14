@@ -63,7 +63,7 @@ func TestIAMPasswordPolicyCheck(t *testing.T) {
 	}
 }
 
-func TestAccAWSUserLoginProfile_basic(t *testing.T) {
+func TestAccIAMUserLoginProfile_basic(t *testing.T) {
 	var conf iam.GetLoginProfileOutput
 
 	username := fmt.Sprintf("test-user-%d", sdkacctest.RandInt())
@@ -102,7 +102,7 @@ func TestAccAWSUserLoginProfile_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSUserLoginProfile_keybase(t *testing.T) {
+func TestAccIAMUserLoginProfile_keybase(t *testing.T) {
 	var conf iam.GetLoginProfileOutput
 
 	username := fmt.Sprintf("test-user-%d", sdkacctest.RandInt())
@@ -140,7 +140,7 @@ func TestAccAWSUserLoginProfile_keybase(t *testing.T) {
 	})
 }
 
-func TestAccAWSUserLoginProfile_keybaseDoesntExist(t *testing.T) {
+func TestAccIAMUserLoginProfile_keybaseDoesntExist(t *testing.T) {
 	username := fmt.Sprintf("test-user-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -158,7 +158,7 @@ func TestAccAWSUserLoginProfile_keybaseDoesntExist(t *testing.T) {
 	})
 }
 
-func TestAccAWSUserLoginProfile_notAKey(t *testing.T) {
+func TestAccIAMUserLoginProfile_notAKey(t *testing.T) {
 	username := fmt.Sprintf("test-user-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -176,7 +176,7 @@ func TestAccAWSUserLoginProfile_notAKey(t *testing.T) {
 	})
 }
 
-func TestAccAWSUserLoginProfile_PasswordLength(t *testing.T) {
+func TestAccIAMUserLoginProfile_passwordLength(t *testing.T) {
 	var conf iam.GetLoginProfileOutput
 
 	username := fmt.Sprintf("test-user-%d", sdkacctest.RandInt())

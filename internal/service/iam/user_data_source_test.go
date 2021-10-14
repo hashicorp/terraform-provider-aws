@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSDataSourceIAMUser_basic(t *testing.T) {
+func TestAccIAMUserDataSource_basic(t *testing.T) {
 	resourceName := "aws_iam_user.test"
 	dataSourceName := "data.aws_iam_user.test"
 
@@ -36,7 +36,7 @@ func TestAccAWSDataSourceIAMUser_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataSourceIAMUser_tags(t *testing.T) {
+func TestAccIAMUserDataSource_tags(t *testing.T) {
 	resourceName := "aws_iam_user.test"
 	dataSourceName := "data.aws_iam_user.test"
 

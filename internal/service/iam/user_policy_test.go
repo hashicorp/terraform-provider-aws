@@ -17,7 +17,7 @@ import (
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
-func TestAccAWSIAMUserPolicy_basic(t *testing.T) {
+func TestAccIAMUserPolicy_basic(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 	policy1 := `{"Version":"2012-10-17","Statement":{"Effect":"Allow","Action":"*","Resource":"*"}}`
 	policy2 := `{"Version":"2012-10-17","Statement":{"Effect":"Allow","Action":"iam:*","Resource":"*"}}`
@@ -64,7 +64,7 @@ func TestAccAWSIAMUserPolicy_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSIAMUserPolicy_disappears(t *testing.T) {
+func TestAccIAMUserPolicy_disappears(t *testing.T) {
 	var out iam.GetUserPolicyOutput
 	suffix := sdkacctest.RandStringFromCharSet(10, sdkacctest.CharSetAlpha)
 	resourceName := fmt.Sprintf("aws_iam_user_policy.foo_%s", suffix)
@@ -87,7 +87,7 @@ func TestAccAWSIAMUserPolicy_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSIAMUserPolicy_namePrefix(t *testing.T) {
+func TestAccIAMUserPolicy_namePrefix(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 	policy1 := `{"Version":"2012-10-17","Statement":{"Effect":"Allow","Action":"*","Resource":"*"}}`
 	policy2 := `{"Version":"2012-10-17","Statement":{"Effect":"Allow","Action":"iam:*","Resource":"*"}}`
@@ -130,7 +130,7 @@ func TestAccAWSIAMUserPolicy_namePrefix(t *testing.T) {
 	})
 }
 
-func TestAccAWSIAMUserPolicy_generatedName(t *testing.T) {
+func TestAccIAMUserPolicy_generatedName(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 	policy1 := `{"Version":"2012-10-17","Statement":{"Effect":"Allow","Action":"*","Resource":"*"}}`
 	policy2 := `{"Version":"2012-10-17","Statement":{"Effect":"Allow","Action":"iam:*","Resource":"*"}}`
@@ -170,7 +170,7 @@ func TestAccAWSIAMUserPolicy_generatedName(t *testing.T) {
 	})
 }
 
-func TestAccAWSIAMUserPolicy_multiplePolicies(t *testing.T) {
+func TestAccIAMUserPolicy_multiplePolicies(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 	policy1 := `{"Version":"2012-10-17","Statement":{"Effect":"Allow","Action":"*","Resource":"*"}}`
 	policy2 := `{"Version":"2012-10-17","Statement":{"Effect":"Allow","Action":"iam:*","Resource":"*"}}`

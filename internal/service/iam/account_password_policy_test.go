@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSIAMAccountPasswordPolicy_basic(t *testing.T) {
+func TestAccIAMAccountPasswordPolicy_basic(t *testing.T) {
 	var policy iam.GetAccountPasswordPolicyOutput
 	resourceName := "aws_iam_account_password_policy.test"
 

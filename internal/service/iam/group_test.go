@@ -145,7 +145,7 @@ func sweepGroups(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSIAMGroup_basic(t *testing.T) {
+func TestAccIAMGroup_basic(t *testing.T) {
 	var conf iam.GetGroupOutput
 	resourceName := "aws_iam_group.test"
 	resourceName2 := "aws_iam_group.test2"
@@ -182,7 +182,7 @@ func TestAccAWSIAMGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSIAMGroup_nameChange(t *testing.T) {
+func TestAccIAMGroup_nameChange(t *testing.T) {
 	var conf iam.GetGroupOutput
 	resourceName := "aws_iam_group.test"
 	rString := sdkacctest.RandString(8)
