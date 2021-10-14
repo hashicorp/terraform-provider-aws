@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/naming"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudwatch/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -124,7 +124,7 @@ func resourceAwsCloudWatchMetricStreamCreate(ctx context.Context, d *schema.Reso
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
-	name := naming.Generate(d.Get("name").(string), d.Get("name_prefix").(string))
+	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 
 	params := cloudwatch.PutMetricStreamInput{
 		Name:         aws.String(name),
@@ -179,7 +179,7 @@ func resourceAwsCloudWatchMetricStreamRead(ctx context.Context, d *schema.Resour
 	d.Set("firehose_arn", output.FirehoseArn)
 	d.Set("last_update_date", output.CreationDate.Format(time.RFC3339))
 	d.Set("name", output.Name)
-	d.Set("name_prefix", naming.NamePrefixFromName(aws.StringValue(output.Name)))
+	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(output.Name)))
 	d.Set("output_format", output.OutputFormat)
 	d.Set("role_arn", output.RoleArn)
 	d.Set("state", output.State)
