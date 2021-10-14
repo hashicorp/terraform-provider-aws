@@ -1,4 +1,4 @@
-package aws
+package gamelift_test
 
 import (
 	"fmt"
