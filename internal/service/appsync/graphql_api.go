@@ -252,7 +252,7 @@ func resourceGraphQLAPICreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(aws.StringValue(resp.GraphqlApi.ApiId))
 
-	if err := resourceAwsAppsyncSchemaPut(d, meta); err != nil {
+	if err := resourceSchemaPut(d, meta); err != nil {
 		return fmt.Errorf("error creating AppSync GraphQL API (%s) Schema: %s", d.Id(), err)
 	}
 
@@ -365,7 +365,7 @@ func resourceGraphQLAPIUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("schema") {
-		if err := resourceAwsAppsyncSchemaPut(d, meta); err != nil {
+		if err := resourceSchemaPut(d, meta); err != nil {
 			return fmt.Errorf("error updating AppSync GraphQL API (%s) Schema: %s", d.Id(), err)
 		}
 	}
@@ -592,7 +592,7 @@ func flattenAppsyncGraphqlApiCognitoUserPoolConfig(userPoolConfig *appsync.Cogni
 	return []interface{}{m}
 }
 
-func resourceAwsAppsyncSchemaPut(d *schema.ResourceData, meta interface{}) error {
+func resourceSchemaPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppSyncConn
 
 	if v, ok := d.GetOk("schema"); ok {
