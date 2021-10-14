@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
 func init() {
@@ -30,14 +31,14 @@ func init() {
 }
 
 func testSweepElasticSearchDomains(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
 	conn := client.(*conns.AWSClient).ElasticSearchConn
-	sweepResources := make([]*testSweepResource, 0)
+	sweepResources := make([]*sweep.SweepResource, 0)
 	var errs *multierror.Error
 
 	input := &elasticsearch.ListDomainNamesInput{}
@@ -45,7 +46,7 @@ func testSweepElasticSearchDomains(region string) error {
 	// ListDomainNames has no pagination support whatsoever
 	output, err := conn.ListDomainNames(input)
 
-	if testSweepSkipSweepError(err) {
+	if sweep.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Elasticsearch Domain sweep for %s: %s", region, err)
 		return errs.ErrorOrNil()
 	}
@@ -96,14 +97,14 @@ func testSweepElasticSearchDomains(region string) error {
 		d.SetId(name)
 		d.Set("domain_name", name)
 
-		sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 	}
 
-	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping ElasticSearch Domains for %s: %w", region, err))
 	}
 
-	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+	if sweep.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping Elasticsearch Domain sweep for %s: %s", region, errs)
 		return nil
 	}
