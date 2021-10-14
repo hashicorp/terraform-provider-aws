@@ -11,6 +11,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfglobalaccelerator "github.com/hashicorp/terraform-provider-aws/internal/service/globalaccelerator"
+	tfglobalaccelerator "github.com/hashicorp/terraform-provider-aws/internal/service/globalaccelerator"
+	tfglobalaccelerator "github.com/hashicorp/terraform-provider-aws/internal/service/globalaccelerator"
+	tfglobalaccelerator "github.com/hashicorp/terraform-provider-aws/internal/service/globalaccelerator"
+	tfglobalaccelerator "github.com/hashicorp/terraform-provider-aws/internal/service/globalaccelerator"
+	tfglobalaccelerator "github.com/hashicorp/terraform-provider-aws/internal/service/globalaccelerator"
+	tfglobalaccelerator "github.com/hashicorp/terraform-provider-aws/internal/service/globalaccelerator"
+	tfglobalaccelerator "github.com/hashicorp/terraform-provider-aws/internal/service/globalaccelerator"
 )
 
 func DataSourceAccelerator() *schema.Resource {
@@ -135,7 +143,7 @@ func dataSourceAcceleratorRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("ip_address_type", accelerator.IpAddressType)
 	d.Set("ip_sets", flattenGlobalAcceleratorIpSets(accelerator.IpSets))
 
-	acceleratorAttributes, err := finder.AcceleratorAttributesByARN(conn, d.Id())
+	acceleratorAttributes, err := tfglobalaccelerator.FindAcceleratorAttributesByARN(conn, d.Id())
 	if err != nil {
 		return fmt.Errorf("error reading Global Accelerator Accelerator (%s) attributes: %w", d.Id(), err)
 	}

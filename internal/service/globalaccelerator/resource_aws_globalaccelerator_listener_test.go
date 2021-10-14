@@ -15,6 +15,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfglobalaccelerator "github.com/hashicorp/terraform-provider-aws/internal/service/globalaccelerator"
+	tfglobalaccelerator "github.com/hashicorp/terraform-provider-aws/internal/service/globalaccelerator"
+	tfglobalaccelerator "github.com/hashicorp/terraform-provider-aws/internal/service/globalaccelerator"
+	tfglobalaccelerator "github.com/hashicorp/terraform-provider-aws/internal/service/globalaccelerator"
+	tfglobalaccelerator "github.com/hashicorp/terraform-provider-aws/internal/service/globalaccelerator"
+	tfglobalaccelerator "github.com/hashicorp/terraform-provider-aws/internal/service/globalaccelerator"
+	tfglobalaccelerator "github.com/hashicorp/terraform-provider-aws/internal/service/globalaccelerator"
+	tfglobalaccelerator "github.com/hashicorp/terraform-provider-aws/internal/service/globalaccelerator"
 )
 
 func TestAccAwsGlobalAcceleratorListener_basic(t *testing.T) {
@@ -119,7 +127,7 @@ func testAccCheckGlobalAcceleratorListenerExists(name string) resource.TestCheck
 			return fmt.Errorf("No ID is set")
 		}
 
-		_, err := finder.ListenerByARN(conn, rs.Primary.ID)
+		_, err := tfglobalaccelerator.FindListenerByARN(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -137,7 +145,7 @@ func testAccCheckGlobalAcceleratorListenerDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.ListenerByARN(conn, rs.Primary.ID)
+		_, err := tfglobalaccelerator.FindListenerByARN(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue

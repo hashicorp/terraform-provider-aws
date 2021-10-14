@@ -20,6 +20,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfglobalaccelerator "github.com/hashicorp/terraform-provider-aws/internal/service/globalaccelerator"
+	tfglobalaccelerator "github.com/hashicorp/terraform-provider-aws/internal/service/globalaccelerator"
+	tfglobalaccelerator "github.com/hashicorp/terraform-provider-aws/internal/service/globalaccelerator"
+	tfglobalaccelerator "github.com/hashicorp/terraform-provider-aws/internal/service/globalaccelerator"
+	tfglobalaccelerator "github.com/hashicorp/terraform-provider-aws/internal/service/globalaccelerator"
+	tfglobalaccelerator "github.com/hashicorp/terraform-provider-aws/internal/service/globalaccelerator"
+	tfglobalaccelerator "github.com/hashicorp/terraform-provider-aws/internal/service/globalaccelerator"
+	tfglobalaccelerator "github.com/hashicorp/terraform-provider-aws/internal/service/globalaccelerator"
 )
 
 func init() {
@@ -396,7 +404,7 @@ func testAccCheckGlobalAcceleratorAcceleratorExists(name string) resource.TestCh
 			return fmt.Errorf("No ID is set")
 		}
 
-		_, err := finder.AcceleratorByARN(conn, rs.Primary.ID)
+		_, err := tfglobalaccelerator.FindAcceleratorByARN(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -414,7 +422,7 @@ func testAccCheckGlobalAcceleratorAcceleratorDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.AcceleratorByARN(conn, rs.Primary.ID)
+		_, err := tfglobalaccelerator.FindAcceleratorByARN(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
