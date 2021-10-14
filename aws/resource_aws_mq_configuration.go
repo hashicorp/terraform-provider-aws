@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsMqConfiguration() *schema.Resource {
@@ -88,8 +89,8 @@ func resourceAwsMqConfiguration() *schema.Resource {
 }
 
 func resourceAwsMqConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).mqconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).MQConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := mq.CreateConfigurationRequest{
@@ -118,9 +119,9 @@ func resourceAwsMqConfigurationCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsMqConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).mqconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).MQConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	log.Printf("[INFO] Reading MQ Configuration %s", d.Id())
 	out, err := conn.DescribeConfiguration(&mq.DescribeConfigurationInput{
@@ -173,7 +174,7 @@ func resourceAwsMqConfigurationRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsMqConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).mqconn
+	conn := meta.(*conns.AWSClient).MQConn
 
 	if d.HasChanges("data", "description") {
 		rawData := d.Get("data").(string)
