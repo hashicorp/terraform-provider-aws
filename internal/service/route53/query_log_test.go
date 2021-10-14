@@ -75,7 +75,7 @@ func sweepQueryLogs(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSRoute53QueryLog_basic(t *testing.T) {
+func TestAccRoute53QueryLog_basic(t *testing.T) {
 	cloudwatchLogGroupResourceName := "aws_cloudwatch_log_group.test"
 	resourceName := "aws_route53_query_log.test"
 	route53ZoneResourceName := "aws_route53_zone.test"
@@ -108,7 +108,7 @@ func TestAccAWSRoute53QueryLog_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53QueryLog_disappears(t *testing.T) {
+func TestAccRoute53QueryLog_disappears(t *testing.T) {
 	resourceName := "aws_route53_query_log.test"
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -133,7 +133,7 @@ func TestAccAWSRoute53QueryLog_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53QueryLog_disappears_hostedZone(t *testing.T) {
+func TestAccRoute53QueryLog_Disappears_hostedZone(t *testing.T) {
 	resourceName := "aws_route53_query_log.test"
 	route53ZoneResourceName := "aws_route53_zone.test"
 

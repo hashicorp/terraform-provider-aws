@@ -113,7 +113,7 @@ func TestParseRecordId(t *testing.T) {
 	}
 }
 
-func TestAccAWSRoute53Record_basic(t *testing.T) {
+func TestAccRoute53Record_basic(t *testing.T) {
 	var record1 route53.ResourceRecordSet
 	resourceName := "aws_route53_record.default"
 
@@ -139,7 +139,7 @@ func TestAccAWSRoute53Record_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53Record_underscored(t *testing.T) {
+func TestAccRoute53Record_underscored(t *testing.T) {
 	var record1 route53.ResourceRecordSet
 	resourceName := "aws_route53_record.underscore"
 
@@ -165,7 +165,7 @@ func TestAccAWSRoute53Record_underscored(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53Record_disappears(t *testing.T) {
+func TestAccRoute53Record_disappears(t *testing.T) {
 	var record1 route53.ResourceRecordSet
 	var zone1 route53.GetHostedZoneOutput
 	resourceName := "aws_route53_record.default"
@@ -189,7 +189,7 @@ func TestAccAWSRoute53Record_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53Record_disappears_MultipleRecords(t *testing.T) {
+func TestAccRoute53Record_Disappears_multipleRecords(t *testing.T) {
 	var record1, record2, record3, record4, record5 route53.ResourceRecordSet
 	var zone1 route53.GetHostedZoneOutput
 
@@ -216,7 +216,7 @@ func TestAccAWSRoute53Record_disappears_MultipleRecords(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53Record_basic_fqdn(t *testing.T) {
+func TestAccRoute53Record_Basic_fqdn(t *testing.T) {
 	var record1, record2 route53.ResourceRecordSet
 	resourceName := "aws_route53_record.default"
 
@@ -255,9 +255,9 @@ func TestAccAWSRoute53Record_basic_fqdn(t *testing.T) {
 	})
 }
 
-// TestAccAWSRoute53Record_basic_trailingPeriodAndZoneID ensures an aws_route53_record
+// TestAccRoute53Record_Basic_trailingPeriodAndZoneID ensures an aws_route53_record
 // created with a name configured with a trailing period and explicit zone_id gets imported correctly
-func TestAccAWSRoute53Record_basic_trailingPeriodAndZoneID(t *testing.T) {
+func TestAccRoute53Record_Basic_trailingPeriodAndZoneID(t *testing.T) {
 	var record1 route53.ResourceRecordSet
 	resourceName := "aws_route53_record.default"
 
@@ -283,7 +283,7 @@ func TestAccAWSRoute53Record_basic_trailingPeriodAndZoneID(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53Record_txtSupport(t *testing.T) {
+func TestAccRoute53Record_txtSupport(t *testing.T) {
 	var record1 route53.ResourceRecordSet
 	resourceName := "aws_route53_record.default"
 
@@ -309,7 +309,7 @@ func TestAccAWSRoute53Record_txtSupport(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53Record_spfSupport(t *testing.T) {
+func TestAccRoute53Record_spfSupport(t *testing.T) {
 	var record1 route53.ResourceRecordSet
 	resourceName := "aws_route53_record.default"
 
@@ -336,7 +336,7 @@ func TestAccAWSRoute53Record_spfSupport(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53Record_caaSupport(t *testing.T) {
+func TestAccRoute53Record_caaSupport(t *testing.T) {
 	var record1 route53.ResourceRecordSet
 	resourceName := "aws_route53_record.default"
 
@@ -363,7 +363,7 @@ func TestAccAWSRoute53Record_caaSupport(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53Record_dsSupport(t *testing.T) {
+func TestAccRoute53Record_dsSupport(t *testing.T) {
 	var record1 route53.ResourceRecordSet
 	resourceName := "aws_route53_record.default"
 
@@ -388,7 +388,7 @@ func TestAccAWSRoute53Record_dsSupport(t *testing.T) {
 		},
 	})
 }
-func TestAccAWSRoute53Record_generatesSuffix(t *testing.T) {
+func TestAccRoute53Record_generatesSuffix(t *testing.T) {
 	var record1 route53.ResourceRecordSet
 	resourceName := "aws_route53_record.default"
 
@@ -414,7 +414,7 @@ func TestAccAWSRoute53Record_generatesSuffix(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53Record_wildcard(t *testing.T) {
+func TestAccRoute53Record_wildcard(t *testing.T) {
 	var record1, record2 route53.ResourceRecordSet
 	resourceName := "aws_route53_record.wildcard"
 
@@ -448,7 +448,7 @@ func TestAccAWSRoute53Record_wildcard(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53Record_failover(t *testing.T) {
+func TestAccRoute53Record_failover(t *testing.T) {
 	var record1, record2 route53.ResourceRecordSet
 	resourceName := "aws_route53_record.www-primary"
 
@@ -475,7 +475,7 @@ func TestAccAWSRoute53Record_failover(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53Record_weighted_basic(t *testing.T) {
+func TestAccRoute53Record_Weighted_basic(t *testing.T) {
 	var record1, record2, record3 route53.ResourceRecordSet
 	resourceName := "aws_route53_record.www-live"
 
@@ -503,7 +503,7 @@ func TestAccAWSRoute53Record_weighted_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53Record_weighted_to_simple_basic(t *testing.T) {
+func TestAccRoute53Record_WeightedToSimple_basic(t *testing.T) {
 	var record1 route53.ResourceRecordSet
 	resourceName := "aws_route53_record.www-server1"
 
@@ -535,7 +535,7 @@ func TestAccAWSRoute53Record_weighted_to_simple_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53Record_Alias_Elb(t *testing.T) {
+func TestAccRoute53Record_Alias_elb(t *testing.T) {
 	var record1 route53.ResourceRecordSet
 	resourceName := "aws_route53_record.alias"
 
@@ -563,7 +563,7 @@ func TestAccAWSRoute53Record_Alias_Elb(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53Record_Alias_S3(t *testing.T) {
+func TestAccRoute53Record_Alias_s3(t *testing.T) {
 	var record1 route53.ResourceRecordSet
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_route53_record.alias"
@@ -590,7 +590,7 @@ func TestAccAWSRoute53Record_Alias_S3(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53Record_Alias_VpcEndpoint(t *testing.T) {
+func TestAccRoute53Record_Alias_vpcEndpoint(t *testing.T) {
 	var record1 route53.ResourceRecordSet
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_route53_record.test"
@@ -621,7 +621,7 @@ func TestAccAWSRoute53Record_Alias_VpcEndpoint(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53Record_Alias_Uppercase(t *testing.T) {
+func TestAccRoute53Record_Alias_uppercase(t *testing.T) {
 	var record1 route53.ResourceRecordSet
 	resourceName := "aws_route53_record.alias"
 
@@ -649,7 +649,7 @@ func TestAccAWSRoute53Record_Alias_Uppercase(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53Record_weighted_alias(t *testing.T) {
+func TestAccRoute53Record_Weighted_alias(t *testing.T) {
 	var record1, record2, record3, record4, record5, record6 route53.ResourceRecordSet
 	resourceName := "aws_route53_record.elb_weighted_alias_live"
 
@@ -686,7 +686,7 @@ func TestAccAWSRoute53Record_weighted_alias(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53Record_geolocation_basic(t *testing.T) {
+func TestAccRoute53Record_Geolocation_basic(t *testing.T) {
 	var record1, record2, record3, record4 route53.ResourceRecordSet
 	resourceName := "aws_route53_record.default"
 
@@ -715,7 +715,7 @@ func TestAccAWSRoute53Record_geolocation_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53Record_HealthCheckId_SetIdentifierChange(t *testing.T) {
+func TestAccRoute53Record_HealthCheckID_setIdentifierChange(t *testing.T) {
 	var record1, record2 route53.ResourceRecordSet
 	resourceName := "aws_route53_record.test"
 
@@ -747,7 +747,7 @@ func TestAccAWSRoute53Record_HealthCheckId_SetIdentifierChange(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53Record_HealthCheckId_TypeChange(t *testing.T) {
+func TestAccRoute53Record_HealthCheckID_typeChange(t *testing.T) {
 	var record1, record2 route53.ResourceRecordSet
 	resourceName := "aws_route53_record.test"
 
@@ -779,7 +779,7 @@ func TestAccAWSRoute53Record_HealthCheckId_TypeChange(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53Record_latency_basic(t *testing.T) {
+func TestAccRoute53Record_Latency_basic(t *testing.T) {
 	var record1, record2, record3 route53.ResourceRecordSet
 	resourceName := "aws_route53_record.first_region"
 
@@ -807,7 +807,7 @@ func TestAccAWSRoute53Record_latency_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53Record_TypeChange(t *testing.T) {
+func TestAccRoute53Record_typeChange(t *testing.T) {
 	var record1, record2 route53.ResourceRecordSet
 	resourceName := "aws_route53_record.sample"
 
@@ -841,7 +841,7 @@ func TestAccAWSRoute53Record_TypeChange(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53Record_NameChange(t *testing.T) {
+func TestAccRoute53Record_nameChange(t *testing.T) {
 	var record1, record2 route53.ResourceRecordSet
 	resourceName := "aws_route53_record.sample"
 
@@ -876,7 +876,7 @@ func TestAccAWSRoute53Record_NameChange(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53Record_SetIdentifierChange(t *testing.T) {
+func TestAccRoute53Record_setIdentifierChange(t *testing.T) {
 	var record1, record2 route53.ResourceRecordSet
 	resourceName := "aws_route53_record.basic_to_weighted"
 
@@ -910,7 +910,7 @@ func TestAccAWSRoute53Record_SetIdentifierChange(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53Record_AliasChange(t *testing.T) {
+func TestAccRoute53Record_aliasChange(t *testing.T) {
 	var record1, record2 route53.ResourceRecordSet
 	resourceName := "aws_route53_record.elb_alias_change"
 
@@ -944,7 +944,7 @@ func TestAccAWSRoute53Record_AliasChange(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53Record_empty(t *testing.T) {
+func TestAccRoute53Record_empty(t *testing.T) {
 	var record1 route53.ResourceRecordSet
 	resourceName := "aws_route53_record.empty"
 
@@ -965,7 +965,7 @@ func TestAccAWSRoute53Record_empty(t *testing.T) {
 }
 
 // Regression test for https://github.com/hashicorp/terraform/issues/8423
-func TestAccAWSRoute53Record_longTXTrecord(t *testing.T) {
+func TestAccRoute53Record_longTXTrecord(t *testing.T) {
 	var record1 route53.ResourceRecordSet
 	resourceName := "aws_route53_record.long_txt"
 
@@ -991,7 +991,7 @@ func TestAccAWSRoute53Record_longTXTrecord(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53Record_multivalue_answer_basic(t *testing.T) {
+func TestAccRoute53Record_MultiValueAnswer_basic(t *testing.T) {
 	var record1, record2 route53.ResourceRecordSet
 	resourceName := "aws_route53_record.www-server1"
 
@@ -1018,7 +1018,7 @@ func TestAccAWSRoute53Record_multivalue_answer_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53Record_doNotAllowOverwrite(t *testing.T) {
+func TestAccRoute53Record_doNotAllowOverwrite(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   testAccRecordOverwriteExpectErrorCheck(t),
@@ -1032,7 +1032,7 @@ func TestAccAWSRoute53Record_doNotAllowOverwrite(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53Record_allowOverwrite(t *testing.T) {
+func TestAccRoute53Record_allowOverwrite(t *testing.T) {
 	var record1 route53.ResourceRecordSet
 	resourceName := "aws_route53_record.overwriting"
 

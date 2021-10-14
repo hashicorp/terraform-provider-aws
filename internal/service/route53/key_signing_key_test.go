@@ -114,7 +114,7 @@ func sweepKeySigningKeys(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func TestAccAwsRoute53KeySigningKey_basic(t *testing.T) {
+func TestAccRoute53KeySigningKey_basic(t *testing.T) {
 	kmsKeyResourceName := "aws_kms_key.test"
 	route53ZoneResourceName := "aws_route53_zone.test"
 	resourceName := "aws_route53_key_signing_key.test"
@@ -157,7 +157,7 @@ func TestAccAwsRoute53KeySigningKey_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsRoute53KeySigningKey_disappears(t *testing.T) {
+func TestAccRoute53KeySigningKey_disappears(t *testing.T) {
 	resourceName := "aws_route53_key_signing_key.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -181,7 +181,7 @@ func TestAccAwsRoute53KeySigningKey_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAwsRoute53KeySigningKey_Status(t *testing.T) {
+func TestAccRoute53KeySigningKey_status(t *testing.T) {
 	resourceName := "aws_route53_key_signing_key.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 

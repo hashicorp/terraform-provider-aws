@@ -16,7 +16,7 @@ import (
 	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
 )
 
-func TestAccAWSRoute53DelegationSet_basic(t *testing.T) {
+func TestAccRoute53DelegationSet_basic(t *testing.T) {
 	refName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_route53_delegation_set.test"
 
@@ -43,7 +43,7 @@ func TestAccAWSRoute53DelegationSet_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53DelegationSet_withZones(t *testing.T) {
+func TestAccRoute53DelegationSet_withZones(t *testing.T) {
 	var zone route53.GetHostedZoneOutput
 
 	refName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -81,7 +81,7 @@ func TestAccAWSRoute53DelegationSet_withZones(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53DelegationSet_disappears(t *testing.T) {
+func TestAccRoute53DelegationSet_disappears(t *testing.T) {
 	refName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_route53_delegation_set.test"
 

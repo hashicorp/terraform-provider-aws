@@ -168,7 +168,7 @@ func sweepZones(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func TestAccAWSRoute53Zone_basic(t *testing.T) {
+func TestAccRoute53Zone_basic(t *testing.T) {
 	var zone route53.GetHostedZoneOutput
 
 	resourceName := "aws_route53_zone.test"
@@ -201,7 +201,7 @@ func TestAccAWSRoute53Zone_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53Zone_disappears(t *testing.T) {
+func TestAccRoute53Zone_disappears(t *testing.T) {
 	var zone route53.GetHostedZoneOutput
 
 	resourceName := "aws_route53_zone.test"
@@ -225,7 +225,7 @@ func TestAccAWSRoute53Zone_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53Zone_multiple(t *testing.T) {
+func TestAccRoute53Zone_multiple(t *testing.T) {
 	var zone0, zone1, zone2, zone3, zone4 route53.GetHostedZoneOutput
 
 	domainName := acctest.RandomDomainName()
@@ -255,7 +255,7 @@ func TestAccAWSRoute53Zone_multiple(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53Zone_Comment(t *testing.T) {
+func TestAccRoute53Zone_comment(t *testing.T) {
 	var zone route53.GetHostedZoneOutput
 
 	resourceName := "aws_route53_zone.test"
@@ -291,7 +291,7 @@ func TestAccAWSRoute53Zone_Comment(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53Zone_DelegationSetID(t *testing.T) {
+func TestAccRoute53Zone_delegationSetID(t *testing.T) {
 	var zone route53.GetHostedZoneOutput
 
 	delegationSetResourceName := "aws_route53_delegation_set.test"
@@ -321,7 +321,7 @@ func TestAccAWSRoute53Zone_DelegationSetID(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53Zone_ForceDestroy(t *testing.T) {
+func TestAccRoute53Zone_forceDestroy(t *testing.T) {
 	var zone route53.GetHostedZoneOutput
 
 	resourceName := "aws_route53_zone.test"
@@ -346,7 +346,7 @@ func TestAccAWSRoute53Zone_ForceDestroy(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53Zone_ForceDestroy_TrailingPeriod(t *testing.T) {
+func TestAccRoute53Zone_ForceDestroy_trailingPeriod(t *testing.T) {
 	var zone route53.GetHostedZoneOutput
 
 	resourceName := "aws_route53_zone.test"
@@ -371,7 +371,7 @@ func TestAccAWSRoute53Zone_ForceDestroy_TrailingPeriod(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53Zone_Tags(t *testing.T) {
+func TestAccRoute53Zone_tags(t *testing.T) {
 	var zone route53.GetHostedZoneOutput
 
 	resourceName := "aws_route53_zone.test"
@@ -418,7 +418,7 @@ func TestAccAWSRoute53Zone_Tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53Zone_VPC_Single(t *testing.T) {
+func TestAccRoute53Zone_VPC_single(t *testing.T) {
 	var zone route53.GetHostedZoneOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -450,7 +450,7 @@ func TestAccAWSRoute53Zone_VPC_Single(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53Zone_VPC_Multiple(t *testing.T) {
+func TestAccRoute53Zone_VPC_multiple(t *testing.T) {
 	var zone route53.GetHostedZoneOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -484,7 +484,7 @@ func TestAccAWSRoute53Zone_VPC_Multiple(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53Zone_VPC_Updates(t *testing.T) {
+func TestAccRoute53Zone_VPC_updates(t *testing.T) {
 	var zone route53.GetHostedZoneOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
