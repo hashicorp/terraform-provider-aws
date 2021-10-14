@@ -83,7 +83,7 @@ func resourceApplicationVersionCreate(d *schema.ResourceData, meta interface{}) 
 		ApplicationName: aws.String(application),
 		Description:     aws.String(description),
 		SourceBundle:    &s3Location,
-		Tags:            tags.IgnoreElasticbeanstalk().ElasticbeanstalkTags(),
+		Tags:            Tags(tags.IgnoreElasticbeanstalk()),
 		VersionLabel:    aws.String(name),
 	}
 
@@ -127,7 +127,7 @@ func resourceApplicationVersionRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("arn", arn)
 	d.Set("description", resp.ApplicationVersions[0].Description)
 
-	tags, err := tftags.ElasticbeanstalkListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Elastic Beanstalk Application version (%s): %w", arn, err)
@@ -160,7 +160,7 @@ func resourceApplicationVersionUpdate(d *schema.ResourceData, meta interface{}) 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.ElasticbeanstalkUpdateTags(conn, arn, o, n); err != nil {
+		if err := UpdateTags(conn, arn, o, n); err != nil {
 			return fmt.Errorf("error updating Elastic Beanstalk Application version (%s) tags: %s", arn, err)
 		}
 	}
