@@ -1,9 +1,3 @@
-//go:generate go run -tags generate generators/servicetags/main.go
-//go:generate go run -tags generate generators/listtags/main.go
-//go:generate go run -tags generate generators/gettag/main.go
-//go:generate go run -tags generate generators/createtags/main.go
-//go:generate go run -tags generate generators/updatetags/main.go
-
 package tags
 
 import (
