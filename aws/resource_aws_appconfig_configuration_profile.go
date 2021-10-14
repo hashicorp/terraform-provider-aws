@@ -15,6 +15,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceConfigurationProfile() *schema.Resource {
@@ -61,7 +62,7 @@ func ResourceConfigurationProfile() *schema.Resource {
 			"retrieval_role_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
@@ -77,9 +78,9 @@ func ResourceConfigurationProfile() *schema.Resource {
 							Sensitive: true,
 							ValidateFunc: validation.Any(
 								validation.StringIsJSON,
-								validateArn,
+								verify.ValidARN,
 							),
-							DiffSuppressFunc: suppressEquivalentJsonDiffs,
+							DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
 						},
 						"type": {
 							Type:         schema.TypeString,
