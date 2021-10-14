@@ -47,7 +47,7 @@ func testSweepLexIntents(region string) error {
 		}
 
 		for _, intent := range page.Intents {
-			r := ResourceIntent()
+			r := tflexmodelbuilding.ResourceIntent()
 			d := r.Data(nil)
 
 			d.SetId(aws.StringValue(intent.Name))
@@ -602,7 +602,7 @@ func TestAccAwsLexIntent_disappears(t *testing.T) {
 				Config: testAccAwsLexIntentConfig_basic(testIntentID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLexIntentExists(rName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceIntent(), rName),
+					acctest.CheckResourceDisappears(acctest.Provider, tflexmodelbuilding.ResourceIntent(), rName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -665,7 +665,7 @@ func TestAccAwsLexIntent_updateWithExternalChange(t *testing.T) {
 				Config: testAccAwsLexIntentConfig_basic(testIntentID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLexIntentExists(rName, &v),
-					testAccCheckAwsLexIntentUpdateDescription(acctest.Provider, ResourceIntent(), rName),
+					testAccCheckAwsLexIntentUpdateDescription(acctest.Provider, tflexmodelbuilding.ResourceIntent(), rName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

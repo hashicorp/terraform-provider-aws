@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -44,7 +45,7 @@ func testSweepLexSlotTypes(region string) error {
 		}
 
 		for _, slotType := range page.SlotTypes {
-			r := ResourceSlotType()
+			r := tflexmodelbuilding.ResourceSlotType()
 			d := r.Data(nil)
 
 			d.SetId(aws.StringValue(slotType.Name))
@@ -101,7 +102,7 @@ func TestAccAwsLexSlotType_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(rName, "name", testSlotTypeID),
 					resource.TestCheckResourceAttr(rName, "value_selection_strategy", lexmodelbuildingservice.SlotValueSelectionStrategyOriginalValue),
 					resource.TestCheckResourceAttrSet(rName, "checksum"),
-					resource.TestCheckResourceAttr(rName, "version", LexSlotTypeVersionLatest),
+					resource.TestCheckResourceAttr(rName, "version", tflexmodelbuilding.SlotTypeVersionLatest),
 					acctest.CheckResourceAttrRFC3339(rName, "created_date"),
 					acctest.CheckResourceAttrRFC3339(rName, "last_updated_date"),
 				),
@@ -135,7 +136,7 @@ func TestAccAwsLexSlotType_createVersion(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsLexSlotTypeExists(rName, &v),
 					testAccCheckAwsLexSlotTypeNotExists(testSlotTypeID, "1"),
-					resource.TestCheckResourceAttr(rName, "version", LexSlotTypeVersionLatest),
+					resource.TestCheckResourceAttr(rName, "version", tflexmodelbuilding.SlotTypeVersionLatest),
 				),
 			},
 			{
@@ -362,7 +363,7 @@ func TestAccAwsLexSlotType_disappears(t *testing.T) {
 				Config: testAccAwsLexSlotTypeConfig_basic(testSlotTypeID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLexSlotTypeExists(rName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceSlotType(), rName),
+					acctest.CheckResourceDisappears(acctest.Provider, tflexmodelbuilding.ResourceSlotType(), rName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -456,7 +457,7 @@ func testAccCheckAwsLexSlotTypeExistsWithVersion(rName, slotTypeVersion string, 
 }
 
 func testAccCheckAwsLexSlotTypeExists(rName string, output *lexmodelbuildingservice.GetSlotTypeOutput) resource.TestCheckFunc {
-	return testAccCheckAwsLexSlotTypeExistsWithVersion(rName, LexSlotTypeVersionLatest, output)
+	return testAccCheckAwsLexSlotTypeExistsWithVersion(rName, tflexmodelbuilding.SlotTypeVersionLatest, output)
 }
 
 func testAccCheckAwsLexSlotTypeNotExists(slotTypeName, slotTypeVersion string) resource.TestCheckFunc {

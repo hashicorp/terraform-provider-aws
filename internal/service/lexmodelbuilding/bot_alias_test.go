@@ -55,7 +55,7 @@ func testSweepLexBotAliases(region string) error {
 				}
 
 				for _, botAlias := range page.BotAliases {
-					r := ResourceBotAlias()
+					r := tflexmodelbuilding.ResourceBotAlias()
 					d := r.Data(nil)
 
 					d.SetId(fmt.Sprintf("%s:%s", aws.StringValue(bot.Name), aws.StringValue(botAlias.Name)))
@@ -72,7 +72,7 @@ func testSweepLexBotAliases(region string) error {
 				errs = multierror.Append(errs, fmt.Errorf("error listing Lex Bot Alias for %s: %w", region, err))
 			}
 
-			r := ResourceBotAlias()
+			r := tflexmodelbuilding.ResourceBotAlias()
 			d := r.Data(nil)
 
 			d.SetId(aws.StringValue(bot.Name))
@@ -421,7 +421,7 @@ func TestAccAwsLexBotAlias_disappears(t *testing.T) {
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLexBotAliasExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceBotAlias(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tflexmodelbuilding.ResourceBotAlias(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

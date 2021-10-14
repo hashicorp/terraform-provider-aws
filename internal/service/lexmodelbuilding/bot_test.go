@@ -47,7 +47,7 @@ func testSweepLexBots(region string) error {
 		}
 
 		for _, bot := range page.Bots {
-			r := ResourceBot()
+			r := tflexmodelbuilding.ResourceBot()
 			d := r.Data(nil)
 
 			d.SetId(aws.StringValue(bot.Name))
@@ -772,7 +772,7 @@ func TestAccAwsLexBot_disappears(t *testing.T) {
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLexBotExists(rName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceBot(), rName),
+					acctest.CheckResourceDisappears(acctest.Provider, tflexmodelbuilding.ResourceBot(), rName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
