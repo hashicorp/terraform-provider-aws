@@ -185,7 +185,7 @@ func resourceAwsEcsClusterCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if v, ok := d.GetOk("capacity_providers"); ok {
-		input.CapacityProviders = expandStringSet(v.(*schema.Set))
+		input.CapacityProviders = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("setting"); ok {
@@ -362,7 +362,7 @@ func resourceAwsEcsClusterUpdate(d *schema.ResourceData, meta interface{}) error
 	if d.HasChanges("capacity_providers", "default_capacity_provider_strategy") {
 		input := ecs.PutClusterCapacityProvidersInput{
 			Cluster:                         aws.String(d.Id()),
-			CapacityProviders:               expandStringSet(d.Get("capacity_providers").(*schema.Set)),
+			CapacityProviders:               flex.ExpandStringSet(d.Get("capacity_providers").(*schema.Set)),
 			DefaultCapacityProviderStrategy: expandEcsCapacityProviderStrategy(d.Get("default_capacity_provider_strategy").(*schema.Set)),
 		}
 
