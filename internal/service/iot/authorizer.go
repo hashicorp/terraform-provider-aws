@@ -20,16 +20,16 @@ import (
 
 func ResourceAuthorizer() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsIotAuthorizerCreate,
-		Read:   resourceAwsIotAuthorizerRead,
-		Update: resourceAwsIotAuthorizerUpdate,
-		Delete: resourceAwsIotAuthorizerDelete,
+		Create: resourceAuthorizerCreate,
+		Read:   resourceAuthorizerRead,
+		Update: resourceAuthorizerUpdate,
+		Delete: resourceAuthorizerDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
-		CustomizeDiff: resourceAwsIotAuthorizerCustomizeDiff,
+		CustomizeDiff: resourceAuthorizerCustomizeDiff,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -78,7 +78,7 @@ func ResourceAuthorizer() *schema.Resource {
 	}
 }
 
-func resourceAwsIotAuthorizerCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAuthorizerCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IoTConn
 
 	name := d.Get("name").(string)
@@ -106,10 +106,10 @@ func resourceAwsIotAuthorizerCreate(d *schema.ResourceData, meta interface{}) er
 
 	d.SetId(aws.StringValue(output.AuthorizerName))
 
-	return resourceAwsIotAuthorizerRead(d, meta)
+	return resourceAuthorizerRead(d, meta)
 }
 
-func resourceAwsIotAuthorizerRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAuthorizerRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IoTConn
 
 	authorizer, err := AuthorizerByName(conn, d.Id())
@@ -135,7 +135,7 @@ func resourceAwsIotAuthorizerRead(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func resourceAwsIotAuthorizerUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAuthorizerUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IoTConn
 
 	input := iot.UpdateAuthorizerInput{
@@ -165,10 +165,10 @@ func resourceAwsIotAuthorizerUpdate(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("error updating IoT Authorizer (%s): %w", d.Id(), err)
 	}
 
-	return resourceAwsIotAuthorizerRead(d, meta)
+	return resourceAuthorizerRead(d, meta)
 }
 
-func resourceAwsIotAuthorizerDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAuthorizerDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IoTConn
 
 	// In order to delete an IoT Authorizer, you must set it inactive first.
@@ -200,7 +200,7 @@ func resourceAwsIotAuthorizerDelete(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func resourceAwsIotAuthorizerCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+func resourceAuthorizerCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 	if !diff.Get("signing_disabled").(bool) {
 		if _, ok := diff.GetOk("token_key_name"); !ok {
 			return errors.New(`"token_key_name" is required when signing is enabled`)
