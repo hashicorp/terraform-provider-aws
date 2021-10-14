@@ -9,8 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/mediaconvert"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceQueue() *schema.Resource {
@@ -86,11 +87,11 @@ func ResourceQueue() *schema.Resource {
 					mediaconvert.QueueStatusPaused,
 				}, false),
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -101,7 +102,7 @@ func resourceQueueCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	createOpts := &mediaconvert.CreateQueueInput{
 		Name:        aws.String(d.Get("name").(string)),
@@ -161,7 +162,7 @@ func resourceQueueRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error setting Media Convert Queue reservation_plan_settings: %s", err)
 	}
 
-	tags, err := keyvaluetags.MediaconvertListTags(conn, aws.StringValue(resp.Queue.Arn))
+	tags, err := tftags.MediaconvertListTags(conn, aws.StringValue(resp.Queue.Arn))
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Media Convert Queue (%s): %s", d.Id(), err)
@@ -216,7 +217,7 @@ func resourceQueueUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := keyvaluetags.MediaconvertUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := tftags.MediaconvertUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)
 		}
 	}
