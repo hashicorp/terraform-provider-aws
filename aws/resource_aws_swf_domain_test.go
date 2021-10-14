@@ -8,9 +8,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/swf"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func testAccPreCheckSwfDomainTestingEnabled(t *testing.T) {
@@ -23,15 +24,15 @@ func testAccPreCheckSwfDomainTestingEnabled(t *testing.T) {
 }
 
 func TestAccAWSSwfDomain_basic(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_swf_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			acctest.PreCheck(t)
 			testAccPreCheckSwfDomainTestingEnabled(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, swf.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, swf.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSwfDomainDestroy,
 		Steps: []resource.TestStep{
@@ -39,7 +40,7 @@ func TestAccAWSSwfDomain_basic(t *testing.T) {
 				Config: testAccAWSSwfDomainConfig_Name(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsSwfDomainExists(resourceName),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "swf", regexp.MustCompile(`/domain/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "swf", regexp.MustCompile(`/domain/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
@@ -54,15 +55,15 @@ func TestAccAWSSwfDomain_basic(t *testing.T) {
 }
 
 func TestAccAWSSwfDomain_tags(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_swf_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			acctest.PreCheck(t)
 			testAccPreCheckSwfDomainTestingEnabled(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, swf.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, swf.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSwfDomainDestroy,
 		Steps: []resource.TestStep{
@@ -105,10 +106,10 @@ func TestAccAWSSwfDomain_NamePrefix(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			acctest.PreCheck(t)
 			testAccPreCheckSwfDomainTestingEnabled(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, swf.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, swf.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSwfDomainDestroy,
 		Steps: []resource.TestStep{
@@ -134,10 +135,10 @@ func TestAccAWSSwfDomain_GeneratedName(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			acctest.PreCheck(t)
 			testAccPreCheckSwfDomainTestingEnabled(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, swf.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, swf.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSwfDomainDestroy,
 		Steps: []resource.TestStep{
@@ -157,15 +158,15 @@ func TestAccAWSSwfDomain_GeneratedName(t *testing.T) {
 }
 
 func TestAccAWSSwfDomain_Description(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_swf_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			acctest.PreCheck(t)
 			testAccPreCheckSwfDomainTestingEnabled(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, swf.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, swf.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSwfDomainDestroy,
 		Steps: []resource.TestStep{
