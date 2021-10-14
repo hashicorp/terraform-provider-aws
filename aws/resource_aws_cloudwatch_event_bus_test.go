@@ -79,15 +79,15 @@ func testSweepCloudWatchEventBuses(region string) error {
 
 func TestAccAWSCloudWatchEventBus_basic(t *testing.T) {
 	var v1, v2, v3 events.DescribeEventBusOutput
-	busName := sdkacctest.RandomWithPrefix("tf-acc-test")
-	busNameModified := sdkacctest.RandomWithPrefix("tf-acc-test")
+	busName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	busNameModified := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resourceName := "aws_cloudwatch_event_bus.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, events.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCloudWatchEventBusDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -131,14 +131,14 @@ func TestAccAWSCloudWatchEventBus_basic(t *testing.T) {
 
 func TestAccAWSCloudWatchEventBus_tags(t *testing.T) {
 	var v1, v2, v3, v4 events.DescribeEventBusOutput
-	busName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	busName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resourceName := "aws_cloudwatch_event_bus.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, events.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCloudWatchEventBusDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -189,7 +189,7 @@ func TestAccAWSCloudWatchEventBus_default(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, events.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCloudWatchEventBusDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -202,21 +202,21 @@ func TestAccAWSCloudWatchEventBus_default(t *testing.T) {
 
 func TestAccAWSCloudWatchEventBus_disappears(t *testing.T) {
 	var v events.DescribeEventBusOutput
-	busName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	busName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resourceName := "aws_cloudwatch_event_bus.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, events.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCloudWatchEventBusDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCloudWatchEventBusConfig(busName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventBusExists(resourceName, &v),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsCloudWatchEventBus(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsCloudWatchEventBus(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -237,7 +237,7 @@ func TestAccAWSCloudWatchEventBus_PartnerEventSource(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, events.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCloudWatchEventBusDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -255,7 +255,7 @@ func TestAccAWSCloudWatchEventBus_PartnerEventSource(t *testing.T) {
 }
 
 func testAccCheckAWSCloudWatchEventBusDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).cloudwatcheventsconn
+	conn := acctest.Provider.Meta().(*AWSClient).cloudwatcheventsconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudwatch_event_bus" {
@@ -283,7 +283,7 @@ func testAccCheckCloudWatchEventBusExists(n string, v *events.DescribeEventBusOu
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).cloudwatcheventsconn
+		conn := acctest.Provider.Meta().(*AWSClient).cloudwatcheventsconn
 		params := events.DescribeEventBusInput{
 			Name: aws.String(rs.Primary.ID),
 		}

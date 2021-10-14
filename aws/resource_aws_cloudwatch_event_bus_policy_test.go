@@ -21,7 +21,7 @@ func TestAccAWSCloudwatchEventBusPolicy_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, events.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCloudWatchEventBusDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -54,14 +54,14 @@ func TestAccAWSCloudwatchEventBusPolicy_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, events.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCloudWatchEventBusDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCloudwatchEventBusPolicyConfig(rstring),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCloudwatchEventBusPolicyExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsCloudWatchEventBusPolicy(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsCloudWatchEventBusPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -86,7 +86,7 @@ func testAccCheckAWSCloudwatchEventBusPolicyExists(pr string) resource.TestCheck
 			Name: aws.String(eventBusName),
 		}
 
-		cloudWatchEventsConnection := testAccProvider.Meta().(*AWSClient).cloudwatcheventsconn
+		cloudWatchEventsConnection := acctest.Provider.Meta().(*AWSClient).cloudwatcheventsconn
 		describedEventBus, err := cloudWatchEventsConnection.DescribeEventBus(input)
 
 		if err != nil {
@@ -123,7 +123,7 @@ func testAccAWSCloudwatchEventBusPolicyDocument(pr string) resource.TestCheckFun
 			Name: aws.String(eventBusName),
 		}
 
-		cloudWatchEventsConnection := testAccProvider.Meta().(*AWSClient).cloudwatcheventsconn
+		cloudWatchEventsConnection := acctest.Provider.Meta().(*AWSClient).cloudwatcheventsconn
 		describedEventBus, err := cloudWatchEventsConnection.DescribeEventBus(input)
 		if err != nil {
 			return fmt.Errorf("Reading CloudWatch Events bus policy for '%s' failed: %w", pr, err)

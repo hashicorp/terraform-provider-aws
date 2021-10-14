@@ -71,13 +71,13 @@ func testSweepCloudWatchEventPermissions(region string) error {
 func TestAccAWSCloudWatchEventPermission_basic(t *testing.T) {
 	principal1 := "111111111111"
 	principal2 := "*"
-	statementID := sdkacctest.RandomWithPrefix("tf-acc-test")
+	statementID := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_permission.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, events.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckCloudWatchEventPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -141,7 +141,7 @@ func TestAccAWSCloudWatchEventPermission_basic(t *testing.T) {
 
 func TestAccAWSCloudWatchEventPermission_EventBusName(t *testing.T) {
 	principal1 := "111111111111"
-	statementID := sdkacctest.RandomWithPrefix("tf-acc-test")
+	statementID := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	busName := sdkacctest.RandomWithPrefix("tf-acc-test-bus")
 
 	resourceName := "aws_cloudwatch_event_permission.test"
@@ -149,7 +149,7 @@ func TestAccAWSCloudWatchEventPermission_EventBusName(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, events.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckCloudWatchEventPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -174,13 +174,13 @@ func TestAccAWSCloudWatchEventPermission_EventBusName(t *testing.T) {
 
 func TestAccAWSCloudWatchEventPermission_Action(t *testing.T) {
 	principal := "111111111111"
-	statementID := sdkacctest.RandomWithPrefix("tf-acc-test")
+	statementID := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_permission.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, events.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckCloudWatchEventPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -216,13 +216,13 @@ func TestAccAWSCloudWatchEventPermission_Action(t *testing.T) {
 }
 
 func TestAccAWSCloudWatchEventPermission_Condition(t *testing.T) {
-	statementID := sdkacctest.RandomWithPrefix("tf-acc-test")
+	statementID := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_permission.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, events.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckCloudWatchEventPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -257,15 +257,15 @@ func TestAccAWSCloudWatchEventPermission_Condition(t *testing.T) {
 func TestAccAWSCloudWatchEventPermission_Multiple(t *testing.T) {
 	principal1 := "111111111111"
 	principal2 := "222222222222"
-	statementID1 := sdkacctest.RandomWithPrefix("tf-acc-test")
-	statementID2 := sdkacctest.RandomWithPrefix("tf-acc-test")
+	statementID1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	statementID2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName1 := "aws_cloudwatch_event_permission.test"
 	resourceName2 := "aws_cloudwatch_event_permission.test2"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, events.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckCloudWatchEventPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -294,19 +294,19 @@ func TestAccAWSCloudWatchEventPermission_Multiple(t *testing.T) {
 func TestAccAWSCloudWatchEventPermission_Disappears(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_permission.test"
 	principal := "111111111111"
-	statementID := sdkacctest.RandomWithPrefix("tf-acc-test")
+	statementID := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, events.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckCloudWatchEventPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAwsCloudWatchEventPermissionResourceConfigBasic(principal, statementID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventPermissionExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsCloudWatchEventPermission(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsCloudWatchEventPermission(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -316,7 +316,7 @@ func TestAccAWSCloudWatchEventPermission_Disappears(t *testing.T) {
 
 func testAccCheckCloudWatchEventPermissionExists(pr string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).cloudwatcheventsconn
+		conn := acctest.Provider.Meta().(*AWSClient).cloudwatcheventsconn
 		rs, ok := s.RootModule().Resources[pr]
 		if !ok {
 			return fmt.Errorf("Not found: %s", pr)
@@ -354,7 +354,7 @@ func testAccCheckCloudWatchEventPermissionExists(pr string) resource.TestCheckFu
 }
 
 func testAccCheckCloudWatchEventPermissionDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).cloudwatcheventsconn
+	conn := acctest.Provider.Meta().(*AWSClient).cloudwatcheventsconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudwatch_event_permission" {
