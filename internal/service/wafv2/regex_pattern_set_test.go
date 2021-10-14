@@ -82,7 +82,7 @@ func sweepRegexPatternSets(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAwsWafv2RegexPatternSet_basic(t *testing.T) {
+func TestAccWAFV2RegexPatternSet_basic(t *testing.T) {
 	var v wafv2.RegexPatternSet
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_regex_pattern_set.test"
@@ -142,7 +142,7 @@ func TestAccAwsWafv2RegexPatternSet_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2RegexPatternSet_Disappears(t *testing.T) {
+func TestAccWAFV2RegexPatternSet_disappears(t *testing.T) {
 	var v wafv2.RegexPatternSet
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_regex_pattern_set.test"
@@ -165,7 +165,7 @@ func TestAccAwsWafv2RegexPatternSet_Disappears(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2RegexPatternSet_Minimal(t *testing.T) {
+func TestAccWAFV2RegexPatternSet_minimal(t *testing.T) {
 	var v wafv2.RegexPatternSet
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_regex_pattern_set.test"
@@ -191,7 +191,7 @@ func TestAccAwsWafv2RegexPatternSet_Minimal(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2RegexPatternSet_ChangeNameForceNew(t *testing.T) {
+func TestAccWAFV2RegexPatternSet_changeNameForceNew(t *testing.T) {
 	var before, after wafv2.RegexPatternSet
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rNewName := fmt.Sprintf("regex-pattern-set-%s", sdkacctest.RandString(5))
@@ -229,7 +229,7 @@ func TestAccAwsWafv2RegexPatternSet_ChangeNameForceNew(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2RegexPatternSet_Tags(t *testing.T) {
+func TestAccWAFV2RegexPatternSet_tags(t *testing.T) {
 	var v wafv2.RegexPatternSet
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_regex_pattern_set.test"

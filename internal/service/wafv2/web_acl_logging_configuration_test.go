@@ -15,7 +15,7 @@ import (
 	tfwafv2 "github.com/hashicorp/terraform-provider-aws/internal/service/wafv2"
 )
 
-func TestAccAwsWafv2WebACLLoggingConfiguration_basic(t *testing.T) {
+func TestAccWAFV2WebACLLoggingConfiguration_basic(t *testing.T) {
 	var v wafv2.LoggingConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl_logging_configuration.test"
@@ -46,7 +46,7 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2WebACLLoggingConfiguration_updateSingleHeaderRedactedField(t *testing.T) {
+func TestAccWAFV2WebACLLoggingConfiguration_updateSingleHeaderRedactedField(t *testing.T) {
 	var v wafv2.LoggingConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl_logging_configuration.test"
@@ -104,7 +104,7 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_updateSingleHeaderRedactedField(t
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/14248
-func TestAccAwsWafv2WebACLLoggingConfiguration_updateMethodRedactedField(t *testing.T) {
+func TestAccWAFV2WebACLLoggingConfiguration_updateMethodRedactedField(t *testing.T) {
 	var v wafv2.LoggingConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl_logging_configuration.test"
@@ -147,7 +147,7 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_updateMethodRedactedField(t *test
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/14248
-func TestAccAwsWafv2WebACLLoggingConfiguration_updateQueryStringRedactedField(t *testing.T) {
+func TestAccWAFV2WebACLLoggingConfiguration_updateQueryStringRedactedField(t *testing.T) {
 	var v wafv2.LoggingConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl_logging_configuration.test"
@@ -190,7 +190,7 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_updateQueryStringRedactedField(t 
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/14248
-func TestAccAwsWafv2WebACLLoggingConfiguration_updateUriPathRedactedField(t *testing.T) {
+func TestAccWAFV2WebACLLoggingConfiguration_updateURIPathRedactedField(t *testing.T) {
 	var v wafv2.LoggingConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl_logging_configuration.test"
@@ -233,7 +233,7 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_updateUriPathRedactedField(t *tes
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/14248
-func TestAccAwsWafv2WebACLLoggingConfiguration_updateMultipleRedactedFields(t *testing.T) {
+func TestAccWAFV2WebACLLoggingConfiguration_updateMultipleRedactedFields(t *testing.T) {
 	var v wafv2.LoggingConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl_logging_configuration.test"
@@ -299,7 +299,7 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_updateMultipleRedactedFields(t *t
 	})
 }
 
-func TestAccAwsWafv2WebACLLoggingConfiguration_changeResourceARNForceNew(t *testing.T) {
+func TestAccWAFV2WebACLLoggingConfiguration_changeResourceARNForceNew(t *testing.T) {
 	var before, after wafv2.LoggingConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rNameNew := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -341,7 +341,7 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_changeResourceARNForceNew(t *test
 	})
 }
 
-func TestAccAwsWafv2WebACLLoggingConfiguration_changeLogDestinationConfigsForceNew(t *testing.T) {
+func TestAccWAFV2WebACLLoggingConfiguration_changeLogDestinationsForceNew(t *testing.T) {
 	var before, after wafv2.LoggingConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rNameNew := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -384,7 +384,7 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_changeLogDestinationConfigsForceN
 	})
 }
 
-func TestAccAwsWafv2WebACLLoggingConfiguration_disappears(t *testing.T) {
+func TestAccWAFV2WebACLLoggingConfiguration_disappears(t *testing.T) {
 	var v wafv2.LoggingConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl_logging_configuration.test"
@@ -407,7 +407,7 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2WebACLLoggingConfiguration_emptyRedactedFields(t *testing.T) {
+func TestAccWAFV2WebACLLoggingConfiguration_emptyRedactedFields(t *testing.T) {
 	var v wafv2.LoggingConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl_logging_configuration.test"
@@ -437,7 +437,7 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_emptyRedactedFields(t *testing.T)
 	})
 }
 
-func TestAccAwsWafv2WebACLLoggingConfiguration_updateEmptyRedactedFields(t *testing.T) {
+func TestAccWAFV2WebACLLoggingConfiguration_updateEmptyRedactedFields(t *testing.T) {
 	var v wafv2.LoggingConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl_logging_configuration.test"
@@ -479,7 +479,7 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_updateEmptyRedactedFields(t *test
 	})
 }
 
-func TestAccAwsWafv2WebACLLoggingConfiguration_disappears_WebAcl(t *testing.T) {
+func TestAccWAFV2WebACLLoggingConfiguration_Disappears_webACL(t *testing.T) {
 	var v wafv2.LoggingConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl_logging_configuration.test"
@@ -503,7 +503,7 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_disappears_WebAcl(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2WebACLLoggingConfiguration_loggingFilter(t *testing.T) {
+func TestAccWAFV2WebACLLoggingConfiguration_loggingFilter(t *testing.T) {
 	var v wafv2.LoggingConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl_logging_configuration.test"

@@ -82,7 +82,7 @@ func sweepIPSets(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAwsWafv2IPSet_basic(t *testing.T) {
+func TestAccWAFV2IPSet_basic(t *testing.T) {
 	var v wafv2.IPSet
 	ipSetName := fmt.Sprintf("ip-set-%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafv2_ip_set.ip_set"
@@ -130,7 +130,7 @@ func TestAccAwsWafv2IPSet_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2IPSet_Disappears(t *testing.T) {
+func TestAccWAFV2IPSet_disappears(t *testing.T) {
 	var r wafv2.IPSet
 	ipSetName := fmt.Sprintf("ip-set-%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafv2_ip_set.ip_set"
@@ -153,7 +153,7 @@ func TestAccAwsWafv2IPSet_Disappears(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2IPSet_IPv6(t *testing.T) {
+func TestAccWAFV2IPSet_ipv6(t *testing.T) {
 	var v wafv2.IPSet
 	ipSetName := fmt.Sprintf("ip-set-%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafv2_ip_set.ip_set"
@@ -189,7 +189,7 @@ func TestAccAwsWafv2IPSet_IPv6(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2IPSet_Minimal(t *testing.T) {
+func TestAccWAFV2IPSet_minimal(t *testing.T) {
 	var v wafv2.IPSet
 	ipSetName := fmt.Sprintf("ip-set-%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafv2_ip_set.ip_set"
@@ -222,7 +222,7 @@ func TestAccAwsWafv2IPSet_Minimal(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2IPSet_ChangeNameForceNew(t *testing.T) {
+func TestAccWAFV2IPSet_changeNameForceNew(t *testing.T) {
 	var before, after wafv2.IPSet
 	ipSetName := fmt.Sprintf("ip-set-%s", sdkacctest.RandString(5))
 	ipSetNewName := fmt.Sprintf("ip-set-%s", sdkacctest.RandString(5))
@@ -262,7 +262,7 @@ func TestAccAwsWafv2IPSet_ChangeNameForceNew(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2IPSet_Tags(t *testing.T) {
+func TestAccWAFV2IPSet_tags(t *testing.T) {
 	var v wafv2.IPSet
 	ipSetName := fmt.Sprintf("ip-set-%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafv2_ip_set.ip_set"
@@ -311,7 +311,7 @@ func TestAccAwsWafv2IPSet_Tags(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2IPSet_Large(t *testing.T) {
+func TestAccWAFV2IPSet_large(t *testing.T) {
 	var v wafv2.IPSet
 	ipSetName := fmt.Sprintf("ip-set-%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafv2_ip_set.ip_set"
