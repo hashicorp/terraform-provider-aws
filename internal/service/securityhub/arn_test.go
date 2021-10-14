@@ -4,11 +4,6 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
-	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
-	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
-	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
 	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
 )
 
