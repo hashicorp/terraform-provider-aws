@@ -19,53 +19,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_glue_dev_endpoint", &resource.Sweeper{
-		Name: "aws_glue_dev_endpoint",
-		F:    sweepDevEndpoint,
-	})
-}
 
-func sweepDevEndpoint(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).GlueConn
 
-	input := &glue.GetDevEndpointsInput{}
-	err = conn.GetDevEndpointsPages(input, func(page *glue.GetDevEndpointsOutput, lastPage bool) bool {
-		if len(page.DevEndpoints) == 0 {
-			log.Printf("[INFO] No Glue Dev Endpoints to sweep")
-			return false
-		}
-		for _, endpoint := range page.DevEndpoints {
-			name := aws.StringValue(endpoint.EndpointName)
-			if !strings.HasPrefix(name, acctest.ResourcePrefix) {
-				log.Printf("[INFO] Skipping Glue Dev Endpoint: %s", name)
-				continue
-			}
 
-			log.Printf("[INFO] Deleting Glue Dev Endpoint: %s", name)
-			_, err := conn.DeleteDevEndpoint(&glue.DeleteDevEndpointInput{
-				EndpointName: aws.String(name),
-			})
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete Glue Dev Endpoint %s: %s", name, err)
-			}
-		}
-		return !lastPage
-	})
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Glue Dev Endpoint sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("error retrieving Glue Dev Endpoint: %s", err)
-	}
-
-	return nil
-}
 
 func TestAccGlueDevEndpoint_basic(t *testing.T) {
 	var endpoint glue.DevEndpoint

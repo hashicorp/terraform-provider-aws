@@ -19,55 +19,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_glue_ml_transform", &resource.Sweeper{
-		Name: "aws_glue_ml_transform",
-		F:    sweepMLTransforms,
-	})
-}
 
-func sweepMLTransforms(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-	conn := client.(*conns.AWSClient).GlueConn
-	var sweeperErrs *multierror.Error
 
-	input := &glue.GetMLTransformsInput{}
-	err = conn.GetMLTransformsPages(input, func(page *glue.GetMLTransformsOutput, lastPage bool) bool {
-		if len(page.Transforms) == 0 {
-			log.Printf("[INFO] No Glue ML Transforms to sweep")
-			return false
-		}
-		for _, transforms := range page.Transforms {
-			id := aws.StringValue(transforms.TransformId)
 
-			log.Printf("[INFO] Deleting Glue ML Transform: %s", id)
-			r := tfglue.ResourceMLTransform()
-			d := r.Data(nil)
-			d.SetId(id)
-			err := r.Delete(d, client)
-
-			if err != nil {
-				log.Printf("[ERROR] %s", err)
-				sweeperErrs = multierror.Append(sweeperErrs, err)
-				continue
-			}
-		}
-		return !lastPage
-	})
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Glue ML Transforms sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-	}
-
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Glue ML Transforms: %w", err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func TestAccGlueMlTransform_ML_basic(t *testing.T) {
 	var transform glue.GetMLTransformOutput

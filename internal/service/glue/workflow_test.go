@@ -17,37 +17,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_glue_workflow", &resource.Sweeper{
-		Name: "aws_glue_workflow",
-		F:    sweepWorkflow,
-	})
-}
 
-func sweepWorkflow(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).GlueConn
 
-	listOutput, err := conn.ListWorkflows(&glue.ListWorkflowsInput{})
-	if err != nil {
-		// Some endpoints that do not support Glue Workflows return InternalFailure
-		if sweep.SkipSweepError(err) || tfawserr.ErrMessageContains(err, "InternalFailure", "") {
-			log.Printf("[WARN] Skipping Glue Workflow sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error retrieving Glue Workflow: %s", err)
-	}
-	for _, workflowName := range listOutput.Workflows {
-		err := tfglue.DeleteWorkflow(conn, *workflowName)
-		if err != nil {
-			log.Printf("[ERROR] Failed to delete Glue Workflow %s: %s", *workflowName, err)
-		}
-	}
-	return nil
-}
+
 
 func TestAccGlueWorkflow_basic(t *testing.T) {
 	var workflow glue.Workflow

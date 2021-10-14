@@ -17,42 +17,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_glue_schema", &resource.Sweeper{
-		Name: "aws_glue_schema",
-		F:    sweepSchema,
-	})
-}
 
-func sweepSchema(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).GlueConn
 
-	listOutput, err := conn.ListSchemas(&glue.ListSchemasInput{})
-	if err != nil {
-		// Some endpoints that do not support Glue Schemas return InternalFailure
-		if sweep.SkipSweepError(err) || tfawserr.ErrMessageContains(err, "InternalFailure", "") {
-			log.Printf("[WARN] Skipping Glue Schema sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error retrieving Glue Schema: %s", err)
-	}
-	for _, schema := range listOutput.Schemas {
-		arn := aws.StringValue(schema.SchemaArn)
-		r := tfglue.ResourceSchema()
-		d := r.Data(nil)
-		d.SetId(arn)
 
-		err := r.Delete(d, client)
-		if err != nil {
-			log.Printf("[ERROR] Failed to delete Glue Schema %s: %s", arn, err)
-		}
-	}
-	return nil
-}
 
 func TestAccGlueSchema_basic(t *testing.T) {
 	var schema glue.GetSchemaOutput

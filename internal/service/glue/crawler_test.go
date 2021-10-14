@@ -21,50 +21,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_glue_crawler", &resource.Sweeper{
-		Name: "aws_glue_crawler",
-		F:    sweepCrawlers,
-	})
-}
 
-func sweepCrawlers(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).GlueConn
 
-	input := &glue.GetCrawlersInput{}
-	err = conn.GetCrawlersPages(input, func(page *glue.GetCrawlersOutput, lastPage bool) bool {
-		if len(page.Crawlers) == 0 {
-			log.Printf("[INFO] No Glue Crawlers to sweep")
-			return false
-		}
-		for _, crawler := range page.Crawlers {
-			name := aws.StringValue(crawler.Name)
 
-			r := tfglue.ResourceCrawler()
-			d := r.Data(nil)
-			d.SetId(name)
-
-			err := r.Delete(d, client)
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete Glue Crawler %s: %s", name, err)
-			}
-		}
-		return !lastPage
-	})
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Glue Crawler sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error retrieving Glue Crawlers: %s", err)
-	}
-
-	return nil
-}
 
 func TestAccGlueCrawler_dynamoDBTarget(t *testing.T) {
 	var crawler glue.Crawler

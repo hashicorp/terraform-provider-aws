@@ -17,50 +17,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_glue_trigger", &resource.Sweeper{
-		Name: "aws_glue_trigger",
-		F:    sweepTriggers,
-	})
-}
 
-func sweepTriggers(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).GlueConn
 
-	input := &glue.GetTriggersInput{}
-	err = conn.GetTriggersPages(input, func(page *glue.GetTriggersOutput, lastPage bool) bool {
-		if page == nil || len(page.Triggers) == 0 {
-			log.Printf("[INFO] No Glue Triggers to sweep")
-			return false
-		}
-		for _, trigger := range page.Triggers {
-			name := aws.StringValue(trigger.Name)
 
-			log.Printf("[INFO] Deleting Glue Trigger: %s", name)
-			r := tfglue.ResourceTrigger()
-			d := r.Data(nil)
-			d.SetId(name)
-			err := r.Delete(d, client)
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete Glue Trigger %s: %s", name, err)
-			}
-		}
-		return !lastPage
-	})
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Glue Trigger sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error retrieving Glue Triggers: %s", err)
-	}
-
-	return nil
-}
 
 func TestAccGlueTrigger_basic(t *testing.T) {
 	var trigger glue.Trigger

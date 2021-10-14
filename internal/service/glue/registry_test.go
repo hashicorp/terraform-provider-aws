@@ -17,42 +17,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_glue_registry", &resource.Sweeper{
-		Name: "aws_glue_registry",
-		F:    sweepRegistry,
-	})
-}
 
-func sweepRegistry(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).GlueConn
 
-	listOutput, err := conn.ListRegistries(&glue.ListRegistriesInput{})
-	if err != nil {
-		// Some endpoints that do not support Glue Registrys return InternalFailure
-		if sweep.SkipSweepError(err) || tfawserr.ErrMessageContains(err, "InternalFailure", "") {
-			log.Printf("[WARN] Skipping Glue Registry sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error retrieving Glue Registry: %s", err)
-	}
-	for _, registry := range listOutput.Registries {
-		arn := aws.StringValue(registry.RegistryArn)
-		r := tfglue.ResourceRegistry()
-		d := r.Data(nil)
-		d.SetId(arn)
 
-		err := r.Delete(d, client)
-		if err != nil {
-			log.Printf("[ERROR] Failed to delete Glue Registry %s: %s", arn, err)
-		}
-	}
-	return nil
-}
 
 func TestAccGlueRegistry_basic(t *testing.T) {
 	var registry glue.GetRegistryOutput

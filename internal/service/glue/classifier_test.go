@@ -17,60 +17,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_glue_classifier", &resource.Sweeper{
-		Name: "aws_glue_classifier",
-		F:    sweepClassifiers,
-	})
-}
 
-func sweepClassifiers(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).GlueConn
 
-	input := &glue.GetClassifiersInput{}
-	err = conn.GetClassifiersPages(input, func(page *glue.GetClassifiersOutput, lastPage bool) bool {
-		if len(page.Classifiers) == 0 {
-			log.Printf("[INFO] No Glue Classifiers to sweep")
-			return false
-		}
-		for _, classifier := range page.Classifiers {
-			var name string
-			if classifier.CsvClassifier != nil {
-				name = aws.StringValue(classifier.CsvClassifier.Name)
-			} else if classifier.GrokClassifier != nil {
-				name = aws.StringValue(classifier.GrokClassifier.Name)
-			} else if classifier.JsonClassifier != nil {
-				name = aws.StringValue(classifier.JsonClassifier.Name)
-			} else if classifier.XMLClassifier != nil {
-				name = aws.StringValue(classifier.XMLClassifier.Name)
-			}
-			if name == "" {
-				log.Printf("[WARN] Unable to determine Glue Classifier name: %#v", classifier)
-				continue
-			}
 
-			log.Printf("[INFO] Deleting Glue Classifier: %s", name)
-			err := tfglue.DeleteClassifier(conn, name)
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete Glue Classifier %s: %s", name, err)
-			}
-		}
-		return !lastPage
-	})
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Glue Classifier sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error retrieving Glue Classifiers: %s", err)
-	}
-
-	return nil
-}
 
 func TestAccGlueClassifier_csvClassifier(t *testing.T) {
 	var classifier glue.Classifier

@@ -17,53 +17,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_glue_security_configuration", &resource.Sweeper{
-		Name: "aws_glue_security_configuration",
-		F:    sweepSecurityConfigurations,
-	})
-}
 
-func sweepSecurityConfigurations(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).GlueConn
 
-	input := &glue.GetSecurityConfigurationsInput{}
 
-	for {
-		output, err := conn.GetSecurityConfigurations(input)
-
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Glue Security Configuration sweep for %s: %s", region, err)
-			return nil
-		}
-
-		if err != nil {
-			return fmt.Errorf("Error retrieving Glue Security Configurations: %s", err)
-		}
-
-		for _, securityConfiguration := range output.SecurityConfigurations {
-			name := aws.StringValue(securityConfiguration.Name)
-
-			log.Printf("[INFO] Deleting Glue Security Configuration: %s", name)
-			err := tfglue.DeleteSecurityConfiguration(conn, name)
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete Glue Security Configuration %s: %s", name, err)
-			}
-		}
-
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-
-		input.NextToken = output.NextToken
-	}
-
-	return nil
-}
 
 func TestAccGlueSecurityConfiguration_basic(t *testing.T) {
 	var securityConfiguration glue.SecurityConfiguration

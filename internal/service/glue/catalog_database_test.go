@@ -17,54 +17,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_glue_catalog_database", &resource.Sweeper{
-		Name: "aws_glue_catalog_database",
-		F:    sweepCatalogDatabases,
-	})
-}
 
-func sweepCatalogDatabases(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).GlueConn
 
-	input := &glue.GetDatabasesInput{}
-	err = conn.GetDatabasesPages(input, func(page *glue.GetDatabasesOutput, lastPage bool) bool {
-		if len(page.DatabaseList) == 0 {
-			log.Printf("[INFO] No Glue Catalog Databases to sweep")
-			return false
-		}
-		for _, database := range page.DatabaseList {
-			name := aws.StringValue(database.Name)
 
-			log.Printf("[INFO] Deleting Glue Catalog Database: %s", name)
-
-			r := tfglue.ResourceCatalogDatabase()
-			d := r.Data(nil)
-			d.SetId("???")
-			d.Set("name", name)
-			d.Set("catalog_id", database.CatalogId)
-
-			err := r.Delete(d, client)
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete Glue Catalog Database %s: %s", name, err)
-			}
-		}
-		return !lastPage
-	})
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Glue Catalog Database sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error retrieving Glue Catalog Databases: %s", err)
-	}
-
-	return nil
-}
 
 func TestAccGlueCatalogDatabase_full(t *testing.T) {
 	resourceName := "aws_glue_catalog_database.test"

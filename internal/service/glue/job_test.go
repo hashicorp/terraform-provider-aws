@@ -18,47 +18,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_glue_job", &resource.Sweeper{
-		Name: "aws_glue_job",
-		F:    sweepJobs,
-	})
-}
 
-func sweepJobs(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).GlueConn
 
-	input := &glue.GetJobsInput{}
-	err = conn.GetJobsPages(input, func(page *glue.GetJobsOutput, lastPage bool) bool {
-		if len(page.Jobs) == 0 {
-			log.Printf("[INFO] No Glue Jobs to sweep")
-			return false
-		}
-		for _, job := range page.Jobs {
-			name := aws.StringValue(job.Name)
 
-			log.Printf("[INFO] Deleting Glue Job: %s", name)
-			err := tfglue.DeleteJob(conn, name)
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete Glue Job %s: %s", name, err)
-			}
-		}
-		return !lastPage
-	})
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Glue Job sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error retrieving Glue Jobs: %s", err)
-	}
-
-	return nil
-}
 
 func TestAccGlueJob_basic(t *testing.T) {
 	var job glue.Job
