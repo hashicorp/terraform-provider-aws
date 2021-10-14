@@ -5,22 +5,23 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSServiceDiscoveryDnsNamespaceDataSource_private(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_service_discovery_dns_namespace.test"
 	resourceName := "aws_service_discovery_private_dns_namespace.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(servicediscovery.EndpointsID, t)
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t)
 			testAccPreCheckAWSServiceDiscovery(t)
 		},
-		ErrorCheck: testAccErrorCheck(t, servicediscovery.EndpointsID),
+		ErrorCheck: acctest.ErrorCheck(t, servicediscovery.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -37,17 +38,17 @@ func TestAccAWSServiceDiscoveryDnsNamespaceDataSource_private(t *testing.T) {
 }
 
 func TestAccAWSServiceDiscoveryDnsNamespaceDataSource_public(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_service_discovery_dns_namespace.test"
 	resourceName := "aws_service_discovery_public_dns_namespace.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(servicediscovery.EndpointsID, t)
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t)
 			testAccPreCheckAWSServiceDiscovery(t)
 		},
-		ErrorCheck: testAccErrorCheck(t, servicediscovery.EndpointsID),
+		ErrorCheck: acctest.ErrorCheck(t, servicediscovery.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{

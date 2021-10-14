@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/servicequotas"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 // This resource is different than many since quotas are pre-existing
@@ -19,8 +20,8 @@ func TestAccAwsServiceQuotasServiceQuota_basic(t *testing.T) {
 	resourceName := "aws_servicequotas_service_quota.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSServiceQuotas(t) },
-		ErrorCheck:   testAccErrorCheck(t, servicequotas.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSServiceQuotas(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, servicequotas.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
@@ -71,8 +72,8 @@ func TestAccAwsServiceQuotasServiceQuota_Value_IncreaseOnCreate(t *testing.T) {
 	resourceName := "aws_servicequotas_service_quota.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSServiceQuotas(t) },
-		ErrorCheck:   testAccErrorCheck(t, servicequotas.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSServiceQuotas(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, servicequotas.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
@@ -114,8 +115,8 @@ func TestAccAwsServiceQuotasServiceQuota_Value_IncreaseOnUpdate(t *testing.T) {
 	resourceName := "aws_servicequotas_service_quota.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSServiceQuotas(t) },
-		ErrorCheck:   testAccErrorCheck(t, servicequotas.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSServiceQuotas(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, servicequotas.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
@@ -141,8 +142,8 @@ func TestAccAwsServiceQuotasServiceQuota_Value_IncreaseOnUpdate(t *testing.T) {
 
 func TestAccAwsServiceQuotasServiceQuota_PermissionError(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSServiceQuotas(t); testAccAssumeRoleARNPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, servicequotas.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSServiceQuotas(t); acctest.PreCheckAssumeRoleARN(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, servicequotas.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
@@ -161,7 +162,7 @@ func testAccPreCheckAWSServiceQuotas(t *testing.T) {
 
 	_, err := conn.ListServices(input)
 
-	if testAccPreCheckSkipError(err) {
+	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
@@ -216,8 +217,8 @@ func testAccAwsServiceQuotasServiceQuotaConfig_PermissionError(serviceCode, quot
   ]
 }`
 
-	return composeConfig(
-		testAccProviderConfigAssumeRolePolicy(policy),
+	return acctest.ConfigCompose(
+		acctest.ConfigAssumeRolePolicy(policy),
 		fmt.Sprintf(`
 resource "aws_servicequotas_service_quota" "test" {
   service_code = %[1]q
