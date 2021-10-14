@@ -17,7 +17,7 @@ func TestAccAwsImageBuilderImageDataSource_Arn_Aws(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsImageBuilderImageDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -45,14 +45,14 @@ func TestAccAwsImageBuilderImageDataSource_Arn_Aws(t *testing.T) {
 
 // Verify additional fields returned by Self owned Images
 func TestAccAwsImageBuilderImageDataSource_Arn_Self(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_imagebuilder_image.test"
 	resourceName := "aws_imagebuilder_image.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsImageBuilderImageDestroy,
 		Steps: []resource.TestStep{
 			{
