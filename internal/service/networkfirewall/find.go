@@ -5,7 +5,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/networkfirewall"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // FindLoggingConfiguration returns the LoggingConfigurationOutput from a call to DescribeLoggingConfigurationWithContext
