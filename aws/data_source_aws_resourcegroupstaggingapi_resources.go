@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/resourcegroupstaggingapi"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsResourceGroupsTaggingAPIResources() *schema.Resource {
@@ -94,7 +95,7 @@ func dataSourceAwsResourceGroupsTaggingAPIResources() *schema.Resource {
 }
 
 func dataSourceAwsResourceGroupsTaggingAPIResourcesRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).resourcegroupstaggingapiconn
+	conn := meta.(*conns.AWSClient).ResourceGroupsTaggingConn
 
 	input := &resourcegroupstaggingapi.GetResourcesInput{}
 
@@ -132,7 +133,7 @@ func dataSourceAwsResourceGroupsTaggingAPIResourcesRead(d *schema.ResourceData, 
 		return fmt.Errorf("error getting Resource Groups Tags API Resources: %w", err)
 	}
 
-	d.SetId(meta.(*AWSClient).partition)
+	d.SetId(meta.(*conns.AWSClient).Partition)
 
 	if err := d.Set("resource_tag_mapping_list", flattenAwsResourceGroupsTaggingAPIResourcesTagMappingList(taggings)); err != nil {
 		return fmt.Errorf("error setting resource tag mapping list: %w", err)
