@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsDirectoryServiceConditionalForwarder() *schema.Resource {
+func ResourceConditionalForwarder() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDirectoryServiceConditionalForwarderCreate,
-		Read:   resourceAwsDirectoryServiceConditionalForwarderRead,
-		Update: resourceAwsDirectoryServiceConditionalForwarderUpdate,
-		Delete: resourceAwsDirectoryServiceConditionalForwarderDelete,
+		Create: resourceConditionalForwarderCreate,
+		Read:   resourceConditionalForwarderRead,
+		Update: resourceConditionalForwarderUpdate,
+		Delete: resourceConditionalForwarderDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -50,7 +50,7 @@ func resourceAwsDirectoryServiceConditionalForwarder() *schema.Resource {
 	}
 }
 
-func resourceAwsDirectoryServiceConditionalForwarderCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceConditionalForwarderCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectoryServiceConn
 
 	dnsIps := flex.ExpandStringList(d.Get("dns_ips").([]interface{}))
@@ -73,7 +73,7 @@ func resourceAwsDirectoryServiceConditionalForwarderCreate(d *schema.ResourceDat
 	return nil
 }
 
-func resourceAwsDirectoryServiceConditionalForwarderRead(d *schema.ResourceData, meta interface{}) error {
+func resourceConditionalForwarderRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectoryServiceConn
 
 	directoryId, domainName, err := parseDSConditionalForwarderId(d.Id())
@@ -110,7 +110,7 @@ func resourceAwsDirectoryServiceConditionalForwarderRead(d *schema.ResourceData,
 	return nil
 }
 
-func resourceAwsDirectoryServiceConditionalForwarderUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceConditionalForwarderUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectoryServiceConn
 
 	directoryId, domainName, err := parseDSConditionalForwarderId(d.Id())
@@ -130,10 +130,10 @@ func resourceAwsDirectoryServiceConditionalForwarderUpdate(d *schema.ResourceDat
 		return err
 	}
 
-	return resourceAwsDirectoryServiceConditionalForwarderRead(d, meta)
+	return resourceConditionalForwarderRead(d, meta)
 }
 
-func resourceAwsDirectoryServiceConditionalForwarderDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceConditionalForwarderDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectoryServiceConn
 
 	directoryId, domainName, err := parseDSConditionalForwarderId(d.Id())

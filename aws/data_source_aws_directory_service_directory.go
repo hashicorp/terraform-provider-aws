@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsDirectoryServiceDirectory() *schema.Resource {
+func DataSourceDirectory() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsDirectoryServiceDirectoryRead,
+		Read: dataSourceDirectoryRead,
 
 		Schema: map[string]*schema.Schema{
 			"directory_id": {
@@ -128,7 +128,7 @@ func dataSourceAwsDirectoryServiceDirectory() *schema.Resource {
 	}
 }
 
-func dataSourceAwsDirectoryServiceDirectoryRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceDirectoryRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectoryServiceConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

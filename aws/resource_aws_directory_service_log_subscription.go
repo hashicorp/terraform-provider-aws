@@ -10,11 +10,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsDirectoryServiceLogSubscription() *schema.Resource {
+func ResourceLogSubscription() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDirectoryServiceLogSubscriptionCreate,
-		Read:   resourceAwsDirectoryServiceLogSubscriptionRead,
-		Delete: resourceAwsDirectoryServiceLogSubscriptionDelete,
+		Create: resourceLogSubscriptionCreate,
+		Read:   resourceLogSubscriptionRead,
+		Delete: resourceLogSubscriptionDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -34,7 +34,7 @@ func resourceAwsDirectoryServiceLogSubscription() *schema.Resource {
 	}
 }
 
-func resourceAwsDirectoryServiceLogSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceLogSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectoryServiceConn
 
 	directoryId := d.Get("directory_id")
@@ -52,10 +52,10 @@ func resourceAwsDirectoryServiceLogSubscriptionCreate(d *schema.ResourceData, me
 
 	d.SetId(directoryId.(string))
 
-	return resourceAwsDirectoryServiceLogSubscriptionRead(d, meta)
+	return resourceLogSubscriptionRead(d, meta)
 }
 
-func resourceAwsDirectoryServiceLogSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
+func resourceLogSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectoryServiceConn
 
 	directoryId := d.Id()
@@ -82,7 +82,7 @@ func resourceAwsDirectoryServiceLogSubscriptionRead(d *schema.ResourceData, meta
 	return nil
 }
 
-func resourceAwsDirectoryServiceLogSubscriptionDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceLogSubscriptionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectoryServiceConn
 
 	directoryId := d.Id()
