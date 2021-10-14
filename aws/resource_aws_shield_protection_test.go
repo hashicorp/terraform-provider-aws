@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSShieldProtection_GlobalAccelerator(t *testing.T) {
@@ -95,7 +96,7 @@ func TestAccAWSShieldProtection_disappears(t *testing.T) {
 				Config: testAccShieldProtectionElasticIPAddressConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSShieldProtectionExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsShieldProtection(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceProtection(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

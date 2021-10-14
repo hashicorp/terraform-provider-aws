@@ -11,12 +11,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsShieldProtection() *schema.Resource {
+func ResourceProtection() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsShieldProtectionCreate,
-		Update: resourceAwsShieldProtectionUpdate,
-		Read:   resourceAwsShieldProtectionRead,
-		Delete: resourceAwsShieldProtectionDelete,
+		Create: resourceProtectionCreate,
+		Update: resourceProtectionUpdate,
+		Read:   resourceProtectionRead,
+		Delete: resourceProtectionDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -44,7 +44,7 @@ func resourceAwsShieldProtection() *schema.Resource {
 	}
 }
 
-func resourceAwsShieldProtectionUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceProtectionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ShieldConn
 
 	if d.HasChange("tags_all") {
@@ -54,10 +54,10 @@ func resourceAwsShieldProtectionUpdate(d *schema.ResourceData, meta interface{})
 		}
 	}
 
-	return resourceAwsShieldProtectionRead(d, meta)
+	return resourceProtectionRead(d, meta)
 }
 
-func resourceAwsShieldProtectionCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceProtectionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ShieldConn
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -74,10 +74,10 @@ func resourceAwsShieldProtectionCreate(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("error creating Shield Protection: %s", err)
 	}
 	d.SetId(aws.StringValue(resp.ProtectionId))
-	return resourceAwsShieldProtectionRead(d, meta)
+	return resourceProtectionRead(d, meta)
 }
 
-func resourceAwsShieldProtectionRead(d *schema.ResourceData, meta interface{}) error {
+func resourceProtectionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ShieldConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -123,7 +123,7 @@ func resourceAwsShieldProtectionRead(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func resourceAwsShieldProtectionDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceProtectionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ShieldConn
 
 	input := &shield.DeleteProtectionInput{
