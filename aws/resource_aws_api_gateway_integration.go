@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceIntegration() *schema.Resource {
@@ -54,7 +55,7 @@ func ResourceIntegration() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateHTTPMethod(),
+				ValidateFunc: validHTTPMethod(),
 			},
 
 			"type": {
@@ -100,7 +101,7 @@ func ResourceIntegration() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validateHTTPMethod(),
+				ValidateFunc: validHTTPMethod(),
 			},
 
 			"request_templates": {
@@ -118,7 +119,7 @@ func ResourceIntegration() *schema.Resource {
 			"content_handling": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateApiGatewayIntegrationContentHandling(),
+				ValidateFunc: validIntegrationContentHandling(),
 			},
 
 			"passthrough_behavior": {
