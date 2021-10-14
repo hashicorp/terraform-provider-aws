@@ -88,7 +88,7 @@ func resourceAwsDevicefarmProjectRead(d *schema.ResourceData, meta interface{}) 
 	log.Printf("[DEBUG] Reading DeviceFarm Project: %s", d.Id())
 	out, err := conn.GetProject(input)
 	if err != nil {
-		if isAWSErr(err, devicefarm.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, devicefarm.ErrCodeNotFoundException, "") {
 			log.Printf("[WARN] DeviceFarm Project (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -166,7 +166,7 @@ func resourceAwsDevicefarmProjectDelete(d *schema.ResourceData, meta interface{}
 	log.Printf("[DEBUG] Deleting DeviceFarm Project: %s", d.Id())
 	_, err := conn.DeleteProject(input)
 	if err != nil {
-		if isAWSErr(err, devicefarm.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, devicefarm.ErrCodeNotFoundException, "") {
 			return nil
 		}
 		return fmt.Errorf("Error deleting DeviceFarm Project: %w", err)
