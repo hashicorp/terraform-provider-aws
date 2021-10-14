@@ -65,7 +65,7 @@ func testSweepServiceCatalogPrincipalPortfolioAssociations(region string) error 
 						continue
 					}
 
-					r := ResourcePrincipalPortfolioAssociation()
+					r := tfservicecatalog.ResourcePrincipalPortfolioAssociation()
 					d := r.Data(nil)
 					d.SetId(tfservicecatalog.PrincipalPortfolioAssociationID(tfservicecatalog.AcceptLanguageEnglish, aws.StringValue(principal.PrincipalARN), aws.StringValue(detail.Id)))
 
@@ -141,7 +141,7 @@ func TestAccAWSServiceCatalogPrincipalPortfolioAssociation_disappears(t *testing
 				Config: testAccAWSServiceCatalogPrincipalPortfolioAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogPrincipalPortfolioAssociationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourcePrincipalPortfolioAssociation(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfservicecatalog.ResourcePrincipalPortfolioAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -86,7 +86,7 @@ func testSweepServiceCatalogProductPortfolioAssociations(region string) error {
 						continue
 					}
 
-					r := ResourceProductPortfolioAssociation()
+					r := tfservicecatalog.ResourceProductPortfolioAssociation()
 					d := r.Data(nil)
 					d.SetId(tfservicecatalog.ProductPortfolioAssociationCreateID(tfservicecatalog.AcceptLanguageEnglish, aws.StringValue(detail.Id), productID))
 
@@ -166,7 +166,7 @@ func TestAccAWSServiceCatalogProductPortfolioAssociation_disappears(t *testing.T
 				Config: testAccAWSServiceCatalogProductPortfolioAssociationConfig_basic(rName, domain, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogProductPortfolioAssociationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceProductPortfolioAssociation(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfservicecatalog.ResourceProductPortfolioAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
