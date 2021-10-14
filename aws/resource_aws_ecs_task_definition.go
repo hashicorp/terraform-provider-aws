@@ -18,6 +18,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceTaskDefinition() *schema.Resource {
@@ -118,14 +119,14 @@ func ResourceTaskDefinition() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 
 			"execution_role_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 
 			"memory": {
@@ -282,7 +283,7 @@ func ResourceTaskDefinition() *schema.Resource {
 													Type:         schema.TypeString,
 													ForceNew:     true,
 													Required:     true,
-													ValidateFunc: validateArn,
+													ValidateFunc: verify.ValidARN,
 												},
 												"domain": {
 													Type:     schema.TypeString,
@@ -755,7 +756,7 @@ func expandEcsTaskDefinitionPlacementConstraints(constraints []interface{}) ([]*
 		p := raw.(map[string]interface{})
 		t := p["type"].(string)
 		e := p["expression"].(string)
-		if err := validateAwsEcsPlacementConstraint(t, e); err != nil {
+		if err := validateAwsECSPlacementConstraint(t, e); err != nil {
 			return nil, err
 		}
 		pc = append(pc, &ecs.TaskDefinitionPlacementConstraint{
@@ -979,11 +980,11 @@ func flattenDockerVolumeConfiguration(config *ecs.DockerVolumeConfiguration) []i
 	}
 
 	if config.DriverOpts != nil {
-		m["driver_opts"] = pointersMapToStringList(config.DriverOpts)
+		m["driver_opts"] = verify.PointersMapToStringList(config.DriverOpts)
 	}
 
 	if v := config.Labels; v != nil {
-		m["labels"] = pointersMapToStringList(v)
+		m["labels"] = verify.PointersMapToStringList(v)
 	}
 
 	items = append(items, m)
