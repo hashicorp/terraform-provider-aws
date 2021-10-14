@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceXSSMatchSet() *schema.Resource {
@@ -179,7 +179,7 @@ func updateXssMatchSetResourceWR(id string, oldT, newT []interface{}, conn *wafr
 		req := &waf.UpdateXssMatchSetInput{
 			ChangeToken:   token,
 			XssMatchSetId: aws.String(id),
-			Updates:       diffWafXssMatchSetTuples(oldT, newT),
+			Updates:       diffXSSMatchSetTuples(oldT, newT),
 		}
 
 		log.Printf("[INFO] Updating XSS Match Set tuples: %s", req)
@@ -201,4 +201,38 @@ func flattenXSSMatchTuples(ts []*waf.XssMatchTuple) []interface{} {
 		out[i] = m
 	}
 	return out
+}
+
+func diffXSSMatchSetTuples(oldT, newT []interface{}) []*waf.XssMatchSetUpdate {
+	updates := make([]*waf.XssMatchSetUpdate, 0)
+
+	for _, od := range oldT {
+		tuple := od.(map[string]interface{})
+
+		if idx, contains := sliceContainsMap(newT, tuple); contains {
+			newT = append(newT[:idx], newT[idx+1:]...)
+			continue
+		}
+
+		updates = append(updates, &waf.XssMatchSetUpdate{
+			Action: aws.String(waf.ChangeActionDelete),
+			XssMatchTuple: &waf.XssMatchTuple{
+				FieldToMatch:       expandFieldToMatch(tuple["field_to_match"].([]interface{})[0].(map[string]interface{})),
+				TextTransformation: aws.String(tuple["text_transformation"].(string)),
+			},
+		})
+	}
+
+	for _, nd := range newT {
+		tuple := nd.(map[string]interface{})
+
+		updates = append(updates, &waf.XssMatchSetUpdate{
+			Action: aws.String(waf.ChangeActionInsert),
+			XssMatchTuple: &waf.XssMatchTuple{
+				FieldToMatch:       expandFieldToMatch(tuple["field_to_match"].([]interface{})[0].(map[string]interface{})),
+				TextTransformation: aws.String(tuple["text_transformation"].(string)),
+			},
+		})
+	}
+	return updates
 }

@@ -13,6 +13,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceRateBasedRule() *schema.Resource {
@@ -35,7 +36,7 @@ func ResourceRateBasedRule() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateWafMetricName,
+				ValidateFunc: validMetricName,
 			},
 			"predicate": {
 				Type:     schema.TypeSet,

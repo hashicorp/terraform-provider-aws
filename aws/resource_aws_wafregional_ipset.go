@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/wafregional"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // WAF requires UpdateIPSet operations be split into batches of 1000 Updates
@@ -172,7 +172,7 @@ func resourceIPSetDelete(d *schema.ResourceData, meta interface{}) error {
 }
 
 func updateIPSetResourceWR(id string, oldD, newD []interface{}, conn *wafregional.WAFRegional, region string) error {
-	for _, ipSetUpdates := range diffWafIpSetDescriptors(oldD, newD) {
+	for _, ipSetUpdates := range diffIPSetDescriptors(oldD, newD) {
 		wr := newWafRegionalRetryer(conn, region)
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 			req := &waf.UpdateIPSetInput{
@@ -190,4 +190,50 @@ func updateIPSetResourceWR(id string, oldD, newD []interface{}, conn *wafregiona
 	}
 
 	return nil
+}
+
+func diffIPSetDescriptors(oldD, newD []interface{}) [][]*waf.IPSetUpdate {
+	updates := make([]*waf.IPSetUpdate, 0, ipSetUpdatesLimit)
+	updatesBatches := make([][]*waf.IPSetUpdate, 0)
+
+	for _, od := range oldD {
+		descriptor := od.(map[string]interface{})
+
+		if idx, contains := sliceContainsMap(newD, descriptor); contains {
+			newD = append(newD[:idx], newD[idx+1:]...)
+			continue
+		}
+
+		if len(updates) == ipSetUpdatesLimit {
+			updatesBatches = append(updatesBatches, updates)
+			updates = make([]*waf.IPSetUpdate, 0, ipSetUpdatesLimit)
+		}
+
+		updates = append(updates, &waf.IPSetUpdate{
+			Action: aws.String(waf.ChangeActionDelete),
+			IPSetDescriptor: &waf.IPSetDescriptor{
+				Type:  aws.String(descriptor["type"].(string)),
+				Value: aws.String(descriptor["value"].(string)),
+			},
+		})
+	}
+
+	for _, nd := range newD {
+		descriptor := nd.(map[string]interface{})
+
+		if len(updates) == ipSetUpdatesLimit {
+			updatesBatches = append(updatesBatches, updates)
+			updates = make([]*waf.IPSetUpdate, 0, ipSetUpdatesLimit)
+		}
+
+		updates = append(updates, &waf.IPSetUpdate{
+			Action: aws.String(waf.ChangeActionInsert),
+			IPSetDescriptor: &waf.IPSetDescriptor{
+				Type:  aws.String(descriptor["type"].(string)),
+				Value: aws.String(descriptor["value"].(string)),
+			},
+		})
+	}
+	updatesBatches = append(updatesBatches, updates)
+	return updatesBatches
 }

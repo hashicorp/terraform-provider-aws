@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func TestAccAWSWafRegionalIPSet_basic(t *testing.T) {
@@ -332,7 +333,7 @@ func TestDiffWafRegionalIpSetDescriptors(t *testing.T) {
 	}
 	for i, tc := range testCases {
 		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
-			updates := diffWafIpSetDescriptors(tc.Old, tc.New)
+			updates := diffIPSetDescriptors(tc.Old, tc.New)
 			if !reflect.DeepEqual(updates, tc.ExpectedUpdates) {
 				t.Fatalf("IPSet updates don't match.\nGiven: %s\nExpected: %s",
 					updates, tc.ExpectedUpdates)
