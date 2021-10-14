@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsDefaultTags() *schema.Resource {
@@ -17,10 +18,10 @@ func dataSourceAwsDefaultTags() *schema.Resource {
 }
 
 func dataSourceAwsDefaultTagsRead(d *schema.ResourceData, meta interface{}) error {
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	d.SetId(meta.(*AWSClient).partition)
+	d.SetId(meta.(*conns.AWSClient).Partition)
 
 	tags := defaultTagsConfig.GetTags()
 

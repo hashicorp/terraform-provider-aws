@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	awspolicy "github.com/jen20/awspolicyequivalence"
 	tfnet "github.com/hashicorp/terraform-provider-aws/aws/internal/net"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func suppressEquivalentAwsPolicyDiffs(k, old, new string, d *schema.ResourceData) bool {

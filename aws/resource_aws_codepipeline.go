@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 const (
@@ -178,8 +179,8 @@ func resourceAwsCodePipeline() *schema.Resource {
 }
 
 func resourceAwsCodePipelineCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codepipelineconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).CodePipelineConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	pipeline, err := expandAwsCodePipeline(d)
@@ -497,9 +498,9 @@ func flattenAwsCodePipelineActionsInputArtifacts(artifacts []*codepipeline.Input
 }
 
 func resourceAwsCodePipelineRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codepipelineconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).CodePipelineConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	resp, err := conn.GetPipeline(&codepipeline.GetPipelineInput{
 		Name: aws.String(d.Id()),
@@ -558,7 +559,7 @@ func resourceAwsCodePipelineRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsCodePipelineUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codepipelineconn
+	conn := meta.(*conns.AWSClient).CodePipelineConn
 
 	pipeline, err := expandAwsCodePipeline(d)
 	if err != nil {
@@ -586,7 +587,7 @@ func resourceAwsCodePipelineUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsCodePipelineDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codepipelineconn
+	conn := meta.(*conns.AWSClient).CodePipelineConn
 
 	_, err := conn.DeletePipeline(&codepipeline.DeletePipelineInput{
 		Name: aws.String(d.Id()),

@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsRegions() *schema.Resource {
@@ -30,7 +31,7 @@ func dataSourceAwsRegions() *schema.Resource {
 }
 
 func dataSourceAwsRegionsRead(d *schema.ResourceData, meta interface{}) error {
-	connection := meta.(*AWSClient).ec2conn
+	connection := meta.(*conns.AWSClient).EC2Conn
 
 	log.Printf("[DEBUG] Reading regions.")
 	request := &ec2.DescribeRegionsInput{}
@@ -52,7 +53,7 @@ func dataSourceAwsRegionsRead(d *schema.ResourceData, meta interface{}) error {
 		names = append(names, aws.StringValue(v.RegionName))
 	}
 
-	d.SetId(meta.(*AWSClient).partition)
+	d.SetId(meta.(*conns.AWSClient).Partition)
 	if err := d.Set("names", names); err != nil {
 		return fmt.Errorf("error setting names: %w", err)
 	}

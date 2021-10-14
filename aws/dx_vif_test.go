@@ -8,11 +8,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func testAccCheckDxVirtualInterfaceExists(name string, vif *directconnect.VirtualInterface) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).dxconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -42,7 +43,7 @@ func testAccCheckDxVirtualInterfaceExists(name string, vif *directconnect.Virtua
 }
 
 func testAccCheckDxVirtualInterfaceDestroy(s *terraform.State, t string) error {
-	conn := acctest.Provider.Meta().(*AWSClient).dxconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != t {

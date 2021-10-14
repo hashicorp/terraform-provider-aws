@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	tfconnect "github.com/hashicorp/terraform-provider-aws/aws/internal/service/connect"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsConnectInstance() *schema.Resource {
@@ -83,7 +84,7 @@ func dataSourceAwsConnectInstance() *schema.Resource {
 }
 
 func dataSourceAwsConnectInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).connectconn
+	conn := meta.(*conns.AWSClient).ConnectConn
 
 	var matchedInstance *connect.Instance
 

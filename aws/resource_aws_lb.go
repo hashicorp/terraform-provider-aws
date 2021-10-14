@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/elbv2/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/elbv2/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsLb() *schema.Resource {
@@ -261,8 +262,8 @@ func suppressIfLBType(t string) schema.SchemaDiffSuppressFunc {
 }
 
 func resourceAwsLbCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elbv2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).ELBV2Conn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	var name string
@@ -352,7 +353,7 @@ func resourceAwsLbCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsLbRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elbv2conn
+	conn := meta.(*conns.AWSClient).ELBV2Conn
 
 	lb, err := finder.LoadBalancerByARN(conn, d.Id())
 
@@ -380,7 +381,7 @@ func resourceAwsLbRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsLbUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elbv2conn
+	conn := meta.(*conns.AWSClient).ELBV2Conn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -548,7 +549,7 @@ func resourceAwsLbUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsLbDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elbv2conn
+	conn := meta.(*conns.AWSClient).ELBV2Conn
 
 	log.Printf("[INFO] Deleting LB: %s", d.Id())
 
@@ -560,7 +561,7 @@ func resourceAwsLbDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting LB: %w", err)
 	}
 
-	ec2conn := meta.(*AWSClient).ec2conn
+	ec2conn := meta.(*conns.AWSClient).EC2Conn
 
 	err := cleanupLBNetworkInterfaces(ec2conn, d.Id())
 	if err != nil {
@@ -736,9 +737,9 @@ func lbSuffixFromARN(arn *string) string {
 
 // flattenAwsLbResource takes a *elbv2.LoadBalancer and populates all respective resource fields.
 func flattenAwsLbResource(d *schema.ResourceData, meta interface{}, lb *elbv2.LoadBalancer) error {
-	conn := meta.(*AWSClient).elbv2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).ELBV2Conn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	d.Set("arn", lb.LoadBalancerArn)
 	d.Set("arn_suffix", lbSuffixFromARN(lb.LoadBalancerArn))

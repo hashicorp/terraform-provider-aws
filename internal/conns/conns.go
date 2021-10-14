@@ -1,4 +1,4 @@
-package aws
+package conns
 
 import (
 	"fmt"
@@ -215,201 +215,201 @@ type Config struct {
 	SkipMetadataApiCheck    bool
 	S3ForcePathStyle        bool
 
-	terraformVersion string
+	TerraformVersion string
 }
 
 type AWSClient struct {
-	accessanalyzerconn                  *accessanalyzer.AccessAnalyzer
-	accountid                           string
-	acmconn                             *acm.ACM
-	acmpcaconn                          *acmpca.ACMPCA
-	amplifyconn                         *amplify.Amplify
-	apigatewayconn                      *apigateway.APIGateway
-	apigatewayv2conn                    *apigatewayv2.ApiGatewayV2
-	appautoscalingconn                  *applicationautoscaling.ApplicationAutoScaling
-	appconfigconn                       *appconfig.AppConfig
-	applicationinsightsconn             *applicationinsights.ApplicationInsights
-	appmeshconn                         *appmesh.AppMesh
-	apprunnerconn                       *apprunner.AppRunner
-	appstreamconn                       *appstream.AppStream
-	appsyncconn                         *appsync.AppSync
-	athenaconn                          *athena.Athena
-	auditmanagerconn                    *auditmanager.AuditManager
-	autoscalingconn                     *autoscaling.AutoScaling
-	autoscalingplansconn                *autoscalingplans.AutoScalingPlans
-	backupconn                          *backup.Backup
-	batchconn                           *batch.Batch
-	budgetconn                          *budgets.Budgets
-	cfconn                              *cloudformation.CloudFormation
-	chimeconn                           *chime.Chime
-	cloud9conn                          *cloud9.Cloud9
-	cloudcontrolapiconn                 *cloudcontrolapi.CloudControlApi
-	cloudfrontconn                      *cloudfront.CloudFront
-	cloudhsmv2conn                      *cloudhsmv2.CloudHSMV2
-	cloudsearchconn                     *cloudsearch.CloudSearch
-	cloudtrailconn                      *cloudtrail.CloudTrail
-	cloudwatchconn                      *cloudwatch.CloudWatch
-	cloudwatcheventsconn                *cloudwatchevents.CloudWatchEvents
-	cloudwatchlogsconn                  *cloudwatchlogs.CloudWatchLogs
-	codeartifactconn                    *codeartifact.CodeArtifact
-	codebuildconn                       *codebuild.CodeBuild
-	codecommitconn                      *codecommit.CodeCommit
-	codedeployconn                      *codedeploy.CodeDeploy
-	codepipelineconn                    *codepipeline.CodePipeline
-	codestarconnectionsconn             *codestarconnections.CodeStarConnections
-	codestarnotificationsconn           *codestarnotifications.CodeStarNotifications
-	cognitoconn                         *cognitoidentity.CognitoIdentity
-	cognitoidpconn                      *cognitoidentityprovider.CognitoIdentityProvider
-	configconn                          *configservice.ConfigService
-	connectconn                         *connect.Connect
-	costandusagereportconn              *costandusagereportservice.CostandUsageReportService
-	dataexchangeconn                    *dataexchange.DataExchange
-	datapipelineconn                    *datapipeline.DataPipeline
-	datasyncconn                        *datasync.DataSync
-	daxconn                             *dax.DAX
-	DefaultTagsConfig                   *keyvaluetags.DefaultConfig
-	detectiveconn                       *detective.Detective
-	devicefarmconn                      *devicefarm.DeviceFarm
-	dlmconn                             *dlm.DLM
-	dmsconn                             *databasemigrationservice.DatabaseMigrationService
-	dnsSuffix                           string
-	docdbconn                           *docdb.DocDB
-	dsconn                              *directoryservice.DirectoryService
-	dxconn                              *directconnect.DirectConnect
-	dynamodbconn                        *dynamodb.DynamoDB
-	ec2conn                             *ec2.EC2
-	ecrconn                             *ecr.ECR
-	ecrpublicconn                       *ecrpublic.ECRPublic
-	ecsconn                             *ecs.ECS
-	efsconn                             *efs.EFS
-	eksconn                             *eks.EKS
-	elasticacheconn                     *elasticache.ElastiCache
-	elasticbeanstalkconn                *elasticbeanstalk.ElasticBeanstalk
-	elastictranscoderconn               *elastictranscoder.ElasticTranscoder
-	elbconn                             *elb.ELB
-	elbv2conn                           *elbv2.ELBV2
-	emrconn                             *emr.EMR
-	emrcontainersconn                   *emrcontainers.EMRContainers
-	esconn                              *elasticsearch.ElasticsearchService
-	firehoseconn                        *firehose.Firehose
-	fmsconn                             *fms.FMS
-	forecastconn                        *forecastservice.ForecastService
-	fsxconn                             *fsx.FSx
-	gameliftconn                        *gamelift.GameLift
-	glacierconn                         *glacier.Glacier
-	globalacceleratorconn               *globalaccelerator.GlobalAccelerator
-	glueconn                            *glue.Glue
-	guarddutyconn                       *guardduty.GuardDuty
-	greengrassconn                      *greengrass.Greengrass
-	iamconn                             *iam.IAM
-	identitystoreconn                   *identitystore.IdentityStore
-	IgnoreTagsConfig                    *keyvaluetags.IgnoreConfig
-	imagebuilderconn                    *imagebuilder.Imagebuilder
-	inspectorconn                       *inspector.Inspector
-	iotconn                             *iot.IoT
-	iotanalyticsconn                    *iotanalytics.IoTAnalytics
-	ioteventsconn                       *iotevents.IoTEvents
-	kafkaconn                           *kafka.Kafka
-	kinesisanalyticsconn                *kinesisanalytics.KinesisAnalytics
-	kinesisanalyticsv2conn              *kinesisanalyticsv2.KinesisAnalyticsV2
-	kinesisconn                         *kinesis.Kinesis
-	kinesisvideoconn                    *kinesisvideo.KinesisVideo
-	kmsconn                             *kms.KMS
-	lakeformationconn                   *lakeformation.LakeFormation
-	lambdaconn                          *lambda.Lambda
-	lexmodelconn                        *lexmodelbuildingservice.LexModelBuildingService
-	licensemanagerconn                  *licensemanager.LicenseManager
-	lightsailconn                       *lightsail.Lightsail
-	locationconn                        *locationservice.LocationService
-	macieconn                           *macie.Macie
-	macie2conn                          *macie2.Macie2
-	managedblockchainconn               *managedblockchain.ManagedBlockchain
-	marketplacecatalogconn              *marketplacecatalog.MarketplaceCatalog
-	mediaconnectconn                    *mediaconnect.MediaConnect
-	mediaconvertconn                    *mediaconvert.MediaConvert
-	mediaconvertaccountconn             *mediaconvert.MediaConvert
-	medialiveconn                       *medialive.MediaLive
-	mediapackageconn                    *mediapackage.MediaPackage
-	mediastoreconn                      *mediastore.MediaStore
-	mediastoredataconn                  *mediastoredata.MediaStoreData
-	memorydbconn                        *memorydb.MemoryDB
-	mqconn                              *mq.MQ
-	mwaaconn                            *mwaa.MWAA
-	neptuneconn                         *neptune.Neptune
-	networkfirewallconn                 *networkfirewall.NetworkFirewall
-	networkmanagerconn                  *networkmanager.NetworkManager
-	opsworksconn                        *opsworks.OpsWorks
-	organizationsconn                   *organizations.Organizations
-	outpostsconn                        *outposts.Outposts
-	partition                           string
-	personalizeconn                     *personalize.Personalize
-	prometheusserviceconn               *prometheusservice.PrometheusService
-	pinpointconn                        *pinpoint.Pinpoint
-	pricingconn                         *pricing.Pricing
-	qldbconn                            *qldb.QLDB
-	quicksightconn                      *quicksight.QuickSight
-	r53conn                             *route53.Route53
-	ramconn                             *ram.RAM
-	rdsconn                             *rds.RDS
-	redshiftconn                        *redshift.Redshift
-	region                              string
-	resourcegroupsconn                  *resourcegroups.ResourceGroups
-	resourcegroupstaggingapiconn        *resourcegroupstaggingapi.ResourceGroupsTaggingAPI
-	reverseDnsPrefix                    string
-	route53domainsconn                  *route53domains.Route53Domains
-	route53recoverycontrolconfigconn    *route53recoverycontrolconfig.Route53RecoveryControlConfig
-	route53recoveryreadinessconn        *route53recoveryreadiness.Route53RecoveryReadiness
-	route53resolverconn                 *route53resolver.Route53Resolver
-	s3conn                              *s3.S3
-	s3connUriCleaningDisabled           *s3.S3
-	s3controlconn                       *s3control.S3Control
-	s3outpostsconn                      *s3outposts.S3Outposts
-	sagemakerconn                       *sagemaker.SageMaker
-	scconn                              *servicecatalog.ServiceCatalog
-	schemasconn                         *schemas.Schemas
-	sdconn                              *servicediscovery.ServiceDiscovery
-	secretsmanagerconn                  *secretsmanager.SecretsManager
-	securityhubconn                     *securityhub.SecurityHub
-	serverlessapplicationrepositoryconn *serverlessapplicationrepository.ServerlessApplicationRepository
-	servicequotasconn                   *servicequotas.ServiceQuotas
-	sesconn                             *ses.SES
-	sfnconn                             *sfn.SFN
-	shieldconn                          *shield.Shield
-	signerconn                          *signer.Signer
-	simpledbconn                        *simpledb.SimpleDB
-	snsconn                             *sns.SNS
-	sqsconn                             *sqs.SQS
-	ssmconn                             *ssm.SSM
-	ssoadminconn                        *ssoadmin.SSOAdmin
-	storagegatewayconn                  *storagegateway.StorageGateway
-	stsconn                             *sts.STS
-	supportedplatforms                  []string
-	swfconn                             *swf.SWF
-	syntheticsconn                      *synthetics.Synthetics
-	terraformVersion                    string
-	timestreamwriteconn                 *timestreamwrite.TimestreamWrite
-	transferconn                        *transfer.Transfer
-	wafconn                             *waf.WAF
-	wafregionalconn                     *wafregional.WAFRegional
-	wafv2conn                           *wafv2.WAFV2
-	worklinkconn                        *worklink.WorkLink
-	workmailconn                        *workmail.WorkMail
-	workspacesconn                      *workspaces.WorkSpaces
-	xrayconn                            *xray.XRay
+	AccessAnalyzerConn               *accessanalyzer.AccessAnalyzer
+	AccountID                        string
+	ACMConn                          *acm.ACM
+	ACMPCAConn                       *acmpca.ACMPCA
+	AmplifyConn                      *amplify.Amplify
+	APIGatewayConn                   *apigateway.APIGateway
+	APIGatewayV2Conn                 *apigatewayv2.ApiGatewayV2
+	ApplicationAutoScalingConn       *applicationautoscaling.ApplicationAutoScaling
+	AppConfigConn                    *appconfig.AppConfig
+	ApplicationInsightsConn          *applicationinsights.ApplicationInsights
+	AppMeshConn                      *appmesh.AppMesh
+	AppRunnerConn                    *apprunner.AppRunner
+	AppStreamConn                    *appstream.AppStream
+	AppSyncConn                      *appsync.AppSync
+	AthenaConn                       *athena.Athena
+	AuditManagerConn                 *auditmanager.AuditManager
+	AutoScalingConn                  *autoscaling.AutoScaling
+	AutoScalingPlansConn             *autoscalingplans.AutoScalingPlans
+	BackupConn                       *backup.Backup
+	BatchConn                        *batch.Batch
+	BudgetsConn                      *budgets.Budgets
+	CloudFormationConn               *cloudformation.CloudFormation
+	ChimeConn                        *chime.Chime
+	Cloud9Conn                       *cloud9.Cloud9
+	CloudControlConn                 *cloudcontrolapi.CloudControlApi
+	CloudFrontConn                   *cloudfront.CloudFront
+	CloudHSMV2Conn                   *cloudhsmv2.CloudHSMV2
+	CloudSearchConn                  *cloudsearch.CloudSearch
+	CloudTrailConn                   *cloudtrail.CloudTrail
+	CloudWatchConn                   *cloudwatch.CloudWatch
+	CloudWatchEventsConn             *cloudwatchevents.CloudWatchEvents
+	CloudWatchLogsConn               *cloudwatchlogs.CloudWatchLogs
+	CodeArtifactConn                 *codeartifact.CodeArtifact
+	CodeBuildConn                    *codebuild.CodeBuild
+	CodeCommitConn                   *codecommit.CodeCommit
+	CodeDeployConn                   *codedeploy.CodeDeploy
+	CodePipelineConn                 *codepipeline.CodePipeline
+	CodeStarConnectionsConn          *codestarconnections.CodeStarConnections
+	CodeStarNotificationsConn        *codestarnotifications.CodeStarNotifications
+	CognitoIdentityConn              *cognitoidentity.CognitoIdentity
+	CognitoIDPConn                   *cognitoidentityprovider.CognitoIdentityProvider
+	ConfigConn                       *configservice.ConfigService
+	ConnectConn                      *connect.Connect
+	CURConn                          *costandusagereportservice.CostandUsageReportService
+	DataExchangeConn                 *dataexchange.DataExchange
+	DataPipelineConn                 *datapipeline.DataPipeline
+	DataSyncConn                     *datasync.DataSync
+	DAXConn                          *dax.DAX
+	DefaultTagsConfig                *keyvaluetags.DefaultConfig
+	DetectiveConn                    *detective.Detective
+	DeviceFarmConn                   *devicefarm.DeviceFarm
+	DLMConn                          *dlm.DLM
+	DMSConn                          *databasemigrationservice.DatabaseMigrationService
+	DNSSuffix                        string
+	DocDBConn                        *docdb.DocDB
+	DirectoryServiceConn             *directoryservice.DirectoryService
+	DirectConnectConn                *directconnect.DirectConnect
+	DynamoDBConn                     *dynamodb.DynamoDB
+	EC2Conn                          *ec2.EC2
+	ECRConn                          *ecr.ECR
+	ECRPublicConn                    *ecrpublic.ECRPublic
+	ECSConn                          *ecs.ECS
+	EFSConn                          *efs.EFS
+	EKSConn                          *eks.EKS
+	ElastiCacheConn                  *elasticache.ElastiCache
+	ElasticBeanstalkConn             *elasticbeanstalk.ElasticBeanstalk
+	ElasticTranscoderConn            *elastictranscoder.ElasticTranscoder
+	ELBConn                          *elb.ELB
+	ELBV2Conn                        *elbv2.ELBV2
+	EMRConn                          *emr.EMR
+	EMRContainersConn                *emrcontainers.EMRContainers
+	ElasticSearchConn                *elasticsearch.ElasticsearchService
+	FirehoseConn                     *firehose.Firehose
+	FMSConn                          *fms.FMS
+	ForecastConn                     *forecastservice.ForecastService
+	FSxConn                          *fsx.FSx
+	GameLiftConn                     *gamelift.GameLift
+	GlacierConn                      *glacier.Glacier
+	GlobalAcceleratorConn            *globalaccelerator.GlobalAccelerator
+	GlueConn                         *glue.Glue
+	GuardDutyConn                    *guardduty.GuardDuty
+	GreengrassConn                   *greengrass.Greengrass
+	IAMConn                          *iam.IAM
+	IdentityStoreConn                *identitystore.IdentityStore
+	IgnoreTagsConfig                 *keyvaluetags.IgnoreConfig
+	ImageBuilderConn                 *imagebuilder.Imagebuilder
+	InspectorConn                    *inspector.Inspector
+	IoTConn                          *iot.IoT
+	IoTAnalyticsConn                 *iotanalytics.IoTAnalytics
+	IoTEventsConn                    *iotevents.IoTEvents
+	KafkaConn                        *kafka.Kafka
+	KinesisAnalyticsConn             *kinesisanalytics.KinesisAnalytics
+	KinesisAnalyticsV2Conn           *kinesisanalyticsv2.KinesisAnalyticsV2
+	KinesisConn                      *kinesis.Kinesis
+	KinesisVideoConn                 *kinesisvideo.KinesisVideo
+	KMSConn                          *kms.KMS
+	LakeFormationConn                *lakeformation.LakeFormation
+	LambdaConn                       *lambda.Lambda
+	LexModelBuildingConn             *lexmodelbuildingservice.LexModelBuildingService
+	LicenseManagerConn               *licensemanager.LicenseManager
+	LightsailConn                    *lightsail.Lightsail
+	LocationConn                     *locationservice.LocationService
+	MacieConn                        *macie.Macie
+	Macie2Conn                       *macie2.Macie2
+	ManagedBlockchainConn            *managedblockchain.ManagedBlockchain
+	MarketplaceCatalogConn           *marketplacecatalog.MarketplaceCatalog
+	MediaConnectConn                 *mediaconnect.MediaConnect
+	MediaConvertConn                 *mediaconvert.MediaConvert
+	MediaConvertAccountConn          *mediaconvert.MediaConvert
+	MediaLiveConn                    *medialive.MediaLive
+	MediaPackageConn                 *mediapackage.MediaPackage
+	MediaStoreConn                   *mediastore.MediaStore
+	MediaStoreDataConn               *mediastoredata.MediaStoreData
+	MemoryDBConn                     *memorydb.MemoryDB
+	MQConn                           *mq.MQ
+	MWAAConn                         *mwaa.MWAA
+	NeptuneConn                      *neptune.Neptune
+	NetworkFirewallConn              *networkfirewall.NetworkFirewall
+	NetworkManagerConn               *networkmanager.NetworkManager
+	OpsWorksConn                     *opsworks.OpsWorks
+	OrganizationsConn                *organizations.Organizations
+	OutpostsConn                     *outposts.Outposts
+	Partition                        string
+	PersonalizeConn                  *personalize.Personalize
+	PrometheusConn                   *prometheusservice.PrometheusService
+	PinpointConn                     *pinpoint.Pinpoint
+	PricingConn                      *pricing.Pricing
+	QLDBConn                         *qldb.QLDB
+	QuickSightConn                   *quicksight.QuickSight
+	Route53Conn                      *route53.Route53
+	RAMConn                          *ram.RAM
+	RDSConn                          *rds.RDS
+	RedshiftConn                     *redshift.Redshift
+	Region                           string
+	ResourceGroupsConn               *resourcegroups.ResourceGroups
+	ResourceGroupsTaggingConn        *resourcegroupstaggingapi.ResourceGroupsTaggingAPI
+	ReverseDNSPrefix                 string
+	Route53DomainsConn               *route53domains.Route53Domains
+	Route53RecoveryControlConfigConn *route53recoverycontrolconfig.Route53RecoveryControlConfig
+	Route53RecoveryReadinessConn     *route53recoveryreadiness.Route53RecoveryReadiness
+	Route53ResolverConn              *route53resolver.Route53Resolver
+	S3Conn                           *s3.S3
+	S3ConnURICleaningDisabled        *s3.S3
+	S3ControlConn                    *s3control.S3Control
+	S3OutpostsConn                   *s3outposts.S3Outposts
+	SageMakerConn                    *sagemaker.SageMaker
+	ServiceCatalogConn               *servicecatalog.ServiceCatalog
+	SchemasConn                      *schemas.Schemas
+	ServiceDiscoveryConn             *servicediscovery.ServiceDiscovery
+	SecretsManagerConn               *secretsmanager.SecretsManager
+	SecurityHubConn                  *securityhub.SecurityHub
+	ServerlessAppRepoConn            *serverlessapplicationrepository.ServerlessApplicationRepository
+	ServiceQuotasConn                *servicequotas.ServiceQuotas
+	SESConn                          *ses.SES
+	SFNConn                          *sfn.SFN
+	ShieldConn                       *shield.Shield
+	SignerConn                       *signer.Signer
+	SimpleDBConn                     *simpledb.SimpleDB
+	SNSConn                          *sns.SNS
+	SQSConn                          *sqs.SQS
+	SSMConn                          *ssm.SSM
+	SSOAdminConn                     *ssoadmin.SSOAdmin
+	StorageGatewayConn               *storagegateway.StorageGateway
+	STSConn                          *sts.STS
+	SupportedPlatforms               []string
+	SWFConn                          *swf.SWF
+	SyntheticsConn                   *synthetics.Synthetics
+	TerraformVersion                 string
+	TimestreamWriteConn              *timestreamwrite.TimestreamWrite
+	TransferConn                     *transfer.Transfer
+	WAFConn                          *waf.WAF
+	WAFRegionalConn                  *wafregional.WAFRegional
+	WAFV2Conn                        *wafv2.WAFV2
+	WorkLinkConn                     *worklink.WorkLink
+	WorkMailConn                     *workmail.WorkMail
+	WorkSpacesConn                   *workspaces.WorkSpaces
+	XRayConn                         *xray.XRay
 }
 
 // PartitionHostname returns a hostname with the provider domain suffix for the partition
 // e.g. PREFIX.amazonaws.com
 // The prefix should not contain a trailing period.
 func (client *AWSClient) PartitionHostname(prefix string) string {
-	return fmt.Sprintf("%s.%s", prefix, client.dnsSuffix)
+	return fmt.Sprintf("%s.%s", prefix, client.DNSSuffix)
 }
 
 // RegionalHostname returns a hostname with the provider domain suffix for the region and partition
 // e.g. PREFIX.us-west-2.amazonaws.com
 // The prefix should not contain a trailing period.
 func (client *AWSClient) RegionalHostname(prefix string) string {
-	return fmt.Sprintf("%s.%s.%s", prefix, client.region, client.dnsSuffix)
+	return fmt.Sprintf("%s.%s.%s", prefix, client.Region, client.DNSSuffix)
 }
 
 // Client configures and returns a fully initialized AWSClient
@@ -451,12 +451,12 @@ func (c *Config) Client() (interface{}, error) {
 		UserAgentProducts: []*awsbase.UserAgentProduct{
 			{Name: "APN", Version: "1.0"},
 			{Name: "HashiCorp", Version: "1.0"},
-			{Name: "Terraform", Version: c.terraformVersion, Extra: []string{"+https://www.terraform.io"}},
+			{Name: "Terraform", Version: c.TerraformVersion, Extra: []string{"+https://www.terraform.io"}},
 			{Name: "terraform-provider-aws", Version: version.ProviderVersion, Extra: []string{"+https://registry.terraform.io/providers/hashicorp/aws"}},
 		},
 	}
 
-	sess, accountID, partition, err := awsbase.GetSessionWithAccountIDAndPartition(awsbaseConfig)
+	sess, accountID, Partition, err := awsbase.GetSessionWithAccountIDAndPartition(awsbaseConfig)
 	if err != nil {
 		return nil, fmt.Errorf("error configuring Terraform AWS Provider: %w", err)
 	}
@@ -469,182 +469,182 @@ func (c *Config) Client() (interface{}, error) {
 		return nil, err
 	}
 
-	dnsSuffix := "amazonaws.com"
+	DNSSuffix := "amazonaws.com"
 	if p, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), c.Region); ok {
-		dnsSuffix = p.DNSSuffix()
+		DNSSuffix = p.DNSSuffix()
 	}
 
 	client := &AWSClient{
-		accessanalyzerconn:                  accessanalyzer.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["accessanalyzer"])})),
-		accountid:                           accountID,
-		acmconn:                             acm.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["acm"])})),
-		acmpcaconn:                          acmpca.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["acmpca"])})),
-		amplifyconn:                         amplify.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["amplify"])})),
-		apigatewayconn:                      apigateway.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["apigateway"])})),
-		apigatewayv2conn:                    apigatewayv2.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["apigateway"])})),
-		appautoscalingconn:                  applicationautoscaling.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["applicationautoscaling"])})),
-		appconfigconn:                       appconfig.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["appconfig"])})),
-		applicationinsightsconn:             applicationinsights.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["applicationinsights"])})),
-		appmeshconn:                         appmesh.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["appmesh"])})),
-		apprunnerconn:                       apprunner.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["apprunner"])})),
-		appstreamconn:                       appstream.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["appstream"])})),
-		appsyncconn:                         appsync.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["appsync"])})),
-		athenaconn:                          athena.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["athena"])})),
-		auditmanagerconn:                    auditmanager.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["auditmanager"])})),
-		autoscalingconn:                     autoscaling.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["autoscaling"])})),
-		autoscalingplansconn:                autoscalingplans.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["autoscalingplans"])})),
-		backupconn:                          backup.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["backup"])})),
-		batchconn:                           batch.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["batch"])})),
-		budgetconn:                          budgets.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["budgets"])})),
-		cfconn:                              cloudformation.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["cloudformation"])})),
-		chimeconn:                           chime.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["chime"])})),
-		cloud9conn:                          cloud9.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["cloud9"])})),
-		cloudcontrolapiconn:                 cloudcontrolapi.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["cloudcontrolapi"])})),
-		cloudfrontconn:                      cloudfront.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["cloudfront"])})),
-		cloudhsmv2conn:                      cloudhsmv2.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["cloudhsm"])})),
-		cloudsearchconn:                     cloudsearch.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["cloudsearch"])})),
-		cloudtrailconn:                      cloudtrail.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["cloudtrail"])})),
-		cloudwatchconn:                      cloudwatch.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["cloudwatch"])})),
-		cloudwatcheventsconn:                cloudwatchevents.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["cloudwatchevents"])})),
-		cloudwatchlogsconn:                  cloudwatchlogs.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["cloudwatchlogs"])})),
-		codeartifactconn:                    codeartifact.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["codeartifact"])})),
-		codebuildconn:                       codebuild.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["codebuild"])})),
-		codecommitconn:                      codecommit.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["codecommit"])})),
-		codedeployconn:                      codedeploy.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["codedeploy"])})),
-		codepipelineconn:                    codepipeline.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["codepipeline"])})),
-		codestarconnectionsconn:             codestarconnections.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["codestarconnections"])})),
-		codestarnotificationsconn:           codestarnotifications.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["codestarnotifications"])})),
-		cognitoconn:                         cognitoidentity.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["cognitoidentity"])})),
-		cognitoidpconn:                      cognitoidentityprovider.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["cognitoidp"])})),
-		configconn:                          configservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["configservice"])})),
-		connectconn:                         connect.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["connect"])})),
-		costandusagereportconn:              costandusagereportservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["cur"])})),
-		dataexchangeconn:                    dataexchange.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["dataexchange"])})),
-		datapipelineconn:                    datapipeline.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["datapipeline"])})),
-		datasyncconn:                        datasync.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["datasync"])})),
-		daxconn:                             dax.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["dax"])})),
-		DefaultTagsConfig:                   c.DefaultTagsConfig,
-		detectiveconn:                       detective.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["detective"])})),
-		devicefarmconn:                      devicefarm.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["devicefarm"])})),
-		dlmconn:                             dlm.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["dlm"])})),
-		dmsconn:                             databasemigrationservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["dms"])})),
-		dnsSuffix:                           dnsSuffix,
-		docdbconn:                           docdb.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["docdb"])})),
-		dsconn:                              directoryservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["ds"])})),
-		dxconn:                              directconnect.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["directconnect"])})),
-		dynamodbconn:                        dynamodb.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["dynamodb"])})),
-		ec2conn:                             ec2.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["ec2"])})),
-		ecrconn:                             ecr.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["ecr"])})),
-		ecrpublicconn:                       ecrpublic.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["ecrpublic"])})),
-		ecsconn:                             ecs.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["ecs"])})),
-		efsconn:                             efs.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["efs"])})),
-		eksconn:                             eks.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["eks"])})),
-		elasticacheconn:                     elasticache.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["elasticache"])})),
-		elasticbeanstalkconn:                elasticbeanstalk.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["elasticbeanstalk"])})),
-		elastictranscoderconn:               elastictranscoder.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["elastictranscoder"])})),
-		elbconn:                             elb.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["elb"])})),
-		elbv2conn:                           elbv2.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["elb"])})),
-		emrconn:                             emr.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["emr"])})),
-		emrcontainersconn:                   emrcontainers.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["emrcontainers"])})),
-		esconn:                              elasticsearch.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["es"])})),
-		firehoseconn:                        firehose.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["firehose"])})),
-		fmsconn:                             fms.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["fms"])})),
-		forecastconn:                        forecastservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["forecast"])})),
-		fsxconn:                             fsx.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["fsx"])})),
-		gameliftconn:                        gamelift.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["gamelift"])})),
-		glacierconn:                         glacier.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["glacier"])})),
-		glueconn:                            glue.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["glue"])})),
-		guarddutyconn:                       guardduty.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["guardduty"])})),
-		greengrassconn:                      greengrass.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["greengrass"])})),
-		iamconn:                             iam.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["iam"])})),
-		identitystoreconn:                   identitystore.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["identitystore"])})),
-		IgnoreTagsConfig:                    c.IgnoreTagsConfig,
-		imagebuilderconn:                    imagebuilder.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["imagebuilder"])})),
-		inspectorconn:                       inspector.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["inspector"])})),
-		iotconn:                             iot.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["iot"])})),
-		iotanalyticsconn:                    iotanalytics.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["iotanalytics"])})),
-		ioteventsconn:                       iotevents.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["iotevents"])})),
-		kafkaconn:                           kafka.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["kafka"])})),
-		kinesisanalyticsconn:                kinesisanalytics.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["kinesisanalytics"])})),
-		kinesisanalyticsv2conn:              kinesisanalyticsv2.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["kinesisanalyticsv2"])})),
-		kinesisconn:                         kinesis.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["kinesis"])})),
-		kinesisvideoconn:                    kinesisvideo.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["kinesisvideo"])})),
-		kmsconn:                             kms.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["kms"])})),
-		lakeformationconn:                   lakeformation.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["lakeformation"])})),
-		lambdaconn:                          lambda.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["lambda"])})),
-		lexmodelconn:                        lexmodelbuildingservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["lexmodels"])})),
-		licensemanagerconn:                  licensemanager.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["licensemanager"])})),
-		lightsailconn:                       lightsail.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["lightsail"])})),
-		locationconn:                        locationservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["location"])})),
-		macieconn:                           macie.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["macie"])})),
-		macie2conn:                          macie2.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["macie2"])})),
-		managedblockchainconn:               managedblockchain.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["managedblockchain"])})),
-		marketplacecatalogconn:              marketplacecatalog.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["marketplacecatalog"])})),
-		mediaconnectconn:                    mediaconnect.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["mediaconnect"])})),
-		mediaconvertconn:                    mediaconvert.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["mediaconvert"])})),
-		medialiveconn:                       medialive.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["medialive"])})),
-		mediapackageconn:                    mediapackage.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["mediapackage"])})),
-		mediastoreconn:                      mediastore.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["mediastore"])})),
-		mediastoredataconn:                  mediastoredata.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["mediastoredata"])})),
-		memorydbconn:                        memorydb.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["memorydb"])})),
-		mqconn:                              mq.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["mq"])})),
-		mwaaconn:                            mwaa.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["mwaa"])})),
-		neptuneconn:                         neptune.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["neptune"])})),
-		networkfirewallconn:                 networkfirewall.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["networkfirewall"])})),
-		networkmanagerconn:                  networkmanager.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["networkmanager"])})),
-		opsworksconn:                        opsworks.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["opsworks"])})),
-		organizationsconn:                   organizations.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["organizations"])})),
-		outpostsconn:                        outposts.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["outposts"])})),
-		partition:                           partition,
-		personalizeconn:                     personalize.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["personalize"])})),
-		prometheusserviceconn:               prometheusservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["prometheusservice"])})),
-		pinpointconn:                        pinpoint.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["pinpoint"])})),
-		pricingconn:                         pricing.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["pricing"])})),
-		qldbconn:                            qldb.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["qldb"])})),
-		quicksightconn:                      quicksight.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["quicksight"])})),
-		ramconn:                             ram.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["ram"])})),
-		rdsconn:                             rds.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["rds"])})),
-		redshiftconn:                        redshift.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["redshift"])})),
-		region:                              c.Region,
-		resourcegroupsconn:                  resourcegroups.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["resourcegroups"])})),
-		resourcegroupstaggingapiconn:        resourcegroupstaggingapi.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["resourcegroupstaggingapi"])})),
-		reverseDnsPrefix:                    ReverseDns(dnsSuffix),
-		route53domainsconn:                  route53domains.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["route53domains"])})),
-		route53recoverycontrolconfigconn:    route53recoverycontrolconfig.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["route53recoverycontrolconfig"])})),
-		route53recoveryreadinessconn:        route53recoveryreadiness.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["route53recoveryreadiness"])})),
-		route53resolverconn:                 route53resolver.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["route53resolver"])})),
-		s3controlconn:                       s3control.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["s3control"])})),
-		s3outpostsconn:                      s3outposts.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["s3outposts"])})),
-		sagemakerconn:                       sagemaker.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["sagemaker"])})),
-		scconn:                              servicecatalog.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["servicecatalog"])})),
-		schemasconn:                         schemas.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["schemas"])})),
-		sdconn:                              servicediscovery.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["servicediscovery"])})),
-		secretsmanagerconn:                  secretsmanager.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["secretsmanager"])})),
-		securityhubconn:                     securityhub.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["securityhub"])})),
-		serverlessapplicationrepositoryconn: serverlessapplicationrepository.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["serverlessrepo"])})),
-		servicequotasconn:                   servicequotas.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["servicequotas"])})),
-		sesconn:                             ses.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["ses"])})),
-		sfnconn:                             sfn.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["stepfunctions"])})),
-		signerconn:                          signer.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["signer"])})),
-		simpledbconn:                        simpledb.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["sdb"])})),
-		snsconn:                             sns.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["sns"])})),
-		sqsconn:                             sqs.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["sqs"])})),
-		ssmconn:                             ssm.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["ssm"])})),
-		ssoadminconn:                        ssoadmin.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["ssoadmin"])})),
-		storagegatewayconn:                  storagegateway.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["storagegateway"])})),
-		stsconn:                             sts.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["sts"])})),
-		swfconn:                             swf.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["swf"])})),
-		syntheticsconn:                      synthetics.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["synthetics"])})),
-		terraformVersion:                    c.terraformVersion,
-		timestreamwriteconn:                 timestreamwrite.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["timestreamwrite"])})),
-		transferconn:                        transfer.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["transfer"])})),
-		wafconn:                             waf.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["waf"])})),
-		wafregionalconn:                     wafregional.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["wafregional"])})),
-		wafv2conn:                           wafv2.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["wafv2"])})),
-		worklinkconn:                        worklink.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["worklink"])})),
-		workmailconn:                        workmail.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["workmail"])})),
-		workspacesconn:                      workspaces.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["workspaces"])})),
-		xrayconn:                            xray.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["xray"])})),
+		AccessAnalyzerConn:               accessanalyzer.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["accessanalyzer"])})),
+		AccountID:                        accountID,
+		ACMConn:                          acm.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["acm"])})),
+		ACMPCAConn:                       acmpca.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["acmpca"])})),
+		AmplifyConn:                      amplify.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["amplify"])})),
+		APIGatewayConn:                   apigateway.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["apigateway"])})),
+		APIGatewayV2Conn:                 apigatewayv2.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["apigateway"])})),
+		ApplicationAutoScalingConn:       applicationautoscaling.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["applicationautoscaling"])})),
+		AppConfigConn:                    appconfig.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["appconfig"])})),
+		ApplicationInsightsConn:          applicationinsights.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["applicationinsights"])})),
+		AppMeshConn:                      appmesh.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["appmesh"])})),
+		AppRunnerConn:                    apprunner.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["apprunner"])})),
+		AppStreamConn:                    appstream.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["appstream"])})),
+		AppSyncConn:                      appsync.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["appsync"])})),
+		AthenaConn:                       athena.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["athena"])})),
+		AuditManagerConn:                 auditmanager.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["auditmanager"])})),
+		AutoScalingConn:                  autoscaling.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["autoscaling"])})),
+		AutoScalingPlansConn:             autoscalingplans.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["autoscalingplans"])})),
+		BackupConn:                       backup.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["backup"])})),
+		BatchConn:                        batch.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["batch"])})),
+		BudgetsConn:                      budgets.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["budgets"])})),
+		CloudFormationConn:               cloudformation.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["cloudformation"])})),
+		ChimeConn:                        chime.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["chime"])})),
+		Cloud9Conn:                       cloud9.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["cloud9"])})),
+		CloudControlConn:                 cloudcontrolapi.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["cloudcontrolapi"])})),
+		CloudFrontConn:                   cloudfront.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["cloudfront"])})),
+		CloudHSMV2Conn:                   cloudhsmv2.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["cloudhsm"])})),
+		CloudSearchConn:                  cloudsearch.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["cloudsearch"])})),
+		CloudTrailConn:                   cloudtrail.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["cloudtrail"])})),
+		CloudWatchConn:                   cloudwatch.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["cloudwatch"])})),
+		CloudWatchEventsConn:             cloudwatchevents.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["cloudwatchevents"])})),
+		CloudWatchLogsConn:               cloudwatchlogs.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["cloudwatchlogs"])})),
+		CodeArtifactConn:                 codeartifact.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["codeartifact"])})),
+		CodeBuildConn:                    codebuild.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["codebuild"])})),
+		CodeCommitConn:                   codecommit.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["codecommit"])})),
+		CodeDeployConn:                   codedeploy.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["codedeploy"])})),
+		CodePipelineConn:                 codepipeline.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["codepipeline"])})),
+		CodeStarConnectionsConn:          codestarconnections.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["codestarconnections"])})),
+		CodeStarNotificationsConn:        codestarnotifications.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["codestarnotifications"])})),
+		CognitoIdentityConn:              cognitoidentity.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["cognitoidentity"])})),
+		CognitoIDPConn:                   cognitoidentityprovider.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["cognitoidp"])})),
+		ConfigConn:                       configservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["configservice"])})),
+		ConnectConn:                      connect.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["connect"])})),
+		CURConn:                          costandusagereportservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["cur"])})),
+		DataExchangeConn:                 dataexchange.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["dataexchange"])})),
+		DataPipelineConn:                 datapipeline.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["datapipeline"])})),
+		DataSyncConn:                     datasync.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["datasync"])})),
+		DAXConn:                          dax.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["dax"])})),
+		DefaultTagsConfig:                c.DefaultTagsConfig,
+		DetectiveConn:                    detective.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["detective"])})),
+		DeviceFarmConn:                   devicefarm.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["devicefarm"])})),
+		DLMConn:                          dlm.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["dlm"])})),
+		DMSConn:                          databasemigrationservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["dms"])})),
+		DNSSuffix:                        DNSSuffix,
+		DocDBConn:                        docdb.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["docdb"])})),
+		DirectoryServiceConn:             directoryservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["ds"])})),
+		DirectConnectConn:                directconnect.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["directconnect"])})),
+		DynamoDBConn:                     dynamodb.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["dynamodb"])})),
+		EC2Conn:                          ec2.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["ec2"])})),
+		ECRConn:                          ecr.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["ecr"])})),
+		ECRPublicConn:                    ecrpublic.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["ecrpublic"])})),
+		ECSConn:                          ecs.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["ecs"])})),
+		EFSConn:                          efs.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["efs"])})),
+		EKSConn:                          eks.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["eks"])})),
+		ElastiCacheConn:                  elasticache.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["elasticache"])})),
+		ElasticBeanstalkConn:             elasticbeanstalk.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["elasticbeanstalk"])})),
+		ElasticTranscoderConn:            elastictranscoder.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["elastictranscoder"])})),
+		ELBConn:                          elb.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["elb"])})),
+		ELBV2Conn:                        elbv2.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["elb"])})),
+		EMRConn:                          emr.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["emr"])})),
+		EMRContainersConn:                emrcontainers.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["emrcontainers"])})),
+		ElasticSearchConn:                elasticsearch.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["es"])})),
+		FirehoseConn:                     firehose.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["firehose"])})),
+		FMSConn:                          fms.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["fms"])})),
+		ForecastConn:                     forecastservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["forecast"])})),
+		FSxConn:                          fsx.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["fsx"])})),
+		GameLiftConn:                     gamelift.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["gamelift"])})),
+		GlacierConn:                      glacier.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["glacier"])})),
+		GlueConn:                         glue.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["glue"])})),
+		GuardDutyConn:                    guardduty.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["guardduty"])})),
+		GreengrassConn:                   greengrass.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["greengrass"])})),
+		IAMConn:                          iam.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["iam"])})),
+		IdentityStoreConn:                identitystore.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["identitystore"])})),
+		IgnoreTagsConfig:                 c.IgnoreTagsConfig,
+		ImageBuilderConn:                 imagebuilder.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["imagebuilder"])})),
+		InspectorConn:                    inspector.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["inspector"])})),
+		IoTConn:                          iot.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["iot"])})),
+		IoTAnalyticsConn:                 iotanalytics.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["iotanalytics"])})),
+		IoTEventsConn:                    iotevents.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["iotevents"])})),
+		KafkaConn:                        kafka.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["kafka"])})),
+		KinesisAnalyticsConn:             kinesisanalytics.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["kinesisanalytics"])})),
+		KinesisAnalyticsV2Conn:           kinesisanalyticsv2.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["kinesisanalyticsv2"])})),
+		KinesisConn:                      kinesis.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["kinesis"])})),
+		KinesisVideoConn:                 kinesisvideo.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["kinesisvideo"])})),
+		KMSConn:                          kms.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["kms"])})),
+		LakeFormationConn:                lakeformation.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["lakeformation"])})),
+		LambdaConn:                       lambda.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["lambda"])})),
+		LexModelBuildingConn:             lexmodelbuildingservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["lexmodels"])})),
+		LicenseManagerConn:               licensemanager.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["licensemanager"])})),
+		LightsailConn:                    lightsail.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["lightsail"])})),
+		LocationConn:                     locationservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["location"])})),
+		MacieConn:                        macie.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["macie"])})),
+		Macie2Conn:                       macie2.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["macie2"])})),
+		ManagedBlockchainConn:            managedblockchain.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["managedblockchain"])})),
+		MarketplaceCatalogConn:           marketplacecatalog.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["marketplacecatalog"])})),
+		MediaConnectConn:                 mediaconnect.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["mediaconnect"])})),
+		MediaConvertConn:                 mediaconvert.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["mediaconvert"])})),
+		MediaLiveConn:                    medialive.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["medialive"])})),
+		MediaPackageConn:                 mediapackage.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["mediapackage"])})),
+		MediaStoreConn:                   mediastore.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["mediastore"])})),
+		MediaStoreDataConn:               mediastoredata.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["mediastoredata"])})),
+		MemoryDBConn:                     memorydb.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["memorydb"])})),
+		MQConn:                           mq.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["mq"])})),
+		MWAAConn:                         mwaa.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["mwaa"])})),
+		NeptuneConn:                      neptune.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["neptune"])})),
+		NetworkFirewallConn:              networkfirewall.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["networkfirewall"])})),
+		NetworkManagerConn:               networkmanager.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["networkmanager"])})),
+		OpsWorksConn:                     opsworks.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["opsworks"])})),
+		OrganizationsConn:                organizations.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["organizations"])})),
+		OutpostsConn:                     outposts.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["outposts"])})),
+		Partition:                        Partition,
+		PersonalizeConn:                  personalize.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["personalize"])})),
+		PrometheusConn:                   prometheusservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["prometheusservice"])})),
+		PinpointConn:                     pinpoint.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["pinpoint"])})),
+		PricingConn:                      pricing.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["pricing"])})),
+		QLDBConn:                         qldb.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["qldb"])})),
+		QuickSightConn:                   quicksight.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["quicksight"])})),
+		RAMConn:                          ram.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["ram"])})),
+		RDSConn:                          rds.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["rds"])})),
+		RedshiftConn:                     redshift.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["redshift"])})),
+		Region:                           c.Region,
+		ResourceGroupsConn:               resourcegroups.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["resourcegroups"])})),
+		ResourceGroupsTaggingConn:        resourcegroupstaggingapi.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["resourcegroupstaggingapi"])})),
+		ReverseDNSPrefix:                 ReverseDns(DNSSuffix),
+		Route53DomainsConn:               route53domains.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["route53domains"])})),
+		Route53RecoveryControlConfigConn: route53recoverycontrolconfig.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["route53recoverycontrolconfig"])})),
+		Route53RecoveryReadinessConn:     route53recoveryreadiness.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["route53recoveryreadiness"])})),
+		Route53ResolverConn:              route53resolver.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["route53resolver"])})),
+		S3ControlConn:                    s3control.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["s3control"])})),
+		S3OutpostsConn:                   s3outposts.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["s3outposts"])})),
+		SageMakerConn:                    sagemaker.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["sagemaker"])})),
+		ServiceCatalogConn:               servicecatalog.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["servicecatalog"])})),
+		SchemasConn:                      schemas.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["schemas"])})),
+		ServiceDiscoveryConn:             servicediscovery.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["servicediscovery"])})),
+		SecretsManagerConn:               secretsmanager.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["secretsmanager"])})),
+		SecurityHubConn:                  securityhub.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["securityhub"])})),
+		ServerlessAppRepoConn:            serverlessapplicationrepository.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["serverlessrepo"])})),
+		ServiceQuotasConn:                servicequotas.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["servicequotas"])})),
+		SESConn:                          ses.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["ses"])})),
+		SFNConn:                          sfn.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["stepfunctions"])})),
+		SignerConn:                       signer.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["signer"])})),
+		SimpleDBConn:                     simpledb.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["sdb"])})),
+		SNSConn:                          sns.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["sns"])})),
+		SQSConn:                          sqs.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["sqs"])})),
+		SSMConn:                          ssm.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["ssm"])})),
+		SSOAdminConn:                     ssoadmin.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["ssoadmin"])})),
+		StorageGatewayConn:               storagegateway.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["storagegateway"])})),
+		STSConn:                          sts.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["sts"])})),
+		SWFConn:                          swf.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["swf"])})),
+		SyntheticsConn:                   synthetics.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["synthetics"])})),
+		TerraformVersion:                 c.TerraformVersion,
+		TimestreamWriteConn:              timestreamwrite.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["timestreamwrite"])})),
+		TransferConn:                     transfer.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["transfer"])})),
+		WAFConn:                          waf.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["waf"])})),
+		WAFRegionalConn:                  wafregional.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["wafregional"])})),
+		WAFV2Conn:                        wafv2.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["wafv2"])})),
+		WorkLinkConn:                     worklink.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["worklink"])})),
+		WorkMailConn:                     workmail.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["workmail"])})),
+		WorkSpacesConn:                   workspaces.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["workspaces"])})),
+		XRayConn:                         xray.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["xray"])})),
 	}
 
 	// "Global" services that require customizations
@@ -670,13 +670,13 @@ func (c *Config) Client() (interface{}, error) {
 		S3ForcePathStyle: aws.Bool(c.S3ForcePathStyle),
 	}
 
-	client.s3conn = s3.New(sess.Copy(s3Config))
+	client.S3Conn = s3.New(sess.Copy(s3Config))
 
 	s3Config.DisableRestProtocolURICleaning = aws.Bool(true)
-	client.s3connUriCleaningDisabled = s3.New(sess.Copy(s3Config))
+	client.S3ConnURICleaningDisabled = s3.New(sess.Copy(s3Config))
 
 	// Force "global" services to correct regions
-	switch partition {
+	switch Partition {
 	case endpoints.AwsPartitionID:
 		globalAcceleratorConfig.Region = aws.String(endpoints.UsWest2RegionID)
 		route53Config.Region = aws.String(endpoints.UsEast1RegionID)
@@ -694,13 +694,13 @@ func (c *Config) Client() (interface{}, error) {
 		route53Config.Region = aws.String(endpoints.UsGovWest1RegionID)
 	}
 
-	client.globalacceleratorconn = globalaccelerator.New(sess.Copy(globalAcceleratorConfig))
-	client.r53conn = route53.New(sess.Copy(route53Config))
-	client.route53recoverycontrolconfigconn = route53recoverycontrolconfig.New(sess.Copy(route53RecoveryControlConfigConfig))
-	client.route53recoveryreadinessconn = route53recoveryreadiness.New(sess.Copy(route53RecoveryReadinessConfig))
-	client.shieldconn = shield.New(sess.Copy(shieldConfig))
+	client.GlobalAcceleratorConn = globalaccelerator.New(sess.Copy(globalAcceleratorConfig))
+	client.Route53Conn = route53.New(sess.Copy(route53Config))
+	client.Route53RecoveryControlConfigConn = route53recoverycontrolconfig.New(sess.Copy(route53RecoveryControlConfigConfig))
+	client.Route53RecoveryReadinessConn = route53recoveryreadiness.New(sess.Copy(route53RecoveryReadinessConfig))
+	client.ShieldConn = shield.New(sess.Copy(shieldConfig))
 
-	client.apigatewayconn.Handlers.Retry.PushBack(func(r *request.Request) {
+	client.APIGatewayConn.Handlers.Retry.PushBack(func(r *request.Request) {
 		// Many operations can return an error such as:
 		//   ConflictException: Unable to complete operation due to concurrent modification. Please try again later.
 		// Handle them all globally for the service client.
@@ -710,7 +710,7 @@ func (c *Config) Client() (interface{}, error) {
 	})
 
 	// Workaround for https://github.com/aws/aws-sdk-go/issues/1472
-	client.appautoscalingconn.Handlers.Retry.PushBack(func(r *request.Request) {
+	client.ApplicationAutoScalingConn.Handlers.Retry.PushBack(func(r *request.Request) {
 		if !strings.HasPrefix(r.Operation.Name, "Describe") && !strings.HasPrefix(r.Operation.Name, "List") {
 			return
 		}
@@ -722,7 +722,7 @@ func (c *Config) Client() (interface{}, error) {
 	// StartDeployment operations can return a ConflictException
 	// if ongoing deployments are in-progress, thus we handle them
 	// here for the service client.
-	client.appconfigconn.Handlers.Retry.PushBack(func(r *request.Request) {
+	client.AppConfigConn.Handlers.Retry.PushBack(func(r *request.Request) {
 		if r.Operation.Name == "StartDeployment" {
 			if tfawserr.ErrCodeEquals(r.Error, appconfig.ErrCodeConflictException) {
 				r.Retryable = aws.Bool(true)
@@ -730,7 +730,7 @@ func (c *Config) Client() (interface{}, error) {
 		}
 	})
 
-	client.appsyncconn.Handlers.Retry.PushBack(func(r *request.Request) {
+	client.AppSyncConn.Handlers.Retry.PushBack(func(r *request.Request) {
 		if r.Operation.Name == "CreateGraphqlApi" {
 			if tfawserr.ErrMessageContains(r.Error, appsync.ErrCodeConcurrentModificationException, "a GraphQL API creation is already in progress") {
 				r.Retryable = aws.Bool(true)
@@ -738,7 +738,7 @@ func (c *Config) Client() (interface{}, error) {
 		}
 	})
 
-	client.chimeconn.Handlers.Retry.PushBack(func(r *request.Request) {
+	client.ChimeConn.Handlers.Retry.PushBack(func(r *request.Request) {
 		// When calling CreateVoiceConnector across multiple resources,
 		// the API can randomly return a BadRequestException without explanation
 		if r.Operation.Name == "CreateVoiceConnector" {
@@ -748,13 +748,13 @@ func (c *Config) Client() (interface{}, error) {
 		}
 	})
 
-	client.cloudhsmv2conn.Handlers.Retry.PushBack(func(r *request.Request) {
+	client.CloudHSMV2Conn.Handlers.Retry.PushBack(func(r *request.Request) {
 		if tfawserr.ErrMessageContains(r.Error, cloudhsmv2.ErrCodeCloudHsmInternalFailureException, "request was rejected because of an AWS CloudHSM internal failure") {
 			r.Retryable = aws.Bool(true)
 		}
 	})
 
-	client.configconn.Handlers.Retry.PushBack(func(r *request.Request) {
+	client.ConfigConn.Handlers.Retry.PushBack(func(r *request.Request) {
 		// When calling Config Organization Rules API actions immediately
 		// after Organization creation, the API can randomly return the
 		// OrganizationAccessDeniedException error for a few minutes, even
@@ -794,14 +794,14 @@ func (c *Config) Client() (interface{}, error) {
 		}
 	})
 
-	client.cfconn.Handlers.Retry.PushBack(func(r *request.Request) {
+	client.CloudFormationConn.Handlers.Retry.PushBack(func(r *request.Request) {
 		if tfawserr.ErrMessageContains(r.Error, cloudformation.ErrCodeOperationInProgressException, "Another Operation on StackSet") {
 			r.Retryable = aws.Bool(true)
 		}
 	})
 
 	// See https://github.com/aws/aws-sdk-go/pull/1276
-	client.dynamodbconn.Handlers.Retry.PushBack(func(r *request.Request) {
+	client.DynamoDBConn.Handlers.Retry.PushBack(func(r *request.Request) {
 		if r.Operation.Name != "PutItem" && r.Operation.Name != "UpdateItem" && r.Operation.Name != "DeleteItem" {
 			return
 		}
@@ -810,7 +810,7 @@ func (c *Config) Client() (interface{}, error) {
 		}
 	})
 
-	client.ec2conn.Handlers.Retry.PushBack(func(r *request.Request) {
+	client.EC2Conn.Handlers.Retry.PushBack(func(r *request.Request) {
 		if r.Operation.Name == "CreateClientVpnEndpoint" {
 			if tfawserr.ErrMessageContains(r.Error, "OperationNotPermitted", "Endpoint cannot be created while another endpoint is being created") {
 				r.Retryable = aws.Bool(true)
@@ -836,7 +836,7 @@ func (c *Config) Client() (interface{}, error) {
 		}
 	})
 
-	client.fmsconn.Handlers.Retry.PushBack(func(r *request.Request) {
+	client.FMSConn.Handlers.Retry.PushBack(func(r *request.Request) {
 		// Acceptance testing creates and deletes resources in quick succession.
 		// The FMS onboarding process into Organizations is opaque to consumers.
 		// Since we cannot reasonably check this status before receiving the error,
@@ -853,13 +853,13 @@ func (c *Config) Client() (interface{}, error) {
 		}
 	})
 
-	client.kafkaconn.Handlers.Retry.PushBack(func(r *request.Request) {
+	client.KafkaConn.Handlers.Retry.PushBack(func(r *request.Request) {
 		if tfawserr.ErrMessageContains(r.Error, kafka.ErrCodeTooManyRequestsException, "Too Many Requests") {
 			r.Retryable = aws.Bool(true)
 		}
 	})
 
-	client.kinesisconn.Handlers.Retry.PushBack(func(r *request.Request) {
+	client.KinesisConn.Handlers.Retry.PushBack(func(r *request.Request) {
 		if r.Operation.Name == "CreateStream" {
 			if tfawserr.ErrMessageContains(r.Error, kinesis.ErrCodeLimitExceededException, "simultaneously be in CREATING or DELETING") {
 				r.Retryable = aws.Bool(true)
@@ -872,7 +872,7 @@ func (c *Config) Client() (interface{}, error) {
 		}
 	})
 
-	client.organizationsconn.Handlers.Retry.PushBack(func(r *request.Request) {
+	client.OrganizationsConn.Handlers.Retry.PushBack(func(r *request.Request) {
 		// Retry on the following error:
 		// ConcurrentModificationException: AWS Organizations can't complete your request because it conflicts with another attempt to modify the same entity. Try again later.
 		if tfawserr.ErrMessageContains(r.Error, organizations.ErrCodeConcurrentModificationException, "Try again later") {
@@ -881,7 +881,7 @@ func (c *Config) Client() (interface{}, error) {
 	})
 
 	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/17996
-	client.securityhubconn.Handlers.Retry.PushBack(func(r *request.Request) {
+	client.SecurityHubConn.Handlers.Retry.PushBack(func(r *request.Request) {
 		switch r.Operation.Name {
 		case "EnableOrganizationAdminAccount":
 			if tfawserr.ErrCodeEquals(r.Error, securityhub.ErrCodeResourceConflictException) {
@@ -891,7 +891,7 @@ func (c *Config) Client() (interface{}, error) {
 	})
 
 	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/19215
-	client.ssoadminconn.Handlers.Retry.PushBack(func(r *request.Request) {
+	client.SSOAdminConn.Handlers.Retry.PushBack(func(r *request.Request) {
 		if r.Operation.Name == "AttachManagedPolicyToPermissionSet" || r.Operation.Name == "DetachManagedPolicyFromPermissionSet" {
 			if tfawserr.ErrCodeEquals(r.Error, ssoadmin.ErrCodeConflictException) {
 				r.Retryable = aws.Bool(true)
@@ -899,14 +899,14 @@ func (c *Config) Client() (interface{}, error) {
 		}
 	})
 
-	client.storagegatewayconn.Handlers.Retry.PushBack(func(r *request.Request) {
+	client.StorageGatewayConn.Handlers.Retry.PushBack(func(r *request.Request) {
 		// InvalidGatewayRequestException: The specified gateway proxy network connection is busy.
 		if tfawserr.ErrMessageContains(r.Error, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified gateway proxy network connection is busy") {
 			r.Retryable = aws.Bool(true)
 		}
 	})
 
-	client.wafv2conn.Handlers.Retry.PushBack(func(r *request.Request) {
+	client.WAFV2Conn.Handlers.Retry.PushBack(func(r *request.Request) {
 		if tfawserr.ErrMessageContains(r.Error, wafv2.ErrCodeWAFInternalErrorException, "Retry your request") {
 			r.Retryable = aws.Bool(true)
 		}
@@ -928,20 +928,20 @@ func (c *Config) Client() (interface{}, error) {
 	})
 
 	if !c.SkipGetEC2Platforms {
-		supportedPlatforms, err := GetSupportedEC2Platforms(client.ec2conn)
+		supportedPlatforms, err := GetSupportedEC2Platforms(client.EC2Conn)
 		if err != nil {
 			// We intentionally fail *silently* because there's a chance
 			// user just doesn't have ec2:DescribeAccountAttributes permissions
 			log.Printf("[WARN] Unable to get supported EC2 platforms: %s", err)
 		} else {
-			client.supportedplatforms = supportedPlatforms
+			client.SupportedPlatforms = supportedPlatforms
 		}
 	}
 
 	return client, nil
 }
 
-func hasEc2Classic(platforms []string) bool {
+func HasEC2Classic(platforms []string) bool {
 	for _, p := range platforms {
 		if p == "EC2" {
 			return true

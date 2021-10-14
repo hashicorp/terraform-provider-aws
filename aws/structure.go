@@ -47,6 +47,7 @@ import (
 	"github.com/mitchellh/copystructure"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
 	"gopkg.in/yaml.v2"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 // Takes the result of flatmap.Expand for an array of listeners and
@@ -2030,7 +2031,7 @@ func normalizeJsonOrYamlString(templateString interface{}) (string, error) {
 	return checkYamlString(templateString)
 }
 
-func buildApiGatewayInvokeURL(client *AWSClient, restApiId, stageName string) string {
+func buildApiGatewayInvokeURL(client *conns.AWSClient, restApiId, stageName string) string {
 	hostname := client.RegionalHostname(fmt.Sprintf("%s.execute-api", restApiId))
 	return fmt.Sprintf("https://%s/%s", hostname, stageName)
 }

@@ -1,4 +1,4 @@
-package mutexkv
+package conns
 
 import (
 	"testing"

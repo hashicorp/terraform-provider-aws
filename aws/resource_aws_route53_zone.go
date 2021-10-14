@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsRoute53Zone() *schema.Resource {
@@ -113,10 +114,10 @@ func resourceAwsRoute53Zone() *schema.Resource {
 }
 
 func resourceAwsRoute53ZoneCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).r53conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).Route53Conn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
-	region := meta.(*AWSClient).region
+	region := meta.(*conns.AWSClient).Region
 
 	input := &route53.CreateHostedZoneInput{
 		CallerReference: aws.String(resource.UniqueId()),
@@ -173,9 +174,9 @@ func resourceAwsRoute53ZoneCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsRoute53ZoneRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).r53conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).Route53Conn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &route53.GetHostedZoneInput{
 		Id: aws.String(d.Id()),
@@ -255,7 +256,7 @@ func resourceAwsRoute53ZoneRead(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "route53",
 		Resource:  fmt.Sprintf("hostedzone/%s", d.Id()),
 	}.String()
@@ -265,8 +266,8 @@ func resourceAwsRoute53ZoneRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceAwsRoute53ZoneUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).r53conn
-	region := meta.(*AWSClient).region
+	conn := meta.(*conns.AWSClient).Route53Conn
+	region := meta.(*conns.AWSClient).Region
 
 	if d.HasChange("comment") {
 		input := route53.UpdateHostedZoneCommentInput{
@@ -326,7 +327,7 @@ func resourceAwsRoute53ZoneUpdate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsRoute53ZoneDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).r53conn
+	conn := meta.(*conns.AWSClient).Route53Conn
 
 	if d.Get("force_destroy").(bool) {
 		if err := deleteAllRecordsInHostedZoneId(d.Id(), d.Get("name").(string), conn); err != nil {

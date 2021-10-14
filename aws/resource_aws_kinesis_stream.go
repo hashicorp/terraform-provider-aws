@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 const (
@@ -114,7 +115,7 @@ func resourceAwsKinesisStreamImport(
 }
 
 func resourceAwsKinesisStreamCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kinesisconn
+	conn := meta.(*conns.AWSClient).KinesisConn
 	sn := d.Get("name").(string)
 	createOpts := &kinesis.CreateStreamInput{
 		ShardCount: aws.Int64(int64(d.Get("shard_count").(int))),
@@ -152,7 +153,7 @@ func resourceAwsKinesisStreamCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsKinesisStreamUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kinesisconn
+	conn := meta.(*conns.AWSClient).KinesisConn
 
 	sn := d.Get("name").(string)
 	if d.HasChange("tags_all") {
@@ -181,9 +182,9 @@ func resourceAwsKinesisStreamUpdate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsKinesisStreamRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kinesisconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).KinesisConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	sn := d.Get("name").(string)
 
@@ -232,7 +233,7 @@ func resourceAwsKinesisStreamRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsKinesisStreamDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kinesisconn
+	conn := meta.(*conns.AWSClient).KinesisConn
 	sn := d.Get("name").(string)
 
 	_, err := conn.DeleteStream(&kinesis.DeleteStreamInput{

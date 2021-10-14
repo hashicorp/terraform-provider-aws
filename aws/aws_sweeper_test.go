@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/envvar"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 const (
@@ -25,7 +26,7 @@ const (
 
 const defaultSweeperAssumeRoleDurationSeconds = 3600
 
-// sweeperAwsClients is a shared cache of regional AWSClient
+// sweeperAwsClients is a shared cache of regional conns.AWSClient
 // This prevents client re-initialization for every resource with no benefit.
 var sweeperAwsClients map[string]interface{}
 
@@ -34,47 +35,47 @@ func TestMain(m *testing.M) {
 	resource.TestMain(m)
 }
 
-// sharedClientForRegion returns a common AWSClient setup needed for the sweeper
+// sharedClientForRegion returns a common conns.AWSClient setup needed for the sweeper
 // functions for a given region
 func sharedClientForRegion(region string) (interface{}, error) {
 	if client, ok := sweeperAwsClients[region]; ok {
 		return client, nil
 	}
 
-	_, _, err := envvar.RequireOneOf([]string{envvar.AwsProfile, envvar.AwsAccessKeyId, envvar.AwsContainerCredentialsFullUri}, "credentials for running sweepers")
+	_, _, err := conns.RequireOneOfEnvVar([]string{conns.EnvVarProfile, conns.EnvVarAccessKeyId, conns.EnvVarContainerCredentialsFullUri}, "credentials for running sweepers")
 	if err != nil {
 		return nil, err
 	}
 
-	if os.Getenv(envvar.AwsAccessKeyId) != "" {
-		_, err := envvar.Require(envvar.AwsSecretAccessKey, "static credentials value when using "+envvar.AwsAccessKeyId)
+	if os.Getenv(conns.EnvVarAccessKeyId) != "" {
+		_, err := conns.RequireEnvVar(conns.EnvVarSecretAccessKey, "static credentials value when using "+conns.EnvVarAccessKeyId)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	conf := &Config{
+	conf := &conns.Config{
 		MaxRetries: 5,
 		Region:     region,
 	}
 
-	if role := os.Getenv(envvar.TfAwsAssumeRoleARN); role != "" {
+	if role := os.Getenv(conns.EnvVarAssumeRoleARN); role != "" {
 		conf.AssumeRoleARN = role
 
 		conf.AssumeRoleDurationSeconds = defaultSweeperAssumeRoleDurationSeconds
-		if v := os.Getenv(envvar.TfAwsAssumeRoleDuration); v != "" {
+		if v := os.Getenv(conns.EnvVarAssumeRoleDuration); v != "" {
 			d, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, fmt.Errorf("environment variable %s: %w", envvar.TfAwsAssumeRoleDuration, err)
+				return nil, fmt.Errorf("environment variable %s: %w", conns.EnvVarAssumeRoleDuration, err)
 			}
 			conf.AssumeRoleDurationSeconds = d
 		}
 
-		if v := os.Getenv(envvar.TfAwsAssumeRoleExternalID); v != "" {
+		if v := os.Getenv(conns.EnvVarAssumeRoleExternalID); v != "" {
 			conf.AssumeRoleExternalID = v
 		}
 
-		if v := os.Getenv(envvar.TfAwsAssumeRoleSessionName); v != "" {
+		if v := os.Getenv(conns.EnvVarAssumeRoleSessionName); v != "" {
 			conf.AssumeRoleSessionName = v
 		}
 	}

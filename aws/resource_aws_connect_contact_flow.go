@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/connect/waiter"
 	"github.com/mitchellh/go-homedir"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 const awsMutexConnectContactFlowKey = `aws_connect_contact_flow`
@@ -89,8 +90,8 @@ func resourceAwsConnectContactFlow() *schema.Resource {
 }
 
 func resourceAwsConnectContactFlowCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).connectconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).ConnectConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	instanceID := d.Get("instance_id").(string)
@@ -142,9 +143,9 @@ func resourceAwsConnectContactFlowCreate(ctx context.Context, d *schema.Resource
 }
 
 func resourceAwsConnectContactFlowRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).connectconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).ConnectConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	instanceID, contactFlowID, err := resourceAwsConnectContactFlowParseID(d.Id())
 
@@ -194,7 +195,7 @@ func resourceAwsConnectContactFlowRead(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourceAwsConnectContactFlowUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).connectconn
+	conn := meta.(*conns.AWSClient).ConnectConn
 
 	instanceID, contactFlowID, err := resourceAwsConnectContactFlowParseID(d.Id())
 
@@ -258,7 +259,7 @@ func resourceAwsConnectContactFlowUpdate(ctx context.Context, d *schema.Resource
 
 //Contact Flows do not support deletion today. We will NoOp the Delete method. Users can rename their flows manually if they want.
 // func resourceAwsConnectContactFlowDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-// 	conn := meta.(*AWSClient).connectconn
+// 	conn := meta.(*conns.AWSClient).ConnectConn
 
 // 	instanceID, contactFlowID, err := resourceAwsConnectContactFlowParseID(d.Id())
 

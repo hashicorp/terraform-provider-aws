@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsVpc() *schema.Resource {
@@ -138,8 +139,8 @@ func resourceAwsVpc() *schema.Resource {
 }
 
 func resourceAwsVpcCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	// Create the VPC
@@ -248,9 +249,9 @@ func resourceAwsVpcCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsVpcRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	var vpc *ec2.Vpc
 
@@ -307,9 +308,9 @@ func resourceAwsVpcRead(d *schema.ResourceData, meta interface{}) error {
 
 	// ARN
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   ec2.ServiceName,
-		Region:    meta.(*AWSClient).region,
+		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: aws.StringValue(vpc.OwnerId),
 		Resource:  fmt.Sprintf("vpc/%s", d.Id()),
 	}.String()
@@ -429,7 +430,7 @@ func resourceAwsVpcRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsVpcUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	vpcid := d.Id()
 	if d.HasChange("enable_dns_hostnames") {
@@ -582,7 +583,7 @@ func resourceAwsVpcUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsVpcDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 	vpcID := d.Id()
 	deleteVpcOpts := &ec2.DeleteVpcInput{
 		VpcId: &vpcID,

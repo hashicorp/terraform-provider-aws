@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsElb() *schema.Resource {
@@ -197,8 +198,8 @@ func dataSourceAwsElb() *schema.Resource {
 }
 
 func dataSourceAwsElbRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elbconn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).ELBConn
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	lbName := d.Get("name").(string)
 
@@ -217,16 +218,16 @@ func dataSourceAwsElbRead(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(aws.StringValue(resp.LoadBalancerDescriptions[0].LoadBalancerName))
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
+		Partition: meta.(*conns.AWSClient).Partition,
+		Region:    meta.(*conns.AWSClient).Region,
 		Service:   "elasticloadbalancing",
-		AccountID: meta.(*AWSClient).accountid,
+		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("loadbalancer/%s", aws.StringValue(resp.LoadBalancerDescriptions[0].LoadBalancerName)),
 	}
 	d.Set("arn", arn.String())
 
 	lb := resp.LoadBalancerDescriptions[0]
-	ec2conn := meta.(*AWSClient).ec2conn
+	ec2conn := meta.(*conns.AWSClient).EC2Conn
 
 	describeAttrsOpts := &elb.DescribeLoadBalancerAttributesInput{
 		LoadBalancerName: aws.String(d.Id()),

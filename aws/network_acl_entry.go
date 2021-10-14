@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func expandNetworkAclEntries(configured []interface{}, entryType string) ([]*ec2.NetworkAclEntry, error) {

@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	tfconnect "github.com/hashicorp/terraform-provider-aws/aws/internal/service/connect"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/connect/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsConnectInstance() *schema.Resource {
@@ -112,7 +113,7 @@ func resourceAwsConnectInstance() *schema.Resource {
 }
 
 func resourceAwsConnectInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).connectconn
+	conn := meta.(*conns.AWSClient).ConnectConn
 
 	input := &connect.CreateInstanceInput{
 		ClientToken:            aws.String(resource.UniqueId()),
@@ -159,7 +160,7 @@ func resourceAwsConnectInstanceCreate(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceAwsConnectInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).connectconn
+	conn := meta.(*conns.AWSClient).ConnectConn
 
 	for att := range tfconnect.InstanceAttributeMapping() {
 		rKey := tfconnect.InstanceAttributeMapping()[att]
@@ -178,7 +179,7 @@ func resourceAwsConnectInstanceUpdate(ctx context.Context, d *schema.ResourceDat
 	return nil
 }
 func resourceAwsConnectInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).connectconn
+	conn := meta.(*conns.AWSClient).ConnectConn
 
 	input := connect.DescribeInstanceInput{
 		InstanceId: aws.String(d.Id()),
@@ -221,7 +222,7 @@ func resourceAwsConnectInstanceRead(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceAwsConnectInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).connectconn
+	conn := meta.(*conns.AWSClient).ConnectConn
 
 	input := &connect.DeleteInstanceInput{
 		InstanceId: aws.String(d.Id()),

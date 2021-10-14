@@ -1,4 +1,4 @@
-package aws
+package conns
 
 import (
 	"reflect"
@@ -19,7 +19,7 @@ func TestAWSClientPartitionHostname(t *testing.T) {
 		{
 			Name: "AWS Commercial",
 			AWSClient: &AWSClient{
-				dnsSuffix: "amazonaws.com",
+				DNSSuffix: "amazonaws.com",
 			},
 			Prefix:   "test",
 			Expected: "test.amazonaws.com",
@@ -27,7 +27,7 @@ func TestAWSClientPartitionHostname(t *testing.T) {
 		{
 			Name: "AWS China",
 			AWSClient: &AWSClient{
-				dnsSuffix: "amazonaws.com.cn",
+				DNSSuffix: "amazonaws.com.cn",
 			},
 			Prefix:   "test",
 			Expected: "test.amazonaws.com.cn",
@@ -55,8 +55,8 @@ func TestAWSClientRegionalHostname(t *testing.T) {
 		{
 			Name: "AWS Commercial",
 			AWSClient: &AWSClient{
-				dnsSuffix: "amazonaws.com",
-				region:    "us-west-2", //lintignore:AWSAT003
+				DNSSuffix: "amazonaws.com",
+				Region:    "us-west-2", //lintignore:AWSAT003
 			},
 			Prefix:   "test",
 			Expected: "test.us-west-2.amazonaws.com", //lintignore:AWSAT003
@@ -64,8 +64,8 @@ func TestAWSClientRegionalHostname(t *testing.T) {
 		{
 			Name: "AWS China",
 			AWSClient: &AWSClient{
-				dnsSuffix: "amazonaws.com.cn",
-				region:    "cn-northwest-1", //lintignore:AWSAT003
+				DNSSuffix: "amazonaws.com.cn",
+				Region:    "cn-northwest-1", //lintignore:AWSAT003
 			},
 			Prefix:   "test",
 			Expected: "test.cn-northwest-1.amazonaws.com.cn", //lintignore:AWSAT003

@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 // OpsWorks has a single concept of "layer" which represents several different
@@ -270,9 +271,9 @@ func (lt *opsworksLayerType) SchemaResource() *schema.Resource {
 }
 
 func (lt *opsworksLayerType) Read(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).opsworksconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).OpsWorksConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	req := &opsworks.DescribeLayersInput{
 		LayerIds: []*string{
@@ -369,8 +370,8 @@ func (lt *opsworksLayerType) Read(d *schema.ResourceData, meta interface{}) erro
 }
 
 func (lt *opsworksLayerType) Create(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).opsworksconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).OpsWorksConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	attributes, err := lt.AttributeMap(d)
@@ -426,10 +427,10 @@ func (lt *opsworksLayerType) Create(d *schema.ResourceData, meta interface{}) er
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
+		Partition: meta.(*conns.AWSClient).Partition,
+		Region:    meta.(*conns.AWSClient).Region,
 		Service:   "opsworks",
-		AccountID: meta.(*AWSClient).accountid,
+		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("layer/%s", d.Id()),
 	}.String()
 
@@ -443,7 +444,7 @@ func (lt *opsworksLayerType) Create(d *schema.ResourceData, meta interface{}) er
 }
 
 func (lt *opsworksLayerType) Update(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).opsworksconn
+	conn := meta.(*conns.AWSClient).OpsWorksConn
 
 	attributes, err := lt.AttributeMap(d)
 	if err != nil {
@@ -523,7 +524,7 @@ func (lt *opsworksLayerType) Update(d *schema.ResourceData, meta interface{}) er
 }
 
 func (lt *opsworksLayerType) Delete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).opsworksconn
+	conn := meta.(*conns.AWSClient).OpsWorksConn
 
 	req := &opsworks.DeleteLayerInput{
 		LayerId: aws.String(d.Id()),
