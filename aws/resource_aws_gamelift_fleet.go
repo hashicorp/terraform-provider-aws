@@ -228,7 +228,7 @@ func resourceAwsGameliftFleetCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if v, ok := d.GetOk("metric_groups"); ok {
-		input.MetricGroups = expandStringList(v.([]interface{}))
+		input.MetricGroups = flex.ExpandStringList(v.([]interface{}))
 	}
 	if v, ok := d.GetOk("new_game_session_protection_policy"); ok {
 		input.NewGameSessionProtectionPolicy = aws.String(v.(string))
@@ -343,7 +343,7 @@ func resourceAwsGameliftFleetRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("description", fleet.Description)
 	d.Set("arn", arn)
 	d.Set("log_paths", aws.StringValueSlice(fleet.LogPaths))
-	d.Set("metric_groups", flattenStringList(fleet.MetricGroups))
+	d.Set("metric_groups", flex.FlattenStringList(fleet.MetricGroups))
 	d.Set("name", fleet.Name)
 	d.Set("fleet_type", fleet.FleetType)
 	d.Set("instance_role_arn", fleet.InstanceRoleArn)
@@ -383,7 +383,7 @@ func resourceAwsGameliftFleetUpdate(d *schema.ResourceData, meta interface{}) er
 		_, err := conn.UpdateFleetAttributes(&gamelift.UpdateFleetAttributesInput{
 			Description:                    aws.String(d.Get("description").(string)),
 			FleetId:                        aws.String(d.Id()),
-			MetricGroups:                   expandStringList(d.Get("metric_groups").([]interface{})),
+			MetricGroups:                   flex.ExpandStringList(d.Get("metric_groups").([]interface{})),
 			Name:                           aws.String(d.Get("name").(string)),
 			NewGameSessionProtectionPolicy: aws.String(d.Get("new_game_session_protection_policy").(string)),
 			ResourceCreationLimitPolicy:    expandGameliftResourceCreationLimitPolicy(d.Get("resource_creation_limit_policy").([]interface{})),
