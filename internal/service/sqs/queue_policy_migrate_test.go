@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	tfsqs "github.com/hashicorp/terraform-provider-aws/internal/service/sqs"
 )
 
 func TestAWSSqsQueuePolicyMigrateState(t *testing.T) {
@@ -31,7 +32,7 @@ func TestAWSSqsQueuePolicyMigrateState(t *testing.T) {
 			ID:         tc.ID,
 			Attributes: tc.Attributes,
 		}
-		is, err := resourceAwsSqsQueuePolicyMigrateState(
+		is, err := tfsqs.QueuePolicyMigrateState(
 			tc.StateVersion, is, tc.Meta)
 
 		if err != nil {

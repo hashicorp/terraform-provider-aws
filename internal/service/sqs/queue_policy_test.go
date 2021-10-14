@@ -8,6 +8,7 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfsqs "github.com/hashicorp/terraform-provider-aws/internal/service/sqs"
 )
 
 func TestAccAWSSQSQueuePolicy_basic(t *testing.T) {
@@ -61,7 +62,7 @@ func TestAccAWSSQSQueuePolicy_disappears(t *testing.T) {
 				Config: testAccAWSSQSQueuePolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSQSQueueExists(queueResourceName, &queueAttributes),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceQueuePolicy(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfsqs.ResourceQueuePolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -84,7 +85,7 @@ func TestAccAWSSQSQueuePolicy_disappears_queue(t *testing.T) {
 				Config: testAccAWSSQSQueuePolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSQSQueueExists(queueResourceName, &queueAttributes),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceQueue(), queueResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfsqs.ResourceQueue(), queueResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
