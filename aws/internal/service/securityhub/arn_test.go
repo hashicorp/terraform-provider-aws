@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/aws/internal/service/securityhub"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func TestStandardsControlARNToStandardsSubscriptionARN(t *testing.T) {

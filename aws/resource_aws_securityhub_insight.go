@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/securityhub/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceInsight() *schema.Resource {
@@ -302,7 +303,7 @@ func ipFilterSchema() *schema.Schema {
 				"cidr": {
 					Type:         schema.TypeString,
 					Required:     true,
-					ValidateFunc: validateCIDRNetworkAddress,
+					ValidateFunc: verify.ValidCIDRNetworkAddress,
 				},
 			},
 		},
@@ -360,17 +361,17 @@ func numberFilterSchema() *schema.Schema {
 				"eq": {
 					Type:         schema.TypeString,
 					Optional:     true,
-					ValidateFunc: validateTypeStringNullableFloat,
+					ValidateFunc: verify.ValidTypeStringNullableFloat,
 				},
 				"gte": {
 					Type:         schema.TypeString,
 					Optional:     true,
-					ValidateFunc: validateTypeStringNullableFloat,
+					ValidateFunc: verify.ValidTypeStringNullableFloat,
 				},
 				"lte": {
 					Type:         schema.TypeString,
 					Optional:     true,
-					ValidateFunc: validateTypeStringNullableFloat,
+					ValidateFunc: verify.ValidTypeStringNullableFloat,
 				},
 			},
 		},
