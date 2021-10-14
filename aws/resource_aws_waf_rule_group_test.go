@@ -126,7 +126,7 @@ func TestAccAWSWafRuleGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", groupName),
 					resource.TestCheckResourceAttr(resourceName, "activated_rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "metric_name", groupName),
-					computeWafActivatedRuleWithRuleId(&rule, "COUNT", 50, &idx),
+					computeActivatedRuleWithRuleId(&rule, "COUNT", 50, &idx),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "activated_rule.*", map[string]string{
 						"action.0.type": "COUNT",
 						"priority":      "50",
@@ -233,7 +233,7 @@ func TestAccAWSWafRuleGroup_changeActivatedRules(t *testing.T) {
 					testAccCheckAWSWafRuleGroupExists(resourceName, &groupBefore),
 					resource.TestCheckResourceAttr(resourceName, "name", groupName),
 					resource.TestCheckResourceAttr(resourceName, "activated_rule.#", "1"),
-					computeWafActivatedRuleWithRuleId(&rule0, "COUNT", 50, &idx0),
+					computeActivatedRuleWithRuleId(&rule0, "COUNT", 50, &idx0),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "activated_rule.*", map[string]string{
 						"action.0.type": "COUNT",
 						"priority":      "50",
@@ -249,7 +249,7 @@ func TestAccAWSWafRuleGroup_changeActivatedRules(t *testing.T) {
 					testAccCheckAWSWafRuleGroupExists(resourceName, &groupAfter),
 
 					testAccCheckAWSWafRuleExists("aws_waf_rule.test", &rule1),
-					computeWafActivatedRuleWithRuleId(&rule1, "BLOCK", 10, &idx1),
+					computeActivatedRuleWithRuleId(&rule1, "BLOCK", 10, &idx1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "activated_rule.*", map[string]string{
 						"action.0.type": "BLOCK",
 						"priority":      "10",
@@ -257,7 +257,7 @@ func TestAccAWSWafRuleGroup_changeActivatedRules(t *testing.T) {
 					}),
 
 					testAccCheckAWSWafRuleExists("aws_waf_rule.test2", &rule2),
-					computeWafActivatedRuleWithRuleId(&rule2, "COUNT", 1, &idx2),
+					computeActivatedRuleWithRuleId(&rule2, "COUNT", 1, &idx2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "activated_rule.*", map[string]string{
 						"action.0.type": "COUNT",
 						"priority":      "1",
@@ -265,7 +265,7 @@ func TestAccAWSWafRuleGroup_changeActivatedRules(t *testing.T) {
 					}),
 
 					testAccCheckAWSWafRuleExists("aws_waf_rule.test3", &rule3),
-					computeWafActivatedRuleWithRuleId(&rule3, "BLOCK", 15, &idx3),
+					computeActivatedRuleWithRuleId(&rule3, "BLOCK", 15, &idx3),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "activated_rule.*", map[string]string{
 						"action.0.type": "BLOCK",
 						"priority":      "15",
@@ -282,9 +282,9 @@ func TestAccAWSWafRuleGroup_changeActivatedRules(t *testing.T) {
 	})
 }
 
-// computeWafActivatedRuleWithRuleId calculates index
+// computeActivatedRuleWithRuleId calculates index
 // which isn't static because ruleId is generated as part of the test
-func computeWafActivatedRuleWithRuleId(rule *waf.Rule, actionType string, priority int, idx *int) resource.TestCheckFunc {
+func computeActivatedRuleWithRuleId(rule *waf.Rule, actionType string, priority int, idx *int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		ruleResource := resourceAwsWafRuleGroup().Schema["activated_rule"].Elem.(*schema.Resource)
 

@@ -13,7 +13,7 @@ import (
 )
 
 // WAF requires UpdateIPSet operations be split into batches of 1000 Updates
-const wafUpdateIPSetUpdatesLimit = 1000
+const ipSetUpdatesLimit = 1000
 
 func resourceAwsWafIPSet() *schema.Resource {
 	return &schema.Resource{
@@ -196,7 +196,7 @@ func updateWafIpSetDescriptors(id string, oldD, newD []interface{}, conn *waf.WA
 }
 
 func diffWafIpSetDescriptors(oldD, newD []interface{}) [][]*waf.IPSetUpdate {
-	updates := make([]*waf.IPSetUpdate, 0, wafUpdateIPSetUpdatesLimit)
+	updates := make([]*waf.IPSetUpdate, 0, ipSetUpdatesLimit)
 	updatesBatches := make([][]*waf.IPSetUpdate, 0)
 
 	for _, od := range oldD {
@@ -207,9 +207,9 @@ func diffWafIpSetDescriptors(oldD, newD []interface{}) [][]*waf.IPSetUpdate {
 			continue
 		}
 
-		if len(updates) == wafUpdateIPSetUpdatesLimit {
+		if len(updates) == ipSetUpdatesLimit {
 			updatesBatches = append(updatesBatches, updates)
-			updates = make([]*waf.IPSetUpdate, 0, wafUpdateIPSetUpdatesLimit)
+			updates = make([]*waf.IPSetUpdate, 0, ipSetUpdatesLimit)
 		}
 
 		updates = append(updates, &waf.IPSetUpdate{
@@ -224,9 +224,9 @@ func diffWafIpSetDescriptors(oldD, newD []interface{}) [][]*waf.IPSetUpdate {
 	for _, nd := range newD {
 		descriptor := nd.(map[string]interface{})
 
-		if len(updates) == wafUpdateIPSetUpdatesLimit {
+		if len(updates) == ipSetUpdatesLimit {
 			updatesBatches = append(updatesBatches, updates)
-			updates = make([]*waf.IPSetUpdate, 0, wafUpdateIPSetUpdatesLimit)
+			updates = make([]*waf.IPSetUpdate, 0, ipSetUpdatesLimit)
 		}
 
 		updates = append(updates, &waf.IPSetUpdate{
