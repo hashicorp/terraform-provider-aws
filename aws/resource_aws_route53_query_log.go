@@ -69,7 +69,7 @@ func resourceAwsRoute53QueryLogRead(d *schema.ResourceData, meta interface{}) er
 	log.Printf("[DEBUG] Reading Route53 query logging configuration: %#v", input)
 	out, err := r53.GetQueryLoggingConfig(input)
 	if err != nil {
-		if isAWSErr(err, route53.ErrCodeNoSuchQueryLoggingConfig, "") || isAWSErr(err, route53.ErrCodeNoSuchHostedZone, "") {
+		if tfawserr.ErrMessageContains(err, route53.ErrCodeNoSuchQueryLoggingConfig, "") || tfawserr.ErrMessageContains(err, route53.ErrCodeNoSuchHostedZone, "") {
 			log.Printf("[WARN] Route53 Query Logging Config (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -99,7 +99,7 @@ func resourceAwsRoute53QueryLogDelete(d *schema.ResourceData, meta interface{}) 
 	}
 	log.Printf("[DEBUG] Deleting Route53 query logging configuration: %#v", input)
 	_, err := r53.DeleteQueryLoggingConfig(input)
-	if isAWSErr(err, route53.ErrCodeNoSuchQueryLoggingConfig, "") {
+	if tfawserr.ErrMessageContains(err, route53.ErrCodeNoSuchQueryLoggingConfig, "") {
 		return nil
 	}
 

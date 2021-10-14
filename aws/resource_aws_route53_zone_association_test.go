@@ -190,7 +190,7 @@ func testAccCheckRoute53ZoneAssociationDestroy(s *terraform.State) error {
 
 		hostedZoneSummary, err := route53GetZoneAssociation(conn, zoneID, vpcID, vpcRegion)
 
-		if isAWSErr(err, "AccessDenied", "is not owned by you") {
+		if tfawserr.ErrMessageContains(err, "AccessDenied", "is not owned by you") {
 			continue
 		}
 
