@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsLambdaFunctionEventInvokeConfig() *schema.Resource {
@@ -90,7 +91,7 @@ func resourceAwsLambdaFunctionEventInvokeConfig() *schema.Resource {
 }
 
 func resourceAwsLambdaFunctionEventInvokeConfigCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lambdaconn
+	conn := meta.(*conns.AWSClient).LambdaConn
 	functionName := d.Get("function_name").(string)
 	qualifier := d.Get("qualifier").(string)
 
@@ -149,7 +150,7 @@ func resourceAwsLambdaFunctionEventInvokeConfigCreate(d *schema.ResourceData, me
 }
 
 func resourceAwsLambdaFunctionEventInvokeConfigRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lambdaconn
+	conn := meta.(*conns.AWSClient).LambdaConn
 
 	functionName, qualifier, err := resourceAwsLambdaFunctionEventInvokeConfigParseId(d.Id())
 
@@ -190,7 +191,7 @@ func resourceAwsLambdaFunctionEventInvokeConfigRead(d *schema.ResourceData, meta
 }
 
 func resourceAwsLambdaFunctionEventInvokeConfigUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lambdaconn
+	conn := meta.(*conns.AWSClient).LambdaConn
 
 	functionName, qualifier, err := resourceAwsLambdaFunctionEventInvokeConfigParseId(d.Id())
 
@@ -245,7 +246,7 @@ func resourceAwsLambdaFunctionEventInvokeConfigUpdate(d *schema.ResourceData, me
 }
 
 func resourceAwsLambdaFunctionEventInvokeConfigDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lambdaconn
+	conn := meta.(*conns.AWSClient).LambdaConn
 
 	functionName, qualifier, err := resourceAwsLambdaFunctionEventInvokeConfigParseId(d.Id())
 

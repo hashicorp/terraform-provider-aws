@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSLambdaAlias_basic(t *testing.T) {
@@ -190,7 +191,7 @@ func TestAccAWSLambdaAlias_routingconfig(t *testing.T) {
 }
 
 func testAccCheckAwsLambdaAliasDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).lambdaconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lambda_alias" {
@@ -221,7 +222,7 @@ func testAccCheckAwsLambdaAliasExists(n string, mapping *lambda.AliasConfigurati
 			return fmt.Errorf("Lambda alias not set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).lambdaconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
 
 		params := &lambda.GetAliasInput{
 			FunctionName: aws.String(rs.Primary.ID),

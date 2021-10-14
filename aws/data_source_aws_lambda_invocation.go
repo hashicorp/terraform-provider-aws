@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsLambdaInvocation() *schema.Resource {
@@ -41,7 +42,7 @@ func dataSourceAwsLambdaInvocation() *schema.Resource {
 }
 
 func dataSourceAwsLambdaInvocationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lambdaconn
+	conn := meta.(*conns.AWSClient).LambdaConn
 
 	functionName := d.Get("function_name").(string)
 	qualifier := d.Get("qualifier").(string)

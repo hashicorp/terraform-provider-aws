@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsLambdaProvisionedConcurrencyConfig() *schema.Resource {
@@ -50,7 +51,7 @@ func resourceAwsLambdaProvisionedConcurrencyConfig() *schema.Resource {
 }
 
 func resourceAwsLambdaProvisionedConcurrencyConfigCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lambdaconn
+	conn := meta.(*conns.AWSClient).LambdaConn
 	functionName := d.Get("function_name").(string)
 	qualifier := d.Get("qualifier").(string)
 
@@ -76,7 +77,7 @@ func resourceAwsLambdaProvisionedConcurrencyConfigCreate(d *schema.ResourceData,
 }
 
 func resourceAwsLambdaProvisionedConcurrencyConfigRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lambdaconn
+	conn := meta.(*conns.AWSClient).LambdaConn
 
 	functionName, qualifier, err := resourceAwsLambdaProvisionedConcurrencyConfigParseId(d.Id())
 
@@ -109,7 +110,7 @@ func resourceAwsLambdaProvisionedConcurrencyConfigRead(d *schema.ResourceData, m
 }
 
 func resourceAwsLambdaProvisionedConcurrencyConfigUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lambdaconn
+	conn := meta.(*conns.AWSClient).LambdaConn
 
 	functionName, qualifier, err := resourceAwsLambdaProvisionedConcurrencyConfigParseId(d.Id())
 
@@ -137,7 +138,7 @@ func resourceAwsLambdaProvisionedConcurrencyConfigUpdate(d *schema.ResourceData,
 }
 
 func resourceAwsLambdaProvisionedConcurrencyConfigDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lambdaconn
+	conn := meta.(*conns.AWSClient).LambdaConn
 
 	functionName, qualifier, err := resourceAwsLambdaProvisionedConcurrencyConfigParseId(d.Id())
 

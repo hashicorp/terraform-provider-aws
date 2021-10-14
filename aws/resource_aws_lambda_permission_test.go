@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestLambdaPermissionUnmarshalling(t *testing.T) {
@@ -559,7 +560,7 @@ func testAccAWSLambdaPermissionDisappears(n string) resource.TestCheckFunc {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).lambdaconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
 
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("No resource ID is set")
@@ -594,7 +595,7 @@ func testAccCheckLambdaPermissionExists(n string, statement *LambdaPolicyStateme
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).lambdaconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
 
 		// IAM is eventually consistent
 		var foundStatement *LambdaPolicyStatement
@@ -626,7 +627,7 @@ func testAccCheckLambdaPermissionExists(n string, statement *LambdaPolicyStateme
 }
 
 func testAccCheckAWSLambdaPermissionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).lambdaconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lambda_permission" {

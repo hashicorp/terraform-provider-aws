@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -27,8 +28,8 @@ func testSweepLambdaLayerVersions(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	lambdaconn := client.(*AWSClient).lambdaconn
-	resp, err := lambdaconn.ListLayers(&lambda.ListLayersInput{})
+	conn := client.(*conns.AWSClient).LambdaConn
+	resp, err := conn.ListLayers(&lambda.ListLayersInput{})
 	if err != nil {
 		if testSweepSkipSweepError(err) {
 			log.Printf("[WARN] Skipping Lambda Layer sweep for %s: %s", region, err)
@@ -43,7 +44,7 @@ func testSweepLambdaLayerVersions(region string) error {
 	}
 
 	for _, l := range resp.Layers {
-		versionResp, err := lambdaconn.ListLayerVersions(&lambda.ListLayerVersionsInput{
+		versionResp, err := conn.ListLayerVersions(&lambda.ListLayerVersionsInput{
 			LayerName: l.LayerName,
 		})
 		if err != nil {
@@ -51,7 +52,7 @@ func testSweepLambdaLayerVersions(region string) error {
 		}
 
 		for _, v := range versionResp.LayerVersions {
-			_, err := lambdaconn.DeleteLayerVersion(&lambda.DeleteLayerVersionInput{
+			_, err := conn.DeleteLayerVersion(&lambda.DeleteLayerVersionInput{
 				LayerName:     l.LayerName,
 				VersionNumber: v.Version,
 			})
@@ -298,7 +299,7 @@ func TestAccAWSLambdaLayerVersion_licenseInfo(t *testing.T) {
 }
 
 func testAccCheckLambdaLayerVersionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).lambdaconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lambda_layer_version" {
@@ -347,7 +348,7 @@ func testAccCheckAwsLambdaLayerVersionExists(res, layerName string) resource.Tes
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).lambdaconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
 		_, err = conn.GetLayerVersion(&lambda.GetLayerVersionInput{
 			LayerName:     aws.String(layerName),
 			VersionNumber: aws.Int64(int64(version)),

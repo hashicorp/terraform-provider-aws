@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -42,9 +43,9 @@ func testSweepLambdaFunctions(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	lambdaconn := client.(*AWSClient).lambdaconn
+	conn := client.(*conns.AWSClient).LambdaConn
 
-	resp, err := lambdaconn.ListFunctions(&lambda.ListFunctionsInput{})
+	resp, err := conn.ListFunctions(&lambda.ListFunctionsInput{})
 	if err != nil {
 		if testSweepSkipSweepError(err) {
 			log.Printf("[WARN] Skipping Lambda Function sweep for %s: %s", region, err)
@@ -59,7 +60,7 @@ func testSweepLambdaFunctions(region string) error {
 	}
 
 	for _, f := range resp.Functions {
-		_, err := lambdaconn.DeleteFunction(
+		_, err := conn.DeleteFunction(
 			&lambda.DeleteFunctionInput{
 				FunctionName: f.FunctionName,
 			})
@@ -2061,7 +2062,7 @@ func TestAccAWSLambdaFunction_zip_validation(t *testing.T) {
 }
 
 func testAccCheckLambdaFunctionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).lambdaconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lambda_function" {
@@ -2083,7 +2084,7 @@ func testAccCheckLambdaFunctionDestroy(s *terraform.State) error {
 
 func testAccCheckAwsLambdaFunctionDisappears(function *lambda.GetFunctionOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).lambdaconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
 
 		input := &lambda.DeleteFunctionInput{
 			FunctionName: function.Configuration.FunctionName,
@@ -2107,7 +2108,7 @@ func testAccCheckAwsLambdaFunctionExists(res, funcName string, function *lambda.
 			return fmt.Errorf("Lambda function ID not set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).lambdaconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
 
 		params := &lambda.GetFunctionInput{
 			FunctionName: aws.String(funcName),
@@ -2134,7 +2135,7 @@ func testAccCheckAwsLambdaFunctionInvokeArn(name string, function *lambda.GetFun
 func testAccAwsInvokeLambdaFunction(function *lambda.GetFunctionOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		f := function.Configuration
-		conn := acctest.Provider.Meta().(*AWSClient).lambdaconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
 
 		// If the function is VPC-enabled this will create ENI automatically
 		_, err := conn.Invoke(&lambda.InvokeInput{
@@ -3458,7 +3459,7 @@ func TestFlattenLambdaImageConfigShouldNotFailWithEmptyImageConfig(t *testing.T)
 }
 
 func testAccPreCheckSingerSigningProfile(t *testing.T, platformID string) {
-	conn := acctest.Provider.Meta().(*AWSClient).signerconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SignerConn
 
 	input := &signer.ListSigningPlatformsInput{}
 
