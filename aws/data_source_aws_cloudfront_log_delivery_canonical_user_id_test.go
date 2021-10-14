@@ -7,14 +7,15 @@ import (
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccDataSourceAWSCloudFrontLogDeliveryCanonicalUserId_basic(t *testing.T) {
 	dataSourceName := "data.aws_cloudfront_log_delivery_canonical_user_id.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
-		ErrorCheck: testAccErrorCheck(t, cloudfront.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck: acctest.ErrorCheck(t, cloudfront.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -31,8 +32,8 @@ func TestAccDataSourceAWSCloudFrontLogDeliveryCanonicalUserId_default(t *testing
 	dataSourceName := "data.aws_cloudfront_log_delivery_canonical_user_id.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
-		ErrorCheck: testAccErrorCheck(t, cloudfront.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck: acctest.ErrorCheck(t, cloudfront.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -49,8 +50,8 @@ func TestAccDataSourceAWSCloudFrontLogDeliveryCanonicalUserId_cn(t *testing.T) {
 	dataSourceName := "data.aws_cloudfront_log_delivery_canonical_user_id.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
-		ErrorCheck: testAccErrorCheck(t, cloudfront.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck: acctest.ErrorCheck(t, cloudfront.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{

@@ -4,18 +4,19 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/cloudfront"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSDataSourceCloudFrontDistribution_basic(t *testing.T) {
 	dataSourceName := "data.aws_cloudfront_distribution.test"
 	resourceName := "aws_cloudfront_distribution.s3_distribution"
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
-		ErrorCheck: testAccErrorCheck(t, cloudfront.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck: acctest.ErrorCheck(t, cloudfront.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -35,7 +36,7 @@ func TestAccAWSDataSourceCloudFrontDistribution_basic(t *testing.T) {
 }
 
 func testAccAWSCloudFrontDistributionDataConfig(rInt int) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSCloudFrontDistributionS3ConfigWithTags(rInt),
 		`
 data "aws_cloudfront_distribution" "test" {
