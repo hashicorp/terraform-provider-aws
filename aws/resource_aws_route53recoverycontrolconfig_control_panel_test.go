@@ -6,18 +6,19 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	r53rcc "github.com/aws/aws-sdk-go/service/route53recoverycontrolconfig"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func testAccAWSRoute53RecoveryControlConfigControlPanel_basic(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_route53recoverycontrolconfig_control_panel.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(r53rcc.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, r53rcc.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(r53rcc.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, r53rcc.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsRoute53RecoveryControlConfigControlPanelDestroy,
 		Steps: []resource.TestStep{
@@ -41,12 +42,12 @@ func testAccAWSRoute53RecoveryControlConfigControlPanel_basic(t *testing.T) {
 }
 
 func testAccAWSRoute53RecoveryControlConfigControlPanel_disappears(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_route53recoverycontrolconfig_control_panel.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(r53rcc.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, r53rcc.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(r53rcc.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, r53rcc.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsRoute53RecoveryControlConfigControlPanelDestroy,
 		Steps: []resource.TestStep{
@@ -54,7 +55,7 @@ func testAccAWSRoute53RecoveryControlConfigControlPanel_disappears(t *testing.T)
 				Config: testAccAwsRoute53RecoveryControlConfigControlPanelConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsRoute53RecoveryControlConfigControlPanelExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsRoute53RecoveryControlConfigControlPanel(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsRoute53RecoveryControlConfigControlPanel(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -93,7 +94,7 @@ resource "aws_route53recoverycontrolconfig_cluster" "test" {
 }
 
 func testAccAwsRoute53RecoveryControlConfigControlPanelConfig(rName string) string {
-	return composeConfig(testAccAwsRoute53RecoveryControlConfigClusterSetUp(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAwsRoute53RecoveryControlConfigClusterSetUp(rName), fmt.Sprintf(`
 resource "aws_route53recoverycontrolconfig_control_panel" "test" {
   name        = %[1]q
   cluster_arn = aws_route53recoverycontrolconfig_cluster.test.arn
