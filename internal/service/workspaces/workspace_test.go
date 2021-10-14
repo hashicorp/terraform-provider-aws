@@ -37,7 +37,7 @@ func testSweepWorkspacesWorkspace(region string) error {
 	input := &workspaces.DescribeWorkspacesInput{}
 	err = conn.DescribeWorkspacesPages(input, func(resp *workspaces.DescribeWorkspacesOutput, _ bool) bool {
 		for _, workspace := range resp.Workspaces {
-			err := workspaceDelete(conn, aws.StringValue(workspace.WorkspaceId), tfworkspaces.WorkspaceTerminatedTimeout)
+			err := tfworkspaces.WorkspaceDelete(conn, aws.StringValue(workspace.WorkspaceId), tfworkspaces.WorkspaceTerminatedTimeout)
 			if err != nil {
 				errors = multierror.Append(errors, err)
 			}
@@ -690,7 +690,7 @@ func TestExpandWorkspaceProperties(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		actual := expandWorkspaceProperties(c.input)
+		actual := tfworkspaces.ExpandWorkspaceProperties(c.input)
 		if !reflect.DeepEqual(actual, c.expected) {
 			t.Fatalf("expected\n\n%#+v\n\ngot\n\n%#+v", c.expected, actual)
 		}
@@ -729,7 +729,7 @@ func TestFlattenWorkspaceProperties(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		actual := flattenWorkspaceProperties(c.input)
+		actual := tfworkspaces.FlattenWorkspaceProperties(c.input)
 		if !reflect.DeepEqual(actual, c.expected) {
 			t.Fatalf("expected\n\n%#+v\n\ngot\n\n%#+v", c.expected, actual)
 		}

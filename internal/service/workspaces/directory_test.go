@@ -41,7 +41,7 @@ func testSweepWorkspacesDirectories(region string) error {
 		}
 
 		for _, directory := range page.Directories {
-			r := ResourceDirectory()
+			r := tfworkspaces.ResourceDirectory()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(directory.DirectoryId))
 
@@ -161,7 +161,7 @@ func testAccAwsWorkspacesDirectory_disappears(t *testing.T) {
 				Config: testAccWorkspacesDirectoryConfig(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsWorkspacesDirectoryExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceDirectory(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfworkspaces.ResourceDirectory(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -495,7 +495,7 @@ func TestExpandSelfServicePermissions(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		actual := expandSelfServicePermissions(c.input)
+		actual := tfworkspaces.ExpandSelfServicePermissions(c.input)
 		if !reflect.DeepEqual(actual, c.expected) {
 			t.Fatalf("expected\n\n%#+v\n\ngot\n\n%#+v", c.expected, actual)
 		}
@@ -534,7 +534,7 @@ func TestFlattenSelfServicePermissions(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		actual := flattenSelfServicePermissions(c.input)
+		actual := tfworkspaces.FlattenSelfServicePermissions(c.input)
 		if !reflect.DeepEqual(actual, c.expected) {
 			t.Fatalf("expected\n\n%#+v\n\ngot\n\n%#+v", c.expected, actual)
 		}
@@ -579,7 +579,7 @@ func TestExpandWorkspaceAccessProperties(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		actual := expandWorkspaceAccessProperties(c.input)
+		actual := tfworkspaces.ExpandWorkspaceAccessProperties(c.input)
 		if !reflect.DeepEqual(actual, c.expected) {
 			t.Fatalf("expected\n\n%#+v\n\ngot\n\n%#+v", c.expected, actual)
 		}
@@ -624,7 +624,7 @@ func TestFlattenWorkspaceAccessProperties(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		actual := flattenWorkspaceAccessProperties(c.input)
+		actual := tfworkspaces.FlattenWorkspaceAccessProperties(c.input)
 		if !reflect.DeepEqual(actual, c.expected) {
 			t.Fatalf("expected\n\n%#+v\n\ngot\n\n%#+v", c.expected, actual)
 		}
@@ -682,7 +682,7 @@ func TestExpandWorkspaceCreationProperties(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		actual := expandWorkspaceCreationProperties(c.input)
+		actual := tfworkspaces.ExpandWorkspaceCreationProperties(c.input)
 		if !reflect.DeepEqual(actual, c.expected) {
 			t.Fatalf("expected\n\n%#+v\n\ngot\n\n%#+v", c.expected, actual)
 		}
@@ -721,7 +721,7 @@ func TestFlattenWorkspaceCreationProperties(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		actual := flattenWorkspaceCreationProperties(c.input)
+		actual := tfworkspaces.FlattenWorkspaceCreationProperties(c.input)
 		if !reflect.DeepEqual(actual, c.expected) {
 			t.Fatalf("expected\n\n%#+v\n\ngot\n\n%#+v", c.expected, actual)
 		}
