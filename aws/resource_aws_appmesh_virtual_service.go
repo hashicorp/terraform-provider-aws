@@ -142,7 +142,7 @@ func resourceAwsAppmeshVirtualServiceCreate(d *schema.ResourceData, meta interfa
 	req := &appmesh.CreateVirtualServiceInput{
 		MeshName:           aws.String(d.Get("mesh_name").(string)),
 		VirtualServiceName: aws.String(d.Get("name").(string)),
-		Spec:               expandAppmeshVirtualServiceSpec(d.Get("spec").([]interface{})),
+		Spec:               expandVirtualServiceSpec(d.Get("spec").([]interface{})),
 		Tags:               tags.IgnoreAws().AppmeshTags(),
 	}
 	if v, ok := d.GetOk("mesh_owner"); ok {
@@ -227,7 +227,7 @@ func resourceAwsAppmeshVirtualServiceRead(d *schema.ResourceData, meta interface
 	d.Set("created_date", resp.VirtualService.Metadata.CreatedAt.Format(time.RFC3339))
 	d.Set("last_updated_date", resp.VirtualService.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	d.Set("resource_owner", resp.VirtualService.Metadata.ResourceOwner)
-	err = d.Set("spec", flattenAppmeshVirtualServiceSpec(resp.VirtualService.Spec))
+	err = d.Set("spec", flattenAppMeshVirtualServiceSpec(resp.VirtualService.Spec))
 	if err != nil {
 		return fmt.Errorf("error setting spec: %s", err)
 	}
@@ -260,7 +260,7 @@ func resourceAwsAppmeshVirtualServiceUpdate(d *schema.ResourceData, meta interfa
 		req := &appmesh.UpdateVirtualServiceInput{
 			MeshName:           aws.String(d.Get("mesh_name").(string)),
 			VirtualServiceName: aws.String(d.Get("name").(string)),
-			Spec:               expandAppmeshVirtualServiceSpec(v.([]interface{})),
+			Spec:               expandVirtualServiceSpec(v.([]interface{})),
 		}
 		if v, ok := d.GetOk("mesh_owner"); ok {
 			req.MeshOwner = aws.String(v.(string))

@@ -108,7 +108,7 @@ func resourceAwsAppmeshMeshCreate(d *schema.ResourceData, meta interface{}) erro
 	meshName := d.Get("name").(string)
 	req := &appmesh.CreateMeshInput{
 		MeshName: aws.String(meshName),
-		Spec:     expandAppmeshMeshSpec(d.Get("spec").([]interface{})),
+		Spec:     expandMeshSpec(d.Get("spec").([]interface{})),
 		Tags:     tags.IgnoreAws().AppmeshTags(),
 	}
 
@@ -188,7 +188,7 @@ func resourceAwsAppmeshMeshRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("last_updated_date", resp.Mesh.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	d.Set("mesh_owner", resp.Mesh.Metadata.MeshOwner)
 	d.Set("resource_owner", resp.Mesh.Metadata.ResourceOwner)
-	err = d.Set("spec", flattenAppmeshMeshSpec(resp.Mesh.Spec))
+	err = d.Set("spec", flattenAppMeshMeshSpec(resp.Mesh.Spec))
 	if err != nil {
 		return fmt.Errorf("error setting spec: %s", err)
 	}
@@ -220,7 +220,7 @@ func resourceAwsAppmeshMeshUpdate(d *schema.ResourceData, meta interface{}) erro
 		_, v := d.GetChange("spec")
 		req := &appmesh.UpdateMeshInput{
 			MeshName: aws.String(d.Id()),
-			Spec:     expandAppmeshMeshSpec(v.([]interface{})),
+			Spec:     expandMeshSpec(v.([]interface{})),
 		}
 
 		log.Printf("[DEBUG] Updating App Mesh service mesh: %#v", req)

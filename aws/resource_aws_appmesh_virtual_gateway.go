@@ -1074,7 +1074,7 @@ func expandAppmeshVirtualGatewaySpec(vSpec []interface{}) *appmesh.VirtualGatewa
 							mMatch := vMatch[0].(map[string]interface{})
 
 							if vExact, ok := mMatch["exact"].(*schema.Set); ok && vExact.Len() > 0 {
-								match.Exact = expandStringSet(vExact)
+								match.Exact = flex.ExpandStringSet(vExact)
 							}
 
 							subjectAlternativeNames.Match = match
@@ -1212,7 +1212,7 @@ func expandAppmeshVirtualGatewayClientPolicy(vClientPolicy []interface{}) *appme
 		}
 
 		if vPorts, ok := mTls["ports"].(*schema.Set); ok && vPorts.Len() > 0 {
-			tls.Ports = expandInt64Set(vPorts)
+			tls.Ports = flex.ExpandInt64Set(vPorts)
 		}
 
 		if vValidation, ok := mTls["validation"].([]interface{}); ok && len(vValidation) > 0 && vValidation[0] != nil {
@@ -1231,7 +1231,7 @@ func expandAppmeshVirtualGatewayClientPolicy(vClientPolicy []interface{}) *appme
 					mMatch := vMatch[0].(map[string]interface{})
 
 					if vExact, ok := mMatch["exact"].(*schema.Set); ok && vExact.Len() > 0 {
-						match.Exact = expandStringSet(vExact)
+						match.Exact = flex.ExpandStringSet(vExact)
 					}
 
 					subjectAlternativeNames.Match = match
@@ -1251,7 +1251,7 @@ func expandAppmeshVirtualGatewayClientPolicy(vClientPolicy []interface{}) *appme
 					mAcm := vAcm[0].(map[string]interface{})
 
 					if vCertificateAuthorityArns, ok := mAcm["certificate_authority_arns"].(*schema.Set); ok && vCertificateAuthorityArns.Len() > 0 {
-						acm.CertificateAuthorityArns = expandStringSet(vCertificateAuthorityArns)
+						acm.CertificateAuthorityArns = flex.ExpandStringSet(vCertificateAuthorityArns)
 					}
 
 					trust.Acm = acm
@@ -1406,7 +1406,7 @@ func flattenAppmeshVirtualGatewaySpec(spec *appmesh.VirtualGatewaySpec) []interf
 
 					if match := subjectAlternativeNames.Match; match != nil {
 						mMatch := map[string]interface{}{
-							"exact": flattenStringSet(match.Exact),
+							"exact": flex.FlattenStringSet(match.Exact),
 						}
 
 						mSubjectAlternativeNames["match"] = []interface{}{mMatch}
@@ -1479,7 +1479,7 @@ func flattenAppmeshVirtualGatewayClientPolicy(clientPolicy *appmesh.VirtualGatew
 	if tls := clientPolicy.Tls; tls != nil {
 		mTls := map[string]interface{}{
 			"enforce": aws.BoolValue(tls.Enforce),
-			"ports":   flattenInt64Set(tls.Ports),
+			"ports":   flex.FlattenInt64Set(tls.Ports),
 		}
 
 		if certificate := tls.Certificate; certificate != nil {
@@ -1513,7 +1513,7 @@ func flattenAppmeshVirtualGatewayClientPolicy(clientPolicy *appmesh.VirtualGatew
 
 				if match := subjectAlternativeNames.Match; match != nil {
 					mMatch := map[string]interface{}{
-						"exact": flattenStringSet(match.Exact),
+						"exact": flex.FlattenStringSet(match.Exact),
 					}
 
 					mSubjectAlternativeNames["match"] = []interface{}{mMatch}
@@ -1527,7 +1527,7 @@ func flattenAppmeshVirtualGatewayClientPolicy(clientPolicy *appmesh.VirtualGatew
 
 				if acm := trust.Acm; acm != nil {
 					mAcm := map[string]interface{}{
-						"certificate_authority_arns": flattenStringSet(acm.CertificateAuthorityArns),
+						"certificate_authority_arns": flex.FlattenStringSet(acm.CertificateAuthorityArns),
 					}
 
 					mTrust["acm"] = []interface{}{mAcm}
