@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSDataPipelinePipeline_basic(t *testing.T) {
@@ -157,7 +158,7 @@ func TestAccAWSDataPipelinePipeline_tags(t *testing.T) {
 
 func testAccCheckAWSDataPipelinePipelineDisappears(conf *datapipeline.PipelineDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).datapipelineconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataPipelineConn
 		params := &datapipeline.DeletePipelineInput{
 			PipelineId: conf.PipelineId,
 		}
@@ -171,7 +172,7 @@ func testAccCheckAWSDataPipelinePipelineDisappears(conf *datapipeline.PipelineDe
 }
 
 func testAccCheckAWSDataPipelinePipelineDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).datapipelineconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DataPipelineConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_datapipeline_pipeline" {
@@ -207,7 +208,7 @@ func testAccCheckAWSDataPipelinePipelineExists(n string, v *datapipeline.Pipelin
 			return fmt.Errorf("No DataPipeline ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).datapipelineconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataPipelineConn
 
 		pipelineDescription, err := resourceAwsDataPipelinePipelineRetrieve(rs.Primary.ID, conn)
 
@@ -224,7 +225,7 @@ func testAccCheckAWSDataPipelinePipelineExists(n string, v *datapipeline.Pipelin
 }
 
 func testAccPreCheckAWSDataPipeline(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).datapipelineconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DataPipelineConn
 
 	input := &datapipeline.ListPipelinesInput{}
 
