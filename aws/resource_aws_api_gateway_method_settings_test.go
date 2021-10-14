@@ -15,13 +15,13 @@ import (
 
 func TestAccAWSAPIGatewayMethodSettings_basic(t *testing.T) {
 	var stage apigateway.Stage
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayMethodSettingsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -44,13 +44,13 @@ func TestAccAWSAPIGatewayMethodSettings_basic(t *testing.T) {
 
 func TestAccAWSAPIGatewayMethodSettings_Settings_CacheDataEncrypted(t *testing.T) {
 	var stage1, stage2 apigateway.Stage
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayMethodSettingsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -81,13 +81,13 @@ func TestAccAWSAPIGatewayMethodSettings_Settings_CacheDataEncrypted(t *testing.T
 
 func TestAccAWSAPIGatewayMethodSettings_Settings_CacheTtlInSeconds(t *testing.T) {
 	var stage1, stage2 apigateway.Stage
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayMethodSettingsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -126,13 +126,13 @@ func TestAccAWSAPIGatewayMethodSettings_Settings_CacheTtlInSeconds(t *testing.T)
 
 func TestAccAWSAPIGatewayMethodSettings_Settings_CachingEnabled(t *testing.T) {
 	var stage1, stage2 apigateway.Stage
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayMethodSettingsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -163,13 +163,13 @@ func TestAccAWSAPIGatewayMethodSettings_Settings_CachingEnabled(t *testing.T) {
 
 func TestAccAWSAPIGatewayMethodSettings_Settings_DataTraceEnabled(t *testing.T) {
 	var stage1, stage2 apigateway.Stage
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayMethodSettingsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -200,13 +200,13 @@ func TestAccAWSAPIGatewayMethodSettings_Settings_DataTraceEnabled(t *testing.T) 
 
 func TestAccAWSAPIGatewayMethodSettings_Settings_LoggingLevel(t *testing.T) {
 	var stage1, stage2 apigateway.Stage
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayMethodSettingsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -239,13 +239,13 @@ func TestAccAWSAPIGatewayMethodSettings_Settings_LoggingLevel(t *testing.T) {
 
 func TestAccAWSAPIGatewayMethodSettings_Settings_MetricsEnabled(t *testing.T) {
 	var stage1, stage2 apigateway.Stage
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayMethodSettingsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -278,13 +278,13 @@ func TestAccAWSAPIGatewayMethodSettings_Settings_MetricsEnabled(t *testing.T) {
 
 func TestAccAWSAPIGatewayMethodSettings_Settings_Multiple(t *testing.T) {
 	var stage1, stage2 apigateway.Stage
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayMethodSettingsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -321,13 +321,13 @@ func TestAccAWSAPIGatewayMethodSettings_Settings_Multiple(t *testing.T) {
 
 func TestAccAWSAPIGatewayMethodSettings_Settings_RequireAuthorizationForCacheControl(t *testing.T) {
 	var stage1, stage2 apigateway.Stage
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayMethodSettingsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -358,13 +358,13 @@ func TestAccAWSAPIGatewayMethodSettings_Settings_RequireAuthorizationForCacheCon
 
 func TestAccAWSAPIGatewayMethodSettings_Settings_ThrottlingBurstLimit(t *testing.T) {
 	var stage1, stage2 apigateway.Stage
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayMethodSettingsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -396,13 +396,13 @@ func TestAccAWSAPIGatewayMethodSettings_Settings_ThrottlingBurstLimit(t *testing
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/5690
 func TestAccAWSAPIGatewayMethodSettings_Settings_ThrottlingBurstLimitDisabledByDefault(t *testing.T) {
 	var stage1, stage2 apigateway.Stage
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayMethodSettingsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -433,13 +433,13 @@ func TestAccAWSAPIGatewayMethodSettings_Settings_ThrottlingBurstLimitDisabledByD
 
 func TestAccAWSAPIGatewayMethodSettings_Settings_ThrottlingRateLimit(t *testing.T) {
 	var stage1, stage2 apigateway.Stage
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayMethodSettingsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -471,13 +471,13 @@ func TestAccAWSAPIGatewayMethodSettings_Settings_ThrottlingRateLimit(t *testing.
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/5690
 func TestAccAWSAPIGatewayMethodSettings_Settings_ThrottlingRateLimitDisabledByDefault(t *testing.T) {
 	var stage1, stage2 apigateway.Stage
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayMethodSettingsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -508,13 +508,13 @@ func TestAccAWSAPIGatewayMethodSettings_Settings_ThrottlingRateLimitDisabledByDe
 
 func TestAccAWSAPIGatewayMethodSettings_Settings_UnauthorizedCacheControlHeaderStrategy(t *testing.T) {
 	var stage1, stage2 apigateway.Stage
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayMethodSettingsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -578,20 +578,20 @@ func testAccCheckAWSAPIGatewayMethodSettings_loggingLevel(conf *apigateway.Stage
 
 func TestAccAWSAPIGatewayMethodSettings_disappears(t *testing.T) {
 	var stage apigateway.Stage
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayMethodSettingsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAPIGatewayMethodSettingsConfigSettingsLoggingLevel(rName, "INFO"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayMethodSettingsExists(resourceName, &stage),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsApiGatewayMethodSettings(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsApiGatewayMethodSettings(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -610,7 +610,7 @@ func testAccCheckAWSAPIGatewayMethodSettingsExists(n string, res *apigateway.Sta
 			return fmt.Errorf("No API Gateway Stage ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
+		conn := acctest.Provider.Meta().(*AWSClient).apigatewayconn
 
 		req := &apigateway.GetStageInput{
 			StageName: aws.String(rs.Primary.Attributes["stage_name"]),
@@ -628,7 +628,7 @@ func testAccCheckAWSAPIGatewayMethodSettingsExists(n string, res *apigateway.Sta
 }
 
 func testAccCheckAWSAPIGatewayMethodSettingsDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
+	conn := acctest.Provider.Meta().(*AWSClient).apigatewayconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_api_gateway_method_settings" {

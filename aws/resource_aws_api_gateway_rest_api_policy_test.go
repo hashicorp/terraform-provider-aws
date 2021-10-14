@@ -18,12 +18,12 @@ import (
 func TestAccAWSAPIGatewayRestApiPolicy_basic(t *testing.T) {
 	var v apigateway.RestApi
 	resourceName := "aws_api_gateway_rest_api_policy.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayRestApiPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -51,19 +51,19 @@ func TestAccAWSAPIGatewayRestApiPolicy_basic(t *testing.T) {
 func TestAccAWSAPIGatewayRestApiPolicy_disappears(t *testing.T) {
 	var v apigateway.RestApi
 	resourceName := "aws_api_gateway_rest_api_policy.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayRestApiPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAPIGatewayRestApiPolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayRestApiPolicyExists(resourceName, &v),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsApiGatewayRestApiPolicy(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsApiGatewayRestApiPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -74,19 +74,19 @@ func TestAccAWSAPIGatewayRestApiPolicy_disappears(t *testing.T) {
 func TestAccAWSAPIGatewayRestApiPolicy_disappears_restApi(t *testing.T) {
 	var v apigateway.RestApi
 	resourceName := "aws_api_gateway_rest_api_policy.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayRestApiPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAPIGatewayRestApiPolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayRestApiPolicyExists(resourceName, &v),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsApiGatewayRestApi(), "aws_api_gateway_rest_api.test"),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsApiGatewayRestApi(), "aws_api_gateway_rest_api.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -105,7 +105,7 @@ func testAccCheckAWSAPIGatewayRestApiPolicyExists(n string, res *apigateway.Rest
 			return fmt.Errorf("No API Gateway ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
+		conn := acctest.Provider.Meta().(*AWSClient).apigatewayconn
 
 		req := &apigateway.GetRestApiInput{
 			RestApiId: aws.String(rs.Primary.ID),
@@ -136,7 +136,7 @@ func testAccCheckAWSAPIGatewayRestApiPolicyExists(n string, res *apigateway.Rest
 }
 
 func testAccCheckAWSAPIGatewayRestApiPolicyDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
+	conn := acctest.Provider.Meta().(*AWSClient).apigatewayconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_api_gateway_rest_api_policy" {

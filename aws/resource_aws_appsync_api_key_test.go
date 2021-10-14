@@ -18,12 +18,12 @@ func TestAccAWSAppsyncApiKey_basic(t *testing.T) {
 	var apiKey appsync.ApiKey
 	dateAfterSevenDays := time.Now().UTC().Add(time.Hour * 24 * time.Duration(7)).Truncate(time.Hour)
 	resourceName := "aws_appsync_api_key.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsAppsyncApiKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -47,12 +47,12 @@ func TestAccAWSAppsyncApiKey_basic(t *testing.T) {
 func TestAccAWSAppsyncApiKey_Description(t *testing.T) {
 	var apiKey appsync.ApiKey
 	resourceName := "aws_appsync_api_key.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsAppsyncApiKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -83,12 +83,12 @@ func TestAccAWSAppsyncApiKey_Expires(t *testing.T) {
 	dateAfterTenDays := time.Now().UTC().Add(time.Hour * 24 * time.Duration(10)).Truncate(time.Hour)
 	dateAfterTwentyDays := time.Now().UTC().Add(time.Hour * 24 * time.Duration(20)).Truncate(time.Hour)
 	resourceName := "aws_appsync_api_key.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsAppsyncApiKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -115,7 +115,7 @@ func TestAccAWSAppsyncApiKey_Expires(t *testing.T) {
 }
 
 func testAccCheckAwsAppsyncApiKeyDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).appsyncconn
+	conn := acctest.Provider.Meta().(*AWSClient).appsyncconn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appsync_api_key" {
 			continue
@@ -157,7 +157,7 @@ func testAccCheckAwsAppsyncApiKeyExists(resourceName string, apiKey *appsync.Api
 			return err
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).appsyncconn
+		conn := acctest.Provider.Meta().(*AWSClient).appsyncconn
 		key, err := getAppsyncApiKey(apiID, keyID, conn)
 		if err != nil {
 			return err

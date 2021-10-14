@@ -24,7 +24,7 @@ func TestAccAWSAPIGatewayDocumentationVersion_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayDocumentationVersionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -59,7 +59,7 @@ func TestAccAWSAPIGatewayDocumentationVersion_allFields(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayDocumentationVersionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -101,14 +101,14 @@ func TestAccAWSAPIGatewayDocumentationVersion_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayDocumentationVersionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAPIGatewayDocumentationVersionBasicConfig(version, apiName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayDocumentationVersionExists(resourceName, &conf),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsApiGatewayDocumentationVersion(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsApiGatewayDocumentationVersion(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -127,7 +127,7 @@ func testAccCheckAWSAPIGatewayDocumentationVersionExists(n string, res *apigatew
 			return fmt.Errorf("No API Gateway Documentation Version ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
+		conn := acctest.Provider.Meta().(*AWSClient).apigatewayconn
 
 		apiId, version, err := decodeApiGatewayDocumentationVersionId(rs.Primary.ID)
 		if err != nil {
@@ -150,7 +150,7 @@ func testAccCheckAWSAPIGatewayDocumentationVersionExists(n string, res *apigatew
 }
 
 func testAccCheckAWSAPIGatewayDocumentationVersionDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
+	conn := acctest.Provider.Meta().(*AWSClient).apigatewayconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_api_gateway_documentation_version" {

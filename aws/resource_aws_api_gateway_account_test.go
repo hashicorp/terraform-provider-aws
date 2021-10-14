@@ -26,7 +26,7 @@ func TestAccAWSAPIGatewayAccount_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayAccountDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -94,7 +94,7 @@ func testAccCheckAWSAPIGatewayAccountExists(n string, res *apigateway.Account) r
 			return fmt.Errorf("No API Gateway Account ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
+		conn := acctest.Provider.Meta().(*AWSClient).apigatewayconn
 
 		req := &apigateway.GetAccountInput{}
 		describe, err := conn.GetAccount(req)
@@ -119,7 +119,7 @@ func testAccCheckAWSAPIGatewayAccountDestroy(s *terraform.State) error {
 
 // testAccPreCheckAWSAPIGatewayAccountCloudWatchRoleArn checks whether a CloudWatch role ARN has been configured in the current AWS region.
 func testAccPreCheckAWSAPIGatewayAccountCloudWatchRoleArn(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
+	conn := acctest.Provider.Meta().(*AWSClient).apigatewayconn
 
 	output, err := conn.GetAccount(&apigateway.GetAccountInput{})
 

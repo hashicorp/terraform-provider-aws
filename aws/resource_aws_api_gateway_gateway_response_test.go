@@ -22,7 +22,7 @@ func TestAccAWSAPIGatewayGatewayResponse_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayGatewayResponseDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -65,14 +65,14 @@ func TestAccAWSAPIGatewayGatewayResponse_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayGatewayResponseDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAPIGatewayGatewayResponseConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayGatewayResponseExists(resourceName, &conf),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsApiGatewayGatewayResponse(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsApiGatewayGatewayResponse(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -91,7 +91,7 @@ func testAccCheckAWSAPIGatewayGatewayResponseExists(n string, res *apigateway.Up
 			return fmt.Errorf("No API Gateway Gateway Response ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
+		conn := acctest.Provider.Meta().(*AWSClient).apigatewayconn
 
 		req := &apigateway.GetGatewayResponseInput{
 			RestApiId:    aws.String(s.RootModule().Resources["aws_api_gateway_rest_api.test"].Primary.ID),
@@ -109,7 +109,7 @@ func testAccCheckAWSAPIGatewayGatewayResponseExists(n string, res *apigateway.Up
 }
 
 func testAccCheckAWSAPIGatewayGatewayResponseDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
+	conn := acctest.Provider.Meta().(*AWSClient).apigatewayconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_api_gateway_gateway_response" {

@@ -14,13 +14,13 @@ func TestAccDataSourceAwsApiGatewayDomainName_basic(t *testing.T) {
 	dataSourceName := "data.aws_api_gateway_domain_name.test"
 	rName := acctest.RandomSubdomain()
 
-	key := tlsRsaPrivateKeyPem(2048)
-	certificate := tlsRsaX509SelfSignedCertificatePem(key, rName)
+	key := acctest.TLSRSAPrivateKeyPEM(2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, rName)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayDomainNameDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -65,5 +65,5 @@ resource "aws_api_gateway_domain_name" "test" {
 data "aws_api_gateway_domain_name" "test" {
   domain_name = aws_api_gateway_domain_name.test.domain_name
 }
-`, domainName, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key))
+`, domainName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key))
 }

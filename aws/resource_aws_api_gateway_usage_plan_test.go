@@ -15,14 +15,14 @@ import (
 
 func TestAccAWSAPIGatewayUsagePlan_basic(t *testing.T) {
 	var conf apigateway.UsagePlan
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	updatedName := sdkacctest.RandomWithPrefix("tf-acc-test-2")
 	resourceName := "aws_api_gateway_usage_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayUsagePlanDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -56,13 +56,13 @@ func TestAccAWSAPIGatewayUsagePlan_basic(t *testing.T) {
 
 func TestAccAWSAPIGatewayUsagePlan_tags(t *testing.T) {
 	var conf apigateway.UsagePlan
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_usage_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayUsagePlanDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -103,13 +103,13 @@ func TestAccAWSAPIGatewayUsagePlan_tags(t *testing.T) {
 
 func TestAccAWSAPIGatewayUsagePlan_description(t *testing.T) {
 	var conf apigateway.UsagePlan
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_usage_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayUsagePlanDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -157,13 +157,13 @@ func TestAccAWSAPIGatewayUsagePlan_description(t *testing.T) {
 
 func TestAccAWSAPIGatewayUsagePlan_productCode(t *testing.T) {
 	var conf apigateway.UsagePlan
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_usage_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayUsagePlanDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -205,13 +205,13 @@ func TestAccAWSAPIGatewayUsagePlan_productCode(t *testing.T) {
 
 func TestAccAWSAPIGatewayUsagePlan_throttling(t *testing.T) {
 	var conf apigateway.UsagePlan
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_usage_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayUsagePlanDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -260,13 +260,13 @@ func TestAccAWSAPIGatewayUsagePlan_throttling(t *testing.T) {
 // https://github.com/hashicorp/terraform-provider-aws/issues/2057
 func TestAccAWSAPIGatewayUsagePlan_throttlingInitialRateLimit(t *testing.T) {
 	var conf apigateway.UsagePlan
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_usage_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayUsagePlanDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -287,13 +287,13 @@ func TestAccAWSAPIGatewayUsagePlan_throttlingInitialRateLimit(t *testing.T) {
 
 func TestAccAWSAPIGatewayUsagePlan_quota(t *testing.T) {
 	var conf apigateway.UsagePlan
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_usage_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayUsagePlanDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -343,13 +343,13 @@ func TestAccAWSAPIGatewayUsagePlan_quota(t *testing.T) {
 
 func TestAccAWSAPIGatewayUsagePlan_apiStages(t *testing.T) {
 	var conf apigateway.UsagePlan
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_usage_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayUsagePlanDestroy,
 		Steps: []resource.TestStep{
 			// Create UsagePlan WITH Stages as the API calls are different
@@ -427,13 +427,13 @@ func TestAccAWSAPIGatewayUsagePlan_apiStages(t *testing.T) {
 
 func TestAccAWSAPIGatewayUsagePlan_apiStages_multiple(t *testing.T) {
 	var conf apigateway.UsagePlan
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_usage_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayUsagePlanDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -460,20 +460,20 @@ func TestAccAWSAPIGatewayUsagePlan_apiStages_multiple(t *testing.T) {
 
 func TestAccAWSAPIGatewayUsagePlan_disappears(t *testing.T) {
 	var conf apigateway.UsagePlan
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_usage_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayUsagePlanDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSApiGatewayUsagePlanBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayUsagePlanExists(resourceName, &conf),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsApiGatewayUsagePlan(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsApiGatewayUsagePlan(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -492,7 +492,7 @@ func testAccCheckAWSAPIGatewayUsagePlanExists(n string, res *apigateway.UsagePla
 			return fmt.Errorf("No API Gateway Usage Plan ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
+		conn := acctest.Provider.Meta().(*AWSClient).apigatewayconn
 
 		req := &apigateway.GetUsagePlanInput{
 			UsagePlanId: aws.String(rs.Primary.ID),
@@ -513,7 +513,7 @@ func testAccCheckAWSAPIGatewayUsagePlanExists(n string, res *apigateway.UsagePla
 }
 
 func testAccCheckAWSAPIGatewayUsagePlanDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
+	conn := acctest.Provider.Meta().(*AWSClient).apigatewayconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_api_gateway_usage_plan" {

@@ -13,12 +13,12 @@ import (
 func TestAccAWSAPIGatewayV2ApiDataSource_Http(t *testing.T) {
 	dataSourceName := "data.aws_apigatewayv2_api.test"
 	resourceName := "aws_apigatewayv2_api.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -53,12 +53,12 @@ func TestAccAWSAPIGatewayV2ApiDataSource_Http(t *testing.T) {
 func TestAccAWSAPIGatewayV2ApiDataSource_WebSocket(t *testing.T) {
 	dataSourceName := "data.aws_apigatewayv2_api.test"
 	resourceName := "aws_apigatewayv2_api.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{

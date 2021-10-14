@@ -72,12 +72,12 @@ func testSweepAPIGatewayV2Apis(region string) error {
 func TestAccAWSAPIGatewayV2Api_basicWebSocket(t *testing.T) {
 	var v apigatewayv2.GetApiOutput
 	resourceName := "aws_apigatewayv2_api.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2ApiDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -110,12 +110,12 @@ func TestAccAWSAPIGatewayV2Api_basicWebSocket(t *testing.T) {
 func TestAccAWSAPIGatewayV2Api_basicHttp(t *testing.T) {
 	var v apigatewayv2.GetApiOutput
 	resourceName := "aws_apigatewayv2_api.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2ApiDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -148,19 +148,19 @@ func TestAccAWSAPIGatewayV2Api_basicHttp(t *testing.T) {
 func TestAccAWSAPIGatewayV2Api_disappears(t *testing.T) {
 	var v apigatewayv2.GetApiOutput
 	resourceName := "aws_apigatewayv2_api.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2ApiDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAPIGatewayV2ApiConfig_basicWebSocket(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayV2ApiExists(resourceName, &v),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsApiGatewayV2Api(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsApiGatewayV2Api(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -171,13 +171,13 @@ func TestAccAWSAPIGatewayV2Api_disappears(t *testing.T) {
 func TestAccAWSAPIGatewayV2Api_AllAttributesWebSocket(t *testing.T) {
 	var v apigatewayv2.GetApiOutput
 	resourceName := "aws_apigatewayv2_api.test"
-	rName1 := sdkacctest.RandomWithPrefix("tf-acc-test")
-	rName2 := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2ApiDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -253,13 +253,13 @@ func TestAccAWSAPIGatewayV2Api_AllAttributesWebSocket(t *testing.T) {
 func TestAccAWSAPIGatewayV2Api_AllAttributesHttp(t *testing.T) {
 	var v apigatewayv2.GetApiOutput
 	resourceName := "aws_apigatewayv2_api.test"
-	rName1 := sdkacctest.RandomWithPrefix("tf-acc-test")
-	rName2 := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2ApiDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -335,12 +335,12 @@ func TestAccAWSAPIGatewayV2Api_AllAttributesHttp(t *testing.T) {
 func TestAccAWSAPIGatewayV2Api_Openapi(t *testing.T) {
 	var v apigatewayv2.GetApiOutput
 	resourceName := "aws_apigatewayv2_api.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2ApiDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -382,12 +382,12 @@ func TestAccAWSAPIGatewayV2Api_Openapi(t *testing.T) {
 func TestAccAWSAPIGatewayV2Api_Openapi_WithTags(t *testing.T) {
 	var v apigatewayv2.GetApiOutput
 	resourceName := "aws_apigatewayv2_api.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2ApiDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -427,12 +427,12 @@ func TestAccAWSAPIGatewayV2Api_Openapi_WithTags(t *testing.T) {
 func TestAccAWSAPIGatewayV2Api_Openapi_WithCorsConfiguration(t *testing.T) {
 	var v apigatewayv2.GetApiOutput
 	resourceName := "aws_apigatewayv2_api.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2ApiDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -484,12 +484,12 @@ func TestAccAWSAPIGatewayV2Api_Openapi_WithCorsConfiguration(t *testing.T) {
 func TestAccAWSAPIGatewayV2Api_OpenapiWithMoreFields(t *testing.T) {
 	var v apigatewayv2.GetApiOutput
 	resourceName := "aws_apigatewayv2_api.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2ApiDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -537,12 +537,12 @@ func TestAccAWSAPIGatewayV2Api_OpenapiWithMoreFields(t *testing.T) {
 func TestAccAWSAPIGatewayV2Api_Openapi_FailOnWarnings(t *testing.T) {
 	var v apigatewayv2.GetApiOutput
 	resourceName := "aws_apigatewayv2_api.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2ApiDestroy,
 		Steps: []resource.TestStep{
 			// Invalid body should not be accepted when fail_on_warnings is enabled
@@ -589,7 +589,7 @@ func TestAccAWSAPIGatewayV2Api_Openapi_FailOnWarnings(t *testing.T) {
 
 func testAccCheckAWSAPIGatewayV2ApiRoutes(v *apigatewayv2.GetApiOutput, routes []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).apigatewayv2conn
+		conn := acctest.Provider.Meta().(*AWSClient).apigatewayv2conn
 
 		resp, err := conn.GetRoutes(&apigatewayv2.GetRoutesInput{
 			ApiId: v.ApiId,
@@ -621,12 +621,12 @@ func testAccCheckAWSAPIGatewayV2ApiRoutes(v *apigatewayv2.GetApiOutput, routes [
 func TestAccAWSAPIGatewayV2Api_Tags(t *testing.T) {
 	var v apigatewayv2.GetApiOutput
 	resourceName := "aws_apigatewayv2_api.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2ApiDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -674,12 +674,12 @@ func TestAccAWSAPIGatewayV2Api_Tags(t *testing.T) {
 func TestAccAWSAPIGatewayV2Api_CorsConfiguration(t *testing.T) {
 	var v apigatewayv2.GetApiOutput
 	resourceName := "aws_apigatewayv2_api.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2ApiDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -765,12 +765,12 @@ func TestAccAWSAPIGatewayV2Api_CorsConfiguration(t *testing.T) {
 func TestAccAWSAPIGatewayV2Api_QuickCreate(t *testing.T) {
 	var v apigatewayv2.GetApiOutput
 	resourceName := "aws_apigatewayv2_api.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2ApiDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -809,7 +809,7 @@ func TestAccAWSAPIGatewayV2Api_QuickCreate(t *testing.T) {
 }
 
 func testAccCheckAWSAPIGatewayV2ApiDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).apigatewayv2conn
+	conn := acctest.Provider.Meta().(*AWSClient).apigatewayv2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_apigatewayv2_api" {
@@ -843,7 +843,7 @@ func testAccCheckAWSAPIGatewayV2ApiExists(n string, v *apigatewayv2.GetApiOutput
 			return fmt.Errorf("No API Gateway v2 API ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).apigatewayv2conn
+		conn := acctest.Provider.Meta().(*AWSClient).apigatewayv2conn
 
 		resp, err := conn.GetApi(&apigatewayv2.GetApiInput{
 			ApiId: aws.String(rs.Primary.ID),
@@ -869,7 +869,7 @@ func testAccCheckAWSAPIGatewayV2ApiQuickCreateIntegration(n, expectedType, expec
 			return fmt.Errorf("No API Gateway v2 API ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).apigatewayv2conn
+		conn := acctest.Provider.Meta().(*AWSClient).apigatewayv2conn
 
 		resp, err := conn.GetIntegrations(&apigatewayv2.GetIntegrationsInput{
 			ApiId: aws.String(rs.Primary.ID),
@@ -904,7 +904,7 @@ func testAccCheckAWSAPIGatewayV2ApiQuickCreateRoute(n, expectedRouteKey string) 
 			return fmt.Errorf("No API Gateway v2 API ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).apigatewayv2conn
+		conn := acctest.Provider.Meta().(*AWSClient).apigatewayv2conn
 
 		resp, err := conn.GetRoutes(&apigatewayv2.GetRoutesInput{
 			ApiId: aws.String(rs.Primary.ID),
@@ -936,7 +936,7 @@ func testAccCheckAWSAPIGatewayV2ApiQuickCreateStage(n, expectedName string) reso
 			return fmt.Errorf("No API Gateway v2 API ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).apigatewayv2conn
+		conn := acctest.Provider.Meta().(*AWSClient).apigatewayv2conn
 
 		resp, err := conn.GetStages(&apigatewayv2.GetStagesInput{
 			ApiId: aws.String(rs.Primary.ID),

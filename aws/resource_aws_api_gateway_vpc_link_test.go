@@ -69,7 +69,7 @@ func TestAccAWSAPIGatewayVpcLink_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsAPIGatewayVpcLinkDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -110,7 +110,7 @@ func TestAccAWSAPIGatewayVpcLink_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsAPIGatewayVpcLinkDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -163,14 +163,14 @@ func TestAccAWSAPIGatewayVpcLink_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsAPIGatewayVpcLinkDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPIGatewayVpcLinkConfig(rName, "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAPIGatewayVpcLinkExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsApiGatewayVpcLink(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsApiGatewayVpcLink(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -179,7 +179,7 @@ func TestAccAWSAPIGatewayVpcLink_disappears(t *testing.T) {
 }
 
 func testAccCheckAwsAPIGatewayVpcLinkDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
+	conn := acctest.Provider.Meta().(*AWSClient).apigatewayconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_api_gateway_vpc_link" {
@@ -211,7 +211,7 @@ func testAccCheckAwsAPIGatewayVpcLinkExists(name string) resource.TestCheckFunc 
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
+		conn := acctest.Provider.Meta().(*AWSClient).apigatewayconn
 
 		input := &apigateway.GetVpcLinkInput{
 			VpcLinkId: aws.String(rs.Primary.ID),
