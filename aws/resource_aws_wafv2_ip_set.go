@@ -15,6 +15,7 @@ import (
 	tfnet "github.com/hashicorp/terraform-provider-aws/aws/internal/net"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceIPSet() *schema.Resource {
@@ -53,7 +54,7 @@ func ResourceIPSet() *schema.Resource {
 						for _, ov := range oldAddresses {
 							hasAddress := false
 							for _, nv := range newAddresses {
-								if tfnet.CIDRBlocksEqual(ov.(string), nv.(string)) {
+								if verify.CIDRBlocksEqual(ov.(string), nv.(string)) {
 									hasAddress = true
 									break
 								}
