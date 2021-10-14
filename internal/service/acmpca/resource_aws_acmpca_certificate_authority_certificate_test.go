@@ -14,6 +14,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfacmpca "github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
+	tfacmpca "github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
 )
 
 func TestAccAwsAcmpcaCertificateAuthorityCertificate_RootCA(t *testing.T) {
@@ -120,7 +122,7 @@ func testAccCheckAwsAcmpcaCertificateAuthorityCertificateExists(resourceName str
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAConn
 
-		output, err := finder.CertificateAuthorityCertificateByARN(conn, rs.Primary.ID)
+		output, err := tfacmpca.FindCertificateAuthorityCertificateByARN(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}

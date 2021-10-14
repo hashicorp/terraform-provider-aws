@@ -17,6 +17,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfacmpca "github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
+	tfacmpca "github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
+	tfacmpca "github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
+	tfacmpca "github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
+	tfacmpca "github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
 )
 
 func ResourceCertificateAuthority() *schema.Resource {
@@ -322,7 +327,7 @@ func resourceCertificateAuthorityCreate(d *schema.ResourceData, meta interface{}
 
 	d.SetId(aws.StringValue(output.CertificateAuthorityArn))
 
-	_, err = waiter.CertificateAuthorityCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
+	_, err = tfacmpca.waitCertificateAuthorityCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
 		return fmt.Errorf("error waiting for ACM PCA Certificate Authority %q to be active or pending certificate: %s", d.Id(), err)
@@ -336,7 +341,7 @@ func resourceCertificateAuthorityRead(d *schema.ResourceData, meta interface{}) 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	certificateAuthority, err := finder.CertificateAuthorityByARN(conn, d.Id())
+	certificateAuthority, err := tfacmpca.FindCertificateAuthorityByARN(conn, d.Id())
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] ACM PCA Certificate Authority (%s) not found, removing from state", d.Id())

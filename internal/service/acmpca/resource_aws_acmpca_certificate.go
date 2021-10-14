@@ -21,6 +21,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfacmpca "github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
+	tfacmpca "github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
+	tfacmpca "github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
 )
 
 func ResourceCertificate() *schema.Resource {
@@ -127,7 +130,7 @@ func resourceCertificateCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	var output *acmpca.IssueCertificateOutput
-	err = resource.Retry(waiter.CertificateAuthorityActiveTimeout, func() *resource.RetryError {
+	err = resource.Retry(tfacmpca.certificateAuthorityActiveTimeout, func() *resource.RetryError {
 		var err error
 		output, err = conn.IssueCertificate(input)
 		if tfawserr.ErrMessageContains(err, acmpca.ErrCodeInvalidStateException, "The certificate authority is not in a valid state for issuing certificates") {

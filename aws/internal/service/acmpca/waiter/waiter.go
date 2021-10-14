@@ -8,12 +8,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// CertificateAuthorityCreated waits for a CertificateAuthority to return Active or PendingCertificate
-func CertificateAuthorityCreated(conn *acmpca.ACMPCA, arn string, timeout time.Duration) (*acmpca.CertificateAuthority, error) {
+// waitCertificateAuthorityCreated waits for a CertificateAuthority to return Active or PendingCertificate
+func waitCertificateAuthorityCreated(conn *acmpca.ACMPCA, arn string, timeout time.Duration) (*acmpca.CertificateAuthority, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"", acmpca.CertificateAuthorityStatusCreating},
 		Target:  []string{acmpca.CertificateAuthorityStatusActive, acmpca.CertificateAuthorityStatusPendingCertificate},
-		Refresh: CertificateAuthorityStatus(conn, arn),
+		Refresh: statusCertificateAuthority(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -27,5 +27,5 @@ func CertificateAuthorityCreated(conn *acmpca.ACMPCA, arn string, timeout time.D
 }
 
 const (
-	CertificateAuthorityActiveTimeout = 1 * time.Minute
+	certificateAuthorityActiveTimeout = 1 * time.Minute
 )
