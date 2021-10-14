@@ -1,4 +1,4 @@
-package aws
+package amplify
 
 import (
 	"fmt"
@@ -9,30 +9,10 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tfamplify "github.com/hashicorp/terraform-provider-aws/aws/internal/service/amplify"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/amplify/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/amplify/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
-	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
-	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
-	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
-	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
-	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
-	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
-	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
-	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
-	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
-	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
-	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
-	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
-	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
-	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
-	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
-	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
 )
 
 func ResourceDomainAssociation() *schema.Resource {
@@ -110,7 +90,7 @@ func resourceDomainAssociationCreate(d *schema.ResourceData, meta interface{}) e
 
 	appID := d.Get("app_id").(string)
 	domainName := d.Get("domain_name").(string)
-	id := tfamplify.DomainAssociationCreateResourceID(appID, domainName)
+	id := DomainAssociationCreateResourceID(appID, domainName)
 
 	input := &amplify.CreateDomainAssociationInput{
 		AppId:             aws.String(appID),
@@ -127,12 +107,12 @@ func resourceDomainAssociationCreate(d *schema.ResourceData, meta interface{}) e
 
 	d.SetId(id)
 
-	if _, err := tfamplify.waitDomainAssociationCreated(conn, appID, domainName); err != nil {
+	if _, err := waitDomainAssociationCreated(conn, appID, domainName); err != nil {
 		return fmt.Errorf("error waiting for Amplify Domain Association (%s) to create: %w", d.Id(), err)
 	}
 
 	if d.Get("wait_for_verification").(bool) {
-		if _, err := tfamplify.waitDomainAssociationVerified(conn, appID, domainName); err != nil {
+		if _, err := waitDomainAssociationVerified(conn, appID, domainName); err != nil {
 			return fmt.Errorf("error waiting for Amplify Domain Association (%s) to verify: %w", d.Id(), err)
 		}
 	}
@@ -143,13 +123,13 @@ func resourceDomainAssociationCreate(d *schema.ResourceData, meta interface{}) e
 func resourceDomainAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AmplifyConn
 
-	appID, domainName, err := tfamplify.DomainAssociationParseResourceID(d.Id())
+	appID, domainName, err := DomainAssociationParseResourceID(d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error parsing Amplify Domain Association ID: %w", err)
 	}
 
-	domainAssociation, err := tfamplify.FindDomainAssociationByAppIDAndDomainName(conn, appID, domainName)
+	domainAssociation, err := FindDomainAssociationByAppIDAndDomainName(conn, appID, domainName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Amplify Domain Association (%s) not found, removing from state", d.Id())
@@ -175,7 +155,7 @@ func resourceDomainAssociationRead(d *schema.ResourceData, meta interface{}) err
 func resourceDomainAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AmplifyConn
 
-	appID, domainName, err := tfamplify.DomainAssociationParseResourceID(d.Id())
+	appID, domainName, err := DomainAssociationParseResourceID(d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error parsing Amplify Domain Association ID: %w", err)
@@ -197,7 +177,7 @@ func resourceDomainAssociationUpdate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if d.Get("wait_for_verification").(bool) {
-		if _, err := tfamplify.waitDomainAssociationVerified(conn, appID, domainName); err != nil {
+		if _, err := waitDomainAssociationVerified(conn, appID, domainName); err != nil {
 			return fmt.Errorf("error waiting for Amplify Domain Association (%s) to verify: %w", d.Id(), err)
 		}
 	}
@@ -208,7 +188,7 @@ func resourceDomainAssociationUpdate(d *schema.ResourceData, meta interface{}) e
 func resourceDomainAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AmplifyConn
 
-	appID, domainName, err := tfamplify.DomainAssociationParseResourceID(d.Id())
+	appID, domainName, err := DomainAssociationParseResourceID(d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error parsing Amplify Domain Association ID: %w", err)

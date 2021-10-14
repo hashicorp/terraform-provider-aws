@@ -1,4 +1,4 @@
-package aws
+package amplify
 
 import (
 	"context"
@@ -12,25 +12,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	tfamplify "github.com/hashicorp/terraform-provider-aws/aws/internal/service/amplify"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/amplify/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
-	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
-	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
-	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
-	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
-	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
-	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
-	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
-	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
-	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
-	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
-	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
 )
 
 func ResourceApp() *schema.Resource {
@@ -141,7 +127,7 @@ func ResourceApp() *schema.Resource {
 							ValidateFunc: validation.StringInSlice(amplify.Stage_Values(), false),
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 								// API returns "NONE" by default.
-								if old == tfamplify.StageNone && new == "" {
+								if old == StageNone && new == "" {
 									return true
 								}
 
@@ -426,7 +412,7 @@ func resourceAppRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	app, err := tfamplify.FindAppByID(conn, d.Id())
+	app, err := FindAppByID(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Amplify App (%s) not found, removing from state", d.Id())
@@ -653,7 +639,7 @@ func expandAmplifyAutoBranchCreationConfig(tfMap map[string]interface{}) *amplif
 		apiObject.PullRequestEnvironmentName = aws.String(v)
 	}
 
-	if v, ok := tfMap["stage"].(string); ok && v != "" && v != tfamplify.StageNone {
+	if v, ok := tfMap["stage"].(string); ok && v != "" && v != StageNone {
 		apiObject.Stage = aws.String(v)
 	}
 
