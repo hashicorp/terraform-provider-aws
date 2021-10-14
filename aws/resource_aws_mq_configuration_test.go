@@ -14,7 +14,7 @@ import (
 )
 
 func TestAccAWSMqConfiguration_basic(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -24,7 +24,7 @@ func TestAccAWSMqConfiguration_basic(t *testing.T) {
 			testAccPreCheckAWSMq(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, mq.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsMqConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -62,7 +62,7 @@ func TestAccAWSMqConfiguration_basic(t *testing.T) {
 }
 
 func TestAccAWSMqConfiguration_withData(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -72,7 +72,7 @@ func TestAccAWSMqConfiguration_withData(t *testing.T) {
 			testAccPreCheckAWSMq(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, mq.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsMqConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -97,7 +97,7 @@ func TestAccAWSMqConfiguration_withData(t *testing.T) {
 }
 
 func TestAccAWSMqConfiguration_withLdapData(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -107,7 +107,7 @@ func TestAccAWSMqConfiguration_withLdapData(t *testing.T) {
 			testAccPreCheckAWSMq(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, mq.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsMqConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -133,7 +133,7 @@ func TestAccAWSMqConfiguration_withLdapData(t *testing.T) {
 }
 
 func TestAccAWSMqConfiguration_updateTags(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -143,7 +143,7 @@ func TestAccAWSMqConfiguration_updateTags(t *testing.T) {
 			testAccPreCheckAWSMq(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, mq.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsMqConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -181,7 +181,7 @@ func TestAccAWSMqConfiguration_updateTags(t *testing.T) {
 }
 
 func testAccCheckAwsMqConfigurationDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).mqconn
+	conn := acctest.Provider.Meta().(*AWSClient).mqconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_mq_configuration" {
