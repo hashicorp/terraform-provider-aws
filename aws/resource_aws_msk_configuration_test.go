@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -31,7 +32,7 @@ func testSweepMskConfigurations(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).kafkaconn
+	conn := client.(*conns.AWSClient).KafkaConn
 	var sweeperErrs *multierror.Error
 
 	input := &kafka.ListConfigurationsInput{}
@@ -233,7 +234,7 @@ func TestAccAWSMskConfiguration_ServerProperties(t *testing.T) {
 }
 
 func testAccCheckMskConfigurationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).kafkaconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_msk_configuration" {
@@ -273,7 +274,7 @@ func testAccCheckMskConfigurationExists(resourceName string, configuration *kafk
 			return fmt.Errorf("Resource ID not set: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).kafkaconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn
 
 		input := &kafka.DescribeConfigurationInput{
 			Arn: aws.String(rs.Primary.ID),

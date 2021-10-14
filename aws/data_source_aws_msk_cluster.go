@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	tfkafka "github.com/hashicorp/terraform-provider-aws/aws/internal/service/kafka"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsMskCluster() *schema.Resource {
@@ -59,8 +60,8 @@ func dataSourceAwsMskCluster() *schema.Resource {
 }
 
 func dataSourceAwsMskClusterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kafkaconn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).KafkaConn
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	clusterName := d.Get("cluster_name").(string)
 	input := &kafka.ListClustersInput{

@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/kafka"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSMskKafkaVersionDataSource_basic(t *testing.T) {
@@ -51,7 +52,7 @@ func TestAccAWSMskKafkaVersionDataSource_preferred(t *testing.T) {
 }
 
 func testAccAWSMskKafkaVersionPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).kafkaconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn
 
 	input := &kafka.ListKafkaVersionsInput{}
 

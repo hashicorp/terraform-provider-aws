@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/kafka/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -29,7 +30,7 @@ func testSweepMskClusters(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).kafkaconn
+	conn := client.(*conns.AWSClient).KafkaConn
 	input := &kafka.ListClustersInput{}
 	sweepResources := make([]*testSweepResource, 0)
 
@@ -917,7 +918,7 @@ func TestAccAWSMskCluster_Tags(t *testing.T) {
 }
 
 func testAccCheckMskClusterDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).kafkaconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_msk_cluster" {
@@ -951,7 +952,7 @@ func testAccCheckMskClusterExists(n string, v *kafka.ClusterInfo) resource.TestC
 			return fmt.Errorf("No MSK Cluster ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).kafkaconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn
 
 		output, err := finder.ClusterByARN(conn, rs.Primary.ID)
 
@@ -986,7 +987,7 @@ func testAccCheckMskClusterRecreated(i, j *kafka.ClusterInfo) resource.TestCheck
 }
 
 func testAccPreCheckAWSMsk(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).kafkaconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn
 
 	input := &kafka.ListClustersInput{}
 

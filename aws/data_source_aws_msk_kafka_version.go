@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kafka"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsMskKafkaVersion() *schema.Resource {
@@ -60,7 +61,7 @@ func findMskKafkaVersion(preferredVersions []interface{}, versions []*kafka.Kafk
 }
 
 func dataSourceAwsMskKafkaVersionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kafkaconn
+	conn := meta.(*conns.AWSClient).KafkaConn
 
 	var kafkaVersions []*kafka.KafkaVersion
 

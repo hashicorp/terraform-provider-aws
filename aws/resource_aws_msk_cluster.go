@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/kafka/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/kafka/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsMskCluster() *schema.Resource {
@@ -380,8 +381,8 @@ func resourceAwsMskCluster() *schema.Resource {
 }
 
 func resourceAwsMskClusterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kafkaconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).KafkaConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("cluster_name").(string)
@@ -417,9 +418,9 @@ func resourceAwsMskClusterCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsMskClusterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kafkaconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).KafkaConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	cluster, err := finder.ClusterByARN(conn, d.Id())
 
@@ -498,7 +499,7 @@ func resourceAwsMskClusterRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsMskClusterUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kafkaconn
+	conn := meta.(*conns.AWSClient).KafkaConn
 
 	if d.HasChange("broker_node_group_info.0.ebs_volume_size") {
 		input := &kafka.UpdateBrokerStorageInput{
@@ -655,7 +656,7 @@ func resourceAwsMskClusterUpdate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsMskClusterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kafkaconn
+	conn := meta.(*conns.AWSClient).KafkaConn
 
 	log.Printf("[DEBUG] Deleting MSK Cluster: %s", d.Id())
 	_, err := conn.DeleteCluster(&kafka.DeleteClusterInput{
