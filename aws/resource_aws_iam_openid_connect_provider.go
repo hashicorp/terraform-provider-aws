@@ -66,8 +66,8 @@ func resourceAwsIamOpenIDConnectProviderCreate(d *schema.ResourceData, meta inte
 
 	input := &iam.CreateOpenIDConnectProviderInput{
 		Url:            aws.String(d.Get("url").(string)),
-		ClientIDList:   expandStringList(d.Get("client_id_list").([]interface{})),
-		ThumbprintList: expandStringList(d.Get("thumbprint_list").([]interface{})),
+		ClientIDList:   flex.ExpandStringList(d.Get("client_id_list").([]interface{})),
+		ThumbprintList: flex.ExpandStringList(d.Get("thumbprint_list").([]interface{})),
 		Tags:           tags.IgnoreAws().IamTags(),
 	}
 
@@ -101,8 +101,8 @@ func resourceAwsIamOpenIDConnectProviderRead(d *schema.ResourceData, meta interf
 
 	d.Set("arn", d.Id())
 	d.Set("url", out.Url)
-	d.Set("client_id_list", flattenStringList(out.ClientIDList))
-	d.Set("thumbprint_list", flattenStringList(out.ThumbprintList))
+	d.Set("client_id_list", flex.FlattenStringList(out.ClientIDList))
+	d.Set("thumbprint_list", flex.FlattenStringList(out.ThumbprintList))
 
 	tags := keyvaluetags.IamKeyValueTags(out.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
@@ -124,7 +124,7 @@ func resourceAwsIamOpenIDConnectProviderUpdate(d *schema.ResourceData, meta inte
 	if d.HasChange("thumbprint_list") {
 		input := &iam.UpdateOpenIDConnectProviderThumbprintInput{
 			OpenIDConnectProviderArn: aws.String(d.Id()),
-			ThumbprintList:           expandStringList(d.Get("thumbprint_list").([]interface{})),
+			ThumbprintList:           flex.ExpandStringList(d.Get("thumbprint_list").([]interface{})),
 		}
 
 		_, err := conn.UpdateOpenIDConnectProviderThumbprint(input)
