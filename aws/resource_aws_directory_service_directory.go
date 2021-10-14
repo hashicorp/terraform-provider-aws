@@ -9,11 +9,12 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/directoryservice/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/directoryservice/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceDirectory() *schema.Resource {
@@ -65,8 +66,8 @@ func ResourceDirectory() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 			"vpc_settings": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -185,7 +186,7 @@ func ResourceDirectory() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -239,7 +240,7 @@ func buildConnectSettings(d *schema.ResourceData) (connectSettings *directoryser
 
 func createDirectoryConnector(conn *directoryservice.DirectoryService, d *schema.ResourceData, meta interface{}) (directoryId string, err error) {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := directoryservice.ConnectDirectoryInput{
 		Name:     aws.String(d.Get("name").(string)),
@@ -277,7 +278,7 @@ func createDirectoryConnector(conn *directoryservice.DirectoryService, d *schema
 
 func createSimpleDirectoryService(conn *directoryservice.DirectoryService, d *schema.ResourceData, meta interface{}) (directoryId string, err error) {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := directoryservice.CreateDirectoryInput{
 		Name:     aws.String(d.Get("name").(string)),
@@ -315,7 +316,7 @@ func createSimpleDirectoryService(conn *directoryservice.DirectoryService, d *sc
 
 func createActiveDirectoryService(conn *directoryservice.DirectoryService, d *schema.ResourceData, meta interface{}) (directoryId string, err error) {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := directoryservice.CreateMicrosoftADInput{
 		Name:     aws.String(d.Get("name").(string)),
@@ -432,7 +433,7 @@ func resourceDirectoryUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := keyvaluetags.DirectoryserviceUpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := tftags.DirectoryserviceUpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating Directory Service Directory (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -490,7 +491,7 @@ func resourceDirectoryRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("security_group_id", dir.VpcSettings.SecurityGroupId)
 	}
 
-	tags, err := keyvaluetags.DirectoryserviceListTags(conn, d.Id())
+	tags, err := tftags.DirectoryserviceListTags(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Directory Service Directory (%s): %s", d.Id(), err)
