@@ -1,4 +1,4 @@
-package attrmap
+package sqs
 
 import (
 	"fmt"

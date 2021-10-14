@@ -1,4 +1,4 @@
-package aws
+package sqs_test
 
 import (
 	"fmt"
@@ -15,15 +15,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	awspolicy "github.com/jen20/awspolicyequivalence"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	tfsqs "github.com/hashicorp/terraform-provider-aws/aws/internal/service/sqs"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sqs/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfsqs "github.com/hashicorp/terraform-provider-aws/internal/service/sqs"
+	tfsqs "github.com/hashicorp/terraform-provider-aws/internal/service/sqs"
 	tfsqs "github.com/hashicorp/terraform-provider-aws/internal/service/sqs"
 	tfsqs "github.com/hashicorp/terraform-provider-aws/internal/service/sqs"
 	tfsqs "github.com/hashicorp/terraform-provider-aws/internal/service/sqs"

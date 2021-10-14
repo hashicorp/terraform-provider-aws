@@ -8,28 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	awspolicy "github.com/jen20/awspolicyequivalence"
-	tfjson "github.com/hashicorp/terraform-provider-aws/aws/internal/json"
-	tfsqs "github.com/hashicorp/terraform-provider-aws/aws/internal/service/sqs"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sqs/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfsqs "github.com/hashicorp/terraform-provider-aws/internal/service/sqs"
-	tfsqs "github.com/hashicorp/terraform-provider-aws/internal/service/sqs"
-	tfsqs "github.com/hashicorp/terraform-provider-aws/internal/service/sqs"
-	tfsqs "github.com/hashicorp/terraform-provider-aws/internal/service/sqs"
-	tfsqs "github.com/hashicorp/terraform-provider-aws/internal/service/sqs"
-	tfsqs "github.com/hashicorp/terraform-provider-aws/internal/service/sqs"
-	tfsqs "github.com/hashicorp/terraform-provider-aws/internal/service/sqs"
-	tfsqs "github.com/hashicorp/terraform-provider-aws/internal/service/sqs"
-	tfsqs "github.com/hashicorp/terraform-provider-aws/internal/service/sqs"
-	tfsqs "github.com/hashicorp/terraform-provider-aws/internal/service/sqs"
-	tfsqs "github.com/hashicorp/terraform-provider-aws/internal/service/sqs"
-	tfsqs "github.com/hashicorp/terraform-provider-aws/internal/service/sqs"
-	tfsqs "github.com/hashicorp/terraform-provider-aws/internal/service/sqs"
-	tfsqs "github.com/hashicorp/terraform-provider-aws/internal/service/sqs"
-	tfsqs "github.com/hashicorp/terraform-provider-aws/internal/service/sqs"
-	tfsqs "github.com/hashicorp/terraform-provider-aws/internal/service/sqs"
-	tfsqs "github.com/hashicorp/terraform-provider-aws/internal/service/sqs"
 )
 
 const (
@@ -61,7 +42,7 @@ func waitQueueAttributesPropagated(conn *sqs.SQS, url string, expected map[strin
 				}
 
 				// Backwards compatibility: https://github.com/hashicorp/terraform-provider-aws/issues/19786.
-				if k == sqs.QueueAttributeNameKmsDataKeyReusePeriodSeconds && e == strconv.Itoa(tfsqs.DefaultQueueKMSDataKeyReusePeriodSeconds) {
+				if k == sqs.QueueAttributeNameKmsDataKeyReusePeriodSeconds && e == strconv.Itoa(DefaultQueueKMSDataKeyReusePeriodSeconds) {
 					continue
 				}
 
@@ -97,7 +78,7 @@ func waitQueueAttributesPropagated(conn *sqs.SQS, url string, expected map[strin
 	err := resource.Retry(queueAttributePropagationTimeout, func() *resource.RetryError {
 		var err error
 
-		got, err = tfsqs.FindQueueAttributesByURL(conn, url)
+		got, err = FindQueueAttributesByURL(conn, url)
 
 		if err != nil {
 			return resource.NonRetryableError(err)
@@ -113,7 +94,7 @@ func waitQueueAttributesPropagated(conn *sqs.SQS, url string, expected map[strin
 	})
 
 	if tfresource.TimedOut(err) {
-		got, err = tfsqs.FindQueueAttributesByURL(conn, url)
+		got, err = FindQueueAttributesByURL(conn, url)
 
 		if err != nil {
 			return err

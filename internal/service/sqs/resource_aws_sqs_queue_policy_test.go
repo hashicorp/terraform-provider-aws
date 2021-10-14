@@ -1,4 +1,4 @@
-package aws
+package sqs_test
 
 import (
 	"fmt"
