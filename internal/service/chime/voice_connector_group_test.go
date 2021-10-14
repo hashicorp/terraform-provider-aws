@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfchime "github.com/hashicorp/terraform-provider-aws/internal/service/chime"
 )
 
 func TestAccAWSChimeVoiceConnectorGroup_basic(t *testing.T) {
@@ -59,7 +60,7 @@ func TestAccAWSChimeVoiceConnectorGroup_disappears(t *testing.T) {
 				Config: testAccAWSChimeVoiceConnectorGroupConfig(vcgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSChimeVoiceConnectorGroupExists(resourceName, voiceConnectorGroup),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceVoiceConnectorGroup(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfchime.ResourceVoiceConnectorGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

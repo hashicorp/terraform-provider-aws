@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfchime "github.com/hashicorp/terraform-provider-aws/internal/service/chime"
 )
 
 func TestAccAWSChimeVoiceConnectorTerminationCredentials_basic(t *testing.T) {
@@ -55,7 +56,7 @@ func TestAccAWSChimeVoiceConnectorTerminationCredentials_disappears(t *testing.T
 				Config: testAccAWSChimeVoiceConnectorTerminationCredentialsConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSChimeVoiceConnectorTerminationCredentialsExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceVoiceConnectorTerminationCredentials(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfchime.ResourceVoiceConnectorTerminationCredentials(), resourceName),
 				),
 				ExpectNonEmptyPlan: false,
 			},
