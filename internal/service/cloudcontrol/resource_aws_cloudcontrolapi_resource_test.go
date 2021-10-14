@@ -18,6 +18,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfcloudcontrol "github.com/hashicorp/terraform-provider-aws/internal/service/cloudcontrol"
+	tfcloudcontrol "github.com/hashicorp/terraform-provider-aws/internal/service/cloudcontrol"
 )
 
 func init() {
@@ -479,7 +481,7 @@ func testAccCheckAwsCloudControlApiResourceDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.ResourceByID(context.TODO(), conn, rs.Primary.ID, rs.Primary.Attributes["type_name"], "", "")
+		_, err := tfcloudcontrol.FindResourceByID(context.TODO(), conn, rs.Primary.ID, rs.Primary.Attributes["type_name"], "", "")
 
 		if tfresource.NotFound(err) {
 			continue
