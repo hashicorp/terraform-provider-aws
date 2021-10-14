@@ -1,4 +1,4 @@
-package aws
+package nas
 
 import (
 	"encoding/json"

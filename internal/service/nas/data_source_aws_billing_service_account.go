@@ -1,4 +1,4 @@
-package aws
+package nas
 
 import (
 	"github.com/aws/aws-sdk-go/aws/arn"
