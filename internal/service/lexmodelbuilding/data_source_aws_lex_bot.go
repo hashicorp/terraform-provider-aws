@@ -1,4 +1,4 @@
-package aws
+package lexmodelbuilding
 
 import (
 	"fmt"
@@ -6,16 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	tflex "github.com/hashicorp/terraform-provider-aws/aws/internal/service/lex"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/lex/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
-	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
-	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
-	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
-	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
 )
 
 func DataSourceBot() *schema.Resource {
@@ -83,7 +76,7 @@ func DataSourceBot() *schema.Resource {
 			"version": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      tflexmodelbuilding.BotVersionLatest,
+				Default:      BotVersionLatest,
 				ValidateFunc: validateLexBotVersion,
 			},
 			"voice_id": {
@@ -99,7 +92,7 @@ func dataSourceBotRead(d *schema.ResourceData, meta interface{}) error {
 
 	name := d.Get("name").(string)
 	version := d.Get("version").(string)
-	output, err := tflexmodelbuilding.FindBotVersionByName(conn, name, version)
+	output, err := FindBotVersionByName(conn, name, version)
 
 	if err != nil {
 		return fmt.Errorf("error reading Lex Bot (%s/%s): %w", name, version, err)

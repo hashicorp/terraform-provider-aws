@@ -7,11 +7,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	tflex "github.com/hashicorp/terraform-provider-aws/aws/internal/service/lex"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
-	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
 )
 
 func FindBotVersionByName(conn *lexmodelbuildingservice.LexModelBuildingService, name, version string) (*lexmodelbuildingservice.GetBotOutput, error) {
@@ -56,7 +53,7 @@ func FindLatestBotVersionByName(conn *lexmodelbuildingservice.LexModelBuildingSe
 		for _, bot := range page.Bots {
 			version := aws.StringValue(bot.Version)
 
-			if version == tflexmodelbuilding.BotVersionLatest {
+			if version == BotVersionLatest {
 				continue
 			}
 
@@ -75,7 +72,7 @@ func FindLatestBotVersionByName(conn *lexmodelbuildingservice.LexModelBuildingSe
 	}
 
 	if latestVersion == 0 {
-		return tflexmodelbuilding.BotVersionLatest, nil
+		return BotVersionLatest, nil
 	}
 
 	return strconv.Itoa(latestVersion), nil
@@ -97,7 +94,7 @@ func FindLatestIntentVersionByName(conn *lexmodelbuildingservice.LexModelBuildin
 		for _, intent := range page.Intents {
 			version := aws.StringValue(intent.Version)
 
-			if version == tflexmodelbuilding.IntentVersionLatest {
+			if version == IntentVersionLatest {
 				continue
 			}
 
@@ -116,7 +113,7 @@ func FindLatestIntentVersionByName(conn *lexmodelbuildingservice.LexModelBuildin
 	}
 
 	if latestVersion == 0 {
-		return tflexmodelbuilding.IntentVersionLatest, nil
+		return IntentVersionLatest, nil
 	}
 
 	return strconv.Itoa(latestVersion), nil

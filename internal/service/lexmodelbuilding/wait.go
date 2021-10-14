@@ -7,11 +7,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	tflex "github.com/hashicorp/terraform-provider-aws/aws/internal/service/lex"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
-	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
 )
 
 const (
@@ -53,7 +50,7 @@ func waitBotDeleted(conn *lexmodelbuildingservice.LexModelBuildingService, name 
 			lexmodelbuildingservice.StatusReadyBasicTesting,
 		},
 		Target:  []string{},
-		Refresh: statusBotVersion(conn, name, tflexmodelbuilding.BotVersionLatest),
+		Refresh: statusBotVersion(conn, name, BotVersionLatest),
 		Timeout: timeout,
 	}
 

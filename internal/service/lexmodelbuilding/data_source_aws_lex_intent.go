@@ -1,4 +1,4 @@
-package aws
+package lexmodelbuilding
 
 import (
 	"fmt"
@@ -10,12 +10,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tflex "github.com/hashicorp/terraform-provider-aws/aws/internal/service/lex"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
-	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
 )
 
 func DataSourceIntent() *schema.Resource {
@@ -58,7 +55,7 @@ func DataSourceIntent() *schema.Resource {
 			"version": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  tflexmodelbuilding.IntentVersionLatest,
+				Default:  IntentVersionLatest,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 64),
 					validation.StringMatch(regexp.MustCompile(`\$LATEST|[0-9]+`), ""),
