@@ -10,8 +10,9 @@ package eks_test
 
 import (
 	"fmt"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
 	"testing"
+
+	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
 )
 
 var arnTests = []struct {
