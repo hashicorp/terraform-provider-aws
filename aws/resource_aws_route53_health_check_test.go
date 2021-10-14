@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -36,7 +37,7 @@ func testSweepRoute53Healthchecks(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*AWSClient).r53conn
+	conn := client.(*conns.AWSClient).Route53Conn
 	sweepResources := make([]*testSweepResource, 0)
 	var errs *multierror.Error
 
@@ -457,7 +458,7 @@ func TestAccAWSRoute53HealthCheck_disappears(t *testing.T) {
 }
 
 func testAccCheckRoute53HealthCheckDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).r53conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route53_health_check" {
@@ -491,7 +492,7 @@ func testAccCheckRoute53HealthCheckExists(n string, v *route53.HealthCheck) reso
 			return fmt.Errorf("No Route53 Health Check ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).r53conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn
 
 		output, err := finder.HealthCheckByID(conn, rs.Primary.ID)
 

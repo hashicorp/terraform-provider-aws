@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestCleanZoneID(t *testing.T) {
@@ -111,7 +112,7 @@ func testSweepRoute53Zones(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*AWSClient).r53conn
+	conn := client.(*conns.AWSClient).Route53Conn
 	sweepResources := make([]*testSweepResource, 0)
 	var errs *multierror.Error
 
@@ -530,7 +531,7 @@ func testAccCheckRoute53ZoneDestroy(s *terraform.State) error {
 }
 
 func testAccCheckRoute53ZoneDestroyWithProvider(s *terraform.State, provider *schema.Provider) error {
-	conn := provider.Meta().(*AWSClient).r53conn
+	conn := provider.Meta().(*conns.AWSClient).Route53Conn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route53_zone" {
 			continue
@@ -551,7 +552,7 @@ func testAccCreateRandomRoute53RecordsInZoneId(zone *route53.GetHostedZoneOutput
 func testAccCreateRandomRoute53RecordsInZoneIdWithProvider(providerF func() *schema.Provider, zone *route53.GetHostedZoneOutput, recordsCount int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		provider := providerF()
-		conn := provider.Meta().(*AWSClient).r53conn
+		conn := provider.Meta().(*conns.AWSClient).Route53Conn
 
 		var changes []*route53.Change
 		if recordsCount > 100 {
@@ -605,7 +606,7 @@ func testAccCheckRoute53ZoneExistsWithProvider(n string, zone *route53.GetHosted
 		}
 
 		provider := providerF()
-		conn := provider.Meta().(*AWSClient).r53conn
+		conn := provider.Meta().(*conns.AWSClient).Route53Conn
 		resp, err := conn.GetHostedZone(&route53.GetHostedZoneInput{Id: aws.String(rs.Primary.ID)})
 		if err != nil {
 			return fmt.Errorf("Hosted zone err: %v", err)
@@ -639,7 +640,7 @@ func testAccCheckRoute53ZoneExistsWithProvider(n string, zone *route53.GetHosted
 
 func testAccCheckRoute53ZoneDisappears(zone *route53.GetHostedZoneOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).r53conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn
 
 		input := &route53.DeleteHostedZoneInput{
 			Id: zone.HostedZone.Id,

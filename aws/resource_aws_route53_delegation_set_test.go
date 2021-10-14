@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSRoute53DelegationSet_basic(t *testing.T) {
@@ -102,7 +103,7 @@ func TestAccAWSRoute53DelegationSet_disappears(t *testing.T) {
 }
 
 func testAccCheckRoute53DelegationSetDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).r53conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route53_delegation_set" {
 			continue
@@ -118,7 +119,7 @@ func testAccCheckRoute53DelegationSetDestroy(s *terraform.State) error {
 
 func testAccCheckRoute53DelegationSetExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).r53conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
@@ -147,7 +148,7 @@ func testAccCheckRoute53DelegationSetExists(n string) resource.TestCheckFunc {
 
 func testAccCheckRoute53NameServersMatch(delegationSetName, zoneName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).r53conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn
 
 		delegationSetLocal, ok := s.RootModule().Resources[delegationSetName]
 		if !ok {

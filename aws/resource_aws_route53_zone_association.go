@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsRoute53ZoneAssociation() *schema.Resource {
@@ -51,9 +52,9 @@ func resourceAwsRoute53ZoneAssociation() *schema.Resource {
 }
 
 func resourceAwsRoute53ZoneAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).r53conn
+	conn := meta.(*conns.AWSClient).Route53Conn
 
-	vpcRegion := meta.(*AWSClient).region
+	vpcRegion := meta.(*conns.AWSClient).Region
 	vpcID := d.Get("vpc_id").(string)
 	zoneID := d.Get("zone_id").(string)
 
@@ -97,7 +98,7 @@ func resourceAwsRoute53ZoneAssociationCreate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsRoute53ZoneAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).r53conn
+	conn := meta.(*conns.AWSClient).Route53Conn
 
 	zoneID, vpcID, vpcRegion, err := resourceAwsRoute53ZoneAssociationParseId(d.Id())
 
@@ -111,7 +112,7 @@ func resourceAwsRoute53ZoneAssociationRead(d *schema.ResourceData, meta interfac
 	}
 
 	if vpcRegion == "" {
-		vpcRegion = meta.(*AWSClient).region
+		vpcRegion = meta.(*conns.AWSClient).Region
 	}
 
 	hostedZoneSummary, err := route53GetZoneAssociation(conn, zoneID, vpcID, vpcRegion)
@@ -145,7 +146,7 @@ func resourceAwsRoute53ZoneAssociationRead(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsRoute53ZoneAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).r53conn
+	conn := meta.(*conns.AWSClient).Route53Conn
 
 	zoneID, vpcID, vpcRegion, err := resourceAwsRoute53ZoneAssociationParseId(d.Id())
 
@@ -159,7 +160,7 @@ func resourceAwsRoute53ZoneAssociationDelete(d *schema.ResourceData, meta interf
 	}
 
 	if vpcRegion == "" {
-		vpcRegion = meta.(*AWSClient).region
+		vpcRegion = meta.(*conns.AWSClient).Region
 	}
 
 	input := &route53.DisassociateVPCFromHostedZoneInput{

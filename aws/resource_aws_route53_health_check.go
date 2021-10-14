@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsRoute53HealthCheck() *schema.Resource {
@@ -187,8 +188,8 @@ func resourceAwsRoute53HealthCheck() *schema.Resource {
 }
 
 func resourceAwsRoute53HealthCheckCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).r53conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).Route53Conn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	healthCheckType := d.Get("type").(string)
@@ -302,9 +303,9 @@ func resourceAwsRoute53HealthCheckCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsRoute53HealthCheckRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).r53conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).Route53Conn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	output, err := finder.HealthCheckByID(conn, d.Id())
 
@@ -365,7 +366,7 @@ func resourceAwsRoute53HealthCheckRead(d *schema.ResourceData, meta interface{})
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "route53",
 		Resource:  fmt.Sprintf("healthcheck/%s", d.Id()),
 	}.String()
@@ -375,7 +376,7 @@ func resourceAwsRoute53HealthCheckRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsRoute53HealthCheckUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).r53conn
+	conn := meta.(*conns.AWSClient).Route53Conn
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		updateHealthCheck := &route53.UpdateHealthCheckInput{
@@ -462,7 +463,7 @@ func resourceAwsRoute53HealthCheckUpdate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsRoute53HealthCheckDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).r53conn
+	conn := meta.(*conns.AWSClient).Route53Conn
 
 	log.Printf("[DEBUG] Deleting Route53 Health Check: %s", d.Id())
 	_, err := conn.DeleteHealthCheck(&route53.DeleteHealthCheckInput{HealthCheckId: aws.String(d.Id())})

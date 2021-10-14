@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -1082,7 +1083,7 @@ func testAccAWSRoute53RecordOverwriteExpectErrorCheck(t *testing.T) resource.Err
 }
 
 func testAccCheckRoute53RecordDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).r53conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route53_record" {
 			continue
@@ -1124,7 +1125,7 @@ func testAccCheckRoute53RecordDestroy(s *terraform.State) error {
 
 func testAccCheckRoute53RecordDisappears(zone *route53.GetHostedZoneOutput, resourceRecordSet *route53.ResourceRecordSet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).r53conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn
 
 		input := &route53.ChangeResourceRecordSetsInput{
 			HostedZoneId: zone.HostedZone.Id,
@@ -1159,7 +1160,7 @@ func testAccCheckRoute53RecordDisappears(zone *route53.GetHostedZoneOutput, reso
 
 func testAccCheckRoute53RecordExists(n string, resourceRecordSet *route53.ResourceRecordSet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).r53conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
@@ -1205,7 +1206,7 @@ func testAccCheckRoute53RecordExists(n string, resourceRecordSet *route53.Resour
 
 func testAccCheckRoute53RecordDoesNotExist(zoneResourceName string, recordName string, recordType string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).r53conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn
 		zoneResource, ok := s.RootModule().Resources[zoneResourceName]
 		if !ok {
 			return fmt.Errorf("Not found: %s", zoneResourceName)
