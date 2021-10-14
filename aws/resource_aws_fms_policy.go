@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/fms"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsFmsPolicy() *schema.Resource {
@@ -147,7 +148,7 @@ func resourceAwsFmsPolicy() *schema.Resource {
 }
 
 func resourceAwsFmsPolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).fmsconn
+	conn := meta.(*conns.AWSClient).FMSConn
 
 	fmsPolicy := resourceAwsFmsPolicyExpandPolicy(d)
 
@@ -170,7 +171,7 @@ func resourceAwsFmsPolicyCreate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceAwsFmsPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).fmsconn
+	conn := meta.(*conns.AWSClient).FMSConn
 
 	var resp *fms.GetPolicyOutput
 	var req = &fms.GetPolicyInput{
@@ -259,7 +260,7 @@ func resourceAwsFmsPolicyExpandPolicy(d *schema.ResourceData) *fms.Policy {
 }
 
 func resourceAwsFmsPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).fmsconn
+	conn := meta.(*conns.AWSClient).FMSConn
 
 	fmsPolicy := resourceAwsFmsPolicyExpandPolicy(d)
 
@@ -274,7 +275,7 @@ func resourceAwsFmsPolicyUpdate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceAwsFmsPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).fmsconn
+	conn := meta.(*conns.AWSClient).FMSConn
 	log.Printf("[DEBUG] Delete FMS Policy: %s", d.Id())
 
 	_, err := conn.DeletePolicy(&fms.DeletePolicyInput{

@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsFmsAdminAccount() *schema.Resource {
@@ -35,7 +36,7 @@ func resourceAwsFmsAdminAccount() *schema.Resource {
 }
 
 func resourceAwsFmsAdminAccountCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).fmsconn
+	conn := meta.(*conns.AWSClient).FMSConn
 
 	// Ensure there is not an existing FMS Admin Account
 	output, err := conn.GetAdminAccount(&fms.GetAdminAccountInput{})
@@ -48,7 +49,7 @@ func resourceAwsFmsAdminAccountCreate(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("FMS Admin Account (%s) already associated: import this Terraform resource to manage", aws.StringValue(output.AdminAccount))
 	}
 
-	accountID := meta.(*AWSClient).accountid
+	accountID := meta.(*conns.AWSClient).AccountID
 
 	if v, ok := d.GetOk("account_id"); ok {
 		accountID = v.(string)
@@ -109,7 +110,7 @@ func associateFmsAdminAccountRefreshFunc(conn *fms.FMS, accountId string) resour
 }
 
 func resourceAwsFmsAdminAccountRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).fmsconn
+	conn := meta.(*conns.AWSClient).FMSConn
 
 	output, err := conn.GetAdminAccount(&fms.GetAdminAccountInput{})
 
@@ -139,7 +140,7 @@ func resourceAwsFmsAdminAccountRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsFmsAdminAccountDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).fmsconn
+	conn := meta.(*conns.AWSClient).FMSConn
 
 	_, err := conn.DisassociateAdminAccount(&fms.DisassociateAdminAccountInput{})
 

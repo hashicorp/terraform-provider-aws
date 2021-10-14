@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func testAccAWSFmsPolicy_basic(t *testing.T) {
@@ -178,7 +179,7 @@ func testAccAWSFmsPolicy_tags(t *testing.T) {
 }
 
 func testAccCheckAwsFmsPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).fmsconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).FMSConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_fms_policy" {

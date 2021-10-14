@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func testAccAwsFmsAdminAccount_basic(t *testing.T) {
@@ -35,7 +36,7 @@ func testAccAwsFmsAdminAccount_basic(t *testing.T) {
 }
 
 func testAccCheckFmsAdminAccountDestroy(s *terraform.State) error {
-	conn := testAccProviderFmsAdmin.Meta().(*AWSClient).fmsconn
+	conn := testAccProviderFmsAdmin.Meta().(*conns.AWSClient).FMSConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_fms_admin_account" {
