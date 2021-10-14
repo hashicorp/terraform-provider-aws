@@ -6,16 +6,17 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lambda"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSLambdaAlias_basic(t *testing.T) {
 	var conf lambda.AliasConfiguration
 	resourceName := "aws_lambda_alias.test"
 
-	rString := acctest.RandString(8)
+	rString := sdkacctest.RandString(8)
 	roleName := fmt.Sprintf("tf_acc_role_lambda_alias_basic_%s", rString)
 	policyName := fmt.Sprintf("tf_acc_policy_lambda_alias_basic_%s", rString)
 	attachmentName := fmt.Sprintf("tf_acc_attachment_%s", rString)
@@ -25,8 +26,8 @@ func TestAccAWSLambdaAlias_basic(t *testing.T) {
 	functionArnResourcePart := fmt.Sprintf("function:%s:%s", funcName, aliasName)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsLambdaAliasDestroy,
 		Steps: []resource.TestStep{
@@ -36,7 +37,7 @@ func TestAccAWSLambdaAlias_basic(t *testing.T) {
 					testAccCheckAwsLambdaAliasExists(resourceName, &conf),
 					testAccCheckAwsLambdaAliasAttributes(&conf),
 					testAccCheckAwsLambdaAliasRoutingConfigDoesNotExist(&conf),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "lambda", functionArnResourcePart),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", functionArnResourcePart),
 					testAccCheckAwsLambdaAliasInvokeArn(resourceName, &conf),
 				),
 			},
@@ -58,11 +59,11 @@ func TestAccAWSLambdaAlias_FunctionName_Name(t *testing.T) {
 	var conf lambda.AliasConfiguration
 
 	resourceName := "aws_lambda_alias.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsLambdaAliasDestroy,
 		Steps: []resource.TestStep{
@@ -72,7 +73,7 @@ func TestAccAWSLambdaAlias_FunctionName_Name(t *testing.T) {
 					testAccCheckAwsLambdaAliasExists(resourceName, &conf),
 					testAccCheckAwsLambdaAliasAttributes(&conf),
 					testAccCheckAwsLambdaAliasRoutingConfigDoesNotExist(&conf),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s:%s", rName, rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s:%s", rName, rName)),
 					testAccCheckAwsLambdaAliasInvokeArn(resourceName, &conf),
 				),
 			},
@@ -90,20 +91,20 @@ func TestAccAWSLambdaAlias_nameupdate(t *testing.T) {
 	var conf lambda.AliasConfiguration
 	resourceName := "aws_lambda_alias.test"
 
-	rString := acctest.RandString(8)
+	rString := sdkacctest.RandString(8)
 	roleName := fmt.Sprintf("tf_acc_role_lambda_alias_basic_%s", rString)
 	policyName := fmt.Sprintf("tf_acc_policy_lambda_alias_basic_%s", rString)
 	attachmentName := fmt.Sprintf("tf_acc_attachment_%s", rString)
 	funcName := fmt.Sprintf("tf_acc_lambda_func_alias_basic_%s", rString)
 	aliasName := fmt.Sprintf("tf_acc_lambda_alias_basic_%s", rString)
-	aliasNameUpdate := fmt.Sprintf("tf_acc_lambda_alias_basic_%s", acctest.RandString(8))
+	aliasNameUpdate := fmt.Sprintf("tf_acc_lambda_alias_basic_%s", sdkacctest.RandString(8))
 
 	functionArnResourcePart := fmt.Sprintf("function:%s:%s", funcName, aliasName)
 	functionArnResourcePartUpdate := fmt.Sprintf("function:%s:%s", funcName, aliasNameUpdate)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsLambdaAliasDestroy,
 		Steps: []resource.TestStep{
@@ -112,7 +113,7 @@ func TestAccAWSLambdaAlias_nameupdate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLambdaAliasExists(resourceName, &conf),
 					testAccCheckAwsLambdaAliasAttributes(&conf),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "lambda", functionArnResourcePart),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", functionArnResourcePart),
 				),
 			},
 			{
@@ -126,7 +127,7 @@ func TestAccAWSLambdaAlias_nameupdate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLambdaAliasExists(resourceName, &conf),
 					testAccCheckAwsLambdaAliasAttributes(&conf),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "lambda", functionArnResourcePartUpdate),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", functionArnResourcePartUpdate),
 				),
 			},
 		},
@@ -137,7 +138,7 @@ func TestAccAWSLambdaAlias_routingconfig(t *testing.T) {
 	var conf lambda.AliasConfiguration
 	resourceName := "aws_lambda_alias.test"
 
-	rString := acctest.RandString(8)
+	rString := sdkacctest.RandString(8)
 	roleName := fmt.Sprintf("tf_acc_role_lambda_alias_basic_%s", rString)
 	policyName := fmt.Sprintf("tf_acc_policy_lambda_alias_basic_%s", rString)
 	attachmentName := fmt.Sprintf("tf_acc_attachment_%s", rString)
@@ -147,8 +148,8 @@ func TestAccAWSLambdaAlias_routingconfig(t *testing.T) {
 	functionArnResourcePart := fmt.Sprintf("function:%s:%s", funcName, aliasName)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsLambdaAliasDestroy,
 		Steps: []resource.TestStep{
@@ -157,7 +158,7 @@ func TestAccAWSLambdaAlias_routingconfig(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLambdaAliasExists(resourceName, &conf),
 					testAccCheckAwsLambdaAliasAttributes(&conf),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "lambda", functionArnResourcePart),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", functionArnResourcePart),
 				),
 			},
 			{
@@ -172,7 +173,7 @@ func TestAccAWSLambdaAlias_routingconfig(t *testing.T) {
 					testAccCheckAwsLambdaAliasExists(resourceName, &conf),
 					testAccCheckAwsLambdaAliasAttributes(&conf),
 					testAccCheckAwsLambdaAliasRoutingConfigExists(&conf),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "lambda", functionArnResourcePart),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", functionArnResourcePart),
 				),
 			},
 			{
@@ -181,7 +182,7 @@ func TestAccAWSLambdaAlias_routingconfig(t *testing.T) {
 					testAccCheckAwsLambdaAliasExists(resourceName, &conf),
 					testAccCheckAwsLambdaAliasAttributes(&conf),
 					testAccCheckAwsLambdaAliasRoutingConfigDoesNotExist(&conf),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "lambda", functionArnResourcePart),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", functionArnResourcePart),
 				),
 			},
 		},
@@ -255,7 +256,7 @@ func testAccCheckAwsLambdaAliasAttributes(mapping *lambda.AliasConfiguration) re
 func testAccCheckAwsLambdaAliasInvokeArn(name string, mapping *lambda.AliasConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		arn := aws.StringValue(mapping.AliasArn)
-		return testAccCheckResourceAttrRegionalARNAccountID(name, "invoke_arn", "apigateway", "lambda", fmt.Sprintf("path/2015-03-31/functions/%s/invocations", arn))(s)
+		return acctest.CheckResourceAttrRegionalARNAccountID(name, "invoke_arn", "apigateway", "lambda", fmt.Sprintf("path/2015-03-31/functions/%s/invocations", arn))(s)
 	}
 }
 
@@ -347,7 +348,7 @@ resource "aws_iam_policy_attachment" "policy_attachment_for_role" {
 }
 
 func testAccAwsLambdaAliasConfig(roleName, policyName, attachmentName, funcName, aliasName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAwsLambdaAliasBaseConfig(roleName, policyName, attachmentName),
 		fmt.Sprintf(`
 resource "aws_lambda_function" "test" {
@@ -370,7 +371,7 @@ resource "aws_lambda_alias" "test" {
 }
 
 func testAccAwsLambdaAliasConfigUsingFunctionName(roleName, policyName, attachmentName, funcName, aliasName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAwsLambdaAliasBaseConfig(roleName, policyName, attachmentName),
 		fmt.Sprintf(`
 resource "aws_lambda_function" "test" {
@@ -393,7 +394,7 @@ resource "aws_lambda_alias" "test" {
 }
 
 func testAccAwsLambdaAliasConfigWithRoutingConfig(roleName, policyName, attachmentName, funcName, aliasName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAwsLambdaAliasBaseConfig(roleName, policyName, attachmentName),
 		fmt.Sprintf(`
 resource "aws_lambda_function" "test" {

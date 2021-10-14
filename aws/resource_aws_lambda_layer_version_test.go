@@ -8,9 +8,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lambda"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -65,11 +66,11 @@ func testSweepLambdaLayerVersions(region string) error {
 
 func TestAccAWSLambdaLayerVersion_basic(t *testing.T) {
 	resourceName := "aws_lambda_layer_version.lambda_layer_test"
-	layerName := fmt.Sprintf("tf_acc_lambda_layer_basic_%s", acctest.RandString(8))
+	layerName := fmt.Sprintf("tf_acc_lambda_layer_basic_%s", sdkacctest.RandString(8))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaLayerVersionDestroy,
 		Steps: []resource.TestStep{
@@ -77,12 +78,12 @@ func TestAccAWSLambdaLayerVersion_basic(t *testing.T) {
 				Config: testAccAWSLambdaLayerVersionBasic(layerName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLambdaLayerVersionExists(resourceName, layerName),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("layer:%s:1", layerName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("layer:%s:1", layerName)),
 					resource.TestCheckResourceAttr(resourceName, "compatible_runtimes.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "layer_name", layerName),
 					resource.TestCheckResourceAttr(resourceName, "license_info", ""),
-					testAccCheckResourceAttrRegionalARN(resourceName, "layer_arn", "lambda", fmt.Sprintf("layer:%s", layerName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "layer_arn", "lambda", fmt.Sprintf("layer:%s", layerName)),
 					resource.TestCheckResourceAttr(resourceName, "version", "1"),
 					resource.TestCheckResourceAttr(resourceName, "signing_profile_version_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "signing_job_arn", ""),
@@ -101,11 +102,11 @@ func TestAccAWSLambdaLayerVersion_basic(t *testing.T) {
 
 func TestAccAWSLambdaLayerVersion_update(t *testing.T) {
 	resourceName := "aws_lambda_layer_version.lambda_layer_test"
-	layerName := fmt.Sprintf("tf_acc_lambda_layer_basic_%s", acctest.RandString(8))
+	layerName := fmt.Sprintf("tf_acc_lambda_layer_basic_%s", sdkacctest.RandString(8))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaLayerVersionDestroy,
 		Steps: []resource.TestStep{
@@ -131,13 +132,13 @@ func TestAccAWSLambdaLayerVersion_update(t *testing.T) {
 
 func TestAccAWSLambdaLayerVersion_s3(t *testing.T) {
 	resourceName := "aws_lambda_layer_version.lambda_layer_test"
-	rString := acctest.RandString(8)
+	rString := sdkacctest.RandString(8)
 	layerName := fmt.Sprintf("tf_acc_lambda_layer_s3_%s", rString)
 	bucketName := fmt.Sprintf("tf-acc-bucket-lambda-layer-s3-%s", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaLayerVersionDestroy,
 		Steps: []resource.TestStep{
@@ -158,12 +159,12 @@ func TestAccAWSLambdaLayerVersion_s3(t *testing.T) {
 
 func TestAccAWSLambdaLayerVersion_compatibleRuntimes(t *testing.T) {
 	resourceName := "aws_lambda_layer_version.lambda_layer_test"
-	rString := acctest.RandString(8)
+	rString := sdkacctest.RandString(8)
 	layerName := fmt.Sprintf("tf_acc_lambda_layer_runtimes_%s", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaLayerVersionDestroy,
 		Steps: []resource.TestStep{
@@ -187,12 +188,12 @@ func TestAccAWSLambdaLayerVersion_compatibleRuntimes(t *testing.T) {
 
 func TestAccAWSLambdaLayerVersion_compatibleArchitectures(t *testing.T) {
 	resourceName := "aws_lambda_layer_version.lambda_layer_test"
-	rString := acctest.RandString(8)
+	rString := sdkacctest.RandString(8)
 	layerName := fmt.Sprintf("tf_acc_lambda_layer_architectures_%s", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaLayerVersionDestroy,
 		Steps: []resource.TestStep{
@@ -238,13 +239,13 @@ func TestAccAWSLambdaLayerVersion_compatibleArchitectures(t *testing.T) {
 
 func TestAccAWSLambdaLayerVersion_description(t *testing.T) {
 	resourceName := "aws_lambda_layer_version.lambda_layer_test"
-	rString := acctest.RandString(8)
+	rString := sdkacctest.RandString(8)
 	layerName := fmt.Sprintf("tf_acc_lambda_layer_description_%s", rString)
 	testDescription := "test description"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaLayerVersionDestroy,
 		Steps: []resource.TestStep{
@@ -268,13 +269,13 @@ func TestAccAWSLambdaLayerVersion_description(t *testing.T) {
 
 func TestAccAWSLambdaLayerVersion_licenseInfo(t *testing.T) {
 	resourceName := "aws_lambda_layer_version.lambda_layer_test"
-	rString := acctest.RandString(8)
+	rString := sdkacctest.RandString(8)
 	layerName := fmt.Sprintf("tf_acc_lambda_layer_license_info_%s", rString)
 	testLicenseInfo := "MIT"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaLayerVersionDestroy,
 		Steps: []resource.TestStep{
