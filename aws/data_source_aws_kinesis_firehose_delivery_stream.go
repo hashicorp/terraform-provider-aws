@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/firehose/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
@@ -25,7 +26,7 @@ func dataSourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 }
 
 func dataSourceAwsKinesisFirehoseDeliveryStreamRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).firehoseconn
+	conn := meta.(*conns.AWSClient).FirehoseConn
 
 	sn := d.Get("name").(string)
 	output, err := finder.DeliveryStreamByName(conn, sn)
