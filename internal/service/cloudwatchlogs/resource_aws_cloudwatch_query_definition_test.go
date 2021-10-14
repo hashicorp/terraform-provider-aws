@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfcloudwatchlogs "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchlogs"
 )
 
 func init() {
@@ -239,7 +240,7 @@ func testAccCheckAWSCloudWatchQueryDefinitionExists(rName string, v *cloudwatchl
 		}
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchLogsConn
 
-		result, err := finder.QueryDefinition(context.Background(), conn, "", rs.Primary.ID)
+		result, err := tfcloudwatchlogs.FindQueryDefinition(context.Background(), conn, "", rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -263,7 +264,7 @@ func testAccCheckAWSCloudWatchQueryDefinitionDestroy(s *terraform.State) error {
 			continue
 		}
 
-		result, err := finder.QueryDefinition(context.Background(), conn, "", rs.Primary.ID)
+		result, err := tfcloudwatchlogs.FindQueryDefinition(context.Background(), conn, "", rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("error reading CloudWatch query definition (%s): %w", rs.Primary.ID, err)
 		}
