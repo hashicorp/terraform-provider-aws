@@ -6,6 +6,12 @@ import (
 
 	tfkms "github.com/hashicorp/terraform-provider-aws/aws/internal/service/kms"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 )
 
 func TestAliasARNToKeyARN(t *testing.T) {

@@ -7,11 +7,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/kms/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 )
 
-func KeyState(conn *kms.KMS, id string) resource.StateRefreshFunc {
+func StatusKeyState(conn *kms.KMS, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.KeyByID(conn, id)
+		output, err := tfkms.FindKeyByID(conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

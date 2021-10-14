@@ -21,6 +21,36 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 )
 
 func TestAccAWSKmsExternalKey_basic(t *testing.T) {
@@ -459,7 +489,7 @@ func testAccCheckAWSKmsExternalKeyHasPolicy(name string, expectedPolicyText stri
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn
 
-		output, err := finder.KeyPolicyByKeyIDAndPolicyName(conn, rs.Primary.ID, tfkms.PolicyNameDefault)
+		output, err := tfkms.FindKeyPolicyByKeyIDAndPolicyName(conn, rs.Primary.ID, tfkms.PolicyNameDefault)
 
 		if err != nil {
 			return err
@@ -488,7 +518,7 @@ func testAccCheckAWSKmsExternalKeyDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.KeyByID(conn, rs.Primary.ID)
+		_, err := tfkms.FindKeyByID(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -517,8 +547,8 @@ func testAccCheckAWSKmsExternalKeyExists(name string, key *kms.KeyMetadata) reso
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn
 
-		outputRaw, err := tfresource.RetryWhenNotFound(waiter.PropagationTimeout, func() (interface{}, error) {
-			return finder.KeyByID(conn, rs.Primary.ID)
+		outputRaw, err := tfresource.RetryWhenNotFound(tfkms.PropagationTimeout, func() (interface{}, error) {
+			return tfkms.FindKeyByID(conn, rs.Primary.ID)
 		})
 
 		if err != nil {

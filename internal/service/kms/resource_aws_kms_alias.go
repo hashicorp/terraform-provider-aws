@@ -16,6 +16,36 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 )
 
 func ResourceAlias() *schema.Resource {
@@ -84,7 +114,7 @@ func resourceAliasCreate(d *schema.ResourceData, meta interface{}) error {
 	// KMS is eventually consistent.
 	log.Printf("[DEBUG] Creating KMS Alias: %s", input)
 
-	_, err := tfresource.RetryWhenAwsErrCodeEquals(waiter.KeyRotationUpdatedTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAwsErrCodeEquals(tfkms.KeyRotationUpdatedTimeout, func() (interface{}, error) {
 		return conn.CreateAlias(input)
 	}, kms.ErrCodeNotFoundException)
 
@@ -100,8 +130,8 @@ func resourceAliasCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceAliasRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KMSConn
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(waiter.PropagationTimeout, func() (interface{}, error) {
-		return finder.AliasByName(conn, d.Id())
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(tfkms.PropagationTimeout, func() (interface{}, error) {
+		return tfkms.FindAliasByName(conn, d.Id())
 	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
