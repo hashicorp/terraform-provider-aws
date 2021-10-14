@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsGlueDataCatalogEncryptionSettings() *schema.Resource {
@@ -62,7 +63,7 @@ func dataSourceAwsGlueDataCatalogEncryptionSettings() *schema.Resource {
 }
 
 func dataSourceAwsGlueDataCatalogEncryptionSettingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).glueconn
+	conn := meta.(*conns.AWSClient).GlueConn
 	id := d.Get("catalog_id").(string)
 	input := &glue.GetDataCatalogEncryptionSettingsInput{
 		CatalogId: aws.String(id),

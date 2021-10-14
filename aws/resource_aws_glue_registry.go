@@ -13,6 +13,7 @@ import (
 	tfglue "github.com/hashicorp/terraform-provider-aws/aws/internal/service/glue"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/glue/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/glue/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsGlueRegistry() *schema.Resource {
@@ -53,8 +54,8 @@ func resourceAwsGlueRegistry() *schema.Resource {
 }
 
 func resourceAwsGlueRegistryCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).GlueConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &glue.CreateRegistryInput{
@@ -77,9 +78,9 @@ func resourceAwsGlueRegistryCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsGlueRegistryRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).GlueConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	output, err := finder.RegistryByID(conn, d.Id())
 	if err != nil {
@@ -123,7 +124,7 @@ func resourceAwsGlueRegistryRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsGlueRegistryUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
+	conn := meta.(*conns.AWSClient).GlueConn
 
 	if d.HasChanges("description") {
 		input := &glue.UpdateRegistryInput{
@@ -152,7 +153,7 @@ func resourceAwsGlueRegistryUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsGlueRegistryDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
+	conn := meta.(*conns.AWSClient).GlueConn
 
 	log.Printf("[DEBUG] Deleting Glue Registry: %s", d.Id())
 	input := &glue.DeleteRegistryInput{

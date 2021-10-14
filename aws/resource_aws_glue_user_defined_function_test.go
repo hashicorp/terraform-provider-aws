@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSGlueUserDefinedFunction_basic(t *testing.T) {
@@ -116,7 +117,7 @@ func TestAccAWSGlueUserDefinedFunction_disappears(t *testing.T) {
 }
 
 func testAccCheckGlueUDFDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).glueconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_glue_user_defined_function" {
@@ -162,7 +163,7 @@ func testAccCheckGlueUserDefinedFunctionExists(name string) resource.TestCheckFu
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).glueconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
 		out, err := conn.GetUserDefinedFunction(&glue.GetUserDefinedFunctionInput{
 			CatalogId:    aws.String(catalogId),
 			DatabaseName: aws.String(dbName),

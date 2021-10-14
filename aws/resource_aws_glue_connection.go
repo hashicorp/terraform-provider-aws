@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/glue/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsGlueConnection() *schema.Resource {
@@ -100,15 +101,15 @@ func resourceAwsGlueConnection() *schema.Resource {
 }
 
 func resourceAwsGlueConnectionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).GlueConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	var catalogID string
 	if v, ok := d.GetOkExists("catalog_id"); ok {
 		catalogID = v.(string)
 	} else {
-		catalogID = meta.(*AWSClient).accountid
+		catalogID = meta.(*conns.AWSClient).AccountID
 	}
 	name := d.Get("name").(string)
 
@@ -130,9 +131,9 @@ func resourceAwsGlueConnectionCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsGlueConnectionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).GlueConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	catalogID, connectionName, err := decodeGlueConnectionID(d.Id())
 	if err != nil {
@@ -151,10 +152,10 @@ func resourceAwsGlueConnectionRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	connectionArn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "glue",
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("connection/%s", connectionName),
 	}.String()
 	d.Set("arn", connectionArn)
@@ -194,7 +195,7 @@ func resourceAwsGlueConnectionRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsGlueConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
+	conn := meta.(*conns.AWSClient).GlueConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		catalogID, connectionName, err := decodeGlueConnectionID(d.Id())
@@ -226,7 +227,7 @@ func resourceAwsGlueConnectionUpdate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsGlueConnectionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
+	conn := meta.(*conns.AWSClient).GlueConn
 
 	catalogID, connectionName, err := decodeGlueConnectionID(d.Id())
 	if err != nil {

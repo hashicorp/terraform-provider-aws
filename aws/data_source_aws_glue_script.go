@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsGlueScript() *schema.Resource {
@@ -98,7 +99,7 @@ func dataSourceAwsGlueScript() *schema.Resource {
 }
 
 func dataSourceAwsGlueScriptRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
+	conn := meta.(*conns.AWSClient).GlueConn
 
 	dagEdge := d.Get("dag_edge").([]interface{})
 	dagNode := d.Get("dag_node").([]interface{})
@@ -122,7 +123,7 @@ func dataSourceAwsGlueScriptRead(d *schema.ResourceData, meta interface{}) error
 		return errors.New("script not created")
 	}
 
-	d.SetId(meta.(*AWSClient).region)
+	d.SetId(meta.(*conns.AWSClient).Region)
 	d.Set("python_script", output.PythonScript)
 	d.Set("scala_code", output.ScalaCode)
 

@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -27,7 +28,7 @@ func testSweepGlueMLTransforms(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).glueconn
+	conn := client.(*conns.AWSClient).GlueConn
 	var sweeperErrs *multierror.Error
 
 	input := &glue.GetMLTransformsInput{}
@@ -472,7 +473,7 @@ func testAccCheckAWSGlueMLTransformExists(resourceName string, mlTransform *glue
 			return fmt.Errorf("No Glue Job ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).glueconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
 
 		output, err := conn.GetMLTransform(&glue.GetMLTransformInput{
 			TransformId: aws.String(rs.Primary.ID),
@@ -500,7 +501,7 @@ func testAccCheckAWSGlueMLTransformDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).glueconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
 
 		output, err := conn.GetMLTransform(&glue.GetMLTransformInput{
 			TransformId: aws.String(rs.Primary.ID),

@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/glue/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/glue/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsGluePartitionIndex() *schema.Resource {
@@ -73,8 +74,8 @@ func resourceAwsGluePartitionIndex() *schema.Resource {
 }
 
 func resourceAwsGluePartitionIndexCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
-	catalogID := createAwsGlueCatalogID(d, meta.(*AWSClient).accountid)
+	conn := meta.(*conns.AWSClient).GlueConn
+	catalogID := createAwsGlueCatalogID(d, meta.(*conns.AWSClient).AccountID)
 	dbName := d.Get("database_name").(string)
 	tableName := d.Get("table_name").(string)
 
@@ -101,7 +102,7 @@ func resourceAwsGluePartitionIndexCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsGluePartitionIndexRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
+	conn := meta.(*conns.AWSClient).GlueConn
 
 	catalogID, dbName, tableName, _, tableErr := tfglue.ReadAwsGluePartitionIndexID(d.Id())
 	if tableErr != nil {
@@ -132,7 +133,7 @@ func resourceAwsGluePartitionIndexRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsGluePartitionIndexDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
+	conn := meta.(*conns.AWSClient).GlueConn
 
 	catalogID, dbName, tableName, partIndex, tableErr := tfglue.ReadAwsGluePartitionIndexID(d.Id())
 	if tableErr != nil {

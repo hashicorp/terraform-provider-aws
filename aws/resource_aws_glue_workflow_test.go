@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -25,7 +26,7 @@ func testSweepGlueWorkflow(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).glueconn
+	conn := client.(*conns.AWSClient).GlueConn
 
 	listOutput, err := conn.ListWorkflows(&glue.ListWorkflowsInput{})
 	if err != nil {
@@ -252,7 +253,7 @@ func TestAccAWSGlueWorkflow_disappears(t *testing.T) {
 }
 
 func testAccPreCheckAWSGlueWorkflow(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).glueconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
 
 	_, err := conn.ListWorkflows(&glue.ListWorkflowsInput{})
 
@@ -277,7 +278,7 @@ func testAccCheckAWSGlueWorkflowExists(resourceName string, workflow *glue.Workf
 			return fmt.Errorf("No Glue Workflow ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).glueconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
 
 		output, err := conn.GetWorkflow(&glue.GetWorkflowInput{
 			Name: aws.String(rs.Primary.ID),
@@ -305,7 +306,7 @@ func testAccCheckAWSGlueWorkflowDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).glueconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
 
 		output, err := conn.GetWorkflow(&glue.GetWorkflowInput{
 			Name: aws.String(rs.Primary.ID),

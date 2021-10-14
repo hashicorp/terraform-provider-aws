@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/glue/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -27,8 +28,8 @@ func testSweepGlueConnections(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).glueconn
-	catalogID := client.(*AWSClient).accountid
+	conn := client.(*conns.AWSClient).GlueConn
+	catalogID := client.(*conns.AWSClient).AccountID
 
 	input := &glue.GetConnectionsInput{
 		CatalogId: aws.String(catalogID),
@@ -417,7 +418,7 @@ func testAccCheckAWSGlueConnectionExists(resourceName string, connection *glue.C
 			return fmt.Errorf("No Glue Connection ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).glueconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
 		catalogID, connectionName, err := decodeGlueConnectionID(rs.Primary.ID)
 		if err != nil {
 			return err
@@ -441,7 +442,7 @@ func testAccCheckAWSGlueConnectionDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).glueconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
 		catalogID, connectionName, err := decodeGlueConnectionID(rs.Primary.ID)
 		if err != nil {
 			return err

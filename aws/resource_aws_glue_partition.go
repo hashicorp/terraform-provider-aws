@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	tfglue "github.com/hashicorp/terraform-provider-aws/aws/internal/service/glue"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/glue/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsGluePartition() *schema.Resource {
@@ -198,8 +199,8 @@ func resourceAwsGluePartition() *schema.Resource {
 }
 
 func resourceAwsGluePartitionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
-	catalogID := createAwsGlueCatalogID(d, meta.(*AWSClient).accountid)
+	conn := meta.(*conns.AWSClient).GlueConn
+	catalogID := createAwsGlueCatalogID(d, meta.(*conns.AWSClient).AccountID)
 	dbName := d.Get("database_name").(string)
 	tableName := d.Get("table_name").(string)
 	values := d.Get("partition_values").([]interface{})
@@ -223,7 +224,7 @@ func resourceAwsGluePartitionCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsGluePartitionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
+	conn := meta.(*conns.AWSClient).GlueConn
 
 	log.Printf("[DEBUG] Reading Glue Partition: %s", d.Id())
 	partition, err := finder.PartitionByValues(conn, d.Id())
@@ -265,7 +266,7 @@ func resourceAwsGluePartitionRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsGluePartitionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
+	conn := meta.(*conns.AWSClient).GlueConn
 
 	catalogID, dbName, tableName, values, err := tfglue.ReadAwsGluePartitionID(d.Id())
 	if err != nil {
@@ -289,7 +290,7 @@ func resourceAwsGluePartitionUpdate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsGluePartitionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
+	conn := meta.(*conns.AWSClient).GlueConn
 
 	catalogID, dbName, tableName, values, tableErr := tfglue.ReadAwsGluePartitionID(d.Id())
 	if tableErr != nil {

@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsGlueUserDefinedFunction() *schema.Resource {
@@ -87,8 +88,8 @@ func resourceAwsGlueUserDefinedFunction() *schema.Resource {
 }
 
 func resourceAwsGlueUserDefinedFunctionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
-	catalogID := createAwsGlueCatalogID(d, meta.(*AWSClient).accountid)
+	conn := meta.(*conns.AWSClient).GlueConn
+	catalogID := createAwsGlueCatalogID(d, meta.(*conns.AWSClient).AccountID)
 	dbName := d.Get("database_name").(string)
 	funcName := d.Get("name").(string)
 
@@ -109,7 +110,7 @@ func resourceAwsGlueUserDefinedFunctionCreate(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsGlueUserDefinedFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
+	conn := meta.(*conns.AWSClient).GlueConn
 
 	catalogID, dbName, funcName, err := readAwsGlueUDFID(d.Id())
 	if err != nil {
@@ -131,7 +132,7 @@ func resourceAwsGlueUserDefinedFunctionUpdate(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsGlueUserDefinedFunctionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
+	conn := meta.(*conns.AWSClient).GlueConn
 
 	catalogID, dbName, funcName, err := readAwsGlueUDFID(d.Id())
 	if err != nil {
@@ -159,10 +160,10 @@ func resourceAwsGlueUserDefinedFunctionRead(d *schema.ResourceData, meta interfa
 	udf := out.UserDefinedFunction
 
 	udfArn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "glue",
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("userDefinedFunction/%s/%s", dbName, aws.StringValue(udf.FunctionName)),
 	}.String()
 
@@ -184,7 +185,7 @@ func resourceAwsGlueUserDefinedFunctionRead(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsGlueUserDefinedFunctionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
+	conn := meta.(*conns.AWSClient).GlueConn
 	catalogID, dbName, funcName, err := readAwsGlueUDFID(d.Id())
 	if err != nil {
 		return err

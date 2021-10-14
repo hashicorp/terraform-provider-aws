@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsGlueJob() *schema.Resource {
@@ -158,8 +159,8 @@ func resourceAwsGlueJob() *schema.Resource {
 }
 
 func resourceAwsGlueJobCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).GlueConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 	name := d.Get("name").(string)
 
@@ -233,9 +234,9 @@ func resourceAwsGlueJobCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsGlueJobRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).GlueConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &glue.GetJobInput{
 		JobName: aws.String(d.Id()),
@@ -260,10 +261,10 @@ func resourceAwsGlueJobRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	jobARN := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "glue",
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("job/%s", d.Id()),
 	}.String()
 	d.Set("arn", jobARN)
@@ -322,7 +323,7 @@ func resourceAwsGlueJobRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsGlueJobUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
+	conn := meta.(*conns.AWSClient).GlueConn
 
 	if d.HasChanges("command", "connections", "default_arguments", "description",
 		"execution_property", "glue_version", "max_capacity", "max_retries", "notification_property", "number_of_workers",
@@ -406,7 +407,7 @@ func resourceAwsGlueJobUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsGlueJobDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
+	conn := meta.(*conns.AWSClient).GlueConn
 
 	log.Printf("[DEBUG] Deleting Glue Job: %s", d.Id())
 	err := deleteGlueJob(conn, d.Id())

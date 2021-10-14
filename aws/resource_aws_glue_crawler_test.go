@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -28,7 +29,7 @@ func testSweepGlueCrawlers(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).glueconn
+	conn := client.(*conns.AWSClient).GlueConn
 
 	input := &glue.GetCrawlersInput{}
 	err = conn.GetCrawlersPages(input, func(page *glue.GetCrawlersOutput, lastPage bool) bool {
@@ -1453,7 +1454,7 @@ func testAccCheckAWSGlueCrawlerExists(resourceName string, crawler *glue.Crawler
 			return fmt.Errorf("no ID is set")
 		}
 
-		glueConn := acctest.Provider.Meta().(*AWSClient).glueconn
+		glueConn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
 		out, err := glueConn.GetCrawler(&glue.GetCrawlerInput{
 			Name: aws.String(rs.Primary.ID),
 		})
@@ -1478,7 +1479,7 @@ func testAccCheckAWSGlueCrawlerDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).glueconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
 		output, err := conn.GetCrawler(&glue.GetCrawlerInput{
 			Name: aws.String(rs.Primary.ID),
 		})

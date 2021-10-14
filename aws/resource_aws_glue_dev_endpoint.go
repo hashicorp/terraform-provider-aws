@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/glue/waiter"
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsGlueDevEndpoint() *schema.Resource {
@@ -164,8 +165,8 @@ func resourceAwsGlueDevEndpoint() *schema.Resource {
 }
 
 func resourceAwsGlueDevEndpointCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).GlueConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 	name := d.Get("name").(string)
 
@@ -264,9 +265,9 @@ func resourceAwsGlueDevEndpointCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsGlueDevEndpointRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).GlueConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	endpoint, err := finder.DevEndpointByName(conn, d.Id())
 
@@ -281,10 +282,10 @@ func resourceAwsGlueDevEndpointRead(d *schema.ResourceData, meta interface{}) er
 	}
 
 	endpointARN := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "glue",
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("devEndpoint/%s", d.Id()),
 	}.String()
 
@@ -401,7 +402,7 @@ func resourceAwsGlueDevEndpointRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsDevEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
+	conn := meta.(*conns.AWSClient).GlueConn
 
 	input := &glue.UpdateDevEndpointInput{
 		EndpointName: aws.String(d.Get("name").(string)),
@@ -506,7 +507,7 @@ func resourceAwsDevEndpointUpdate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsDevEndpointDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
+	conn := meta.(*conns.AWSClient).GlueConn
 
 	log.Printf("[INFO] Deleting Glue Dev Endpoint: %s", d.Id())
 	_, err := conn.DeleteDevEndpoint(&glue.DeleteDevEndpointInput{

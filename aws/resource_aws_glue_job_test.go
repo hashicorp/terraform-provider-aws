@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -26,7 +27,7 @@ func testSweepGlueJobs(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).glueconn
+	conn := client.(*conns.AWSClient).GlueConn
 
 	input := &glue.GetJobsInput{}
 	err = conn.GetJobsPages(input, func(page *glue.GetJobsOutput, lastPage bool) bool {
@@ -693,7 +694,7 @@ func testAccCheckAWSGlueJobExists(resourceName string, job *glue.Job) resource.T
 			return fmt.Errorf("No Glue Job ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).glueconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
 
 		output, err := conn.GetJob(&glue.GetJobInput{
 			JobName: aws.String(rs.Primary.ID),
@@ -721,7 +722,7 @@ func testAccCheckAWSGlueJobDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).glueconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
 
 		output, err := conn.GetJob(&glue.GetJobInput{
 			JobName: aws.String(rs.Primary.ID),

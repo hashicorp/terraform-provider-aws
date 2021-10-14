@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/glue/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/glue/waiter"
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsGlueTrigger() *schema.Resource {
@@ -174,8 +175,8 @@ func resourceAwsGlueTrigger() *schema.Resource {
 }
 
 func resourceAwsGlueTriggerCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).GlueConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 	name := d.Get("name").(string)
 	triggerType := d.Get("type").(string)
@@ -256,9 +257,9 @@ func resourceAwsGlueTriggerCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsGlueTriggerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).GlueConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	output, err := finder.TriggerByName(conn, d.Id())
 	if err != nil {
@@ -282,10 +283,10 @@ func resourceAwsGlueTriggerRead(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	triggerARN := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "glue",
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("trigger/%s", d.Id()),
 	}.String()
 	d.Set("arn", triggerARN)
@@ -334,7 +335,7 @@ func resourceAwsGlueTriggerRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceAwsGlueTriggerUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
+	conn := meta.(*conns.AWSClient).GlueConn
 
 	if d.HasChanges("actions", "description", "predicate", "schedule") {
 		triggerUpdate := &glue.TriggerUpdate{
@@ -406,7 +407,7 @@ func resourceAwsGlueTriggerUpdate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsGlueTriggerDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
+	conn := meta.(*conns.AWSClient).GlueConn
 
 	log.Printf("[DEBUG] Deleting Glue Trigger: %s", d.Id())
 	err := deleteGlueTrigger(conn, d.Id())
