@@ -91,7 +91,7 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(tags) > 0 {
-		params.Tags = tags.IgnoreAws().CloudwatchlogsTags()
+		params.Tags = Tags(tags.IgnoreAws())
 	}
 
 	_, err := conn.CreateLogGroup(params)
@@ -144,7 +144,7 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("kms_key_id", lg.KmsKeyId)
 	d.Set("retention_in_days", lg.RetentionInDays)
 
-	tags, err := tftags.CloudwatchlogsListTags(conn, d.Id())
+	tags, err := ListTags(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for CloudWatch Logs Group (%s): %s", d.Id(), err)
@@ -216,7 +216,7 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.CloudwatchlogsUpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating CloudWatch Log Group (%s) tags: %s", d.Id(), err)
 		}
 	}
