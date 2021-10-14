@@ -22,11 +22,11 @@ func TestAccDataSourceAwsAcmpcaCertificateAuthority_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccDataSourceAwsAcmpcaCertificateAuthorityConfig_NonExistent,
+				Config:      testAccCertificateAuthorityDataSourceConfig_NonExistent,
 				ExpectError: regexp.MustCompile(`(AccessDeniedException|ResourceNotFoundException)`),
 			},
 			{
-				Config: testAccDataSourceAwsAcmpcaCertificateAuthorityConfig_ARN(commonName),
+				Config: testAccCertificateAuthorityDataSourceConfig_ARN(commonName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "certificate", resourceName, "certificate"),
@@ -59,11 +59,11 @@ func TestAccDataSourceAwsAcmpcaCertificateAuthority_S3ObjectAcl(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccDataSourceAwsAcmpcaCertificateAuthorityConfig_NonExistent,
+				Config:      testAccCertificateAuthorityDataSourceConfig_NonExistent,
 				ExpectError: regexp.MustCompile(`(AccessDeniedException|ResourceNotFoundException)`),
 			},
 			{
-				Config: testAccDataSourceAwsAcmpcaCertificateAuthorityConfigS3ObjectAcl_ARN(commonName),
+				Config: testAccCertificateAuthorityS3ObjectACLDataSourceConfig_ARN(commonName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "certificate", resourceName, "certificate"),
@@ -88,7 +88,7 @@ func TestAccDataSourceAwsAcmpcaCertificateAuthority_S3ObjectAcl(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAwsAcmpcaCertificateAuthorityConfig_ARN(commonName string) string {
+func testAccCertificateAuthorityDataSourceConfig_ARN(commonName string) string {
 	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "wrong" {
   permanent_deletion_time_in_days = 7
@@ -122,7 +122,7 @@ data "aws_acmpca_certificate_authority" "test" {
 `, commonName)
 }
 
-func testAccDataSourceAwsAcmpcaCertificateAuthorityConfigS3ObjectAcl_ARN(commonName string) string {
+func testAccCertificateAuthorityS3ObjectACLDataSourceConfig_ARN(commonName string) string {
 	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "wrong" {
   permanent_deletion_time_in_days = 7
@@ -157,7 +157,7 @@ data "aws_acmpca_certificate_authority" "test" {
 }
 
 //lintignore:AWSAT003,AWSAT005
-const testAccDataSourceAwsAcmpcaCertificateAuthorityConfig_NonExistent = `
+const testAccCertificateAuthorityDataSourceConfig_NonExistent = `
 data "aws_acmpca_certificate_authority" "test" {
   arn = "arn:aws:acm-pca:us-east-1:123456789012:certificate-authority/tf-acc-test-does-not-exist"
 }

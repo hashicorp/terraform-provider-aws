@@ -26,9 +26,9 @@ func TestAccAwsAcmpcaCertificateAuthorityCertificate_RootCA(t *testing.T) {
 		CheckDestroy: nil, // Certificate authority certificates cannot be deleted
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsAcmpcaCertificateAuthorityCertificate_RootCA(commonName),
+				Config: testAccCertificateAuthorityCertificate_RootCA(commonName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsAcmpcaCertificateAuthorityCertificateExists(resourceName, &v),
+					testAccCheckCertificateAuthorityCertificateExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_authority_arn", "aws_acmpca_certificate_authority.test", "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate", "aws_acmpca_certificate.test", "certificate"),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_chain", "aws_acmpca_certificate.test", "certificate_chain"),
@@ -57,18 +57,18 @@ func TestAccAwsAcmpcaCertificateAuthorityCertificate_UpdateRootCA(t *testing.T) 
 		CheckDestroy: nil, // Certificate authority certificates cannot be deleted
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsAcmpcaCertificateAuthorityCertificate_RootCA(commonName),
+				Config: testAccCertificateAuthorityCertificate_RootCA(commonName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsAcmpcaCertificateAuthorityCertificateExists(resourceName, &v),
+					testAccCheckCertificateAuthorityCertificateExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_authority_arn", "aws_acmpca_certificate_authority.test", "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate", "aws_acmpca_certificate.test", "certificate"),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_chain", "aws_acmpca_certificate.test", "certificate_chain"),
 				),
 			},
 			{
-				Config: testAccAwsAcmpcaCertificateAuthorityCertificate_UpdateRootCA(commonName),
+				Config: testAccCertificateAuthorityCertificate_UpdateRootCA(commonName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsAcmpcaCertificateAuthorityCertificateExists(updatedResourceName, &v),
+					testAccCheckCertificateAuthorityCertificateExists(updatedResourceName, &v),
 					resource.TestCheckResourceAttrPair(updatedResourceName, "certificate_authority_arn", "aws_acmpca_certificate_authority.test", "arn"),
 					resource.TestCheckResourceAttrPair(updatedResourceName, "certificate", "aws_acmpca_certificate.updated", "certificate"),
 					resource.TestCheckResourceAttrPair(updatedResourceName, "certificate_chain", "aws_acmpca_certificate.updated", "certificate_chain"),
@@ -91,9 +91,9 @@ func TestAccAwsAcmpcaCertificateAuthorityCertificate_SubordinateCA(t *testing.T)
 		CheckDestroy: nil, // Certificate authority certificates cannot be deleted
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsAcmpcaCertificateAuthorityCertificate_SubordinateCA(commonName),
+				Config: testAccCertificateAuthorityCertificate_SubordinateCA(commonName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsAcmpcaCertificateAuthorityCertificateExists(resourceName, &v),
+					testAccCheckCertificateAuthorityCertificateExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_authority_arn", "aws_acmpca_certificate_authority.test", "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate", "aws_acmpca_certificate.test", "certificate"),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_chain", "aws_acmpca_certificate.test", "certificate_chain"),
@@ -108,7 +108,7 @@ func TestAccAwsAcmpcaCertificateAuthorityCertificate_SubordinateCA(t *testing.T)
 	})
 }
 
-func testAccCheckAwsAcmpcaCertificateAuthorityCertificateExists(resourceName string, certificate *acmpca.GetCertificateAuthorityCertificateOutput) resource.TestCheckFunc {
+func testAccCheckCertificateAuthorityCertificateExists(resourceName string, certificate *acmpca.GetCertificateAuthorityCertificateOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -131,7 +131,7 @@ func testAccCheckAwsAcmpcaCertificateAuthorityCertificateExists(resourceName str
 	}
 }
 
-func testAccAwsAcmpcaCertificateAuthorityCertificate_RootCA(commonName string) string {
+func testAccCertificateAuthorityCertificate_RootCA(commonName string) string {
 	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority_certificate" "test" {
   certificate_authority_arn = aws_acmpca_certificate_authority.test.arn
@@ -171,7 +171,7 @@ data "aws_partition" "current" {}
 `, commonName)
 }
 
-func testAccAwsAcmpcaCertificateAuthorityCertificate_UpdateRootCA(commonName string) string {
+func testAccCertificateAuthorityCertificate_UpdateRootCA(commonName string) string {
 	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority_certificate" "updated" {
   certificate_authority_arn = aws_acmpca_certificate_authority.test.arn
@@ -211,7 +211,7 @@ data "aws_partition" "current" {}
 `, commonName)
 }
 
-func testAccAwsAcmpcaCertificateAuthorityCertificate_SubordinateCA(commonName string) string {
+func testAccCertificateAuthorityCertificate_SubordinateCA(commonName string) string {
 	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority_certificate" "test" {
   certificate_authority_arn = aws_acmpca_certificate_authority.test.arn

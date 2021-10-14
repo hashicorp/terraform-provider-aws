@@ -7,7 +7,7 @@ import (
 	tfacmpca "github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
 )
 
-func TestAwsAcmpcaCertificateAuthorityMigrateState(t *testing.T) {
+func TestCertificateAuthorityMigrateState(t *testing.T) {
 	testCases := map[string]struct {
 		StateVersion int
 		Attributes   map[string]string
