@@ -1,4 +1,4 @@
-package aws
+package s3
 
 import (
 	"fmt"
@@ -10,21 +10,10 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	tfs3 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/s3"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/s3/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
-	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
-	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
-	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
-	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
-	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
-	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
-	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
-	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
 )
 
 func ResourceBucketPublicAccessBlock() *schema.Resource {
@@ -119,7 +108,7 @@ func resourceBucketPublicAccessBlockRead(d *schema.ResourceData, meta interface{
 
 	// Retry for eventual consistency on creation
 	var output *s3.GetPublicAccessBlockOutput
-	err := resource.Retry(tfs3.propagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 		output, err = conn.GetPublicAccessBlock(input)
 
@@ -127,7 +116,7 @@ func resourceBucketPublicAccessBlockRead(d *schema.ResourceData, meta interface{
 			return resource.RetryableError(err)
 		}
 
-		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, tfs3.ErrCodeNoSuchPublicAccessBlockConfiguration) {
+		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, ErrCodeNoSuchPublicAccessBlockConfiguration) {
 			return resource.RetryableError(err)
 		}
 
@@ -142,7 +131,7 @@ func resourceBucketPublicAccessBlockRead(d *schema.ResourceData, meta interface{
 		output, err = conn.GetPublicAccessBlock(input)
 	}
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, tfs3.ErrCodeNoSuchPublicAccessBlockConfiguration) {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ErrCodeNoSuchPublicAccessBlockConfiguration) {
 		log.Printf("[WARN] S3 Bucket Public Access Block (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -187,7 +176,7 @@ func resourceBucketPublicAccessBlockUpdate(d *schema.ResourceData, meta interfac
 	log.Printf("[DEBUG] Updating S3 bucket Public Access Block: %s", input)
 	_, err := conn.PutPublicAccessBlock(input)
 
-	if tfawserr.ErrCodeEquals(err, tfs3.ErrCodeNoSuchPublicAccessBlockConfiguration) {
+	if tfawserr.ErrCodeEquals(err, ErrCodeNoSuchPublicAccessBlockConfiguration) {
 		log.Printf("[WARN] S3 Bucket Public Access Block (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -226,7 +215,7 @@ func resourceBucketPublicAccessBlockDelete(d *schema.ResourceData, meta interfac
 	log.Printf("[DEBUG] S3 bucket: %s, delete public access block", d.Id())
 	_, err := conn.DeletePublicAccessBlock(input)
 
-	if tfawserr.ErrCodeEquals(err, tfs3.ErrCodeNoSuchPublicAccessBlockConfiguration) {
+	if tfawserr.ErrCodeEquals(err, ErrCodeNoSuchPublicAccessBlockConfiguration) {
 		return nil
 	}
 

@@ -1,4 +1,4 @@
-package aws
+package s3
 
 import (
 	"fmt"
@@ -11,21 +11,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tfs3 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/s3"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/s3/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
-	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
-	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
-	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
-	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
-	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
-	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
-	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
-	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
 )
 
 func ResourceBucketInventory() *schema.Resource {
@@ -235,7 +224,7 @@ func resourceAwsS3BucketInventoryPut(d *schema.ResourceData, meta interface{}) e
 	}
 
 	log.Printf("[DEBUG] Putting S3 bucket inventory configuration: %s", input)
-	err := resource.Retry(tfs3.propagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		_, err := conn.PutBucketInventoryConfiguration(input)
 
 		if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
@@ -282,7 +271,7 @@ func resourceBucketInventoryDelete(d *schema.ResourceData, meta interface{}) err
 		return nil
 	}
 
-	if tfawserr.ErrCodeEquals(err, tfs3.ErrCodeNoSuchConfiguration) {
+	if tfawserr.ErrCodeEquals(err, ErrCodeNoSuchConfiguration) {
 		return nil
 	}
 
@@ -311,7 +300,7 @@ func resourceBucketInventoryRead(d *schema.ResourceData, meta interface{}) error
 
 	log.Printf("[DEBUG] Reading S3 bucket inventory configuration: %s", input)
 	var output *s3.GetBucketInventoryConfigurationOutput
-	err = resource.Retry(tfs3.propagationTimeout, func() *resource.RetryError {
+	err = resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 		output, err = conn.GetBucketInventoryConfiguration(input)
 
@@ -319,7 +308,7 @@ func resourceBucketInventoryRead(d *schema.ResourceData, meta interface{}) error
 			return resource.RetryableError(err)
 		}
 
-		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, tfs3.ErrCodeNoSuchConfiguration) {
+		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, ErrCodeNoSuchConfiguration) {
 			return resource.RetryableError(err)
 		}
 
@@ -340,7 +329,7 @@ func resourceBucketInventoryRead(d *schema.ResourceData, meta interface{}) error
 		return nil
 	}
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, tfs3.ErrCodeNoSuchConfiguration) {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ErrCodeNoSuchConfiguration) {
 		log.Printf("[WARN] S3 Bucket Inventory Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
