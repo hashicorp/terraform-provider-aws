@@ -7,11 +7,11 @@ import (
 
 const (
 	// Default maximum amount of time to wait for a Stack to be Created
-	CloudFormationStackCreatedDefaultTimeout = 30 * time.Minute
+	cloudFormationStackCreatedDefaultTimeout = 30 * time.Minute
 
 	// Default maximum amount of time to wait for a Stack to be Updated
-	CloudFormationStackUpdatedDefaultTimeout = 30 * time.Minute
+	cloudFormationStackUpdatedDefaultTimeout = 30 * time.Minute
 
 	// Default maximum amount of time to wait for a Stack to be Deleted
-	CloudFormationStackDeletedDefaultTimeout = 30 * time.Minute
+	cloudFormationStackDeletedDefaultTimeout = 30 * time.Minute
 )

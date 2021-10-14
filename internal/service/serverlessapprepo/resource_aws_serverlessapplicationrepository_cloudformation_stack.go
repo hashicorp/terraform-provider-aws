@@ -22,6 +22,39 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfserverlessapprepo "github.com/hashicorp/terraform-provider-aws/internal/service/serverlessapprepo"
+	tfserverlessapprepo "github.com/hashicorp/terraform-provider-aws/internal/service/serverlessapprepo"
+	tfserverlessapprepo "github.com/hashicorp/terraform-provider-aws/internal/service/serverlessapprepo"
+	tfserverlessapprepo "github.com/hashicorp/terraform-provider-aws/internal/service/serverlessapprepo"
 )
 
 const (
@@ -43,9 +76,9 @@ func ResourceCloudFormationStack() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(waiter.CloudFormationStackCreatedDefaultTimeout),
-			Update: schema.DefaultTimeout(waiter.CloudFormationStackUpdatedDefaultTimeout),
-			Delete: schema.DefaultTimeout(waiter.CloudFormationStackDeletedDefaultTimeout),
+			Create: schema.DefaultTimeout(tfserverlessapprepo.cloudFormationStackCreatedDefaultTimeout),
+			Update: schema.DefaultTimeout(tfserverlessapprepo.cloudFormationStackUpdatedDefaultTimeout),
+			Delete: schema.DefaultTimeout(tfserverlessapprepo.cloudFormationStackDeletedDefaultTimeout),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -116,7 +149,7 @@ func resourceCloudFormationStackCreate(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("executing Serverless Application Repository CloudFormation Stack (%s) change set failed: %w", d.Id(), err)
 	}
 
-	_, err = cfwaiter.StackCreated(cfConn, d.Id(), requestToken, d.Timeout(schema.TimeoutCreate))
+	_, err = tfcloudformation.WaitStackCreated(cfConn, d.Id(), requestToken, d.Timeout(schema.TimeoutCreate))
 	if err != nil {
 		return fmt.Errorf("error waiting for Serverless Application Repository CloudFormation Stack (%s) creation: %w", d.Id(), err)
 	}
@@ -132,7 +165,7 @@ func resourceCloudFormationStackRead(d *schema.ResourceData, meta interface{}) e
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	stack, err := cffinder.StackByID(cfConn, d.Id())
+	stack, err := tfcloudformation.FindStackByID(cfConn, d.Id())
 
 	if tfresource.NotFound(err) {
 		log.Printf("[WARN] Serverless Application Repository CloudFormation Stack (%s) not found, removing from state", d.Id())
@@ -178,7 +211,7 @@ func resourceCloudFormationStackRead(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("failed to set outputs: %w", err)
 	}
 
-	getApplicationOutput, err := finder.Application(serverlessConn, applicationID, semanticVersion)
+	getApplicationOutput, err := tfserverlessapprepo.findApplication(serverlessConn, applicationID, semanticVersion)
 	if err != nil {
 		return fmt.Errorf("error getting Serverless Application Repository application (%s, v%s): %w", applicationID, semanticVersion, err)
 	}
@@ -242,7 +275,7 @@ func resourceCloudFormationStackUpdate(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("executing Serverless Application Repository CloudFormation change set failed: %w", err)
 	}
 
-	_, err = cfwaiter.StackUpdated(cfConn, d.Id(), requestToken, d.Timeout(schema.TimeoutUpdate))
+	_, err = tfcloudformation.WaitStackUpdated(cfConn, d.Id(), requestToken, d.Timeout(schema.TimeoutUpdate))
 	if err != nil {
 		return fmt.Errorf("error waiting for Serverless Application Repository CloudFormation Stack (%s) update: %w", d.Id(), err)
 	}
@@ -269,7 +302,7 @@ func resourceCloudFormationStackDelete(d *schema.ResourceData, meta interface{})
 		return err
 	}
 
-	_, err = cfwaiter.StackDeleted(conn, d.Id(), requestToken, d.Timeout(schema.TimeoutDelete))
+	_, err = tfcloudformation.WaitStackDeleted(conn, d.Id(), requestToken, d.Timeout(schema.TimeoutDelete))
 	if err != nil {
 		return fmt.Errorf("error waiting for Serverless Application Repository CloudFormation Stack deletion: %w", err)
 	}
@@ -290,7 +323,7 @@ func resourceAwsServerlessApplicationRepositoryCloudFormationStackImport(d *sche
 	}
 
 	cfConn := meta.(*conns.AWSClient).CloudFormationConn
-	stack, err := cffinder.StackByID(cfConn, stackID)
+	stack, err := tfcloudformation.FindStackByID(cfConn, stackID)
 	if err != nil {
 		return nil, fmt.Errorf("error describing Serverless Application Repository CloudFormation Stack (%s): %w", stackID, err)
 	}
@@ -326,7 +359,7 @@ func createServerlessApplicationRepositoryCloudFormationChangeSet(d *schema.Reso
 		return nil, err
 	}
 
-	return cfwaiter.ChangeSetCreated(cfConn, aws.StringValue(changeSetResponse.StackId), aws.StringValue(changeSetResponse.ChangeSetId))
+	return tfcloudformation.WaitChangeSetCreated(cfConn, aws.StringValue(changeSetResponse.StackId), aws.StringValue(changeSetResponse.ChangeSetId))
 }
 
 func expandServerlessRepositoryCloudFormationChangeSetParameters(params map[string]interface{}) []*serverlessrepository.ParameterValue {
