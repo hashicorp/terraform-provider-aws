@@ -3,6 +3,7 @@ package finder
 import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codebuild"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // ReportGroupByArn returns the Report Group corresponding to the specified Arn.

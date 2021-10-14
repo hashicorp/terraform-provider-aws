@@ -19,6 +19,7 @@ import (
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceProject() *schema.Resource {
@@ -334,7 +335,7 @@ func ResourceProject() *schema.Resource {
 									},
 								},
 							},
-							DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
+							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 						},
 						"s3_logs": {
 							Type:     schema.TypeList,
@@ -360,11 +361,11 @@ func ResourceProject() *schema.Resource {
 									},
 								},
 							},
-							DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
+							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 						},
 					},
 				},
-				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 			},
 			"name": {
 				Type:         schema.TypeString,
@@ -519,7 +520,7 @@ func ResourceProject() *schema.Resource {
 			"service_role": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"source": {
 				Type:     schema.TypeList,
@@ -1879,7 +1880,7 @@ func validateAwsCodeBuildProjectName(v interface{}, k string) (ws []string, erro
 func validateAwsCodeBuildProjectS3LogsLocation(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 
-	if _, errs := validateArn(v, k); len(errs) == 0 {
+	if _, errs := verify.ValidARN(v, k); len(errs) == 0 {
 		errors = append(errors, errs...)
 		return
 	}
