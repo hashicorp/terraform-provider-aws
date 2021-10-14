@@ -50,7 +50,7 @@ func ResourceJobDefinition() *schema.Resource {
 
 					return equal
 				},
-				ValidateFunc: validateAwsBatchJobContainerProperties,
+				ValidateFunc: validJobContainerProperties,
 			},
 			"parameters": {
 				Type:     schema.TypeMap,
@@ -321,7 +321,7 @@ func resourceJobDefinitionDelete(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func validateAwsBatchJobContainerProperties(v interface{}, k string) (ws []string, errors []error) {
+func validJobContainerProperties(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	_, err := expandBatchJobContainerProperties(value)
 	if err != nil {

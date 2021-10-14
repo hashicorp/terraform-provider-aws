@@ -30,7 +30,7 @@ func ResourceComputeEnvironment() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			resourceAwsBatchComputeEnvironmentCustomizeDiff,
+			resourceComputeEnvironmentCustomizeDiff,
 			verify.SetTagsDiff,
 		),
 
@@ -410,7 +410,7 @@ func resourceComputeEnvironmentDelete(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func resourceAwsBatchComputeEnvironmentCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+func resourceComputeEnvironmentCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
 	if diff.Id() != "" {
 		// Update.
 
