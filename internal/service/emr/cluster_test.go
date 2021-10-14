@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfemr "github.com/hashicorp/terraform-provider-aws/internal/service/emr"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -1619,7 +1620,7 @@ func testAccCheckAWSEmrClusterDisappears(cluster *emr.Cluster) resource.TestChec
 				return resource.NonRetryableError(err)
 			}
 
-			instanceCount = countEMRRemainingInstances(output, id)
+			instanceCount = tfemr.CountRemainingInstances(output, id)
 
 			if instanceCount != 0 {
 				return resource.RetryableError(fmt.Errorf("EMR Cluster (%s) has (%d) Instances remaining", id, instanceCount))
@@ -1632,7 +1633,7 @@ func testAccCheckAWSEmrClusterDisappears(cluster *emr.Cluster) resource.TestChec
 			output, err = conn.ListInstances(input)
 
 			if err == nil {
-				instanceCount = countEMRRemainingInstances(output, id)
+				instanceCount = tfemr.CountRemainingInstances(output, id)
 			}
 		}
 

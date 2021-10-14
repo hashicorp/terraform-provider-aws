@@ -244,13 +244,13 @@ func resourceInstanceFleetCreate(d *schema.ResourceData, meta interface{}) error
 
 func resourceInstanceFleetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EMRConn
-	instanceFleets, err := fetchAllEMRInstanceFleets(conn, d.Get("cluster_id").(string))
+	instanceFleets, err := FetchAllInstanceFleets(conn, d.Get("cluster_id").(string))
 
 	if err != nil {
 		return fmt.Errorf("error listing EMR Instance Fleets for Cluster (%s): %w", d.Get("cluster_id").(string), err)
 	}
 
-	fleet := findInstanceFleetById(instanceFleets, d.Id())
+	fleet := FindInstanceFleetByID(instanceFleets, d.Id())
 	if fleet == nil {
 		if d.IsNewResource() {
 			return fmt.Errorf("error finding EMR Instance Fleet (%s): not found after creation", d.Id())
@@ -276,7 +276,7 @@ func resourceInstanceFleetRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func findInstanceFleetById(instanceFleets []*emr.InstanceFleet, fleetId string) *emr.InstanceFleet {
+func FindInstanceFleetByID(instanceFleets []*emr.InstanceFleet, fleetId string) *emr.InstanceFleet {
 	for _, fleet := range instanceFleets {
 		if fleet != nil && aws.StringValue(fleet.Id) == fleetId {
 			return fleet
@@ -326,12 +326,12 @@ func resourceInstanceFleetUpdate(d *schema.ResourceData, meta interface{}) error
 func instanceFleetStateRefresh(conn *emr.EMR, clusterID, ifID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 
-		instanceFleets, err := fetchAllEMRInstanceFleets(conn, clusterID)
+		instanceFleets, err := FetchAllInstanceFleets(conn, clusterID)
 		if err != nil {
 			return nil, "Not Found", err
 		}
 
-		fleet := findInstanceFleetById(instanceFleets, ifID)
+		fleet := FindInstanceFleetByID(instanceFleets, ifID)
 		if fleet == nil {
 			return nil, "Not Found", err
 		}

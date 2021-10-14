@@ -200,7 +200,7 @@ func resourceInstanceGroupCreate(d *schema.ResourceData, meta interface{}) error
 func resourceInstanceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EMRConn
 
-	ig, err := fetchEMRInstanceGroup(conn, d.Get("cluster_id").(string), d.Id())
+	ig, err := FetchInstanceGroup(conn, d.Get("cluster_id").(string), d.Id())
 
 	if tfresource.NotFound(err) {
 		log.Printf("[DEBUG] EMR Instance Group (%s) not found, removing", d.Id())
@@ -367,7 +367,7 @@ func resourceInstanceGroupDelete(d *schema.ResourceData, meta interface{}) error
 
 func instanceGroupStateRefresh(conn *emr.EMR, clusterID, groupID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		ig, err := fetchEMRInstanceGroup(conn, clusterID, groupID)
+		ig, err := FetchInstanceGroup(conn, clusterID, groupID)
 		if err != nil {
 			return nil, "Not Found", err
 		}
@@ -381,7 +381,7 @@ func instanceGroupStateRefresh(conn *emr.EMR, clusterID, groupID string) resourc
 	}
 }
 
-func fetchEMRInstanceGroup(conn *emr.EMR, clusterID, groupID string) (*emr.InstanceGroup, error) {
+func FetchInstanceGroup(conn *emr.EMR, clusterID, groupID string) (*emr.InstanceGroup, error) {
 	input := &emr.ListInstanceGroupsInput{ClusterId: aws.String(clusterID)}
 
 	var groups []*emr.InstanceGroup

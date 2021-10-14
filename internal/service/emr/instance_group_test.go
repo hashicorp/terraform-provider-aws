@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfemr "github.com/hashicorp/terraform-provider-aws/internal/service/emr"
 )
 
 func TestAccAWSEMRInstanceGroup_basic(t *testing.T) {
@@ -324,7 +325,7 @@ func testAccCheckAWSEmrInstanceGroupExists(name string, ig *emr.InstanceGroup) r
 
 		meta := acctest.Provider.Meta()
 		conn := meta.(*conns.AWSClient).EMRConn
-		group, err := fetchEMRInstanceGroup(conn, rs.Primary.Attributes["cluster_id"], rs.Primary.ID)
+		group, err := tfemr.FetchInstanceGroup(conn, rs.Primary.Attributes["cluster_id"], rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("EMR error: %v", err)
 		}

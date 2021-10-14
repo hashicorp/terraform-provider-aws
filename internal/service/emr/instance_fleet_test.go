@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfemr "github.com/hashicorp/terraform-provider-aws/internal/service/emr"
 )
 
 func TestAccAWSEMRInstanceFleet_basic(t *testing.T) {
@@ -153,7 +154,7 @@ func TestAccAWSEMRInstanceFleet_disappears(t *testing.T) {
 					testAccCheckAWSEmrInstanceFleetExists(resourceName, &fleet),
 					// EMR Instance Fleet can only be scaled down and are not removed until the
 					// Cluster is removed. Verify EMR Cluster disappearance handling.
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceCluster(), emrClusterResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfemr.ResourceCluster(), emrClusterResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -204,12 +205,12 @@ func testAccCheckAWSEmrInstanceFleetExists(n string, v *emr.InstanceFleet) resou
 		}
 		meta := acctest.Provider.Meta()
 		conn := meta.(*conns.AWSClient).EMRConn
-		instanceFleets, err := fetchAllEMRInstanceFleets(conn, rs.Primary.Attributes["cluster_id"])
+		instanceFleets, err := tfemr.FetchAllInstanceFleets(conn, rs.Primary.Attributes["cluster_id"])
 		if err != nil {
 			return fmt.Errorf("EMR error: %v", err)
 		}
 
-		fleet := findInstanceFleetById(instanceFleets, rs.Primary.ID)
+		fleet := tfemr.FindInstanceFleetByID(instanceFleets, rs.Primary.ID)
 		if fleet == nil {
 			return fmt.Errorf("No match found for (%s)", n)
 		}
