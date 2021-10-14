@@ -164,7 +164,7 @@ func resourceAwsConfigDeliveryChannelRead(d *schema.ResourceData, meta interface
 	d.Set("sns_topic_arn", channel.SnsTopicARN)
 
 	if channel.ConfigSnapshotDeliveryProperties != nil {
-		d.Set("snapshot_delivery_properties", flattenConfigSnapshotDeliveryProperties(channel.ConfigSnapshotDeliveryProperties))
+		d.Set("snapshot_delivery_properties", flattenSnapshotDeliveryProperties(channel.ConfigSnapshotDeliveryProperties))
 	}
 
 	return nil

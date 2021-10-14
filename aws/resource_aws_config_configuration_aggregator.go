@@ -125,11 +125,11 @@ func resourceAwsConfigConfigurationAggregatorPut(d *schema.ResourceData, meta in
 	}
 
 	if v, ok := d.GetOk("account_aggregation_source"); ok && len(v.([]interface{})) > 0 {
-		req.AccountAggregationSources = expandConfigAccountAggregationSources(v.([]interface{}))
+		req.AccountAggregationSources = expandAccountAggregationSources(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("organization_aggregation_source"); ok && len(v.([]interface{})) > 0 {
-		req.OrganizationAggregationSource = expandConfigOrganizationAggregationSource(v.([]interface{})[0].(map[string]interface{}))
+		req.OrganizationAggregationSource = expandOrganizationAggregationSource(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	resp, err := conn.PutConfigurationAggregator(req)
@@ -182,11 +182,11 @@ func resourceAwsConfigConfigurationAggregatorRead(d *schema.ResourceData, meta i
 	d.Set("arn", arn)
 	d.Set("name", aggregator.ConfigurationAggregatorName)
 
-	if err := d.Set("account_aggregation_source", flattenConfigAccountAggregationSources(aggregator.AccountAggregationSources)); err != nil {
+	if err := d.Set("account_aggregation_source", flattenAccountAggregationSources(aggregator.AccountAggregationSources)); err != nil {
 		return fmt.Errorf("error setting account_aggregation_source: %s", err)
 	}
 
-	if err := d.Set("organization_aggregation_source", flattenConfigOrganizationAggregationSource(aggregator.OrganizationAggregationSource)); err != nil {
+	if err := d.Set("organization_aggregation_source", flattenOrganizationAggregationSource(aggregator.OrganizationAggregationSource)); err != nil {
 		return fmt.Errorf("error setting organization_aggregation_source: %s", err)
 	}
 

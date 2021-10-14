@@ -74,7 +74,7 @@ func resourceAwsConfigConfigurationRecorderPut(d *schema.ResourceData, meta inte
 	}
 
 	if g, ok := d.GetOk("recording_group"); ok {
-		recorder.RecordingGroup = expandConfigRecordingGroup(g.([]interface{}))
+		recorder.RecordingGroup = expandRecordingGroup(g.([]interface{}))
 	}
 
 	input := configservice.PutConfigurationRecorderInput{
@@ -124,7 +124,7 @@ func resourceAwsConfigConfigurationRecorderRead(d *schema.ResourceData, meta int
 	d.Set("role_arn", recorder.RoleARN)
 
 	if recorder.RecordingGroup != nil {
-		flattened := flattenConfigRecordingGroup(recorder.RecordingGroup)
+		flattened := flattenRecordingGroup(recorder.RecordingGroup)
 		err = d.Set("recording_group", flattened)
 		if err != nil {
 			return fmt.Errorf("Failed to set recording_group: %s", err)

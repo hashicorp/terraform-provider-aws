@@ -126,7 +126,7 @@ func resourceAwsConfigOrganizationConformancePackCreate(d *schema.ResourceData, 
 	}
 
 	if v, ok := d.GetOk("excluded_accounts"); ok {
-		input.ExcludedAccounts = expandStringSet(v.(*schema.Set))
+		input.ExcludedAccounts = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("input_parameter"); ok {
@@ -186,7 +186,7 @@ func resourceAwsConfigOrganizationConformancePackRead(d *schema.ResourceData, me
 	d.Set("delivery_s3_bucket", pack.DeliveryS3Bucket)
 	d.Set("delivery_s3_key_prefix", pack.DeliveryS3KeyPrefix)
 
-	if err = d.Set("excluded_accounts", flattenStringSet(pack.ExcludedAccounts)); err != nil {
+	if err = d.Set("excluded_accounts", flex.FlattenStringSet(pack.ExcludedAccounts)); err != nil {
 		return fmt.Errorf("error setting excluded_accounts: %w", err)
 	}
 
@@ -213,7 +213,7 @@ func resourceAwsConfigOrganizationConformancePackUpdate(d *schema.ResourceData, 
 	}
 
 	if v, ok := d.GetOk("excluded_accounts"); ok {
-		input.ExcludedAccounts = expandStringSet(v.(*schema.Set))
+		input.ExcludedAccounts = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("input_parameter"); ok {

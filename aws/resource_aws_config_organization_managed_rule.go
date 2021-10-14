@@ -123,7 +123,7 @@ func resourceAwsConfigOrganizationManagedRuleCreate(d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk("excluded_accounts"); ok && v.(*schema.Set).Len() > 0 {
-		input.ExcludedAccounts = expandStringSet(v.(*schema.Set))
+		input.ExcludedAccounts = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("input_parameters"); ok {
@@ -139,7 +139,7 @@ func resourceAwsConfigOrganizationManagedRuleCreate(d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk("resource_types_scope"); ok && v.(*schema.Set).Len() > 0 {
-		input.OrganizationManagedRuleMetadata.ResourceTypesScope = expandStringSet(v.(*schema.Set))
+		input.OrganizationManagedRuleMetadata.ResourceTypesScope = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("tag_key_scope"); ok {
@@ -232,7 +232,7 @@ func resourceAwsConfigOrganizationManagedRuleUpdate(d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk("excluded_accounts"); ok && v.(*schema.Set).Len() > 0 {
-		input.ExcludedAccounts = expandStringSet(v.(*schema.Set))
+		input.ExcludedAccounts = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("input_parameters"); ok {
@@ -248,7 +248,7 @@ func resourceAwsConfigOrganizationManagedRuleUpdate(d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk("resource_types_scope"); ok && v.(*schema.Set).Len() > 0 {
-		input.OrganizationManagedRuleMetadata.ResourceTypesScope = expandStringSet(v.(*schema.Set))
+		input.OrganizationManagedRuleMetadata.ResourceTypesScope = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("tag_key_scope"); ok {
