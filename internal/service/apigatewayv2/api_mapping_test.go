@@ -28,13 +28,13 @@ func TestAccAWSAPIGatewayV2ApiMapping_basic(t *testing.T) {
 	// of CloudFront distribution backing the API Gateway domain name is asynchronous
 	// and can take up to 60 minutes and the distribution keeps the certificate alive.
 	t.Run("createCertificate", func(t *testing.T) {
-		testAccAWSAPIGatewayV2ApiMapping_createCertificate(t, rName, &certificateArn)
+		testAccAPIMapping_createCertificate(t, rName, &certificateArn)
 	})
 
 	testCases := map[string]func(t *testing.T, rName string, certificateArn *string){
-		"basic":         testAccAWSAPIGatewayV2ApiMapping_basic,
-		"disappears":    testAccAWSAPIGatewayV2ApiMapping_disappears,
-		"ApiMappingKey": testAccAWSAPIGatewayV2ApiMapping_ApiMappingKey,
+		"basic":         testAccAPIMapping_basic,
+		"disappears":    testAccAPIMapping_disappears,
+		"ApiMappingKey": testAccAPIMapping_ApiMappingKey,
 	}
 	for name, tc := range testCases {
 		tc := tc
@@ -44,7 +44,7 @@ func TestAccAWSAPIGatewayV2ApiMapping_basic(t *testing.T) {
 	}
 }
 
-func testAccAWSAPIGatewayV2ApiMapping_createCertificate(t *testing.T, rName string, certificateArn *string) {
+func testAccAPIMapping_createCertificate(t *testing.T, rName string, certificateArn *string) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
@@ -54,7 +54,7 @@ func testAccAWSAPIGatewayV2ApiMapping_createCertificate(t *testing.T, rName stri
 			{
 				Config: "# Dummy config.",
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayV2ApiMappingCreateCertificate(rName, certificateArn),
+					testAccCheckAPIMappingCreateCertificate(rName, certificateArn),
 				),
 			},
 		},
@@ -63,7 +63,7 @@ func testAccAWSAPIGatewayV2ApiMapping_createCertificate(t *testing.T, rName stri
 	log.Printf("[INFO] Created ACM certificate %s", *certificateArn)
 }
 
-func testAccAWSAPIGatewayV2ApiMapping_basic(t *testing.T, rName string, certificateArn *string) {
+func testAccAPIMapping_basic(t *testing.T, rName string, certificateArn *string) {
 	var domainName string
 	var v apigatewayv2.GetApiMappingOutput
 	resourceName := "aws_apigatewayv2_api_mapping.test"
@@ -74,18 +74,18 @@ func testAccAWSAPIGatewayV2ApiMapping_basic(t *testing.T, rName string, certific
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayV2ApiMappingDestroy,
+		CheckDestroy: testAccCheckAPIMappingDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayV2ApiMappingConfig_basic(rName, *certificateArn),
+				Config: testAccAPIMappingConfig_basic(rName, *certificateArn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayV2ApiMappingExists(resourceName, &domainName, &v),
+					testAccCheckAPIMappingExists(resourceName, &domainName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "domain_name", domainNameResourceName, "domain_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "stage", stageResourceName, "name")),
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccAWSAPIGatewayV2ApiMappingImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccAPIMappingImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -93,7 +93,7 @@ func testAccAWSAPIGatewayV2ApiMapping_basic(t *testing.T, rName string, certific
 	})
 }
 
-func testAccAWSAPIGatewayV2ApiMapping_disappears(t *testing.T, rName string, certificateArn *string) {
+func testAccAPIMapping_disappears(t *testing.T, rName string, certificateArn *string) {
 	var domainName string
 	var v apigatewayv2.GetApiMappingOutput
 	resourceName := "aws_apigatewayv2_api_mapping.test"
@@ -102,13 +102,13 @@ func testAccAWSAPIGatewayV2ApiMapping_disappears(t *testing.T, rName string, cer
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayV2ApiMappingDestroy,
+		CheckDestroy: testAccCheckAPIMappingDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayV2ApiMappingConfig_basic(rName, *certificateArn),
+				Config: testAccAPIMappingConfig_basic(rName, *certificateArn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayV2ApiMappingExists(resourceName, &domainName, &v),
-					testAccCheckAWSAPIGatewayV2ApiMappingDisappears(&domainName, &v),
+					testAccCheckAPIMappingExists(resourceName, &domainName, &v),
+					testAccCheckAPIMappingDisappears(&domainName, &v),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -116,7 +116,7 @@ func testAccAWSAPIGatewayV2ApiMapping_disappears(t *testing.T, rName string, cer
 	})
 }
 
-func testAccAWSAPIGatewayV2ApiMapping_ApiMappingKey(t *testing.T, rName string, certificateArn *string) {
+func testAccAPIMapping_ApiMappingKey(t *testing.T, rName string, certificateArn *string) {
 	var domainName string
 	var v apigatewayv2.GetApiMappingOutput
 	resourceName := "aws_apigatewayv2_api_mapping.test"
@@ -127,27 +127,27 @@ func testAccAWSAPIGatewayV2ApiMapping_ApiMappingKey(t *testing.T, rName string, 
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayV2ApiMappingDestroy,
+		CheckDestroy: testAccCheckAPIMappingDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayV2ApiMappingConfig_apiMappingKey(rName, *certificateArn, "$context.domainName"),
+				Config: testAccAPIMappingConfig_apiMappingKey(rName, *certificateArn, "$context.domainName"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayV2ApiMappingExists(resourceName, &domainName, &v),
+					testAccCheckAPIMappingExists(resourceName, &domainName, &v),
 					resource.TestCheckResourceAttr(resourceName, "api_mapping_key", "$context.domainName"),
 					resource.TestCheckResourceAttrPair(resourceName, "domain_name", domainNameResourceName, "domain_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "stage", stageResourceName, "name")),
 			},
 			{
-				Config: testAccAWSAPIGatewayV2ApiMappingConfig_apiMappingKey(rName, *certificateArn, "$context.apiId"),
+				Config: testAccAPIMappingConfig_apiMappingKey(rName, *certificateArn, "$context.apiId"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayV2ApiMappingExists(resourceName, &domainName, &v),
+					testAccCheckAPIMappingExists(resourceName, &domainName, &v),
 					resource.TestCheckResourceAttr(resourceName, "api_mapping_key", "$context.apiId"),
 					resource.TestCheckResourceAttrPair(resourceName, "domain_name", domainNameResourceName, "domain_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "stage", stageResourceName, "name")),
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccAWSAPIGatewayV2ApiMappingImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccAPIMappingImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -155,7 +155,7 @@ func testAccAWSAPIGatewayV2ApiMapping_ApiMappingKey(t *testing.T, rName string, 
 	})
 }
 
-func testAccCheckAWSAPIGatewayV2ApiMappingCreateCertificate(rName string, certificateArn *string) resource.TestCheckFunc {
+func testAccCheckAPIMappingCreateCertificate(rName string, certificateArn *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		privateKey := acctest.TLSRSAPrivateKeyPEM(2048)
 		certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(privateKey, fmt.Sprintf("%s.example.com", rName))
@@ -179,7 +179,7 @@ func testAccCheckAWSAPIGatewayV2ApiMappingCreateCertificate(rName string, certif
 	}
 }
 
-func testAccCheckAWSAPIGatewayV2ApiMappingDestroy(s *terraform.State) error {
+func testAccCheckAPIMappingDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn
 
 	for _, rs := range s.RootModule().Resources {
@@ -204,7 +204,7 @@ func testAccCheckAWSAPIGatewayV2ApiMappingDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSAPIGatewayV2ApiMappingDisappears(domainName *string, v *apigatewayv2.GetApiMappingOutput) resource.TestCheckFunc {
+func testAccCheckAPIMappingDisappears(domainName *string, v *apigatewayv2.GetApiMappingOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn
 
@@ -217,7 +217,7 @@ func testAccCheckAWSAPIGatewayV2ApiMappingDisappears(domainName *string, v *apig
 	}
 }
 
-func testAccCheckAWSAPIGatewayV2ApiMappingExists(n string, vDomainName *string, v *apigatewayv2.GetApiMappingOutput) resource.TestCheckFunc {
+func testAccCheckAPIMappingExists(n string, vDomainName *string, v *apigatewayv2.GetApiMappingOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -246,7 +246,7 @@ func testAccCheckAWSAPIGatewayV2ApiMappingExists(n string, vDomainName *string, 
 	}
 }
 
-func testAccAWSAPIGatewayV2ApiMappingImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccAPIMappingImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -257,7 +257,7 @@ func testAccAWSAPIGatewayV2ApiMappingImportStateIdFunc(resourceName string) reso
 	}
 }
 
-func testAccAWSAPIGatewayV2ApiMappingConfig_base(rName, certificateArn string) string {
+func testAccAPIMappingConfig_base(rName, certificateArn string) string {
 	return fmt.Sprintf(`
 resource "aws_apigatewayv2_domain_name" "test" {
   domain_name = "%[1]s.example.com"
@@ -271,8 +271,8 @@ resource "aws_apigatewayv2_domain_name" "test" {
 `, rName, certificateArn)
 }
 
-func testAccAWSAPIGatewayV2ApiMappingConfig_basic(rName, certificateArn string) string {
-	return testAccAWSAPIGatewayV2ApiMappingConfig_base(rName, certificateArn) + testAccAWSAPIGatewayV2StageConfig_basicWebSocket(rName) + `
+func testAccAPIMappingConfig_basic(rName, certificateArn string) string {
+	return testAccAPIMappingConfig_base(rName, certificateArn) + testAccStageConfig_basicWebSocket(rName) + `
 resource "aws_apigatewayv2_api_mapping" "test" {
   api_id      = aws_apigatewayv2_api.test.id
   domain_name = aws_apigatewayv2_domain_name.test.id
@@ -281,8 +281,8 @@ resource "aws_apigatewayv2_api_mapping" "test" {
 `
 }
 
-func testAccAWSAPIGatewayV2ApiMappingConfig_apiMappingKey(rName, certificateArn, apiMappingKey string) string {
-	return testAccAWSAPIGatewayV2ApiMappingConfig_base(rName, certificateArn) + testAccAWSAPIGatewayV2StageConfig_basicWebSocket(rName) + fmt.Sprintf(`
+func testAccAPIMappingConfig_apiMappingKey(rName, certificateArn, apiMappingKey string) string {
+	return testAccAPIMappingConfig_base(rName, certificateArn) + testAccStageConfig_basicWebSocket(rName) + fmt.Sprintf(`
 resource "aws_apigatewayv2_api_mapping" "test" {
   api_id      = aws_apigatewayv2_api.test.id
   domain_name = aws_apigatewayv2_domain_name.test.id

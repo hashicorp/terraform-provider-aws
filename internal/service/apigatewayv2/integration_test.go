@@ -24,12 +24,12 @@ func TestAccAWSAPIGatewayV2Integration_basicWebSocket(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayV2IntegrationDestroy,
+		CheckDestroy: testAccCheckIntegrationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayV2IntegrationConfig_basic(rName),
+				Config: testAccIntegrationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayV2IntegrationExists(resourceName, &apiId, &v),
+					testAccCheckIntegrationExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "connection_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", ""),
@@ -52,7 +52,7 @@ func TestAccAWSAPIGatewayV2Integration_basicWebSocket(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccAWSAPIGatewayV2IntegrationImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccIntegrationImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -70,12 +70,12 @@ func TestAccAWSAPIGatewayV2Integration_basicHttp(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayV2IntegrationDestroy,
+		CheckDestroy: testAccCheckIntegrationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayV2IntegrationConfig_httpProxy(rName),
+				Config: testAccIntegrationConfig_httpProxy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayV2IntegrationExists(resourceName, &apiId, &v),
+					testAccCheckIntegrationExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "connection_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", ""),
@@ -98,7 +98,7 @@ func TestAccAWSAPIGatewayV2Integration_basicHttp(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccAWSAPIGatewayV2IntegrationImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccIntegrationImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -116,13 +116,13 @@ func TestAccAWSAPIGatewayV2Integration_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayV2IntegrationDestroy,
+		CheckDestroy: testAccCheckIntegrationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayV2IntegrationConfig_basic(rName),
+				Config: testAccIntegrationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayV2IntegrationExists(resourceName, &apiId, &v),
-					testAccCheckAWSAPIGatewayV2IntegrationDisappears(&apiId, &v),
+					testAccCheckIntegrationExists(resourceName, &apiId, &v),
+					testAccCheckIntegrationDisappears(&apiId, &v),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -140,12 +140,12 @@ func TestAccAWSAPIGatewayV2Integration_DataMappingHttp(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayV2IntegrationDestroy,
+		CheckDestroy: testAccCheckIntegrationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayV2IntegrationConfig_dataMappingHttp(rName),
+				Config: testAccIntegrationConfig_dataMappingHTTP(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayV2IntegrationExists(resourceName, &apiId, &v),
+					testAccCheckIntegrationExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "connection_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", ""),
@@ -180,9 +180,9 @@ func TestAccAWSAPIGatewayV2Integration_DataMappingHttp(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSAPIGatewayV2IntegrationConfig_dataMappingHttpUpdated(rName),
+				Config: testAccIntegrationConfig_dataMappingHTTPUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayV2IntegrationExists(resourceName, &apiId, &v),
+					testAccCheckIntegrationExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "connection_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", ""),
@@ -213,7 +213,7 @@ func TestAccAWSAPIGatewayV2Integration_DataMappingHttp(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccAWSAPIGatewayV2IntegrationImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccIntegrationImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -231,12 +231,12 @@ func TestAccAWSAPIGatewayV2Integration_IntegrationTypeHttp(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayV2IntegrationDestroy,
+		CheckDestroy: testAccCheckIntegrationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayV2IntegrationConfig_integrationTypeHttp(rName),
+				Config: testAccIntegrationConfig_integrationTypeHTTP(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayV2IntegrationExists(resourceName, &apiId, &v),
+					testAccCheckIntegrationExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "connection_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", "CONVERT_TO_TEXT"),
@@ -260,9 +260,9 @@ func TestAccAWSAPIGatewayV2Integration_IntegrationTypeHttp(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSAPIGatewayV2IntegrationConfig_integrationTypeHttpUpdated(rName),
+				Config: testAccIntegrationConfig_integrationTypeHTTPUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayV2IntegrationExists(resourceName, &apiId, &v),
+					testAccCheckIntegrationExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "connection_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", "CONVERT_TO_BINARY"),
@@ -289,7 +289,7 @@ func TestAccAWSAPIGatewayV2Integration_IntegrationTypeHttp(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccAWSAPIGatewayV2IntegrationImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccIntegrationImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -308,12 +308,12 @@ func TestAccAWSAPIGatewayV2Integration_LambdaWebSocket(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayV2IntegrationDestroy,
+		CheckDestroy: testAccCheckIntegrationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayV2IntegrationConfig_lambdaWebSocket(rName),
+				Config: testAccIntegrationConfig_lambdaWebSocket(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayV2IntegrationExists(resourceName, &apiId, &v),
+					testAccCheckIntegrationExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", "CONVERT_TO_TEXT"),
 					resource.TestCheckResourceAttr(resourceName, "credentials_arn", ""),
@@ -335,7 +335,7 @@ func TestAccAWSAPIGatewayV2Integration_LambdaWebSocket(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccAWSAPIGatewayV2IntegrationImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccIntegrationImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -354,12 +354,12 @@ func TestAccAWSAPIGatewayV2Integration_LambdaHttp(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayV2IntegrationDestroy,
+		CheckDestroy: testAccCheckIntegrationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayV2IntegrationConfig_lambdaHttp(rName),
+				Config: testAccIntegrationConfig_lambdaHTTP(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayV2IntegrationExists(resourceName, &apiId, &v),
+					testAccCheckIntegrationExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", ""),
 					resource.TestCheckResourceAttr(resourceName, "credentials_arn", ""),
@@ -381,7 +381,7 @@ func TestAccAWSAPIGatewayV2Integration_LambdaHttp(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccAWSAPIGatewayV2IntegrationImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccIntegrationImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -400,12 +400,12 @@ func TestAccAWSAPIGatewayV2Integration_VpcLinkWebSocket(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayV2IntegrationDestroy,
+		CheckDestroy: testAccCheckIntegrationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayV2IntegrationConfig_vpcLinkWebSocket(rName),
+				Config: testAccIntegrationConfig_vpcLinkWebSocket(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayV2IntegrationExists(resourceName, &apiId, &v),
+					testAccCheckIntegrationExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "connection_id", vpcLinkResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "VPC_LINK"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", "CONVERT_TO_TEXT"),
@@ -428,7 +428,7 @@ func TestAccAWSAPIGatewayV2Integration_VpcLinkWebSocket(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccAWSAPIGatewayV2IntegrationImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccIntegrationImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -448,12 +448,12 @@ func TestAccAWSAPIGatewayV2Integration_VpcLinkHttp(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayV2IntegrationDestroy,
+		CheckDestroy: testAccCheckIntegrationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayV2IntegrationConfig_vpcLinkHttp(rName),
+				Config: testAccIntegrationConfig_vpcLinkHTTP(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayV2IntegrationExists(resourceName, &apiId, &v),
+					testAccCheckIntegrationExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "connection_id", vpcLinkResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "VPC_LINK"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", ""),
@@ -477,14 +477,14 @@ func TestAccAWSAPIGatewayV2Integration_VpcLinkHttp(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccAWSAPIGatewayV2IntegrationImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccIntegrationImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSAPIGatewayV2IntegrationConfig_vpcLinkHttpUpdated(rName),
+				Config: testAccIntegrationConfig_vpcLinkHTTPUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayV2IntegrationExists(resourceName, &apiId, &v),
+					testAccCheckIntegrationExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "connection_id", vpcLinkResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "VPC_LINK"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", ""),
@@ -508,7 +508,7 @@ func TestAccAWSAPIGatewayV2Integration_VpcLinkHttp(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccAWSAPIGatewayV2IntegrationImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccIntegrationImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -529,12 +529,12 @@ func TestAccAWSAPIGatewayV2Integration_AwsServiceIntegration(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayV2IntegrationDestroy,
+		CheckDestroy: testAccCheckIntegrationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayV2IntegrationConfig_sqsIntegration(rName, 0),
+				Config: testAccIntegrationConfig_sqsIntegration(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayV2IntegrationExists(resourceName, &apiId, &v),
+					testAccCheckIntegrationExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "credentials_arn", iamRoleResourceName, "arn"),
@@ -558,9 +558,9 @@ func TestAccAWSAPIGatewayV2Integration_AwsServiceIntegration(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSAPIGatewayV2IntegrationConfig_sqsIntegration(rName, 1),
+				Config: testAccIntegrationConfig_sqsIntegration(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayV2IntegrationExists(resourceName, &apiId, &v),
+					testAccCheckIntegrationExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "credentials_arn", iamRoleResourceName, "arn"),
@@ -585,7 +585,7 @@ func TestAccAWSAPIGatewayV2Integration_AwsServiceIntegration(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccAWSAPIGatewayV2IntegrationImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccIntegrationImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -593,7 +593,7 @@ func TestAccAWSAPIGatewayV2Integration_AwsServiceIntegration(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSAPIGatewayV2IntegrationDestroy(s *terraform.State) error {
+func testAccCheckIntegrationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn
 
 	for _, rs := range s.RootModule().Resources {
@@ -618,7 +618,7 @@ func testAccCheckAWSAPIGatewayV2IntegrationDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSAPIGatewayV2IntegrationDisappears(apiId *string, v *apigatewayv2.GetIntegrationOutput) resource.TestCheckFunc {
+func testAccCheckIntegrationDisappears(apiId *string, v *apigatewayv2.GetIntegrationOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn
 
@@ -631,7 +631,7 @@ func testAccCheckAWSAPIGatewayV2IntegrationDisappears(apiId *string, v *apigatew
 	}
 }
 
-func testAccCheckAWSAPIGatewayV2IntegrationExists(n string, vApiId *string, v *apigatewayv2.GetIntegrationOutput) resource.TestCheckFunc {
+func testAccCheckIntegrationExists(n string, vApiId *string, v *apigatewayv2.GetIntegrationOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -660,7 +660,7 @@ func testAccCheckAWSAPIGatewayV2IntegrationExists(n string, vApiId *string, v *a
 	}
 }
 
-func testAccAWSAPIGatewayV2IntegrationImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccIntegrationImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -671,7 +671,7 @@ func testAccAWSAPIGatewayV2IntegrationImportStateIdFunc(resourceName string) res
 	}
 }
 
-func testAccAWSAPIGatewayV2IntegrationConfig_apiWebSocket(rName string) string {
+func testAccIntegrationConfig_apiWebSocket(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_apigatewayv2_api" "test" {
   name                       = %[1]q
@@ -681,7 +681,7 @@ resource "aws_apigatewayv2_api" "test" {
 `, rName)
 }
 
-func testAccAWSAPIGatewayV2IntegrationConfig_apiHttp(rName string) string {
+func testAccIntegrationConfig_apiHTTP(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_apigatewayv2_api" "test" {
   name          = %[1]q
@@ -690,7 +690,7 @@ resource "aws_apigatewayv2_api" "test" {
 `, rName)
 }
 
-func testAccAWSAPIGatewayV2IntegrationConfig_lambdaBase(rName string) string {
+func testAccIntegrationConfig_lambdaBase(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name               = %[1]q
@@ -744,10 +744,10 @@ resource "aws_lambda_permission" "test" {
 `, rName)
 }
 
-func testAccAWSAPIGatewayV2IntegrationConfig_vpcLinkHttpBase(rName string) string {
+func testAccIntegrationConfig_vpcLinkHTTPBase(rName string) string {
 	return acctest.ConfigCompose(
-		testAccAWSAPIGatewayV2IntegrationConfig_apiHttp(rName),
-		testAccAWSAPIGatewayV2VpcLinkConfig_basic(rName),
+		testAccIntegrationConfig_apiHTTP(rName),
+		testAccVPCLinkConfig_basic(rName),
 		fmt.Sprintf(`
 resource "aws_lb" "test" {
   name = %[1]q
@@ -790,8 +790,8 @@ resource "aws_lb_listener" "test" {
 `, rName))
 }
 
-func testAccAWSAPIGatewayV2IntegrationConfig_basic(rName string) string {
-	return testAccAWSAPIGatewayV2IntegrationConfig_apiWebSocket(rName) + `
+func testAccIntegrationConfig_basic(rName string) string {
+	return testAccIntegrationConfig_apiWebSocket(rName) + `
 resource "aws_apigatewayv2_integration" "test" {
   api_id           = aws_apigatewayv2_api.test.id
   integration_type = "MOCK"
@@ -799,8 +799,8 @@ resource "aws_apigatewayv2_integration" "test" {
 `
 }
 
-func testAccAWSAPIGatewayV2IntegrationConfig_dataMappingHttp(rName string) string {
-	return testAccAWSAPIGatewayV2IntegrationConfig_apiHttp(rName) + `
+func testAccIntegrationConfig_dataMappingHTTP(rName string) string {
+	return testAccIntegrationConfig_apiHTTP(rName) + `
 resource "aws_apigatewayv2_integration" "test" {
   api_id = aws_apigatewayv2_api.test.id
 
@@ -833,8 +833,8 @@ resource "aws_apigatewayv2_integration" "test" {
 `
 }
 
-func testAccAWSAPIGatewayV2IntegrationConfig_dataMappingHttpUpdated(rName string) string {
-	return testAccAWSAPIGatewayV2IntegrationConfig_apiHttp(rName) + `
+func testAccIntegrationConfig_dataMappingHTTPUpdated(rName string) string {
+	return testAccIntegrationConfig_apiHTTP(rName) + `
 resource "aws_apigatewayv2_integration" "test" {
   api_id = aws_apigatewayv2_api.test.id
 
@@ -859,8 +859,8 @@ resource "aws_apigatewayv2_integration" "test" {
 `
 }
 
-func testAccAWSAPIGatewayV2IntegrationConfig_integrationTypeHttp(rName string) string {
-	return testAccAWSAPIGatewayV2IntegrationConfig_apiWebSocket(rName) + `
+func testAccIntegrationConfig_integrationTypeHTTP(rName string) string {
+	return testAccIntegrationConfig_apiWebSocket(rName) + `
 resource "aws_apigatewayv2_integration" "test" {
   api_id           = aws_apigatewayv2_api.test.id
   integration_type = "HTTP"
@@ -885,8 +885,8 @@ resource "aws_apigatewayv2_integration" "test" {
 `
 }
 
-func testAccAWSAPIGatewayV2IntegrationConfig_integrationTypeHttpUpdated(rName string) string {
-	return testAccAWSAPIGatewayV2IntegrationConfig_apiWebSocket(rName) + `
+func testAccIntegrationConfig_integrationTypeHTTPUpdated(rName string) string {
+	return testAccIntegrationConfig_apiWebSocket(rName) + `
 resource "aws_apigatewayv2_integration" "test" {
   api_id           = aws_apigatewayv2_api.test.id
   integration_type = "HTTP"
@@ -913,10 +913,10 @@ resource "aws_apigatewayv2_integration" "test" {
 `
 }
 
-func testAccAWSAPIGatewayV2IntegrationConfig_lambdaWebSocket(rName string) string {
+func testAccIntegrationConfig_lambdaWebSocket(rName string) string {
 	return acctest.ConfigCompose(
-		testAccAWSAPIGatewayV2IntegrationConfig_apiWebSocket(rName),
-		testAccAWSAPIGatewayV2IntegrationConfig_lambdaBase(rName),
+		testAccIntegrationConfig_apiWebSocket(rName),
+		testAccIntegrationConfig_lambdaBase(rName),
 		`
 resource "aws_apigatewayv2_integration" "test" {
   api_id           = aws_apigatewayv2_api.test.id
@@ -933,10 +933,10 @@ resource "aws_apigatewayv2_integration" "test" {
 `)
 }
 
-func testAccAWSAPIGatewayV2IntegrationConfig_lambdaHttp(rName string) string {
+func testAccIntegrationConfig_lambdaHTTP(rName string) string {
 	return acctest.ConfigCompose(
-		testAccAWSAPIGatewayV2IntegrationConfig_apiHttp(rName),
-		testAccAWSAPIGatewayV2IntegrationConfig_lambdaBase(rName),
+		testAccIntegrationConfig_apiHTTP(rName),
+		testAccIntegrationConfig_lambdaBase(rName),
 		`
 resource "aws_apigatewayv2_integration" "test" {
   api_id           = aws_apigatewayv2_api.test.id
@@ -953,8 +953,8 @@ resource "aws_apigatewayv2_integration" "test" {
 `)
 }
 
-func testAccAWSAPIGatewayV2IntegrationConfig_httpProxy(rName string) string {
-	return acctest.ConfigCompose(testAccAWSAPIGatewayV2IntegrationConfig_apiHttp(rName), `
+func testAccIntegrationConfig_httpProxy(rName string) string {
+	return acctest.ConfigCompose(testAccIntegrationConfig_apiHTTP(rName), `
 resource "aws_apigatewayv2_integration" "test" {
   api_id           = aws_apigatewayv2_api.test.id
   integration_type = "HTTP_PROXY"
@@ -965,9 +965,9 @@ resource "aws_apigatewayv2_integration" "test" {
 `)
 }
 
-func testAccAWSAPIGatewayV2IntegrationConfig_vpcLinkHttp(rName string) string {
+func testAccIntegrationConfig_vpcLinkHTTP(rName string) string {
 	return acctest.ConfigCompose(
-		testAccAWSAPIGatewayV2IntegrationConfig_vpcLinkHttpBase(rName),
+		testAccIntegrationConfig_vpcLinkHTTPBase(rName),
 		`
 resource "aws_apigatewayv2_integration" "test" {
   api_id           = aws_apigatewayv2_api.test.id
@@ -987,9 +987,9 @@ resource "aws_apigatewayv2_integration" "test" {
 `)
 }
 
-func testAccAWSAPIGatewayV2IntegrationConfig_vpcLinkHttpUpdated(rName string) string {
+func testAccIntegrationConfig_vpcLinkHTTPUpdated(rName string) string {
 	return acctest.ConfigCompose(
-		testAccAWSAPIGatewayV2IntegrationConfig_vpcLinkHttpBase(rName),
+		testAccIntegrationConfig_vpcLinkHTTPBase(rName),
 		`
 resource "aws_apigatewayv2_integration" "test" {
   api_id           = aws_apigatewayv2_api.test.id
@@ -1008,9 +1008,9 @@ resource "aws_apigatewayv2_integration" "test" {
 `)
 }
 
-func testAccAWSAPIGatewayV2IntegrationConfig_vpcLinkWebSocket(rName string) string {
+func testAccIntegrationConfig_vpcLinkWebSocket(rName string) string {
 	return acctest.ConfigCompose(
-		testAccAWSAPIGatewayV2IntegrationConfig_apiWebSocket(rName),
+		testAccIntegrationConfig_apiWebSocket(rName),
 		fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -1071,9 +1071,9 @@ resource "aws_apigatewayv2_integration" "test" {
 `, rName))
 }
 
-func testAccAWSAPIGatewayV2IntegrationConfig_sqsIntegration(rName string, queueIndex int) string {
+func testAccIntegrationConfig_sqsIntegration(rName string, queueIndex int) string {
 	return acctest.ConfigCompose(
-		testAccAWSAPIGatewayV2IntegrationConfig_apiHttp(rName),
+		testAccIntegrationConfig_apiHTTP(rName),
 		fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q

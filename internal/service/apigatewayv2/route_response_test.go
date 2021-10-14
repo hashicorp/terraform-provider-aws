@@ -26,12 +26,12 @@ func TestAccAWSAPIGatewayV2RouteResponse_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayV2RouteResponseDestroy,
+		CheckDestroy: testAccCheckRouteResponseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayV2RouteResponseConfig_basicWebSocket(rName),
+				Config: testAccRouteResponseConfig_basicWebSocket(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayV2RouteResponseExists(resourceName, &apiId, &routeId, &v),
+					testAccCheckRouteResponseExists(resourceName, &apiId, &routeId, &v),
 					resource.TestCheckResourceAttr(resourceName, "model_selection_expression", ""),
 					resource.TestCheckResourceAttr(resourceName, "response_models.%", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "route_id", routeResourceName, "id"),
@@ -40,7 +40,7 @@ func TestAccAWSAPIGatewayV2RouteResponse_basic(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccAWSAPIGatewayV2RouteResponseImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccRouteResponseImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -58,13 +58,13 @@ func TestAccAWSAPIGatewayV2RouteResponse_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayV2RouteResponseDestroy,
+		CheckDestroy: testAccCheckRouteResponseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayV2RouteResponseConfig_basicWebSocket(rName),
+				Config: testAccRouteResponseConfig_basicWebSocket(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayV2RouteResponseExists(resourceName, &apiId, &routeId, &v),
-					testAccCheckAWSAPIGatewayV2RouteResponseDisappears(&apiId, &routeId, &v),
+					testAccCheckRouteResponseExists(resourceName, &apiId, &routeId, &v),
+					testAccCheckRouteResponseDisappears(&apiId, &routeId, &v),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -85,12 +85,12 @@ func TestAccAWSAPIGatewayV2RouteResponse_Model(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayV2RouteResponseDestroy,
+		CheckDestroy: testAccCheckRouteResponseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayV2RouteResponseConfig_model(rName),
+				Config: testAccRouteResponseConfig_model(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayV2RouteResponseExists(resourceName, &apiId, &routeId, &v),
+					testAccCheckRouteResponseExists(resourceName, &apiId, &routeId, &v),
 					resource.TestCheckResourceAttr(resourceName, "model_selection_expression", "action"),
 					resource.TestCheckResourceAttr(resourceName, "response_models.%", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "response_models.test", modelResourceName, "name"),
@@ -100,7 +100,7 @@ func TestAccAWSAPIGatewayV2RouteResponse_Model(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccAWSAPIGatewayV2RouteResponseImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccRouteResponseImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -108,7 +108,7 @@ func TestAccAWSAPIGatewayV2RouteResponse_Model(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSAPIGatewayV2RouteResponseDestroy(s *terraform.State) error {
+func testAccCheckRouteResponseDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn
 
 	for _, rs := range s.RootModule().Resources {
@@ -134,7 +134,7 @@ func testAccCheckAWSAPIGatewayV2RouteResponseDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSAPIGatewayV2RouteResponseDisappears(apiId, routeId *string, v *apigatewayv2.GetRouteResponseOutput) resource.TestCheckFunc {
+func testAccCheckRouteResponseDisappears(apiId, routeId *string, v *apigatewayv2.GetRouteResponseOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn
 
@@ -148,7 +148,7 @@ func testAccCheckAWSAPIGatewayV2RouteResponseDisappears(apiId, routeId *string, 
 	}
 }
 
-func testAccCheckAWSAPIGatewayV2RouteResponseExists(n string, vApiId, vRouteId *string, v *apigatewayv2.GetRouteResponseOutput) resource.TestCheckFunc {
+func testAccCheckRouteResponseExists(n string, vApiId, vRouteId *string, v *apigatewayv2.GetRouteResponseOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -180,7 +180,7 @@ func testAccCheckAWSAPIGatewayV2RouteResponseExists(n string, vApiId, vRouteId *
 	}
 }
 
-func testAccAWSAPIGatewayV2RouteResponseImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccRouteResponseImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -191,9 +191,9 @@ func testAccAWSAPIGatewayV2RouteResponseImportStateIdFunc(resourceName string) r
 	}
 }
 
-func testAccAWSAPIGatewayV2RouteResponseConfig_basicWebSocket(rName string) string {
+func testAccRouteResponseConfig_basicWebSocket(rName string) string {
 	return acctest.ConfigCompose(
-		testAccAWSAPIGatewayV2RouteConfig_basicWebSocket(rName),
+		testAccRouteConfig_basicWebSocket(rName),
 		`
 resource "aws_apigatewayv2_route_response" "test" {
   api_id             = aws_apigatewayv2_api.test.id
@@ -203,9 +203,9 @@ resource "aws_apigatewayv2_route_response" "test" {
 `)
 }
 
-func testAccAWSAPIGatewayV2RouteResponseConfig_model(rName string) string {
+func testAccRouteResponseConfig_model(rName string) string {
 	return acctest.ConfigCompose(
-		testAccAWSAPIGatewayV2RouteConfig_model(rName),
+		testAccRouteConfig_model(rName),
 		`
 resource "aws_apigatewayv2_route_response" "test" {
   api_id             = aws_apigatewayv2_api.test.id

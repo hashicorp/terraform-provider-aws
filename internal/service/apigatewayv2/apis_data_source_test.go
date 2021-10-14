@@ -23,7 +23,7 @@ func TestAccAWSAPIGatewayV2ApisDataSource_Name(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayV2ApisDataSourceConfigName(rName1, rName2),
+				Config: testAccAPIsNameDataSourceConfig(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSource1Name, "ids.#", "1"),
 					resource.TestCheckResourceAttr(dataSource2Name, "ids.#", "2"),
@@ -46,7 +46,7 @@ func TestAccAWSAPIGatewayV2ApisDataSource_ProtocolType(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayV2ApisDataSourceConfigProtocolType(rName1, rName2),
+				Config: testAccAPIsProtocolTypeDataSourceConfig(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSource1Name, "ids.#", "1"),
 					resource.TestCheckResourceAttr(dataSource2Name, "ids.#", "1"),
@@ -70,7 +70,7 @@ func TestAccAWSAPIGatewayV2ApisDataSource_Tags(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayV2ApisDataSourceConfigTags(rName1, rName2),
+				Config: testAccAPIsTagsDataSourceConfig(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSource1Name, "ids.#", "1"),
 					resource.TestCheckResourceAttr(dataSource2Name, "ids.#", "2"),
@@ -81,7 +81,7 @@ func TestAccAWSAPIGatewayV2ApisDataSource_Tags(t *testing.T) {
 	})
 }
 
-func testAccAWSAPIGatewayV2ApisDataSourceConfigBase(rName1, rName2 string) string {
+func testAccAPIsBaseDataSourceConfig(rName1, rName2 string) string {
 	return fmt.Sprintf(`
 resource "aws_apigatewayv2_api" "test1" {
   name          = %[1]q
@@ -113,9 +113,9 @@ resource "aws_apigatewayv2_api" "test3" {
 `, rName1, rName2)
 }
 
-func testAccAWSAPIGatewayV2ApisDataSourceConfigName(rName1, rName2 string) string {
+func testAccAPIsNameDataSourceConfig(rName1, rName2 string) string {
 	return acctest.ConfigCompose(
-		testAccAWSAPIGatewayV2ApisDataSourceConfigBase(rName1, rName2),
+		testAccAPIsBaseDataSourceConfig(rName1, rName2),
 		`
 data "aws_apigatewayv2_apis" "test1" {
   # Force dependency on resources.
@@ -129,9 +129,9 @@ data "aws_apigatewayv2_apis" "test2" {
 `)
 }
 
-func testAccAWSAPIGatewayV2ApisDataSourceConfigProtocolType(rName1, rName2 string) string {
+func testAccAPIsProtocolTypeDataSourceConfig(rName1, rName2 string) string {
 	return acctest.ConfigCompose(
-		testAccAWSAPIGatewayV2ApisDataSourceConfigBase(rName1, rName2),
+		testAccAPIsBaseDataSourceConfig(rName1, rName2),
 		fmt.Sprintf(`
 data "aws_apigatewayv2_apis" "test1" {
   name = %[1]q
@@ -147,9 +147,9 @@ data "aws_apigatewayv2_apis" "test2" {
 `, rName1, rName2))
 }
 
-func testAccAWSAPIGatewayV2ApisDataSourceConfigTags(rName1, rName2 string) string {
+func testAccAPIsTagsDataSourceConfig(rName1, rName2 string) string {
 	return acctest.ConfigCompose(
-		testAccAWSAPIGatewayV2ApisDataSourceConfigBase(rName1, rName2),
+		testAccAPIsBaseDataSourceConfig(rName1, rName2),
 		`
 data "aws_apigatewayv2_apis" "test1" {
   # Force dependency on resources.

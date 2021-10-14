@@ -24,26 +24,26 @@ func TestAccAWSAPIGatewayV2Deployment_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayV2DeploymentDestroy,
+		CheckDestroy: testAccCheckDeploymentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayV2DeploymentConfig_basic(rName, "Test description"),
+				Config: testAccDeploymentConfig_basic(rName, "Test description"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayV2DeploymentExists(resourceName, &apiId, &v),
+					testAccCheckDeploymentExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "auto_deployed", "false"),
 					resource.TestCheckResourceAttr(resourceName, "description", "Test description"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccAWSAPIGatewayV2DeploymentImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccDeploymentImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSAPIGatewayV2DeploymentConfig_basic(rName, "Test description updated"),
+				Config: testAccDeploymentConfig_basic(rName, "Test description updated"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayV2DeploymentExists(resourceName, &apiId, &v),
+					testAccCheckDeploymentExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "auto_deployed", "false"),
 					resource.TestCheckResourceAttr(resourceName, "description", "Test description updated"),
 				),
@@ -62,13 +62,13 @@ func TestAccAWSAPIGatewayV2Deployment_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayV2DeploymentDestroy,
+		CheckDestroy: testAccCheckDeploymentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayV2DeploymentConfig_basic(rName, "Test description"),
+				Config: testAccDeploymentConfig_basic(rName, "Test description"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayV2DeploymentExists(resourceName, &apiId, &v),
-					testAccCheckAWSAPIGatewayV2DeploymentDisappears(&apiId, &v),
+					testAccCheckDeploymentExists(resourceName, &apiId, &v),
+					testAccCheckDeploymentDisappears(&apiId, &v),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -86,50 +86,50 @@ func TestAccAWSAPIGatewayV2Deployment_Triggers(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayV2DeploymentDestroy,
+		CheckDestroy: testAccCheckDeploymentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayV2DeploymentConfigTriggers(rName, false),
+				Config: testAccDeploymentTriggersConfig(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayV2DeploymentExists(resourceName, &apiId, &deployment1),
+					testAccCheckDeploymentExists(resourceName, &apiId, &deployment1),
 				),
 				// Due to how the Terraform state is handled for resources during creation,
 				// any SHA1 of whole resources will change after first apply, then stabilize.
 				ExpectNonEmptyPlan: true,
 			},
 			{
-				Config: testAccAWSAPIGatewayV2DeploymentConfigTriggers(rName, false),
+				Config: testAccDeploymentTriggersConfig(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayV2DeploymentExists(resourceName, &apiId, &deployment2),
-					testAccCheckAWSAPIGatewayV2DeploymentRecreated(&deployment1, &deployment2),
+					testAccCheckDeploymentExists(resourceName, &apiId, &deployment2),
+					testAccCheckDeploymentRecreated(&deployment1, &deployment2),
 				),
 			},
 			{
-				Config: testAccAWSAPIGatewayV2DeploymentConfigTriggers(rName, false),
+				Config: testAccDeploymentTriggersConfig(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayV2DeploymentExists(resourceName, &apiId, &deployment3),
-					testAccCheckAWSAPIGatewayV2DeploymentNotRecreated(&deployment2, &deployment3),
+					testAccCheckDeploymentExists(resourceName, &apiId, &deployment3),
+					testAccCheckDeploymentNotRecreated(&deployment2, &deployment3),
 				),
 			},
 			{
 				ResourceName:            resourceName,
-				ImportStateIdFunc:       testAccAWSAPIGatewayV2DeploymentImportStateIdFunc(resourceName),
+				ImportStateIdFunc:       testAccDeploymentImportStateIdFunc(resourceName),
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"triggers"},
 			},
 			{
-				Config: testAccAWSAPIGatewayV2DeploymentConfigTriggers(rName, true),
+				Config: testAccDeploymentTriggersConfig(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayV2DeploymentExists(resourceName, &apiId, &deployment4),
-					testAccCheckAWSAPIGatewayV2DeploymentRecreated(&deployment3, &deployment4),
+					testAccCheckDeploymentExists(resourceName, &apiId, &deployment4),
+					testAccCheckDeploymentRecreated(&deployment3, &deployment4),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckAWSAPIGatewayV2DeploymentDestroy(s *terraform.State) error {
+func testAccCheckDeploymentDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn
 
 	for _, rs := range s.RootModule().Resources {
@@ -154,7 +154,7 @@ func testAccCheckAWSAPIGatewayV2DeploymentDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSAPIGatewayV2DeploymentDisappears(apiId *string, v *apigatewayv2.GetDeploymentOutput) resource.TestCheckFunc {
+func testAccCheckDeploymentDisappears(apiId *string, v *apigatewayv2.GetDeploymentOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn
 
@@ -167,7 +167,7 @@ func testAccCheckAWSAPIGatewayV2DeploymentDisappears(apiId *string, v *apigatewa
 	}
 }
 
-func testAccCheckAWSAPIGatewayV2DeploymentExists(n string, vApiId *string, v *apigatewayv2.GetDeploymentOutput) resource.TestCheckFunc {
+func testAccCheckDeploymentExists(n string, vApiId *string, v *apigatewayv2.GetDeploymentOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -196,7 +196,7 @@ func testAccCheckAWSAPIGatewayV2DeploymentExists(n string, vApiId *string, v *ap
 	}
 }
 
-func testAccCheckAWSAPIGatewayV2DeploymentNotRecreated(i, j *apigatewayv2.GetDeploymentOutput) resource.TestCheckFunc {
+func testAccCheckDeploymentNotRecreated(i, j *apigatewayv2.GetDeploymentOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if !aws.TimeValue(i.CreatedDate).Equal(aws.TimeValue(j.CreatedDate)) {
 			return fmt.Errorf("API Gateway V2 Deployment recreated")
@@ -206,7 +206,7 @@ func testAccCheckAWSAPIGatewayV2DeploymentNotRecreated(i, j *apigatewayv2.GetDep
 	}
 }
 
-func testAccCheckAWSAPIGatewayV2DeploymentRecreated(i, j *apigatewayv2.GetDeploymentOutput) resource.TestCheckFunc {
+func testAccCheckDeploymentRecreated(i, j *apigatewayv2.GetDeploymentOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.TimeValue(i.CreatedDate).Equal(aws.TimeValue(j.CreatedDate)) {
 			return fmt.Errorf("API Gateway V2 Deployment not recreated")
@@ -216,7 +216,7 @@ func testAccCheckAWSAPIGatewayV2DeploymentRecreated(i, j *apigatewayv2.GetDeploy
 	}
 }
 
-func testAccAWSAPIGatewayV2DeploymentImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccDeploymentImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -227,8 +227,8 @@ func testAccAWSAPIGatewayV2DeploymentImportStateIdFunc(resourceName string) reso
 	}
 }
 
-func testAccAWSAPIGatewayV2DeploymentConfig_basic(rName, description string) string {
-	return testAccAWSAPIGatewayV2RouteConfig_target(rName) + fmt.Sprintf(`
+func testAccDeploymentConfig_basic(rName, description string) string {
+	return testAccRouteConfig_target(rName) + fmt.Sprintf(`
 resource "aws_apigatewayv2_deployment" "test" {
   api_id      = aws_apigatewayv2_api.test.id
   description = %[1]q
@@ -238,7 +238,7 @@ resource "aws_apigatewayv2_deployment" "test" {
 `, description)
 }
 
-func testAccAWSAPIGatewayV2DeploymentConfigTriggers(rName string, apiKeyRequired bool) string {
+func testAccDeploymentTriggersConfig(rName string, apiKeyRequired bool) string {
 	return fmt.Sprintf(`
 resource "aws_apigatewayv2_api" "test" {
   name                       = %[1]q

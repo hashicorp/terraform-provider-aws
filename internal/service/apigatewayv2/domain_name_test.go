@@ -22,11 +22,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_apigatewayv2_domain_name", &resource.Sweeper{
 		Name: "aws_apigatewayv2_domain_name",
-		F:    testSweepAPIGatewayV2DomainNames,
+		F:    sweepDomainNames,
 	})
 }
 
-func testSweepAPIGatewayV2DomainNames(region string) error {
+func sweepDomainNames(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -81,12 +81,12 @@ func TestAccAWSAPIGatewayV2DomainName_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayV2DomainNameDestroy,
+		CheckDestroy: testAccCheckDomainNameDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayV2DomainNameConfig_basic(rName, certificate, key, 1, 0),
+				Config: testAccDomainNameConfig_basic(rName, certificate, key, 1, 0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayV2DomainNameExists(resourceName, &v),
+					testAccCheckDomainNameExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/domainnames/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", domainName),
 					resource.TestCheckResourceAttr(resourceName, "domain_name_configuration.#", "1"),
@@ -120,12 +120,12 @@ func TestAccAWSAPIGatewayV2DomainName_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayV2DomainNameDestroy,
+		CheckDestroy: testAccCheckDomainNameDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayV2DomainNameConfig_basic(rName, certificate, key, 1, 0),
+				Config: testAccDomainNameConfig_basic(rName, certificate, key, 1, 0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayV2DomainNameExists(resourceName, &v),
+					testAccCheckDomainNameExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfapigatewayv2.ResourceDomainName(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -147,12 +147,12 @@ func TestAccAWSAPIGatewayV2DomainName_Tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayV2DomainNameDestroy,
+		CheckDestroy: testAccCheckDomainNameDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayV2DomainNameConfig_tags(rName, certificate, key, 1, 0),
+				Config: testAccDomainNameConfig_tags(rName, certificate, key, 1, 0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayV2DomainNameExists(resourceName, &v),
+					testAccCheckDomainNameExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/domainnames/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", domainName),
 					resource.TestCheckResourceAttr(resourceName, "domain_name_configuration.#", "1"),
@@ -173,9 +173,9 @@ func TestAccAWSAPIGatewayV2DomainName_Tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSAPIGatewayV2DomainNameConfig_basic(rName, certificate, key, 1, 0),
+				Config: testAccDomainNameConfig_basic(rName, certificate, key, 1, 0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayV2DomainNameExists(resourceName, &v),
+					testAccCheckDomainNameExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/domainnames/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", domainName),
 					resource.TestCheckResourceAttr(resourceName, "domain_name_configuration.#", "1"),
@@ -206,12 +206,12 @@ func TestAccAWSAPIGatewayV2DomainName_UpdateCertificate(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayV2DomainNameDestroy,
+		CheckDestroy: testAccCheckDomainNameDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayV2DomainNameConfig_basic(rName, certificate, key, 2, 0),
+				Config: testAccDomainNameConfig_basic(rName, certificate, key, 2, 0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayV2DomainNameExists(resourceName, &v),
+					testAccCheckDomainNameExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/domainnames/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", domainName),
 					resource.TestCheckResourceAttr(resourceName, "domain_name_configuration.#", "1"),
@@ -225,9 +225,9 @@ func TestAccAWSAPIGatewayV2DomainName_UpdateCertificate(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSAPIGatewayV2DomainNameConfig_basic(rName, certificate, key, 2, 1),
+				Config: testAccDomainNameConfig_basic(rName, certificate, key, 2, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayV2DomainNameExists(resourceName, &v),
+					testAccCheckDomainNameExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/domainnames/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", domainName),
 					resource.TestCheckResourceAttr(resourceName, "domain_name_configuration.#", "1"),
@@ -241,9 +241,9 @@ func TestAccAWSAPIGatewayV2DomainName_UpdateCertificate(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSAPIGatewayV2DomainNameConfig_tags(rName, certificate, key, 2, 0),
+				Config: testAccDomainNameConfig_tags(rName, certificate, key, 2, 0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayV2DomainNameExists(resourceName, &v),
+					testAccCheckDomainNameExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/domainnames/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", domainName),
 					resource.TestCheckResourceAttr(resourceName, "domain_name_configuration.#", "1"),
@@ -281,12 +281,12 @@ func TestAccAWSAPIGatewayV2DomainName_MutualTlsAuthentication(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayV2DomainNameDestroy,
+		CheckDestroy: testAccCheckDomainNameDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayV2DomainNameConfigMututalTlsAuthenticationNoObjectVersion(rootDomain, domain, rName, "apigateway-domain-name-truststore-1.pem"),
+				Config: testAccDomainNameMututalTLSAuthenticationNoObjectVersionConfig(rootDomain, domain, rName, "apigateway-domain-name-truststore-1.pem"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayV2DomainNameExists(resourceName, &v),
+					testAccCheckDomainNameExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/domainnames/.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, "domain_name", acmCertificateResourceName, "domain_name"),
 					resource.TestCheckResourceAttr(resourceName, "domain_name_configuration.#", "1"),
@@ -302,9 +302,9 @@ func TestAccAWSAPIGatewayV2DomainName_MutualTlsAuthentication(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSAPIGatewayV2DomainNameConfigMututalTlsAuthenticationObjectVersion(rootDomain, domain, rName, "apigateway-domain-name-truststore-2.pem"),
+				Config: testAccDomainNameMututalTLSAuthenticationObjectVersionConfig(rootDomain, domain, rName, "apigateway-domain-name-truststore-2.pem"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayV2DomainNameExists(resourceName, &v),
+					testAccCheckDomainNameExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/domainnames/.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, "domain_name", acmCertificateResourceName, "domain_name"),
 					resource.TestCheckResourceAttr(resourceName, "domain_name_configuration.#", "1"),
@@ -320,9 +320,9 @@ func TestAccAWSAPIGatewayV2DomainName_MutualTlsAuthentication(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSAPIGatewayV2DomainNameConfigMututalTlsAuthenticationObjectVersion(rootDomain, domain, rName, "apigateway-domain-name-truststore-1.pem"),
+				Config: testAccDomainNameMututalTLSAuthenticationObjectVersionConfig(rootDomain, domain, rName, "apigateway-domain-name-truststore-1.pem"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayV2DomainNameExists(resourceName, &v),
+					testAccCheckDomainNameExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/domainnames/.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, "domain_name", acmCertificateResourceName, "domain_name"),
 					resource.TestCheckResourceAttr(resourceName, "domain_name_configuration.#", "1"),
@@ -344,9 +344,9 @@ func TestAccAWSAPIGatewayV2DomainName_MutualTlsAuthentication(t *testing.T) {
 			},
 			// Test disabling mutual TLS authentication.
 			{
-				Config: testAccAWSAPIGatewayV2DomainNameConfigMututalTlsAuthenticationMissing(rootDomain, domain),
+				Config: testAccDomainNameMututalTLSAuthenticationMissingConfig(rootDomain, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayV2DomainNameExists(resourceName, &v),
+					testAccCheckDomainNameExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/domainnames/.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, "domain_name", acmCertificateResourceName, "domain_name"),
 					resource.TestCheckResourceAttr(resourceName, "domain_name_configuration.#", "1"),
@@ -363,7 +363,7 @@ func TestAccAWSAPIGatewayV2DomainName_MutualTlsAuthentication(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSAPIGatewayV2DomainNameDestroy(s *terraform.State) error {
+func testAccCheckDomainNameDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn
 
 	for _, rs := range s.RootModule().Resources {
@@ -387,7 +387,7 @@ func testAccCheckAWSAPIGatewayV2DomainNameDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSAPIGatewayV2DomainNameExists(n string, v *apigatewayv2.GetDomainNameOutput) resource.TestCheckFunc {
+func testAccCheckDomainNameExists(n string, v *apigatewayv2.GetDomainNameOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -412,7 +412,7 @@ func testAccCheckAWSAPIGatewayV2DomainNameExists(n string, v *apigatewayv2.GetDo
 	}
 }
 
-func testAccAWSAPIGatewayV2DomainNameConfigImportedCerts(rName, certificate, key string, count int) string {
+func testAccDomainNameImportedCertsConfig(rName, certificate, key string, count int) string {
 	return fmt.Sprintf(`
 resource "aws_acm_certificate" "test" {
   count = %[4]d
@@ -427,7 +427,7 @@ resource "aws_acm_certificate" "test" {
 `, rName, certificate, key, count)
 }
 
-func testAccAWSAPIGatewayV2DomainNameConfigPublicCert(rootDomain, domain string) string {
+func testAccDomainNamePublicCertConfig(rootDomain, domain string) string {
 	return fmt.Sprintf(`
 data "aws_route53_zone" "test" {
   name         = %[1]q
@@ -475,9 +475,9 @@ resource "aws_acm_certificate_validation" "test" {
 `, rootDomain, domain)
 }
 
-func testAccAWSAPIGatewayV2DomainNameConfig_basic(rName, certificate, key string, count, index int) string {
+func testAccDomainNameConfig_basic(rName, certificate, key string, count, index int) string {
 	return acctest.ConfigCompose(
-		testAccAWSAPIGatewayV2DomainNameConfigImportedCerts(rName, certificate, key, count),
+		testAccDomainNameImportedCertsConfig(rName, certificate, key, count),
 		fmt.Sprintf(`
 resource "aws_apigatewayv2_domain_name" "test" {
   domain_name = "%[1]s.example.com"
@@ -491,9 +491,9 @@ resource "aws_apigatewayv2_domain_name" "test" {
 `, rName, index))
 }
 
-func testAccAWSAPIGatewayV2DomainNameConfig_tags(rName, certificate, key string, count, index int) string {
+func testAccDomainNameConfig_tags(rName, certificate, key string, count, index int) string {
 	return acctest.ConfigCompose(
-		testAccAWSAPIGatewayV2DomainNameConfigImportedCerts(rName, certificate, key, count),
+		testAccDomainNameImportedCertsConfig(rName, certificate, key, count),
 		fmt.Sprintf(`
 resource "aws_apigatewayv2_domain_name" "test" {
   domain_name = "%[1]s.example.com"
@@ -512,9 +512,9 @@ resource "aws_apigatewayv2_domain_name" "test" {
 `, rName, index))
 }
 
-func testAccAWSAPIGatewayV2DomainNameConfigMututalTlsAuthenticationNoObjectVersion(rootDomain, domain, rName, pemFileName string) string {
+func testAccDomainNameMututalTLSAuthenticationNoObjectVersionConfig(rootDomain, domain, rName, pemFileName string) string {
 	return acctest.ConfigCompose(
-		testAccAWSAPIGatewayV2DomainNameConfigPublicCert(rootDomain, domain),
+		testAccDomainNamePublicCertConfig(rootDomain, domain),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -544,9 +544,9 @@ resource "aws_apigatewayv2_domain_name" "test" {
 `, rName, pemFileName))
 }
 
-func testAccAWSAPIGatewayV2DomainNameConfigMututalTlsAuthenticationObjectVersion(rootDomain, domain, rName, pemFileName string) string {
+func testAccDomainNameMututalTLSAuthenticationObjectVersionConfig(rootDomain, domain, rName, pemFileName string) string {
 	return acctest.ConfigCompose(
-		testAccAWSAPIGatewayV2DomainNameConfigPublicCert(rootDomain, domain),
+		testAccDomainNamePublicCertConfig(rootDomain, domain),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -581,9 +581,9 @@ resource "aws_apigatewayv2_domain_name" "test" {
 `, rName, pemFileName))
 }
 
-func testAccAWSAPIGatewayV2DomainNameConfigMututalTlsAuthenticationMissing(rootDomain, domain string) string {
+func testAccDomainNameMututalTLSAuthenticationMissingConfig(rootDomain, domain string) string {
 	return acctest.ConfigCompose(
-		testAccAWSAPIGatewayV2DomainNameConfigPublicCert(rootDomain, domain),
+		testAccDomainNamePublicCertConfig(rootDomain, domain),
 		`
 resource "aws_apigatewayv2_domain_name" "test" {
   domain_name = aws_acm_certificate.test.domain_name
