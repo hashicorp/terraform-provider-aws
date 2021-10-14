@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
@@ -233,5 +233,5 @@ func cloudwatchLogsSubscriptionFilterId(log_group_name string) string {
 
 	buf.WriteString(fmt.Sprintf("%s-", log_group_name)) // only one filter allowed per log_group_name at the moment
 
-	return fmt.Sprintf("cwlsf-%d", hashcode.String(buf.String()))
+	return fmt.Sprintf("cwlsf-%d", create.StringHashcode(buf.String()))
 }
