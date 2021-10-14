@@ -20,15 +20,15 @@ func TestAccAwsRoute53RecoveryReadinessRecoveryGroup_basic(t *testing.T) {
 	resourceName := "aws_route53recoveryreadiness_recovery_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckAwsRoute53RecoveryReadiness(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, route53recoveryreadiness.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAwsRoute53RecoveryReadinessRecoveryGroupDestroy,
+		CheckDestroy:      testAccCheckRecoveryGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsRoute53RecoveryReadinessRecoveryGroupConfig(rName),
+				Config: testAccRecoveryGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsRoute53RecoveryReadinessRecoveryGroupExists(resourceName),
+					testAccCheckRecoveryGroupExists(resourceName),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "route53-recovery-readiness", regexp.MustCompile(`recovery-group/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "cells.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -48,15 +48,15 @@ func TestAccAwsRoute53RecoveryReadinessRecoveryGroup_disappears(t *testing.T) {
 	resourceName := "aws_route53recoveryreadiness_recovery_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckAwsRoute53RecoveryReadiness(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, route53recoveryreadiness.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAwsRoute53RecoveryReadinessRecoveryGroupDestroy,
+		CheckDestroy:      testAccCheckRecoveryGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsRoute53RecoveryReadinessRecoveryGroupConfig(rName),
+				Config: testAccRecoveryGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsRoute53RecoveryReadinessRecoveryGroupExists(resourceName),
+					testAccCheckRecoveryGroupExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfroute53recoveryreadiness.ResourceRecoveryGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -70,15 +70,15 @@ func TestAccAwsRoute53RecoveryReadinessRecoveryGroup_nestedCell(t *testing.T) {
 	rNameCell := sdkacctest.RandomWithPrefix("tf-acc-test-cell")
 	resourceName := "aws_route53recoveryreadiness_recovery_group.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckAwsRoute53RecoveryReadiness(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, route53recoveryreadiness.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAwsRoute53RecoveryReadinessRecoveryGroupDestroy,
+		CheckDestroy:      testAccCheckRecoveryGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsRoute53RecoveryReadinessRecoveryGroupAndCellConfig(rName, rNameCell),
+				Config: testAccRecoveryGroupAndCellConfig(rName, rNameCell),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsRoute53RecoveryReadinessRecoveryGroupExists(resourceName),
+					testAccCheckRecoveryGroupExists(resourceName),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "route53-recovery-readiness", regexp.MustCompile(`recovery-group/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "cells.#", "1"),
 				),
@@ -96,15 +96,15 @@ func TestAccAwsRoute53RecoveryReadinessRecoveryGroup_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_route53recoveryreadiness_recovery_group.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckAwsRoute53RecoveryReadiness(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, route53recoveryreadiness.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAwsRoute53RecoveryReadinessRecoveryGroupDestroy,
+		CheckDestroy:      testAccCheckRecoveryGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsRoute53RecoveryReadinessRecoveryGroupConfig_Tags1(rName, "key1", "value1"),
+				Config: testAccRecoveryGroupConfig_Tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsRoute53RecoveryReadinessRecoveryGroupExists(resourceName),
+					testAccCheckRecoveryGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -115,18 +115,18 @@ func TestAccAwsRoute53RecoveryReadinessRecoveryGroup_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAwsRoute53RecoveryReadinessRecoveryGroupConfig_Tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccRecoveryGroupConfig_Tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsRoute53RecoveryReadinessRecoveryGroupExists(resourceName),
+					testAccCheckRecoveryGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccAwsRoute53RecoveryReadinessRecoveryGroupConfig_Tags1(rName, "key2", "value2"),
+				Config: testAccRecoveryGroupConfig_Tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsRoute53RecoveryReadinessRecoveryGroupExists(resourceName),
+					testAccCheckRecoveryGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -139,15 +139,15 @@ func TestAccAwsRoute53RecoveryReadinessRecoveryGroup_timeout(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_route53recoveryreadiness_recovery_group.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckAwsRoute53RecoveryReadiness(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, route53recoveryreadiness.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAwsRoute53RecoveryReadinessRecoveryGroupDestroy,
+		CheckDestroy:      testAccCheckRecoveryGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsRoute53RecoveryReadinessRecoveryGroupConfig_Timeout(rName),
+				Config: testAccRecoveryGroupConfig_Timeout(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsRoute53RecoveryReadinessRecoveryGroupExists(resourceName),
+					testAccCheckRecoveryGroupExists(resourceName),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "route53-recovery-readiness", regexp.MustCompile(`recovery-group/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "cells.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -162,7 +162,7 @@ func TestAccAwsRoute53RecoveryReadinessRecoveryGroup_timeout(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsRoute53RecoveryReadinessRecoveryGroupDestroy(s *terraform.State) error {
+func testAccCheckRecoveryGroupDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryReadinessConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -183,7 +183,7 @@ func testAccCheckAwsRoute53RecoveryReadinessRecoveryGroupDestroy(s *terraform.St
 	return nil
 }
 
-func testAccCheckAwsRoute53RecoveryReadinessRecoveryGroupExists(name string) resource.TestCheckFunc {
+func testAccCheckRecoveryGroupExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -202,7 +202,7 @@ func testAccCheckAwsRoute53RecoveryReadinessRecoveryGroupExists(name string) res
 	}
 }
 
-func testAccAwsRoute53RecoveryReadinessRecoveryGroupConfig(rName string) string {
+func testAccRecoveryGroupConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_route53recoveryreadiness_recovery_group" "test" {
   recovery_group_name = %q
@@ -210,7 +210,7 @@ resource "aws_route53recoveryreadiness_recovery_group" "test" {
 `, rName)
 }
 
-func testAccAwsRoute53RecoveryReadinessRecoveryGroupAndCellConfig(rName, rNameCell string) string {
+func testAccRecoveryGroupAndCellConfig(rName, rNameCell string) string {
 	return fmt.Sprintf(`
 resource "aws_route53recoveryreadiness_cell" "test" {
   cell_name = %[2]q
@@ -223,7 +223,7 @@ resource "aws_route53recoveryreadiness_recovery_group" "test" {
 `, rName, rNameCell)
 }
 
-func testAccAwsRoute53RecoveryReadinessRecoveryGroupConfig_Tags1(rName, tagKey1, tagValue1 string) string {
+func testAccRecoveryGroupConfig_Tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_route53recoveryreadiness_recovery_group" "test" {
   recovery_group_name = %[1]q
@@ -234,7 +234,7 @@ resource "aws_route53recoveryreadiness_recovery_group" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccAwsRoute53RecoveryReadinessRecoveryGroupConfig_Tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccRecoveryGroupConfig_Tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_route53recoveryreadiness_recovery_group" "test" {
   recovery_group_name = %[1]q
@@ -246,7 +246,7 @@ resource "aws_route53recoveryreadiness_recovery_group" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccAwsRoute53RecoveryReadinessRecoveryGroupConfig_Timeout(rName string) string {
+func testAccRecoveryGroupConfig_Timeout(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_route53recoveryreadiness_recovery_group" "test" {
   recovery_group_name = %q

@@ -20,15 +20,15 @@ func TestAccAwsRoute53RecoveryReadinessCell_basic(t *testing.T) {
 	resourceName := "aws_route53recoveryreadiness_cell.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckAwsRoute53RecoveryReadiness(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, route53recoveryreadiness.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAwsRoute53RecoveryReadinessCellDestroy,
+		CheckDestroy:      testAccCheckCellDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsRoute53RecoveryReadinessCellConfig(rName),
+				Config: testAccCellConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsRoute53RecoveryReadinessCellExists(resourceName),
+					testAccCheckCellExists(resourceName),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "route53-recovery-readiness", regexp.MustCompile(`cell/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "cells.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "parent_readiness_scopes.#", "0"),
@@ -49,15 +49,15 @@ func TestAccAwsRoute53RecoveryReadinessCell_disappears(t *testing.T) {
 	resourceName := "aws_route53recoveryreadiness_cell.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckAwsRoute53RecoveryReadiness(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, route53recoveryreadiness.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAwsRoute53RecoveryReadinessCellDestroy,
+		CheckDestroy:      testAccCheckCellDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsRoute53RecoveryReadinessCellConfig(rName),
+				Config: testAccCellConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsRoute53RecoveryReadinessCellExists(resourceName),
+					testAccCheckCellExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfroute53recoveryreadiness.ResourceCell(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -73,32 +73,32 @@ func TestAccAwsRoute53RecoveryReadinessCell_nestedCell(t *testing.T) {
 	resourceNameChild := "aws_route53recoveryreadiness_cell.test_child"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckAwsRoute53RecoveryReadiness(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, route53recoveryreadiness.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAwsRoute53RecoveryReadinessCellDestroy,
+		CheckDestroy:      testAccCheckCellDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsRoute53RecoveryReadinessCellChildConfig(rNameChild),
+				Config: testAccCellChildConfig(rNameChild),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsRoute53RecoveryReadinessCellExists(resourceNameChild),
+					testAccCheckCellExists(resourceNameChild),
 					acctest.MatchResourceAttrGlobalARN(resourceNameChild, "arn", "route53-recovery-readiness", regexp.MustCompile(`cell/.+`)),
 				),
 			},
 			{
-				Config: testAccAwsRoute53RecoveryReadinessCellParentConfig(rNameChild, rNameParent),
+				Config: testAccCellParentConfig(rNameChild, rNameParent),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsRoute53RecoveryReadinessCellExists(resourceNameParent),
+					testAccCheckCellExists(resourceNameParent),
 					acctest.MatchResourceAttrGlobalARN(resourceNameParent, "arn", "route53-recovery-readiness", regexp.MustCompile(`cell/.+`)),
 					resource.TestCheckResourceAttr(resourceNameParent, "cells.#", "1"),
 					resource.TestCheckResourceAttr(resourceNameParent, "parent_readiness_scopes.#", "0"),
-					testAccCheckAwsRoute53RecoveryReadinessCellExists(resourceNameChild),
+					testAccCheckCellExists(resourceNameChild),
 					acctest.MatchResourceAttrGlobalARN(resourceNameChild, "arn", "route53-recovery-readiness", regexp.MustCompile(`cell/.+`)),
 					resource.TestCheckResourceAttr(resourceNameChild, "cells.#", "0"),
 				),
 			},
 			{
-				Config: testAccAwsRoute53RecoveryReadinessCellParentConfig(rNameChild, rNameParent),
+				Config: testAccCellParentConfig(rNameChild, rNameParent),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNameChild, "parent_readiness_scopes.#", "1"),
 				),
@@ -122,15 +122,15 @@ func TestAccAwsRoute53RecoveryReadinessCell_tags(t *testing.T) {
 	resourceName := "aws_route53recoveryreadiness_cell.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckAwsRoute53RecoveryReadiness(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, route53recoveryreadiness.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAwsRoute53RecoveryReadinessCellDestroy,
+		CheckDestroy:      testAccCheckCellDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsRoute53RecoveryReadinessCellConfig_Tags1(rName, "key1", "value1"),
+				Config: testAccCellConfig_Tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsRoute53RecoveryReadinessCellExists(resourceName),
+					testAccCheckCellExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -141,18 +141,18 @@ func TestAccAwsRoute53RecoveryReadinessCell_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAwsRoute53RecoveryReadinessCellConfig_Tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccCellConfig_Tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsRoute53RecoveryReadinessCellExists(resourceName),
+					testAccCheckCellExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccAwsRoute53RecoveryReadinessCellConfig_Tags1(rName, "key2", "value2"),
+				Config: testAccCellConfig_Tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsRoute53RecoveryReadinessCellExists(resourceName),
+					testAccCheckCellExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -166,15 +166,15 @@ func TestAccAwsRoute53RecoveryReadinessCell_timeout(t *testing.T) {
 	resourceName := "aws_route53recoveryreadiness_cell.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckAwsRoute53RecoveryReadiness(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, route53recoveryreadiness.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAwsRoute53RecoveryReadinessCellDestroy,
+		CheckDestroy:      testAccCheckCellDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsRoute53RecoveryReadinessCellConfig_Timeout(rName),
+				Config: testAccCellConfig_Timeout(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsRoute53RecoveryReadinessCellExists(resourceName),
+					testAccCheckCellExists(resourceName),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "route53-recovery-readiness", regexp.MustCompile(`cell/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "cells.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "parent_readiness_scopes.#", "0"),
@@ -190,7 +190,7 @@ func TestAccAwsRoute53RecoveryReadinessCell_timeout(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsRoute53RecoveryReadinessCellDestroy(s *terraform.State) error {
+func testAccCheckCellDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryReadinessConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -211,7 +211,7 @@ func testAccCheckAwsRoute53RecoveryReadinessCellDestroy(s *terraform.State) erro
 	return nil
 }
 
-func testAccCheckAwsRoute53RecoveryReadinessCellExists(name string) resource.TestCheckFunc {
+func testAccCheckCellExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 
@@ -231,7 +231,7 @@ func testAccCheckAwsRoute53RecoveryReadinessCellExists(name string) resource.Tes
 	}
 }
 
-func testAccPreCheckAwsRoute53RecoveryReadiness(t *testing.T) {
+func testAccPreCheck(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryReadinessConn
 
 	input := &route53recoveryreadiness.ListCellsInput{}
@@ -247,7 +247,7 @@ func testAccPreCheckAwsRoute53RecoveryReadiness(t *testing.T) {
 	}
 }
 
-func testAccAwsRoute53RecoveryReadinessCellConfig(rName string) string {
+func testAccCellConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_route53recoveryreadiness_cell" "test" {
   cell_name = %q
@@ -255,7 +255,7 @@ resource "aws_route53recoveryreadiness_cell" "test" {
 `, rName)
 }
 
-func testAccAwsRoute53RecoveryReadinessCellChildConfig(rName string) string {
+func testAccCellChildConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_route53recoveryreadiness_cell" "test_child" {
   cell_name = %q
@@ -263,8 +263,8 @@ resource "aws_route53recoveryreadiness_cell" "test_child" {
 `, rName)
 }
 
-func testAccAwsRoute53RecoveryReadinessCellParentConfig(rName, rName2 string) string {
-	return acctest.ConfigCompose(testAccAwsRoute53RecoveryReadinessCellChildConfig(rName), fmt.Sprintf(`
+func testAccCellParentConfig(rName, rName2 string) string {
+	return acctest.ConfigCompose(testAccCellChildConfig(rName), fmt.Sprintf(`
 resource "aws_route53recoveryreadiness_cell" "test_parent" {
   cell_name = %q
   cells     = [aws_route53recoveryreadiness_cell.test_child.arn]
@@ -272,7 +272,7 @@ resource "aws_route53recoveryreadiness_cell" "test_parent" {
 `, rName2))
 }
 
-func testAccAwsRoute53RecoveryReadinessCellConfig_Tags1(rName, tagKey1, tagValue1 string) string {
+func testAccCellConfig_Tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_route53recoveryreadiness_cell" "test" {
   cell_name = %[1]q
@@ -284,7 +284,7 @@ resource "aws_route53recoveryreadiness_cell" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccAwsRoute53RecoveryReadinessCellConfig_Tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccCellConfig_Tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_route53recoveryreadiness_cell" "test" {
   cell_name = %[1]q
@@ -297,7 +297,7 @@ resource "aws_route53recoveryreadiness_cell" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccAwsRoute53RecoveryReadinessCellConfig_Timeout(rName string) string {
+func testAccCellConfig_Timeout(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_route53recoveryreadiness_cell" "test" {
   cell_name = %q
