@@ -12,9 +12,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -202,7 +203,7 @@ func TestAccAWSSnsPlatformApplication_basic(t *testing.T) {
 	resourceName := "aws_sns_platform_application.test"
 
 	for _, platform := range platforms {
-		name := fmt.Sprintf("tf-acc-%d", acctest.RandInt())
+		name := fmt.Sprintf("tf-acc-%d", sdkacctest.RandInt())
 		platformPrincipalCheck := resource.TestCheckNoResourceAttr(resourceName, "platform_principal")
 		if platform.Principal != "" {
 			platformPrincipalCheck = resource.TestCheckResourceAttrSet(resourceName, "platform_principal")
@@ -210,8 +211,8 @@ func TestAccAWSSnsPlatformApplication_basic(t *testing.T) {
 
 		t.Run(platform.Name, func(*testing.T) {
 			resource.ParallelTest(t, resource.TestCase{
-				PreCheck:     func() { testAccPreCheck(t) },
-				ErrorCheck:   testAccErrorCheck(t, sns.EndpointsID),
+				PreCheck:     func() { acctest.PreCheck(t) },
+				ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
 				Providers:    testAccProviders,
 				CheckDestroy: testAccCheckAWSSNSPlatformApplicationDestroy,
 				Steps: []resource.TestStep{
@@ -219,7 +220,7 @@ func TestAccAWSSnsPlatformApplication_basic(t *testing.T) {
 						Config: testAccAwsSnsPlatformApplicationConfig_basic(name, platform),
 						Check: resource.ComposeTestCheckFunc(
 							testAccCheckAwsSnsPlatformApplicationExists(resourceName),
-							testAccMatchResourceAttrRegionalARN(resourceName, "arn", "sns", regexp.MustCompile(fmt.Sprintf("app/%s/%s$", platform.Name, name))),
+							acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "sns", regexp.MustCompile(fmt.Sprintf("app/%s/%s$", platform.Name, name))),
 							resource.TestCheckResourceAttr(resourceName, "name", name),
 							resource.TestCheckResourceAttr(resourceName, "platform", platform.Name),
 							resource.TestCheckResourceAttrSet(resourceName, "platform_credential"),
@@ -258,11 +259,11 @@ func TestAccAWSSnsPlatformApplication_basicAttributes(t *testing.T) {
 		t.Run(platform.Name, func(*testing.T) {
 			for _, tc := range testCases {
 				t.Run(fmt.Sprintf("%s/%s", platform.Name, tc.AttributeKey), func(*testing.T) {
-					name := fmt.Sprintf("tf-acc-%d", acctest.RandInt())
+					name := fmt.Sprintf("tf-acc-%d", sdkacctest.RandInt())
 
 					resource.ParallelTest(t, resource.TestCase{
-						PreCheck:     func() { testAccPreCheck(t) },
-						ErrorCheck:   testAccErrorCheck(t, sns.EndpointsID),
+						PreCheck:     func() { acctest.PreCheck(t) },
+						ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
 						Providers:    testAccProviders,
 						CheckDestroy: testAccCheckAWSSNSPlatformApplicationDestroy,
 						Steps: []resource.TestStep{
@@ -307,13 +308,13 @@ func TestAccAWSSnsPlatformApplication_iamRoleAttributes(t *testing.T) {
 		t.Run(platform.Name, func(*testing.T) {
 			for _, tc := range testCases {
 				t.Run(fmt.Sprintf("%s/%s", platform.Name, tc), func(*testing.T) {
-					iamRoleName1 := fmt.Sprintf("tf-acc-%d", acctest.RandInt())
-					iamRoleName2 := fmt.Sprintf("tf-acc-%d", acctest.RandInt())
-					name := fmt.Sprintf("tf-acc-%d", acctest.RandInt())
+					iamRoleName1 := fmt.Sprintf("tf-acc-%d", sdkacctest.RandInt())
+					iamRoleName2 := fmt.Sprintf("tf-acc-%d", sdkacctest.RandInt())
+					name := fmt.Sprintf("tf-acc-%d", sdkacctest.RandInt())
 
 					resource.ParallelTest(t, resource.TestCase{
-						PreCheck:     func() { testAccPreCheck(t) },
-						ErrorCheck:   testAccErrorCheck(t, sns.EndpointsID),
+						PreCheck:     func() { acctest.PreCheck(t) },
+						ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
 						Providers:    testAccProviders,
 						CheckDestroy: testAccCheckAWSSNSPlatformApplicationDestroy,
 						Steps: []resource.TestStep{
@@ -360,13 +361,13 @@ func TestAccAWSSnsPlatformApplication_snsTopicAttributes(t *testing.T) {
 		t.Run(platform.Name, func(*testing.T) {
 			for _, tc := range testCases {
 				t.Run(fmt.Sprintf("%s/%s", platform.Name, tc), func(*testing.T) {
-					snsTopicName1 := fmt.Sprintf("tf-acc-%d", acctest.RandInt())
-					snsTopicName2 := fmt.Sprintf("tf-acc-%d", acctest.RandInt())
-					name := fmt.Sprintf("tf-acc-%d", acctest.RandInt())
+					snsTopicName1 := fmt.Sprintf("tf-acc-%d", sdkacctest.RandInt())
+					snsTopicName2 := fmt.Sprintf("tf-acc-%d", sdkacctest.RandInt())
+					name := fmt.Sprintf("tf-acc-%d", sdkacctest.RandInt())
 
 					resource.ParallelTest(t, resource.TestCase{
-						PreCheck:     func() { testAccPreCheck(t) },
-						ErrorCheck:   testAccErrorCheck(t, sns.EndpointsID),
+						PreCheck:     func() { acctest.PreCheck(t) },
+						ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
 						Providers:    testAccProviders,
 						CheckDestroy: testAccCheckAWSSNSPlatformApplicationDestroy,
 						Steps: []resource.TestStep{
