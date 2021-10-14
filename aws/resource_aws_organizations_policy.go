@@ -82,7 +82,7 @@ func resourceAwsOrganizationsPolicyCreate(ctx context.Context, d *schema.Resourc
 		resp, err = conn.CreatePolicy(input)
 
 		if err != nil {
-			if isAWSErr(err, organizations.ErrCodeFinalizingOrganizationException, "") {
+			if tfawserr.ErrMessageContains(err, organizations.ErrCodeFinalizingOrganizationException, "") {
 				log.Printf("[DEBUG] Retrying creating Organizations Policy (%s): %s", name, err)
 				return resource.RetryableError(err)
 			}
@@ -92,7 +92,7 @@ func resourceAwsOrganizationsPolicyCreate(ctx context.Context, d *schema.Resourc
 
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		resp, err = conn.CreatePolicy(input)
 	}
 
@@ -117,7 +117,7 @@ func resourceAwsOrganizationsPolicyRead(ctx context.Context, d *schema.ResourceD
 	log.Printf("[DEBUG] Reading Organizations policy: %s", input)
 	resp, err := conn.DescribePolicy(input)
 	if err != nil {
-		if isAWSErr(err, organizations.ErrCodePolicyNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, organizations.ErrCodePolicyNotFoundException, "") {
 			log.Printf("[WARN] Organizations policy does not exist, removing from state: %s", d.Id())
 			d.SetId("")
 			return nil
@@ -211,7 +211,7 @@ func resourceAwsOrganizationsPolicyDelete(ctx context.Context, d *schema.Resourc
 	log.Printf("[DEBUG] Deleting Organizations Policy: %s", input)
 	_, err := conn.DeletePolicy(input)
 	if err != nil {
-		if isAWSErr(err, organizations.ErrCodePolicyNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, organizations.ErrCodePolicyNotFoundException, "") {
 			return nil
 		}
 		return diag.FromErr(fmt.Errorf("error deleting Organizations policy (%s): %w", d.Id(), err))

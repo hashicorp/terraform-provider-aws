@@ -231,7 +231,7 @@ func resourceAwsOrganizationsOrganizationRead(d *schema.ResourceData, meta inter
 	log.Printf("[INFO] Reading Organization: %s", d.Id())
 	org, err := conn.DescribeOrganization(&organizations.DescribeOrganizationInput{})
 
-	if isAWSErr(err, organizations.ErrCodeAWSOrganizationsNotInUseException, "") {
+	if tfawserr.ErrMessageContains(err, organizations.ErrCodeAWSOrganizationsNotInUseException, "") {
 		log.Printf("[WARN] Organization does not exist, removing from state: %s", d.Id())
 		d.SetId("")
 		return nil
