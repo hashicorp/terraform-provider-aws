@@ -98,7 +98,7 @@ func dataSourceAwsSecretsManagerSecretRead(d *schema.ResourceData, meta interfac
 	log.Printf("[DEBUG] Reading Secrets Manager Secret: %s", input)
 	output, err := conn.DescribeSecret(input)
 	if err != nil {
-		if isAWSErr(err, secretsmanager.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeResourceNotFoundException, "") {
 			return fmt.Errorf("Secrets Manager Secret %q not found", secretID)
 		}
 		return fmt.Errorf("error reading Secrets Manager Secret: %w", err)

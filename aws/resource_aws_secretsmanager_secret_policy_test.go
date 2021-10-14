@@ -44,7 +44,7 @@ func testSweepSecretsManagerSecretPolicies(region string) error {
 
 			_, err := conn.DeleteResourcePolicy(input)
 			if err != nil {
-				if isAWSErr(err, secretsmanager.ErrCodeResourceNotFoundException, "") {
+				if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeResourceNotFoundException, "") {
 					continue
 				}
 				log.Printf("[ERROR] Failed to delete Secrets Manager Secret Policy (%s): %s", name, err)
@@ -194,11 +194,11 @@ func testAccCheckAwsSecretsManagerSecretPolicyDestroy(s *terraform.State) error 
 			return nil
 		})
 
-		if isResourceTimeoutError(err) {
+		if tfresource.TimedOut(err) {
 			output, err = conn.DescribeSecret(secretInput)
 		}
 
-		if isAWSErr(err, secretsmanager.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeResourceNotFoundException, "") {
 			continue
 		}
 
@@ -216,8 +216,8 @@ func testAccCheckAwsSecretsManagerSecretPolicyDestroy(s *terraform.State) error 
 
 		_, err = conn.GetResourcePolicy(input)
 
-		if isAWSErr(err, secretsmanager.ErrCodeResourceNotFoundException, "") ||
-			isAWSErr(err, secretsmanager.ErrCodeInvalidRequestException,
+		if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeResourceNotFoundException, "") ||
+			tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeInvalidRequestException,
 				"You can't perform this operation on the secret because it was marked for deletion.") {
 			continue
 		}
