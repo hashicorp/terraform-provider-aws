@@ -12,12 +12,12 @@ import (
 
 func TestAccAWSSsmParameterDataSource_basic(t *testing.T) {
 	resourceName := "data.aws_ssm_parameter.test"
-	name := sdkacctest.RandomWithPrefix("tf-acc-test")
+	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ssm.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAwsSsmParameterDataSourceConfig(name, "false"),
@@ -51,7 +51,7 @@ func TestAccAWSSsmParameterDataSource_fullPath(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ssm.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAwsSsmParameterDataSourceConfig(name, "false"),

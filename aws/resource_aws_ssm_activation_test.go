@@ -22,7 +22,7 @@ func TestAccAWSSSMActivation_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSSMActivationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -54,7 +54,7 @@ func TestAccAWSSSMActivation_update(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSSMActivationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -106,7 +106,7 @@ func TestAccAWSSSMActivation_expirationDate(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSSMActivationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -137,7 +137,7 @@ func TestAccAWSSSMActivation_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSSMActivationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -172,7 +172,7 @@ func testAccCheckAWSSSMActivationExists(n string, ssmActivation *ssm.Activation)
 			return fmt.Errorf("No SSM Activation ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ssmconn
+		conn := acctest.Provider.Meta().(*AWSClient).ssmconn
 
 		resp, err := conn.DescribeActivations(&ssm.DescribeActivationsInput{
 			Filters: []*ssm.DescribeActivationsFilter{
@@ -198,7 +198,7 @@ func testAccCheckAWSSSMActivationExists(n string, ssmActivation *ssm.Activation)
 
 func testAccCheckAWSSSMActivationDisappears(a *ssm.Activation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).ssmconn
+		conn := acctest.Provider.Meta().(*AWSClient).ssmconn
 
 		input := &ssm.DeleteActivationInput{ActivationId: a.ActivationId}
 		_, err := conn.DeleteActivation(input)
@@ -210,7 +210,7 @@ func testAccCheckAWSSSMActivationDisappears(a *ssm.Activation) resource.TestChec
 }
 
 func testAccCheckAWSSSMActivationDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ssmconn
+	conn := acctest.Provider.Meta().(*AWSClient).ssmconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ssm_activation" {

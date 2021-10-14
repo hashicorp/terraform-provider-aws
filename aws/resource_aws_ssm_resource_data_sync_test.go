@@ -74,7 +74,7 @@ func TestAccAWSSsmResourceDataSync_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSsmResourceDataSyncDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -99,7 +99,7 @@ func TestAccAWSSsmResourceDataSync_update(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSsmResourceDataSyncDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -124,7 +124,7 @@ func TestAccAWSSsmResourceDataSync_update(t *testing.T) {
 }
 
 func testAccCheckAWSSsmResourceDataSyncDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ssmconn
+	conn := acctest.Provider.Meta().(*AWSClient).ssmconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ssm_resource_data_sync" {
