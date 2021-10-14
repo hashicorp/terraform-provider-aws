@@ -108,7 +108,7 @@ func resourceAwsSecurityHubMemberRead(d *schema.ResourceData, meta interface{}) 
 	})
 
 	if err != nil {
-		if isAWSErr(err, securityhub.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, securityhub.ErrCodeResourceNotFoundException, "") {
 			log.Printf("[WARN] Security Hub member (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -143,7 +143,7 @@ func resourceAwsSecurityHubMemberDelete(d *schema.ResourceData, meta interface{}
 	_, err := conn.DisassociateMembers(&securityhub.DisassociateMembersInput{
 		AccountIds: []*string{aws.String(d.Id())},
 	})
-	if isAWSErr(err, securityhub.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, securityhub.ErrCodeResourceNotFoundException, "") {
 		return nil
 	}
 	if err != nil {
@@ -154,7 +154,7 @@ func resourceAwsSecurityHubMemberDelete(d *schema.ResourceData, meta interface{}
 		AccountIds: []*string{aws.String(d.Id())},
 	})
 
-	if isAWSErr(err, securityhub.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, securityhub.ErrCodeResourceNotFoundException, "") {
 		return nil
 	}
 	if err != nil {

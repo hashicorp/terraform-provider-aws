@@ -48,7 +48,7 @@ func resourceAwsSecurityHubAccountRead(d *schema.ResourceData, meta interface{})
 
 	if err != nil {
 		// Can only read enabled standards if Security Hub is enabled
-		if isAWSErr(err, "InvalidAccessException", "not subscribed to AWS Security Hub") {
+		if tfawserr.ErrMessageContains(err, "InvalidAccessException", "not subscribed to AWS Security Hub") {
 			d.SetId("")
 			return nil
 		}
