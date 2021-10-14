@@ -72,7 +72,7 @@ func sweepMonitoringSubscriptions(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSCloudFrontMonitoringSubscription_basic(t *testing.T) {
+func TestAccCloudFrontMonitoringSubscription_basic(t *testing.T) {
 	var v cloudfront.MonitoringSubscription
 	resourceName := "aws_cloudfront_monitoring_subscription.test"
 
@@ -101,7 +101,7 @@ func TestAccAWSCloudFrontMonitoringSubscription_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudFrontMonitoringSubscription_disappears(t *testing.T) {
+func TestAccCloudFrontMonitoringSubscription_disappears(t *testing.T) {
 	var v cloudfront.MonitoringSubscription
 	resourceName := "aws_cloudfront_monitoring_subscription.test"
 
@@ -123,7 +123,7 @@ func TestAccAWSCloudFrontMonitoringSubscription_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudFrontMonitoringSubscription_update(t *testing.T) {
+func TestAccCloudFrontMonitoringSubscription_update(t *testing.T) {
 	var v cloudfront.MonitoringSubscription
 	resourceName := "aws_cloudfront_monitoring_subscription.test"
 

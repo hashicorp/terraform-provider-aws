@@ -74,7 +74,7 @@ func sweepKeyGroup(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSCloudFrontKeyGroup_basic(t *testing.T) {
+func TestAccCloudFrontKeyGroup_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudfront_key_group.test"
 
@@ -104,7 +104,7 @@ func TestAccAWSCloudFrontKeyGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudFrontKeyGroup_disappears(t *testing.T) {
+func TestAccCloudFrontKeyGroup_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudfront_key_group.test"
 
@@ -126,7 +126,7 @@ func TestAccAWSCloudFrontKeyGroup_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudFrontKeyGroup_Comment(t *testing.T) {
+func TestAccCloudFrontKeyGroup_comment(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudfront_key_group.test"
 
@@ -162,7 +162,7 @@ func TestAccAWSCloudFrontKeyGroup_Comment(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudFrontKeyGroup_Items(t *testing.T) {
+func TestAccCloudFrontKeyGroup_items(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudfront_key_group.test"
 

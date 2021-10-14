@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSCloudFrontDataSourceOriginRequestPolicy_basic(t *testing.T) {
+func TestAccCloudFrontOriginRequestPolicyDataSource_basic(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 	dataSourceName := "data.aws_cloudfront_origin_request_policy.example"
 

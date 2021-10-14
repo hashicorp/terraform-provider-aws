@@ -73,7 +73,7 @@ func sweepRealtimeLogsConfig(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSCloudFrontRealtimeLogConfig_basic(t *testing.T) {
+func TestAccCloudFrontRealtimeLogConfig_basic(t *testing.T) {
 	var v cloudfront.RealtimeLogConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	samplingRate := sdkacctest.RandIntRange(1, 100)
@@ -113,7 +113,7 @@ func TestAccAWSCloudFrontRealtimeLogConfig_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudFrontRealtimeLogConfig_disappears(t *testing.T) {
+func TestAccCloudFrontRealtimeLogConfig_disappears(t *testing.T) {
 	var v cloudfront.RealtimeLogConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	samplingRate := sdkacctest.RandIntRange(1, 100)
@@ -137,7 +137,7 @@ func TestAccAWSCloudFrontRealtimeLogConfig_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudFrontRealtimeLogConfig_updates(t *testing.T) {
+func TestAccCloudFrontRealtimeLogConfig_updates(t *testing.T) {
 	var v cloudfront.RealtimeLogConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	samplingRate1 := sdkacctest.RandIntRange(1, 100)

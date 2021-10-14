@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSDataSourceCloudFrontDistribution_basic(t *testing.T) {
+func TestAccCloudFrontDistributionDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_cloudfront_distribution.test"
 	resourceName := "aws_cloudfront_distribution.s3_distribution"
 	rInt := sdkacctest.RandInt()

@@ -16,7 +16,7 @@ import (
 	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
 )
 
-func TestAccAWSCloudFrontPublicKey_basic(t *testing.T) {
+func TestAccCloudFrontPublicKey_basic(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_cloudfront_public_key.example"
 
@@ -44,7 +44,7 @@ func TestAccAWSCloudFrontPublicKey_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudFrontPublicKey_disappears(t *testing.T) {
+func TestAccCloudFrontPublicKey_disappears(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_cloudfront_public_key.example"
 
@@ -66,7 +66,7 @@ func TestAccAWSCloudFrontPublicKey_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudFrontPublicKey_namePrefix(t *testing.T) {
+func TestAccCloudFrontPublicKey_namePrefix(t *testing.T) {
 	startsWithPrefix := regexp.MustCompile("^tf-acc-test-")
 	resourceName := "aws_cloudfront_public_key.example"
 
@@ -95,7 +95,7 @@ func TestAccAWSCloudFrontPublicKey_namePrefix(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudFrontPublicKey_update(t *testing.T) {
+func TestAccCloudFrontPublicKey_update(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_cloudfront_public_key.example"
 

@@ -92,7 +92,7 @@ func sweepFunctions(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSCloudfrontFunction_basic(t *testing.T) {
+func TestAccCloudFrontFunction_basic(t *testing.T) {
 	var conf cloudfront.DescribeFunctionOutput
 	resourceName := "aws_cloudfront_function.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -127,7 +127,7 @@ func TestAccAWSCloudfrontFunction_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudfrontFunction_disappears(t *testing.T) {
+func TestAccCloudFrontFunction_disappears(t *testing.T) {
 	var conf cloudfront.DescribeFunctionOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -151,7 +151,7 @@ func TestAccAWSCloudfrontFunction_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudfrontFunction_Publish(t *testing.T) {
+func TestAccCloudFrontFunction_publish(t *testing.T) {
 	var conf cloudfront.DescribeFunctionOutput
 	resourceName := "aws_cloudfront_function.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -190,7 +190,7 @@ func TestAccAWSCloudfrontFunction_Publish(t *testing.T) {
 
 // If you are testing manually and can't wait for deletion, set the
 // TF_TEST_CLOUDFRONT_RETAIN environment variable.
-func TestAccAWSCloudfrontFunction_Associated(t *testing.T) {
+func TestAccCloudFrontFunction_associated(t *testing.T) {
 	var conf cloudfront.DescribeFunctionOutput
 	resourceName := "aws_cloudfront_function.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -233,7 +233,7 @@ func TestAccAWSCloudfrontFunction_Associated(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudfrontFunction_Update_Code(t *testing.T) {
+func TestAccCloudFrontFunction_Update_code(t *testing.T) {
 	var conf cloudfront.DescribeFunctionOutput
 	resourceName := "aws_cloudfront_function.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -268,7 +268,7 @@ func TestAccAWSCloudfrontFunction_Update_Code(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudfrontFunction_Update_Comment(t *testing.T) {
+func TestAccCloudFrontFunction_Update_comment(t *testing.T) {
 	var conf cloudfront.DescribeFunctionOutput
 	resourceName := "aws_cloudfront_function.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

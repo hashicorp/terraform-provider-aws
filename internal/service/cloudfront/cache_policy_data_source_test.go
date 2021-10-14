@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSCloudFrontDataSourceCachePolicy_basic(t *testing.T) {
+func TestAccCloudFrontCachePolicyDataSource_basic(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 	dataSourceName := "data.aws_cloudfront_cache_policy.example"
 

@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAWSCloudFrontLogDeliveryCanonicalUserId_basic(t *testing.T) {
+func TestAccCloudFrontLogDeliveryCanonicalUserIDDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_cloudfront_log_delivery_canonical_user_id.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -28,7 +28,7 @@ func TestAccDataSourceAWSCloudFrontLogDeliveryCanonicalUserId_basic(t *testing.T
 	})
 }
 
-func TestAccDataSourceAWSCloudFrontLogDeliveryCanonicalUserId_default(t *testing.T) {
+func TestAccCloudFrontLogDeliveryCanonicalUserIDDataSource_default(t *testing.T) {
 	dataSourceName := "data.aws_cloudfront_log_delivery_canonical_user_id.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -46,7 +46,7 @@ func TestAccDataSourceAWSCloudFrontLogDeliveryCanonicalUserId_default(t *testing
 	})
 }
 
-func TestAccDataSourceAWSCloudFrontLogDeliveryCanonicalUserId_cn(t *testing.T) {
+func TestAccCloudFrontLogDeliveryCanonicalUserIDDataSource_cn(t *testing.T) {
 	dataSourceName := "data.aws_cloudfront_log_delivery_canonical_user_id.test"
 
 	resource.ParallelTest(t, resource.TestCase{
