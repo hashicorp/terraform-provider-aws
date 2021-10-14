@@ -25,12 +25,12 @@ func TestAccAWSWafRegionalByteMatchSet_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, wafregional.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSWafRegionalByteMatchSetDestroy,
+		CheckDestroy: testAccCheckByteMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSWafRegionalByteMatchSetConfig(byteMatchSet),
+				Config: testAccByteMatchSetConfig(byteMatchSet),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWafRegionalByteMatchSetExists(resourceName, &v),
+					testAccCheckByteMatchSetExists(resourceName, &v),
 					resource.TestCheckResourceAttr(
 						resourceName, "name", byteMatchSet),
 					resource.TestCheckResourceAttr(
@@ -72,12 +72,12 @@ func TestAccAWSWafRegionalByteMatchSet_changeNameForceNew(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, wafregional.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSWafRegionalByteMatchSetDestroy,
+		CheckDestroy: testAccCheckByteMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSWafRegionalByteMatchSetConfig(byteMatchSet),
+				Config: testAccByteMatchSetConfig(byteMatchSet),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWafRegionalByteMatchSetExists(resourceName, &before),
+					testAccCheckByteMatchSetExists(resourceName, &before),
 					resource.TestCheckResourceAttr(
 						resourceName, "name", byteMatchSet),
 					resource.TestCheckResourceAttr(
@@ -101,9 +101,9 @@ func TestAccAWSWafRegionalByteMatchSet_changeNameForceNew(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSWafRegionalByteMatchSetConfigChangeName(byteMatchSetNewName),
+				Config: testAccByteMatchSetChangeNameConfig(byteMatchSetNewName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWafRegionalByteMatchSetExists(resourceName, &after),
+					testAccCheckByteMatchSetExists(resourceName, &after),
 					resource.TestCheckResourceAttr(
 						resourceName, "name", byteMatchSetNewName),
 					resource.TestCheckResourceAttr(
@@ -144,12 +144,12 @@ func TestAccAWSWafRegionalByteMatchSet_changeByteMatchTuples(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, wafregional.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSWafRegionalByteMatchSetDestroy,
+		CheckDestroy: testAccCheckByteMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSWafRegionalByteMatchSetConfig(byteMatchSetName),
+				Config: testAccByteMatchSetConfig(byteMatchSetName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWafRegionalByteMatchSetExists(resourceName, &before),
+					testAccCheckByteMatchSetExists(resourceName, &before),
 					resource.TestCheckResourceAttr(
 						resourceName, "name", byteMatchSetName),
 					resource.TestCheckResourceAttr(
@@ -171,9 +171,9 @@ func TestAccAWSWafRegionalByteMatchSet_changeByteMatchTuples(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSWafRegionalByteMatchSetConfigChangeByteMatchTuples(byteMatchSetName),
+				Config: testAccByteMatchSetChangeByteMatchTuplesConfig(byteMatchSetName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWafRegionalByteMatchSetExists(resourceName, &after),
+					testAccCheckByteMatchSetExists(resourceName, &after),
 					resource.TestCheckResourceAttr(
 						resourceName, "name", byteMatchSetName),
 					resource.TestCheckResourceAttr(
@@ -214,12 +214,12 @@ func TestAccAWSWafRegionalByteMatchSet_noByteMatchTuples(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, wafregional.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSWafRegionalByteMatchSetDestroy,
+		CheckDestroy: testAccCheckByteMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSWafRegionalByteMatchSetConfig_noDescriptors(byteMatchSetName),
+				Config: testAccByteMatchSetConfig_noDescriptors(byteMatchSetName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSWafRegionalByteMatchSetExists(resourceName, &byteMatchSet),
+					testAccCheckByteMatchSetExists(resourceName, &byteMatchSet),
 					resource.TestCheckResourceAttr(resourceName, "name", byteMatchSetName),
 					resource.TestCheckResourceAttr(resourceName, "byte_match_tuples.#", "0"),
 				),
@@ -242,13 +242,13 @@ func TestAccAWSWafRegionalByteMatchSet_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, wafregional.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSWafRegionalByteMatchSetDestroy,
+		CheckDestroy: testAccCheckByteMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSWafRegionalByteMatchSetConfig(byteMatchSet),
+				Config: testAccByteMatchSetConfig(byteMatchSet),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWafRegionalByteMatchSetExists(resourceName, &v),
-					testAccCheckAWSWafRegionalByteMatchSetDisappears(&v),
+					testAccCheckByteMatchSetExists(resourceName, &v),
+					testAccCheckByteMatchSetDisappears(&v),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -256,7 +256,7 @@ func TestAccAWSWafRegionalByteMatchSet_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSWafRegionalByteMatchSetDisappears(v *waf.ByteMatchSet) resource.TestCheckFunc {
+func testAccCheckByteMatchSetDisappears(v *waf.ByteMatchSet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn
 		region := acctest.Provider.Meta().(*conns.AWSClient).Region
@@ -302,7 +302,7 @@ func testAccCheckAWSWafRegionalByteMatchSetDisappears(v *waf.ByteMatchSet) resou
 	}
 }
 
-func testAccCheckAWSWafRegionalByteMatchSetExists(n string, v *waf.ByteMatchSet) resource.TestCheckFunc {
+func testAccCheckByteMatchSetExists(n string, v *waf.ByteMatchSet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -331,7 +331,7 @@ func testAccCheckAWSWafRegionalByteMatchSetExists(n string, v *waf.ByteMatchSet)
 	}
 }
 
-func testAccCheckAWSWafRegionalByteMatchSetDestroy(s *terraform.State) error {
+func testAccCheckByteMatchSetDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_wafregional_byte_match_set" {
 			continue
@@ -359,7 +359,7 @@ func testAccCheckAWSWafRegionalByteMatchSetDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSWafRegionalByteMatchSetConfig(name string) string {
+func testAccByteMatchSetConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_byte_match_set" "byte_set" {
   name = "%s"
@@ -389,7 +389,7 @@ resource "aws_wafregional_byte_match_set" "byte_set" {
 `, name)
 }
 
-func testAccAWSWafRegionalByteMatchSetConfigChangeName(name string) string {
+func testAccByteMatchSetChangeNameConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_byte_match_set" "byte_set" {
   name = "%s"
@@ -419,7 +419,7 @@ resource "aws_wafregional_byte_match_set" "byte_set" {
 `, name)
 }
 
-func testAccAWSWafRegionalByteMatchSetConfig_noDescriptors(name string) string {
+func testAccByteMatchSetConfig_noDescriptors(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_byte_match_set" "byte_match_set" {
   name = "%s"
@@ -427,7 +427,7 @@ resource "aws_wafregional_byte_match_set" "byte_match_set" {
 `, name)
 }
 
-func testAccAWSWafRegionalByteMatchSetConfigChangeByteMatchTuples(name string) string {
+func testAccByteMatchSetChangeByteMatchTuplesConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_byte_match_set" "byte_set" {
   name = "%s"
