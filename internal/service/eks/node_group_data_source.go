@@ -182,7 +182,7 @@ func dataSourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 		return diag.Errorf("error setting subnets: %s", err)
 	}
 
-	if err := d.Set("tags", tftags.EksKeyValueTags(nodeGroup.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(nodeGroup.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return diag.Errorf("error setting tags: %s", err)
 	}
 

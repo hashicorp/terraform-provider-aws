@@ -112,7 +112,7 @@ func resourceAddonCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if len(tags) > 0 {
-		input.Tags = tags.IgnoreAws().EksTags()
+		input.Tags = Tags(tags.IgnoreAws())
 	}
 
 	err := resource.RetryContext(ctx, tfiam.PropagationTimeout, func() *resource.RetryError {
@@ -193,7 +193,7 @@ func resourceAddonRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("modified_at", aws.TimeValue(addon.ModifiedAt).Format(time.RFC3339))
 	d.Set("service_account_role_arn", addon.ServiceAccountRoleArn)
 
-	tags := tftags.EksKeyValueTags(addon.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(addon.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -262,7 +262,7 @@ func resourceAddonUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.EksUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.FromErr(fmt.Errorf("error updating tags: %w", err))
 		}
 	}

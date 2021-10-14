@@ -350,7 +350,7 @@ func resourceNodeGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if len(tags) > 0 {
-		input.Tags = tags.IgnoreAws().EksTags()
+		input.Tags = Tags(tags.IgnoreAws())
 	}
 
 	_, err := conn.CreateNodegroup(input)
@@ -452,7 +452,7 @@ func resourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.Set("version", nodeGroup.Version)
 
-	tags := tftags.EksKeyValueTags(nodeGroup.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(nodeGroup.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -568,7 +568,7 @@ func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.EksUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("error updating tags: %s", err)
 		}
 	}
