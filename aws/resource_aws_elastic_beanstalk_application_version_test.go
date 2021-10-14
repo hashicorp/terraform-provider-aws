@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSBeanstalkAppVersion_basic(t *testing.T) {
@@ -106,7 +107,7 @@ func TestAccAWSBeanstalkAppVersion_tags(t *testing.T) {
 }
 
 func testAccCheckApplicationVersionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).elasticbeanstalkconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_elastic_beanstalk_application_version" {
@@ -148,7 +149,7 @@ func testAccCheckApplicationVersionExists(n string, app *elasticbeanstalk.Applic
 			return fmt.Errorf("Elastic Beanstalk Application Version is not set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).elasticbeanstalkconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkConn
 		describeApplicationVersionOpts := &elasticbeanstalk.DescribeApplicationVersionsInput{
 			ApplicationName: aws.String(rs.Primary.Attributes["application"]),
 			VersionLabels:   []*string{aws.String(rs.Primary.ID)},

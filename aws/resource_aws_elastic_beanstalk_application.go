@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsElasticBeanstalkApplication() *schema.Resource {
@@ -71,8 +72,8 @@ func resourceAwsElasticBeanstalkApplication() *schema.Resource {
 }
 
 func resourceAwsElasticBeanstalkApplicationCreate(d *schema.ResourceData, meta interface{}) error {
-	beanstalkConn := meta.(*AWSClient).elasticbeanstalkconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	beanstalkConn := meta.(*conns.AWSClient).ElasticBeanstalkConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	// Get the name and description
@@ -102,7 +103,7 @@ func resourceAwsElasticBeanstalkApplicationCreate(d *schema.ResourceData, meta i
 }
 
 func resourceAwsElasticBeanstalkApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elasticbeanstalkconn
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn
 
 	if d.HasChange("description") {
 		if err := resourceAwsElasticBeanstalkApplicationDescriptionUpdate(conn, d); err != nil {
@@ -215,9 +216,9 @@ func resourceAwsElasticBeanstalkApplicationAppversionLifecycleUpdate(beanstalkCo
 }
 
 func resourceAwsElasticBeanstalkApplicationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elasticbeanstalkconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	var app *elasticbeanstalk.ApplicationDescription
 	err := resource.Retry(30*time.Second, func() *resource.RetryError {
@@ -278,7 +279,7 @@ func resourceAwsElasticBeanstalkApplicationRead(d *schema.ResourceData, meta int
 }
 
 func resourceAwsElasticBeanstalkApplicationDelete(d *schema.ResourceData, meta interface{}) error {
-	beanstalkConn := meta.(*AWSClient).elasticbeanstalkconn
+	beanstalkConn := meta.(*conns.AWSClient).ElasticBeanstalkConn
 
 	_, err := beanstalkConn.DeleteApplication(&elasticbeanstalk.DeleteApplicationInput{
 		ApplicationName: aws.String(d.Id()),
@@ -289,7 +290,7 @@ func resourceAwsElasticBeanstalkApplicationDelete(d *schema.ResourceData, meta i
 
 	var app *elasticbeanstalk.ApplicationDescription
 	err = resource.Retry(10*time.Second, func() *resource.RetryError {
-		app, err = getBeanstalkApplication(d.Id(), meta.(*AWSClient).elasticbeanstalkconn)
+		app, err = getBeanstalkApplication(d.Id(), meta.(*conns.AWSClient).ElasticBeanstalkConn)
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
@@ -301,7 +302,7 @@ func resourceAwsElasticBeanstalkApplicationDelete(d *schema.ResourceData, meta i
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		app, err = getBeanstalkApplication(d.Id(), meta.(*AWSClient).elasticbeanstalkconn)
+		app, err = getBeanstalkApplication(d.Id(), meta.(*conns.AWSClient).ElasticBeanstalkConn)
 	}
 	if err != nil {
 		return fmt.Errorf("Error deleting Beanstalk application: %s", err)
