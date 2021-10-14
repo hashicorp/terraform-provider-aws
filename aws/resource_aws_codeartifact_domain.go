@@ -10,8 +10,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/codeartifact"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceDomain() *schema.Resource {
@@ -57,18 +58,18 @@ func ResourceDomain() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodeArtifactConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	log.Print("[DEBUG] Creating CodeArtifact Domain")
 
 	params := &codeartifact.CreateDomainInput{
@@ -124,7 +125,7 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("repository_count", sm.Domain.RepositoryCount)
 	d.Set("created_time", sm.Domain.CreatedTime.Format(time.RFC3339))
 
-	tags, err := keyvaluetags.CodeartifactListTags(conn, arn)
+	tags, err := tftags.CodeartifactListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for CodeArtifact Domain (%s): %w", arn, err)
@@ -149,7 +150,7 @@ func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := keyvaluetags.CodeartifactUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := tftags.CodeartifactUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating CodeArtifact Domain (%s) tags: %w", d.Id(), err)
 		}
 	}
