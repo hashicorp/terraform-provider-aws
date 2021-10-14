@@ -22,15 +22,15 @@ func TestAccAWSWorkLinkWorkLinkWebsiteCertificateAuthorityAssociation_basic(t *t
 	resourceName := "aws_worklink_website_certificate_authority_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWorkLink(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, worklink.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSWorkLinkWebsiteCertificateAuthorityAssociationDestroy,
+		CheckDestroy: testAccCheckWebsiteCertificateAuthorityAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSWorkLinkWebsiteCertificateAuthorityAssociationConfig(suffix),
+				Config: testAccWebsiteCertificateAuthorityAssociationConfig(suffix),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWorkLinkWebsiteCertificateAuthorityAssociationExists(resourceName),
+					testAccCheckWebsiteCertificateAuthorityAssociationExists(resourceName),
 					resource.TestCheckResourceAttrPair(
 						resourceName, "fleet_arn",
 						"aws_worklink_fleet.test", "arn"),
@@ -52,22 +52,22 @@ func TestAccAWSWorkLinkWorkLinkWebsiteCertificateAuthorityAssociation_DisplayNam
 	displayName1 := fmt.Sprintf("tf-website-certificate-%s", sdkacctest.RandStringFromCharSet(5, sdkacctest.CharSetAlpha))
 	displayName2 := fmt.Sprintf("tf-website-certificate-%s", sdkacctest.RandStringFromCharSet(5, sdkacctest.CharSetAlpha))
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWorkLink(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, worklink.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSWorkLinkWebsiteCertificateAuthorityAssociationDestroy,
+		CheckDestroy: testAccCheckWebsiteCertificateAuthorityAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSWorkLinkWebsiteCertificateAuthorityAssociationConfigDisplayName(suffix, displayName1),
+				Config: testAccWebsiteCertificateAuthorityAssociationDisplayNameConfig(suffix, displayName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWorkLinkWebsiteCertificateAuthorityAssociationExists(resourceName),
+					testAccCheckWebsiteCertificateAuthorityAssociationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "display_name", displayName1),
 				),
 			},
 			{
-				Config: testAccAWSWorkLinkWebsiteCertificateAuthorityAssociationConfigDisplayName(suffix, displayName2),
+				Config: testAccWebsiteCertificateAuthorityAssociationDisplayNameConfig(suffix, displayName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWorkLinkWebsiteCertificateAuthorityAssociationExists(resourceName),
+					testAccCheckWebsiteCertificateAuthorityAssociationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "display_name", displayName2),
 				),
 			},
@@ -85,16 +85,16 @@ func TestAccAWSWorkLinkWorkLinkWebsiteCertificateAuthorityAssociation_Disappears
 	resourceName := "aws_worklink_website_certificate_authority_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWorkLink(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, worklink.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSWorkLinkWebsiteCertificateAuthorityAssociationDestroy,
+		CheckDestroy: testAccCheckWebsiteCertificateAuthorityAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSWorkLinkWebsiteCertificateAuthorityAssociationConfig(suffix),
+				Config: testAccWebsiteCertificateAuthorityAssociationConfig(suffix),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWorkLinkWebsiteCertificateAuthorityAssociationExists(resourceName),
-					testAccCheckAWSWorkLinkWebsiteCertificateAuthorityAssociationDisappears(resourceName),
+					testAccCheckWebsiteCertificateAuthorityAssociationExists(resourceName),
+					testAccCheckWebsiteCertificateAuthorityAssociationDisappears(resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -102,7 +102,7 @@ func TestAccAWSWorkLinkWorkLinkWebsiteCertificateAuthorityAssociation_Disappears
 	})
 }
 
-func testAccCheckAWSWorkLinkWebsiteCertificateAuthorityAssociationDestroy(s *terraform.State) error {
+func testAccCheckWebsiteCertificateAuthorityAssociationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).WorkLinkConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -128,7 +128,7 @@ func testAccCheckAWSWorkLinkWebsiteCertificateAuthorityAssociationDestroy(s *ter
 	return nil
 }
 
-func testAccCheckAWSWorkLinkWebsiteCertificateAuthorityAssociationDisappears(resourceName string) resource.TestCheckFunc {
+func testAccCheckWebsiteCertificateAuthorityAssociationDisappears(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -170,7 +170,7 @@ func testAccCheckAWSWorkLinkWebsiteCertificateAuthorityAssociationDisappears(res
 
 }
 
-func testAccCheckAWSWorkLinkWebsiteCertificateAuthorityAssociationExists(n string) resource.TestCheckFunc {
+func testAccCheckWebsiteCertificateAuthorityAssociationExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -200,7 +200,7 @@ func testAccCheckAWSWorkLinkWebsiteCertificateAuthorityAssociationExists(n strin
 	}
 }
 
-func testAccAWSWorkLinkWebsiteCertificateAuthorityAssociationConfig(r string) string {
+func testAccWebsiteCertificateAuthorityAssociationConfig(r string) string {
 	return fmt.Sprintf(`
 %s
 
@@ -208,10 +208,10 @@ resource "aws_worklink_website_certificate_authority_association" "test" {
   fleet_arn   = aws_worklink_fleet.test.arn
   certificate = file("test-fixtures/worklink-website-certificate-authority-association.pem")
 }
-`, testAccAWSWorkLinkFleetConfig(r))
+`, testAccFleetConfig(r))
 }
 
-func testAccAWSWorkLinkWebsiteCertificateAuthorityAssociationConfigDisplayName(r, displayName string) string {
+func testAccWebsiteCertificateAuthorityAssociationDisplayNameConfig(r, displayName string) string {
 	return fmt.Sprintf(`
 %s
 
@@ -220,5 +220,5 @@ resource "aws_worklink_website_certificate_authority_association" "test" {
   certificate  = file("test-fixtures/worklink-website-certificate-authority-association.pem")
   display_name = "%s"
 }
-`, testAccAWSWorkLinkFleetConfig(r), displayName)
+`, testAccFleetConfig(r), displayName)
 }
