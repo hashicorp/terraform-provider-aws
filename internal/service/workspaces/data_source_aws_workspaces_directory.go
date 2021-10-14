@@ -1,30 +1,14 @@
-package aws
+package workspaces
 
 import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/service/workspaces"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/workspaces/waiter"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfworkspaces "github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
-	tfworkspaces "github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
-	tfworkspaces "github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
-	tfworkspaces "github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
-	tfworkspaces "github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
-	tfworkspaces "github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
-	tfworkspaces "github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
-	tfworkspaces "github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
-	tfworkspaces "github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
-	tfworkspaces "github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
-	tfworkspaces "github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
-	tfworkspaces "github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
-	tfworkspaces "github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
-	tfworkspaces "github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
-	tfworkspaces "github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
 )
 
 func DataSourceDirectory() *schema.Resource {
@@ -186,7 +170,7 @@ func dataSourceDirectoryRead(d *schema.ResourceData, meta interface{}) error {
 
 	directoryID := d.Get("directory_id").(string)
 
-	rawOutput, state, err := tfworkspaces.StatusDirectoryState(conn, directoryID)()
+	rawOutput, state, err := StatusDirectoryState(conn, directoryID)()
 	if err != nil {
 		return fmt.Errorf("error getting WorkSpaces Directory (%s): %w", directoryID, err)
 	}

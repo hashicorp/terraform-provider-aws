@@ -4,15 +4,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/workspaces"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/workspaces/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfworkspaces "github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
 )
 
 func StatusDirectoryState(conn *workspaces.WorkSpaces, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := tfworkspaces.FindDirectoryByID(conn, id)
+		output, err := FindDirectoryByID(conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

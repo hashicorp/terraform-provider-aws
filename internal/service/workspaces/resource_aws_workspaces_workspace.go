@@ -1,4 +1,4 @@
-package aws
+package workspaces
 
 import (
 	"fmt"
@@ -9,26 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/workspaces"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/workspaces/waiter"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfworkspaces "github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
-	tfworkspaces "github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
-	tfworkspaces "github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
-	tfworkspaces "github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
-	tfworkspaces "github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
-	tfworkspaces "github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
-	tfworkspaces "github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
-	tfworkspaces "github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
-	tfworkspaces "github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
-	tfworkspaces "github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
-	tfworkspaces "github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
-	tfworkspaces "github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
-	tfworkspaces "github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
-	tfworkspaces "github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
-	tfworkspaces "github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
 )
 
 func ResourceWorkspace() *schema.Resource {
@@ -153,9 +137,9 @@ func ResourceWorkspace() *schema.Resource {
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(tfworkspaces.WorkspaceAvailableTimeout),
-			Update: schema.DefaultTimeout(tfworkspaces.WorkspaceUpdatingTimeout),
-			Delete: schema.DefaultTimeout(tfworkspaces.WorkspaceTerminatedTimeout),
+			Create: schema.DefaultTimeout(WorkspaceAvailableTimeout),
+			Update: schema.DefaultTimeout(WorkspaceUpdatingTimeout),
+			Delete: schema.DefaultTimeout(WorkspaceTerminatedTimeout),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -198,7 +182,7 @@ func resourceWorkspaceCreate(d *schema.ResourceData, meta interface{}) error {
 	workspaceID := aws.StringValue(resp.PendingRequests[0].WorkspaceId)
 
 	log.Printf("[DEBUG] Waiting for workspace %q to be available...", workspaceID)
-	_, err = tfworkspaces.WaitWorkspaceAvailable(conn, workspaceID, d.Timeout(schema.TimeoutCreate))
+	_, err = WaitWorkspaceAvailable(conn, workspaceID, d.Timeout(schema.TimeoutCreate))
 	if err != nil {
 		return fmt.Errorf("workspace %q is not available: %s", workspaceID, err)
 	}
@@ -214,7 +198,7 @@ func resourceWorkspaceRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	rawOutput, state, err := tfworkspaces.StatusWorkspaceState(conn, d.Id())()
+	rawOutput, state, err := StatusWorkspaceState(conn, d.Id())()
 	if err != nil {
 		return fmt.Errorf("error reading workspace (%s): %s", d.Id(), err)
 	}
@@ -334,7 +318,7 @@ func workspaceDelete(conn *workspaces.WorkSpaces, id string, timeout time.Durati
 	}
 
 	log.Printf("[DEBUG] Waiting for workspace %q to be terminated", id)
-	_, err = tfworkspaces.WaitWorkspaceTerminated(conn, id, timeout)
+	_, err = WaitWorkspaceTerminated(conn, id, timeout)
 	if err != nil {
 		return fmt.Errorf("workspace %q was not terminated: %s", id, err)
 	}
@@ -387,7 +371,7 @@ func workspacePropertyUpdate(p string, conn *workspaces.WorkSpaces, d *schema.Re
 	}
 
 	log.Printf("[DEBUG] Waiting for workspace %q %s property to be modified...", d.Id(), p)
-	_, err = tfworkspaces.WaitWorkspaceUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+	_, err = WaitWorkspaceUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 	if err != nil {
 		return fmt.Errorf("error modifying workspace %q property %q was not modified: %w", d.Id(), p, err)
 	}
