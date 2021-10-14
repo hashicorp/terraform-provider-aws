@@ -17,50 +17,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_config_configuration_aggregator", &resource.Sweeper{
-		Name: "aws_config_configuration_aggregator",
-		F:    sweepConfigurationAggregators,
-	})
-}
 
-func sweepConfigurationAggregators(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("Error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).ConfigConn
 
-	resp, err := conn.DescribeConfigurationAggregators(&configservice.DescribeConfigurationAggregatorsInput{})
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Config Configuration Aggregators sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error retrieving config configuration aggregators: %s", err)
-	}
 
-	if len(resp.ConfigurationAggregators) == 0 {
-		log.Print("[DEBUG] No config configuration aggregators to sweep")
-		return nil
-	}
-
-	log.Printf("[INFO] Found %d config configuration aggregators", len(resp.ConfigurationAggregators))
-
-	for _, agg := range resp.ConfigurationAggregators {
-		log.Printf("[INFO] Deleting config configuration aggregator %s", *agg.ConfigurationAggregatorName)
-		_, err := conn.DeleteConfigurationAggregator(&configservice.DeleteConfigurationAggregatorInput{
-			ConfigurationAggregatorName: agg.ConfigurationAggregatorName,
-		})
-
-		if err != nil {
-			return fmt.Errorf("error deleting config configuration aggregator %s: %w",
-				aws.StringValue(agg.ConfigurationAggregatorName), err)
-		}
-	}
-
-	return nil
-}
 
 func TestAccConfigConfigurationAggregator_account(t *testing.T) {
 	var ca configservice.ConfigurationAggregator

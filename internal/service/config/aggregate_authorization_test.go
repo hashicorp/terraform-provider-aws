@@ -17,49 +17,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_config_aggregate_authorization", &resource.Sweeper{
-		Name: "aws_config_aggregate_authorization",
-		F:    sweepAggregateAuthorizations,
-	})
-}
 
-func sweepAggregateAuthorizations(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("Error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).ConfigConn
 
-	aggregateAuthorizations, err := tfconfig.DescribeAggregateAuthorizations(conn)
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Config Aggregate Authorizations sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error retrieving config aggregate authorizations: %s", err)
-	}
 
-	if len(aggregateAuthorizations) == 0 {
-		log.Print("[DEBUG] No config aggregate authorizations to sweep")
-		return nil
-	}
-
-	log.Printf("[INFO] Found %d config aggregate authorizations", len(aggregateAuthorizations))
-
-	for _, auth := range aggregateAuthorizations {
-		log.Printf("[INFO] Deleting config authorization %s", *auth.AggregationAuthorizationArn)
-		_, err := conn.DeleteAggregationAuthorization(&configservice.DeleteAggregationAuthorizationInput{
-			AuthorizedAccountId: auth.AuthorizedAccountId,
-			AuthorizedAwsRegion: auth.AuthorizedAwsRegion,
-		})
-		if err != nil {
-			return fmt.Errorf("Error deleting config aggregate authorization %s: %s", *auth.AggregationAuthorizationArn, err)
-		}
-	}
-
-	return nil
-}
 
 func TestAccConfigAggregateAuthorization_basic(t *testing.T) {
 	rString := sdkacctest.RandStringFromCharSet(12, "0123456789")
