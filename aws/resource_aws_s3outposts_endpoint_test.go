@@ -6,19 +6,20 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/s3outposts"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/s3outposts/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSS3OutpostsEndpoint_basic(t *testing.T) {
 	resourceName := "aws_s3outposts_endpoint.test"
-	rInt := acctest.RandIntRange(0, 255)
+	rInt := sdkacctest.RandIntRange(0, 255)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3outposts.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3outposts.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3OutpostsEndpointDestroy,
 		Steps: []resource.TestStep{
@@ -26,7 +27,7 @@ func TestAccAWSS3OutpostsEndpoint_basic(t *testing.T) {
 				Config: testAccAWSS3OutpostsEndpointConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3OutpostsEndpointExists(resourceName),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "s3-outposts", regexp.MustCompile(`outpost/[^/]+/endpoint/[a-z0-9]+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "s3-outposts", regexp.MustCompile(`outpost/[^/]+/endpoint/[a-z0-9]+`)),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
 					resource.TestCheckResourceAttrPair(resourceName, "cidr_block", "aws_vpc.test", "cidr_block"),
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", "4"),
@@ -47,11 +48,11 @@ func TestAccAWSS3OutpostsEndpoint_basic(t *testing.T) {
 
 func TestAccAWSS3OutpostsEndpoint_disappears(t *testing.T) {
 	resourceName := "aws_s3outposts_endpoint.test"
-	rInt := acctest.RandIntRange(0, 255)
+	rInt := sdkacctest.RandIntRange(0, 255)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3outposts.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3outposts.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3OutpostsEndpointDestroy,
 		Steps: []resource.TestStep{
@@ -59,7 +60,7 @@ func TestAccAWSS3OutpostsEndpoint_disappears(t *testing.T) {
 				Config: testAccAWSS3OutpostsEndpointConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3OutpostsEndpointExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsS3OutpostsEndpoint(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsS3OutpostsEndpoint(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
