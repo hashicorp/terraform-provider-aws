@@ -1,4 +1,4 @@
-package aws
+package worklink_test
 
 import (
 	"fmt"
