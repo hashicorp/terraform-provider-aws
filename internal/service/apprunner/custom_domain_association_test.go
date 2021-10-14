@@ -73,7 +73,7 @@ func TestAccAwsAppRunnerCustomDomainAssociation_disappears(t *testing.T) {
 				Config: testAccAppRunnerCustomDomainAssociation_basic(rName, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppRunnerCustomDomainAssociationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceCustomDomainAssociation(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfapprunner.ResourceCustomDomainAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

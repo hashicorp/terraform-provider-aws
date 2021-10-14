@@ -57,7 +57,7 @@ func testSweepAppRunnerConnections(region string) error {
 
 			log.Printf("[INFO] Deleting App Runner Connection: %s", name)
 
-			r := ResourceConnection()
+			r := tfapprunner.ResourceConnection()
 			d := r.Data(nil)
 			d.SetId(name)
 			d.Set("arn", c.ConnectionArn)
@@ -128,7 +128,7 @@ func TestAccAwsAppRunnerConnection_disappears(t *testing.T) {
 				Config: testAccAppRunnerConnection_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppRunnerConnectionExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceConnection(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfapprunner.ResourceConnection(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

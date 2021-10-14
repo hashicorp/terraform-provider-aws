@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -54,7 +55,7 @@ func testSweepAppRunnerServices(region string) error {
 
 			log.Printf("[INFO] Deleting App Runner Service: %s", arn)
 
-			r := ResourceService()
+			r := tfapprunner.ResourceService()
 			d := r.Data(nil)
 			d.SetId(arn)
 
@@ -348,7 +349,7 @@ func TestAccAwsAppRunnerService_disappears(t *testing.T) {
 				Config: testAccAppRunnerService_imageRepository(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppRunnerServiceExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceService(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfapprunner.ResourceService(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

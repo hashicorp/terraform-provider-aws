@@ -62,7 +62,7 @@ func testSweepAppRunnerAutoScalingConfigurationVersions(region string) error {
 			arn := aws.StringValue(summaryConfig.AutoScalingConfigurationArn)
 
 			log.Printf("[INFO] Deleting App Runner AutoScaling Configuration Version (%s)", arn)
-			r := ResourceAutoScalingConfigurationVersion()
+			r := tfapprunner.ResourceAutoScalingConfigurationVersion()
 			d := r.Data(nil)
 			d.SetId(arn)
 
@@ -316,7 +316,7 @@ func TestAccAwsAppRunnerAutoScalingConfigurationVersion_disappears(t *testing.T)
 				Config: testAccAppRunnerAutoScalingConfigurationVersionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppRunnerAutoScalingConfigurationVersionExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceAutoScalingConfigurationVersion(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfapprunner.ResourceAutoScalingConfigurationVersion(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
