@@ -12,9 +12,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsElasticBeanstalkSolutionStack() *schema.Resource {
+func DataSourceSolutionStack() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsElasticBeanstalkSolutionStackRead,
+		Read: dataSourceSolutionStackRead,
 
 		Schema: map[string]*schema.Schema{
 			"name_regex": {
@@ -36,8 +36,8 @@ func dataSourceAwsElasticBeanstalkSolutionStack() *schema.Resource {
 	}
 }
 
-// dataSourceAwsElasticBeanstalkSolutionStackRead performs the API lookup.
-func dataSourceAwsElasticBeanstalkSolutionStackRead(d *schema.ResourceData, meta interface{}) error {
+// dataSourceSolutionStackRead performs the API lookup.
+func dataSourceSolutionStackRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn
 
 	nameRegex := d.Get("name_regex")

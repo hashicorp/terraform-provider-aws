@@ -12,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsElasticBeanstalkConfigurationTemplate() *schema.Resource {
+func ResourceConfigurationTemplate() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsElasticBeanstalkConfigurationTemplateCreate,
-		Read:   resourceAwsElasticBeanstalkConfigurationTemplateRead,
-		Update: resourceAwsElasticBeanstalkConfigurationTemplateUpdate,
-		Delete: resourceAwsElasticBeanstalkConfigurationTemplateDelete,
+		Create: resourceConfigurationTemplateCreate,
+		Read:   resourceConfigurationTemplateRead,
+		Update: resourceConfigurationTemplateUpdate,
+		Delete: resourceConfigurationTemplateDelete,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -55,7 +55,7 @@ func resourceAwsElasticBeanstalkConfigurationTemplate() *schema.Resource {
 	}
 }
 
-func resourceAwsElasticBeanstalkConfigurationTemplateCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceConfigurationTemplateCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn
 
 	// Get the relevant properties
@@ -89,10 +89,10 @@ func resourceAwsElasticBeanstalkConfigurationTemplateCreate(d *schema.ResourceDa
 
 	d.SetId(name)
 
-	return resourceAwsElasticBeanstalkConfigurationTemplateRead(d, meta)
+	return resourceConfigurationTemplateRead(d, meta)
 }
 
-func resourceAwsElasticBeanstalkConfigurationTemplateRead(d *schema.ResourceData, meta interface{}) error {
+func resourceConfigurationTemplateRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn
 
 	log.Printf("[DEBUG] Elastic Beanstalk configuration template read: %s", d.Get("name").(string))
@@ -126,7 +126,7 @@ func resourceAwsElasticBeanstalkConfigurationTemplateRead(d *schema.ResourceData
 	return nil
 }
 
-func resourceAwsElasticBeanstalkConfigurationTemplateUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceConfigurationTemplateUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn
 
 	log.Printf("[DEBUG] Elastic Beanstalk configuration template update: %s", d.Get("name").(string))
@@ -143,7 +143,7 @@ func resourceAwsElasticBeanstalkConfigurationTemplateUpdate(d *schema.ResourceDa
 		}
 	}
 
-	return resourceAwsElasticBeanstalkConfigurationTemplateRead(d, meta)
+	return resourceConfigurationTemplateRead(d, meta)
 }
 
 func resourceAwsElasticBeanstalkConfigurationTemplateDescriptionUpdate(conn *elasticbeanstalk.ElasticBeanstalk, d *schema.ResourceData) error {
@@ -221,7 +221,7 @@ func resourceAwsElasticBeanstalkConfigurationTemplateOptionSettingsUpdate(conn *
 	return nil
 }
 
-func resourceAwsElasticBeanstalkConfigurationTemplateDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceConfigurationTemplateDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn
 
 	application := d.Get("application").(string)

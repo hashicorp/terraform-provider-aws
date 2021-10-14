@@ -43,13 +43,13 @@ func resourceAwsElasticBeanstalkOptionSetting() *schema.Resource {
 	}
 }
 
-func resourceAwsElasticBeanstalkEnvironment() *schema.Resource {
+func ResourceEnvironment() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
-		Create: resourceAwsElasticBeanstalkEnvironmentCreate,
-		Read:   resourceAwsElasticBeanstalkEnvironmentRead,
-		Update: resourceAwsElasticBeanstalkEnvironmentUpdate,
-		Delete: resourceAwsElasticBeanstalkEnvironmentDelete,
+		Create: resourceEnvironmentCreate,
+		Read:   resourceEnvironmentRead,
+		Update: resourceEnvironmentUpdate,
+		Delete: resourceEnvironmentDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -214,7 +214,7 @@ func resourceAwsElasticBeanstalkEnvironment() *schema.Resource {
 	}
 }
 
-func resourceAwsElasticBeanstalkEnvironmentCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceEnvironmentCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -316,10 +316,10 @@ func resourceAwsElasticBeanstalkEnvironmentCreate(d *schema.ResourceData, meta i
 		return envErrors
 	}
 
-	return resourceAwsElasticBeanstalkEnvironmentRead(d, meta)
+	return resourceEnvironmentRead(d, meta)
 }
 
-func resourceAwsElasticBeanstalkEnvironmentUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceEnvironmentUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn
 
 	envID := d.Id()
@@ -495,10 +495,10 @@ func resourceAwsElasticBeanstalkEnvironmentUpdate(d *schema.ResourceData, meta i
 		}
 	}
 
-	return resourceAwsElasticBeanstalkEnvironmentRead(d, meta)
+	return resourceEnvironmentRead(d, meta)
 }
 
-func resourceAwsElasticBeanstalkEnvironmentRead(d *schema.ResourceData, meta interface{}) error {
+func resourceEnvironmentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -735,7 +735,7 @@ func resourceAwsElasticBeanstalkEnvironmentSettingsRead(d *schema.ResourceData, 
 	return nil
 }
 
-func resourceAwsElasticBeanstalkEnvironmentDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceEnvironmentDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn
 
 	waitForReadyTimeOut, err := time.ParseDuration(d.Get("wait_for_ready_timeout").(string))

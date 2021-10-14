@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsElasticBeanstalkApplication() *schema.Resource {
+func ResourceApplication() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsElasticBeanstalkApplicationCreate,
-		Read:   resourceAwsElasticBeanstalkApplicationRead,
-		Update: resourceAwsElasticBeanstalkApplicationUpdate,
-		Delete: resourceAwsElasticBeanstalkApplicationDelete,
+		Create: resourceApplicationCreate,
+		Read:   resourceApplicationRead,
+		Update: resourceApplicationUpdate,
+		Delete: resourceApplicationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -71,7 +71,7 @@ func resourceAwsElasticBeanstalkApplication() *schema.Resource {
 	}
 }
 
-func resourceAwsElasticBeanstalkApplicationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 	beanstalkConn := meta.(*conns.AWSClient).ElasticBeanstalkConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -99,10 +99,10 @@ func resourceAwsElasticBeanstalkApplicationCreate(d *schema.ResourceData, meta i
 		return err
 	}
 
-	return resourceAwsElasticBeanstalkApplicationRead(d, meta)
+	return resourceApplicationRead(d, meta)
 }
 
-func resourceAwsElasticBeanstalkApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn
 
 	if d.HasChange("description") {
@@ -126,7 +126,7 @@ func resourceAwsElasticBeanstalkApplicationUpdate(d *schema.ResourceData, meta i
 		}
 	}
 
-	return resourceAwsElasticBeanstalkApplicationRead(d, meta)
+	return resourceApplicationRead(d, meta)
 }
 
 func resourceAwsElasticBeanstalkApplicationDescriptionUpdate(beanstalkConn *elasticbeanstalk.ElasticBeanstalk, d *schema.ResourceData) error {
@@ -215,7 +215,7 @@ func resourceAwsElasticBeanstalkApplicationAppversionLifecycleUpdate(beanstalkCo
 	return err
 }
 
-func resourceAwsElasticBeanstalkApplicationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -278,7 +278,7 @@ func resourceAwsElasticBeanstalkApplicationRead(d *schema.ResourceData, meta int
 	return nil
 }
 
-func resourceAwsElasticBeanstalkApplicationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceApplicationDelete(d *schema.ResourceData, meta interface{}) error {
 	beanstalkConn := meta.(*conns.AWSClient).ElasticBeanstalkConn
 
 	_, err := beanstalkConn.DeleteApplication(&elasticbeanstalk.DeleteApplicationInput{
