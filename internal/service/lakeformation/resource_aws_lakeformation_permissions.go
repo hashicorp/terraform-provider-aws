@@ -1,4 +1,4 @@
-package aws
+package lakeformation
 
 import (
 	"fmt"
@@ -12,32 +12,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
-	tflakeformation "github.com/hashicorp/terraform-provider-aws/aws/internal/service/lakeformation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/lakeformation/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
-	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
-	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
-	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
-	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
-	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
-	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
-	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
-	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
-	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
-	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
-	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
-	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
-	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
-	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
-	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
-	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
-	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
-	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 func ResourcePermissions() *schema.Resource {
@@ -399,20 +379,20 @@ func resourcePermissionsRead(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("table"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.Resource.Table = expandLakeFormationTableResource(v.([]interface{})[0].(map[string]interface{}))
-		tableType = tflakeformation.TableTypeTable
+		tableType = TableTypeTable
 	}
 
 	if v, ok := d.GetOk("table_with_columns"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		// can't ListPermissions for TableWithColumns, so use Table instead
 		input.Resource.Table = expandLakeFormationTableWithColumnsResourceAsTable(v.([]interface{})[0].(map[string]interface{}))
-		tableType = tflakeformation.TableTypeTableWithColumns
+		tableType = TableTypeTableWithColumns
 	}
 
 	columnNames := make([]*string, 0)
 	excludedColumnNames := make([]*string, 0)
 	columnWildcard := false
 
-	if tableType == tflakeformation.TableTypeTableWithColumns {
+	if tableType == TableTypeTableWithColumns {
 		if v, ok := d.GetOk("table_with_columns.0.wildcard"); ok {
 			columnWildcard = v.(bool)
 		}
@@ -432,7 +412,7 @@ func resourcePermissionsRead(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Reading Lake Formation permissions: %v", input)
 
-	allPermissions, err := tflakeformation.waitPermissionsReady(conn, input, tableType, columnNames, excludedColumnNames, columnWildcard)
+	allPermissions, err := waitPermissionsReady(conn, input, tableType, columnNames, excludedColumnNames, columnWildcard)
 
 	if !d.IsNewResource() {
 		if tfawserr.ErrCodeEquals(err, lakeformation.ErrCodeEntityNotFoundException) {
@@ -459,7 +439,7 @@ func resourcePermissionsRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// clean permissions = filter out permissions that do not pertain to this specific resource
-	cleanPermissions := tflakeformation.FilterPermissions(input, tableType, columnNames, excludedColumnNames, columnWildcard, allPermissions)
+	cleanPermissions := FilterPermissions(input, tableType, columnNames, excludedColumnNames, columnWildcard, allPermissions)
 
 	if len(cleanPermissions) == 0 {
 		log.Printf("[WARN] No Lake Formation permissions (%s) found", d.Id())
@@ -596,7 +576,7 @@ func resourcePermissionsDelete(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	err := resource.Retry(tflakeformation.permissionsDeleteRetryTimeout, func() *resource.RetryError {
+	err := resource.Retry(permissionsDeleteRetryTimeout, func() *resource.RetryError {
 		var err error
 		_, err = conn.RevokePermissions(input)
 		if err != nil {
@@ -639,7 +619,7 @@ func resourcePermissionsDelete(d *schema.ResourceData, meta interface{}) error {
 	// You can't just wait until permissions = 0 because there could be many other unrelated permissions
 	// on the resource and filtering is non-trivial for table with columns.
 
-	err = resource.Retry(tflakeformation.permissionsDeleteRetryTimeout, func() *resource.RetryError {
+	err = resource.Retry(permissionsDeleteRetryTimeout, func() *resource.RetryError {
 		var err error
 		_, err = conn.RevokePermissions(input)
 
@@ -805,7 +785,7 @@ func flattenLakeFormationTableResource(apiObject *lakeformation.TableResource) m
 	}
 
 	if v := apiObject.Name; v != nil {
-		if aws.StringValue(v) != tflakeformation.TableNameAllTables || apiObject.TableWildcard == nil {
+		if aws.StringValue(v) != TableNameAllTables || apiObject.TableWildcard == nil {
 			tfMap["name"] = aws.StringValue(v)
 		}
 	}
@@ -904,7 +884,7 @@ func flattenLakeFormationTableWithColumnsResourceAsTable(apiObject *lakeformatio
 		tfMap["database_name"] = aws.StringValue(v)
 	}
 
-	if v := apiObject.Name; v != nil && aws.StringValue(v) == tflakeformation.TableNameAllTables && apiObject.ColumnWildcard != nil {
+	if v := apiObject.Name; v != nil && aws.StringValue(v) == TableNameAllTables && apiObject.ColumnWildcard != nil {
 		tfMap["wildcard"] = true
 	} else if v := apiObject.Name; v != nil {
 		tfMap["name"] = aws.StringValue(v)

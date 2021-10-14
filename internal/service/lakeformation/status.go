@@ -7,18 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/lakeformation"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	tflakeformation "github.com/hashicorp/terraform-provider-aws/aws/internal/service/lakeformation"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
-	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
-	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
-	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
-	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
-	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
-	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
-	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
-	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
-	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
 )
 
 func statusPermissions(conn *lakeformation.LakeFormation, input *lakeformation.ListPermissionsInput, tableType string, columnNames []*string, excludedColumnNames []*string, columnWildcard bool) resource.StateRefreshFunc {
@@ -53,7 +42,7 @@ func statusPermissions(conn *lakeformation.LakeFormation, input *lakeformation.L
 		}
 
 		// clean permissions = filter out permissions that do not pertain to this specific resource
-		cleanPermissions := tflakeformation.FilterPermissions(input, tableType, columnNames, excludedColumnNames, columnWildcard, permissions)
+		cleanPermissions := FilterPermissions(input, tableType, columnNames, excludedColumnNames, columnWildcard, permissions)
 
 		if len(cleanPermissions) == 0 {
 			return nil, statusNotFound, nil

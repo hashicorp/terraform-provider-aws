@@ -1,4 +1,4 @@
-package lakeformation
+package lakeformation_test
 
 import (
 	"fmt"
