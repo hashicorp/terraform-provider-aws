@@ -2,12 +2,9 @@ package mq_test
 
 import (
 	"fmt"
-	"log"
-	"math/rand"
 	"regexp"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mq"
@@ -19,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfmq "github.com/hashicorp/terraform-provider-aws/internal/service/mq"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
 func TestBrokerPasswordValidation(t *testing.T) {
