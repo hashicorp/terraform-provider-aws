@@ -18,7 +18,7 @@ func TestAccAWSDirectoryServiceLogSubscription_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckDirectoryService(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, directoryservice.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsDirectoryServiceLogSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			// test create
@@ -42,7 +42,7 @@ func TestAccAWSDirectoryServiceLogSubscription_basic(t *testing.T) {
 }
 
 func testAccCheckAwsDirectoryServiceLogSubscriptionDestroy(s *terraform.State) error {
-	dsconn := testAccProvider.Meta().(*AWSClient).dsconn
+	dsconn := acctest.Provider.Meta().(*AWSClient).dsconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_directory_service_log_subscription" {
@@ -80,7 +80,7 @@ func testAccCheckAwsDirectoryServiceLogSubscriptionExists(name string, logGroupN
 			return fmt.Errorf("No ID is set")
 		}
 
-		dsconn := testAccProvider.Meta().(*AWSClient).dsconn
+		dsconn := acctest.Provider.Meta().(*AWSClient).dsconn
 
 		res, err := dsconn.ListLogSubscriptions(&directoryservice.ListLogSubscriptionsInput{
 			DirectoryId: aws.String(rs.Primary.ID),
