@@ -102,7 +102,7 @@ func testAccCheckAWSWafv2WebACLAssociationDestroy(s *terraform.State) error {
 		}
 
 		// Return nil if the Web ACL Association is already destroyed
-		if isAWSErr(err, wafv2.ErrCodeWAFNonexistentItemException, "") {
+		if tfawserr.ErrMessageContains(err, wafv2.ErrCodeWAFNonexistentItemException, "") {
 			return nil
 		}
 
