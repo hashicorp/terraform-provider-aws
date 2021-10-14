@@ -16,6 +16,17 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tftransfer "github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
+	tftransfer "github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
+	tftransfer "github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
+	tftransfer "github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
+	tftransfer "github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
+	tftransfer "github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
+	tftransfer "github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
+	tftransfer "github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
+	tftransfer "github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
+	tftransfer "github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
+	tftransfer "github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
 )
 
 func testAccAWSTransferAccess_s3_basic(t *testing.T) {
@@ -183,7 +194,7 @@ func testAccCheckAWSTransferAccessExists(n string, v *transfer.DescribedAccess) 
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn
 
-		output, err := finder.AccessByServerIDAndExternalID(conn, serverID, externalID)
+		output, err := tftransfer.FindAccessByServerIDAndExternalID(conn, serverID, externalID)
 
 		if err != nil {
 			return err
@@ -208,7 +219,7 @@ func testAccCheckAWSTransferAccessDestroy(s *terraform.State) error {
 		if err != nil {
 			return fmt.Errorf("error parsing Transfer Access ID: %w", err)
 		}
-		_, err = finder.AccessByServerIDAndExternalID(conn, serverID, externalID)
+		_, err = tftransfer.FindAccessByServerIDAndExternalID(conn, serverID, externalID)
 
 		if tfresource.NotFound(err) {
 			continue

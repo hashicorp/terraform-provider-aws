@@ -16,6 +16,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tftransfer "github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
+	tftransfer "github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
+	tftransfer "github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
 )
 
 func testAccAWSTransferUser_basic(t *testing.T) {
@@ -246,7 +249,7 @@ func testAccCheckAWSTransferUserExists(n string, res *transfer.DescribedUser) re
 		userName := rs.Primary.Attributes["user_name"]
 		serverID := rs.Primary.Attributes["server_id"]
 
-		output, err := finder.UserByServerIDAndUserName(conn, serverID, userName)
+		output, err := tftransfer.FindUserByServerIDAndUserName(conn, serverID, userName)
 
 		if err != nil {
 			return err
@@ -269,7 +272,7 @@ func testAccCheckAWSTransferUserDestroy(s *terraform.State) error {
 		userName := rs.Primary.Attributes["user_name"]
 		serverID := rs.Primary.Attributes["server_id"]
 
-		_, err := finder.UserByServerIDAndUserName(conn, serverID, userName)
+		_, err := tftransfer.FindUserByServerIDAndUserName(conn, serverID, userName)
 
 		if tfresource.NotFound(err) {
 			continue

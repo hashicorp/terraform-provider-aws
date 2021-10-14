@@ -9,6 +9,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tftransfer "github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
+	tftransfer "github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
+	tftransfer "github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
 )
 
 func DataSourceServer() *schema.Resource {
@@ -86,7 +89,7 @@ func dataSourceServerRead(d *schema.ResourceData, meta interface{}) error {
 
 	serverID := d.Get("server_id").(string)
 
-	output, err := finder.ServerByID(conn, serverID)
+	output, err := tftransfer.FindServerByID(conn, serverID)
 
 	if err != nil {
 		return fmt.Errorf("error reading Transfer Server (%s): %w", serverID, err)

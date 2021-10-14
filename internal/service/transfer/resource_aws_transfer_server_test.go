@@ -20,6 +20,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tftransfer "github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
+	tftransfer "github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
+	tftransfer "github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
 )
 
 func init() {
@@ -978,7 +981,7 @@ func testAccCheckAWSTransferServerExists(n string, v *transfer.DescribedServer) 
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn
 
-		output, err := finder.ServerByID(conn, rs.Primary.ID)
+		output, err := tftransfer.FindServerByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -998,7 +1001,7 @@ func testAccCheckAWSTransferServerDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.ServerByID(conn, rs.Primary.ID)
+		_, err := tftransfer.FindServerByID(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue

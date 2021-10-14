@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func AccessByServerIDAndExternalID(conn *transfer.Transfer, serverID, externalID string) (*transfer.DescribedAccess, error) {
+func FindAccessByServerIDAndExternalID(conn *transfer.Transfer, serverID, externalID string) (*transfer.DescribedAccess, error) {
 	input := &transfer.DescribeAccessInput{
 		ExternalId: aws.String(externalID),
 		ServerId:   aws.String(serverID),
@@ -35,7 +35,7 @@ func AccessByServerIDAndExternalID(conn *transfer.Transfer, serverID, externalID
 	return output.Access, nil
 }
 
-func ServerByID(conn *transfer.Transfer, id string) (*transfer.DescribedServer, error) {
+func FindServerByID(conn *transfer.Transfer, id string) (*transfer.DescribedServer, error) {
 	input := &transfer.DescribeServerInput{
 		ServerId: aws.String(id),
 	}
@@ -60,7 +60,7 @@ func ServerByID(conn *transfer.Transfer, id string) (*transfer.DescribedServer, 
 	return output.Server, nil
 }
 
-func UserByServerIDAndUserName(conn *transfer.Transfer, serverID, userName string) (*transfer.DescribedUser, error) {
+func FindUserByServerIDAndUserName(conn *transfer.Transfer, serverID, userName string) (*transfer.DescribedUser, error) {
 	input := &transfer.DescribeUserInput{
 		ServerId: aws.String(serverID),
 		UserName: aws.String(userName),
