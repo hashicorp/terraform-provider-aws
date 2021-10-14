@@ -3,6 +3,7 @@ package finder
 import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codestarconnections"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // ConnectionByArn returns the Connection corresponding to the specified Arn.
