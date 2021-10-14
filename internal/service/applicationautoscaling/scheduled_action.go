@@ -19,9 +19,9 @@ import (
 
 func ResourceScheduledAction() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAppautoscalingScheduledActionPut,
+		Create: resourceScheduledActionPut,
 		Read:   resourceScheduledActionRead,
-		Update: resourceAwsAppautoscalingScheduledActionPut,
+		Update: resourceScheduledActionPut,
 		Delete: resourceScheduledActionDelete,
 
 		Schema: map[string]*schema.Schema{
@@ -103,7 +103,7 @@ func ResourceScheduledAction() *schema.Resource {
 	}
 }
 
-func resourceAwsAppautoscalingScheduledActionPut(d *schema.ResourceData, meta interface{}) error {
+func resourceScheduledActionPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ApplicationAutoScalingConn
 
 	input := &applicationautoscaling.PutScheduledActionInput{

@@ -25,7 +25,7 @@ func ResourcePolicy() *schema.Resource {
 		Update: resourcePolicyUpdate,
 		Delete: resourcePolicyDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsAppautoscalingPolicyImport,
+			State: resourcePolicyImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -206,7 +206,7 @@ func ResourcePolicy() *schema.Resource {
 func resourcePolicyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ApplicationAutoScalingConn
 
-	params, err := getAwsAppautoscalingPutScalingPolicyInput(d)
+	params, err := getPutScalingPolicyInput(d)
 	if err != nil {
 		return err
 	}
@@ -252,7 +252,7 @@ func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 
 	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
 		var err error
-		p, err = getAwsAppautoscalingPolicy(d, meta)
+		p, err = getPolicy(d, meta)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, applicationautoscaling.ErrCodeFailedResourceAccessException, "") {
 				return resource.RetryableError(err)
@@ -265,7 +265,7 @@ func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		p, err = getAwsAppautoscalingPolicy(d, meta)
+		p, err = getPolicy(d, meta)
 	}
 	if err != nil {
 		return fmt.Errorf("Failed to read scaling policy: %s", err)
@@ -299,7 +299,7 @@ func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 func resourcePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ApplicationAutoScalingConn
 
-	params, inputErr := getAwsAppautoscalingPutScalingPolicyInput(d)
+	params, inputErr := getPutScalingPolicyInput(d)
 	if inputErr != nil {
 		return inputErr
 	}
@@ -330,7 +330,7 @@ func resourcePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 
 func resourcePolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ApplicationAutoScalingConn
-	p, err := getAwsAppautoscalingPolicy(d, meta)
+	p, err := getPolicy(d, meta)
 	if err != nil {
 		return fmt.Errorf("Error getting policy: %s", err)
 	}
@@ -373,7 +373,7 @@ func resourcePolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsAppautoscalingPolicyImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourcePolicyImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	idParts, err := ValidPolicyImportInput(d.Id())
 	if err != nil {
 		return nil, fmt.Errorf("unexpected format (%q), expected <service-namespace>/<resource-id>/<scalable-dimension>/<policy-name>", d.Id())
@@ -533,7 +533,7 @@ func expandAppautoscalingPredefinedMetricSpecification(configured []interface{})
 	return spec
 }
 
-func getAwsAppautoscalingPutScalingPolicyInput(d *schema.ResourceData) (applicationautoscaling.PutScalingPolicyInput, error) {
+func getPutScalingPolicyInput(d *schema.ResourceData) (applicationautoscaling.PutScalingPolicyInput, error) {
 	var params = applicationautoscaling.PutScalingPolicyInput{
 		PolicyName: aws.String(d.Get("name").(string)),
 		ResourceId: aws.String(d.Get("resource_id").(string)),
@@ -591,7 +591,7 @@ func getAwsAppautoscalingPutScalingPolicyInput(d *schema.ResourceData) (applicat
 	return params, nil
 }
 
-func getAwsAppautoscalingPolicy(d *schema.ResourceData, meta interface{}) (*applicationautoscaling.ScalingPolicy, error) {
+func getPolicy(d *schema.ResourceData, meta interface{}) (*applicationautoscaling.ScalingPolicy, error) {
 	conn := meta.(*conns.AWSClient).ApplicationAutoScalingConn
 
 	params := applicationautoscaling.DescribeScalingPoliciesInput{

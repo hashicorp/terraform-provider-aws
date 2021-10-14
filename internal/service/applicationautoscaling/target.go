@@ -18,12 +18,12 @@ import (
 
 func ResourceTarget() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAppautoscalingTargetPut,
+		Create: resourceTargetPut,
 		Read:   resourceTargetRead,
-		Update: resourceAwsAppautoscalingTargetPut,
+		Update: resourceTargetPut,
 		Delete: resourceTargetDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsAppautoscalingTargetImport,
+			State: resourceTargetImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -59,7 +59,7 @@ func ResourceTarget() *schema.Resource {
 	}
 }
 
-func resourceAwsAppautoscalingTargetPut(d *schema.ResourceData, meta interface{}) error {
+func resourceTargetPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ApplicationAutoScalingConn
 
 	var targetOpts applicationautoscaling.RegisterScalableTargetInput
@@ -211,7 +211,7 @@ func GetTarget(resourceId, namespace, dimension string,
 	return nil, nil
 }
 
-func resourceAwsAppautoscalingTargetImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceTargetImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	idParts := strings.Split(d.Id(), "/")
 
 	if len(idParts) < 3 {
