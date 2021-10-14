@@ -66,7 +66,7 @@ func dataSourceLocalGatewayRouteTableRead(d *schema.ResourceData, meta interface
 	)
 
 	req.Filters = append(req.Filters, BuildTagFilterList(
-		tftags.New(d.Get("tags").(map[string]interface{})).Ec2Tags(),
+		Tags(tftags.New(d.Get("tags").(map[string]interface{}))),
 	)...)
 
 	req.Filters = append(req.Filters, BuildCustomFilterList(
@@ -97,7 +97,7 @@ func dataSourceLocalGatewayRouteTableRead(d *schema.ResourceData, meta interface
 	d.Set("outpost_arn", localgatewayroutetable.OutpostArn)
 	d.Set("state", localgatewayroutetable.State)
 
-	if err := d.Set("tags", tftags.Ec2KeyValueTags(localgatewayroutetable.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(localgatewayroutetable.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 

@@ -158,7 +158,7 @@ func volumeDescriptionAttributes(d *schema.ResourceData, client *conns.AWSClient
 	d.Set("multi_attach_enabled", volume.MultiAttachEnabled)
 	d.Set("throughput", volume.Throughput)
 
-	if err := d.Set("tags", tftags.Ec2KeyValueTags(volume.Tags).IgnoreAws().IgnoreConfig(client.IgnoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(volume.Tags).IgnoreAws().IgnoreConfig(client.IgnoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 

@@ -41,7 +41,7 @@ func ec2TagSpecificationsFromKeyValueTags(tags tftags.KeyValueTags, t string) []
 	return []*ec2.TagSpecification{
 		{
 			ResourceType: aws.String(t),
-			Tags:         tags.IgnoreAws().Ec2Tags(),
+			Tags:         Tags(tags.IgnoreAws()),
 		},
 	}
 }
@@ -55,7 +55,7 @@ func ec2TagSpecificationsFromMap(m map[string]interface{}, t string) []*ec2.TagS
 	return []*ec2.TagSpecification{
 		{
 			ResourceType: aws.String(t),
-			Tags:         tftags.New(m).IgnoreAws().Ec2Tags(),
+			Tags:         Tags(tftags.New(m).IgnoreAws()),
 		},
 	}
 }

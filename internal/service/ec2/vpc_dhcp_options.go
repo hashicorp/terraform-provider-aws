@@ -183,7 +183,7 @@ func resourceVPCDHCPOptionsRead(d *schema.ResourceData, meta interface{}) error 
 
 	opts := resp.DhcpOptions[0]
 
-	tags := tftags.Ec2KeyValueTags(opts.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(opts.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -229,7 +229,7 @@ func resourceVPCDHCPOptionsUpdate(d *schema.ResourceData, meta interface{}) erro
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)
 		}
 	}

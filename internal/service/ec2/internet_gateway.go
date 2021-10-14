@@ -123,7 +123,7 @@ func resourceInternetGatewayRead(d *schema.ResourceData, meta interface{}) error
 		d.Set("vpc_id", ig.Attachments[0].VpcId)
 	}
 
-	tags := tftags.Ec2KeyValueTags(ig.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ig.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -167,7 +167,7 @@ func resourceInternetGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating EC2 Internet Gateway (%s) tags: %s", d.Id(), err)
 		}
 	}

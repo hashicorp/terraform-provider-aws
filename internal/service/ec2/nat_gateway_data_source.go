@@ -98,7 +98,7 @@ func dataSourceNatGatewayRead(d *schema.ResourceData, meta interface{}) error {
 
 	if tags, ok := d.GetOk("tags"); ok {
 		req.Filter = append(req.Filter, BuildTagFilterList(
-			tftags.New(tags.(map[string]interface{})).Ec2Tags(),
+			Tags(tftags.New(tags.(map[string]interface{}))),
 		)...)
 	}
 
@@ -131,7 +131,7 @@ func dataSourceNatGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("subnet_id", ngw.SubnetId)
 	d.Set("vpc_id", ngw.VpcId)
 
-	if err := d.Set("tags", tftags.Ec2KeyValueTags(ngw.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ngw.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 

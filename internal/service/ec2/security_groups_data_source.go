@@ -56,7 +56,7 @@ func dataSourceSecurityGroupsRead(d *schema.ResourceData, meta interface{}) erro
 	}
 	if tagsOk {
 		req.Filters = append(req.Filters, BuildTagFilterList(
-			tftags.New(tags.(map[string]interface{})).Ec2Tags(),
+			Tags(tftags.New(tags.(map[string]interface{}))),
 		)...)
 	}
 

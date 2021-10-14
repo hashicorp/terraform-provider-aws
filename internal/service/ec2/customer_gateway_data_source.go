@@ -97,7 +97,7 @@ func dataSourceCustomerGatewayRead(d *schema.ResourceData, meta interface{}) err
 		d.Set("bgp_asn", int(asn))
 	}
 
-	if err := d.Set("tags", tftags.Ec2KeyValueTags(cg.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(cg.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags for EC2 Customer Gateway %q: %w", aws.StringValue(cg.CustomerGatewayId), err)
 	}
 

@@ -68,7 +68,7 @@ func dataSourceSecurityGroupRead(d *schema.ResourceData, meta interface{}) error
 		},
 	)
 	req.Filters = append(req.Filters, BuildTagFilterList(
-		tftags.New(d.Get("tags").(map[string]interface{})).Ec2Tags(),
+		Tags(tftags.New(d.Get("tags").(map[string]interface{}))),
 	)...)
 	req.Filters = append(req.Filters, BuildCustomFilterList(
 		d.Get("filter").(*schema.Set),
@@ -94,7 +94,7 @@ func dataSourceSecurityGroupRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("description", sg.Description)
 	d.Set("vpc_id", sg.VpcId)
 
-	if err := d.Set("tags", tftags.Ec2KeyValueTags(sg.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(sg.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 

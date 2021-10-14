@@ -53,7 +53,7 @@ func dataSourceLocalGatewayVirtualInterfaceGroupRead(d *schema.ResourceData, met
 	)
 
 	input.Filters = append(input.Filters, BuildTagFilterList(
-		tftags.New(d.Get("tags").(map[string]interface{})).Ec2Tags(),
+		Tags(tftags.New(d.Get("tags").(map[string]interface{}))),
 	)...)
 
 	input.Filters = append(input.Filters, BuildCustomFilterList(
@@ -89,7 +89,7 @@ func dataSourceLocalGatewayVirtualInterfaceGroupRead(d *schema.ResourceData, met
 		return fmt.Errorf("error setting local_gateway_virtual_interface_ids: %w", err)
 	}
 
-	if err := d.Set("tags", tftags.Ec2KeyValueTags(localGatewayVirtualInterfaceGroup.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(localGatewayVirtualInterfaceGroup.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 

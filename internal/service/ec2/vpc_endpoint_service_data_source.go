@@ -180,7 +180,7 @@ func dataSourceVPCEndpointServiceRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("service_id", serviceId)
 	d.Set("service_name", serviceName)
 	d.Set("service_type", sd.ServiceType[0].ServiceType)
-	err = d.Set("tags", tftags.Ec2KeyValueTags(sd.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map())
+	err = d.Set("tags", KeyValueTags(sd.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map())
 	if err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}

@@ -313,7 +313,7 @@ func resourceEIPRead(d *schema.ResourceData, meta interface{}) error {
 		d.SetId(aws.StringValue(address.AllocationId))
 	}
 
-	tags := tftags.Ec2KeyValueTags(address.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(address.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -416,7 +416,7 @@ func resourceEIPUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("tags cannot be set for a standard-domain EIP - must be a VPC-domain EIP")
 		}
 		o, n := d.GetChange("tags_all")
-		if err := tftags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating EIP (%s) tags: %s", d.Id(), err)
 		}
 	}

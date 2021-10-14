@@ -250,7 +250,7 @@ func resourceCustomerGatewayRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("type", customerGateway.Type)
 	d.Set("device_name", customerGateway.DeviceName)
 
-	tags := tftags.Ec2KeyValueTags(customerGateway.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(customerGateway.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -280,7 +280,7 @@ func resourceCustomerGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating EC2 Customer Gateway (%s) tags: %s", d.Id(), err)
 		}
 	}

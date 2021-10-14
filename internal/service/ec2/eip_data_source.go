@@ -102,7 +102,7 @@ func dataSourceEIPRead(d *schema.ResourceData, meta interface{}) error {
 
 	if tags, tagsOk := d.GetOk("tags"); tagsOk {
 		req.Filters = append(req.Filters, BuildTagFilterList(
-			tftags.New(tags.(map[string]interface{})).Ec2Tags(),
+			Tags(tftags.New(tags.(map[string]interface{}))),
 		)...)
 	}
 
@@ -153,7 +153,7 @@ func dataSourceEIPRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("customer_owned_ipv4_pool", eip.CustomerOwnedIpv4Pool)
 	d.Set("customer_owned_ip", eip.CustomerOwnedIp)
 
-	if err := d.Set("tags", tftags.Ec2KeyValueTags(eip.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(eip.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 

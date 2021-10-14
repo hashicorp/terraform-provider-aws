@@ -130,7 +130,7 @@ func dataSourceVPCDHCPOptionsRead(d *schema.ResourceData, meta interface{}) erro
 		}
 	}
 
-	if err := d.Set("tags", tftags.Ec2KeyValueTags(output.DhcpOptions[0].Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(output.DhcpOptions[0].Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 	d.Set("owner_id", output.DhcpOptions[0].OwnerId)

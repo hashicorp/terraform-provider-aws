@@ -103,7 +103,7 @@ func resourceLocalGatewayRouteTableVPCAssociationRead(d *schema.ResourceData, me
 	d.Set("local_gateway_id", association.LocalGatewayId)
 	d.Set("local_gateway_route_table_id", association.LocalGatewayRouteTableId)
 
-	tags := tftags.Ec2KeyValueTags(association.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(association.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -125,7 +125,7 @@ func resourceLocalGatewayRouteTableVPCAssociationUpdate(d *schema.ResourceData, 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating EC2 Local Gateway Route Table VPC Association (%s) tags: %w", d.Id(), err)
 		}
 	}

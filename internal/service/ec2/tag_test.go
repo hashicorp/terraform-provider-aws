@@ -19,12 +19,12 @@ func TestAccAWSEc2Tag_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEc2TagDestroy,
+		CheckDestroy: testAccCheckTagDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEc2TagConfig(rBgpAsn, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEc2TagExists(resourceName),
+					testAccCheckTagExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "key", "key1"),
 					resource.TestCheckResourceAttr(resourceName, "value", "value1"),
 				),
@@ -46,12 +46,12 @@ func TestAccAWSEc2Tag_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEc2TagDestroy,
+		CheckDestroy: testAccCheckTagDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEc2TagConfig(rBgpAsn, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEc2TagExists(resourceName),
+					testAccCheckTagExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceTag(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -68,12 +68,12 @@ func TestAccAWSEc2Tag_Value(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEc2TagDestroy,
+		CheckDestroy: testAccCheckTagDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEc2TagConfig(rBgpAsn, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEc2TagExists(resourceName),
+					testAccCheckTagExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "key", "key1"),
 					resource.TestCheckResourceAttr(resourceName, "value", "value1"),
 				),
@@ -86,7 +86,7 @@ func TestAccAWSEc2Tag_Value(t *testing.T) {
 			{
 				Config: testAccEc2TagConfig(rBgpAsn, "key1", "value1updated"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEc2TagExists(resourceName),
+					testAccCheckTagExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "key", "key1"),
 					resource.TestCheckResourceAttr(resourceName, "value", "value1updated"),
 				),
