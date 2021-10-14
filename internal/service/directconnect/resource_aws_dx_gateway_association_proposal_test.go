@@ -22,6 +22,24 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
 )
 
 func init() {
@@ -41,7 +59,7 @@ func testSweepDirectConnectGatewayAssociationProposals(region string) error {
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]*sweep.SweepResource, 0)
 
-	err = lister.DescribeDirectConnectGatewayAssociationProposalsPages(conn, input, func(page *directconnect.DescribeDirectConnectGatewayAssociationProposalsOutput, lastPage bool) bool {
+	err = tfdirectconnect.DescribeDirectConnectGatewayAssociationProposalsPages(conn, input, func(page *directconnect.DescribeDirectConnectGatewayAssociationProposalsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -306,7 +324,7 @@ func testAccCheckAwsDxGatewayAssociationProposalDestroy(s *terraform.State) erro
 			continue
 		}
 
-		_, err := finder.GatewayAssociationProposalByID(conn, rs.Primary.ID)
+		_, err := tfdirectconnect.FindGatewayAssociationProposalByID(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -335,7 +353,7 @@ func testAccCheckAwsDxGatewayAssociationProposalExists(resourceName string, gate
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn
 
-		output, err := finder.GatewayAssociationProposalByID(conn, rs.Primary.ID)
+		output, err := tfdirectconnect.FindGatewayAssociationProposalByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -366,7 +384,7 @@ func testAccCheckAwsDxGatewayAssociationProposalAccepted(resourceName string) re
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn
 
-		output, err := finder.GatewayAssociationProposalByID(conn, rs.Primary.ID)
+		output, err := tfdirectconnect.FindGatewayAssociationProposalByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

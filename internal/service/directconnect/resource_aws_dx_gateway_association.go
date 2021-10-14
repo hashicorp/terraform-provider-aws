@@ -17,6 +17,38 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
 )
 
 func ResourceGatewayAssociation() *schema.Resource {
@@ -165,7 +197,7 @@ func resourceGatewayAssociationCreate(d *schema.ResourceData, meta interface{}) 
 
 	d.Set("dx_gateway_association_id", associationID)
 
-	if _, err := waiter.GatewayAssociationCreated(conn, associationID, d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := tfdirectconnect.waitGatewayAssociationCreated(conn, associationID, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for Direct Connect Gateway Association (%s) to create: %w", d.Id(), err)
 	}
 
@@ -177,7 +209,7 @@ func resourceGatewayAssociationRead(d *schema.ResourceData, meta interface{}) er
 
 	associationID := d.Get("dx_gateway_association_id").(string)
 
-	output, err := finder.GatewayAssociationByID(conn, associationID)
+	output, err := tfdirectconnect.FindGatewayAssociationByID(conn, associationID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Direct Connect Gateway Association (%s) not found, removing from state", d.Id())
@@ -229,7 +261,7 @@ func resourceGatewayAssociationUpdate(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("error updating Direct Connect Gateway Association (%s): %w", d.Id(), err)
 	}
 
-	if _, err := waiter.GatewayAssociationUpdated(conn, associationID, d.Timeout(schema.TimeoutUpdate)); err != nil {
+	if _, err := tfdirectconnect.waitGatewayAssociationUpdated(conn, associationID, d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return fmt.Errorf("error waiting for Direct Connect Gateway Association (%s) to update: %w", d.Id(), err)
 	}
 
@@ -254,7 +286,7 @@ func resourceGatewayAssociationDelete(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("error deleting Direct Connect Gateway Association (%s): %w", d.Id(), err)
 	}
 
-	if _, err := waiter.GatewayAssociationDeleted(conn, associationID, d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := tfdirectconnect.waitGatewayAssociationDeleted(conn, associationID, d.Timeout(schema.TimeoutDelete)); err != nil {
 		return fmt.Errorf("error waiting for Direct Connect Gateway Association (%s) to delete: %w", d.Id(), err)
 	}
 
@@ -273,7 +305,7 @@ func resourceAwsDxGatewayAssociationImport(d *schema.ResourceData, meta interfac
 	directConnectGatewayID := parts[0]
 	associatedGatewayID := parts[1]
 
-	output, err := finder.GatewayAssociationByDirectConnectGatewayIDAndAssociatedGatewayID(conn, directConnectGatewayID, associatedGatewayID)
+	output, err := tfdirectconnect.FindGatewayAssociationByDirectConnectGatewayIDAndAssociatedGatewayID(conn, directConnectGatewayID, associatedGatewayID)
 
 	if err != nil {
 		return nil, err

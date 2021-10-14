@@ -15,6 +15,18 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
 )
 
 func TestAccAWSDxConnectionAssociation_basic(t *testing.T) {
@@ -87,7 +99,7 @@ func testAccCheckAwsDxConnectionAssociationDestroy(s *terraform.State) error {
 			continue
 		}
 
-		err := finder.ConnectionAssociationExists(conn, rs.Primary.ID, rs.Primary.Attributes["lag_id"])
+		err := tfdirectconnect.FindConnectionAssociationExists(conn, rs.Primary.ID, rs.Primary.Attributes["lag_id"])
 
 		if tfresource.NotFound(err) {
 			continue
@@ -116,7 +128,7 @@ func testAccCheckAwsDxConnectionAssociationExists(name string) resource.TestChec
 			return fmt.Errorf("No ID is set")
 		}
 
-		err := finder.ConnectionAssociationExists(conn, rs.Primary.ID, rs.Primary.Attributes["lag_id"])
+		err := tfdirectconnect.FindConnectionAssociationExists(conn, rs.Primary.ID, rs.Primary.Attributes["lag_id"])
 
 		if err != nil {
 			return err

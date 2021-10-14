@@ -16,6 +16,37 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
 )
 
 func ResourceLag() *schema.Resource {
@@ -124,7 +155,7 @@ func resourceLagCreate(d *schema.ResourceData, meta interface{}) error {
 
 	// Delete unmanaged connection.
 	if !connectionIDSpecified {
-		err = deleteDirectConnectConnection(conn, aws.StringValue(output.Connections[0].ConnectionId), waiter.ConnectionDeleted)
+		err = deleteDirectConnectConnection(conn, aws.StringValue(output.Connections[0].ConnectionId), tfdirectconnect.waitConnectionDeleted)
 
 		if err != nil {
 			return err
@@ -139,7 +170,7 @@ func resourceLagRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	lag, err := finder.LagByID(conn, d.Id())
+	lag, err := tfdirectconnect.FindLagByID(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Direct Connect LAG (%s) not found, removing from state", d.Id())
@@ -220,14 +251,14 @@ func resourceLagDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	if d.Get("force_destroy").(bool) {
-		lag, err := finder.LagByID(conn, d.Id())
+		lag, err := tfdirectconnect.FindLagByID(conn, d.Id())
 
 		if tfresource.NotFound(err) {
 			return nil
 		}
 
 		for _, connection := range lag.Connections {
-			err = deleteDirectConnectConnection(conn, aws.StringValue(connection.ConnectionId), waiter.ConnectionDeleted)
+			err = deleteDirectConnectConnection(conn, aws.StringValue(connection.ConnectionId), tfdirectconnect.waitConnectionDeleted)
 
 			if err != nil {
 				return err
@@ -252,7 +283,7 @@ func resourceLagDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting Direct Connect LAG (%s): %w", d.Id(), err)
 	}
 
-	_, err = waiter.LagDeleted(conn, d.Id())
+	_, err = tfdirectconnect.waitLagDeleted(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Direct Connect LAG (%s) delete: %w", d.Id(), err)

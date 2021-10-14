@@ -18,6 +18,18 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
 )
 
 type testAccDxHostedConnectionEnv struct {
@@ -78,7 +90,7 @@ func testAccCheckAwsDxHostedConnectionDestroy(providerFunc func() *schema.Provid
 				continue
 			}
 
-			_, err := finder.HostedConnectionByID(conn, rs.Primary.ID)
+			_, err := tfdirectconnect.FindHostedConnectionByID(conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -108,7 +120,7 @@ func testAccCheckAwsDxHostedConnectionExists(name string) resource.TestCheckFunc
 			return errors.New("No Direct Connect Hosted Connection ID is set")
 		}
 
-		_, err := finder.HostedConnectionByID(conn, rs.Primary.ID)
+		_, err := tfdirectconnect.FindHostedConnectionByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
