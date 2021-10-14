@@ -82,12 +82,12 @@ func TestAccAWSStorageGatewayUploadBuffer_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		// Storage Gateway API does not support removing upload buffers,
 		// but we want to ensure other resources are removed.
-		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
+		CheckDestroy: testAccCheckGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSStorageGatewayUploadBufferConfigDiskId(rName),
+				Config: testAccUploadBufferDiskIDConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSStorageGatewayUploadBufferExists(resourceName),
+					testAccCheckUploadBufferExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "disk_id", localDiskDataSourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "disk_path", localDiskDataSourceName, "disk_path"),
 					resource.TestCheckResourceAttrPair(resourceName, "gateway_arn", gatewayResourceName, "arn"),
@@ -115,12 +115,12 @@ func TestAccAWSStorageGatewayUploadBuffer_DiskPath(t *testing.T) {
 		Providers:  acctest.Providers,
 		// Storage Gateway API does not support removing upload buffers,
 		// but we want to ensure other resources are removed.
-		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
+		CheckDestroy: testAccCheckGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSStorageGatewayUploadBufferConfigDiskPath(rName),
+				Config: testAccUploadBufferDiskPathConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSStorageGatewayUploadBufferExists(resourceName),
+					testAccCheckUploadBufferExists(resourceName),
 					resource.TestMatchResourceAttr(resourceName, "disk_id", regexp.MustCompile(`.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, "disk_path", localDiskDataSourceName, "disk_path"),
 					resource.TestCheckResourceAttrPair(resourceName, "gateway_arn", gatewayResourceName, "arn"),
@@ -135,7 +135,7 @@ func TestAccAWSStorageGatewayUploadBuffer_DiskPath(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSStorageGatewayUploadBufferExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckUploadBufferExists(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -163,8 +163,8 @@ func testAccCheckAWSStorageGatewayUploadBufferExists(resourceName string) resour
 	}
 }
 
-func testAccAWSStorageGatewayUploadBufferConfigDiskId(rName string) string {
-	return testAccAWSStorageGatewayGatewayConfig_GatewayType_Stored(rName) + fmt.Sprintf(`
+func testAccUploadBufferDiskIDConfig(rName string) string {
+	return testAccGatewayConfig_GatewayType_Stored(rName) + fmt.Sprintf(`
 resource "aws_ebs_volume" "test" {
   availability_zone = aws_instance.test.availability_zone
   size              = "10"
@@ -194,8 +194,8 @@ resource "aws_storagegateway_upload_buffer" "test" {
 `, rName)
 }
 
-func testAccAWSStorageGatewayUploadBufferConfigDiskPath(rName string) string {
-	return testAccAWSStorageGatewayGatewayConfig_GatewayType_Cached(rName) + fmt.Sprintf(`
+func testAccUploadBufferDiskPathConfig(rName string) string {
+	return testAccGatewayConfig_GatewayType_Cached(rName) + fmt.Sprintf(`
 resource "aws_ebs_volume" "test" {
   availability_zone = aws_instance.test.availability_zone
   size              = "10"

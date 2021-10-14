@@ -81,12 +81,12 @@ func TestAccAWSStorageGatewayCache_FileGateway(t *testing.T) {
 		Providers:  acctest.Providers,
 		// Storage Gateway API does not support removing caches,
 		// but we want to ensure other resources are removed.
-		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
+		CheckDestroy: testAccCheckGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSStorageGatewayCacheConfig_FileGateway(rName),
+				Config: testAccCacheConfig_FileGateway(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSStorageGatewayCacheExists(resourceName),
+					testAccCheckCacheExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "disk_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "gateway_arn", gatewayResourceName, "arn"),
 				),
@@ -111,12 +111,12 @@ func TestAccAWSStorageGatewayCache_TapeAndVolumeGateway(t *testing.T) {
 		Providers:  acctest.Providers,
 		// Storage Gateway API does not support removing caches,
 		// but we want to ensure other resources are removed.
-		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
+		CheckDestroy: testAccCheckGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSStorageGatewayCacheConfig_TapeAndVolumeGateway(rName),
+				Config: testAccCacheConfig_TapeAndVolumeGateway(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSStorageGatewayCacheExists(resourceName),
+					testAccCheckCacheExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "disk_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "gateway_arn", gatewayResourceName, "arn"),
 				),
@@ -130,7 +130,7 @@ func TestAccAWSStorageGatewayCache_TapeAndVolumeGateway(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSStorageGatewayCacheExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckCacheExists(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -168,8 +168,8 @@ func testAccCheckAWSStorageGatewayCacheExists(resourceName string) resource.Test
 	}
 }
 
-func testAccAWSStorageGatewayCacheConfig_FileGateway(rName string) string {
-	return testAccAWSStorageGatewayGatewayConfig_GatewayType_FileS3(rName) + fmt.Sprintf(`
+func testAccCacheConfig_FileGateway(rName string) string {
+	return testAccGatewayConfig_GatewayType_FileS3(rName) + fmt.Sprintf(`
 resource "aws_ebs_volume" "test" {
   availability_zone = aws_instance.test.availability_zone
   size              = "10"
@@ -209,8 +209,8 @@ resource "aws_storagegateway_cache" "test" {
 `, rName)
 }
 
-func testAccAWSStorageGatewayCacheConfig_TapeAndVolumeGateway(rName string) string {
-	return testAccAWSStorageGatewayGatewayConfig_GatewayType_Cached(rName) + fmt.Sprintf(`
+func testAccCacheConfig_TapeAndVolumeGateway(rName string) string {
+	return testAccGatewayConfig_GatewayType_Cached(rName) + fmt.Sprintf(`
 resource "aws_ebs_volume" "test" {
   availability_zone = aws_instance.test.availability_zone
   size              = "10"

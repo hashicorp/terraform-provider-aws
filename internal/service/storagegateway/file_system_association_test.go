@@ -28,12 +28,12 @@ func TestAccAWSStorageGatewayFileSystemAssociation_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(storagegateway.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsStorageGatewayFileSystemAssociationDestroy,
+		CheckDestroy: testAccCheckFileSystemAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsStorageGatewayFileSystemAssociationConfig_Required(rName, domainName, username),
+				Config: testAccFileSystemAssociationConfig_Required(rName, domainName, username),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsStorageGatewayFileSystemAssociationExists(resourceName, &fileSystemAssociation),
+					testAccCheckFileSystemAssociationExists(resourceName, &fileSystemAssociation),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "storagegateway", regexp.MustCompile(`fs-association/fsa-.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, "gateway_arn", gatewayResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "location_arn", fsxResourceName, "arn"),
@@ -63,12 +63,12 @@ func TestAccAWSStorageGatewayFileSystemAssociation_tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(storagegateway.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsStorageGatewayFileSystemAssociationDestroy,
+		CheckDestroy: testAccCheckFileSystemAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsStorageGatewayFileSystemAssociationConfigTags1(rName, domainName, username, "key1", "value1"),
+				Config: testAccFileSystemAssociationTags1Config(rName, domainName, username, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsStorageGatewayFileSystemAssociationExists(resourceName, &fileSystemAssociation),
+					testAccCheckFileSystemAssociationExists(resourceName, &fileSystemAssociation),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "storagegateway", regexp.MustCompile(`fs-association/fsa-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
@@ -81,9 +81,9 @@ func TestAccAWSStorageGatewayFileSystemAssociation_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"username", "password"},
 			},
 			{
-				Config: testAccAwsStorageGatewayFileSystemAssociationConfigTags2(rName, domainName, username, "key1", "value1updated", "key2", "value2"),
+				Config: testAccFileSystemAssociationTags2Config(rName, domainName, username, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsStorageGatewayFileSystemAssociationExists(resourceName, &fileSystemAssociation),
+					testAccCheckFileSystemAssociationExists(resourceName, &fileSystemAssociation),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "storagegateway", regexp.MustCompile(`fs-association/fsa-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
@@ -91,9 +91,9 @@ func TestAccAWSStorageGatewayFileSystemAssociation_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsStorageGatewayFileSystemAssociationConfigTags1(rName, domainName, username, "key2", "value2"),
+				Config: testAccFileSystemAssociationTags1Config(rName, domainName, username, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsStorageGatewayFileSystemAssociationExists(resourceName, &fileSystemAssociation),
+					testAccCheckFileSystemAssociationExists(resourceName, &fileSystemAssociation),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "storagegateway", regexp.MustCompile(`fs-association/fsa-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -114,12 +114,12 @@ func TestAccAWSStorageGatewayFileSystemAssociation_cacheAttributes(t *testing.T)
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(storagegateway.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsStorageGatewayFileSystemAssociationDestroy,
+		CheckDestroy: testAccCheckFileSystemAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsStorageGatewayFileSystemAssociationConfig_Cache(rName, domainName, username, 400),
+				Config: testAccFileSystemAssociationConfig_Cache(rName, domainName, username, 400),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsStorageGatewayFileSystemAssociationExists(resourceName, &fileSystemAssociation),
+					testAccCheckFileSystemAssociationExists(resourceName, &fileSystemAssociation),
 					resource.TestCheckResourceAttr(resourceName, "cache_attributes.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cache_attributes.0.cache_stale_timeout_in_seconds", "400"),
 				),
@@ -131,9 +131,9 @@ func TestAccAWSStorageGatewayFileSystemAssociation_cacheAttributes(t *testing.T)
 				ImportStateVerifyIgnore: []string{"username", "password"},
 			},
 			{
-				Config: testAccAwsStorageGatewayFileSystemAssociationConfig_Cache(rName, domainName, username, 0),
+				Config: testAccFileSystemAssociationConfig_Cache(rName, domainName, username, 0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsStorageGatewayFileSystemAssociationExists(resourceName, &fileSystemAssociation),
+					testAccCheckFileSystemAssociationExists(resourceName, &fileSystemAssociation),
 					resource.TestCheckResourceAttr(resourceName, "cache_attributes.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cache_attributes.0.cache_stale_timeout_in_seconds", "0"),
 				),
@@ -153,12 +153,12 @@ func TestAccAWSStorageGatewayFileSystemAssociation_auditDestination(t *testing.T
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(storagegateway.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsStorageGatewayFileSystemAssociationDestroy,
+		CheckDestroy: testAccCheckFileSystemAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsStorageGatewayFileSystemAssociationConfig_Audit(rName, domainName, username, "aws_cloudwatch_log_group.test.arn"),
+				Config: testAccFileSystemAssociationConfig_Audit(rName, domainName, username, "aws_cloudwatch_log_group.test.arn"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsStorageGatewayFileSystemAssociationExists(resourceName, &fileSystemAssociation),
+					testAccCheckFileSystemAssociationExists(resourceName, &fileSystemAssociation),
 					resource.TestCheckResourceAttrPair(resourceName, "audit_destination_arn", "aws_cloudwatch_log_group.test", "arn"),
 				),
 			}, {
@@ -168,16 +168,16 @@ func TestAccAWSStorageGatewayFileSystemAssociation_auditDestination(t *testing.T
 				ImportStateVerifyIgnore: []string{"username", "password"},
 			},
 			{
-				Config: testAccAwsStorageGatewayFileSystemAssociationConfig_AuditDisabled(rName, domainName, username),
+				Config: testAccFileSystemAssociationConfig_AuditDisabled(rName, domainName, username),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsStorageGatewayFileSystemAssociationExists(resourceName, &fileSystemAssociation),
+					testAccCheckFileSystemAssociationExists(resourceName, &fileSystemAssociation),
 					resource.TestCheckResourceAttr(resourceName, "audit_destination_arn", ""),
 				),
 			},
 			{
-				Config: testAccAwsStorageGatewayFileSystemAssociationConfig_Audit(rName, domainName, username, "aws_cloudwatch_log_group.test2.arn"),
+				Config: testAccFileSystemAssociationConfig_Audit(rName, domainName, username, "aws_cloudwatch_log_group.test2.arn"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsStorageGatewayFileSystemAssociationExists(resourceName, &fileSystemAssociation),
+					testAccCheckFileSystemAssociationExists(resourceName, &fileSystemAssociation),
 					resource.TestCheckResourceAttrPair(resourceName, "audit_destination_arn", "aws_cloudwatch_log_group.test2", "arn"),
 				),
 			},
@@ -196,12 +196,12 @@ func TestAccAWSStorageGatewayFileSystemAssociation_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(storagegateway.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsStorageGatewayFileSystemAssociationDestroy,
+		CheckDestroy: testAccCheckFileSystemAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsStorageGatewayFileSystemAssociationConfig_Required(rName, domainName, username),
+				Config: testAccFileSystemAssociationConfig_Required(rName, domainName, username),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsStorageGatewayFileSystemAssociationExists(resourceName, &fileSystemAssociation),
+					testAccCheckFileSystemAssociationExists(resourceName, &fileSystemAssociation),
 					acctest.CheckResourceDisappears(acctest.Provider, tfstoragegateway.ResourceFileSystemAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -221,12 +221,12 @@ func TestAccAWSStorageGatewayFileSystemAssociation_disappears_storageGateway(t *
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(storagegateway.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsStorageGatewayFileSystemAssociationDestroy,
+		CheckDestroy: testAccCheckFileSystemAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsStorageGatewayFileSystemAssociationConfig_Required(rName, domainName, username),
+				Config: testAccFileSystemAssociationConfig_Required(rName, domainName, username),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsStorageGatewayFileSystemAssociationExists(resourceName, &fileSystemAssociation),
+					testAccCheckFileSystemAssociationExists(resourceName, &fileSystemAssociation),
 					acctest.CheckResourceDisappears(acctest.Provider, tfstoragegateway.ResourceGateway(), "aws_storagegateway_gateway.test"),
 				),
 				ExpectNonEmptyPlan: true,
@@ -249,12 +249,12 @@ func TestAccAWSStorageGatewayFileSystemAssociation_disappears_fsxFileSystem(t *t
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(storagegateway.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsStorageGatewayFileSystemAssociationDestroy,
+		CheckDestroy: testAccCheckFileSystemAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsStorageGatewayFileSystemAssociationConfig_Required(rName, domainName, username),
+				Config: testAccFileSystemAssociationConfig_Required(rName, domainName, username),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsStorageGatewayFileSystemAssociationExists(resourceName, &fileSystemAssociation),
+					testAccCheckFileSystemAssociationExists(resourceName, &fileSystemAssociation),
 					acctest.CheckResourceDisappears(acctest.Provider, tffsx.ResourceWindowsFileSystem(), "aws_fsx_windows_file_system.test"),
 				),
 				ExpectNonEmptyPlan: true,
@@ -263,7 +263,7 @@ func TestAccAWSStorageGatewayFileSystemAssociation_disappears_fsxFileSystem(t *t
 	})
 }
 
-func testAccCheckAwsStorageGatewayFileSystemAssociationDestroy(s *terraform.State) error {
+func testAccCheckFileSystemAssociationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -290,7 +290,7 @@ func testAccCheckAwsStorageGatewayFileSystemAssociationDestroy(s *terraform.Stat
 
 }
 
-func testAccCheckAwsStorageGatewayFileSystemAssociationExists(resourceName string, fileSystemAssociation *storagegateway.FileSystemAssociationInfo) resource.TestCheckFunc {
+func testAccCheckFileSystemAssociationExists(resourceName string, fileSystemAssociation *storagegateway.FileSystemAssociationInfo) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -315,10 +315,10 @@ func testAccCheckAwsStorageGatewayFileSystemAssociationExists(resourceName strin
 	}
 }
 
-func testAccAWSStorageGatewayFileSystemAssociationBase(rName, domainName, username string) string {
+func testAccFileSystemAssociationBase(rName, domainName, username string) string {
 	return acctest.ConfigCompose(
-		testAccAWSStorageGatewayGatewayConfigSmbActiveDirectorySettingsBase(rName),
-		testAccAWSStorageGatewayGatewayConfig_DirectoryServiceMicrosoftAD(rName, domainName),
+		testAccGatewaySMBActiveDirectorySettingsBaseConfig(rName),
+		testAccGatewayConfig_DirectoryServiceMicrosoftAD(rName, domainName),
 		fmt.Sprintf(`
 resource "aws_fsx_windows_file_system" "test" {
   active_directory_id = aws_directory_service_directory.test.id
@@ -353,8 +353,8 @@ resource "aws_storagegateway_gateway" "test" {
 `, rName, username))
 }
 
-func testAccAwsStorageGatewayFileSystemAssociationConfig_Required(rName, domainName, username string) string {
-	return testAccAWSStorageGatewayFileSystemAssociationBase(rName, domainName, username) + fmt.Sprintf(`
+func testAccFileSystemAssociationConfig_Required(rName, domainName, username string) string {
+	return testAccFileSystemAssociationBase(rName, domainName, username) + fmt.Sprintf(`
 resource "aws_storagegateway_file_system_association" "test" {
   gateway_arn  = aws_storagegateway_gateway.test.arn
   location_arn = aws_fsx_windows_file_system.test.arn
@@ -364,8 +364,8 @@ resource "aws_storagegateway_file_system_association" "test" {
 `, username)
 }
 
-func testAccAwsStorageGatewayFileSystemAssociationConfigTags1(rName, domainName, username, tagKey1, tagValue1 string) string {
-	return testAccAWSStorageGatewayFileSystemAssociationBase(rName, domainName, username) + fmt.Sprintf(`
+func testAccFileSystemAssociationTags1Config(rName, domainName, username, tagKey1, tagValue1 string) string {
+	return testAccFileSystemAssociationBase(rName, domainName, username) + fmt.Sprintf(`
 resource "aws_storagegateway_file_system_association" "test" {
   gateway_arn  = aws_storagegateway_gateway.test.arn
   location_arn = aws_fsx_windows_file_system.test.arn
@@ -379,8 +379,8 @@ resource "aws_storagegateway_file_system_association" "test" {
 `, username, tagKey1, tagValue1)
 }
 
-func testAccAwsStorageGatewayFileSystemAssociationConfigTags2(rName, domainName, username, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return testAccAWSStorageGatewayFileSystemAssociationBase(rName, domainName, username) + fmt.Sprintf(`
+func testAccFileSystemAssociationTags2Config(rName, domainName, username, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return testAccFileSystemAssociationBase(rName, domainName, username) + fmt.Sprintf(`
 resource "aws_storagegateway_file_system_association" "test" {
   gateway_arn  = aws_storagegateway_gateway.test.arn
   location_arn = aws_fsx_windows_file_system.test.arn
@@ -395,8 +395,8 @@ resource "aws_storagegateway_file_system_association" "test" {
 `, username, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccAwsStorageGatewayFileSystemAssociationConfig_Audit(rName, domainName, username string, loggingDestination string) string {
-	return testAccAWSStorageGatewayFileSystemAssociationBase(rName, domainName, username) + fmt.Sprintf(`
+func testAccFileSystemAssociationConfig_Audit(rName, domainName, username string, loggingDestination string) string {
+	return testAccFileSystemAssociationBase(rName, domainName, username) + fmt.Sprintf(`
 resource "aws_storagegateway_file_system_association" "test" {
   gateway_arn           = aws_storagegateway_gateway.test.arn
   location_arn          = aws_fsx_windows_file_system.test.arn
@@ -409,8 +409,8 @@ resource "aws_cloudwatch_log_group" "test" {}
 resource "aws_cloudwatch_log_group" "test2" {}
 `, username, loggingDestination)
 }
-func testAccAwsStorageGatewayFileSystemAssociationConfig_AuditDisabled(rName, domainName, username string) string {
-	return testAccAWSStorageGatewayFileSystemAssociationBase(rName, domainName, username) + fmt.Sprintf(`
+func testAccFileSystemAssociationConfig_AuditDisabled(rName, domainName, username string) string {
+	return testAccFileSystemAssociationBase(rName, domainName, username) + fmt.Sprintf(`
 resource "aws_storagegateway_file_system_association" "test" {
   gateway_arn           = aws_storagegateway_gateway.test.arn
   location_arn          = aws_fsx_windows_file_system.test.arn
@@ -424,8 +424,8 @@ resource "aws_cloudwatch_log_group" "test2" {}
 `, username)
 }
 
-func testAccAwsStorageGatewayFileSystemAssociationConfig_Cache(rName, domainName, username string, cache int) string {
-	return testAccAWSStorageGatewayFileSystemAssociationBase(rName, domainName, username) + fmt.Sprintf(`
+func testAccFileSystemAssociationConfig_Cache(rName, domainName, username string, cache int) string {
+	return testAccFileSystemAssociationBase(rName, domainName, username) + fmt.Sprintf(`
 resource "aws_storagegateway_file_system_association" "test" {
   gateway_arn  = aws_storagegateway_gateway.test.arn
   location_arn = aws_fsx_windows_file_system.test.arn
