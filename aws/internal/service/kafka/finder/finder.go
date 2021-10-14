@@ -6,7 +6,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ClusterByARN(conn *kafka.Kafka, arn string) (*kafka.ClusterInfo, error) {
@@ -82,4 +81,22 @@ func ConfigurationByARN(conn *kafka.Kafka, arn string) (*kafka.DescribeConfigura
 	}
 
 	return output, nil
+}
+
+// ScramSecrets returns the matching MSK Cluster's associated secrets
+func ScramSecrets(conn *kafka.Kafka, clusterArn string) ([]*string, error) {
+	input := &kafka.ListScramSecretsInput{
+		ClusterArn: aws.String(clusterArn),
+	}
+
+	var scramSecrets []*string
+	err := conn.ListScramSecretsPages(input, func(page *kafka.ListScramSecretsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+		scramSecrets = append(scramSecrets, page.SecretArnList...)
+		return !lastPage
+	})
+
+	return scramSecrets, err
 }
