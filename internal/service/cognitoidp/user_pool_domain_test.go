@@ -19,64 +19,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_cognito_user_pool_domain", &resource.Sweeper{
-		Name: "aws_cognito_user_pool_domain",
-		F:    sweepUserPoolDomains,
-	})
-}
 
-func sweepUserPoolDomains(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("Error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).CognitoIDPConn
 
-	input := &cognitoidentityprovider.ListUserPoolsInput{
-		MaxResults: aws.Int64(int64(50)),
-	}
 
-	err = conn.ListUserPoolsPages(input, func(resp *cognitoidentityprovider.ListUserPoolsOutput, lastPage bool) bool {
-		if len(resp.UserPools) == 0 {
-			log.Print("[DEBUG] No Cognito user pools (i.e. domains) to sweep")
-			return false
-		}
-
-		for _, u := range resp.UserPools {
-			output, err := conn.DescribeUserPool(&cognitoidentityprovider.DescribeUserPoolInput{
-				UserPoolId: u.Id,
-			})
-			if err != nil {
-				log.Printf("[ERROR] Failed describing Cognito user pool (%s): %s", aws.StringValue(u.Name), err)
-				continue
-			}
-			if output.UserPool != nil && output.UserPool.Domain != nil {
-				domain := aws.StringValue(output.UserPool.Domain)
-
-				log.Printf("[INFO] Deleting Cognito user pool domain: %s", domain)
-				_, err := conn.DeleteUserPoolDomain(&cognitoidentityprovider.DeleteUserPoolDomainInput{
-					Domain:     output.UserPool.Domain,
-					UserPoolId: u.Id,
-				})
-				if err != nil {
-					log.Printf("[ERROR] Failed deleting Cognito user pool domain (%s): %s", domain, err)
-				}
-			}
-		}
-		return !lastPage
-	})
-
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Cognito User Pool Domain sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error retrieving Cognito User Pools: %s", err)
-	}
-
-	return nil
-}
 
 func TestAccCognitoIDPUserPoolDomain_basic(t *testing.T) {
 	domainName := fmt.Sprintf("tf-acc-test-domain-%d", sdkacctest.RandInt())

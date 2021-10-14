@@ -24,56 +24,10 @@ import (
 func init() {
 	acctest.RegisterServiceErrorCheckFunc(cognitoidentityprovider.EndpointsID, testAccErrorCheckSkipCognitoIdentityProvider)
 
-	resource.AddTestSweepers("aws_cognito_user_pool", &resource.Sweeper{
-		Name: "aws_cognito_user_pool",
-		F:    sweepUserPools,
-		Dependencies: []string{
-			"aws_cognito_user_pool_domain",
-		},
-	})
+
 }
 
-func sweepUserPools(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-	conn := client.(*conns.AWSClient).CognitoIDPConn
 
-	input := &cognitoidentityprovider.ListUserPoolsInput{
-		MaxResults: aws.Int64(int64(50)),
-	}
-
-	err = conn.ListUserPoolsPages(input, func(resp *cognitoidentityprovider.ListUserPoolsOutput, lastPage bool) bool {
-		if len(resp.UserPools) == 0 {
-			log.Print("[DEBUG] No Cognito User Pools to sweep")
-			return false
-		}
-
-		for _, userPool := range resp.UserPools {
-			name := aws.StringValue(userPool.Name)
-
-			log.Printf("[INFO] Deleting Cognito User Pool: %s", name)
-			_, err := conn.DeleteUserPool(&cognitoidentityprovider.DeleteUserPoolInput{
-				UserPoolId: userPool.Id,
-			})
-			if err != nil {
-				log.Printf("[ERROR] Failed deleting Cognito User Pool (%s): %s", name, err)
-			}
-		}
-		return !lastPage
-	})
-
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Cognito User Pool sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error retrieving Cognito User Pools: %w", err)
-	}
-
-	return nil
-}
 
 func testAccErrorCheckSkipCognitoIdentityProvider(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
