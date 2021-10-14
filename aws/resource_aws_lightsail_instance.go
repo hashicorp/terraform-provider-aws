@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsLightsailInstance() *schema.Resource {
@@ -126,8 +127,8 @@ func resourceAwsLightsailInstance() *schema.Resource {
 }
 
 func resourceAwsLightsailInstanceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lightsailconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).LightsailConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	iName := d.Get("name").(string)
@@ -181,9 +182,9 @@ func resourceAwsLightsailInstanceCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsLightsailInstanceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lightsailconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).LightsailConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	resp, err := conn.GetInstance(&lightsail.GetInstanceInput{
 		InstanceName: aws.String(d.Id()),
@@ -247,7 +248,7 @@ func resourceAwsLightsailInstanceRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsLightsailInstanceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lightsailconn
+	conn := meta.(*conns.AWSClient).LightsailConn
 	resp, err := conn.DeleteInstance(&lightsail.DeleteInstanceInput{
 		InstanceName: aws.String(d.Id()),
 	})
@@ -278,7 +279,7 @@ func resourceAwsLightsailInstanceDelete(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsLightsailInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lightsailconn
+	conn := meta.(*conns.AWSClient).LightsailConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -302,7 +303,7 @@ func resourceAwsLightsailInstanceUpdate(d *schema.ResourceData, meta interface{}
 func resourceAwsLightsailOperationRefreshFunc(
 	oid *string, meta interface{}) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		conn := meta.(*AWSClient).lightsailconn
+		conn := meta.(*conns.AWSClient).LightsailConn
 		log.Printf("[DEBUG] Checking if Lightsail Operation (%s) is Completed", *oid)
 		o, err := conn.GetOperation(&lightsail.GetOperationInput{
 			OperationId: oid,

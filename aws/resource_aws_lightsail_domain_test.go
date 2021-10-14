@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSLightsailDomain_basic(t *testing.T) {
@@ -69,7 +70,7 @@ func testAccCheckAWSLightsailDomainExists(n string, domain *lightsail.Domain) re
 			return errors.New("No Lightsail Domain ID is set")
 		}
 
-		conn := testAccProviderLightsailDomain.Meta().(*AWSClient).lightsailconn
+		conn := testAccProviderLightsailDomain.Meta().(*conns.AWSClient).LightsailConn
 
 		resp, err := conn.GetDomain(&lightsail.GetDomainInput{
 			DomainName: aws.String(rs.Primary.ID),
@@ -93,7 +94,7 @@ func testAccCheckAWSLightsailDomainDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProviderLightsailDomain.Meta().(*AWSClient).lightsailconn
+		conn := testAccProviderLightsailDomain.Meta().(*conns.AWSClient).LightsailConn
 
 		resp, err := conn.GetDomain(&lightsail.GetDomainInput{
 			DomainName: aws.String(rs.Primary.ID),

@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -27,7 +28,7 @@ func testSweepLightsailStaticIps(region string) error {
 	if err != nil {
 		return fmt.Errorf("Error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).lightsailconn
+	conn := client.(*conns.AWSClient).LightsailConn
 
 	input := &lightsail.GetStaticIpsInput{}
 
@@ -92,7 +93,7 @@ func TestAccAWSLightsailStaticIp_disappears(t *testing.T) {
 	staticIpName := fmt.Sprintf("tf-test-lightsail-%s", sdkacctest.RandString(5))
 
 	staticIpDestroy := func(*terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).lightsailconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
 		_, err := conn.ReleaseStaticIp(&lightsail.ReleaseStaticIpInput{
 			StaticIpName: aws.String(staticIpName),
 		})
@@ -133,7 +134,7 @@ func testAccCheckAWSLightsailStaticIpExists(n string, staticIp *lightsail.Static
 			return errors.New("No Lightsail Static IP ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).lightsailconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
 
 		resp, err := conn.GetStaticIp(&lightsail.GetStaticIpInput{
 			StaticIpName: aws.String(rs.Primary.ID),
@@ -157,7 +158,7 @@ func testAccCheckAWSLightsailStaticIpDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).lightsailconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
 
 		resp, err := conn.GetStaticIp(&lightsail.GetStaticIpInput{
 			StaticIpName: aws.String(rs.Primary.ID),
