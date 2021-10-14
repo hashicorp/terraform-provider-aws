@@ -22,14 +22,14 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_msk_configuration", &resource.Sweeper{
 		Name: "aws_msk_configuration",
-		F:    testSweepMskConfigurations,
+		F:    sweepConfigurations,
 		Dependencies: []string{
 			"aws_msk_cluster",
 		},
 	})
 }
 
-func testSweepMskConfigurations(region string) error {
+func sweepConfigurations(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -85,7 +85,7 @@ func TestAccAWSMskConfiguration_basic(t *testing.T) {
 	resourceName := "aws_msk_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSMsk(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckMskConfigurationDestroy,
@@ -117,7 +117,7 @@ func TestAccAWSMskConfiguration_disappears(t *testing.T) {
 	resourceName := "aws_msk_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSMsk(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckMskConfigurationDestroy,
@@ -140,7 +140,7 @@ func TestAccAWSMskConfiguration_Description(t *testing.T) {
 	resourceName := "aws_msk_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSMsk(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckMskConfigurationDestroy,
@@ -175,7 +175,7 @@ func TestAccAWSMskConfiguration_KafkaVersions(t *testing.T) {
 	resourceName := "aws_msk_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSMsk(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckMskConfigurationDestroy,
@@ -206,7 +206,7 @@ func TestAccAWSMskConfiguration_ServerProperties(t *testing.T) {
 	serverProperty2 := "auto.create.topics.enable = true"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSMsk(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckMskConfigurationDestroy,

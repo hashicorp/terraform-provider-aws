@@ -22,7 +22,7 @@ func TestAccAwsMskScramSecretAssociation_basic(t *testing.T) {
 	secretResourceName := "aws_secretsmanager_secret.test.0"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSMsk(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckMskScramSecretAssociationDestroy,
@@ -53,7 +53,7 @@ func TestAccAwsMskScramSecretAssociation_update(t *testing.T) {
 	secretResourceName3 := "aws_secretsmanager_secret.test.2"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSMsk(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckMskScramSecretAssociationDestroy,
@@ -97,7 +97,7 @@ func TestAccAwsMskScramSecretAssociation_disappears(t *testing.T) {
 	resourceName := "aws_msk_scram_secret_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSMsk(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckMskScramSecretAssociationDestroy,
@@ -120,7 +120,7 @@ func TestAccAwsMskScramSecretAssociation_disappears_Cluster(t *testing.T) {
 	clusterResourceName := "aws_msk_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSMsk(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckMskScramSecretAssociationDestroy,
