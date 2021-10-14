@@ -30,9 +30,9 @@ func validateDeliverySamplingRate(v interface{}, k string) (ws []string, errors 
 
 func ResourceSMSPreferences() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSnsSmsPreferencesSet,
-		Read:   resourceAwsSnsSmsPreferencesGet,
-		Update: resourceAwsSnsSmsPreferencesSet,
+		Create: resourceSMSPreferencesSet,
+		Read:   resourceSMSPreferencesGet,
+		Update: resourceSMSPreferencesSet,
 		Delete: resourceSMSPreferencesDelete,
 
 		Schema: map[string]*schema.Schema{
@@ -90,7 +90,7 @@ var smsAttributeDefaultValues = map[string]string{
 	"usage_report_s3_bucket":                "",
 }
 
-func resourceAwsSnsSmsPreferencesSet(d *schema.ResourceData, meta interface{}) error {
+func resourceSMSPreferencesSet(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SNSConn
 
 	log.Printf("[DEBUG] SNS Set SMS preferences")
@@ -123,7 +123,7 @@ func resourceAwsSnsSmsPreferencesSet(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func resourceAwsSnsSmsPreferencesGet(d *schema.ResourceData, meta interface{}) error {
+func resourceSMSPreferencesGet(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SNSConn
 
 	// Fetch ALL attributes

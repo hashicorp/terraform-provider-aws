@@ -15,9 +15,9 @@ import (
 
 func ResourceTopicPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSnsTopicPolicyUpsert,
+		Create: resourceTopicPolicyUpsert,
 		Read:   resourceTopicPolicyRead,
-		Update: resourceAwsSnsTopicPolicyUpsert,
+		Update: resourceTopicPolicyUpsert,
 		Delete: resourceTopicPolicyDelete,
 
 		Importer: &schema.ResourceImporter{
@@ -45,7 +45,7 @@ func ResourceTopicPolicy() *schema.Resource {
 	}
 }
 
-func resourceAwsSnsTopicPolicyUpsert(d *schema.ResourceData, meta interface{}) error {
+func resourceTopicPolicyUpsert(d *schema.ResourceData, meta interface{}) error {
 	arn := d.Get("arn").(string)
 	req := sns.SetTopicAttributesInput{
 		TopicArn:       aws.String(arn),

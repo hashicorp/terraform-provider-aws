@@ -13,7 +13,7 @@ import (
 
 func DataSourceTopic() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsSnsTopicsRead,
+		Read: dataSourceTopicsRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -28,7 +28,7 @@ func DataSourceTopic() *schema.Resource {
 	}
 }
 
-func dataSourceAwsSnsTopicsRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceTopicsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SNSConn
 
 	resourceArn := ""
