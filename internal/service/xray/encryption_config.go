@@ -13,9 +13,9 @@ import (
 
 func ResourceEncryptionConfig() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsXrayEncryptionConfigPut,
+		Create: resourceEncryptionPutConfig,
 		Read:   resourceEncryptionConfigRead,
-		Update: resourceAwsXrayEncryptionConfigPut,
+		Update: resourceEncryptionPutConfig,
 		Delete: schema.Noop,
 
 		Importer: &schema.ResourceImporter{
@@ -40,7 +40,7 @@ func ResourceEncryptionConfig() *schema.Resource {
 	}
 }
 
-func resourceAwsXrayEncryptionConfigPut(d *schema.ResourceData, meta interface{}) error {
+func resourceEncryptionPutConfig(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).XRayConn
 
 	input := &xray.PutEncryptionConfigInput{
