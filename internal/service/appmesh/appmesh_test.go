@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestAccAWSAppmesh_serial(t *testing.T) {
+func TestAccAppMesh_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"GatewayRoute": {
 			"basic":      testAccGatewayRoute_basic,
