@@ -21,13 +21,13 @@ func TestAccAwsServiceQuotasServiceQuota_basic(t *testing.T) {
 	resourceName := "aws_servicequotas_service_quota.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSServiceQuotas(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, servicequotas.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsServiceQuotasServiceQuotaConfigSameValue("L-F678F1CE", "vpc"),
+				Config: testAccServiceQuotaSameValueConfig("L-F678F1CE", "vpc"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "adjustable", dataSourceName, "adjustable"),
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
@@ -73,13 +73,13 @@ func TestAccAwsServiceQuotasServiceQuota_Value_IncreaseOnCreate(t *testing.T) {
 	resourceName := "aws_servicequotas_service_quota.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSServiceQuotas(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, servicequotas.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsServiceQuotasServiceQuotaConfigValue(quotaCode, serviceCode, value),
+				Config: testAccServiceQuotaValueConfig(quotaCode, serviceCode, value),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "quota_code", quotaCode),
 					resource.TestCheckResourceAttr(resourceName, "service_code", serviceCode),
@@ -116,13 +116,13 @@ func TestAccAwsServiceQuotasServiceQuota_Value_IncreaseOnUpdate(t *testing.T) {
 	resourceName := "aws_servicequotas_service_quota.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSServiceQuotas(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, servicequotas.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsServiceQuotasServiceQuotaConfigSameValue(quotaCode, serviceCode),
+				Config: testAccServiceQuotaSameValueConfig(quotaCode, serviceCode),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "quota_code", quotaCode),
 					resource.TestCheckResourceAttr(resourceName, "service_code", serviceCode),
@@ -130,7 +130,7 @@ func TestAccAwsServiceQuotasServiceQuota_Value_IncreaseOnUpdate(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsServiceQuotasServiceQuotaConfigValue(quotaCode, serviceCode, value),
+				Config: testAccServiceQuotaValueConfig(quotaCode, serviceCode, value),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "quota_code", quotaCode),
 					resource.TestCheckResourceAttr(resourceName, "service_code", serviceCode),
@@ -143,20 +143,20 @@ func TestAccAwsServiceQuotasServiceQuota_Value_IncreaseOnUpdate(t *testing.T) {
 
 func TestAccAwsServiceQuotasServiceQuota_PermissionError(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSServiceQuotas(t); acctest.PreCheckAssumeRoleARN(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t); acctest.PreCheckAssumeRoleARN(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, servicequotas.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAwsServiceQuotasServiceQuotaConfig_PermissionError("elasticloadbalancing", "L-53DA6B97"),
+				Config:      testAccServiceQuotaConfig_PermissionError("elasticloadbalancing", "L-53DA6B97"),
 				ExpectError: regexp.MustCompile(`DEPENDENCY_ACCESS_DENIED_ERROR`),
 			},
 		},
 	})
 }
 
-func testAccPreCheckAWSServiceQuotas(t *testing.T) {
+func testAccPreCheck(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceQuotasConn
 
 	input := &servicequotas.ListServicesInput{}
@@ -172,7 +172,7 @@ func testAccPreCheckAWSServiceQuotas(t *testing.T) {
 	}
 }
 
-func testAccAwsServiceQuotasServiceQuotaConfigSameValue(quotaCode, serviceCode string) string {
+func testAccServiceQuotaSameValueConfig(quotaCode, serviceCode string) string {
 	return fmt.Sprintf(`
 data "aws_servicequotas_service_quota" "test" {
   quota_code   = %[1]q
@@ -187,7 +187,7 @@ resource "aws_servicequotas_service_quota" "test" {
 `, quotaCode, serviceCode)
 }
 
-func testAccAwsServiceQuotasServiceQuotaConfigValue(quotaCode, serviceCode, value string) string {
+func testAccServiceQuotaValueConfig(quotaCode, serviceCode, value string) string {
 	return fmt.Sprintf(`
 resource "aws_servicequotas_service_quota" "test" {
   quota_code   = %[1]q
@@ -197,7 +197,7 @@ resource "aws_servicequotas_service_quota" "test" {
 `, quotaCode, serviceCode, value)
 }
 
-func testAccAwsServiceQuotasServiceQuotaConfig_PermissionError(serviceCode, quotaCode string) string {
+func testAccServiceQuotaConfig_PermissionError(serviceCode, quotaCode string) string {
 	policy := `{
   "Version": "2012-10-17",
   "Statement": [

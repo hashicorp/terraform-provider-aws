@@ -19,7 +19,7 @@ func TestAccAwsServiceQuotasServiceQuotaDataSource_QuotaCode(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsServiceQuotasServiceQuotaDataSourceConfigQuotaCode("vpc", "L-F678F1CE"),
+				Config: testAccServiceQuotaQuotaCodeDataSourceConfig("vpc", "L-F678F1CE"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "adjustable", "true"),
 					acctest.CheckResourceAttrRegionalARN(dataSourceName, "arn", "servicequotas", "vpc/L-F678F1CE"),
@@ -38,13 +38,13 @@ func TestAccAwsServiceQuotasServiceQuotaDataSource_QuotaCode(t *testing.T) {
 
 func TestAccAwsServiceQuotasServiceQuotaDataSource_PermissionError_QuotaCode(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSServiceQuotas(t); acctest.PreCheckAssumeRoleARN(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t); acctest.PreCheckAssumeRoleARN(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, servicequotas.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAwsServiceQuotasServiceQuotaDataSourceConfig_PermissionError_QuotaCode("elasticloadbalancing", "L-53DA6B97"),
+				Config:      testAccServiceQuotaDataSourceConfig_PermissionError_QuotaCode("elasticloadbalancing", "L-53DA6B97"),
 				ExpectError: regexp.MustCompile(`DEPENDENCY_ACCESS_DENIED_ERROR`),
 			},
 		},
@@ -60,7 +60,7 @@ func TestAccAwsServiceQuotasServiceQuotaDataSource_QuotaName(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsServiceQuotasServiceQuotaDataSourceConfigQuotaName("vpc", "VPCs per Region"),
+				Config: testAccServiceQuotaQuotaNameDataSourceConfig("vpc", "VPCs per Region"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "adjustable", "true"),
 					acctest.CheckResourceAttrRegionalARN(dataSourceName, "arn", "servicequotas", "vpc/L-F678F1CE"),
@@ -79,20 +79,20 @@ func TestAccAwsServiceQuotasServiceQuotaDataSource_QuotaName(t *testing.T) {
 
 func TestAccAwsServiceQuotasServiceQuotaDataSource_PermissionError_QuotaName(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSServiceQuotas(t); acctest.PreCheckAssumeRoleARN(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t); acctest.PreCheckAssumeRoleARN(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, servicequotas.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAwsServiceQuotasServiceQuotaDataSourceConfig_PermissionError_QuotaName("elasticloadbalancing", "Application Load Balancers per Region"),
+				Config:      testAccServiceQuotaDataSourceConfig_PermissionError_QuotaName("elasticloadbalancing", "Application Load Balancers per Region"),
 				ExpectError: regexp.MustCompile(`DEPENDENCY_ACCESS_DENIED_ERROR`),
 			},
 		},
 	})
 }
 
-func testAccAwsServiceQuotasServiceQuotaDataSourceConfigQuotaCode(serviceCode, quotaCode string) string {
+func testAccServiceQuotaQuotaCodeDataSourceConfig(serviceCode, quotaCode string) string {
 	return fmt.Sprintf(`
 data "aws_servicequotas_service_quota" "test" {
   quota_code   = %[1]q
@@ -101,7 +101,7 @@ data "aws_servicequotas_service_quota" "test" {
 `, quotaCode, serviceCode)
 }
 
-func testAccAwsServiceQuotasServiceQuotaDataSourceConfig_PermissionError_QuotaCode(serviceCode, quotaCode string) string {
+func testAccServiceQuotaDataSourceConfig_PermissionError_QuotaCode(serviceCode, quotaCode string) string {
 	policy := `{
   "Version": "2012-10-17",
   "Statement": [
@@ -132,7 +132,7 @@ data "aws_servicequotas_service_quota" "test" {
 `, serviceCode, quotaCode))
 }
 
-func testAccAwsServiceQuotasServiceQuotaDataSourceConfigQuotaName(serviceCode, quotaName string) string {
+func testAccServiceQuotaQuotaNameDataSourceConfig(serviceCode, quotaName string) string {
 	return fmt.Sprintf(`
 data "aws_servicequotas_service_quota" "test" {
   quota_name   = %[1]q
@@ -141,7 +141,7 @@ data "aws_servicequotas_service_quota" "test" {
 `, quotaName, serviceCode)
 }
 
-func testAccAwsServiceQuotasServiceQuotaDataSourceConfig_PermissionError_QuotaName(serviceCode, quotaName string) string {
+func testAccServiceQuotaDataSourceConfig_PermissionError_QuotaName(serviceCode, quotaName string) string {
 	policy := `{
   "Version": "2012-10-17",
   "Statement": [
