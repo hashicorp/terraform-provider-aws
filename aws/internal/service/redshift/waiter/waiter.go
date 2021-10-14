@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	tfredshift "github.com/hashicorp/terraform-provider-aws/aws/internal/service/redshift"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (
