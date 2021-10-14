@@ -16,6 +16,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourcePlan() *schema.Resource {
@@ -116,7 +117,7 @@ func ResourcePlan() *schema.Resource {
 									"destination_vault_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: verify.ValidARN,
 									},
 								},
 							},

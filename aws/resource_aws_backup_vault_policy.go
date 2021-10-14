@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceVaultPolicy() *schema.Resource {
@@ -40,7 +41,7 @@ func ResourceVaultPolicy() *schema.Resource {
 				Type:             schema.TypeString,
 				Required:         true,
 				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
+				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
 			},
 		},
 	}
