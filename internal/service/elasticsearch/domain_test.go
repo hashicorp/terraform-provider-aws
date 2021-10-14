@@ -2,7 +2,6 @@ package elasticsearch_test
 
 import (
 	"fmt"
-	"log"
 	"regexp"
 	"strings"
 	"testing"
@@ -13,14 +12,12 @@ import (
 	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
 	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/go-multierror"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfelasticsearch "github.com/hashicorp/terraform-provider-aws/internal/service/elasticsearch"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
 func TestAccElasticSearchDomain_basic(t *testing.T) {
