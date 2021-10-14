@@ -77,7 +77,7 @@ func sweepImagePipelines(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAwsImageBuilderImagePipeline_basic(t *testing.T) {
+func TestAccImageBuilderImagePipeline_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	imageRecipeResourceName := "aws_imagebuilder_image_recipe.test"
 	infrastructureConfigurationResourceName := "aws_imagebuilder_infrastructure_configuration.test"
@@ -122,7 +122,7 @@ func TestAccAwsImageBuilderImagePipeline_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsImageBuilderImagePipeline_disappears(t *testing.T) {
+func TestAccImageBuilderImagePipeline_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_image_pipeline.test"
 
@@ -144,7 +144,7 @@ func TestAccAwsImageBuilderImagePipeline_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAwsImageBuilderImagePipeline_Description(t *testing.T) {
+func TestAccImageBuilderImagePipeline_description(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_image_pipeline.test"
 
@@ -177,7 +177,7 @@ func TestAccAwsImageBuilderImagePipeline_Description(t *testing.T) {
 	})
 }
 
-func TestAccAwsImageBuilderImagePipeline_DistributionConfigurationArn(t *testing.T) {
+func TestAccImageBuilderImagePipeline_distributionARN(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	distributionConfigurationResourceName := "aws_imagebuilder_distribution_configuration.test"
 	resourceName := "aws_imagebuilder_image_pipeline.test"
@@ -211,7 +211,7 @@ func TestAccAwsImageBuilderImagePipeline_DistributionConfigurationArn(t *testing
 	})
 }
 
-func TestAccAwsImageBuilderImagePipeline_EnhancedImageMetadataEnabled(t *testing.T) {
+func TestAccImageBuilderImagePipeline_enhancedImageMetadataEnabled(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_image_pipeline.test"
 
@@ -244,7 +244,7 @@ func TestAccAwsImageBuilderImagePipeline_EnhancedImageMetadataEnabled(t *testing
 	})
 }
 
-func TestAccAwsImageBuilderImagePipeline_ImageRecipeArn(t *testing.T) {
+func TestAccImageBuilderImagePipeline_imageRecipeARN(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	imageRecipeResourceName := "aws_imagebuilder_image_recipe.test"
 	imageRecipeResourceName2 := "aws_imagebuilder_image_recipe.test2"
@@ -279,7 +279,7 @@ func TestAccAwsImageBuilderImagePipeline_ImageRecipeArn(t *testing.T) {
 	})
 }
 
-func TestAccAwsImageBuilderImagePipeline_ImageTestsConfiguration_ImageTestsEnabled(t *testing.T) {
+func TestAccImageBuilderImagePipeline_ImageTests_imageTestsEnabled(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_image_pipeline.test"
 
@@ -314,7 +314,7 @@ func TestAccAwsImageBuilderImagePipeline_ImageTestsConfiguration_ImageTestsEnabl
 	})
 }
 
-func TestAccAwsImageBuilderImagePipeline_ImageTestsConfiguration_TimeoutMinutes(t *testing.T) {
+func TestAccImageBuilderImagePipeline_ImageTests_timeoutMinutes(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_image_pipeline.test"
 
@@ -349,7 +349,7 @@ func TestAccAwsImageBuilderImagePipeline_ImageTestsConfiguration_TimeoutMinutes(
 	})
 }
 
-func TestAccAwsImageBuilderImagePipeline_InfrastructureConfigurationArn(t *testing.T) {
+func TestAccImageBuilderImagePipeline_infrastructureARN(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	infrastructureConfigurationResourceName := "aws_imagebuilder_infrastructure_configuration.test"
 	infrastructureConfigurationResourceName2 := "aws_imagebuilder_infrastructure_configuration.test2"
@@ -384,7 +384,7 @@ func TestAccAwsImageBuilderImagePipeline_InfrastructureConfigurationArn(t *testi
 	})
 }
 
-func TestAccAwsImageBuilderImagePipeline_Schedule_PipelineExecutionStartCondition(t *testing.T) {
+func TestAccImageBuilderImagePipeline_Schedule_pipelineExecutionStartCondition(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_image_pipeline.test"
 
@@ -419,7 +419,7 @@ func TestAccAwsImageBuilderImagePipeline_Schedule_PipelineExecutionStartConditio
 	})
 }
 
-func TestAccAwsImageBuilderImagePipeline_Schedule_ScheduleExpression(t *testing.T) {
+func TestAccImageBuilderImagePipeline_Schedule_scheduleExpression(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_image_pipeline.test"
 
@@ -454,7 +454,7 @@ func TestAccAwsImageBuilderImagePipeline_Schedule_ScheduleExpression(t *testing.
 	})
 }
 
-func TestAccAwsImageBuilderImagePipeline_Status(t *testing.T) {
+func TestAccImageBuilderImagePipeline_status(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_image_pipeline.test"
 
@@ -487,7 +487,7 @@ func TestAccAwsImageBuilderImagePipeline_Status(t *testing.T) {
 	})
 }
 
-func TestAccAwsImageBuilderImagePipeline_Tags(t *testing.T) {
+func TestAccImageBuilderImagePipeline_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_image_pipeline.test"
 

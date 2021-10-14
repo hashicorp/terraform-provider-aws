@@ -106,7 +106,7 @@ func sweepComponents(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAwsImageBuilderComponent_basic(t *testing.T) {
+func TestAccImageBuilderComponent_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_component.test"
 
@@ -145,7 +145,7 @@ func TestAccAwsImageBuilderComponent_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsImageBuilderComponent_disappears(t *testing.T) {
+func TestAccImageBuilderComponent_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_component.test"
 
@@ -167,7 +167,7 @@ func TestAccAwsImageBuilderComponent_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAwsImageBuilderComponent_ChangeDescription(t *testing.T) {
+func TestAccImageBuilderComponent_changeDescription(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_component.test"
 
@@ -193,7 +193,7 @@ func TestAccAwsImageBuilderComponent_ChangeDescription(t *testing.T) {
 	})
 }
 
-func TestAccAwsImageBuilderComponent_Description(t *testing.T) {
+func TestAccImageBuilderComponent_description(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_component.test"
 
@@ -219,7 +219,7 @@ func TestAccAwsImageBuilderComponent_Description(t *testing.T) {
 	})
 }
 
-func TestAccAwsImageBuilderComponent_KmsKeyId(t *testing.T) {
+func TestAccImageBuilderComponent_kmsKeyID(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	kmsKeyResourceName := "aws_kms_key.test"
 	resourceName := "aws_imagebuilder_component.test"
@@ -246,7 +246,7 @@ func TestAccAwsImageBuilderComponent_KmsKeyId(t *testing.T) {
 	})
 }
 
-func TestAccAwsImageBuilderComponent_Platform_Windows(t *testing.T) {
+func TestAccImageBuilderComponent_Platform_windows(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_component.test"
 
@@ -272,7 +272,7 @@ func TestAccAwsImageBuilderComponent_Platform_Windows(t *testing.T) {
 	})
 }
 
-func TestAccAwsImageBuilderComponent_SupportedOsVersions(t *testing.T) {
+func TestAccImageBuilderComponent_supportedOsVersions(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_component.test"
 
@@ -298,7 +298,7 @@ func TestAccAwsImageBuilderComponent_SupportedOsVersions(t *testing.T) {
 	})
 }
 
-func TestAccAwsImageBuilderComponent_Tags(t *testing.T) {
+func TestAccImageBuilderComponent_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_component.test"
 
@@ -342,7 +342,7 @@ func TestAccAwsImageBuilderComponent_Tags(t *testing.T) {
 	})
 }
 
-func TestAccAwsImageBuilderComponent_Uri(t *testing.T) {
+func TestAccImageBuilderComponent_uri(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_component.test"
 

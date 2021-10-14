@@ -77,7 +77,7 @@ func sweepDistributionConfigurations(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAwsImageBuilderDistributionConfiguration_basic(t *testing.T) {
+func TestAccImageBuilderDistributionConfiguration_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_distribution_configuration.test"
 
@@ -108,7 +108,7 @@ func TestAccAwsImageBuilderDistributionConfiguration_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsImageBuilderDistributionConfiguration_disappears(t *testing.T) {
+func TestAccImageBuilderDistributionConfiguration_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_distribution_configuration.test"
 
@@ -130,7 +130,7 @@ func TestAccAwsImageBuilderDistributionConfiguration_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAwsImageBuilderDistributionConfiguration_Description(t *testing.T) {
+func TestAccImageBuilderDistributionConfiguration_description(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_distribution_configuration.test"
 
@@ -164,7 +164,7 @@ func TestAccAwsImageBuilderDistributionConfiguration_Description(t *testing.T) {
 	})
 }
 
-func TestAccAwsImageBuilderDistributionConfiguration_Distribution(t *testing.T) {
+func TestAccImageBuilderDistributionConfiguration_distribution(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_distribution_configuration.test"
 
@@ -193,7 +193,7 @@ func TestAccAwsImageBuilderDistributionConfiguration_Distribution(t *testing.T) 
 	})
 }
 
-func TestAccAwsImageBuilderDistributionConfiguration_Distribution_AmiDistributionConfiguration_AmiTags(t *testing.T) {
+func TestAccImageBuilderDistributionConfiguration_DistributionAMIDistribution_amiTags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_distribution_configuration.test"
 
@@ -237,7 +237,7 @@ func TestAccAwsImageBuilderDistributionConfiguration_Distribution_AmiDistributio
 	})
 }
 
-func TestAccAwsImageBuilderDistributionConfiguration_Distribution_AmiDistributionConfiguration_Description(t *testing.T) {
+func TestAccImageBuilderDistributionConfiguration_DistributionAMIDistribution_description(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_distribution_configuration.test"
 
@@ -279,7 +279,7 @@ func TestAccAwsImageBuilderDistributionConfiguration_Distribution_AmiDistributio
 	})
 }
 
-func TestAccAwsImageBuilderDistributionConfiguration_Distribution_AmiDistributionConfiguration_KmsKeyId(t *testing.T) {
+func TestAccImageBuilderDistributionConfiguration_DistributionAMIDistribution_kmsKeyID(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	kmsKeyResourceName := "aws_kms_key.test"
 	kmsKeyResourceName2 := "aws_kms_key.test2"
@@ -317,7 +317,7 @@ func TestAccAwsImageBuilderDistributionConfiguration_Distribution_AmiDistributio
 	})
 }
 
-func TestAccAwsImageBuilderDistributionConfiguration_Distribution_AmiDistributionConfiguration_LaunchPermission_UserGroups(t *testing.T) {
+func TestAccImageBuilderDistributionConfiguration_DistributionAMIDistributionLaunchPermission_userGroups(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_distribution_configuration.test"
 
@@ -344,7 +344,7 @@ func TestAccAwsImageBuilderDistributionConfiguration_Distribution_AmiDistributio
 	})
 }
 
-func TestAccAwsImageBuilderDistributionConfiguration_Distribution_AmiDistributionConfiguration_LaunchPermission_UserIds(t *testing.T) {
+func TestAccImageBuilderDistributionConfiguration_DistributionAMIDistributionLaunchPermission_userIDs(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_distribution_configuration.test"
 
@@ -380,7 +380,7 @@ func TestAccAwsImageBuilderDistributionConfiguration_Distribution_AmiDistributio
 	})
 }
 
-func TestAccAwsImageBuilderDistributionConfiguration_Distribution_AmiDistributionConfiguration_Name(t *testing.T) {
+func TestAccImageBuilderDistributionConfiguration_DistributionAMIDistribution_name(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_distribution_configuration.test"
 
@@ -422,7 +422,7 @@ func TestAccAwsImageBuilderDistributionConfiguration_Distribution_AmiDistributio
 	})
 }
 
-func TestAccAwsImageBuilderDistributionConfiguration_Distribution_AmiDistributionConfiguration_TargetAccountIds(t *testing.T) {
+func TestAccImageBuilderDistributionConfiguration_DistributionAMIDistribution_targetAccountIDs(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_distribution_configuration.test"
 
@@ -458,7 +458,7 @@ func TestAccAwsImageBuilderDistributionConfiguration_Distribution_AmiDistributio
 	})
 }
 
-func TestAccAwsImageBuilderDistributionConfiguration_Distribution_LicenseConfigurationArns(t *testing.T) {
+func TestAccImageBuilderDistributionConfiguration_Distribution_licenseARNs(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	licenseConfigurationResourceName := "aws_licensemanager_license_configuration.test"
 	licenseConfigurationResourceName2 := "aws_licensemanager_license_configuration.test2"
@@ -496,7 +496,7 @@ func TestAccAwsImageBuilderDistributionConfiguration_Distribution_LicenseConfigu
 	})
 }
 
-func TestAccAwsImageBuilderDistributionConfiguration_Tags(t *testing.T) {
+func TestAccImageBuilderDistributionConfiguration_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_distribution_configuration.test"
 

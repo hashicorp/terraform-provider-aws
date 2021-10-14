@@ -106,7 +106,7 @@ func sweepImages(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func TestAccAwsImageBuilderImage_basic(t *testing.T) {
+func TestAccImageBuilderImage_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	imageRecipeResourceName := "aws_imagebuilder_image_recipe.test"
 	infrastructureConfigurationResourceName := "aws_imagebuilder_infrastructure_configuration.test"
@@ -148,7 +148,7 @@ func TestAccAwsImageBuilderImage_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsImageBuilderImage_disappears(t *testing.T) {
+func TestAccImageBuilderImage_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_image.test"
 
@@ -170,7 +170,7 @@ func TestAccAwsImageBuilderImage_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAwsImageBuilderImage_DistributionConfigurationArn(t *testing.T) {
+func TestAccImageBuilderImage_distributionARN(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	distributionConfigurationResourceName := "aws_imagebuilder_distribution_configuration.test"
 	resourceName := "aws_imagebuilder_image.test"
@@ -197,7 +197,7 @@ func TestAccAwsImageBuilderImage_DistributionConfigurationArn(t *testing.T) {
 	})
 }
 
-func TestAccAwsImageBuilderImage_EnhancedImageMetadataEnabled(t *testing.T) {
+func TestAccImageBuilderImage_enhancedImageMetadataEnabled(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_image.test"
 
@@ -223,7 +223,7 @@ func TestAccAwsImageBuilderImage_EnhancedImageMetadataEnabled(t *testing.T) {
 	})
 }
 
-func TestAccAwsImageBuilderImage_ImageTestsConfiguration_ImageTestsEnabled(t *testing.T) {
+func TestAccImageBuilderImage_ImageTests_imageTestsEnabled(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_image.test"
 
@@ -250,7 +250,7 @@ func TestAccAwsImageBuilderImage_ImageTestsConfiguration_ImageTestsEnabled(t *te
 	})
 }
 
-func TestAccAwsImageBuilderImage_ImageTestsConfiguration_TimeoutMinutes(t *testing.T) {
+func TestAccImageBuilderImage_ImageTests_timeoutMinutes(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_image.test"
 
@@ -277,7 +277,7 @@ func TestAccAwsImageBuilderImage_ImageTestsConfiguration_TimeoutMinutes(t *testi
 	})
 }
 
-func TestAccAwsImageBuilderImage_Tags(t *testing.T) {
+func TestAccImageBuilderImage_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_image.test"
 
