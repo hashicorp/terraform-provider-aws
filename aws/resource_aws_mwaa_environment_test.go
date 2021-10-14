@@ -28,7 +28,7 @@ func testSweepMwaaEnvironment(region string) error {
 
 	listOutput, err := conn.ListEnvironments(&mwaa.ListEnvironmentsInput{})
 	if err != nil {
-		if testSweepSkipSweepError(err) || isAWSErr(err, "InternalFailure", "") {
+		if testSweepSkipSweepError(err) || tfawserr.ErrMessageContains(err, "InternalFailure", "") {
 			log.Printf("[WARN] Skipping MWAA Environment sweep for %s: %s", region, err)
 			return nil
 		}
@@ -419,7 +419,7 @@ func testAccCheckAWSMwaaEnvironmentDestroy(s *terraform.State) error {
 		})
 
 		if err != nil {
-			if isAWSErr(err, mwaa.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, mwaa.ErrCodeResourceNotFoundException, "") {
 				continue
 			}
 			return err
