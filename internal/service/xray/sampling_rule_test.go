@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfxray "github.com/hashicorp/terraform-provider-aws/internal/service/xray"
 )
 
 func TestAccAWSXraySamplingRule_basic(t *testing.T) {
@@ -169,7 +170,7 @@ func TestAccAWSXraySamplingRule_disappears(t *testing.T) {
 				Config: testAccAWSXraySamplingRuleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckXraySamplingRuleExists(resourceName, &samplingRule),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceSamplingRule(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfxray.ResourceSamplingRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -189,7 +190,7 @@ func testAccCheckXraySamplingRuleExists(n string, samplingRule *xray.SamplingRul
 		}
 		conn := acctest.Provider.Meta().(*conns.AWSClient).XRayConn
 
-		rule, err := getXraySamplingRule(conn, rs.Primary.ID)
+		rule, err := tfxray.GetSamplingRule(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -209,7 +210,7 @@ func testAccCheckAWSXraySamplingRuleDestroy(s *terraform.State) error {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).XRayConn
 
-		rule, err := getXraySamplingRule(conn, rs.Primary.ID)
+		rule, err := tfxray.GetSamplingRule(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

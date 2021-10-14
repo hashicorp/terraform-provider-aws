@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfxray "github.com/hashicorp/terraform-provider-aws/internal/service/xray"
 )
 
 func TestAccAWSXrayGroup_basic(t *testing.T) {
@@ -112,7 +113,7 @@ func TestAccAWSXrayGroup_disappears(t *testing.T) {
 				Config: testAccAWSXrayGroupBasicConfig(rName, "responsetime > 5"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckXrayGroupExists(resourceName, &Group),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceGroup(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfxray.ResourceGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

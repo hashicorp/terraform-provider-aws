@@ -144,7 +144,7 @@ func resourceSamplingRuleRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	samplingRule, err := getXraySamplingRule(conn, d.Id())
+	samplingRule, err := GetSamplingRule(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error reading XRay Sampling Rule (%s): %w", d.Id(), err)
@@ -254,7 +254,7 @@ func resourceSamplingRuleDelete(d *schema.ResourceData, meta interface{}) error 
 	return nil
 }
 
-func getXraySamplingRule(conn *xray.XRay, ruleName string) (*xray.SamplingRule, error) {
+func GetSamplingRule(conn *xray.XRay, ruleName string) (*xray.SamplingRule, error) {
 	params := &xray.GetSamplingRulesInput{}
 	for {
 		out, err := conn.GetSamplingRules(params)
