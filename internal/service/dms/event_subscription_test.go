@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
 )
 
 func TestAccAWSDmsEventSubscription_basic(t *testing.T) {
@@ -236,7 +237,7 @@ func testAccCheckDmsEventSubscriptionDisappears(resourceName string) resource.Te
 			return fmt.Errorf("No ID is set")
 		}
 
-		resource := ResourceEventSubscription()
+		resource := tfdms.ResourceEventSubscription()
 
 		return resource.Delete(resource.Data(rs.Primary), acctest.Provider.Meta())
 	}

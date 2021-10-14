@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -39,7 +40,7 @@ func testSweepDmsReplicationInstances(region string) error {
 
 	err = conn.DescribeReplicationInstancesPages(&dms.DescribeReplicationInstancesInput{}, func(page *dms.DescribeReplicationInstancesOutput, lastPage bool) bool {
 		for _, instance := range page.ReplicationInstances {
-			r := ResourceReplicationInstance()
+			r := tfdms.ResourceReplicationInstance()
 			d := r.Data(nil)
 			d.Set("replication_instance_arn", instance.ReplicationInstanceArn)
 			d.SetId(aws.StringValue(instance.ReplicationInstanceIdentifier))
