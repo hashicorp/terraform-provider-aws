@@ -8,21 +8,22 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kinesisvideo"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSKinesisVideoStream_basic(t *testing.T) {
 	var stream kinesisvideo.StreamInfo
 
 	resourceName := "aws_kinesis_video_stream.default"
-	rInt1 := acctest.RandInt()
-	rInt2 := acctest.RandInt()
+	rInt1 := sdkacctest.RandInt()
+	rInt2 := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(kinesisvideo.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, kinesisvideo.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kinesisvideo.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kinesisvideo.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisVideoStreamDestroy,
 		Steps: []resource.TestStep{
@@ -31,7 +32,7 @@ func TestAccAWSKinesisVideoStream_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisVideoStreamExists(resourceName, &stream),
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("terraform-kinesis-video-stream-test-%d", rInt1)),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "kinesisvideo", regexp.MustCompile(fmt.Sprintf("stream/terraform-kinesis-video-stream-test-%d/.+", rInt1))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kinesisvideo", regexp.MustCompile(fmt.Sprintf("stream/terraform-kinesis-video-stream-test-%d/.+", rInt1))),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
 					resource.TestCheckResourceAttrSet(resourceName, "version"),
 				),
@@ -46,7 +47,7 @@ func TestAccAWSKinesisVideoStream_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisVideoStreamExists(resourceName, &stream),
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("terraform-kinesis-video-stream-test-%d", rInt2)),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "kinesisvideo", regexp.MustCompile(fmt.Sprintf("stream/terraform-kinesis-video-stream-test-%d/.+", rInt2))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kinesisvideo", regexp.MustCompile(fmt.Sprintf("stream/terraform-kinesis-video-stream-test-%d/.+", rInt2))),
 				),
 			},
 		},
@@ -58,13 +59,13 @@ func TestAccAWSKinesisVideoStream_options(t *testing.T) {
 
 	resourceName := "aws_kinesis_video_stream.default"
 	kmsResourceName := "aws_kms_key.default"
-	rInt := acctest.RandInt()
-	rName1 := acctest.RandString(8)
-	rName2 := acctest.RandString(8)
+	rInt := sdkacctest.RandInt()
+	rName1 := sdkacctest.RandString(8)
+	rName2 := sdkacctest.RandString(8)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(kinesisvideo.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, kinesisvideo.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kinesisvideo.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kinesisvideo.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisVideoStreamDestroy,
 		Steps: []resource.TestStep{
@@ -72,7 +73,7 @@ func TestAccAWSKinesisVideoStream_options(t *testing.T) {
 				Config: testAccKinesisVideoStreamConfig_Options(rInt, rName1, "video/h264"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisVideoStreamExists(resourceName, &stream),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "kinesisvideo", regexp.MustCompile(fmt.Sprintf("stream/terraform-kinesis-video-stream-test-%d/.+", rInt))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kinesisvideo", regexp.MustCompile(fmt.Sprintf("stream/terraform-kinesis-video-stream-test-%d/.+", rInt))),
 					resource.TestCheckResourceAttr(resourceName, "data_retention_in_hours", "1"),
 					resource.TestCheckResourceAttr(resourceName, "media_type", "video/h264"),
 					resource.TestCheckResourceAttr(resourceName, "device_name", fmt.Sprintf("kinesis-video-device-name-%s", rName1)),
@@ -102,11 +103,11 @@ func TestAccAWSKinesisVideoStream_Tags(t *testing.T) {
 	var stream kinesisvideo.StreamInfo
 
 	resourceName := "aws_kinesis_video_stream.default"
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(kinesisvideo.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, kinesisvideo.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kinesisvideo.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kinesisvideo.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisVideoStreamDestroy,
 		Steps: []resource.TestStep{
@@ -148,11 +149,11 @@ func TestAccAWSKinesisVideoStream_disappears(t *testing.T) {
 	var stream kinesisvideo.StreamInfo
 
 	resourceName := "aws_kinesis_video_stream.default"
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(kinesisvideo.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, kinesisvideo.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kinesisvideo.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kinesisvideo.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisVideoStreamDestroy,
 		Steps: []resource.TestStep{
