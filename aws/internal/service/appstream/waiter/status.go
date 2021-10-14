@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/appstream"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/appstream/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 //StackState fetches the fleet and its state
