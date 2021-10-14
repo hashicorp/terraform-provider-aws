@@ -13,10 +13,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ssoadmin/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourcePermissionSet() *schema.Resource {
@@ -81,18 +82,18 @@ func ResourcePermissionSet() *schema.Resource {
 				Default:      "PT1H",
 			},
 
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourcePermissionSetCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSOAdminConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	instanceArn := d.Get("instance_arn").(string)
 	name := d.Get("name").(string)
@@ -171,7 +172,7 @@ func resourcePermissionSetRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("relay_state", permissionSet.RelayState)
 	d.Set("session_duration", permissionSet.SessionDuration)
 
-	tags, err := keyvaluetags.SsoadminListTags(conn, arn, instanceArn)
+	tags, err := tftags.SsoadminListTags(conn, arn, instanceArn)
 	if err != nil {
 		return fmt.Errorf("error listing tags for SSO Permission Set (%s): %w", arn, err)
 	}
@@ -229,7 +230,7 @@ func resourcePermissionSetUpdate(d *schema.ResourceData, meta interface{}) error
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := keyvaluetags.SsoadminUpdateTags(conn, arn, instanceArn, o, n); err != nil {
+		if err := tftags.SsoadminUpdateTags(conn, arn, instanceArn, o, n); err != nil {
 			return fmt.Errorf("error updating tags: %w", err)
 		}
 	}
