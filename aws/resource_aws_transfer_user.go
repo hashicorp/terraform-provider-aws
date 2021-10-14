@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/transfer/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/transfer/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsTransferUser() *schema.Resource {
@@ -125,8 +126,8 @@ func resourceAwsTransferUser() *schema.Resource {
 }
 
 func resourceAwsTransferUserCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).transferconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).TransferConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	serverID := d.Get("server_id").(string)
@@ -175,9 +176,9 @@ func resourceAwsTransferUserCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsTransferUserRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).transferconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).TransferConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	serverID, userName, err := tftransfer.UserParseResourceID(d.Id())
 
@@ -225,7 +226,7 @@ func resourceAwsTransferUserRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsTransferUserUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).transferconn
+	conn := meta.(*conns.AWSClient).TransferConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		serverID, userName, err := tftransfer.UserParseResourceID(d.Id())
@@ -282,7 +283,7 @@ func resourceAwsTransferUserUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsTransferUserDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).transferconn
+	conn := meta.(*conns.AWSClient).TransferConn
 
 	serverID, userName, err := tftransfer.UserParseResourceID(d.Id())
 

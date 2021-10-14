@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/transfer"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsTransferSshKey() *schema.Resource {
@@ -49,7 +50,7 @@ func resourceAwsTransferSshKey() *schema.Resource {
 }
 
 func resourceAwsTransferSshKeyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).transferconn
+	conn := meta.(*conns.AWSClient).TransferConn
 	userName := d.Get("user_name").(string)
 	serverID := d.Get("server_id").(string)
 
@@ -72,7 +73,7 @@ func resourceAwsTransferSshKeyCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsTransferSshKeyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).transferconn
+	conn := meta.(*conns.AWSClient).TransferConn
 	serverID, userName, sshKeyID, err := decodeTransferSshKeyId(d.Id())
 	if err != nil {
 		return fmt.Errorf("error parsing Transfer SSH Public Key ID: %s", err)
@@ -115,7 +116,7 @@ func resourceAwsTransferSshKeyRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsTransferSshKeyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).transferconn
+	conn := meta.(*conns.AWSClient).TransferConn
 	serverID, userName, sshKeyID, err := decodeTransferSshKeyId(d.Id())
 	if err != nil {
 		return fmt.Errorf("error parsing Transfer SSH Public Key ID: %s", err)

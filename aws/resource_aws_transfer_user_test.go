@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/transfer/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func testAccAWSTransferUser_basic(t *testing.T) {
@@ -237,7 +238,7 @@ func testAccCheckAWSTransferUserExists(n string, res *transfer.DescribedUser) re
 			return fmt.Errorf("No Transfer User ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).transferconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn
 
 		userName := rs.Primary.Attributes["user_name"]
 		serverID := rs.Primary.Attributes["server_id"]
@@ -255,7 +256,7 @@ func testAccCheckAWSTransferUserExists(n string, res *transfer.DescribedUser) re
 }
 
 func testAccCheckAWSTransferUserDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).transferconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_transfer_user" {

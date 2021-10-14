@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/transfer/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -31,7 +32,7 @@ func testSweepTransferServers(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).transferconn
+	conn := client.(*conns.AWSClient).TransferConn
 	input := &transfer.ListServersInput{}
 	sweepResources := make([]*testSweepResource, 0)
 
@@ -971,7 +972,7 @@ func testAccCheckAWSTransferServerExists(n string, v *transfer.DescribedServer) 
 			return fmt.Errorf("No Transfer Server ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).transferconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn
 
 		output, err := finder.ServerByID(conn, rs.Primary.ID)
 
@@ -986,7 +987,7 @@ func testAccCheckAWSTransferServerExists(n string, v *transfer.DescribedServer) 
 }
 
 func testAccCheckAWSTransferServerDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).transferconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_transfer_server" {
@@ -1010,7 +1011,7 @@ func testAccCheckAWSTransferServerDestroy(s *terraform.State) error {
 }
 
 func testAccPreCheckAWSTransfer(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).transferconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn
 
 	input := &transfer.ListServersInput{}
 
