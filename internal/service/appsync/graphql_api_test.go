@@ -2,7 +2,6 @@ package appsync_test
 
 import (
 	"fmt"
-	"log"
 	"regexp"
 	"testing"
 
@@ -15,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfappsync "github.com/hashicorp/terraform-provider-aws/internal/service/appsync"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
 func TestAccAppSyncGraphQLAPI_basic(t *testing.T) {
