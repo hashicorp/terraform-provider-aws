@@ -26,7 +26,7 @@ func ResourceCertificate() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceCertificateCreate,
 		Read:   resourceCertificateRead,
-		Delete: resourceAwsAcmpcaCertificateRevoke,
+		Delete: resourceCertificateRevoke,
 
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
@@ -193,7 +193,7 @@ func resourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsAcmpcaCertificateRevoke(d *schema.ResourceData, meta interface{}) error {
+func resourceCertificateRevoke(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ACMPCAConn
 
 	block, _ := pem.Decode([]byte(d.Get("certificate").(string)))

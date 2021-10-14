@@ -34,7 +34,7 @@ func ResourceCertificateAuthority() *schema.Resource {
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(1 * time.Minute),
 		},
-		MigrateState:  resourceAwsAcmpcaCertificateAuthorityMigrateState,
+		MigrateState:  resourceCertificateAuthorityMigrateState,
 		SchemaVersion: 1,
 
 		Schema: map[string]*schema.Schema{
