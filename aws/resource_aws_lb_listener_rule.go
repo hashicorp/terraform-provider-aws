@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsLbbListenerRule() *schema.Resource {
+func ResourceListenerRule() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsLbListenerRuleCreate,
 		Read:   resourceAwsLbListenerRuleRead,

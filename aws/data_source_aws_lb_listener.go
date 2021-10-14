@@ -12,9 +12,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsLbListener() *schema.Resource {
+func DataSourceListener() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsLbListenerRead,
+		Read: dataSourceListenerRead,
 
 		Schema: map[string]*schema.Schema{
 			"alpn_policy": {
@@ -263,7 +263,7 @@ func dataSourceAwsLbListener() *schema.Resource {
 	}
 }
 
-func dataSourceAwsLbListenerRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceListenerRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBV2Conn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

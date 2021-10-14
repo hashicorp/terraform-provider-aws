@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsLbTargetGroupAttachment() *schema.Resource {
+func ResourceTargetGroupAttachment() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsLbAttachmentCreate,
 		Read:   resourceAwsLbAttachmentRead,
