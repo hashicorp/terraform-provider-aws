@@ -88,7 +88,7 @@ func TestAccAWSNeptuneEventSubscription_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSNeptuneEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -100,7 +100,7 @@ func TestAccAWSNeptuneEventSubscription_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "source_type", "db-instance"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", "tf-acc-test"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", acctest.ResourcePrefix),
 				),
 			},
 			{
@@ -132,7 +132,7 @@ func TestAccAWSNeptuneEventSubscription_withPrefix(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSNeptuneEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -161,7 +161,7 @@ func TestAccAWSNeptuneEventSubscription_withSourceIds(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSNeptuneEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -199,7 +199,7 @@ func TestAccAWSNeptuneEventSubscription_withCategories(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSNeptuneEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -238,7 +238,7 @@ func testAccCheckAWSNeptuneEventSubscriptionExists(n string, v *neptune.EventSub
 			return fmt.Errorf("No Neptune Event Subscription is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).neptuneconn
+		conn := acctest.Provider.Meta().(*AWSClient).neptuneconn
 
 		opts := neptune.DescribeEventSubscriptionsInput{
 			SubscriptionName: aws.String(rs.Primary.ID),
@@ -261,7 +261,7 @@ func testAccCheckAWSNeptuneEventSubscriptionExists(n string, v *neptune.EventSub
 }
 
 func testAccCheckAWSNeptuneEventSubscriptionDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).neptuneconn
+	conn := acctest.Provider.Meta().(*AWSClient).neptuneconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_neptune_event_subscription" {

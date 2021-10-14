@@ -24,7 +24,7 @@ func TestAccAWSNeptuneCluster_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -66,7 +66,7 @@ func TestAccAWSNeptuneCluster_copyTagsToSnapshot(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -113,7 +113,7 @@ func TestAccAWSNeptuneCluster_namePrefix(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -146,7 +146,7 @@ func TestAccAWSNeptuneCluster_takeFinalSnapshot(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSNeptuneClusterSnapshot(rName),
 		Steps: []resource.TestStep{
 			{
@@ -178,7 +178,7 @@ func TestAccAWSNeptuneCluster_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -229,7 +229,7 @@ func TestAccAWSNeptuneCluster_updateIamRoles(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -276,7 +276,7 @@ func TestAccAWSNeptuneCluster_kmsKey(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -309,7 +309,7 @@ func TestAccAWSNeptuneCluster_encrypted(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -342,7 +342,7 @@ func TestAccAWSNeptuneCluster_backupsUpdate(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -386,7 +386,7 @@ func TestAccAWSNeptuneCluster_iamAuth(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -419,7 +419,7 @@ func TestAccAWSNeptuneCluster_updateCloudwatchLogsExports(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -467,7 +467,7 @@ func TestAccAWSNeptuneCluster_deleteProtection(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -514,14 +514,14 @@ func TestAccAWSNeptuneCluster_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSNeptuneClusterConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSNeptuneClusterExists(resourceName, &dbCluster),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsNeptuneCluster(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsNeptuneCluster(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -530,7 +530,7 @@ func TestAccAWSNeptuneCluster_disappears(t *testing.T) {
 }
 
 func testAccCheckAWSNeptuneClusterDestroy(s *terraform.State) error {
-	return testAccCheckAWSNeptuneClusterDestroyWithProvider(s, testAccProvider)
+	return testAccCheckAWSNeptuneClusterDestroyWithProvider(s, acctest.Provider)
 }
 
 func testAccCheckAWSNeptuneClusterDestroyWithProvider(s *terraform.State, provider *schema.Provider) error {
@@ -569,7 +569,7 @@ func testAccCheckAWSNeptuneClusterDestroyWithProvider(s *terraform.State, provid
 }
 
 func testAccCheckAWSNeptuneClusterExists(n string, v *neptune.DBCluster) resource.TestCheckFunc {
-	return testAccCheckAWSNeptuneClusterExistsWithProvider(n, v, func() *schema.Provider { return testAccProvider })
+	return testAccCheckAWSNeptuneClusterExistsWithProvider(n, v, func() *schema.Provider { return acctest.Provider })
 }
 
 func testAccCheckAWSNeptuneClusterExistsWithProvider(n string, v *neptune.DBCluster, providerF func() *schema.Provider) resource.TestCheckFunc {
@@ -611,7 +611,7 @@ func testAccCheckAWSNeptuneClusterSnapshot(rName string) resource.TestCheckFunc 
 				continue
 			}
 
-			awsClient := testAccProvider.Meta().(*AWSClient)
+			awsClient := acctest.Provider.Meta().(*AWSClient)
 			conn := awsClient.neptuneconn
 
 			log.Printf("[INFO] Deleting the Snapshot %s", rName)

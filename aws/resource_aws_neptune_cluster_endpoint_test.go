@@ -23,7 +23,7 @@ func TestAccAWSNeptuneClusterEndpoint_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSNeptuneClusterEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -60,7 +60,7 @@ func TestAccAWSNeptuneClusterEndpoint_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSNeptuneClusterEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -105,14 +105,14 @@ func TestAccAWSNeptuneClusterEndpoint_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSNeptuneClusterEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSNeptuneClusterEndpointConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSNeptuneClusterEndpointExists(resourceName, &dbCluster),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsNeptuneClusterEndpoint(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsNeptuneClusterEndpoint(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -128,14 +128,14 @@ func TestAccAWSNeptuneClusterEndpoint_disappears_cluster(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSNeptuneClusterEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSNeptuneClusterEndpointConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSNeptuneClusterEndpointExists(resourceName, &dbCluster),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsNeptuneCluster(), "aws_neptune_cluster.test"),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsNeptuneCluster(), "aws_neptune_cluster.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -144,7 +144,7 @@ func TestAccAWSNeptuneClusterEndpoint_disappears_cluster(t *testing.T) {
 }
 
 func testAccCheckAWSNeptuneClusterEndpointDestroy(s *terraform.State) error {
-	return testAccCheckAWSNeptuneClusterEndpointDestroyWithProvider(s, testAccProvider)
+	return testAccCheckAWSNeptuneClusterEndpointDestroyWithProvider(s, acctest.Provider)
 }
 
 func testAccCheckAWSNeptuneClusterEndpointDestroyWithProvider(s *terraform.State, provider *schema.Provider) error {
@@ -170,7 +170,7 @@ func testAccCheckAWSNeptuneClusterEndpointDestroyWithProvider(s *terraform.State
 }
 
 func testAccCheckAWSNeptuneClusterEndpointExists(n string, v *neptune.DBClusterEndpoint) resource.TestCheckFunc {
-	return testAccCheckAWSNeptuneClusterEndpointExistsWithProvider(n, v, func() *schema.Provider { return testAccProvider })
+	return testAccCheckAWSNeptuneClusterEndpointExistsWithProvider(n, v, func() *schema.Provider { return acctest.Provider })
 }
 
 func testAccCheckAWSNeptuneClusterEndpointExistsWithProvider(n string, v *neptune.DBClusterEndpoint, providerF func() *schema.Provider) resource.TestCheckFunc {

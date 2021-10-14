@@ -15,13 +15,13 @@ import (
 
 func TestAccAWSNeptuneParameterGroup_basic(t *testing.T) {
 	var v neptune.DBParameterGroup
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_neptune_parameter_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSNeptuneParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -48,13 +48,13 @@ func TestAccAWSNeptuneParameterGroup_basic(t *testing.T) {
 
 func TestAccAWSNeptuneParameterGroup_Description(t *testing.T) {
 	var v neptune.DBParameterGroup
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_neptune_parameter_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSNeptuneParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -76,13 +76,13 @@ func TestAccAWSNeptuneParameterGroup_Description(t *testing.T) {
 
 func TestAccAWSNeptuneParameterGroup_Parameter(t *testing.T) {
 	var v neptune.DBParameterGroup
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_neptune_parameter_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSNeptuneParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -124,13 +124,13 @@ func TestAccAWSNeptuneParameterGroup_Parameter(t *testing.T) {
 func TestAccAWSNeptuneParameterGroup_Tags(t *testing.T) {
 	var v neptune.DBParameterGroup
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_neptune_parameter_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSNeptuneParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -168,7 +168,7 @@ func TestAccAWSNeptuneParameterGroup_Tags(t *testing.T) {
 }
 
 func testAccCheckAWSNeptuneParameterGroupDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).neptuneconn
+	conn := acctest.Provider.Meta().(*AWSClient).neptuneconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_neptune_parameter_group" {
@@ -221,7 +221,7 @@ func testAccCheckAWSNeptuneParameterGroupExists(n string, v *neptune.DBParameter
 			return fmt.Errorf("No Neptune Parameter Group ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).neptuneconn
+		conn := acctest.Provider.Meta().(*AWSClient).neptuneconn
 
 		opts := neptune.DescribeDBParameterGroupsInput{
 			DBParameterGroupName: aws.String(rs.Primary.ID),
