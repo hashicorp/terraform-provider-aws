@@ -21,12 +21,12 @@ const (
 	codestarNotificationsTargetSubscriptionTimeout = 30 * time.Second
 )
 
-func resourceAwsCodeStarNotificationsNotificationRule() *schema.Resource {
+func ResourceNotificationRule() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCodeStarNotificationsNotificationRuleCreate,
-		Read:   resourceAwsCodeStarNotificationsNotificationRuleRead,
-		Update: resourceAwsCodeStarNotificationsNotificationRuleUpdate,
-		Delete: resourceAwsCodeStarNotificationsNotificationRuleDelete,
+		Create: resourceNotificationRuleCreate,
+		Read:   resourceNotificationRuleRead,
+		Update: resourceNotificationRuleUpdate,
+		Delete: resourceNotificationRuleDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -124,7 +124,7 @@ func expandCodeStarNotificationsNotificationRuleTargets(targetsData []interface{
 	return targets
 }
 
-func resourceAwsCodeStarNotificationsNotificationRuleCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceNotificationRuleCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodeStarNotificationsConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -149,10 +149,10 @@ func resourceAwsCodeStarNotificationsNotificationRuleCreate(d *schema.ResourceDa
 
 	d.SetId(aws.StringValue(res.Arn))
 
-	return resourceAwsCodeStarNotificationsNotificationRuleRead(d, meta)
+	return resourceNotificationRuleRead(d, meta)
 }
 
-func resourceAwsCodeStarNotificationsNotificationRuleRead(d *schema.ResourceData, meta interface{}) error {
+func resourceNotificationRuleRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodeStarNotificationsConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -262,7 +262,7 @@ func cleanupCodeStarNotificationsNotificationRuleTargets(conn *codestarnotificat
 	return nil
 }
 
-func resourceAwsCodeStarNotificationsNotificationRuleUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceNotificationRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodeStarNotificationsConn
 
 	params := &codestarnotifications.UpdateNotificationRuleInput{
@@ -292,10 +292,10 @@ func resourceAwsCodeStarNotificationsNotificationRuleUpdate(d *schema.ResourceDa
 		}
 	}
 
-	return resourceAwsCodeStarNotificationsNotificationRuleRead(d, meta)
+	return resourceNotificationRuleRead(d, meta)
 }
 
-func resourceAwsCodeStarNotificationsNotificationRuleDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceNotificationRuleDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodeStarNotificationsConn
 
 	_, err := conn.DeleteNotificationRule(&codestarnotifications.DeleteNotificationRuleInput{
