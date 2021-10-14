@@ -32,7 +32,7 @@ func ResourceRule() *schema.Resource {
 		Update: resourceRuleUpdate,
 		Delete: resourceRuleDelete,
 		CustomizeDiff: customdiff.Sequence(
-			resourceAwsRoute53ResolverRuleCustomizeDiff,
+			resourceRuleCustomizeDiff,
 			verify.SetTagsDiff,
 		),
 		Importer: &schema.ResourceImporter{
@@ -274,7 +274,7 @@ func resourceRuleDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsRoute53ResolverRuleCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+func resourceRuleCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 	if diff.Id() != "" {
 		if diff.HasChange("resolver_endpoint_id") {
 			if _, n := diff.GetChange("resolver_endpoint_id"); n.(string) == "" {
