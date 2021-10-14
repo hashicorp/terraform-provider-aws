@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -30,7 +31,7 @@ func testSweepAPIGatewayV2Apis(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).apigatewayv2conn
+	conn := client.(*conns.AWSClient).APIGatewayV2Conn
 	input := &apigatewayv2.GetApisInput{}
 	var sweeperErrs *multierror.Error
 
@@ -589,7 +590,7 @@ func TestAccAWSAPIGatewayV2Api_Openapi_FailOnWarnings(t *testing.T) {
 
 func testAccCheckAWSAPIGatewayV2ApiRoutes(v *apigatewayv2.GetApiOutput, routes []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).apigatewayv2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn
 
 		resp, err := conn.GetRoutes(&apigatewayv2.GetRoutesInput{
 			ApiId: v.ApiId,
@@ -809,7 +810,7 @@ func TestAccAWSAPIGatewayV2Api_QuickCreate(t *testing.T) {
 }
 
 func testAccCheckAWSAPIGatewayV2ApiDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).apigatewayv2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_apigatewayv2_api" {
@@ -843,7 +844,7 @@ func testAccCheckAWSAPIGatewayV2ApiExists(n string, v *apigatewayv2.GetApiOutput
 			return fmt.Errorf("No API Gateway v2 API ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).apigatewayv2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn
 
 		resp, err := conn.GetApi(&apigatewayv2.GetApiInput{
 			ApiId: aws.String(rs.Primary.ID),
@@ -869,7 +870,7 @@ func testAccCheckAWSAPIGatewayV2ApiQuickCreateIntegration(n, expectedType, expec
 			return fmt.Errorf("No API Gateway v2 API ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).apigatewayv2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn
 
 		resp, err := conn.GetIntegrations(&apigatewayv2.GetIntegrationsInput{
 			ApiId: aws.String(rs.Primary.ID),
@@ -904,7 +905,7 @@ func testAccCheckAWSAPIGatewayV2ApiQuickCreateRoute(n, expectedRouteKey string) 
 			return fmt.Errorf("No API Gateway v2 API ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).apigatewayv2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn
 
 		resp, err := conn.GetRoutes(&apigatewayv2.GetRoutesInput{
 			ApiId: aws.String(rs.Primary.ID),
@@ -936,7 +937,7 @@ func testAccCheckAWSAPIGatewayV2ApiQuickCreateStage(n, expectedName string) reso
 			return fmt.Errorf("No API Gateway v2 API ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).apigatewayv2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn
 
 		resp, err := conn.GetStages(&apigatewayv2.GetStagesInput{
 			ApiId: aws.String(rs.Primary.ID),

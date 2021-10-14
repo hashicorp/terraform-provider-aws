@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsApiGatewayV2ApiMapping() *schema.Resource {
@@ -44,7 +45,7 @@ func resourceAwsApiGatewayV2ApiMapping() *schema.Resource {
 }
 
 func resourceAwsApiGatewayV2ApiMappingCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	req := &apigatewayv2.CreateApiMappingInput{
 		ApiId:      aws.String(d.Get("api_id").(string)),
@@ -67,7 +68,7 @@ func resourceAwsApiGatewayV2ApiMappingCreate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsApiGatewayV2ApiMappingRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	resp, err := conn.GetApiMapping(&apigatewayv2.GetApiMappingInput{
 		ApiMappingId: aws.String(d.Id()),
@@ -90,7 +91,7 @@ func resourceAwsApiGatewayV2ApiMappingRead(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsApiGatewayV2ApiMappingUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	req := &apigatewayv2.UpdateApiMappingInput{
 		ApiId:        aws.String(d.Get("api_id").(string)),
@@ -114,7 +115,7 @@ func resourceAwsApiGatewayV2ApiMappingUpdate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsApiGatewayV2ApiMappingDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 API mapping (%s)", d.Id())
 	_, err := conn.DeleteApiMapping(&apigatewayv2.DeleteApiMappingInput{

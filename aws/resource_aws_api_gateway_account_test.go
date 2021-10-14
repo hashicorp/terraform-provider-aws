@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSAPIGatewayAccount_basic(t *testing.T) {
@@ -94,7 +95,7 @@ func testAccCheckAWSAPIGatewayAccountExists(n string, res *apigateway.Account) r
 			return fmt.Errorf("No API Gateway Account ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).apigatewayconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
 
 		req := &apigateway.GetAccountInput{}
 		describe, err := conn.GetAccount(req)
@@ -119,7 +120,7 @@ func testAccCheckAWSAPIGatewayAccountDestroy(s *terraform.State) error {
 
 // testAccPreCheckAWSAPIGatewayAccountCloudWatchRoleArn checks whether a CloudWatch role ARN has been configured in the current AWS region.
 func testAccPreCheckAWSAPIGatewayAccountCloudWatchRoleArn(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).apigatewayconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
 
 	output, err := conn.GetAccount(&apigateway.GetAccountInput{})
 

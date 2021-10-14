@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsApiGatewayModel() *schema.Resource {
@@ -27,7 +28,7 @@ func resourceAwsApiGatewayModel() *schema.Resource {
 				d.Set("name", name)
 				d.Set("rest_api_id", restApiID)
 
-				conn := meta.(*AWSClient).apigatewayconn
+				conn := meta.(*conns.AWSClient).APIGatewayConn
 
 				output, err := conn.GetModel(&apigateway.GetModelInput{
 					ModelName: aws.String(name),
@@ -77,7 +78,7 @@ func resourceAwsApiGatewayModel() *schema.Resource {
 }
 
 func resourceAwsApiGatewayModelCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*conns.AWSClient).APIGatewayConn
 	log.Printf("[DEBUG] Creating API Gateway Model")
 
 	var description *string
@@ -109,7 +110,7 @@ func resourceAwsApiGatewayModelCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsApiGatewayModelRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*conns.AWSClient).APIGatewayConn
 
 	log.Printf("[DEBUG] Reading API Gateway Model %s", d.Id())
 	out, err := conn.GetModel(&apigateway.GetModelInput{
@@ -134,7 +135,7 @@ func resourceAwsApiGatewayModelRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsApiGatewayModelUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*conns.AWSClient).APIGatewayConn
 
 	log.Printf("[DEBUG] Reading API Gateway Model %s", d.Id())
 	operations := make([]*apigateway.PatchOperation, 0)
@@ -167,7 +168,7 @@ func resourceAwsApiGatewayModelUpdate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsApiGatewayModelDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*conns.AWSClient).APIGatewayConn
 	log.Printf("[DEBUG] Deleting API Gateway Model: %s", d.Id())
 	input := &apigateway.DeleteModelInput{
 		ModelName: aws.String(d.Get("name").(string)),

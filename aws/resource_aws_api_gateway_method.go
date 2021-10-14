@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsApiGatewayMethod() *schema.Resource {
@@ -103,7 +104,7 @@ func resourceAwsApiGatewayMethod() *schema.Resource {
 }
 
 func resourceAwsApiGatewayMethodCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*conns.AWSClient).APIGatewayConn
 
 	input := apigateway.PutMethodInput{
 		AuthorizationType: aws.String(d.Get("authorization").(string)),
@@ -161,7 +162,7 @@ func resourceAwsApiGatewayMethodCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsApiGatewayMethodRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*conns.AWSClient).APIGatewayConn
 
 	log.Printf("[DEBUG] Reading API Gateway Method %s", d.Id())
 	out, err := conn.GetMethod(&apigateway.GetMethodInput{
@@ -203,7 +204,7 @@ func resourceAwsApiGatewayMethodRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsApiGatewayMethodUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*conns.AWSClient).APIGatewayConn
 
 	log.Printf("[DEBUG] Reading API Gateway Method %s", d.Id())
 	operations := make([]*apigateway.PatchOperation, 0)
@@ -330,7 +331,7 @@ func resourceAwsApiGatewayMethodUpdate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsApiGatewayMethodDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*conns.AWSClient).APIGatewayConn
 	log.Printf("[DEBUG] Deleting API Gateway Method: %s", d.Id())
 
 	_, err := conn.DeleteMethod(&apigateway.DeleteMethodInput{

@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsApiGatewayIntegrationResponse() *schema.Resource {
@@ -87,7 +88,7 @@ func resourceAwsApiGatewayIntegrationResponse() *schema.Resource {
 }
 
 func resourceAwsApiGatewayIntegrationResponseCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*conns.AWSClient).APIGatewayConn
 
 	templates := make(map[string]string)
 	for k, v := range d.Get("response_templates").(map[string]interface{}) {
@@ -131,7 +132,7 @@ func resourceAwsApiGatewayIntegrationResponseCreate(d *schema.ResourceData, meta
 }
 
 func resourceAwsApiGatewayIntegrationResponseRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*conns.AWSClient).APIGatewayConn
 
 	log.Printf("[DEBUG] Reading API Gateway Integration Response %s", d.Id())
 	integrationResponse, err := conn.GetIntegrationResponse(&apigateway.GetIntegrationResponseInput{
@@ -172,7 +173,7 @@ func resourceAwsApiGatewayIntegrationResponseRead(d *schema.ResourceData, meta i
 }
 
 func resourceAwsApiGatewayIntegrationResponseDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*conns.AWSClient).APIGatewayConn
 	log.Printf("[DEBUG] Deleting API Gateway Integration Response: %s", d.Id())
 
 	_, err := conn.DeleteIntegrationResponse(&apigateway.DeleteIntegrationResponseInput{

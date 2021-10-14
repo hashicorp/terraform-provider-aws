@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSAPIGatewayDocumentationVersion_basic(t *testing.T) {
@@ -127,7 +128,7 @@ func testAccCheckAWSAPIGatewayDocumentationVersionExists(n string, res *apigatew
 			return fmt.Errorf("No API Gateway Documentation Version ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).apigatewayconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
 
 		apiId, version, err := decodeApiGatewayDocumentationVersionId(rs.Primary.ID)
 		if err != nil {
@@ -150,7 +151,7 @@ func testAccCheckAWSAPIGatewayDocumentationVersionExists(n string, res *apigatew
 }
 
 func testAccCheckAWSAPIGatewayDocumentationVersionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).apigatewayconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_api_gateway_documentation_version" {

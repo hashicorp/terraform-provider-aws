@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsApiGatewayApiKey() *schema.Resource {
@@ -49,8 +50,8 @@ func dataSourceAwsApiGatewayApiKey() *schema.Resource {
 }
 
 func dataSourceAwsApiGatewayApiKeyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).APIGatewayConn
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	apiKey, err := conn.GetApiKey(&apigateway.GetApiKeyInput{
 		ApiKey:       aws.String(d.Get("id").(string)),

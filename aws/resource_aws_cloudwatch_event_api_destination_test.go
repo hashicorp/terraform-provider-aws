@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 const uuidRegex = "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
@@ -32,7 +33,7 @@ func testSweepCloudWatchEventApiDestination(region string) error {
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).cloudwatcheventsconn
+	conn := client.(*conns.AWSClient).CloudWatchEventsConn
 
 	var sweeperErrs *multierror.Error
 
@@ -254,7 +255,7 @@ func TestAccAWSCloudWatchEventApiDestination_disappears(t *testing.T) {
 }
 
 func testAccCheckAWSCloudWatchEventApiDestinationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).cloudwatcheventsconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchEventsConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudwatch_event_api_destination" {
@@ -282,7 +283,7 @@ func testAccCheckCloudWatchEventApiDestinationExists(n string, v *events.Describ
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).cloudwatcheventsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchEventsConn
 		params := events.DescribeApiDestinationInput{
 			Name: aws.String(rs.Primary.ID),
 		}

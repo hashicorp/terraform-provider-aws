@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsApiGatewayIntegration() *schema.Resource {
@@ -170,7 +171,7 @@ func resourceAwsApiGatewayIntegration() *schema.Resource {
 }
 
 func resourceAwsApiGatewayIntegrationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*conns.AWSClient).APIGatewayConn
 
 	log.Print("[DEBUG] Creating API Gateway Integration")
 
@@ -247,7 +248,7 @@ func resourceAwsApiGatewayIntegrationCreate(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsApiGatewayIntegrationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*conns.AWSClient).APIGatewayConn
 
 	log.Printf("[DEBUG] Reading API Gateway Integration: %s", d.Id())
 	integration, err := conn.GetIntegration(&apigateway.GetIntegrationInput{
@@ -304,7 +305,7 @@ func resourceAwsApiGatewayIntegrationRead(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsApiGatewayIntegrationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*conns.AWSClient).APIGatewayConn
 
 	log.Printf("[DEBUG] Updating API Gateway Integration: %s", d.Id())
 	operations := make([]*apigateway.PatchOperation, 0)
@@ -493,7 +494,7 @@ func resourceAwsApiGatewayIntegrationUpdate(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsApiGatewayIntegrationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*conns.AWSClient).APIGatewayConn
 	log.Printf("[DEBUG] Deleting API Gateway Integration: %s", d.Id())
 
 	_, err := conn.DeleteIntegration(&apigateway.DeleteIntegrationInput{

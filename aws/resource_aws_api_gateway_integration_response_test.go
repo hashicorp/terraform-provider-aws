@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSAPIGatewayIntegrationResponse_basic(t *testing.T) {
@@ -138,7 +139,7 @@ func testAccCheckAWSAPIGatewayIntegrationResponseExists(n string, res *apigatewa
 			return fmt.Errorf("No API Gateway Method ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).apigatewayconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
 
 		req := &apigateway.GetIntegrationResponseInput{
 			HttpMethod: aws.String("GET"),
@@ -158,7 +159,7 @@ func testAccCheckAWSAPIGatewayIntegrationResponseExists(n string, res *apigatewa
 }
 
 func testAccCheckAWSAPIGatewayIntegrationResponseDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).apigatewayconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_api_gateway_integration_response" {

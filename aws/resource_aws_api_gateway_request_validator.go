@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsApiGatewayRequestValidator() *schema.Resource {
@@ -58,7 +59,7 @@ func resourceAwsApiGatewayRequestValidator() *schema.Resource {
 }
 
 func resourceAwsApiGatewayRequestValidatorCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*conns.AWSClient).APIGatewayConn
 
 	input := apigateway.CreateRequestValidatorInput{
 		Name:                      aws.String(d.Get("name").(string)),
@@ -78,7 +79,7 @@ func resourceAwsApiGatewayRequestValidatorCreate(d *schema.ResourceData, meta in
 }
 
 func resourceAwsApiGatewayRequestValidatorRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*conns.AWSClient).APIGatewayConn
 
 	input := apigateway.GetRequestValidatorInput{
 		RequestValidatorId: aws.String(d.Id()),
@@ -103,7 +104,7 @@ func resourceAwsApiGatewayRequestValidatorRead(d *schema.ResourceData, meta inte
 }
 
 func resourceAwsApiGatewayRequestValidatorUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*conns.AWSClient).APIGatewayConn
 	log.Printf("[DEBUG] Updating Request Validator %s", d.Id())
 
 	operations := make([]*apigateway.PatchOperation, 0)
@@ -149,7 +150,7 @@ func resourceAwsApiGatewayRequestValidatorUpdate(d *schema.ResourceData, meta in
 }
 
 func resourceAwsApiGatewayRequestValidatorDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*conns.AWSClient).APIGatewayConn
 	log.Printf("[DEBUG] Deleting Request Validator %s", d.Id())
 
 	_, err := conn.DeleteRequestValidator(&apigateway.DeleteRequestValidatorInput{

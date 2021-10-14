@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsApiGatewayUsagePlanKey() *schema.Resource {
@@ -63,7 +64,7 @@ func resourceAwsApiGatewayUsagePlanKey() *schema.Resource {
 }
 
 func resourceAwsApiGatewayUsagePlanKeyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*conns.AWSClient).APIGatewayConn
 	log.Print("[DEBUG] Creating API Gateway Usage Plan Key")
 
 	params := &apigateway.CreateUsagePlanKeyInput{
@@ -84,7 +85,7 @@ func resourceAwsApiGatewayUsagePlanKeyCreate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsApiGatewayUsagePlanKeyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*conns.AWSClient).APIGatewayConn
 	log.Printf("[DEBUG] Reading API Gateway Usage Plan Key: %s", d.Id())
 
 	up, err := conn.GetUsagePlanKey(&apigateway.GetUsagePlanKeyInput{
@@ -108,7 +109,7 @@ func resourceAwsApiGatewayUsagePlanKeyRead(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsApiGatewayUsagePlanKeyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*conns.AWSClient).APIGatewayConn
 
 	log.Printf("[DEBUG] Deleting API Gateway Usage Plan Key: %s", d.Id())
 	_, err := conn.DeleteUsagePlanKey(&apigateway.DeleteUsagePlanKeyInput{

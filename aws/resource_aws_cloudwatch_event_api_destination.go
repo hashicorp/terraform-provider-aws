@@ -9,6 +9,7 @@ import (
 	events "github.com/aws/aws-sdk-go/service/cloudwatchevents"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsCloudWatchEventApiDestination() *schema.Resource {
@@ -65,7 +66,7 @@ func resourceAwsCloudWatchEventApiDestination() *schema.Resource {
 }
 
 func resourceAwsCloudWatchEventApiDestinationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatcheventsconn
+	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 
 	input := &events.CreateApiDestinationInput{}
 
@@ -103,7 +104,7 @@ func resourceAwsCloudWatchEventApiDestinationCreate(d *schema.ResourceData, meta
 }
 
 func resourceAwsCloudWatchEventApiDestinationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatcheventsconn
+	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 
 	input := &events.DescribeApiDestinationInput{
 		Name: aws.String(d.Id()),
@@ -134,7 +135,7 @@ func resourceAwsCloudWatchEventApiDestinationRead(d *schema.ResourceData, meta i
 }
 
 func resourceAwsCloudWatchEventApiDestinationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatcheventsconn
+	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 
 	input := &events.UpdateApiDestinationInput{}
 
@@ -166,7 +167,7 @@ func resourceAwsCloudWatchEventApiDestinationUpdate(d *schema.ResourceData, meta
 }
 
 func resourceAwsCloudWatchEventApiDestinationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatcheventsconn
+	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 
 	log.Printf("[INFO] Deleting CloudWatchEvent API Destination (%s)", d.Id())
 	input := &events.DeleteApiDestinationInput{

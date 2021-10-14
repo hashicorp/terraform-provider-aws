@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSAppsyncApiKey_basic(t *testing.T) {
@@ -115,7 +116,7 @@ func TestAccAWSAppsyncApiKey_Expires(t *testing.T) {
 }
 
 func testAccCheckAwsAppsyncApiKeyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).appsyncconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appsync_api_key" {
 			continue
@@ -157,7 +158,7 @@ func testAccCheckAwsAppsyncApiKeyExists(resourceName string, apiKey *appsync.Api
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).appsyncconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn
 		key, err := getAppsyncApiKey(apiID, keyID, conn)
 		if err != nil {
 			return err

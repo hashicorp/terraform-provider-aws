@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSAPIGatewayAuthorizer_basic(t *testing.T) {
@@ -315,7 +316,7 @@ func testAccCheckAWSAPIGatewayAuthorizerExists(n string, res *apigateway.Authori
 			return fmt.Errorf("No API Gateway Authorizer ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).apigatewayconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
 
 		req := &apigateway.GetAuthorizerInput{
 			AuthorizerId: aws.String(rs.Primary.ID),
@@ -333,7 +334,7 @@ func testAccCheckAWSAPIGatewayAuthorizerExists(n string, res *apigateway.Authori
 }
 
 func testAccCheckAWSAPIGatewayAuthorizerDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).apigatewayconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_api_gateway_authorizer" {

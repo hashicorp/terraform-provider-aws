@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsApiGatewayResource() *schema.Resource {
@@ -56,7 +57,7 @@ func resourceAwsApiGatewayResource() *schema.Resource {
 }
 
 func resourceAwsApiGatewayResourceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*conns.AWSClient).APIGatewayConn
 	log.Printf("[DEBUG] Creating API Gateway Resource for API %s", d.Get("rest_api_id").(string))
 
 	var err error
@@ -76,7 +77,7 @@ func resourceAwsApiGatewayResourceCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsApiGatewayResourceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*conns.AWSClient).APIGatewayConn
 
 	log.Printf("[DEBUG] Reading API Gateway Resource %s", d.Id())
 	resource, err := conn.GetResource(&apigateway.GetResourceInput{
@@ -121,7 +122,7 @@ func resourceAwsApiGatewayResourceUpdateOperations(d *schema.ResourceData) []*ap
 }
 
 func resourceAwsApiGatewayResourceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*conns.AWSClient).APIGatewayConn
 
 	log.Printf("[DEBUG] Updating API Gateway Resource %s", d.Id())
 	_, err := conn.UpdateResource(&apigateway.UpdateResourceInput{
@@ -138,7 +139,7 @@ func resourceAwsApiGatewayResourceUpdate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsApiGatewayResourceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*conns.AWSClient).APIGatewayConn
 	log.Printf("[DEBUG] Deleting API Gateway Resource: %s", d.Id())
 
 	log.Printf("[DEBUG] schema is %#v", d)

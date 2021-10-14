@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsApiGatewayRestApiPolicy() *schema.Resource {
@@ -40,7 +41,7 @@ func resourceAwsApiGatewayRestApiPolicy() *schema.Resource {
 }
 
 func resourceAwsApiGatewayRestApiPolicyPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*conns.AWSClient).APIGatewayConn
 
 	restApiId := d.Get("rest_api_id").(string)
 	log.Printf("[DEBUG] Setting API Gateway REST API Policy: %s", restApiId)
@@ -70,7 +71,7 @@ func resourceAwsApiGatewayRestApiPolicyPut(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsApiGatewayRestApiPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*conns.AWSClient).APIGatewayConn
 
 	log.Printf("[DEBUG] Reading API Gateway REST API Policy %s", d.Id())
 
@@ -101,7 +102,7 @@ func resourceAwsApiGatewayRestApiPolicyRead(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsApiGatewayRestApiPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*conns.AWSClient).APIGatewayConn
 
 	restApiId := d.Get("rest_api_id").(string)
 	log.Printf("[DEBUG] Deleting API Gateway REST API Policy: %s", restApiId)
