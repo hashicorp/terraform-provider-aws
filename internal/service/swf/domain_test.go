@@ -35,12 +35,12 @@ func TestAccAWSSwfDomain_basic(t *testing.T) {
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, swf.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsSwfDomainDestroy,
+		CheckDestroy: testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSwfDomainConfig_Name(rName),
+				Config: testAccDomainConfig_Name(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsSwfDomainExists(resourceName),
+					testAccCheckDomainExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "swf", regexp.MustCompile(`/domain/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -66,12 +66,12 @@ func TestAccAWSSwfDomain_tags(t *testing.T) {
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, swf.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsSwfDomainDestroy,
+		CheckDestroy: testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSwfDomainConfigTags1(rName, "key1", "value1"),
+				Config: testAccDomainTags1Config(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsSwfDomainExists(resourceName),
+					testAccCheckDomainExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -82,18 +82,18 @@ func TestAccAWSSwfDomain_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSSwfDomainConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccDomainTags2Config(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsSwfDomainExists(resourceName),
+					testAccCheckDomainExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccAWSSwfDomainConfigTags1(rName, "key2", "value2"),
+				Config: testAccDomainTags1Config(rName, "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsSwfDomainExists(resourceName),
+					testAccCheckDomainExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -112,12 +112,12 @@ func TestAccAWSSwfDomain_NamePrefix(t *testing.T) {
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, swf.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsSwfDomainDestroy,
+		CheckDestroy: testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSwfDomainConfig_NamePrefix,
+				Config: testAccDomainConfig_NamePrefix,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsSwfDomainExists(resourceName),
+					testAccCheckDomainExists(resourceName),
 					resource.TestMatchResourceAttr(resourceName, "name", regexp.MustCompile(`^tf-acc-test`)),
 				),
 			},
@@ -141,12 +141,12 @@ func TestAccAWSSwfDomain_GeneratedName(t *testing.T) {
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, swf.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsSwfDomainDestroy,
+		CheckDestroy: testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSwfDomainConfig_GeneratedName,
+				Config: testAccDomainConfig_GeneratedName,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsSwfDomainExists(resourceName),
+					testAccCheckDomainExists(resourceName),
 				),
 			},
 			{
@@ -169,12 +169,12 @@ func TestAccAWSSwfDomain_Description(t *testing.T) {
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, swf.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsSwfDomainDestroy,
+		CheckDestroy: testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSwfDomainConfig_Description(rName, "description1"),
+				Config: testAccDomainConfig_Description(rName, "description1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsSwfDomainExists(resourceName),
+					testAccCheckDomainExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
 				),
 			},
@@ -187,7 +187,7 @@ func TestAccAWSSwfDomain_Description(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsSwfDomainDestroy(s *terraform.State) error {
+func testAccCheckDomainDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).SWFConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -213,7 +213,7 @@ func testAccCheckAwsSwfDomainDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAwsSwfDomainExists(n string) resource.TestCheckFunc {
+func testAccCheckDomainExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -243,7 +243,7 @@ func testAccCheckAwsSwfDomainExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccAWSSwfDomainConfig_Description(rName, description string) string {
+func testAccDomainConfig_Description(rName, description string) string {
 	return fmt.Sprintf(`
 resource "aws_swf_domain" "test" {
   description                                 = %q
@@ -253,13 +253,13 @@ resource "aws_swf_domain" "test" {
 `, description, rName)
 }
 
-const testAccAWSSwfDomainConfig_GeneratedName = `
+const testAccDomainConfig_GeneratedName = `
 resource "aws_swf_domain" "test" {
   workflow_execution_retention_period_in_days = 1
 }
 `
 
-func testAccAWSSwfDomainConfig_Name(rName string) string {
+func testAccDomainConfig_Name(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_swf_domain" "test" {
   name                                        = %q
@@ -268,7 +268,7 @@ resource "aws_swf_domain" "test" {
 `, rName)
 }
 
-func testAccAWSSwfDomainConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccDomainTags1Config(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_swf_domain" "test" {
   name                                        = %[1]q
@@ -281,7 +281,7 @@ resource "aws_swf_domain" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccAWSSwfDomainConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccDomainTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_swf_domain" "test" {
   name                                        = %[1]q
@@ -295,7 +295,7 @@ resource "aws_swf_domain" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-const testAccAWSSwfDomainConfig_NamePrefix = `
+const testAccDomainConfig_NamePrefix = `
 resource "aws_swf_domain" "test" {
   name_prefix                                 = "tf-acc-test"
   workflow_execution_retention_period_in_days = 1
