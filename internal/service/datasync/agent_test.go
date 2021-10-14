@@ -130,7 +130,7 @@ func TestAccAWSDataSyncAgent_disappears(t *testing.T) {
 				Config: testAccAWSDataSyncAgentConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDataSyncAgentExists(resourceName, &agent1),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceAgent(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfdatasync.ResourceAgent(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

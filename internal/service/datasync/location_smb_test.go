@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfdatasync "github.com/hashicorp/terraform-provider-aws/internal/service/datasync"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -59,7 +60,7 @@ func testSweepDataSyncLocationSmbs(region string) error {
 			}
 			log.Printf("[INFO] Deleting DataSync Location SMB: %s", uri)
 
-			r := ResourceLocationSMB()
+			r := tfdatasync.ResourceLocationSMB()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(location.LocationArn))
 			err = r.Delete(d, client)

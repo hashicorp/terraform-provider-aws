@@ -146,7 +146,7 @@ func TestAccAWSDataSyncTask_disappears(t *testing.T) {
 				Config: testAccAWSDataSyncTaskConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDataSyncTaskExists(resourceName, &task1),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceTask(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfdatasync.ResourceTask(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
