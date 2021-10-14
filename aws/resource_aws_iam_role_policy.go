@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceRolePolicy() *schema.Resource {
@@ -33,8 +34,8 @@ func ResourceRolePolicy() *schema.Resource {
 			"policy": {
 				Type:             schema.TypeString,
 				Required:         true,
-				ValidateFunc:     validateIAMPolicyJson,
-				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
+				ValidateFunc:     verify.ValidIAMPolicyJSON,
+				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
 			},
 			"name": {
 				Type:          schema.TypeString,
@@ -42,14 +43,14 @@ func ResourceRolePolicy() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc:  validateIamRolePolicyName,
+				ValidateFunc:  validRolePolicyName,
 			},
 			"name_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
-				ValidateFunc:  validateIamRolePolicyNamePrefix,
+				ValidateFunc:  validRolePolicyNamePrefix,
 			},
 			"role": {
 				Type:     schema.TypeString,

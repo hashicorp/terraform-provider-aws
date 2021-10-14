@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceRole() *schema.Resource {
@@ -78,7 +79,7 @@ func ResourceRole() *schema.Resource {
 			"permissions_boundary": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 
 			"description": {
@@ -94,7 +95,7 @@ func ResourceRole() *schema.Resource {
 			"assume_role_policy": {
 				Type:             schema.TypeString,
 				Required:         true,
-				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
+				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
 				ValidateFunc:     validation.StringIsJSON,
 			},
 
@@ -130,14 +131,14 @@ func ResourceRole() *schema.Resource {
 							Optional: true,
 							ValidateFunc: validation.All(
 								validation.StringIsNotEmpty,
-								validateIamRolePolicyName,
+								validRolePolicyName,
 							),
 						},
 						"policy": {
 							Type:             schema.TypeString,
 							Optional:         true,
-							ValidateFunc:     validateIAMPolicyJson,
-							DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
+							ValidateFunc:     verify.ValidIAMPolicyJSON,
+							DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
 						},
 					},
 				},
@@ -149,7 +150,7 @@ func ResourceRole() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validateArn,
+					ValidateFunc: verify.ValidARN,
 				},
 			},
 		},

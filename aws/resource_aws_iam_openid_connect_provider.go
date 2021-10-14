@@ -11,6 +11,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceOpenIDConnectProvider() *schema.Resource {
@@ -32,8 +33,8 @@ func ResourceOpenIDConnectProvider() *schema.Resource {
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
-				ValidateFunc:     validateOpenIdURL,
-				DiffSuppressFunc: suppressOpenIdURL,
+				ValidateFunc:     validOpenIDURL,
+				DiffSuppressFunc: suppressOpenIDURL,
 			},
 			"client_id_list": {
 				Elem: &schema.Schema{
