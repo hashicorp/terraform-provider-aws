@@ -396,7 +396,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 		NumberOfBrokerNodes:  aws.Int64(int64(d.Get("number_of_broker_nodes").(int))),
 		OpenMonitoring:       expandMskOpenMonitoring(d.Get("open_monitoring").([]interface{})),
 		LoggingInfo:          expandMskLoggingInfo(d.Get("logging_info").([]interface{})),
-		Tags:                 tags.IgnoreAws().KafkaTags(),
+		Tags:                 Tags(tags.IgnoreAws()),
 	}
 
 	output, err := conn.CreateCluster(input)
@@ -483,7 +483,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("zookeeper_connect_string", SortEndpointsString(aws.StringValue(cluster.ZookeeperConnectString)))
 	d.Set("zookeeper_connect_string_tls", SortEndpointsString(aws.StringValue(cluster.ZookeeperConnectStringTls)))
 
-	tags := tftags.KafkaKeyValueTags(cluster.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(cluster.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -646,7 +646,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.KafkaUpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating MSK Cluster (%s) tags: %w", d.Id(), err)
 		}
 	}
