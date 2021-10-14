@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
@@ -120,5 +120,5 @@ func findResourceVpcEndpointServiceAllowedPrincipals(conn *ec2.EC2, id string) (
 }
 
 func vpcEndpointServiceIdPrincipalArnHash(svcId, arn string) string {
-	return fmt.Sprintf("a-%s%d", svcId, hashcode.String(arn))
+	return fmt.Sprintf("a-%s%d", svcId, create.StringHashcode(arn))
 }

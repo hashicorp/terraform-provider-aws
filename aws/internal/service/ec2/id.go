@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 )
 
 const clientVpnAuthorizationRuleIDSeparator = ","
@@ -91,7 +91,7 @@ func ManagedPrefixListEntryParseID(id string) (string, string, error) {
 
 // RouteCreateID returns a route resource ID.
 func RouteCreateID(routeTableID, destination string) string {
-	return fmt.Sprintf("r-%s%d", routeTableID, hashcode.String(destination))
+	return fmt.Sprintf("r-%s%d", routeTableID, create.StringHashcode(destination))
 }
 
 const transitGatewayPrefixListReferenceSeparator = "_"
@@ -114,15 +114,15 @@ func TransitGatewayPrefixListReferenceParseID(id string) (string, string, error)
 }
 
 func VpcEndpointRouteTableAssociationCreateID(vpcEndpointID, routeTableID string) string {
-	return fmt.Sprintf("a-%s%d", vpcEndpointID, hashcode.String(routeTableID))
+	return fmt.Sprintf("a-%s%d", vpcEndpointID, create.StringHashcode(routeTableID))
 }
 
 func VpcEndpointSubnetAssociationCreateID(vpcEndpointID, subnetID string) string {
-	return fmt.Sprintf("a-%s%d", vpcEndpointID, hashcode.String(subnetID))
+	return fmt.Sprintf("a-%s%d", vpcEndpointID, create.StringHashcode(subnetID))
 }
 
 func VpnGatewayVpcAttachmentCreateID(vpnGatewayID, vpcID string) string {
-	return fmt.Sprintf("vpn-attachment-%x", hashcode.String(fmt.Sprintf("%s-%s", vpcID, vpnGatewayID)))
+	return fmt.Sprintf("vpn-attachment-%x", create.StringHashcode(fmt.Sprintf("%s-%s", vpcID, vpnGatewayID)))
 }
 
 const vpnGatewayRoutePropagationIDSeparator = "_"

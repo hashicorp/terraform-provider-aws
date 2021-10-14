@@ -11,7 +11,7 @@ import (
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
@@ -92,7 +92,7 @@ func resourceAwsLightsailInstancePublicPortsCreate(d *schema.ResourceData, meta 
 		buffer.WriteString(fmt.Sprintf("%s-%d-%d\n", aws.StringValue(portInfo.Protocol), aws.Int64Value(portInfo.FromPort), aws.Int64Value(portInfo.ToPort)))
 	}
 
-	d.SetId(fmt.Sprintf("%s-%d", d.Get("instance_name").(string), hashcode.String(buffer.String())))
+	d.SetId(fmt.Sprintf("%s-%d", d.Get("instance_name").(string), create.StringHashcode(buffer.String())))
 
 	return resourceAwsLightsailInstancePublicPortsRead(d, meta)
 }

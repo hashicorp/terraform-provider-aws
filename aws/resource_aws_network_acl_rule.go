@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
@@ -311,7 +311,7 @@ func networkAclIdRuleNumberEgressHash(networkAclId string, ruleNumber int, egres
 	buf.WriteString(fmt.Sprintf("%d-", ruleNumber))
 	buf.WriteString(fmt.Sprintf("%t-", egress))
 	buf.WriteString(fmt.Sprintf("%s-", protocol))
-	return fmt.Sprintf("nacl-%d", hashcode.String(buf.String()))
+	return fmt.Sprintf("nacl-%d", create.StringHashcode(buf.String()))
 }
 
 func validateICMPArgumentValue(v interface{}, k string) (ws []string, errors []error) {

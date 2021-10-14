@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
@@ -464,7 +464,7 @@ func resourceAwsDefaultSecurityGroupRuleHash(v interface{}) int {
 		buf.WriteString(fmt.Sprintf("%s-", m["description"].(string)))
 	}
 
-	return hashcode.String(buf.String())
+	return create.StringHashcode(buf.String())
 }
 
 func resourceAwsDefaultSecurityGroupMigrateState(
