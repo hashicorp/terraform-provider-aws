@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
 )
 
 func TestAccAWSAPIGatewayAuthorizer_basic(t *testing.T) {
@@ -38,7 +39,7 @@ func TestAccAWSAPIGatewayAuthorizer_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "type", "TOKEN"),
 					resource.TestCheckResourceAttrPair(resourceName, "authorizer_credentials", roleResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "authorizer_result_ttl_in_seconds", strconv.Itoa(defaultAuthorizerTTL)),
+					resource.TestCheckResourceAttr(resourceName, "authorizer_result_ttl_in_seconds", strconv.Itoa(tfapigateway.DefaultAuthorizerTTL)),
 					resource.TestCheckResourceAttr(resourceName, "identity_validation_expression", ""),
 				),
 			},
@@ -195,7 +196,7 @@ func TestAccAWSAPIGatewayAuthorizer_switchAuthorizerTTL(t *testing.T) {
 				Config: testAccAWSAPIGatewayAuthorizerConfig_lambda(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayAuthorizerExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "authorizer_result_ttl_in_seconds", strconv.Itoa(defaultAuthorizerTTL)),
+					resource.TestCheckResourceAttr(resourceName, "authorizer_result_ttl_in_seconds", strconv.Itoa(tfapigateway.DefaultAuthorizerTTL)),
 				),
 			},
 			{
@@ -222,7 +223,7 @@ func TestAccAWSAPIGatewayAuthorizer_switchAuthorizerTTL(t *testing.T) {
 				Config: testAccAWSAPIGatewayAuthorizerConfig_lambda(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayAuthorizerExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "authorizer_result_ttl_in_seconds", strconv.Itoa(defaultAuthorizerTTL)),
+					resource.TestCheckResourceAttr(resourceName, "authorizer_result_ttl_in_seconds", strconv.Itoa(tfapigateway.DefaultAuthorizerTTL)),
 				),
 			},
 		},
@@ -297,7 +298,7 @@ func TestAccAWSAPIGatewayAuthorizer_disappears(t *testing.T) {
 				Config: testAccAWSAPIGatewayAuthorizerConfig_lambda(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayAuthorizerExists(resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceAuthorizer(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceAuthorizer(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
 )
 
 func TestAccAWSAPIGatewayUsagePlan_basic(t *testing.T) {
@@ -475,7 +476,7 @@ func TestAccAWSAPIGatewayUsagePlan_disappears(t *testing.T) {
 				Config: testAccAWSApiGatewayUsagePlanBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayUsagePlanExists(resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceUsagePlan(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceUsagePlan(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

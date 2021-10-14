@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -40,7 +41,7 @@ func testSweepAPIGatewayVpcLinks(region string) error {
 			id := aws.StringValue(item.Id)
 
 			log.Printf("[INFO] Deleting API Gateway VPC Link (%s)", id)
-			r := ResourceVPCLink()
+			r := tfapigateway.ResourceVPCLink()
 			d := r.Data(nil)
 			d.SetId(id)
 
@@ -173,7 +174,7 @@ func TestAccAWSAPIGatewayVpcLink_disappears(t *testing.T) {
 				Config: testAccAPIGatewayVpcLinkConfig(rName, "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAPIGatewayVpcLinkExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceVPCLink(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceVPCLink(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

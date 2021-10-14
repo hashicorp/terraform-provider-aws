@@ -94,7 +94,7 @@ func resourceDocumentationPartRead(d *schema.ResourceData, meta interface{}) err
 
 	log.Printf("[INFO] Reading API Gateway Documentation Part %s", d.Id())
 
-	apiId, id, err := decodeApiGatewayDocumentationPartId(d.Id())
+	apiId, id, err := DecodeDocumentationPartID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -124,7 +124,7 @@ func resourceDocumentationPartRead(d *schema.ResourceData, meta interface{}) err
 func resourceDocumentationPartUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 
-	apiId, id, err := decodeApiGatewayDocumentationPartId(d.Id())
+	apiId, id, err := DecodeDocumentationPartID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -161,7 +161,7 @@ func resourceDocumentationPartUpdate(d *schema.ResourceData, meta interface{}) e
 func resourceDocumentationPartDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 
-	apiId, id, err := decodeApiGatewayDocumentationPartId(d.Id())
+	apiId, id, err := DecodeDocumentationPartID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -226,7 +226,7 @@ func flattenApiGatewayDocumentationPartLocation(l *apigateway.DocumentationPartL
 	return []interface{}{m}
 }
 
-func decodeApiGatewayDocumentationPartId(id string) (string, string, error) {
+func DecodeDocumentationPartID(id string) (string, string, error) {
 	parts := strings.Split(id, "/")
 	if len(parts) != 2 {
 		return "", "", fmt.Errorf("Unexpected format of ID (%q), expected REST-API-ID/ID", id)

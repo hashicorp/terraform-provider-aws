@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
 )
 
 func TestAccAWSAPIGatewayRequestValidator_basic(t *testing.T) {
@@ -74,7 +75,7 @@ func TestAccAWSAPIGatewayRequestValidator_disappears(t *testing.T) {
 				Config: testAccAWSAPIGatewayRequestValidatorConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayRequestValidatorExists(resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceRequestValidator(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceRequestValidator(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
