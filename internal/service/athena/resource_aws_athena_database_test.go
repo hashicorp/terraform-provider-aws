@@ -1,4 +1,4 @@
-package aws
+package athena_test
 
 import (
 	"fmt"
