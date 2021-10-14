@@ -5,7 +5,7 @@ import (
 	"regexp"
 )
 
-func validateAwsKMSGrantName(v interface{}, k string) (ws []string, es []error) {
+func validGrantName(v interface{}, k string) (ws []string, es []error) {
 	value := v.(string)
 
 	if len(value) > 256 {
@@ -19,7 +19,7 @@ func validateAwsKMSGrantName(v interface{}, k string) (ws []string, es []error) 
 	return
 }
 
-func validateAwsKMSName(v interface{}, k string) (ws []string, es []error) {
+func validName(v interface{}, k string) (ws []string, es []error) {
 	value := v.(string)
 	if !regexp.MustCompile(`^(alias\/)[a-zA-Z0-9:/_-]+$`).MatchString(value) {
 		es = append(es, fmt.Errorf(

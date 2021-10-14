@@ -36,7 +36,7 @@ func ResourceAlias() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc:  validateAwsKMSName,
+				ValidateFunc:  validName,
 			},
 
 			"name_prefix": {
@@ -45,7 +45,7 @@ func ResourceAlias() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
-				ValidateFunc:  validateAwsKMSName,
+				ValidateFunc:  validName,
 			},
 
 			"target_key_arn": {

@@ -14,7 +14,7 @@ func TestValidGrantName(t *testing.T) {
 	}
 
 	for _, s := range validValues {
-		_, errors := validateAwsKMSGrantName(s, "name")
+		_, errors := validGrantName(s, "name")
 		if len(errors) > 0 {
 			t.Fatalf("%q AWS KMS Grant Name should have been valid: %v", s, errors)
 		}
@@ -28,7 +28,7 @@ func TestValidGrantName(t *testing.T) {
 	}
 
 	for _, s := range invalidValues {
-		_, errors := validateAwsKMSGrantName(s, "name")
+		_, errors := validGrantName(s, "name")
 		if len(errors) == 0 {
 			t.Fatalf("%q should not be a valid AWS KMS Grant Name", s)
 		}
@@ -59,7 +59,7 @@ func TestValidName(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		_, errors := validateAwsKMSName(tc.Value, "name")
+		_, errors := validName(tc.Value, "name")
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("AWS KMS Alias Name validation failed: %v", errors)
 		}

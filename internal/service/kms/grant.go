@@ -47,7 +47,7 @@ func ResourceGrant() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validateAwsKMSGrantName,
+				ValidateFunc: validGrantName,
 			},
 			"key_id": {
 				Type:     schema.TypeString,
