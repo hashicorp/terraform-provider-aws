@@ -12,11 +12,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
-	tfkafka "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kafka"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kafka/finder"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kafka/waiter"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tfkafka "github.com/hashicorp/terraform-provider-aws/aws/internal/service/kafka"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/kafka/finder"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/kafka/waiter"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsMskCluster() *schema.Resource {

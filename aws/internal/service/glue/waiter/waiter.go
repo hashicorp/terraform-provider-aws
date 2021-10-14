@@ -7,8 +7,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	tfglue "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/glue"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	tfglue "github.com/hashicorp/terraform-provider-aws/aws/internal/service/glue"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 )
 
 const (

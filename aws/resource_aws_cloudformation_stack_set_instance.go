@@ -12,11 +12,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tfcloudformation "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudformation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudformation/finder"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudformation/waiter"
-	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudformation"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudformation/finder"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudformation/waiter"
+	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsCloudFormationStackSetInstance() *schema.Resource {

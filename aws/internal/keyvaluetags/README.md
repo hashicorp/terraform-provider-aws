@@ -4,7 +4,7 @@ The `keyvaluetags` package is designed to provide a consistent interface for han
 
 This package instead implements a single `KeyValueTags` type, which covers all key-value handling logic such as merging tags and ignoring keys via functions on the single type. The underlying implementation is compatible with Go operations such as `len()`.
 
-Full documentation for this package can be found on [GoDoc](https://godoc.org/github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags).
+Full documentation for this package can be found on [GoDoc](https://godoc.org/github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags).
 
 Many AWS Go SDK services that support tagging have their service-specific Go type conversion functions to and from `KeyValueTags` code generated. Converting from `KeyValueTags` to AWS Go SDK types is done via `{SERVICE}Tags()` functions on the type, while converting from AWS Go SDK types to the `KeyValueTags` type is done via `{SERVICE}KeyValueTags()` functions. For more information about this code generation, see the [`generators/servicetags` README](generators/servicetags/README.md).
 

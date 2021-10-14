@@ -14,10 +14,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tflex "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/lex"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/lex/finder"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/lex/waiter"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	tflex "github.com/hashicorp/terraform-provider-aws/aws/internal/service/lex"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/lex/finder"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/lex/waiter"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 )
 
 const (

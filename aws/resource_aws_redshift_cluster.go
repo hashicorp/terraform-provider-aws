@@ -14,11 +14,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
-	tfredshift "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/redshift"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/redshift/finder"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/redshift/waiter"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tfredshift "github.com/hashicorp/terraform-provider-aws/aws/internal/service/redshift"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/redshift/finder"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/redshift/waiter"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsRedshiftCluster() *schema.Resource {

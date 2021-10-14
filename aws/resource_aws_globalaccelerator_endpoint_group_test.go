@@ -12,9 +12,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	ec2finder "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/globalaccelerator/finder"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	ec2finder "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/globalaccelerator/finder"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func TestAccAwsGlobalAcceleratorEndpointGroup_basic(t *testing.T) {

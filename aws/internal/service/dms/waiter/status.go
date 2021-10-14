@@ -4,8 +4,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/dms/finder"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/dms/finder"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func EndpointStatus(conn *dms.DatabaseMigrationService, id string) resource.StateRefreshFunc {

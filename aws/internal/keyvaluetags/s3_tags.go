@@ -12,8 +12,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	tfs3 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/s3"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	tfs3 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/s3"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 )
 
 // Custom S3 tag service update functions using the same format as generated code.

@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tfsecurityhub "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/securityhub"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/securityhub/finder"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/aws/internal/service/securityhub"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/securityhub/finder"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsSecurityHubStandardsControl() *schema.Resource {

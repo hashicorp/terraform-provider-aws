@@ -6,7 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	tfcloudwatchlogs "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatchlogs"
+	tfcloudwatchlogs "github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudwatchlogs"
 )
 
 func dataSourceAwsCloudwatchLogGroups() *schema.Resource {

@@ -5,8 +5,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	tfglue "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/glue"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	tfglue "github.com/hashicorp/terraform-provider-aws/aws/internal/service/glue"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func DevEndpointByName(conn *glue.Glue, name string) (*glue.DevEndpoint, error) {

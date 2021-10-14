@@ -7,8 +7,8 @@ import (
 	events "github.com/aws/aws-sdk-go/service/cloudwatchevents"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	tfevents "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatchevents"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatchevents/lister"
+	tfevents "github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudwatchevents"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudwatchevents/lister"
 )
 
 func ConnectionByName(conn *events.CloudWatchEvents, name string) (*events.DescribeConnectionOutput, error) {

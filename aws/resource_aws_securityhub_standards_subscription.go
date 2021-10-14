@@ -7,9 +7,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/securityhub"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/securityhub/finder"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/securityhub/waiter"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/securityhub/finder"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/securityhub/waiter"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsSecurityHubStandardsSubscription() *schema.Resource {

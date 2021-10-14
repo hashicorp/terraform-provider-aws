@@ -3,7 +3,7 @@ package cloudwatchlogs_test
 import (
 	"testing"
 
-	tfcloudwatchlogs "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatchlogs"
+	tfcloudwatchlogs "github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudwatchlogs"
 )
 
 func TestTrimLogGroupARNWildcardSuffix(t *testing.T) {

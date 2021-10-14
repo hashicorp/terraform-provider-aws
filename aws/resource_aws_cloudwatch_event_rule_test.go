@@ -13,10 +13,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatchevents/finder"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatchevents/lister"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/naming"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudwatchevents/finder"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudwatchevents/lister"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func init() {

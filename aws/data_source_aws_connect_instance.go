@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/connect"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	tfconnect "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/connect"
+	tfconnect "github.com/hashicorp/terraform-provider-aws/aws/internal/service/connect"
 )
 
 func dataSourceAwsConnectInstance() *schema.Resource {

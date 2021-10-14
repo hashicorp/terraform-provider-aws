@@ -12,7 +12,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 const filename = `service_tags_gen.go`

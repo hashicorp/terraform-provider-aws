@@ -12,9 +12,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/appstream/finder"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/appstream/waiter"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/appstream/finder"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/appstream/waiter"
 )
 
 func resourceAwsAppStreamImageBuilder() *schema.Resource {

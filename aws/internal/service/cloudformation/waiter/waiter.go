@@ -10,9 +10,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	tfcloudformation "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudformation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudformation/lister"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudformation"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudformation/lister"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 )
 
 const (

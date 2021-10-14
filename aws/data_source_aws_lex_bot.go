@@ -6,8 +6,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	tflex "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/lex"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/lex/finder"
+	tflex "github.com/hashicorp/terraform-provider-aws/aws/internal/service/lex"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/lex/finder"
 )
 
 func dataSourceAwsLexBot() *schema.Resource {

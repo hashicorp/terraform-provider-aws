@@ -8,10 +8,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	awspolicy "github.com/jen20/awspolicyequivalence"
-	tfjson "github.com/terraform-providers/terraform-provider-aws/aws/internal/json"
-	tfsqs "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sqs"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sqs/finder"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	tfjson "github.com/hashicorp/terraform-provider-aws/aws/internal/json"
+	tfsqs "github.com/hashicorp/terraform-provider-aws/aws/internal/service/sqs"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sqs/finder"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 )
 
 const (

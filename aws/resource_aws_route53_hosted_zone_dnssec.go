@@ -9,9 +9,9 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tfroute53 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/route53"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/route53/finder"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/route53/waiter"
+	tfroute53 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53/finder"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53/waiter"
 )
 
 func resourceAwsRoute53HostedZoneDnssec() *schema.Resource {

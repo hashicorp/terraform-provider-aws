@@ -7,8 +7,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	tfcloudformation "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudformation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudformation"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func ChangeSetByStackIDAndChangeSetName(conn *cloudformation.CloudFormation, stackID, changeSetName string) (*cloudformation.DescribeChangeSetOutput, error) {

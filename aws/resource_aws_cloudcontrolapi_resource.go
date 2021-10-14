@@ -17,10 +17,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/mattbaird/jsonpatch"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudcontrol/finder"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudcontrol/waiter"
-	cffinder "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudformation/finder"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudcontrol/finder"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudcontrol/waiter"
+	cffinder "github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudformation/finder"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsCloudControlApiResource() *schema.Resource {

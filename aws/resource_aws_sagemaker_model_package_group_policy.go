@@ -9,9 +9,9 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tfsagemaker "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sagemaker"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sagemaker/finder"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	tfsagemaker "github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker/finder"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsSagemakerModelPackageGroupPolicy() *schema.Resource {

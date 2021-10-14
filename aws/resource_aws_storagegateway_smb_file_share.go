@@ -11,11 +11,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
-	tfstoragegateway "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/storagegateway"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/storagegateway/finder"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/storagegateway/waiter"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/aws/internal/service/storagegateway"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/storagegateway/finder"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/storagegateway/waiter"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsStorageGatewaySmbFileShare() *schema.Resource {

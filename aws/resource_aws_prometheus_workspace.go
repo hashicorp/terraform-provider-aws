@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/prometheusservice/waiter"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/prometheusservice/waiter"
 )
 
 func resourceAwsPrometheusWorkspace() *schema.Resource {

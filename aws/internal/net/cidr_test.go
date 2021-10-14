@@ -3,7 +3,7 @@ package net_test
 import (
 	"testing"
 
-	tfnet "github.com/terraform-providers/terraform-provider-aws/aws/internal/net"
+	tfnet "github.com/hashicorp/terraform-provider-aws/aws/internal/net"
 )
 
 func TestCIDRBlocksEqual(t *testing.T) {

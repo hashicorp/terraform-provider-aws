@@ -10,10 +10,10 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tfautoscalingplans "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/autoscalingplans"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/autoscalingplans/finder"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/autoscalingplans/waiter"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	tfautoscalingplans "github.com/hashicorp/terraform-provider-aws/aws/internal/service/autoscalingplans"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/autoscalingplans/finder"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/autoscalingplans/waiter"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsAutoScalingPlansScalingPlan() *schema.Resource {

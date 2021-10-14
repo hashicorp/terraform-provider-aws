@@ -8,9 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/lakeformation"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
-	tflakeformation "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/lakeformation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/lakeformation/waiter"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
+	tflakeformation "github.com/hashicorp/terraform-provider-aws/aws/internal/service/lakeformation"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/lakeformation/waiter"
 )
 
 func dataSourceAwsLakeFormationPermissions() *schema.Resource {

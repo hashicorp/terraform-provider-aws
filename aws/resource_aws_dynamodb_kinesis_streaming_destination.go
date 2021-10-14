@@ -11,8 +11,8 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/dynamodb/finder"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/dynamodb/waiter"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/dynamodb/finder"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/dynamodb/waiter"
 )
 
 func resourceAwsDynamoDbKinesisStreamingDestination() *schema.Resource {

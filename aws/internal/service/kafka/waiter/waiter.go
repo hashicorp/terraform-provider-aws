@@ -7,8 +7,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kafka"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	tfkafka "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kafka"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	tfkafka "github.com/hashicorp/terraform-provider-aws/aws/internal/service/kafka"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 )
 
 const (

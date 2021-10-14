@@ -13,7 +13,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tagresource"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/tagresource"
 )
 
 var (
@@ -102,9 +102,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/{{ .ServiceName }}"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tagresource"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/tagresource"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAws{{ .ServiceName | Title }}Tag() *schema.Resource {
@@ -224,9 +224,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/{{ .ServiceName }}"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tagresource"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/tagresource"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func testAccCheck{{ .ServiceName | Title }}TagDestroy(s *terraform.State) error {

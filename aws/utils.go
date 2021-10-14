@@ -8,7 +8,7 @@ import (
 	"sort"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 )
 
 // Base64Encode encodes data if the input isn't already encoded using base64.StdEncoding.EncodeToString.

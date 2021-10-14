@@ -119,7 +119,7 @@ Then referencing code can use it via:
 
 ```go
 // imports
-tf{SERVICE} "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/{SERVICE}"
+tf{SERVICE} "github.com/hashicorp/terraform-provider-aws/aws/internal/service/{SERVICE}"
 
 // logic
 tfawserr.ErrCodeEquals(err, tf{SERVICE}.ErrCodeInvalidParameterException)
@@ -129,7 +129,7 @@ e.g.
 
 ```go
 // imports
-tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
+tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
 
 // logic
 tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidParameterException)
@@ -142,7 +142,7 @@ The Terraform Plugin SDK includes some error types which are used in certain ope
 * [`resource.NotFoundError`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource#NotFoundError)
 * [`resource.TimeoutError`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource#TimeoutError): Returned from [`resource.Retry()`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource#Retry), [`resource.RetryContext()`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource#RetryContext), [`(resource.StateChangeConf).WaitForState()`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource#StateChangeConf.WaitForState), and [`(resource.StateChangeConf).WaitForStateContext()`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource#StateChangeConf.WaitForStateContext)
 
-The Terraform AWS Provider codebase implements some additional helpers for working with these in the `github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource` package:
+The Terraform AWS Provider codebase implements some additional helpers for working with these in the `github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource` package:
 
 - `tfresource.NotFound(err)`: Returns true if the error is a `resource.NotFoundError`.
 - `tfresource.TimedOut(err)`: Returns true if the error is a `resource.TimeoutError` and contains no `LastError`. This typically signifies that the retry logic was never signaled for a retry, which can happen when AWS Go SDK operations are automatically retrying before returning.

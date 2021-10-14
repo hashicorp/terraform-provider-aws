@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/connect"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	tfconnect "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/connect"
+	tfconnect "github.com/hashicorp/terraform-provider-aws/aws/internal/service/connect"
 )
 
 func InstanceStatus(ctx context.Context, conn *connect.Connect, instanceId string) resource.StateRefreshFunc {

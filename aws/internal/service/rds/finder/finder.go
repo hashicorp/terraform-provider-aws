@@ -5,8 +5,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	tfrds "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/rds"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	tfrds "github.com/hashicorp/terraform-provider-aws/aws/internal/service/rds"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 )
 
 // DBProxyTarget returns matching DBProxyTarget.

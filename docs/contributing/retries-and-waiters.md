@@ -126,7 +126,7 @@ const (
 
 import (
 	// ... other imports ...
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/example/waiter"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/example/waiter"
 )
 
 // ... Create, Read, Update, or Delete function ...
@@ -183,7 +183,7 @@ Each AWS service API (and sometimes even operations within the same API) varies 
 import (
 	// ... other imports ...
 	// By convention, cross-service waiter imports are aliased as {SERVICE}waiter
-	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
+	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
 )
 
 // ... Create and typically Update function ...
@@ -223,9 +223,9 @@ The below code example highlights this situation for a resource creation that al
 
 import (
 	// ... other imports ...
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/{SERVICE}/waiter"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/{SERVICE}/waiter"
 	// By convention, cross-service waiter imports are aliased as {SERVICE}waiter
-	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
+	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
 )
 
 // ... Create function ...

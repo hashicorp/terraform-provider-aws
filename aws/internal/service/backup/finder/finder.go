@@ -5,7 +5,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/backup"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	tfbackup "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/backup"
+	tfbackup "github.com/hashicorp/terraform-provider-aws/aws/internal/service/backup"
 )
 
 func BackupVaultAccessPolicyByName(conn *backup.Backup, name string) (*backup.GetBackupVaultAccessPolicyOutput, error) {

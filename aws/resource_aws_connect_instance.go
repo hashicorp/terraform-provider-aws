@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tfconnect "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/connect"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/connect/waiter"
+	tfconnect "github.com/hashicorp/terraform-provider-aws/aws/internal/service/connect"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/connect/waiter"
 )
 
 func resourceAwsConnectInstance() *schema.Resource {

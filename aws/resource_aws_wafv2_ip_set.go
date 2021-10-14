@@ -11,8 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
-	tfnet "github.com/terraform-providers/terraform-provider-aws/aws/internal/net"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tfnet "github.com/hashicorp/terraform-provider-aws/aws/internal/net"
 )
 
 func resourceAwsWafv2IPSet() *schema.Resource {

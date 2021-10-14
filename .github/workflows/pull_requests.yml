@@ -50,8 +50,8 @@ jobs:
           pr-message: |-
             Welcome @${{github.actor}} :wave:
             
-            It looks like this is your first Pull Request submission to the [Terraform AWS Provider](https://github.com/terraform-providers/terraform-provider-aws)! If you haven’t already done so please make sure you have checked out our [CONTRIBUTING](https://github.com/terraform-providers/terraform-provider-aws/blob/main/docs/CONTRIBUTING.md) guide and [FAQ](https://github.com/terraform-providers/terraform-provider-aws/blob/main/docs/FAQ.md) to make sure your contribution is adhering to best practice and has all the necessary elements in place for a successful approval.
+            It looks like this is your first Pull Request submission to the [Terraform AWS Provider](https://github.com/hashicorp/terraform-provider-aws)! If you haven’t already done so please make sure you have checked out our [CONTRIBUTING](https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/CONTRIBUTING.md) guide and [FAQ](https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/FAQ.md) to make sure your contribution is adhering to best practice and has all the necessary elements in place for a successful approval.
 
-            Also take a look at our [FAQ](https://github.com/terraform-providers/terraform-provider-aws/blob/main/docs/FAQ.md) which details how we prioritize Pull Requests for inclusion.
+            Also take a look at our [FAQ](https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/FAQ.md) which details how we prioritize Pull Requests for inclusion.
             
             Thanks again, and welcome to the community! :smiley:         

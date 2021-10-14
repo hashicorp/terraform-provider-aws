@@ -11,10 +11,10 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tfkinesisanalyticsv2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kinesisanalyticsv2"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kinesisanalyticsv2/finder"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kinesisanalyticsv2/waiter"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	tfkinesisanalyticsv2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/kinesisanalyticsv2"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/kinesisanalyticsv2/finder"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/kinesisanalyticsv2/waiter"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsKinesisAnalyticsV2ApplicationSnapshot() *schema.Resource {

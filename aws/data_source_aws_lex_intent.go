@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tflex "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/lex"
+	tflex "github.com/hashicorp/terraform-provider-aws/aws/internal/service/lex"
 )
 
 func dataSourceAwsLexIntent() *schema.Resource {

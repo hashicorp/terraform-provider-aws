@@ -12,9 +12,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
-	tflakeformation "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/lakeformation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
+	tflakeformation "github.com/hashicorp/terraform-provider-aws/aws/internal/service/lakeformation"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func testAccAWSLakeFormationPermissions_basic(t *testing.T) {

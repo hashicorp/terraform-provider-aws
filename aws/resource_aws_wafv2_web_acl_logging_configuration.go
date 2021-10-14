@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
 )
 
 func resourceAwsWafv2WebACLLoggingConfiguration() *schema.Resource {
@@ -430,7 +430,7 @@ func expandWafv2RedactedField(field interface{}) *wafv2.FieldToMatch {
 	// While the FieldToMatch struct allows more than 1 of its fields to be set,
 	// the WAFv2 API does not. In addition, in the context of Logging Configuration requests,
 	// the WAFv2 API only supports the following redacted fields.
-	// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/14244
+	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/14244
 	if v, ok := m["method"]; ok && len(v.([]interface{})) > 0 {
 		f.Method = &wafv2.Method{}
 	}
@@ -551,7 +551,7 @@ func flattenWafv2RedactedField(f *wafv2.FieldToMatch) map[string]interface{} {
 
 	// In the context of Logging Configuration requests,
 	// the WAFv2 API only supports the following redacted fields.
-	// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/14244
+	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/14244
 	if f.Method != nil {
 		m["method"] = make([]map[string]interface{}, 1)
 	}

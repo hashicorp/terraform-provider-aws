@@ -8,8 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/securityhub"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/securityhub/finder"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/securityhub/waiter"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/securityhub/finder"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/securityhub/waiter"
 )
 
 func resourceAwsSecurityHubOrganizationAdminAccount() *schema.Resource {

@@ -3,7 +3,7 @@ package AWSAT002_test
 import (
 	"testing"
 
-	"github.com/terraform-providers/terraform-provider-aws/awsproviderlint/passes/AWSAT002"
+	"github.com/hashicorp/terraform-provider-aws/awsproviderlint/passes/AWSAT002"
 	"golang.org/x/tools/go/analysis/analysistest"
 )
 

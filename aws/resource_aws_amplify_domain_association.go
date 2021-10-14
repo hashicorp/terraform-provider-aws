@@ -9,10 +9,10 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tfamplify "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/amplify"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/amplify/finder"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/amplify/waiter"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/aws/internal/service/amplify"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/amplify/finder"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/amplify/waiter"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsAmplifyDomainAssociation() *schema.Resource {

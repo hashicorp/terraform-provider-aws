@@ -99,7 +99,7 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_updateSingleHeaderRedactedField(t
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/14248
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/14248
 func TestAccAwsWafv2WebACLLoggingConfiguration_updateMethodRedactedField(t *testing.T) {
 	var v wafv2.LoggingConfiguration
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -142,7 +142,7 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_updateMethodRedactedField(t *test
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/14248
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/14248
 func TestAccAwsWafv2WebACLLoggingConfiguration_updateQueryStringRedactedField(t *testing.T) {
 	var v wafv2.LoggingConfiguration
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -185,7 +185,7 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_updateQueryStringRedactedField(t 
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/14248
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/14248
 func TestAccAwsWafv2WebACLLoggingConfiguration_updateUriPathRedactedField(t *testing.T) {
 	var v wafv2.LoggingConfiguration
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -228,7 +228,7 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_updateUriPathRedactedField(t *tes
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/14248
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/14248
 func TestAccAwsWafv2WebACLLoggingConfiguration_updateMultipleRedactedFields(t *testing.T) {
 	var v wafv2.LoggingConfiguration
 	rName := acctest.RandomWithPrefix("tf-acc-test")

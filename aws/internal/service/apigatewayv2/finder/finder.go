@@ -5,7 +5,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/apigatewayv2/lister"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/apigatewayv2/lister"
 )
 
 // ApiByID returns the API corresponding to the specified ID.

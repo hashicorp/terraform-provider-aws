@@ -11,11 +11,11 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tfbudgets "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/budgets"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/budgets/finder"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/budgets/waiter"
-	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	tfbudgets "github.com/hashicorp/terraform-provider-aws/aws/internal/service/budgets"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/budgets/finder"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/budgets/waiter"
+	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsBudgetsBudgetAction() *schema.Resource {

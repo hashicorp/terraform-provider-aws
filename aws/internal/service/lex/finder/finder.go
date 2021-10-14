@@ -7,8 +7,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	tflex "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/lex"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	tflex "github.com/hashicorp/terraform-provider-aws/aws/internal/service/lex"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func BotVersionByName(conn *lexmodelbuildingservice.LexModelBuildingService, name, version string) (*lexmodelbuildingservice.GetBotOutput, error) {

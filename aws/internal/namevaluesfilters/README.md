@@ -4,7 +4,7 @@ The `namevaluesfilters` package is designed to provide a consistent interface fo
 
 This package implements a single `NameValuesFilters` type, which covers all filter handling logic, such as merging filters, via functions on the single type. The underlying implementation is compatible with Go operations such as `len()`.
 
-Full documentation for this package can be found on [GoDoc](https://godoc.org/github.com/terraform-providers/terraform-provider-aws/aws/internal/namevaluesfilters).
+Full documentation for this package can be found on [GoDoc](https://godoc.org/github.com/hashicorp/terraform-provider-aws/aws/internal/namevaluesfilters).
 
 Many AWS Go SDK services that support resource filtering have their service-specific Go type conversion functions to and from `NameValuesFilters` code generated. Converting from `NameValuesFilters` to AWS Go SDK types is done via `{SERVICE}Filters()` functions on the type. For more information about this code generation, see the [`generators/servicefilters` README](generators/servicefilters/README.md).
 

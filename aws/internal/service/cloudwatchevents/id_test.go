@@ -3,7 +3,7 @@ package cloudwatchevents_test
 import (
 	"testing"
 
-	tfevents "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatchevents"
+	tfevents "github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudwatchevents"
 )
 
 func TestPermissionParseResourceID(t *testing.T) {

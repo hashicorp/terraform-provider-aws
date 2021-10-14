@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
-	cffinder "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudformation/finder"
-	cfwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudformation/waiter"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/serverlessapplicationrepository/finder"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/serverlessapplicationrepository/waiter"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	cffinder "github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudformation/finder"
+	cfwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudformation/waiter"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/serverlessapplicationrepository/finder"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/serverlessapplicationrepository/waiter"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 )
 
 const (

@@ -7,8 +7,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	tfroute53 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/route53"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	tfroute53 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func HealthCheckByID(conn *route53.Route53, id string) (*route53.HealthCheck, error) {

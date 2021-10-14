@@ -5,7 +5,7 @@ import (
 
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	tfdms "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/dms"
+	tfdms "github.com/hashicorp/terraform-provider-aws/aws/internal/service/dms"
 )
 
 const (

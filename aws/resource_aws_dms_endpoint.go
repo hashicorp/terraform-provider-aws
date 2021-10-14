@@ -15,11 +15,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
-	tfdms "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/dms"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/dms/finder"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/dms/waiter"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tfdms "github.com/hashicorp/terraform-provider-aws/aws/internal/service/dms"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/dms/finder"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/dms/waiter"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsDmsEndpoint() *schema.Resource {
