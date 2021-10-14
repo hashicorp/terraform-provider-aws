@@ -16,12 +16,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsLightsailInstance() *schema.Resource {
+func ResourceInstance() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLightsailInstanceCreate,
-		Read:   resourceAwsLightsailInstanceRead,
-		Update: resourceAwsLightsailInstanceUpdate,
-		Delete: resourceAwsLightsailInstanceDelete,
+		Create: resourceInstanceCreate,
+		Read:   resourceInstanceRead,
+		Update: resourceInstanceUpdate,
+		Delete: resourceInstanceDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -126,7 +126,7 @@ func resourceAwsLightsailInstance() *schema.Resource {
 	}
 }
 
-func resourceAwsLightsailInstanceCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LightsailConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -178,10 +178,10 @@ func resourceAwsLightsailInstanceCreate(d *schema.ResourceData, meta interface{}
 		log.Printf("[ERR] Error waiting for instance (%s) to become ready: %s", d.Id(), err)
 	}
 
-	return resourceAwsLightsailInstanceRead(d, meta)
+	return resourceInstanceRead(d, meta)
 }
 
-func resourceAwsLightsailInstanceRead(d *schema.ResourceData, meta interface{}) error {
+func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LightsailConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -247,7 +247,7 @@ func resourceAwsLightsailInstanceRead(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func resourceAwsLightsailInstanceDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LightsailConn
 	resp, err := conn.DeleteInstance(&lightsail.DeleteInstanceInput{
 		InstanceName: aws.String(d.Id()),
@@ -278,7 +278,7 @@ func resourceAwsLightsailInstanceDelete(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceAwsLightsailInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LightsailConn
 
 	if d.HasChange("tags_all") {
@@ -289,7 +289,7 @@ func resourceAwsLightsailInstanceUpdate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	return resourceAwsLightsailInstanceRead(d, meta)
+	return resourceInstanceRead(d, meta)
 }
 
 // method to check the status of an Operation, which is returned from
