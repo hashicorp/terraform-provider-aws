@@ -89,7 +89,7 @@ func resourceAwsCloudFrontKeyGroupRead(d *schema.ResourceData, meta interface{})
 
 	d.Set("name", keyGroupConfig.Name)
 	d.Set("comment", keyGroupConfig.Comment)
-	d.Set("items", flattenStringSet(keyGroupConfig.Items))
+	d.Set("items", flex.FlattenStringSet(keyGroupConfig.Items))
 	d.Set("etag", output.ETag)
 
 	return nil
@@ -133,7 +133,7 @@ func resourceAwsCloudFrontKeyGroupDelete(d *schema.ResourceData, meta interface{
 
 func expandCloudFrontKeyGroupConfig(d *schema.ResourceData) *cloudfront.KeyGroupConfig {
 	keyGroupConfig := &cloudfront.KeyGroupConfig{
-		Items: expandStringSet(d.Get("items").(*schema.Set)),
+		Items: flex.ExpandStringSet(d.Get("items").(*schema.Set)),
 		Name:  aws.String(d.Get("name").(string)),
 	}
 

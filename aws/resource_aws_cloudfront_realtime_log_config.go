@@ -94,7 +94,7 @@ func resourceAwsCloudFrontRealtimeLogConfigCreate(d *schema.ResourceData, meta i
 	name := d.Get("name").(string)
 	input := &cloudfront.CreateRealtimeLogConfigInput{
 		EndPoints:    expandCloudFrontEndPoints(d.Get("endpoint").([]interface{})),
-		Fields:       expandStringSet(d.Get("fields").(*schema.Set)),
+		Fields:       flex.ExpandStringSet(d.Get("fields").(*schema.Set)),
 		Name:         aws.String(name),
 		SamplingRate: aws.Int64(int64(d.Get("sampling_rate").(int))),
 	}
@@ -139,7 +139,7 @@ func resourceAwsCloudFrontRealtimeLogConfigRead(d *schema.ResourceData, meta int
 	if err := d.Set("endpoint", flattenCloudFrontEndPoints(logConfig.EndPoints)); err != nil {
 		return fmt.Errorf("error setting endpoint: %w", err)
 	}
-	if err := d.Set("fields", flattenStringSet(logConfig.Fields)); err != nil {
+	if err := d.Set("fields", flex.FlattenStringSet(logConfig.Fields)); err != nil {
 		return fmt.Errorf("error setting fields: %w", err)
 	}
 	d.Set("name", logConfig.Name)
@@ -154,7 +154,7 @@ func resourceAwsCloudFrontRealtimeLogConfigUpdate(d *schema.ResourceData, meta i
 	input := &cloudfront.UpdateRealtimeLogConfigInput{
 		ARN:          aws.String(d.Id()),
 		EndPoints:    expandCloudFrontEndPoints(d.Get("endpoint").([]interface{})),
-		Fields:       expandStringSet(d.Get("fields").((*schema.Set))),
+		Fields:       flex.ExpandStringSet(d.Get("fields").((*schema.Set))),
 		SamplingRate: aws.Int64(int64(d.Get("sampling_rate").(int))),
 	}
 
