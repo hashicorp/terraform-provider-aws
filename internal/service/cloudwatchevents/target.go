@@ -699,7 +699,7 @@ func expandAwsCloudWatchEventTargetEcsParameters(config []interface{}) *events.E
 		}
 
 		if len(tags) > 0 {
-			ecsParameters.Tags = tags.IgnoreAws().CloudwatcheventsTags()
+			ecsParameters.Tags = Tags(tags.IgnoreAws())
 		}
 
 		ecsParameters.EnableExecuteCommand = aws.Bool(param["enable_execute_command"].(bool))
@@ -887,7 +887,7 @@ func flattenAwsCloudWatchEventTargetEcsParameters(ecsParameters *events.EcsParam
 		config["placement_constraint"] = flattenAwsCloudWatchEventTargetPlacementConstraints(ecsParameters.PlacementConstraints)
 	}
 
-	config["tags"] = tftags.CloudwatcheventsKeyValueTags(ecsParameters.Tags).IgnoreAws().Map()
+	config["tags"] = KeyValueTags(ecsParameters.Tags).IgnoreAws().Map()
 	config["enable_execute_command"] = aws.BoolValue(ecsParameters.EnableExecuteCommand)
 	config["enable_ecs_managed_tags"] = aws.BoolValue(ecsParameters.EnableECSManagedTags)
 	config["task_count"] = aws.Int64Value(ecsParameters.TaskCount)

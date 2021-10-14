@@ -63,7 +63,7 @@ func resourceBusCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(tags) > 0 {
-		input.Tags = tags.IgnoreAws().CloudwatcheventsTags()
+		input.Tags = Tags(tags.IgnoreAws())
 	}
 
 	log.Printf("[DEBUG] Creating CloudWatch Events event bus: %v", input)
@@ -105,7 +105,7 @@ func resourceBusRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", output.Arn)
 	d.Set("name", output.Name)
 
-	tags, err := tftags.CloudwatcheventsListTags(conn, aws.StringValue(output.Arn))
+	tags, err := ListTags(conn, aws.StringValue(output.Arn))
 	if err != nil {
 		return fmt.Errorf("error listing tags for CloudWatch Events event bus (%s): %w", d.Id(), err)
 	}
@@ -130,7 +130,7 @@ func resourceBusUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.CloudwatcheventsUpdateTags(conn, arn, o, n); err != nil {
+		if err := UpdateTags(conn, arn, o, n); err != nil {
 			return fmt.Errorf("error updating CloudwWatch Events event bus (%s) tags: %w", arn, err)
 		}
 	}
