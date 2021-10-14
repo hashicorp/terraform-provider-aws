@@ -2,6 +2,7 @@ package kinesis_test
 
 import (
 	"context"
+	tfkinesis "github.com/hashicorp/terraform-provider-aws/internal/service/kinesis"
 	"reflect"
 	"testing"
 )
@@ -36,7 +37,7 @@ func testResourceAwsKinesisStreamStateDataV1() map[string]interface{} {
 
 func TestResourceAwsKinesisStreamStateUpgradeV0(t *testing.T) {
 	expected := testResourceAwsKinesisStreamStateDataV1()
-	actual, err := resourceAwsKinesisStreamStateUpgradeV0(context.Background(), testResourceAwsKinesisStreamStateDataV0(), nil)
+	actual, err := tfkinesis.StreamStateUpgradeV0(context.Background(), testResourceAwsKinesisStreamStateDataV0(), nil)
 	if err != nil {
 		t.Fatalf("error migrating state: %s", err)
 	}

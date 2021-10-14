@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfkinesis "github.com/hashicorp/terraform-provider-aws/internal/service/kinesis"
 )
 
 func TestAccAWSKinesisStreamDataSource_basic(t *testing.T) {
@@ -29,7 +30,7 @@ func TestAccAWSKinesisStreamDataSource_basic(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Error calling UpdateShardCount: %s", err)
 		}
-		if err := waitForKinesisToBeActive(conn, 5*time.Minute, sn); err != nil {
+		if err := tfkinesis.WaitForToBeActive(conn, 5*time.Minute, sn); err != nil {
 			t.Fatal(err)
 		}
 	}

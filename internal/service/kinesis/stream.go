@@ -38,7 +38,7 @@ func ResourceStream() *schema.Resource {
 		StateUpgraders: []schema.StateUpgrader{
 			{
 				Type:    resourceAwsKinesisStreamResourceV0().CoreConfigSchema().ImpliedType(),
-				Upgrade: resourceAwsKinesisStreamStateUpgradeV0,
+				Upgrade: StreamStateUpgradeV0,
 				Version: 0,
 			},
 		},
@@ -298,7 +298,7 @@ func setKinesisRetentionPeriod(conn *kinesis.Kinesis, d *schema.ResourceData) er
 		}
 	}
 
-	if err := waitForKinesisToBeActive(conn, d.Timeout(schema.TimeoutUpdate), sn); err != nil {
+	if err := WaitForToBeActive(conn, d.Timeout(schema.TimeoutUpdate), sn); err != nil {
 		return err
 	}
 
@@ -327,7 +327,7 @@ func updateKinesisShardCount(conn *kinesis.Kinesis, d *schema.ResourceData) erro
 		return err
 	}
 
-	if err := waitForKinesisToBeActive(conn, d.Timeout(schema.TimeoutUpdate), sn); err != nil {
+	if err := WaitForToBeActive(conn, d.Timeout(schema.TimeoutUpdate), sn); err != nil {
 		return err
 	}
 
@@ -368,7 +368,7 @@ func updateKinesisStreamEncryption(conn *kinesis.Kinesis, d *schema.ResourceData
 			return err
 		}
 
-		if err := waitForKinesisToBeActive(conn, d.Timeout(schema.TimeoutUpdate), sn); err != nil {
+		if err := WaitForToBeActive(conn, d.Timeout(schema.TimeoutUpdate), sn); err != nil {
 			return err
 		}
 	}
@@ -389,7 +389,7 @@ func updateKinesisStreamEncryption(conn *kinesis.Kinesis, d *schema.ResourceData
 		if err != nil {
 			return err
 		}
-		if err := waitForKinesisToBeActive(conn, d.Timeout(schema.TimeoutUpdate), sn); err != nil {
+		if err := WaitForToBeActive(conn, d.Timeout(schema.TimeoutUpdate), sn); err != nil {
 			return err
 		}
 	}
@@ -422,7 +422,7 @@ func updateKinesisShardLevelMetrics(conn *kinesis.Kinesis, d *schema.ResourceDat
 		if err != nil {
 			return fmt.Errorf("Failure to disable shard level metrics for stream %s: %s", sn, err)
 		}
-		if err := waitForKinesisToBeActive(conn, d.Timeout(schema.TimeoutUpdate), sn); err != nil {
+		if err := WaitForToBeActive(conn, d.Timeout(schema.TimeoutUpdate), sn); err != nil {
 			return err
 		}
 	}
@@ -438,7 +438,7 @@ func updateKinesisShardLevelMetrics(conn *kinesis.Kinesis, d *schema.ResourceDat
 		if err != nil {
 			return fmt.Errorf("Failure to enable shard level metrics for stream %s: %s", sn, err)
 		}
-		if err := waitForKinesisToBeActive(conn, d.Timeout(schema.TimeoutUpdate), sn); err != nil {
+		if err := WaitForToBeActive(conn, d.Timeout(schema.TimeoutUpdate), sn); err != nil {
 			return err
 		}
 	}
@@ -469,9 +469,9 @@ func readKinesisStreamState(conn *kinesis.Kinesis, sn string) (*kinesisStreamSta
 		state.creationTimestamp = aws.TimeValue(page.StreamDescription.StreamCreationTimestamp).Unix()
 		state.status = aws.StringValue(page.StreamDescription.StreamStatus)
 		state.retentionPeriod = aws.Int64Value(page.StreamDescription.RetentionPeriodHours)
-		state.openShards = append(state.openShards, flattenShards(filterShards(page.StreamDescription.Shards, true))...)
-		state.closedShards = append(state.closedShards, flattenShards(filterShards(page.StreamDescription.Shards, false))...)
-		state.shardLevelMetrics = flattenShardLevelMetrics(page.StreamDescription.EnhancedMonitoring)
+		state.openShards = append(state.openShards, FlattenShards(FilterShards(page.StreamDescription.Shards, true))...)
+		state.closedShards = append(state.closedShards, FlattenShards(FilterShards(page.StreamDescription.Shards, false))...)
+		state.shardLevelMetrics = FlattenShardLevelMetrics(page.StreamDescription.EnhancedMonitoring)
 		// EncryptionType can be nil in certain APIs, e.g. AWS China
 		if page.StreamDescription.EncryptionType != nil {
 			state.encryptionType = aws.StringValue(page.StreamDescription.EncryptionType)
@@ -501,7 +501,7 @@ func streamStateRefreshFunc(conn *kinesis.Kinesis, sn string) resource.StateRefr
 	}
 }
 
-func waitForKinesisToBeActive(conn *kinesis.Kinesis, timeout time.Duration, sn string) error {
+func WaitForToBeActive(conn *kinesis.Kinesis, timeout time.Duration, sn string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{kinesis.StreamStatusUpdating},
 		Target:     []string{kinesis.StreamStatusActive},
@@ -521,7 +521,7 @@ func waitForKinesisToBeActive(conn *kinesis.Kinesis, timeout time.Duration, sn s
 }
 
 // See http://docs.aws.amazon.com/kinesis/latest/dev/kinesis-using-sdk-java-resharding-merge.html
-func filterShards(shards []*kinesis.Shard, open bool) []*kinesis.Shard {
+func FilterShards(shards []*kinesis.Shard, open bool) []*kinesis.Shard {
 	res := make([]*kinesis.Shard, 0, len(shards))
 	for _, s := range shards {
 		if open && s.SequenceNumberRange.EndingSequenceNumber == nil {
@@ -533,7 +533,7 @@ func filterShards(shards []*kinesis.Shard, open bool) []*kinesis.Shard {
 	return res
 }
 
-func flattenShards(shards []*kinesis.Shard) []string {
+func FlattenShards(shards []*kinesis.Shard) []string {
 	res := make([]string, len(shards))
 	for i, s := range shards {
 		res[i] = aws.StringValue(s.ShardId)

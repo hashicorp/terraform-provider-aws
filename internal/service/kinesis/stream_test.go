@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfkinesis "github.com/hashicorp/terraform-provider-aws/internal/service/kinesis"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -41,7 +42,7 @@ func testSweepKinesisStreams(region string) error {
 				continue
 			}
 
-			r := ResourceStream()
+			r := tfkinesis.ResourceStream()
 			d := r.Data(nil)
 			d.Set("name", streamName)
 			d.Set("enforce_consumer_deletion", true)
@@ -486,7 +487,7 @@ func testAccCheckAWSKinesisStreamAttributes(stream *kinesis.StreamDescription) r
 			if *stream.StreamARN != rs.Primary.Attributes["arn"] {
 				return fmt.Errorf("Bad Stream ARN\n\t expected: %s\n\tgot: %s\n", rs.Primary.Attributes["arn"], *stream.StreamARN)
 			}
-			shard_count := strconv.Itoa(len(flattenShards(filterShards(stream.Shards, true))))
+			shard_count := strconv.Itoa(len(tfkinesis.FlattenShards(tfkinesis.FilterShards(stream.Shards, true))))
 			if shard_count != rs.Primary.Attributes["shard_count"] {
 				return fmt.Errorf("Bad Stream Shard Count\n\t expected: %s\n\tgot: %s\n", rs.Primary.Attributes["shard_count"], shard_count)
 			}

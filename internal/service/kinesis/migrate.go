@@ -55,7 +55,7 @@ func resourceAwsKinesisStreamResourceV0() *schema.Resource {
 	}
 }
 
-func resourceAwsKinesisStreamStateUpgradeV0(_ context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+func StreamStateUpgradeV0(_ context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
 	rawState["enforce_consumer_deletion"] = false
 
 	return rawState, nil

@@ -59,7 +59,7 @@ func TestAccAWSKinesisStreamConsumer_disappears(t *testing.T) {
 				Config: testAccAWSKinesisStreamConsumerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccAWSKinesisStreamConsumerExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceStreamConsumer(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfkinesis.ResourceStreamConsumer(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

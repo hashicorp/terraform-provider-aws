@@ -16,7 +16,7 @@ func TestFlattenShardLevelMetrics(t *testing.T) {
 			},
 		},
 	}
-	result := flattenShardLevelMetrics(expanded)
+	result := FlattenShardLevelMetrics(expanded)
 	if len(result) != 2 {
 		t.Fatalf("expected result had %d elements, but got %d", 2, len(result))
 	}
