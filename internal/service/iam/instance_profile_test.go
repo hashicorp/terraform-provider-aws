@@ -19,70 +19,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_iam_instance_profile", &resource.Sweeper{
-		Name:         "aws_iam_instance_profile",
-		F:            sweepInstanceProfile,
-		Dependencies: []string{"aws_iam_role"},
-	})
-}
 
-func sweepInstanceProfile(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-	conn := client.(*conns.AWSClient).IAMConn
 
-	var sweeperErrs *multierror.Error
 
-	err = conn.ListInstanceProfilesPages(&iam.ListInstanceProfilesInput{}, func(page *iam.ListInstanceProfilesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, instanceProfile := range page.InstanceProfiles {
-			name := aws.StringValue(instanceProfile.InstanceProfileName)
-
-			if !iamRoleNameFilter(name) {
-				log.Printf("[INFO] Skipping IAM Instance Profile (%s): no match on allow-list", name)
-				continue
-			}
-
-			r := tfiam.ResourceInstanceProfile()
-			d := r.Data(nil)
-			d.SetId(name)
-
-			roles := instanceProfile.Roles
-			if r := len(roles); r > 1 {
-				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("unexpected number of roles for IAM Instance Profile (%s): %d", name, r))
-			} else if r == 1 {
-				d.Set("role", roles[0].RoleName)
-			}
-
-			log.Printf("[INFO] Sweeping IAM Instance Profile %q", name)
-			err := r.Delete(d, client)
-
-			if err != nil {
-				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error deleting IAM Instance Profile (%s): %w", name, err))
-				continue
-			}
-		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping IAM Instance Profile sweep for %q: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-	}
-
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing IAM Instance Profiles: %w", err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func TestAccIAMInstanceProfile_basic(t *testing.T) {
 	var conf iam.GetInstanceProfileOutput

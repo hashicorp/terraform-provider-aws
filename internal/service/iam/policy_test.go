@@ -19,85 +19,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_iam_policy", &resource.Sweeper{
-		Name: "aws_iam_policy",
-		F:    sweepPolicies,
-		Dependencies: []string{
-			"aws_iam_group",
-			"aws_iam_role",
-			"aws_iam_user",
-		},
-	})
-}
 
-func sweepPolicies(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
 
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
 
-	conn := client.(*conns.AWSClient).IAMConn
-	input := &iam.ListPoliciesInput{
-		Scope: aws.String(iam.PolicyScopeTypeLocal),
-	}
-	var sweeperErrs *multierror.Error
-
-	err = conn.ListPoliciesPages(input, func(page *iam.ListPoliciesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, policy := range page.Policies {
-			arn := aws.StringValue(policy.Arn)
-			input := &iam.DeletePolicyInput{
-				PolicyArn: policy.Arn,
-			}
-
-			log.Printf("[INFO] Deleting IAM Policy: %s", arn)
-			if err := tfiam.PolicyDeleteNondefaultVersions(arn, conn); err != nil {
-				sweeperErr := fmt.Errorf("error deleting IAM Policy (%s) non-default versions: %w", arn, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
-
-			_, err := conn.DeletePolicy(input)
-
-			// Treat this sweeper as best effort for now. There are a lot of edge cases
-			// with lingering aws_iam_role resources in the HashiCorp testing accounts.
-			if tfawserr.ErrMessageContains(err, iam.ErrCodeDeleteConflictException, "") {
-				log.Printf("[WARN] Ignoring IAM Policy (%s) deletion error: %s", arn, err)
-				continue
-			}
-
-			if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
-				continue
-			}
-
-			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting IAM Policy (%s): %w", arn, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
-		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping IAM Policy sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil()
-	}
-
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving IAM Policies: %w", err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func TestAccIAMPolicy_basic(t *testing.T) {
 	var out iam.GetPolicyOutput

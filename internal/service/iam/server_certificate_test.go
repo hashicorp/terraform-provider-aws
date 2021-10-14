@@ -17,45 +17,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_iam_server_certificate", &resource.Sweeper{
-		Name: "aws_iam_server_certificate",
-		F:    sweepServerCertificates,
-	})
-}
 
-func sweepServerCertificates(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).IAMConn
 
-	err = conn.ListServerCertificatesPages(&iam.ListServerCertificatesInput{}, func(out *iam.ListServerCertificatesOutput, lastPage bool) bool {
-		for _, sc := range out.ServerCertificateMetadataList {
-			log.Printf("[INFO] Deleting IAM Server Certificate: %s", *sc.ServerCertificateName)
 
-			_, err := conn.DeleteServerCertificate(&iam.DeleteServerCertificateInput{
-				ServerCertificateName: sc.ServerCertificateName,
-			})
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete IAM Server Certificate %s: %s",
-					*sc.ServerCertificateName, err)
-				continue
-			}
-		}
-		return !lastPage
-	})
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping IAM Server Certificate sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error retrieving IAM Server Certificates: %s", err)
-	}
-
-	return nil
-}
 
 func TestAccIAMServerCertificate_basic(t *testing.T) {
 	var cert iam.ServerCertificate

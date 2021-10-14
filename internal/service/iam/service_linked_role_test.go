@@ -18,69 +18,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_iam_service_linked_role", &resource.Sweeper{
-		Name: "aws_iam_service_linked_role",
-		F:    sweepServiceLinkedRoles,
-	})
-}
 
-func sweepServiceLinkedRoles(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).IAMConn
 
-	input := &iam.ListRolesInput{
-		PathPrefix: aws.String("/aws-service-role/"),
-	}
 
-	// include generic service role names created by:
-	// TestAccIAMServiceLinkedRole_basic
-	// TestAccIAMServiceLinkedRole_CustomSuffix_diffSuppressFunc
-	customSuffixRegex := regexp.MustCompile(`_?(tf-acc-test-\d+|ServiceRoleFor(ApplicationAutoScaling_CustomResource|ElasticBeanstalk))$`)
-	err = conn.ListRolesPages(input, func(page *iam.ListRolesOutput, lastPage bool) bool {
-		if len(page.Roles) == 0 {
-			log.Printf("[INFO] No IAM Service Roles to sweep")
-			return true
-		}
-		for _, role := range page.Roles {
-			roleName := aws.StringValue(role.RoleName)
-
-			if !customSuffixRegex.MatchString(roleName) {
-				log.Printf("[INFO] Skipping IAM Service Role: %s", roleName)
-				continue
-			}
-
-			log.Printf("[INFO] Deleting IAM Service Role: %s", roleName)
-			deletionTaskID, err := tfiam.DeleteServiceLinkedRole(conn, roleName)
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete IAM Service Role %s: %s", roleName, err)
-				continue
-			}
-			if deletionTaskID == "" {
-				continue
-			}
-
-			log.Printf("[INFO] Waiting for deletion of IAM Service Role: %s", roleName)
-			err = tfiam.DeleteServiceLinkedRoleWaiter(conn, deletionTaskID)
-			if err != nil {
-				log.Printf("[ERROR] Failed to wait for deletion of IAM Service Role %s: %s", roleName, err)
-			}
-		}
-		return !lastPage
-	})
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping IAM Service Role sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error retrieving IAM Service Roles: %s", err)
-	}
-
-	return nil
-}
 
 func TestDecodeIamServiceLinkedRoleID(t *testing.T) {
 	var testCases = []struct {
