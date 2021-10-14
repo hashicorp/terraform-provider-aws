@@ -164,7 +164,7 @@ func resourceAwsWorkLinkFleetRead(d *schema.ResourceData, meta interface{}) erro
 		FleetArn: aws.String(d.Id()),
 	})
 	if err != nil {
-		if isAWSErr(err, worklink.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, worklink.ErrCodeResourceNotFoundException, "") {
 			log.Printf("[WARN] Worklink Fleet (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -236,7 +236,7 @@ func resourceAwsWorkLinkFleetUpdate(d *schema.ResourceData, meta interface{}) er
 	if d.HasChanges("display_name", "optimize_for_end_user_location") {
 		_, err := conn.UpdateFleetMetadata(input)
 		if err != nil {
-			if isAWSErr(err, worklink.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, worklink.ErrCodeResourceNotFoundException, "") {
 				log.Printf("[WARN] Worklink Fleet (%s) not found, removing from state", d.Id())
 				d.SetId("")
 				return nil
@@ -280,7 +280,7 @@ func resourceAwsWorkLinkFleetDelete(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if _, err := conn.DeleteFleet(input); err != nil {
-		if isAWSErr(err, worklink.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, worklink.ErrCodeResourceNotFoundException, "") {
 			return nil
 		}
 		return fmt.Errorf("Error deleting Worklink Fleet resource share %s: %s", d.Id(), err)
@@ -313,7 +313,7 @@ func worklinkFleetStateRefresh(conn *worklink.WorkLink, arn string) resource.Sta
 			FleetArn: aws.String(arn),
 		})
 		if err != nil {
-			if isAWSErr(err, worklink.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, worklink.ErrCodeResourceNotFoundException, "") {
 				return emptyResp, "DELETED", nil
 			}
 		}
@@ -334,7 +334,7 @@ func updateAuditStreamConfiguration(conn *worklink.WorkLink, d *schema.ResourceD
 
 	log.Printf("[DEBUG] Update audit stream configuration option: %#v", input)
 	if _, err := conn.UpdateAuditStreamConfiguration(input); err != nil {
-		if isAWSErr(err, worklink.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, worklink.ErrCodeResourceNotFoundException, "") {
 			log.Printf("[WARN] Worklink Fleet (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -362,7 +362,7 @@ func updateCompanyNetworkConfiguration(conn *worklink.WorkLink, d *schema.Resour
 		}
 		log.Printf("[DEBUG] Update company network configuration option: %#v", input)
 		if _, err := conn.UpdateCompanyNetworkConfiguration(input); err != nil {
-			if isAWSErr(err, worklink.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, worklink.ErrCodeResourceNotFoundException, "") {
 				log.Printf("[WARN] Worklink Fleet (%s) not found, removing from state", d.Id())
 				d.SetId("")
 				return nil
@@ -385,7 +385,7 @@ func updateDevicePolicyConfiguration(conn *worklink.WorkLink, d *schema.Resource
 
 	log.Printf("[DEBUG] Update device policy configuration option: %#v", input)
 	if _, err := conn.UpdateDevicePolicyConfiguration(input); err != nil {
-		if isAWSErr(err, worklink.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, worklink.ErrCodeResourceNotFoundException, "") {
 			log.Printf("[WARN] Worklink Fleet (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -412,7 +412,7 @@ func updateIdentityProviderConfiguration(conn *worklink.WorkLink, d *schema.Reso
 		}
 		log.Printf("[DEBUG] Update identity provider configuration option: %#v", input)
 		if _, err := conn.UpdateIdentityProviderConfiguration(input); err != nil {
-			if isAWSErr(err, worklink.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, worklink.ErrCodeResourceNotFoundException, "") {
 				log.Printf("[WARN] Worklink Fleet (%s) not found, removing from state", d.Id())
 				d.SetId("")
 				return nil
