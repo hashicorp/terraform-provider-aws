@@ -13,6 +13,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const docdbClusterParameterGroupMaxParamsBulkEdit = 20
@@ -39,7 +40,7 @@ func ResourceClusterParameterGroup() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc:  validateDocDBParamGroupName,
+				ValidateFunc:  validParamGroupName,
 			},
 			"name_prefix": {
 				Type:          schema.TypeString,
@@ -47,7 +48,7 @@ func ResourceClusterParameterGroup() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
-				ValidateFunc:  validateDocDBParamGroupNamePrefix,
+				ValidateFunc:  validParamGroupNamePrefix,
 			},
 			"family": {
 				Type:     schema.TypeString,

@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceClusterSnapshot() *schema.Resource {
@@ -29,13 +30,13 @@ func ResourceClusterSnapshot() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"db_cluster_snapshot_identifier": {
 				Type:         schema.TypeString,
-				ValidateFunc: validateDocDBClusterSnapshotIdentifier,
+				ValidateFunc: validClusterSnapshotIdentifier,
 				Required:     true,
 				ForceNew:     true,
 			},
 			"db_cluster_identifier": {
 				Type:         schema.TypeString,
-				ValidateFunc: validateDocDBClusterIdentifier,
+				ValidateFunc: validClusterIdentifier,
 				Required:     true,
 				ForceNew:     true,
 			},

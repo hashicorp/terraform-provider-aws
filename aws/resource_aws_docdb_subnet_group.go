@@ -12,6 +12,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceSubnetGroup() *schema.Resource {
@@ -36,7 +37,7 @@ func ResourceSubnetGroup() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc:  validateDocDBSubnetGroupName,
+				ValidateFunc:  validSubnetGroupName,
 			},
 			"name_prefix": {
 				Type:          schema.TypeString,
@@ -44,7 +45,7 @@ func ResourceSubnetGroup() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
-				ValidateFunc:  validateDocDBSubnetGroupNamePrefix,
+				ValidateFunc:  validSubnetGroupNamePrefix,
 			},
 
 			"description": {
