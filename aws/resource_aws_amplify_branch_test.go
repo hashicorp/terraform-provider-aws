@@ -7,22 +7,23 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/amplify"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	tfamplify "github.com/hashicorp/terraform-provider-aws/aws/internal/service/amplify"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/amplify/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func testAccAWSAmplifyBranch_basic(t *testing.T) {
 	var branch amplify.Branch
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_amplify_branch.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAmplify(t) },
-		ErrorCheck:   testAccErrorCheck(t, amplify.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSAmplify(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, amplify.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAmplifyBranchDestroy,
 		Steps: []resource.TestStep{
@@ -30,7 +31,7 @@ func testAccAWSAmplifyBranch_basic(t *testing.T) {
 				Config: testAccAWSAmplifyBranchConfigName(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSAmplifyBranchExists(resourceName, &branch),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "amplify", regexp.MustCompile(`apps/.+/branches/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "amplify", regexp.MustCompile(`apps/.+/branches/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "associated_resources.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "backend_environment_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "basic_auth_credentials", ""),
@@ -64,12 +65,12 @@ func testAccAWSAmplifyBranch_basic(t *testing.T) {
 
 func testAccAWSAmplifyBranch_disappears(t *testing.T) {
 	var branch amplify.Branch
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_amplify_branch.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAmplify(t) },
-		ErrorCheck:   testAccErrorCheck(t, amplify.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSAmplify(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, amplify.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAmplifyBranchDestroy,
 		Steps: []resource.TestStep{
@@ -77,7 +78,7 @@ func testAccAWSAmplifyBranch_disappears(t *testing.T) {
 				Config: testAccAWSAmplifyBranchConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAmplifyBranchExists(resourceName, &branch),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsAmplifyBranch(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsAmplifyBranch(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -87,12 +88,12 @@ func testAccAWSAmplifyBranch_disappears(t *testing.T) {
 
 func testAccAWSAmplifyBranch_Tags(t *testing.T) {
 	var branch amplify.Branch
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_amplify_branch.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAmplify(t) },
-		ErrorCheck:   testAccErrorCheck(t, amplify.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSAmplify(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, amplify.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAmplifyBranchDestroy,
 		Steps: []resource.TestStep{
@@ -132,15 +133,15 @@ func testAccAWSAmplifyBranch_Tags(t *testing.T) {
 
 func testAccAWSAmplifyBranch_BasicAuthCredentials(t *testing.T) {
 	var branch amplify.Branch
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_amplify_branch.test"
 
 	credentials1 := base64.StdEncoding.EncodeToString([]byte("username1:password1"))
 	credentials2 := base64.StdEncoding.EncodeToString([]byte("username2:password2"))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAmplify(t) },
-		ErrorCheck:   testAccErrorCheck(t, amplify.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSAmplify(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, amplify.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAmplifyBranchDestroy,
 		Steps: []resource.TestStep{
@@ -180,12 +181,12 @@ func testAccAWSAmplifyBranch_BasicAuthCredentials(t *testing.T) {
 
 func testAccAWSAmplifyBranch_EnvironmentVariables(t *testing.T) {
 	var branch amplify.Branch
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_amplify_branch.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAmplify(t) },
-		ErrorCheck:   testAccErrorCheck(t, amplify.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSAmplify(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, amplify.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAmplifyBranchDestroy,
 		Steps: []resource.TestStep{
@@ -224,15 +225,15 @@ func testAccAWSAmplifyBranch_EnvironmentVariables(t *testing.T) {
 
 func testAccAWSAmplifyBranch_OptionalArguments(t *testing.T) {
 	var branch amplify.Branch
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	environmentName := acctest.RandStringFromCharSet(9, acctest.CharSetAlpha)
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	environmentName := sdkacctest.RandStringFromCharSet(9, sdkacctest.CharSetAlpha)
 	resourceName := "aws_amplify_branch.test"
 	backendEnvironment1ResourceName := "aws_amplify_backend_environment.test1"
 	backendEnvironment2ResourceName := "aws_amplify_backend_environment.test2"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAmplify(t) },
-		ErrorCheck:   testAccErrorCheck(t, amplify.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSAmplify(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, amplify.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAmplifyBranchDestroy,
 		Steps: []resource.TestStep{

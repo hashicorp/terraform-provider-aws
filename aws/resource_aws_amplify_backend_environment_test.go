@@ -6,24 +6,25 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/amplify"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	tfamplify "github.com/hashicorp/terraform-provider-aws/aws/internal/service/amplify"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/amplify/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func testAccAWSAmplifyBackendEnvironment_basic(t *testing.T) {
 	var env amplify.BackendEnvironment
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_amplify_backend_environment.test"
 
-	environmentName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	environmentName := sdkacctest.RandStringFromCharSet(10, sdkacctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAmplify(t) },
-		ErrorCheck:   testAccErrorCheck(t, amplify.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSAmplify(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, amplify.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAmplifyBackendEnvironmentDestroy,
 		Steps: []resource.TestStep{
@@ -31,7 +32,7 @@ func testAccAWSAmplifyBackendEnvironment_basic(t *testing.T) {
 				Config: testAccAWSAmplifyBackendEnvironmentConfigBasic(rName, environmentName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAmplifyBackendEnvironmentExists(resourceName, &env),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "amplify", regexp.MustCompile(`apps/[^/]+/backendenvironments/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "amplify", regexp.MustCompile(`apps/[^/]+/backendenvironments/.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, "deployment_artifacts"),
 					resource.TestCheckResourceAttr(resourceName, "environment_name", environmentName),
 					resource.TestCheckResourceAttrSet(resourceName, "stack_name"),
@@ -48,14 +49,14 @@ func testAccAWSAmplifyBackendEnvironment_basic(t *testing.T) {
 
 func testAccAWSAmplifyBackendEnvironment_disappears(t *testing.T) {
 	var env amplify.BackendEnvironment
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_amplify_backend_environment.test"
 
-	environmentName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	environmentName := sdkacctest.RandStringFromCharSet(10, sdkacctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAmplify(t) },
-		ErrorCheck:   testAccErrorCheck(t, amplify.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSAmplify(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, amplify.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAmplifyBackendEnvironmentDestroy,
 		Steps: []resource.TestStep{
@@ -63,7 +64,7 @@ func testAccAWSAmplifyBackendEnvironment_disappears(t *testing.T) {
 				Config: testAccAWSAmplifyBackendEnvironmentConfigBasic(rName, environmentName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAmplifyBackendEnvironmentExists(resourceName, &env),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsAmplifyBackendEnvironment(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsAmplifyBackendEnvironment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -73,14 +74,14 @@ func testAccAWSAmplifyBackendEnvironment_disappears(t *testing.T) {
 
 func testAccAWSAmplifyBackendEnvironment_DeploymentArtifacts_StackName(t *testing.T) {
 	var env amplify.BackendEnvironment
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_amplify_backend_environment.test"
 
-	environmentName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	environmentName := sdkacctest.RandStringFromCharSet(10, sdkacctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAmplify(t) },
-		ErrorCheck:   testAccErrorCheck(t, amplify.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSAmplify(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, amplify.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAmplifyBackendEnvironmentDestroy,
 		Steps: []resource.TestStep{
@@ -88,7 +89,7 @@ func testAccAWSAmplifyBackendEnvironment_DeploymentArtifacts_StackName(t *testin
 				Config: testAccAWSAmplifyBackendEnvironmentConfigDeploymentArtifactsAndStackName(rName, environmentName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAmplifyBackendEnvironmentExists(resourceName, &env),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "amplify", regexp.MustCompile(`apps/[^/]+/backendenvironments/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "amplify", regexp.MustCompile(`apps/[^/]+/backendenvironments/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "deployment_artifacts", rName),
 					resource.TestCheckResourceAttr(resourceName, "environment_name", environmentName),
 					resource.TestCheckResourceAttr(resourceName, "stack_name", rName),
