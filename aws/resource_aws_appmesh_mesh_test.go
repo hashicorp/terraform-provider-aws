@@ -194,7 +194,7 @@ func testAccCheckAppmeshMeshDestroy(s *terraform.State) error {
 		_, err := conn.DescribeMesh(&appmesh.DescribeMeshInput{
 			MeshName: aws.String(rs.Primary.Attributes["name"]),
 		})
-		if isAWSErr(err, "NotFoundException", "") {
+		if tfawserr.ErrMessageContains(err, "NotFoundException", "") {
 			continue
 		}
 		if err != nil {
