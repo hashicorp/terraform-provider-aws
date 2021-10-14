@@ -279,7 +279,7 @@ func resourceRepositoryUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ECRPublicConn
 
 	if d.HasChange("catalog_data") {
-		if err := resourceAwsEcrPublicRepositoryUpdateCatalogData(conn, d); err != nil {
+		if err := resourceRepositoryUpdateCatalogData(conn, d); err != nil {
 			return err
 		}
 	}
@@ -354,7 +354,7 @@ func expandEcrPublicRepositoryCatalogData(tfMap map[string]interface{}) *ecrpubl
 	return repositoryCatalogDataInput
 }
 
-func resourceAwsEcrPublicRepositoryUpdateCatalogData(conn *ecrpublic.ECRPublic, d *schema.ResourceData) error {
+func resourceRepositoryUpdateCatalogData(conn *ecrpublic.ECRPublic, d *schema.ResourceData) error {
 
 	if d.HasChange("catalog_data") {
 
