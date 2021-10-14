@@ -102,7 +102,7 @@ func resourceAwsAppRunnerAutoScalingConfigurationCreate(ctx context.Context, d *
 	}
 
 	if len(tags) > 0 {
-		input.Tags = tags.IgnoreAws().ApprunnerTags()
+		input.Tags = Tags(tags.IgnoreAws())
 	}
 
 	output, err := conn.CreateAutoScalingConfigurationWithContext(ctx, input)
@@ -170,7 +170,7 @@ func resourceAwsAppRunnerAutoScalingConfigurationRead(ctx context.Context, d *sc
 	d.Set("min_size", config.MinSize)
 	d.Set("status", config.Status)
 
-	tags, err := tftags.ApprunnerListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error listing tags for App Runner AutoScaling Configuration Version (%s): %s", arn, err))
@@ -196,7 +196,7 @@ func resourceAwsAppRunnerAutoScalingConfigurationUpdate(ctx context.Context, d *
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.ApprunnerUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.FromErr(fmt.Errorf("error updating App Runner AutoScaling Configuration Version (%s) tags: %s", d.Get("arn").(string), err))
 		}
 	}
