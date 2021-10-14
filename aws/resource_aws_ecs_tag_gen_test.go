@@ -12,10 +12,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tagresource"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func testAccCheckEcsTagDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).ecsconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ecs_tag" {
@@ -61,7 +62,7 @@ func testAccCheckEcsTagExists(resourceName string) resource.TestCheckFunc {
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).ecsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn
 
 		_, err = keyvaluetags.EcsGetTag(conn, identifier, key)
 

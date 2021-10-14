@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ecs/lister"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -33,7 +34,7 @@ func testSweepEcsCapacityProviders(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).ecsconn
+	conn := client.(*conns.AWSClient).ECSConn
 	input := &ecs.DescribeCapacityProvidersInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]*testSweepResource, 0)
@@ -269,7 +270,7 @@ func TestAccAWSEcsCapacityProvider_Tags(t *testing.T) {
 }
 
 func testAccCheckAWSEcsCapacityProviderDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).ecsconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ecs_capacity_provider" {
@@ -303,7 +304,7 @@ func testAccCheckAWSEcsCapacityProviderExists(resourceName string, provider *ecs
 			return fmt.Errorf("No ECS Capacity Provider ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).ecsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn
 
 		output, err := finder.CapacityProviderByARN(conn, rs.Primary.ID)
 

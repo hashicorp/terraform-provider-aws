@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ecs/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ecs/waiter"
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 const (
@@ -160,9 +161,9 @@ func resourceAwsEcsCluster() *schema.Resource {
 func resourceAwsEcsClusterImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	d.Set("name", d.Id())
 	d.SetId(arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		Partition: meta.(*conns.AWSClient).Partition,
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
 		Service:   "ecs",
 		Resource:  fmt.Sprintf("cluster/%s", d.Id()),
 	}.String())
@@ -170,8 +171,8 @@ func resourceAwsEcsClusterImport(d *schema.ResourceData, meta interface{}) ([]*s
 }
 
 func resourceAwsEcsClusterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ecsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).ECSConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	clusterName := d.Get("name").(string)
@@ -233,9 +234,9 @@ func resourceAwsEcsClusterCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsEcsClusterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ecsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).ECSConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	var out *ecs.DescribeClustersOutput
 	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
@@ -325,7 +326,7 @@ func resourceAwsEcsClusterRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsEcsClusterUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ecsconn
+	conn := meta.(*conns.AWSClient).ECSConn
 
 	if d.HasChanges("setting", "configuration") {
 		input := ecs.UpdateClusterInput{
@@ -397,7 +398,7 @@ func resourceAwsEcsClusterUpdate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsEcsClusterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ecsconn
+	conn := meta.(*conns.AWSClient).ECSConn
 
 	log.Printf("[DEBUG] Deleting ECS cluster %s", d.Id())
 	input := &ecs.DeleteClusterInput{

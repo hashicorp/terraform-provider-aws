@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ecs/waiter"
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsEcsService() *schema.Resource {
@@ -393,10 +394,10 @@ func resourceAwsEcsServiceImport(d *schema.ResourceData, meta interface{}) ([]*s
 
 	d.SetId(name)
 	clusterArn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
+		Partition: meta.(*conns.AWSClient).Partition,
+		Region:    meta.(*conns.AWSClient).Region,
 		Service:   "ecs",
-		AccountID: meta.(*AWSClient).accountid,
+		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("cluster/%s", cluster),
 	}.String()
 	d.Set("cluster", clusterArn)
@@ -404,8 +405,8 @@ func resourceAwsEcsServiceImport(d *schema.ResourceData, meta interface{}) ([]*s
 }
 
 func resourceAwsEcsServiceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ecsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).ECSConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	deploymentMinimumHealthyPercent := d.Get("deployment_minimum_healthy_percent").(int)
@@ -590,9 +591,9 @@ func resourceAwsEcsServiceCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsEcsServiceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ecsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).ECSConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	log.Printf("[DEBUG] Reading ECS service %s", d.Id())
 	input := ecs.DescribeServicesInput{
@@ -651,7 +652,7 @@ func resourceAwsEcsServiceRead(d *schema.ResourceData, meta interface{}) error {
 	// hence TaskDefinition will not be set by aws sdk
 	if service.TaskDefinition != nil {
 		// Save task definition in the same format
-		if strings.HasPrefix(d.Get("task_definition").(string), "arn:"+meta.(*AWSClient).partition+":ecs:") {
+		if strings.HasPrefix(d.Get("task_definition").(string), "arn:"+meta.(*conns.AWSClient).Partition+":ecs:") {
 			d.Set("task_definition", service.TaskDefinition)
 		} else {
 			taskDefinition := buildFamilyAndRevisionFromARN(aws.StringValue(service.TaskDefinition))
@@ -669,7 +670,7 @@ func resourceAwsEcsServiceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("enable_execute_command", service.EnableExecuteCommand)
 
 	// Save cluster in the same format
-	if strings.HasPrefix(d.Get("cluster").(string), "arn:"+meta.(*AWSClient).partition+":ecs:") {
+	if strings.HasPrefix(d.Get("cluster").(string), "arn:"+meta.(*conns.AWSClient).Partition+":ecs:") {
 		d.Set("cluster", service.ClusterArn)
 	} else {
 		clusterARN := getNameFromARN(aws.StringValue(service.ClusterArn))
@@ -678,7 +679,7 @@ func resourceAwsEcsServiceRead(d *schema.ResourceData, meta interface{}) error {
 
 	// Save IAM role in the same format
 	if service.RoleArn != nil {
-		if strings.HasPrefix(d.Get("iam_role").(string), "arn:"+meta.(*AWSClient).partition+":iam:") {
+		if strings.HasPrefix(d.Get("iam_role").(string), "arn:"+meta.(*conns.AWSClient).Partition+":iam:") {
 			d.Set("iam_role", service.RoleArn)
 		} else {
 			roleARN := getNameFromARN(aws.StringValue(service.RoleArn))
@@ -1008,7 +1009,7 @@ func flattenServiceRegistries(srs []*ecs.ServiceRegistry) []map[string]interface
 }
 
 func resourceAwsEcsServiceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ecsconn
+	conn := meta.(*conns.AWSClient).ECSConn
 	updateService := false
 
 	input := ecs.UpdateServiceInput{
@@ -1172,7 +1173,7 @@ func resourceAwsEcsServiceUpdate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsEcsServiceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ecsconn
+	conn := meta.(*conns.AWSClient).ECSConn
 
 	// Check if it's not already gone
 	output, err := conn.DescribeServices(&ecs.DescribeServicesInput{

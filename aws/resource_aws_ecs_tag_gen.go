@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tagresource"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsEcsTag() *schema.Resource {
@@ -43,7 +44,7 @@ func resourceAwsEcsTag() *schema.Resource {
 }
 
 func resourceAwsEcsTagCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ecsconn
+	conn := meta.(*conns.AWSClient).ECSConn
 
 	identifier := d.Get("resource_arn").(string)
 	key := d.Get("key").(string)
@@ -59,7 +60,7 @@ func resourceAwsEcsTagCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsEcsTagRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ecsconn
+	conn := meta.(*conns.AWSClient).ECSConn
 	identifier, key, err := tagresource.GetResourceID(d.Id())
 
 	if err != nil {
@@ -86,7 +87,7 @@ func resourceAwsEcsTagRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsEcsTagUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ecsconn
+	conn := meta.(*conns.AWSClient).ECSConn
 	identifier, key, err := tagresource.GetResourceID(d.Id())
 
 	if err != nil {
@@ -101,7 +102,7 @@ func resourceAwsEcsTagUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsEcsTagDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ecsconn
+	conn := meta.(*conns.AWSClient).ECSConn
 	identifier, key, err := tagresource.GetResourceID(d.Id())
 
 	if err != nil {

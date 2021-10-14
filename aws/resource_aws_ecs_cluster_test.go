@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ecs/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -29,7 +30,7 @@ func testSweepEcsClusters(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).ecsconn
+	conn := client.(*conns.AWSClient).ECSConn
 
 	err = conn.ListClustersPages(&ecs.ListClustersInput{}, func(page *ecs.ListClustersOutput, lastPage bool) bool {
 		if page == nil {
@@ -386,7 +387,7 @@ func TestAccAWSEcsCluster_configuration(t *testing.T) {
 }
 
 func testAccCheckAWSEcsClusterDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).ecsconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ecs_cluster" {
@@ -416,7 +417,7 @@ func testAccCheckAWSEcsClusterExists(resourceName string, cluster *ecs.Cluster) 
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).ecsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn
 		output, err := finder.ClusterByARN(conn, rs.Primary.ID)
 
 		if err != nil {

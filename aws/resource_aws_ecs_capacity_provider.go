@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ecs/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ecs/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsEcsCapacityProvider() *schema.Resource {
@@ -107,8 +108,8 @@ func resourceAwsEcsCapacityProvider() *schema.Resource {
 }
 
 func resourceAwsEcsCapacityProviderCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ecsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).ECSConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
@@ -135,9 +136,9 @@ func resourceAwsEcsCapacityProviderCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsEcsCapacityProviderRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ecsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).ECSConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	output, err := finder.CapacityProviderByARN(conn, d.Id())
 
@@ -174,7 +175,7 @@ func resourceAwsEcsCapacityProviderRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsEcsCapacityProviderUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ecsconn
+	conn := meta.(*conns.AWSClient).ECSConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &ecs.UpdateCapacityProviderInput{
@@ -221,7 +222,7 @@ func resourceAwsEcsCapacityProviderUpdate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsEcsCapacityProviderDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ecsconn
+	conn := meta.(*conns.AWSClient).ECSConn
 
 	log.Printf("[DEBUG] Deleting ECS Capacity Provider (%s)", d.Id())
 	_, err := conn.DeleteCapacityProvider(&ecs.DeleteCapacityProviderInput{
@@ -247,9 +248,9 @@ func resourceAwsEcsCapacityProviderDelete(d *schema.ResourceData, meta interface
 func resourceAwsEcsCapacityProviderImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	d.Set("name", d.Id())
 	d.SetId(arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		Partition: meta.(*conns.AWSClient).Partition,
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
 		Service:   "ecs",
 		Resource:  fmt.Sprintf("capacity-provider/%s", d.Id()),
 	}.String())

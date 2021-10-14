@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsEcsService() *schema.Resource {
@@ -47,7 +48,7 @@ func dataSourceAwsEcsService() *schema.Resource {
 }
 
 func dataSourceAwsEcsServiceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ecsconn
+	conn := meta.(*conns.AWSClient).ECSConn
 
 	clusterArn := d.Get("cluster_arn").(string)
 	serviceName := d.Get("service_name").(string)
