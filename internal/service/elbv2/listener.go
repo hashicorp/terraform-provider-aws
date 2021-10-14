@@ -398,7 +398,7 @@ func resourceListenerCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(tags) > 0 {
-		params.Tags = tags.IgnoreAws().Elbv2Tags()
+		params.Tags = Tags(tags.IgnoreAws())
 	}
 
 	if v, ok := d.GetOk("protocol"); ok {
@@ -534,7 +534,7 @@ func resourceListenerRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting default_action for ELBv2 listener (%s): %w", d.Id(), err)
 	}
 
-	tags, err := tftags.Elbv2ListTags(conn, d.Id())
+	tags, err := ListTags(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for (%s): %w", d.Id(), err)
@@ -620,7 +620,7 @@ func resourceListenerUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		err := resource.Retry(loadBalancerTagPropagationTimeout, func() *resource.RetryError {
-			err := tftags.Elbv2UpdateTags(conn, d.Id(), o, n)
+			err := UpdateTags(conn, d.Id(), o, n)
 
 			if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeLoadBalancerNotFoundException) ||
 				tfawserr.ErrCodeEquals(err, elbv2.ErrCodeListenerNotFoundException) {
@@ -636,7 +636,7 @@ func resourceListenerUpdate(d *schema.ResourceData, meta interface{}) error {
 		})
 
 		if tfresource.TimedOut(err) {
-			err = tftags.Elbv2UpdateTags(conn, d.Id(), o, n)
+			err = UpdateTags(conn, d.Id(), o, n)
 		}
 
 		if err != nil {

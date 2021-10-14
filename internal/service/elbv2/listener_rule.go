@@ -486,7 +486,7 @@ func resourceAwsLbListenerRuleCreate(d *schema.ResourceData, meta interface{}) e
 		ListenerArn: aws.String(listenerArn),
 	}
 	if len(tags) > 0 {
-		params.Tags = tags.IgnoreAws().Elbv2Tags()
+		params.Tags = Tags(tags.IgnoreAws())
 	}
 
 	var err error
@@ -591,7 +591,7 @@ func resourceAwsLbListenerRuleRead(d *schema.ResourceData, meta interface{}) err
 
 	d.Set("arn", rule.RuleArn)
 
-	tags, err := tftags.Elbv2ListTags(conn, d.Id())
+	tags, err := ListTags(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for (%s): %w", d.Id(), err)
@@ -847,7 +847,7 @@ func resourceAwsLbListenerRuleUpdate(d *schema.ResourceData, meta interface{}) e
 		o, n := d.GetChange("tags_all")
 
 		err := resource.Retry(loadBalancerTagPropagationTimeout, func() *resource.RetryError {
-			err := tftags.Elbv2UpdateTags(conn, d.Id(), o, n)
+			err := UpdateTags(conn, d.Id(), o, n)
 
 			if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeLoadBalancerNotFoundException) {
 				log.Printf("[DEBUG] Retrying tagging of LB Listener Rule (%s) after error: %s", d.Id(), err)
@@ -862,7 +862,7 @@ func resourceAwsLbListenerRuleUpdate(d *schema.ResourceData, meta interface{}) e
 		})
 
 		if tfresource.TimedOut(err) {
-			err = tftags.Elbv2UpdateTags(conn, d.Id(), o, n)
+			err = UpdateTags(conn, d.Id(), o, n)
 		}
 
 		if err != nil {
