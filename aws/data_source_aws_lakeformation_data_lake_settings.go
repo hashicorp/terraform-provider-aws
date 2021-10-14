@@ -100,7 +100,7 @@ func dataSourceAwsLakeFormationDataLakeSettingsRead(d *schema.ResourceData, meta
 	d.Set("create_database_default_permissions", flattenDataLakeSettingsCreateDefaultPermissions(settings.CreateDatabaseDefaultPermissions))
 	d.Set("create_table_default_permissions", flattenDataLakeSettingsCreateDefaultPermissions(settings.CreateTableDefaultPermissions))
 	d.Set("admins", flattenDataLakeSettingsAdmins(settings.DataLakeAdmins))
-	d.Set("trusted_resource_owners", flattenStringList(settings.TrustedResourceOwners))
+	d.Set("trusted_resource_owners", flex.FlattenStringList(settings.TrustedResourceOwners))
 
 	return nil
 }

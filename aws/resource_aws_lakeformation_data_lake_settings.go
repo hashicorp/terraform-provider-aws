@@ -127,7 +127,7 @@ func resourceAwsLakeFormationDataLakeSettingsCreate(d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk("trusted_resource_owners"); ok {
-		settings.TrustedResourceOwners = expandStringList(v.([]interface{}))
+		settings.TrustedResourceOwners = flex.ExpandStringList(v.([]interface{}))
 	}
 
 	input.DataLakeSettings = settings
@@ -196,7 +196,7 @@ func resourceAwsLakeFormationDataLakeSettingsRead(d *schema.ResourceData, meta i
 	d.Set("create_database_default_permissions", flattenDataLakeSettingsCreateDefaultPermissions(settings.CreateDatabaseDefaultPermissions))
 	d.Set("create_table_default_permissions", flattenDataLakeSettingsCreateDefaultPermissions(settings.CreateTableDefaultPermissions))
 	d.Set("admins", flattenDataLakeSettingsAdmins(settings.DataLakeAdmins))
-	d.Set("trusted_resource_owners", flattenStringList(settings.TrustedResourceOwners))
+	d.Set("trusted_resource_owners", flex.FlattenStringList(settings.TrustedResourceOwners))
 
 	return nil
 }
@@ -243,7 +243,7 @@ func expandDataLakeSettingsCreateDefaultPermissions(tfMaps []interface{}) []*lak
 
 func expandDataLakeSettingsCreateDefaultPermission(tfMap map[string]interface{}) *lakeformation.PrincipalPermissions {
 	apiObject := &lakeformation.PrincipalPermissions{
-		Permissions: expandStringSet(tfMap["permissions"].(*schema.Set)),
+		Permissions: flex.ExpandStringSet(tfMap["permissions"].(*schema.Set)),
 		Principal: &lakeformation.DataLakePrincipal{
 			DataLakePrincipalIdentifier: aws.String(tfMap["principal"].(string)),
 		},
@@ -273,7 +273,7 @@ func flattenDataLakeSettingsCreateDefaultPermission(apiObject *lakeformation.Pri
 	}
 
 	if apiObject.Permissions != nil {
-		tfMap["permissions"] = flattenStringSet(apiObject.Permissions)
+		tfMap["permissions"] = flex.FlattenStringSet(apiObject.Permissions)
 	}
 
 	if v := aws.StringValue(apiObject.Principal.DataLakePrincipalIdentifier); v != "" {

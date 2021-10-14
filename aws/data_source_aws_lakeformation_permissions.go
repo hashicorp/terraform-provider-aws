@@ -219,13 +219,13 @@ func dataSourceAwsLakeFormationPermissionsRead(d *schema.ResourceData, meta inte
 
 		if v, ok := d.GetOk("table_with_columns.0.column_names"); ok {
 			if v, ok := v.(*schema.Set); ok && v.Len() > 0 {
-				columnNames = expandStringSet(v)
+				columnNames = flex.ExpandStringSet(v)
 			}
 		}
 
 		if v, ok := d.GetOk("table_with_columns.0.excluded_column_names"); ok {
 			if v, ok := v.(*schema.Set); ok && v.Len() > 0 {
-				excludedColumnNames = expandStringSet(v)
+				excludedColumnNames = flex.ExpandStringSet(v)
 			}
 		}
 	}
