@@ -85,7 +85,7 @@ func sweepReceiptRuleSets(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSSESReceiptRuleSet_basic(t *testing.T) {
+func TestAccSESReceiptRuleSet_basic(t *testing.T) {
 	resourceName := "aws_ses_receipt_rule_set.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -112,7 +112,7 @@ func TestAccAWSSESReceiptRuleSet_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSESReceiptRuleSet_disappears(t *testing.T) {
+func TestAccSESReceiptRuleSet_disappears(t *testing.T) {
 	resourceName := "aws_ses_receipt_rule_set.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 

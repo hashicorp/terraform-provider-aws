@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAwsSESIdentityNotificationTopic_basic(t *testing.T) {
+func TestAccSESIdentityNotificationTopic_basic(t *testing.T) {
 	domain := acctest.RandomDomainName()
 	topicName := sdkacctest.RandomWithPrefix("test-topic")
 	resourceName := "aws_ses_identity_notification_topic.test"

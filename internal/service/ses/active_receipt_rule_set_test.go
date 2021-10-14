@@ -16,7 +16,7 @@ import (
 
 // Only one SES Receipt RuleSet can be active at a time, so run serially
 // locally and in TeamCity.
-func TestAccAWSSESActiveReceiptRuleSet_serial(t *testing.T) {
+func TestAccSESActiveReceiptRuleSet_serial(t *testing.T) {
 	testFuncs := map[string]func(t *testing.T){
 		"basic":      testAccActiveReceiptRuleSet_basic,
 		"disappears": testAccActiveReceiptRuleSet_disappears,

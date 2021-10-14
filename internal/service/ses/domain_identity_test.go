@@ -69,7 +69,7 @@ func sweepIdentities(region, identityType string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSSESDomainIdentity_basic(t *testing.T) {
+func TestAccSESDomainIdentity_basic(t *testing.T) {
 	domain := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -89,7 +89,7 @@ func TestAccAWSSESDomainIdentity_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSESDomainIdentity_disappears(t *testing.T) {
+func TestAccSESDomainIdentity_disappears(t *testing.T) {
 	domain := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -110,9 +110,9 @@ func TestAccAWSSESDomainIdentity_disappears(t *testing.T) {
 	})
 }
 
-// TestAccAWSSESDomainIdentity_trailingPeriod updated in 3.0 to account for domain plan-time validation
+// TestAccSESDomainIdentity_trailingPeriod updated in 3.0 to account for domain plan-time validation
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/13510
-func TestAccAWSSESDomainIdentity_trailingPeriod(t *testing.T) {
+func TestAccSESDomainIdentity_trailingPeriod(t *testing.T) {
 	domain := acctest.RandomFQDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{

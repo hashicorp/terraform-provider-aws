@@ -21,7 +21,7 @@ func init() {
 	})
 }
 
-func TestAccAWSSESEmailIdentity_basic(t *testing.T) {
+func TestAccSESEmailIdentity_basic(t *testing.T) {
 	email := acctest.DefaultEmailAddress
 	resourceName := "aws_ses_email_identity.test"
 
@@ -47,7 +47,7 @@ func TestAccAWSSESEmailIdentity_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSESEmailIdentity_trailingPeriod(t *testing.T) {
+func TestAccSESEmailIdentity_trailingPeriod(t *testing.T) {
 	email := fmt.Sprintf("%s.", acctest.DefaultEmailAddress)
 	resourceName := "aws_ses_email_identity.test"
 

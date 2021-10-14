@@ -27,7 +27,7 @@ func testAccDomainIdentityDomainFromEnv(t *testing.T) string {
 	return rootDomain
 }
 
-func TestAccAwsSesDomainIdentityVerification_basic(t *testing.T) {
+func TestAccSESDomainIdentityVerification_basic(t *testing.T) {
 	rootDomain := testAccDomainIdentityDomainFromEnv(t)
 	domain := fmt.Sprintf("tf-acc-%d.%s", sdkacctest.RandInt(), rootDomain)
 
@@ -45,7 +45,7 @@ func TestAccAwsSesDomainIdentityVerification_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsSesDomainIdentityVerification_timeout(t *testing.T) {
+func TestAccSESDomainIdentityVerification_timeout(t *testing.T) {
 	domain := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -62,7 +62,7 @@ func TestAccAwsSesDomainIdentityVerification_timeout(t *testing.T) {
 	})
 }
 
-func TestAccAwsSesDomainIdentityVerification_nonexistent(t *testing.T) {
+func TestAccSESDomainIdentityVerification_nonexistent(t *testing.T) {
 	domain := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{

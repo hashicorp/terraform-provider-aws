@@ -16,7 +16,7 @@ import (
 	tfses "github.com/hashicorp/terraform-provider-aws/internal/service/ses"
 )
 
-func TestAccAWSSESReceiptRule_basic(t *testing.T) {
+func TestAccSESReceiptRule_basic(t *testing.T) {
 	var rule ses.ReceiptRule
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -62,7 +62,7 @@ func TestAccAWSSESReceiptRule_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSESReceiptRule_s3Action(t *testing.T) {
+func TestAccSESReceiptRule_s3Action(t *testing.T) {
 	var rule ses.ReceiptRule
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -99,7 +99,7 @@ func TestAccAWSSESReceiptRule_s3Action(t *testing.T) {
 	})
 }
 
-func TestAccAWSSESReceiptRule_snsAction(t *testing.T) {
+func TestAccSESReceiptRule_snsAction(t *testing.T) {
 	var rule ses.ReceiptRule
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -136,7 +136,7 @@ func TestAccAWSSESReceiptRule_snsAction(t *testing.T) {
 	})
 }
 
-func TestAccAWSSESReceiptRule_snsActionEncoding(t *testing.T) {
+func TestAccSESReceiptRule_snsActionEncoding(t *testing.T) {
 	var rule ses.ReceiptRule
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -173,7 +173,7 @@ func TestAccAWSSESReceiptRule_snsActionEncoding(t *testing.T) {
 	})
 }
 
-func TestAccAWSSESReceiptRule_lambdaAction(t *testing.T) {
+func TestAccSESReceiptRule_lambdaAction(t *testing.T) {
 	var rule ses.ReceiptRule
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -210,7 +210,7 @@ func TestAccAWSSESReceiptRule_lambdaAction(t *testing.T) {
 	})
 }
 
-func TestAccAWSSESReceiptRule_stopAction(t *testing.T) {
+func TestAccSESReceiptRule_stopAction(t *testing.T) {
 	var rule ses.ReceiptRule
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -246,7 +246,7 @@ func TestAccAWSSESReceiptRule_stopAction(t *testing.T) {
 	})
 }
 
-func TestAccAWSSESReceiptRule_order(t *testing.T) {
+func TestAccSESReceiptRule_order(t *testing.T) {
 	var rule ses.ReceiptRule
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -279,7 +279,7 @@ func TestAccAWSSESReceiptRule_order(t *testing.T) {
 	})
 }
 
-func TestAccAWSSESReceiptRule_actions(t *testing.T) {
+func TestAccSESReceiptRule_actions(t *testing.T) {
 	var rule ses.ReceiptRule
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -320,7 +320,7 @@ func TestAccAWSSESReceiptRule_actions(t *testing.T) {
 	})
 }
 
-func TestAccAWSSESReceiptRule_disappears(t *testing.T) {
+func TestAccSESReceiptRule_disappears(t *testing.T) {
 	var rule ses.ReceiptRule
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
