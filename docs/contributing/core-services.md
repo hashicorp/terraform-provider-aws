@@ -1,6 +1,6 @@
-# TF AWS Provider Core Services
+# Terraform AWS Provider Core Services
 
-Core Services are AWS services we have identified as critical for a large majority of our users. Our goal is to continually increase the depth of coverage for these services. We will work to prioritize features and enhancements to these services in each weekly release, even if they are not necessarily highlighted in our quarterly roadmap.
+Core Services are AWS services we have identified as critical for a large majority of our users. Our goal is to continually increase the depth of coverage for these services. We will work to prioritize features and enhancements to these services in each weekly release, even if they are not necessarily highlighted in our quarterly road map.
 
 The core services we have identified are:
 

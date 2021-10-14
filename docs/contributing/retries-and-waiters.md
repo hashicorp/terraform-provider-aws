@@ -74,7 +74,7 @@ In some situations, while handling a response, the AWS Go SDK automatically retr
 
 - Certain network errors. A common exception to this is connection reset errors.
 - HTTP status codes 429 and 5xx.
-- Certain API error codes, which are common across various AWS services (e.g. `ThrottledException`). However, not all AWS services implement these error codes consistently. A common exception to this is certain expired credentials errors.
+- Certain API error codes, which are common across various AWS services (e.g., `ThrottledException`). However, not all AWS services implement these error codes consistently. A common exception to this is certain expired credentials errors.
 
 By default, the Terraform AWS Provider sets the maximum number of AWS Go SDK retries based on the [`max_retries` provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#max_retries). The provider configuration defaults to 25 and the exponential backoff roughly equates to one hour of retries. This very high default value was present before the Terraform AWS Provider codebase was split from Terraform CLI in version 0.10.
 
@@ -122,7 +122,7 @@ const (
 ```
 
 ```go
-// aws/resource_example_thing.go
+// internal/service/{service}/{thing}.go
 
 import (
 	// ... other imports ...
@@ -147,7 +147,7 @@ import (
 	})
 
 	// This check is important - it handles when the AWS Go SDK operation retries without returning.
-	// e.g. any automatic retries due to network or throttling errors.
+	// e.g., any automatic retries due to network or throttling errors.
 	if tfresource.TimedOut(err) {
 		// The use of equals assignment (over colon equals) is also important here.
 		// This overwrites the error variable to simplify logic.
@@ -178,7 +178,7 @@ The last operation can receive varied API errors ranging from:
 Each AWS service API (and sometimes even operations within the same API) varies in the implementation of these errors. To handle them, it is recommended to use the [Operation Specific Error Retries](#operation-specific-error-retries) pattern. The Terraform AWS Provider implements a standard timeout constant of two minutes in the `aws/internal/service/iam/waiter` package which should be used for all retry timeouts associated with IAM errors. This timeout was derived from years of Terraform operational experience with all AWS APIs.
 
 ```go
-// aws/resource_example_thing.go
+// internal/service/{service}/{thing}.go
 
 import (
 	// ... other imports ...
@@ -219,7 +219,7 @@ Some remote system operations run asynchronously as detailed in the [Asynchronou
 The below code example highlights this situation for a resource creation that also exhibited IAM eventual consistency.
 
 ```go
-// aws/resource_example_thing.go
+// internal/service/{service}/{thing}.go
 
 import (
 	// ... other imports ...
@@ -297,7 +297,7 @@ const (
 ```
 
 ```go
-// aws/resource_example_thing.go
+// internal/service/{service}/{thing}.go
 
 function ExampleThingCreate(d *schema.ResourceData, meta interface{}) error {
 	// ...
@@ -415,7 +415,7 @@ func ThingAttributeUpdated(conn *example.Example, id string, expectedValue strin
 ```
 
 ```go
-// aws/resource_example_thing.go
+// internal/service/{service}/{thing}.go
 
 function ExampleThingUpdate(d *schema.ResourceData, meta interface{}) error {
 	// ...
@@ -434,7 +434,7 @@ function ExampleThingUpdate(d *schema.ResourceData, meta interface{}) error {
 
 ## Asynchronous Operations
 
-When you initiate a long-running operation, an AWS service may return a successful response immediately and continue working on the request asynchronously. A resource can track the status with a component-level field (e.g. `CREATING`, `UPDATING`, etc.) or an explicit tracking identifier.
+When you initiate a long-running operation, an AWS service may return a successful response immediately and continue working on the request asynchronously. A resource can track the status with a component-level field (e.g., `CREATING`, `UPDATING`, etc.) or an explicit tracking identifier.
 
 Terraform resources should wait for these background operations to complete. Failing to do so can introduce incomplete state information and downstream errors in other resources. In rare scenarios involving very long-running operations, operators may request a flag to skip the waiting. However, these should only be implemented case-by-case to prevent those previously mentioned confusing issues.
 
@@ -525,7 +525,7 @@ func ThingDeleted(conn *example.Example, id string) (*example.Thing, error) {
 ```
 
 ```go
-// aws/resource_example_thing.go
+// internal/service/{service}/{thing}.go
 
 function ExampleThingCreate(d *schema.ResourceData, meta interface{}) error {
 	// ... AWS Go SDK logic to create resource ...
@@ -548,4 +548,4 @@ function ExampleThingDelete(d *schema.ResourceData, meta interface{}) error {
 }
 ```
 
-Typically, the AWS Go SDK should include constants for various status field values (e.g. `StatusCreating` for `CREATING`). If not, create them in a file named `aws/internal/service/{SERVICE}/consts.go`.
+Typically, the AWS Go SDK should include constants for various status field values (e.g., `StatusCreating` for `CREATING`). If not, create them in a file named `aws/internal/service/{SERVICE}/consts.go`.

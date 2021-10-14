@@ -63,7 +63,7 @@ For most use cases in this codebase, this means if code is receiving an error an
 return fmt.Errorf("adding some additional message: %w", err)
 ```
 
-This type of error wrapping should be applied to all Terraform resource logic. It should also be applied to any nested functions that contains two or more error conditions (e.g. a function that calls an update API and waits for the update to finish) so practitioners and code maintainers have a clear idea which generated the error. When returning errors in those situations, it is important to only include necessary additional context. Resource logic will typically include the information such as the type of operation and resource identifier (e.g. `error updating Service Thing (%s): %w`), so these messages can be more terse such as `error waiting for completion: %w`.
+This type of error wrapping should be applied to all Terraform resource logic. It should also be applied to any nested functions that contains two or more error conditions (e.g., a function that calls an update API and waits for the update to finish) so practitioners and code maintainers have a clear idea which generated the error. When returning errors in those situations, it is important to only include necessary additional context. Resource logic will typically include the information such as the type of operation and resource identifier (e.g., `error updating Service Thing (%s): %w`), so these messages can be more terse such as `error waiting for completion: %w`.
 
 ### AWS Go SDK Errors
 
@@ -71,7 +71,7 @@ The [AWS Go SDK documentation](https://docs.aws.amazon.com/sdk-for-go/) includes
 
 For the purposes of this documentation, the most important concepts with handling these errors are:
 
-- Each response error (which eventually implements `awserr.Error`) has a `string` error code (`Code`) and `string` error message (`Message`). When printed as a string, they format as: `Code: Message`, e.g. `InvalidParameterValueException: IAM Role arn:aws:iam::123456789012:role/XXX cannot be assumed by AWS Backup`.
+- Each response error (which eventually implements `awserr.Error`) has a `string` error code (`Code`) and `string` error message (`Message`). When printed as a string, they format as: `Code: Message`, e.g., `InvalidParameterValueException: IAM Role arn:aws:iam::123456789012:role/XXX cannot be assumed by AWS Backup`.
 - Error handling is almost exclusively done via those `string` fields and not other response information, such as HTTP Status Codes.
 - When the error code is non-specific, the error message should also be checked. Unfortunately, AWS APIs generally do not provide documentation or API modeling with the contents of these messages and often the Terraform AWS Provider code must rely on substring matching.
 - Not all errors are returned in the response error from an AWS Go SDK operation. This is service and sometimes API call specific. For example, the [EC2 `DeleteVpcEndpoints` API call](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DeleteVpcEndpoints.html) can return a "successful" response (in terms of no response error) but include information in an `Unsuccessful` field in the response body.

@@ -3,19 +3,19 @@
 ## Requirements
 
 - [Terraform](https://www.terraform.io/downloads.html) 0.12.26+ (to run acceptance tests)
-- [Go](https://golang.org/doc/install) 1.16 (to build the provider plugin)
+- [Go](https://golang.org/doc/install) 1.16+ (to build the provider plugin)
 
 ## Quick Start
 
 If you wish to work on the provider, you'll first need [Go](http://www.golang.org) installed on your machine (please check the [requirements](#requirements) before proceeding).
 
-*Note:* This project uses [Go Modules](https://blog.golang.org/using-go-modules) making it safe to work with it outside of your existing [GOPATH](http://golang.org/doc/code.html#GOPATH). The instructions that follow assume a directory in your home directory outside of the standard GOPATH (i.e `$HOME/development/terraform-providers/`).
+*Note:* This project uses [Go Modules](https://blog.golang.org/using-go-modules) making it safe to work with it outside of your existing [GOPATH](http://golang.org/doc/code.html#GOPATH). The instructions that follow assume a directory in your home directory outside of the standard GOPATH (i.e `$HOME/development/hashicorp/`).
 
-Clone repository to: `$HOME/development/terraform-providers/`
+Clone repository to: `$HOME/development/hashicorp/`
 
 ```sh
-$ mkdir -p $HOME/development/terraform-providers/; cd $HOME/development/terraform-providers/
-$ git clone git@github.com:terraform-providers/terraform-provider-aws
+$ mkdir -p $HOME/development/hashicorp/; cd $HOME/development/hashicorp/
+$ git clone git@github.com:hashicorp/terraform-provider-aws
 ...
 ```
 
