@@ -59,7 +59,7 @@ func testSweepDataSyncLocationNfss(region string) error {
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(location.LocationArn))
 			err = r.Delete(d, client)
-			if isAWSErr(err, "InvalidRequestException", "not found") {
+			if tfawserr.ErrMessageContains(err, "InvalidRequestException", "not found") {
 				continue
 			}
 
@@ -298,7 +298,7 @@ func testAccCheckAWSDataSyncLocationNfsDestroy(s *terraform.State) error {
 
 		_, err := conn.DescribeLocationNfs(input)
 
-		if isAWSErr(err, "InvalidRequestException", "not found") {
+		if tfawserr.ErrMessageContains(err, "InvalidRequestException", "not found") {
 			return nil
 		}
 

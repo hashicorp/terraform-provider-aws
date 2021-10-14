@@ -59,7 +59,7 @@ func testSweepDataSyncLocationFsxWindows(region string) error {
 
 			_, err := conn.DeleteLocation(input)
 
-			if isAWSErr(err, datasync.ErrCodeInvalidRequestException, "not found") {
+			if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
 				continue
 			}
 
@@ -238,7 +238,7 @@ func testAccCheckAWSDataSyncLocationFsxWindowsDestroy(s *terraform.State) error 
 
 		_, err := conn.DescribeLocationFsxWindows(input)
 
-		if isAWSErr(err, datasync.ErrCodeInvalidRequestException, "not found") {
+		if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
 			return nil
 		}
 

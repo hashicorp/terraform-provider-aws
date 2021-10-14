@@ -121,13 +121,13 @@ func resourceAwsDataSyncLocationS3Create(d *schema.ResourceData, meta interface{
 
 		// Retry for IAM eventual consistency on error:
 		// InvalidRequestException: Unable to assume role. Reason: Access denied when calling sts:AssumeRole
-		if isAWSErr(err, datasync.ErrCodeInvalidRequestException, "Unable to assume role") {
+		if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "Unable to assume role") {
 			return resource.RetryableError(err)
 		}
 
 		// Retry for IAM eventual consistency on error:
 		// InvalidRequestException: DataSync location access test failed: could not perform s3:ListObjectsV2 on bucket
-		if isAWSErr(err, datasync.ErrCodeInvalidRequestException, "access test failed") {
+		if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "access test failed") {
 			return resource.RetryableError(err)
 		}
 
@@ -138,7 +138,7 @@ func resourceAwsDataSyncLocationS3Create(d *schema.ResourceData, meta interface{
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		output, err = conn.CreateLocationS3(input)
 	}
 
@@ -163,7 +163,7 @@ func resourceAwsDataSyncLocationS3Read(d *schema.ResourceData, meta interface{})
 	log.Printf("[DEBUG] Reading DataSync Location S3: %s", input)
 	output, err := conn.DescribeLocationS3(input)
 
-	if isAWSErr(err, "InvalidRequestException", "not found") {
+	if tfawserr.ErrMessageContains(err, "InvalidRequestException", "not found") {
 		log.Printf("[WARN] DataSync Location S3 %q not found - removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -232,7 +232,7 @@ func resourceAwsDataSyncLocationS3Delete(d *schema.ResourceData, meta interface{
 	log.Printf("[DEBUG] Deleting DataSync Location S3: %s", input)
 	_, err := conn.DeleteLocation(input)
 
-	if isAWSErr(err, "InvalidRequestException", "not found") {
+	if tfawserr.ErrMessageContains(err, "InvalidRequestException", "not found") {
 		return nil
 	}
 

@@ -135,7 +135,7 @@ func resourceAwsDataSyncLocationNfsRead(d *schema.ResourceData, meta interface{}
 	log.Printf("[DEBUG] Reading DataSync Location NFS: %s", input)
 	output, err := conn.DescribeLocationNfs(input)
 
-	if isAWSErr(err, "InvalidRequestException", "not found") {
+	if tfawserr.ErrMessageContains(err, "InvalidRequestException", "not found") {
 		log.Printf("[WARN] DataSync Location NFS %q not found - removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -225,7 +225,7 @@ func resourceAwsDataSyncLocationNfsDelete(d *schema.ResourceData, meta interface
 	log.Printf("[DEBUG] Deleting DataSync Location NFS: %s", input)
 	_, err := conn.DeleteLocation(input)
 
-	if isAWSErr(err, "InvalidRequestException", "not found") {
+	if tfawserr.ErrMessageContains(err, "InvalidRequestException", "not found") {
 		return nil
 	}
 
