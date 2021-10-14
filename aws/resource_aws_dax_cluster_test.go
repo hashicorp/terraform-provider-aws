@@ -8,9 +8,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dax"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -60,13 +61,13 @@ func testSweepDAXClusters(region string) error {
 
 func TestAccAWSDAXCluster_basic(t *testing.T) {
 	var dc dax.Cluster
-	rString := acctest.RandString(10)
+	rString := sdkacctest.RandString(10)
 	iamRoleResourceName := "aws_iam_role.test"
 	resourceName := "aws_dax_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDax(t) },
-		ErrorCheck:   testAccErrorCheck(t, dax.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSDax(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, dax.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDAXClusterDestroy,
 		Steps: []resource.TestStep{
@@ -74,7 +75,7 @@ func TestAccAWSDAXCluster_basic(t *testing.T) {
 				Config: testAccAWSDAXClusterConfig(rString),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDAXClusterExists(resourceName, &dc),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "dax", regexp.MustCompile("cache/.+")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "dax", regexp.MustCompile("cache/.+")),
 					resource.TestMatchResourceAttr(
 						resourceName, "cluster_name", regexp.MustCompile(`^tf-\w+$`)),
 					resource.TestCheckResourceAttrPair(resourceName, "iam_role_arn", iamRoleResourceName, "arn"),
@@ -115,12 +116,12 @@ func TestAccAWSDAXCluster_basic(t *testing.T) {
 
 func TestAccAWSDAXCluster_resize(t *testing.T) {
 	var dc dax.Cluster
-	rString := acctest.RandString(10)
+	rString := sdkacctest.RandString(10)
 	resourceName := "aws_dax_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDax(t) },
-		ErrorCheck:   testAccErrorCheck(t, dax.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSDax(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, dax.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDAXClusterDestroy,
 		Steps: []resource.TestStep{
@@ -159,12 +160,12 @@ func TestAccAWSDAXCluster_resize(t *testing.T) {
 
 func TestAccAWSDAXCluster_encryption_disabled(t *testing.T) {
 	var dc dax.Cluster
-	rString := acctest.RandString(10)
+	rString := sdkacctest.RandString(10)
 	resourceName := "aws_dax_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDax(t) },
-		ErrorCheck:   testAccErrorCheck(t, dax.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSDax(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, dax.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDAXClusterDestroy,
 		Steps: []resource.TestStep{
@@ -193,12 +194,12 @@ func TestAccAWSDAXCluster_encryption_disabled(t *testing.T) {
 
 func TestAccAWSDAXCluster_encryption_enabled(t *testing.T) {
 	var dc dax.Cluster
-	rString := acctest.RandString(10)
+	rString := sdkacctest.RandString(10)
 	resourceName := "aws_dax_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDax(t) },
-		ErrorCheck:   testAccErrorCheck(t, dax.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSDax(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, dax.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDAXClusterDestroy,
 		Steps: []resource.TestStep{
@@ -285,7 +286,7 @@ func testAccPreCheckAWSDax(t *testing.T) {
 
 	_, err := conn.DescribeClusters(input)
 
-	if testAccPreCheckSkipError(err) || tfawserr.ErrMessageContains(err, "InvalidParameterValueException", "Access Denied to API Version: DAX_V3") {
+	if acctest.PreCheckSkipError(err) || tfawserr.ErrMessageContains(err, "InvalidParameterValueException", "Access Denied to API Version: DAX_V3") {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
