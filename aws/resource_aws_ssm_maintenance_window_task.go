@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceMaintenanceWindowTask() *schema.Resource {
@@ -60,7 +61,7 @@ func ResourceMaintenanceWindowTask() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 
 			"targets": {
@@ -207,7 +208,7 @@ func ResourceMaintenanceWindowTask() *schema.Resource {
 												"notification_arn": {
 													Type:         schema.TypeString,
 													Optional:     true,
-													ValidateFunc: validateArn,
+													ValidateFunc: verify.ValidARN,
 												},
 
 												"notification_events": {
@@ -260,7 +261,7 @@ func ResourceMaintenanceWindowTask() *schema.Resource {
 									"service_role_arn": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: verify.ValidARN,
 									},
 
 									"timeout_seconds": {

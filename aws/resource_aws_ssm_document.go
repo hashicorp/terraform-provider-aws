@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ssm/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (
@@ -41,7 +42,7 @@ func ResourceDocument() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateAwsSSMName,
+				ValidateFunc: validName,
 			},
 			"attachments_source": {
 				Type:     schema.TypeList,
@@ -506,13 +507,13 @@ func setDocumentPermissions(d *schema.ResourceData, meta interface{}) error {
 		// we filter out accounts from both lists
 		accountIdsToRemove := make([]interface{}, 0)
 		for _, oldPermissionsAccountId := range oldPermissionsAccountIds {
-			if _, contains := sliceContainsString(newPermissionsAccountIds, oldPermissionsAccountId.(string)); !contains {
+			if _, contains := verify.SliceContainsString(newPermissionsAccountIds, oldPermissionsAccountId.(string)); !contains {
 				accountIdsToRemove = append(accountIdsToRemove, oldPermissionsAccountId.(string))
 			}
 		}
 		accountIdsToAdd := make([]interface{}, 0)
 		for _, newPermissionsAccountId := range newPermissionsAccountIds {
-			if _, contains := sliceContainsString(oldPermissionsAccountIds, newPermissionsAccountId.(string)); !contains {
+			if _, contains := verify.SliceContainsString(oldPermissionsAccountIds, newPermissionsAccountId.(string)); !contains {
 				accountIdsToAdd = append(accountIdsToAdd, newPermissionsAccountId.(string))
 			}
 		}
