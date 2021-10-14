@@ -13,6 +13,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceWorkGroup() *schema.Resource {
@@ -34,7 +35,7 @@ func ResourceWorkGroup() *schema.Resource {
 				Type:             schema.TypeList,
 				Optional:         true,
 				MaxItems:         1,
-				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"bytes_scanned_cutoff_per_query": {
@@ -75,7 +76,7 @@ func ResourceWorkGroup() *schema.Resource {
 												"kms_key_arn": {
 													Type:         schema.TypeString,
 													Optional:     true,
-													ValidateFunc: validateArn,
+													ValidateFunc: verify.ValidARN,
 												},
 											},
 										},
