@@ -57,7 +57,7 @@ func resourceAwsBackupVaultNotificationsCreate(d *schema.ResourceData, meta inte
 	input := &backup.PutBackupVaultNotificationsInput{
 		BackupVaultName:   aws.String(d.Get("backup_vault_name").(string)),
 		SNSTopicArn:       aws.String(d.Get("sns_topic_arn").(string)),
-		BackupVaultEvents: expandStringSet(d.Get("backup_vault_events").(*schema.Set)),
+		BackupVaultEvents: flex.ExpandStringSet(d.Get("backup_vault_events").(*schema.Set)),
 	}
 
 	_, err := conn.PutBackupVaultNotifications(input)
@@ -90,7 +90,7 @@ func resourceAwsBackupVaultNotificationsRead(d *schema.ResourceData, meta interf
 	d.Set("backup_vault_name", resp.BackupVaultName)
 	d.Set("sns_topic_arn", resp.SNSTopicArn)
 	d.Set("backup_vault_arn", resp.BackupVaultArn)
-	if err := d.Set("backup_vault_events", flattenStringSet(resp.BackupVaultEvents)); err != nil {
+	if err := d.Set("backup_vault_events", flex.FlattenStringSet(resp.BackupVaultEvents)); err != nil {
 		return fmt.Errorf("error setting backup_vault_events: %w", err)
 	}
 
