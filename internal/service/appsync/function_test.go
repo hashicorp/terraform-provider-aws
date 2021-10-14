@@ -27,12 +27,12 @@ func TestAccAwsAppsyncFunction_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsAppsyncFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAppsyncFunctionConfig(rName1, rName2, acctest.Region()),
+				Config: testAccFunctionConfig(rName1, rName2, acctest.Region()),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAppsyncFunctionExists(resourceName, &config),
+					testAccCheckFunctionExists(resourceName, &config),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appsync", regexp.MustCompile("apis/.+/functions/.+")),
 					resource.TestCheckResourceAttr(resourceName, "name", rName2),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
@@ -41,9 +41,9 @@ func TestAccAwsAppsyncFunction_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSAppsyncFunctionConfig(rName1, rName3, acctest.Region()),
+				Config: testAccFunctionConfig(rName1, rName3, acctest.Region()),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAppsyncFunctionExists(resourceName, &config),
+					testAccCheckFunctionExists(resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, "name", rName3),
 				),
 			},
@@ -66,19 +66,19 @@ func TestAccAwsAppsyncFunction_description(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsAppsyncFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAppsyncFunctionConfigDescription(rName1, rName2, acctest.Region(), "test description 1"),
+				Config: testAccFunctionDescriptionConfig(rName1, rName2, acctest.Region(), "test description 1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAppsyncFunctionExists(resourceName, &config),
+					testAccCheckFunctionExists(resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, "description", "test description 1"),
 				),
 			},
 			{
-				Config: testAccAWSAppsyncFunctionConfigDescription(rName1, rName2, acctest.Region(), "test description 2"),
+				Config: testAccFunctionDescriptionConfig(rName1, rName2, acctest.Region(), "test description 2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAppsyncFunctionExists(resourceName, &config),
+					testAccCheckFunctionExists(resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, "description", "test description 2"),
 				),
 			},
@@ -101,12 +101,12 @@ func TestAccAwsAppsyncFunction_responseMappingTemplate(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsAppsyncFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAppsyncFunctionConfigResponseMappingTemplate(rName1, rName2, acctest.Region()),
+				Config: testAccFunctionResponseMappingTemplateConfig(rName1, rName2, acctest.Region()),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAppsyncFunctionExists(resourceName, &config),
+					testAccCheckFunctionExists(resourceName, &config),
 				),
 			},
 			{
@@ -128,12 +128,12 @@ func TestAccAwsAppsyncFunction_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsAppsyncFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAppsyncFunctionConfig(rName1, rName2, acctest.Region()),
+				Config: testAccFunctionConfig(rName1, rName2, acctest.Region()),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAppsyncFunctionExists(resourceName, &config),
+					testAccCheckFunctionExists(resourceName, &config),
 					acctest.CheckResourceDisappears(acctest.Provider, tfappsync.ResourceFunction(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -142,7 +142,7 @@ func TestAccAwsAppsyncFunction_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsAppsyncFunctionDestroy(s *terraform.State) error {
+func testAccCheckFunctionDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appsync_function" {
@@ -170,7 +170,7 @@ func testAccCheckAwsAppsyncFunctionDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAwsAppsyncFunctionExists(name string, config *appsync.FunctionConfiguration) resource.TestCheckFunc {
+func testAccCheckFunctionExists(name string, config *appsync.FunctionConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -201,7 +201,7 @@ func testAccCheckAwsAppsyncFunctionExists(name string, config *appsync.FunctionC
 	}
 }
 
-func testAccAWSAppsyncFunctionConfig(r1, r2, region string) string {
+func testAccFunctionConfig(r1, r2, region string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -231,7 +231,7 @@ EOF
 `, testAccAppsyncDatasourceConfig_DynamoDBConfig_Region(r1, region), r2)
 }
 
-func testAccAWSAppsyncFunctionConfigDescription(r1, r2, region, description string) string {
+func testAccFunctionDescriptionConfig(r1, r2, region, description string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -262,7 +262,7 @@ EOF
 `, testAccAppsyncDatasourceConfig_DynamoDBConfig_Region(r1, region), r2, description)
 }
 
-func testAccAWSAppsyncFunctionConfigResponseMappingTemplate(r1, r2, region string) string {
+func testAccFunctionResponseMappingTemplateConfig(r1, r2, region string) string {
 	return fmt.Sprintf(`
 %[1]s
 

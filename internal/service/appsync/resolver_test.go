@@ -25,12 +25,12 @@ func TestAccAwsAppsyncResolver_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsAppsyncResolverDestroy,
+		CheckDestroy: testAccCheckResolverDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppsyncResolver_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAppsyncResolverExists(resourceName, &resolver1),
+					testAccCheckResolverExists(resourceName, &resolver1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appsync", regexp.MustCompile("apis/.+/types/.+/resolvers/.+")),
 					resource.TestCheckResourceAttr(resourceName, "data_source", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "request_template"),
@@ -56,13 +56,13 @@ func TestAccAwsAppsyncResolver_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsAppsyncResolverDestroy,
+		CheckDestroy: testAccCheckResolverDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppsyncResolver_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAppsyncGraphqlApiExists(appsyncGraphqlApiResourceName, &api1),
-					testAccCheckAwsAppsyncResolverExists(resourceName, &resolver1),
+					testAccCheckGraphQLAPIExists(appsyncGraphqlApiResourceName, &api1),
+					testAccCheckResolverExists(resourceName, &resolver1),
 					acctest.CheckResourceDisappears(acctest.Provider, tfappsync.ResourceResolver(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -80,19 +80,19 @@ func TestAccAwsAppsyncResolver_DataSource(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsAppsyncResolverDestroy,
+		CheckDestroy: testAccCheckResolverDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppsyncResolver_DataSource(rName, "test_ds_1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAppsyncResolverExists(resourceName, &resolver1),
+					testAccCheckResolverExists(resourceName, &resolver1),
 					resource.TestCheckResourceAttr(resourceName, "data_source", "test_ds_1"),
 				),
 			},
 			{
 				Config: testAccAppsyncResolver_DataSource(rName, "test_ds_2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAppsyncResolverExists(resourceName, &resolver2),
+					testAccCheckResolverExists(resourceName, &resolver2),
 					resource.TestCheckResourceAttr(resourceName, "data_source", "test_ds_2"),
 				),
 			},
@@ -114,12 +114,12 @@ func TestAccAwsAppsyncResolver_DataSource_lambda(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsAppsyncResolverDestroy,
+		CheckDestroy: testAccCheckResolverDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppsyncResolver_DataSource_lambda(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAppsyncResolverExists(resourceName, &resolver),
+					testAccCheckResolverExists(resourceName, &resolver),
 					resource.TestCheckResourceAttr(resourceName, "data_source", rName),
 				),
 			},
@@ -141,12 +141,12 @@ func TestAccAwsAppsyncResolver_RequestTemplate(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsAppsyncResolverDestroy,
+		CheckDestroy: testAccCheckResolverDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppsyncResolver_RequestTemplate(rName, "/"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAppsyncResolverExists(resourceName, &resolver1),
+					testAccCheckResolverExists(resourceName, &resolver1),
 					resource.TestMatchResourceAttr(resourceName, "request_template", regexp.MustCompile("resourcePath\": \"/\"")),
 				),
 			},
@@ -158,7 +158,7 @@ func TestAccAwsAppsyncResolver_RequestTemplate(t *testing.T) {
 			{
 				Config: testAccAppsyncResolver_RequestTemplate(rName, "/test"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAppsyncResolverExists(resourceName, &resolver2),
+					testAccCheckResolverExists(resourceName, &resolver2),
 					resource.TestMatchResourceAttr(resourceName, "request_template", regexp.MustCompile("resourcePath\": \"/test\"")),
 				),
 			},
@@ -175,12 +175,12 @@ func TestAccAwsAppsyncResolver_ResponseTemplate(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsAppsyncResolverDestroy,
+		CheckDestroy: testAccCheckResolverDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppsyncResolver_ResponseTemplate(rName, 200),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAppsyncResolverExists(resourceName, &resolver1),
+					testAccCheckResolverExists(resourceName, &resolver1),
 					resource.TestMatchResourceAttr(resourceName, "response_template", regexp.MustCompile(`ctx\.result\.statusCode == 200`)),
 				),
 			},
@@ -192,7 +192,7 @@ func TestAccAwsAppsyncResolver_ResponseTemplate(t *testing.T) {
 			{
 				Config: testAccAppsyncResolver_ResponseTemplate(rName, 201),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAppsyncResolverExists(resourceName, &resolver2),
+					testAccCheckResolverExists(resourceName, &resolver2),
 					resource.TestMatchResourceAttr(resourceName, "response_template", regexp.MustCompile(`ctx\.result\.statusCode == 201`)),
 				),
 			},
@@ -209,21 +209,21 @@ func TestAccAwsAppsyncResolver_multipleResolvers(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsAppsyncResolverDestroy,
+		CheckDestroy: testAccCheckResolverDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppsyncResolver_multipleResolvers(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAppsyncResolverExists(resourceName+"1", &resolver),
-					testAccCheckAwsAppsyncResolverExists(resourceName+"2", &resolver),
-					testAccCheckAwsAppsyncResolverExists(resourceName+"3", &resolver),
-					testAccCheckAwsAppsyncResolverExists(resourceName+"4", &resolver),
-					testAccCheckAwsAppsyncResolverExists(resourceName+"5", &resolver),
-					testAccCheckAwsAppsyncResolverExists(resourceName+"6", &resolver),
-					testAccCheckAwsAppsyncResolverExists(resourceName+"7", &resolver),
-					testAccCheckAwsAppsyncResolverExists(resourceName+"8", &resolver),
-					testAccCheckAwsAppsyncResolverExists(resourceName+"9", &resolver),
-					testAccCheckAwsAppsyncResolverExists(resourceName+"10", &resolver),
+					testAccCheckResolverExists(resourceName+"1", &resolver),
+					testAccCheckResolverExists(resourceName+"2", &resolver),
+					testAccCheckResolverExists(resourceName+"3", &resolver),
+					testAccCheckResolverExists(resourceName+"4", &resolver),
+					testAccCheckResolverExists(resourceName+"5", &resolver),
+					testAccCheckResolverExists(resourceName+"6", &resolver),
+					testAccCheckResolverExists(resourceName+"7", &resolver),
+					testAccCheckResolverExists(resourceName+"8", &resolver),
+					testAccCheckResolverExists(resourceName+"9", &resolver),
+					testAccCheckResolverExists(resourceName+"10", &resolver),
 				),
 			},
 		},
@@ -239,12 +239,12 @@ func TestAccAwsAppsyncResolver_PipelineConfig(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsAppsyncResolverDestroy,
+		CheckDestroy: testAccCheckResolverDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppsyncResolver_pipelineConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAppsyncResolverExists(resourceName, &resolver),
+					testAccCheckResolverExists(resourceName, &resolver),
 					resource.TestCheckResourceAttr(resourceName, "pipeline_config.0.functions.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "pipeline_config.0.functions.0", "aws_appsync_function.test", "function_id"),
 				),
@@ -267,12 +267,12 @@ func TestAccAwsAppsyncResolver_CachingConfig(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsAppsyncResolverDestroy,
+		CheckDestroy: testAccCheckResolverDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppsyncResolver_cachingConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAppsyncResolverExists(resourceName, &resolver),
+					testAccCheckResolverExists(resourceName, &resolver),
 					resource.TestCheckResourceAttr(resourceName, "caching_config.0.caching_keys.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "caching_config.0.ttl", "60"),
 				),
@@ -286,7 +286,7 @@ func TestAccAwsAppsyncResolver_CachingConfig(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsAppsyncResolverDestroy(s *terraform.State) error {
+func testAccCheckResolverDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appsync_resolver" {
@@ -318,7 +318,7 @@ func testAccCheckAwsAppsyncResolverDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAwsAppsyncResolverExists(name string, resolver *appsync.Resolver) resource.TestCheckFunc {
+func testAccCheckResolverExists(name string, resolver *appsync.Resolver) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
