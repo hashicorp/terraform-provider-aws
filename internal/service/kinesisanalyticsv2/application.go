@@ -937,7 +937,7 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(tags) > 0 {
-		input.Tags = tags.IgnoreAws().Kinesisanalyticsv2Tags()
+		input.Tags = Tags(tags.IgnoreAws())
 	}
 
 	log.Printf("[DEBUG] Creating Kinesis Analytics v2 Application: %s", input)
@@ -1001,7 +1001,7 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting cloudwatch_logging_options: %w", err)
 	}
 
-	tags, err := tftags.Kinesisanalyticsv2ListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Kinesis Analytics v2 Application (%s): %w", arn, err)
@@ -1486,7 +1486,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		arn := d.Get("arn").(string)
 		o, n := d.GetChange("tags_all")
-		if err := tftags.Kinesisanalyticsv2UpdateTags(conn, arn, o, n); err != nil {
+		if err := UpdateTags(conn, arn, o, n); err != nil {
 			return fmt.Errorf("error updating Kinesis Analytics v2 Application (%s) tags: %s", arn, err)
 		}
 	}
