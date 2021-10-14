@@ -2,7 +2,6 @@ package cloudwatchevents_test
 
 import (
 	"fmt"
-	"log"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -13,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
 func TestAccCloudWatchEventsArchive_basic(t *testing.T) {

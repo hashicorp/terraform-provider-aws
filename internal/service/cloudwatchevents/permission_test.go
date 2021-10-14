@@ -3,7 +3,6 @@ package cloudwatchevents_test
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"regexp"
 	"testing"
 	"time"
@@ -17,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
 func TestAccCloudWatchEventsPermission_basic(t *testing.T) {
