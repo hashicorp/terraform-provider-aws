@@ -23,11 +23,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_secretsmanager_secret", &resource.Sweeper{
 		Name: "aws_secretsmanager_secret",
-		F:    testSweepSecretsManagerSecrets,
+		F:    sweepSecrets,
 	})
 }
 
-func testSweepSecretsManagerSecrets(region string) error {
+func sweepSecrets(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -76,15 +76,15 @@ func TestAccAwsSecretsManagerSecret_basic(t *testing.T) {
 	resourceName := "aws_secretsmanager_secret.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSecretsManager(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, secretsmanager.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsSecretsManagerSecretDestroy,
+		CheckDestroy: testAccCheckSecretDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsSecretsManagerSecretConfig_Name(rName),
+				Config: testAccSecretConfig_Name(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSecretsManagerSecretExists(resourceName, &secret),
+					testAccCheckSecretExists(resourceName, &secret),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "secretsmanager", regexp.MustCompile(fmt.Sprintf("secret:%s-[[:alnum:]]+$", rName))),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
@@ -113,15 +113,15 @@ func TestAccAwsSecretsManagerSecret_withNamePrefix(t *testing.T) {
 	resourceName := "aws_secretsmanager_secret.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSecretsManager(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, secretsmanager.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsSecretsManagerSecretDestroy,
+		CheckDestroy: testAccCheckSecretDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsSecretsManagerSecretConfig_withNamePrefix(rPrefix),
+				Config: testAccSecretConfig_withNamePrefix(rPrefix),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSecretsManagerSecretExists(resourceName, &secret),
+					testAccCheckSecretExists(resourceName, &secret),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "secretsmanager", regexp.MustCompile(fmt.Sprintf("secret:%s[[:digit:]]+-[[:alnum:]]+$", rPrefix))),
 					resource.TestMatchResourceAttr(resourceName, "name", regexp.MustCompile(fmt.Sprintf("^%s", rPrefix))),
 				),
@@ -142,22 +142,22 @@ func TestAccAwsSecretsManagerSecret_Description(t *testing.T) {
 	resourceName := "aws_secretsmanager_secret.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSecretsManager(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, secretsmanager.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsSecretsManagerSecretDestroy,
+		CheckDestroy: testAccCheckSecretDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsSecretsManagerSecretConfig_Description(rName, "description1"),
+				Config: testAccSecretConfig_Description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSecretsManagerSecretExists(resourceName, &secret),
+					testAccCheckSecretExists(resourceName, &secret),
 					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
 				),
 			},
 			{
-				Config: testAccAwsSecretsManagerSecretConfig_Description(rName, "description2"),
+				Config: testAccSecretConfig_Description(rName, "description2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSecretsManagerSecretExists(resourceName, &secret),
+					testAccCheckSecretExists(resourceName, &secret),
 					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
 				),
 			},
@@ -178,15 +178,15 @@ func TestAccAwsSecretsManagerSecret_basicReplica(t *testing.T) {
 	resourceName := "aws_secretsmanager_secret.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckAWSSecretsManager(t); acctest.PreCheckMultipleRegion(t, 2) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t); acctest.PreCheckMultipleRegion(t, 2) },
 		ErrorCheck:        acctest.ErrorCheck(t, secretsmanager.EndpointsID),
 		ProviderFactories: acctest.FactoriesMultipleRegion(&providers, 2),
-		CheckDestroy:      testAccCheckAwsSecretsManagerSecretDestroy,
+		CheckDestroy:      testAccCheckSecretDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsSecretsManagerSecretConfig_basicReplica(rName),
+				Config: testAccSecretConfig_basicReplica(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSecretsManagerSecretExists(resourceName, &secret),
+					testAccCheckSecretExists(resourceName, &secret),
 					resource.TestCheckResourceAttr(resourceName, "force_overwrite_replica_secret", "false"),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
 				),
@@ -202,29 +202,29 @@ func TestAccAwsSecretsManagerSecret_overwriteReplica(t *testing.T) {
 	resourceName := "aws_secretsmanager_secret.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckAWSSecretsManager(t); acctest.PreCheckMultipleRegion(t, 3) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t); acctest.PreCheckMultipleRegion(t, 3) },
 		ErrorCheck:        acctest.ErrorCheck(t, secretsmanager.EndpointsID),
 		ProviderFactories: acctest.FactoriesMultipleRegion(&providers, 3),
-		CheckDestroy:      testAccCheckAwsSecretsManagerSecretDestroy,
+		CheckDestroy:      testAccCheckSecretDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsSecretsManagerSecretConfig_overwriteReplica(rName, true),
+				Config: testAccSecretConfig_overwriteReplica(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSecretsManagerSecretExists(resourceName, &secret),
+					testAccCheckSecretExists(resourceName, &secret),
 					resource.TestCheckResourceAttr(resourceName, "force_overwrite_replica_secret", "true"),
 				),
 			},
 			{
-				Config: testAccAwsSecretsManagerSecretConfig_overwriteReplicaUpdate(rName, true),
+				Config: testAccSecretConfig_overwriteReplicaUpdate(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSecretsManagerSecretExists(resourceName, &secret),
+					testAccCheckSecretExists(resourceName, &secret),
 					resource.TestCheckResourceAttr(resourceName, "force_overwrite_replica_secret", "true"),
 				),
 			},
 			{
-				Config: testAccAwsSecretsManagerSecretConfig_overwriteReplica(rName, false),
+				Config: testAccSecretConfig_overwriteReplica(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSecretsManagerSecretExists(resourceName, &secret),
+					testAccCheckSecretExists(resourceName, &secret),
 					resource.TestCheckResourceAttr(resourceName, "force_overwrite_replica_secret", "false"),
 				),
 			},
@@ -238,22 +238,22 @@ func TestAccAwsSecretsManagerSecret_KmsKeyID(t *testing.T) {
 	resourceName := "aws_secretsmanager_secret.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSecretsManager(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, secretsmanager.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsSecretsManagerSecretDestroy,
+		CheckDestroy: testAccCheckSecretDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsSecretsManagerSecretConfig_KmsKeyID(rName),
+				Config: testAccSecretConfig_KMSKeyID(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSecretsManagerSecretExists(resourceName, &secret),
+					testAccCheckSecretExists(resourceName, &secret),
 					resource.TestCheckResourceAttrSet(resourceName, "kms_key_id"),
 				),
 			},
 			{
-				Config: testAccAwsSecretsManagerSecretConfig_KmsKeyID_Updated(rName),
+				Config: testAccSecretConfig_KMSKeyID_Updated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSecretsManagerSecretExists(resourceName, &secret),
+					testAccCheckSecretExists(resourceName, &secret),
 					resource.TestCheckResourceAttrSet(resourceName, "kms_key_id"),
 				),
 			},
@@ -273,22 +273,22 @@ func TestAccAwsSecretsManagerSecret_RecoveryWindowInDays_Recreate(t *testing.T) 
 	resourceName := "aws_secretsmanager_secret.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSecretsManager(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, secretsmanager.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsSecretsManagerSecretDestroy,
+		CheckDestroy: testAccCheckSecretDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsSecretsManagerSecretConfig_RecoveryWindowInDays(rName, 0),
+				Config: testAccSecretConfig_RecoveryWindowInDays(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSecretsManagerSecretExists(resourceName, &secret),
+					testAccCheckSecretExists(resourceName, &secret),
 					resource.TestCheckResourceAttr(resourceName, "recovery_window_in_days", "0"),
 				),
 			},
 			{
-				Config: testAccAwsSecretsManagerSecretConfig_RecoveryWindowInDays(rName, 0),
+				Config: testAccSecretConfig_RecoveryWindowInDays(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSecretsManagerSecretExists(resourceName, &secret),
+					testAccCheckSecretExists(resourceName, &secret),
 					resource.TestCheckResourceAttr(resourceName, "recovery_window_in_days", "0"),
 				),
 				Taint: []string{resourceName},
@@ -310,16 +310,16 @@ func TestAccAwsSecretsManagerSecret_RotationLambdaARN(t *testing.T) {
 	lambdaFunctionResourceName := "aws_lambda_function.test1"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSecretsManager(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, secretsmanager.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsSecretsManagerSecretDestroy,
+		CheckDestroy: testAccCheckSecretDestroy,
 		Steps: []resource.TestStep{
 			// Test enabling rotation on resource creation
 			{
-				Config: testAccAwsSecretsManagerSecretConfig_RotationLambdaARN(rName),
+				Config: testAccSecretConfig_RotationLambdaARN(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSecretsManagerSecretExists(resourceName, &secret),
+					testAccCheckSecretExists(resourceName, &secret),
 					resource.TestCheckResourceAttr(resourceName, "rotation_enabled", "true"),
 					resource.TestCheckResourceAttrPair(resourceName, "rotation_lambda_arn", lambdaFunctionResourceName, "arn"),
 				),
@@ -329,9 +329,9 @@ func TestAccAwsSecretsManagerSecret_RotationLambdaARN(t *testing.T) {
 			// InvalidRequestException: A previous rotation isn’t complete. That rotation will be reattempted.
 			/*
 				{
-					Config: testAccAwsSecretsManagerSecretConfig_RotationLambdaARN_Updated(rName),
+					Config: testAccAWSSecretsManagerSecretConfig_RotationLambdaARN_Updated(rName),
 					Check: resource.ComposeTestCheckFunc(
-						testAccCheckAwsSecretsManagerSecretExists(resourceName, &secret),
+						testAccCheckSecretExists(resourceName, &secret),
 						resource.TestCheckResourceAttr(resourceName, "rotation_enabled", "true"),
 						resource.TestMatchResourceAttr(resourceName, "rotation_lambda_arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:lambda:[^:]+:[^:]+:function:%s-2$", rName))),
 					),
@@ -346,9 +346,9 @@ func TestAccAwsSecretsManagerSecret_RotationLambdaARN(t *testing.T) {
 			},
 			// Test removing rotation on resource update
 			{
-				Config: testAccAwsSecretsManagerSecretConfig_Name(rName),
+				Config: testAccSecretConfig_Name(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSecretsManagerSecretExists(resourceName, &secret),
+					testAccCheckSecretExists(resourceName, &secret),
 					resource.TestCheckResourceAttr(resourceName, "rotation_enabled", "true"), // Must be removed with aws_secretsmanager_secret_rotation after version 2.67.0
 				),
 			},
@@ -362,16 +362,16 @@ func TestAccAwsSecretsManagerSecret_RotationRules(t *testing.T) {
 	resourceName := "aws_secretsmanager_secret.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSecretsManager(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, secretsmanager.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsSecretsManagerSecretDestroy,
+		CheckDestroy: testAccCheckSecretDestroy,
 		Steps: []resource.TestStep{
 			// Test creating rotation rules on resource creation
 			{
-				Config: testAccAwsSecretsManagerSecretConfig_RotationRules(rName, 7),
+				Config: testAccSecretConfig_RotationRules(rName, 7),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSecretsManagerSecretExists(resourceName, &secret),
+					testAccCheckSecretExists(resourceName, &secret),
 					resource.TestCheckResourceAttr(resourceName, "rotation_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "rotation_rules.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rotation_rules.0.automatically_after_days", "7"),
@@ -382,9 +382,9 @@ func TestAccAwsSecretsManagerSecret_RotationRules(t *testing.T) {
 			// InvalidRequestException: A previous rotation isn’t complete. That rotation will be reattempted.
 			/*
 				{
-					Config: testAccAwsSecretsManagerSecretConfig_RotationRules(rName, 1),
+					Config: testAccSecretConfig_RotationRules(rName, 1),
 					Check: resource.ComposeTestCheckFunc(
-						testAccCheckAwsSecretsManagerSecretExists(resourceName, &secret),
+						testAccCheckSecretExists(resourceName, &secret),
 						resource.TestCheckResourceAttr(resourceName, "rotation_enabled", "true"),
 						resource.TestCheckResourceAttr(resourceName, "rotation_rules.#", "1"),
 						resource.TestCheckResourceAttr(resourceName, "rotation_rules.0.automatically_after_days", "1"),
@@ -400,9 +400,9 @@ func TestAccAwsSecretsManagerSecret_RotationRules(t *testing.T) {
 			},
 			// Test removing rotation rules on resource update
 			{
-				Config: testAccAwsSecretsManagerSecretConfig_Name(rName),
+				Config: testAccSecretConfig_Name(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSecretsManagerSecretExists(resourceName, &secret),
+					testAccCheckSecretExists(resourceName, &secret),
 					resource.TestCheckResourceAttr(resourceName, "rotation_enabled", "true"), // Must be removed with aws_secretsmanager_secret_rotation after version 2.67.0
 				),
 			},
@@ -416,40 +416,40 @@ func TestAccAwsSecretsManagerSecret_Tags(t *testing.T) {
 	resourceName := "aws_secretsmanager_secret.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSecretsManager(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, secretsmanager.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsSecretsManagerSecretDestroy,
+		CheckDestroy: testAccCheckSecretDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsSecretsManagerSecretConfig_Tags_Single(rName),
+				Config: testAccSecretConfig_Tags_Single(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSecretsManagerSecretExists(resourceName, &secret),
+					testAccCheckSecretExists(resourceName, &secret),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.tag1", "tag1value"),
 				),
 			},
 			{
-				Config: testAccAwsSecretsManagerSecretConfig_Tags_SingleUpdated(rName),
+				Config: testAccSecretConfig_Tags_SingleUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSecretsManagerSecretExists(resourceName, &secret),
+					testAccCheckSecretExists(resourceName, &secret),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.tag1", "tag1value-updated"),
 				),
 			},
 			{
-				Config: testAccAwsSecretsManagerSecretConfig_Tags_Multiple(rName),
+				Config: testAccSecretConfig_Tags_Multiple(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSecretsManagerSecretExists(resourceName, &secret),
+					testAccCheckSecretExists(resourceName, &secret),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.tag1", "tag1value"),
 					resource.TestCheckResourceAttr(resourceName, "tags.tag2", "tag2value"),
 				),
 			},
 			{
-				Config: testAccAwsSecretsManagerSecretConfig_Tags_Single(rName),
+				Config: testAccSecretConfig_Tags_Single(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSecretsManagerSecretExists(resourceName, &secret),
+					testAccCheckSecretExists(resourceName, &secret),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.tag1", "tag1value"),
 				),
@@ -470,30 +470,30 @@ func TestAccAwsSecretsManagerSecret_policy(t *testing.T) {
 	resourceName := "aws_secretsmanager_secret.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSecretsManager(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, secretsmanager.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsSecretsManagerSecretDestroy,
+		CheckDestroy: testAccCheckSecretDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsSecretsManagerSecretConfig_Policy(rName),
+				Config: testAccSecretConfig_Policy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSecretsManagerSecretExists(resourceName, &secret),
+					testAccCheckSecretExists(resourceName, &secret),
 					resource.TestMatchResourceAttr(resourceName, "policy",
 						regexp.MustCompile(`{"Action":"secretsmanager:GetSecretValue".+`)),
 				),
 			},
 			{
-				Config: testAccAwsSecretsManagerSecretConfig_Name(rName),
+				Config: testAccSecretConfig_Name(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSecretsManagerSecretExists(resourceName, &secret),
+					testAccCheckSecretExists(resourceName, &secret),
 					resource.TestCheckResourceAttr(resourceName, "policy", ""),
 				),
 			},
 			{
-				Config: testAccAwsSecretsManagerSecretConfig_Policy(rName),
+				Config: testAccSecretConfig_Policy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSecretsManagerSecretExists(resourceName, &secret),
+					testAccCheckSecretExists(resourceName, &secret),
 					resource.TestMatchResourceAttr(resourceName, "policy",
 						regexp.MustCompile(`{"Action":"secretsmanager:GetSecretValue".+`)),
 				),
@@ -502,7 +502,7 @@ func TestAccAwsSecretsManagerSecret_policy(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsSecretsManagerSecretDestroy(s *terraform.State) error {
+func testAccCheckSecretDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -552,7 +552,7 @@ func testAccCheckAwsSecretsManagerSecretDestroy(s *terraform.State) error {
 
 }
 
-func testAccCheckAwsSecretsManagerSecretExists(resourceName string, secret *secretsmanager.DescribeSecretOutput) resource.TestCheckFunc {
+func testAccCheckSecretExists(resourceName string, secret *secretsmanager.DescribeSecretOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -580,7 +580,7 @@ func testAccCheckAwsSecretsManagerSecretExists(resourceName string, secret *secr
 	}
 }
 
-func testAccPreCheckAWSSecretsManager(t *testing.T) {
+func testAccPreCheck(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn
 
 	input := &secretsmanager.ListSecretsInput{}
@@ -596,7 +596,7 @@ func testAccPreCheckAWSSecretsManager(t *testing.T) {
 	}
 }
 
-func testAccAwsSecretsManagerSecretConfig_Description(rName, description string) string {
+func testAccSecretConfig_Description(rName, description string) string {
 	return fmt.Sprintf(`
 resource "aws_secretsmanager_secret" "test" {
   description = "%s"
@@ -605,7 +605,7 @@ resource "aws_secretsmanager_secret" "test" {
 `, description, rName)
 }
 
-func testAccAwsSecretsManagerSecretConfig_basicReplica(rName string) string {
+func testAccSecretConfig_basicReplica(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(2),
 		fmt.Sprintf(`
@@ -623,7 +623,7 @@ resource "aws_secretsmanager_secret" "test" {
 `, rName))
 }
 
-func testAccAwsSecretsManagerSecretConfig_overwriteReplica(rName string, force_overwrite_replica_secret bool) string {
+func testAccSecretConfig_overwriteReplica(rName string, force_overwrite_replica_secret bool) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(3),
 		fmt.Sprintf(`
@@ -653,7 +653,7 @@ resource "aws_secretsmanager_secret" "test" {
 `, rName, force_overwrite_replica_secret))
 }
 
-func testAccAwsSecretsManagerSecretConfig_overwriteReplicaUpdate(rName string, force_overwrite_replica_secret bool) string {
+func testAccSecretConfig_overwriteReplicaUpdate(rName string, force_overwrite_replica_secret bool) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(3),
 		fmt.Sprintf(`
@@ -683,7 +683,7 @@ resource "aws_secretsmanager_secret" "test" {
 `, rName, force_overwrite_replica_secret))
 }
 
-func testAccAwsSecretsManagerSecretConfig_Name(rName string) string {
+func testAccSecretConfig_Name(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_secretsmanager_secret" "test" {
   name = "%s"
@@ -691,7 +691,7 @@ resource "aws_secretsmanager_secret" "test" {
 `, rName)
 }
 
-func testAccAwsSecretsManagerSecretConfig_withNamePrefix(rName string) string {
+func testAccSecretConfig_withNamePrefix(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_secretsmanager_secret" "test" {
   name_prefix = "%s"
@@ -699,7 +699,7 @@ resource "aws_secretsmanager_secret" "test" {
 `, rName)
 }
 
-func testAccAwsSecretsManagerSecretConfig_KmsKeyID(rName string) string {
+func testAccSecretConfig_KMSKeyID(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test1" {
   deletion_window_in_days = 7
@@ -716,7 +716,7 @@ resource "aws_secretsmanager_secret" "test" {
 `, rName)
 }
 
-func testAccAwsSecretsManagerSecretConfig_KmsKeyID_Updated(rName string) string {
+func testAccSecretConfig_KMSKeyID_Updated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test1" {
   deletion_window_in_days = 7
@@ -733,7 +733,7 @@ resource "aws_secretsmanager_secret" "test" {
 `, rName)
 }
 
-func testAccAwsSecretsManagerSecretConfig_RecoveryWindowInDays(rName string, recoveryWindowInDays int) string {
+func testAccSecretConfig_RecoveryWindowInDays(rName string, recoveryWindowInDays int) string {
 	return fmt.Sprintf(`
 resource "aws_secretsmanager_secret" "test" {
   name                    = %q
@@ -742,7 +742,7 @@ resource "aws_secretsmanager_secret" "test" {
 `, rName, recoveryWindowInDays)
 }
 
-func testAccAwsSecretsManagerSecretConfig_RotationLambdaARN(rName string) string {
+func testAccSecretConfig_RotationLambdaARN(rName string) string {
 	return acctest.ConfigLambdaBase(rName, rName, rName) + fmt.Sprintf(`
 resource "aws_secretsmanager_secret" "test" {
   name                = "%[1]s"
@@ -785,7 +785,7 @@ resource "aws_lambda_permission" "test2" {
 `, rName)
 }
 
-func testAccAwsSecretsManagerSecretConfig_RotationRules(rName string, automaticallyAfterDays int) string {
+func testAccSecretConfig_RotationRules(rName string, automaticallyAfterDays int) string {
 	return acctest.ConfigLambdaBase(rName, rName, rName) + fmt.Sprintf(`
 # Not a real rotation function
 resource "aws_lambda_function" "test" {
@@ -816,7 +816,7 @@ resource "aws_secretsmanager_secret" "test" {
 `, rName, automaticallyAfterDays)
 }
 
-func testAccAwsSecretsManagerSecretConfig_Tags_Single(rName string) string {
+func testAccSecretConfig_Tags_Single(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_secretsmanager_secret" "test" {
   name = "%s"
@@ -828,7 +828,7 @@ resource "aws_secretsmanager_secret" "test" {
 `, rName)
 }
 
-func testAccAwsSecretsManagerSecretConfig_Tags_SingleUpdated(rName string) string {
+func testAccSecretConfig_Tags_SingleUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_secretsmanager_secret" "test" {
   name = "%s"
@@ -840,7 +840,7 @@ resource "aws_secretsmanager_secret" "test" {
 `, rName)
 }
 
-func testAccAwsSecretsManagerSecretConfig_Tags_Multiple(rName string) string {
+func testAccSecretConfig_Tags_Multiple(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_secretsmanager_secret" "test" {
   name = "%s"
@@ -853,7 +853,7 @@ resource "aws_secretsmanager_secret" "test" {
 `, rName)
 }
 
-func testAccAwsSecretsManagerSecretConfig_Policy(rName string) string {
+func testAccSecretConfig_Policy(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q

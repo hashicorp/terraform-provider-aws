@@ -17,16 +17,16 @@ func TestAccDataSourceAwsSecretsManagerSecretRotation_basic(t *testing.T) {
 	datasourceName := "data.aws_secretsmanager_secret_rotation.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckAWSSecretsManager(t) },
+		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, secretsmanager.EndpointsID),
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccDataSourceAwsSecretsManagerSecretRotationConfig_NonExistent,
+				Config:      testAccSecretRotationDataSourceConfig_NonExistent,
 				ExpectError: regexp.MustCompile(`ResourceNotFoundException`),
 			},
 			{
-				Config: testAccDataSourceAwsSecretsManagerSecretRotationConfig_Default(rName, 7),
+				Config: testAccSecretRotationDataSourceConfig_Default(rName, 7),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "rotation_enabled", resourceName, "rotation_enabled"),
 					resource.TestCheckResourceAttrPair(datasourceName, "rotation_lambda_arn", resourceName, "rotation_lambda_arn"),
@@ -37,13 +37,13 @@ func TestAccDataSourceAwsSecretsManagerSecretRotation_basic(t *testing.T) {
 	})
 }
 
-const testAccDataSourceAwsSecretsManagerSecretRotationConfig_NonExistent = `
+const testAccSecretRotationDataSourceConfig_NonExistent = `
 data "aws_secretsmanager_secret_rotation" "test" {
   secret_id = "tf-acc-test-does-not-exist"
 }
 `
 
-func testAccDataSourceAwsSecretsManagerSecretRotationConfig_Default(rName string, automaticallyAfterDays int) string {
+func testAccSecretRotationDataSourceConfig_Default(rName string, automaticallyAfterDays int) string {
 	return acctest.ConfigLambdaBase(rName, rName, rName) + fmt.Sprintf(`
 # Not a real rotation function
 resource "aws_lambda_function" "test" {

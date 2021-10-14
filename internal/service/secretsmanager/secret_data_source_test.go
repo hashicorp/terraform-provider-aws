@@ -14,20 +14,20 @@ import (
 
 func TestAccDataSourceAwsSecretsManagerSecret_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckAWSSecretsManager(t) },
+		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, secretsmanager.EndpointsID),
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccDataSourceAwsSecretsManagerSecretConfig_MissingRequired,
+				Config:      testAccSecretDataSourceConfig_MissingRequired,
 				ExpectError: regexp.MustCompile(`must specify either arn or name`),
 			},
 			{
-				Config:      testAccDataSourceAwsSecretsManagerSecretConfig_MultipleSpecified,
+				Config:      testAccSecretDataSourceConfig_MultipleSpecified,
 				ExpectError: regexp.MustCompile(`specify only arn or name`),
 			},
 			{
-				Config:      testAccDataSourceAwsSecretsManagerSecretConfig_NonExistent,
+				Config:      testAccSecretDataSourceConfig_NonExistent,
 				ExpectError: regexp.MustCompile(`not found`),
 			},
 		},
@@ -40,14 +40,14 @@ func TestAccDataSourceAwsSecretsManagerSecret_ARN(t *testing.T) {
 	datasourceName := "data.aws_secretsmanager_secret.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckAWSSecretsManager(t) },
+		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, secretsmanager.EndpointsID),
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsSecretsManagerSecretConfig_ARN(rName),
+				Config: testAccSecretDataSourceConfig_ARN(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccDataSourceAwsSecretsManagerSecretCheck(datasourceName, resourceName),
+					testAccSecretCheckDataSource(datasourceName, resourceName),
 				),
 			},
 		},
@@ -60,14 +60,14 @@ func TestAccDataSourceAwsSecretsManagerSecret_Name(t *testing.T) {
 	datasourceName := "data.aws_secretsmanager_secret.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckAWSSecretsManager(t) },
+		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, secretsmanager.EndpointsID),
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsSecretsManagerSecretConfig_Name(rName),
+				Config: testAccSecretDataSourceConfig_Name(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccDataSourceAwsSecretsManagerSecretCheck(datasourceName, resourceName),
+					testAccSecretCheckDataSource(datasourceName, resourceName),
 				),
 			},
 		},
@@ -80,21 +80,21 @@ func TestAccDataSourceAwsSecretsManagerSecret_Policy(t *testing.T) {
 	datasourceName := "data.aws_secretsmanager_secret.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckAWSSecretsManager(t) },
+		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, secretsmanager.EndpointsID),
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsSecretsManagerSecretConfig_Policy(rName),
+				Config: testAccSecretDataSourceConfig_Policy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccDataSourceAwsSecretsManagerSecretCheck(datasourceName, resourceName),
+					testAccSecretCheckDataSource(datasourceName, resourceName),
 				),
 			},
 		},
 	})
 }
 
-func testAccDataSourceAwsSecretsManagerSecretCheck(datasourceName, resourceName string) resource.TestCheckFunc {
+func testAccSecretCheckDataSource(datasourceName, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		resource, ok := s.RootModule().Resources[datasourceName]
 		if !ok {
@@ -133,7 +133,7 @@ func testAccDataSourceAwsSecretsManagerSecretCheck(datasourceName, resourceName 
 	}
 }
 
-func testAccDataSourceAwsSecretsManagerSecretConfig_ARN(rName string) string {
+func testAccSecretDataSourceConfig_ARN(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_secretsmanager_secret" "wrong" {
   name = "%[1]s-wrong"
@@ -149,19 +149,19 @@ data "aws_secretsmanager_secret" "test" {
 `, rName)
 }
 
-const testAccDataSourceAwsSecretsManagerSecretConfig_MissingRequired = `
+const testAccSecretDataSourceConfig_MissingRequired = `
 data "aws_secretsmanager_secret" "test" {}
 `
 
 //lintignore:AWSAT003,AWSAT005
-const testAccDataSourceAwsSecretsManagerSecretConfig_MultipleSpecified = `
+const testAccSecretDataSourceConfig_MultipleSpecified = `
 data "aws_secretsmanager_secret" "test" {
   arn  = "arn:aws:secretsmanager:us-east-1:123456789012:secret:tf-acc-test-does-not-exist"
   name = "tf-acc-test-does-not-exist"
 }
 `
 
-func testAccDataSourceAwsSecretsManagerSecretConfig_Name(rName string) string {
+func testAccSecretDataSourceConfig_Name(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_secretsmanager_secret" "wrong" {
   name = "%[1]s-wrong"
@@ -177,7 +177,7 @@ data "aws_secretsmanager_secret" "test" {
 `, rName)
 }
 
-func testAccDataSourceAwsSecretsManagerSecretConfig_Policy(rName string) string {
+func testAccSecretDataSourceConfig_Policy(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_secretsmanager_secret" "test" {
   name = "%[1]s"
@@ -206,7 +206,7 @@ data "aws_secretsmanager_secret" "test" {
 `, rName)
 }
 
-const testAccDataSourceAwsSecretsManagerSecretConfig_NonExistent = `
+const testAccSecretDataSourceConfig_NonExistent = `
 data "aws_secretsmanager_secret" "test" {
   name = "tf-acc-test-does-not-exist"
 }

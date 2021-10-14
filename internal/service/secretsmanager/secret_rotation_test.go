@@ -21,16 +21,16 @@ func TestAccAwsSecretsManagerSecretRotation_basic(t *testing.T) {
 	lambdaFunctionResourceName := "aws_lambda_function.test1"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSecretsManager(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, secretsmanager.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsSecretsManagerSecretRotationDestroy,
+		CheckDestroy: testAccCheckSecretRotationDestroy,
 		Steps: []resource.TestStep{
 			// Test creating secret rotation resource
 			{
-				Config: testAccAwsSecretsManagerSecretRotationConfig(rName, 7),
+				Config: testAccSecretRotationConfig(rName, 7),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSecretsManagerSecretRotationExists(resourceName, &secret),
+					testAccCheckSecretRotationExists(resourceName, &secret),
 					resource.TestCheckResourceAttr(resourceName, "rotation_enabled", "true"),
 					resource.TestCheckResourceAttrPair(resourceName, "rotation_lambda_arn", lambdaFunctionResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "rotation_rules.#", "1"),
@@ -42,9 +42,9 @@ func TestAccAwsSecretsManagerSecretRotation_basic(t *testing.T) {
 			// InvalidRequestException: A previous rotation isn’t complete. That rotation will be reattempted.
 			/*
 				{
-					Config: testAccAwsSecretsManagerSecretConfig_Updated(rName),
+					Config: testAccAWSSecretsManagerSecretConfig_Updated(rName),
 					Check: resource.ComposeTestCheckFunc(
-						testAccCheckAwsSecretsManagerSecretRotationExists(resourceName, &secret),
+						testAccCheckSecretRotationExists(resourceName, &secret),
 						resource.TestCheckResourceAttr(resourceName, "rotation_enabled", "true"),
 						resource.TestMatchResourceAttr(resourceName, "rotation_lambda_arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:lambda:[^:]+:[^:]+:function:%s-2$", rName))),
 					),
@@ -60,7 +60,7 @@ func TestAccAwsSecretsManagerSecretRotation_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsSecretsManagerSecretRotationDestroy(s *terraform.State) error {
+func testAccCheckSecretRotationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -89,7 +89,7 @@ func testAccCheckAwsSecretsManagerSecretRotationDestroy(s *terraform.State) erro
 	return nil
 }
 
-func testAccCheckAwsSecretsManagerSecretRotationExists(resourceName string, secret *secretsmanager.DescribeSecretOutput) resource.TestCheckFunc {
+func testAccCheckSecretRotationExists(resourceName string, secret *secretsmanager.DescribeSecretOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -121,7 +121,7 @@ func testAccCheckAwsSecretsManagerSecretRotationExists(resourceName string, secr
 	}
 }
 
-func testAccAwsSecretsManagerSecretRotationConfig(rName string, automaticallyAfterDays int) string {
+func testAccSecretRotationConfig(rName string, automaticallyAfterDays int) string {
 	return acctest.ConfigLambdaBase(rName, rName, rName) + fmt.Sprintf(`
 # Not a real rotation function
 resource "aws_lambda_function" "test1" {

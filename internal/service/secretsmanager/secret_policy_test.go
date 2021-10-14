@@ -22,11 +22,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_secretsmanager_secret_policy", &resource.Sweeper{
 		Name: "aws_secretsmanager_secret_policy",
-		F:    testSweepSecretsManagerSecretPolicies,
+		F:    sweepSecretPolicies,
 	})
 }
 
-func testSweepSecretsManagerSecretPolicies(region string) error {
+func sweepSecretPolicies(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -74,15 +74,15 @@ func TestAccAwsSecretsManagerSecretPolicy_basic(t *testing.T) {
 	resourceName := "aws_secretsmanager_secret_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSecretsManager(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, secretsmanager.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsSecretsManagerSecretPolicyDestroy,
+		CheckDestroy: testAccCheckSecretPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsSecretsManagerSecretPolicyBasicConfig(rName),
+				Config: testAccSecretPolicyBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSecretsManagerSecretPolicyExists(resourceName, &policy),
+					testAccCheckSecretPolicyExists(resourceName, &policy),
 					resource.TestMatchResourceAttr(resourceName, "policy",
 						regexp.MustCompile(`{"Action":"secretsmanager:GetSecretValue".+`)),
 				),
@@ -94,9 +94,9 @@ func TestAccAwsSecretsManagerSecretPolicy_basic(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"block_public_policy"},
 			},
 			{
-				Config: testAccAwsSecretsManagerSecretPolicyUpdatedConfig(rName),
+				Config: testAccSecretPolicyUpdatedConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSecretsManagerSecretPolicyExists(resourceName, &policy),
+					testAccCheckSecretPolicyExists(resourceName, &policy),
 					resource.TestMatchResourceAttr(resourceName, "policy",
 						regexp.MustCompile(`{"Action":"secretsmanager:\*".+`)),
 				),
@@ -111,15 +111,15 @@ func TestAccAwsSecretsManagerSecretPolicy_blockPublicPolicy(t *testing.T) {
 	resourceName := "aws_secretsmanager_secret_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSecretsManager(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, secretsmanager.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsSecretsManagerSecretPolicyDestroy,
+		CheckDestroy: testAccCheckSecretPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsSecretsManagerSecretPolicyBlockConfig(rName, true),
+				Config: testAccSecretPolicyBlockConfig(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSecretsManagerSecretPolicyExists(resourceName, &policy),
+					testAccCheckSecretPolicyExists(resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "block_public_policy", "true"),
 				),
 			},
@@ -130,16 +130,16 @@ func TestAccAwsSecretsManagerSecretPolicy_blockPublicPolicy(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"block_public_policy"},
 			},
 			{
-				Config: testAccAwsSecretsManagerSecretPolicyBlockConfig(rName, false),
+				Config: testAccSecretPolicyBlockConfig(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSecretsManagerSecretPolicyExists(resourceName, &policy),
+					testAccCheckSecretPolicyExists(resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "block_public_policy", "false"),
 				),
 			},
 			{
-				Config: testAccAwsSecretsManagerSecretPolicyBlockConfig(rName, true),
+				Config: testAccSecretPolicyBlockConfig(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSecretsManagerSecretPolicyExists(resourceName, &policy),
+					testAccCheckSecretPolicyExists(resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "block_public_policy", "true"),
 				),
 			},
@@ -153,15 +153,15 @@ func TestAccAwsSecretsManagerSecretPolicy_disappears(t *testing.T) {
 	resourceName := "aws_secretsmanager_secret_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSecretsManager(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, secretsmanager.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsSecretsManagerSecretPolicyDestroy,
+		CheckDestroy: testAccCheckSecretPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsSecretsManagerSecretPolicyBasicConfig(rName),
+				Config: testAccSecretPolicyBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSecretsManagerSecretPolicyExists(resourceName, &policy),
+					testAccCheckSecretPolicyExists(resourceName, &policy),
 					acctest.CheckResourceDisappears(acctest.Provider, tfsecretsmanager.ResourceSecretPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -170,7 +170,7 @@ func TestAccAwsSecretsManagerSecretPolicy_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsSecretsManagerSecretPolicyDestroy(s *terraform.State) error {
+func testAccCheckSecretPolicyDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -236,7 +236,7 @@ func testAccCheckAwsSecretsManagerSecretPolicyDestroy(s *terraform.State) error 
 
 }
 
-func testAccCheckAwsSecretsManagerSecretPolicyExists(resourceName string, policy *secretsmanager.GetResourcePolicyOutput) resource.TestCheckFunc {
+func testAccCheckSecretPolicyExists(resourceName string, policy *secretsmanager.GetResourcePolicyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -264,7 +264,7 @@ func testAccCheckAwsSecretsManagerSecretPolicyExists(resourceName string, policy
 	}
 }
 
-func testAccAwsSecretsManagerSecretPolicyBasicConfig(rName string) string {
+func testAccSecretPolicyBasicConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name               = %[1]q
@@ -312,7 +312,7 @@ POLICY
 `, rName)
 }
 
-func testAccAwsSecretsManagerSecretPolicyUpdatedConfig(rName string) string {
+func testAccSecretPolicyUpdatedConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_secretsmanager_secret" "test" {
   name = %[1]q
@@ -341,7 +341,7 @@ POLICY
 `, rName)
 }
 
-func testAccAwsSecretsManagerSecretPolicyBlockConfig(rName string, block bool) string {
+func testAccSecretPolicyBlockConfig(rName string, block bool) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name               = %[1]q
