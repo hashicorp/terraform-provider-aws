@@ -144,7 +144,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		rKey := InstanceAttributeMapping()[att]
 
 		if v, ok := d.GetOk(rKey); ok {
-			err := resourceAwsConnectInstanceUpdateAttribute(ctx, conn, d.Id(), att, strconv.FormatBool(v.(bool)))
+			err := resourceInstanceUpdateAttribute(ctx, conn, d.Id(), att, strconv.FormatBool(v.(bool)))
 			//Pre-release attribute, user/account/instance now allow-listed
 			if err != nil && tfawserr.ErrCodeEquals(err, ErrCodeAccessDeniedException) || tfawserr.ErrMessageContains(err, ErrCodeAccessDeniedException, "not authorized to update") {
 				log.Printf("[WARN] error setting Connect instance (%s) attribute (%s): %s", d.Id(), att, err)
@@ -164,7 +164,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		rKey := InstanceAttributeMapping()[att]
 		if d.HasChange(rKey) {
 			_, n := d.GetChange(rKey)
-			err := resourceAwsConnectInstanceUpdateAttribute(ctx, conn, d.Id(), att, strconv.FormatBool(n.(bool)))
+			err := resourceInstanceUpdateAttribute(ctx, conn, d.Id(), att, strconv.FormatBool(n.(bool)))
 			//Pre-release attribute, user/account/instance now allow-listed
 			if err != nil && tfawserr.ErrCodeEquals(err, ErrCodeAccessDeniedException) || tfawserr.ErrMessageContains(err, ErrCodeAccessDeniedException, "not authorized to update") {
 				log.Printf("[WARN] error setting Connect instance (%s) attribute (%s): %s", d.Id(), att, err)
@@ -209,7 +209,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("status", instance.InstanceStatus)
 
 	for att := range InstanceAttributeMapping() {
-		value, err := resourceAwsConnectInstanceReadAttribute(ctx, conn, d.Id(), att)
+		value, err := resourceInstanceReadAttribute(ctx, conn, d.Id(), att)
 		if err != nil {
 			return diag.FromErr(fmt.Errorf("error reading Connect instance (%s) attribute (%s): %s", d.Id(), att, err))
 		}
@@ -244,7 +244,7 @@ func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta in
 	return nil
 }
 
-func resourceAwsConnectInstanceUpdateAttribute(ctx context.Context, conn *connect.Connect, instanceID string, attributeType string, value string) error {
+func resourceInstanceUpdateAttribute(ctx context.Context, conn *connect.Connect, instanceID string, attributeType string, value string) error {
 	input := &connect.UpdateInstanceAttributeInput{
 		InstanceId:    aws.String(instanceID),
 		AttributeType: aws.String(attributeType),
@@ -258,7 +258,7 @@ func resourceAwsConnectInstanceUpdateAttribute(ctx context.Context, conn *connec
 	return nil
 }
 
-func resourceAwsConnectInstanceReadAttribute(ctx context.Context, conn *connect.Connect, instanceID string, attributeType string) (bool, error) {
+func resourceInstanceReadAttribute(ctx context.Context, conn *connect.Connect, instanceID string, attributeType string) (bool, error) {
 	input := &connect.DescribeInstanceAttributeInput{
 		InstanceId:    aws.String(instanceID),
 		AttributeType: aws.String(attributeType),

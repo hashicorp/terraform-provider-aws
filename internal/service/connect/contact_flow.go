@@ -115,7 +115,7 @@ func resourceContactFlowCreate(ctx context.Context, d *schema.ResourceData, meta
 		// See https://github.com/hashicorp/terraform/issues/9364
 		conns.GlobalMutexKV.Lock(awsMutexConnectContactFlowKey)
 		defer conns.GlobalMutexKV.Unlock(awsMutexConnectContactFlowKey)
-		file, err := resourceAwsConnectContactFlowLoadFileContent(filename)
+		file, err := resourceContactFlowLoadFileContent(filename)
 		if err != nil {
 			return diag.FromErr(fmt.Errorf("unable to load %q: %w", filename, err))
 		}
@@ -232,7 +232,7 @@ func resourceContactFlowUpdate(ctx context.Context, d *schema.ResourceData, meta
 			// See https://github.com/hashicorp/terraform/issues/9364
 			conns.GlobalMutexKV.Lock(awsMutexConnectContactFlowKey)
 			defer conns.GlobalMutexKV.Unlock(awsMutexConnectContactFlowKey)
-			file, err := resourceAwsConnectContactFlowLoadFileContent(filename)
+			file, err := resourceContactFlowLoadFileContent(filename)
 			if err != nil {
 				return diag.FromErr(fmt.Errorf("unable to load %q: %w", filename, err))
 			}
@@ -294,7 +294,7 @@ func ContactFlowParseID(id string) (string, string, error) {
 	return parts[0], parts[1], nil
 }
 
-func resourceAwsConnectContactFlowLoadFileContent(filename string) (string, error) {
+func resourceContactFlowLoadFileContent(filename string) (string, error) {
 	filename, err := homedir.Expand(filename)
 	if err != nil {
 		return "", err

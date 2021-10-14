@@ -111,7 +111,7 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	} else if v, ok := d.GetOk("instance_alias"); ok {
 		instanceAlias := v.(string)
 
-		instanceSummary, err := dataSourceAwsConnectGetConnectInstanceSummaryByInstanceAlias(ctx, conn, instanceAlias)
+		instanceSummary, err := dataSourceGetConnectInstanceSummaryByInstanceAlias(ctx, conn, instanceAlias)
 
 		if err != nil {
 			return diag.FromErr(fmt.Errorf("error finding Connect Instance Summary by instance_alias (%s): %w", instanceAlias, err))
@@ -150,7 +150,7 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("status", matchedInstance.InstanceStatus)
 
 	for att := range InstanceAttributeMapping() {
-		value, err := dataResourceAwsConnectInstanceReadAttribute(ctx, conn, d.Id(), att)
+		value, err := dataSourceInstanceReadAttribute(ctx, conn, d.Id(), att)
 		if err != nil {
 			return diag.FromErr(fmt.Errorf("error reading Connect Instance (%s) attribute (%s): %w", d.Id(), att, err))
 		}
@@ -160,7 +160,7 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	return nil
 }
 
-func dataSourceAwsConnectGetConnectInstanceSummaryByInstanceAlias(ctx context.Context, conn *connect.Connect, instanceAlias string) (*connect.InstanceSummary, error) {
+func dataSourceGetConnectInstanceSummaryByInstanceAlias(ctx context.Context, conn *connect.Connect, instanceAlias string) (*connect.InstanceSummary, error) {
 	var result *connect.InstanceSummary
 
 	input := &connect.ListInstancesInput{
@@ -193,7 +193,7 @@ func dataSourceAwsConnectGetConnectInstanceSummaryByInstanceAlias(ctx context.Co
 	return result, nil
 }
 
-func dataResourceAwsConnectInstanceReadAttribute(ctx context.Context, conn *connect.Connect, instanceID string, attributeType string) (bool, error) {
+func dataSourceInstanceReadAttribute(ctx context.Context, conn *connect.Connect, instanceID string, attributeType string) (bool, error) {
 	input := &connect.DescribeInstanceAttributeInput{
 		InstanceId:    aws.String(instanceID),
 		AttributeType: aws.String(attributeType),
