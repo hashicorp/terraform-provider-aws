@@ -238,7 +238,7 @@ func resourceAwsFsxOntapFileSystemCreate(d *schema.ResourceData, meta interface{
 		FileSystemType:     aws.String(fsx.FileSystemTypeOntap),
 		StorageCapacity:    aws.Int64(int64(d.Get("storage_capacity").(int))),
 		StorageType:        aws.String(d.Get("storage_type").(string)),
-		SubnetIds:          expandStringList(d.Get("subnet_ids").([]interface{})),
+		SubnetIds:          flex.ExpandStringList(d.Get("subnet_ids").([]interface{})),
 		OntapConfiguration: &fsx.CreateFileSystemOntapConfiguration{
 			DeploymentType:               aws.String(d.Get("deployment_type").(string)),
 			AutomaticBackupRetentionDays: aws.Int64(int64(d.Get("automatic_backup_retention_days").(int))),
@@ -268,11 +268,11 @@ func resourceAwsFsxOntapFileSystemCreate(d *schema.ResourceData, meta interface{
 	}
 
 	if v, ok := d.GetOk("route_table_ids"); ok {
-		input.OntapConfiguration.RouteTableIds = expandStringSet(v.(*schema.Set))
+		input.OntapConfiguration.RouteTableIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("security_group_ids"); ok {
-		input.SecurityGroupIds = expandStringSet(v.(*schema.Set))
+		input.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("weekly_maintenance_start_time"); ok {
@@ -506,7 +506,7 @@ func flattenFsxOntapFileSystemEndpoint(rs *fsx.FileSystemEndpoint) []interface{}
 		m["dns_name"] = aws.StringValue(rs.DNSName)
 	}
 	if rs.IpAddresses != nil {
-		m["ip_addresses"] = flattenStringSet(rs.IpAddresses)
+		m["ip_addresses"] = flex.FlattenStringSet(rs.IpAddresses)
 	}
 
 	return []interface{}{m}

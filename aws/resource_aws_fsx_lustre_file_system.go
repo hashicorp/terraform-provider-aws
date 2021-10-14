@@ -232,7 +232,7 @@ func resourceAwsFsxLustreFileSystemCreate(d *schema.ResourceData, meta interface
 		FileSystemType:     aws.String(fsx.FileSystemTypeLustre),
 		StorageCapacity:    aws.Int64(int64(d.Get("storage_capacity").(int))),
 		StorageType:        aws.String(d.Get("storage_type").(string)),
-		SubnetIds:          expandStringList(d.Get("subnet_ids").([]interface{})),
+		SubnetIds:          flex.ExpandStringList(d.Get("subnet_ids").([]interface{})),
 		LustreConfiguration: &fsx.CreateFileSystemLustreConfiguration{
 			DeploymentType: aws.String(d.Get("deployment_type").(string)),
 		},
@@ -241,7 +241,7 @@ func resourceAwsFsxLustreFileSystemCreate(d *schema.ResourceData, meta interface
 	backupInput := &fsx.CreateFileSystemFromBackupInput{
 		ClientRequestToken: aws.String(resource.UniqueId()),
 		StorageType:        aws.String(d.Get("storage_type").(string)),
-		SubnetIds:          expandStringList(d.Get("subnet_ids").([]interface{})),
+		SubnetIds:          flex.ExpandStringList(d.Get("subnet_ids").([]interface{})),
 		LustreConfiguration: &fsx.CreateFileSystemLustreConfiguration{
 			DeploymentType: aws.String(d.Get("deployment_type").(string)),
 		},
@@ -279,8 +279,8 @@ func resourceAwsFsxLustreFileSystemCreate(d *schema.ResourceData, meta interface
 	}
 
 	if v, ok := d.GetOk("security_group_ids"); ok {
-		input.SecurityGroupIds = expandStringSet(v.(*schema.Set))
-		backupInput.SecurityGroupIds = expandStringSet(v.(*schema.Set))
+		input.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
+		backupInput.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if len(tags) > 0 {
