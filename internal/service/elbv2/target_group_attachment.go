@@ -16,9 +16,9 @@ import (
 
 func ResourceTargetGroupAttachment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLbAttachmentCreate,
-		Read:   resourceAwsLbAttachmentRead,
-		Delete: resourceAwsLbAttachmentDelete,
+		Create: resourceAttachmentCreate,
+		Read:   resourceAttachmentRead,
+		Delete: resourceAttachmentDelete,
 
 		Schema: map[string]*schema.Schema{
 			"target_group_arn": {
@@ -48,7 +48,7 @@ func ResourceTargetGroupAttachment() *schema.Resource {
 	}
 }
 
-func resourceAwsLbAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBV2Conn
 
 	target := &elbv2.TargetDescription{
@@ -97,7 +97,7 @@ func resourceAwsLbAttachmentCreate(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func resourceAwsLbAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBV2Conn
 
 	target := &elbv2.TargetDescription{
@@ -125,9 +125,9 @@ func resourceAwsLbAttachmentDelete(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-// resourceAwsLbAttachmentRead requires all of the fields in order to describe the correct
+// resourceAttachmentRead requires all of the fields in order to describe the correct
 // target, so there is no work to do beyond ensuring that the target and group still exist.
-func resourceAwsLbAttachmentRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAttachmentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBV2Conn
 
 	target := &elbv2.TargetDescription{

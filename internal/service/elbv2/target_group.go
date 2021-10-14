@@ -27,7 +27,7 @@ func ResourceTargetGroup() *schema.Resource {
 	return &schema.Resource{
 		// NLBs have restrictions on them at this time
 		CustomizeDiff: customdiff.Sequence(
-			resourceAwsLbTargetGroupCustomizeDiff,
+			resourceTargetGroupCustomizeDiff,
 			verify.SetTagsDiff,
 		),
 
@@ -86,13 +86,13 @@ func ResourceTargetGroup() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
-							ValidateFunc: validateAwsLbTargetGroupHealthCheckPath,
+							ValidateFunc: validTargetGroupHealthCheckPath,
 						},
 						"port": {
 							Type:             schema.TypeString,
 							Optional:         true,
 							Default:          "traffic-port",
-							ValidateFunc:     validateAwsLbTargetGroupHealthCheckPort,
+							ValidateFunc:     validTargetGroupHealthCheckPort,
 							DiffSuppressFunc: suppressIfTargetType(elbv2.TargetTypeEnumLambda),
 						},
 						"protocol": {
@@ -564,7 +564,7 @@ func resourceTargetGroupRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	return flattenAwsLbTargetGroupResource(d, meta, targetGroup)
+	return flattenTargetGroupResource(d, meta, targetGroup)
 }
 
 func resourceTargetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -794,7 +794,7 @@ func resourceTargetGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func validateAwsLbTargetGroupHealthCheckPath(v interface{}, k string) (ws []string, errors []error) {
+func validTargetGroupHealthCheckPath(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if len(value) > 1024 {
 		errors = append(errors, fmt.Errorf(
@@ -820,7 +820,7 @@ func validateSlowStart(v interface{}, k string) (ws []string, errors []error) {
 	return
 }
 
-func validateAwsLbTargetGroupHealthCheckPort(v interface{}, k string) (ws []string, errors []error) {
+func validTargetGroupHealthCheckPort(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 
 	if value == "traffic-port" {
@@ -853,8 +853,8 @@ func TargetGroupSuffixFromARN(arn *string) string {
 	return ""
 }
 
-// flattenAwsLbTargetGroupResource takes a *elbv2.TargetGroup and populates all respective resource fields.
-func flattenAwsLbTargetGroupResource(d *schema.ResourceData, meta interface{}, targetGroup *elbv2.TargetGroup) error {
+// flattenTargetGroupResource takes a *elbv2.TargetGroup and populates all respective resource fields.
+func flattenTargetGroupResource(d *schema.ResourceData, meta interface{}, targetGroup *elbv2.TargetGroup) error {
 	conn := meta.(*conns.AWSClient).ELBV2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -920,7 +920,7 @@ func flattenAwsLbTargetGroupResource(d *schema.ResourceData, meta interface{}, t
 		}
 	}
 
-	stickinessAttr, err := flattenAwsLbTargetGroupStickiness(attrResp.Attributes)
+	stickinessAttr, err := flattenTargetGroupStickiness(attrResp.Attributes)
 	if err != nil {
 		return fmt.Errorf("error flattening stickiness: %w", err)
 	}
@@ -949,7 +949,7 @@ func flattenAwsLbTargetGroupResource(d *schema.ResourceData, meta interface{}, t
 	return nil
 }
 
-func flattenAwsLbTargetGroupStickiness(attributes []*elbv2.TargetGroupAttribute) ([]interface{}, error) {
+func flattenTargetGroupStickiness(attributes []*elbv2.TargetGroupAttribute) ([]interface{}, error) {
 	if len(attributes) == 0 {
 		return []interface{}{}, nil
 	}
@@ -990,7 +990,7 @@ func flattenAwsLbTargetGroupStickiness(attributes []*elbv2.TargetGroupAttribute)
 	return []interface{}{m}, nil
 }
 
-func resourceAwsLbTargetGroupCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+func resourceTargetGroupCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 	protocol := diff.Get("protocol").(string)
 
 	// Network Load Balancers have many special quirks to them.

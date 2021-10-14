@@ -245,7 +245,7 @@ func dataSourceTargetGroupRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	stickinessAttr, err := flattenAwsLbTargetGroupStickiness(attrResp.Attributes)
+	stickinessAttr, err := flattenTargetGroupStickiness(attrResp.Attributes)
 	if err != nil {
 		return fmt.Errorf("error flattening stickiness: %w", err)
 	}

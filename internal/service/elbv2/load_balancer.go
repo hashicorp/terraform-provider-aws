@@ -379,7 +379,7 @@ func resourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	return flattenAwsLbResource(d, meta, lb)
+	return flattenResource(d, meta, lb)
 }
 
 func resourceLoadBalancerUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -737,8 +737,8 @@ func SuffixFromARN(arn *string) string {
 	return ""
 }
 
-// flattenAwsLbResource takes a *elbv2.LoadBalancer and populates all respective resource fields.
-func flattenAwsLbResource(d *schema.ResourceData, meta interface{}, lb *elbv2.LoadBalancer) error {
+// flattenResource takes a *elbv2.LoadBalancer and populates all respective resource fields.
+func flattenResource(d *schema.ResourceData, meta interface{}, lb *elbv2.LoadBalancer) error {
 	conn := meta.(*conns.AWSClient).ELBV2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig

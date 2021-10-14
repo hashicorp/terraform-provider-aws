@@ -26,10 +26,10 @@ import (
 
 func ResourceListenerRule() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLbListenerRuleCreate,
-		Read:   resourceAwsLbListenerRuleRead,
-		Update: resourceAwsLbListenerRuleUpdate,
-		Delete: resourceAwsLbListenerRuleDelete,
+		Create: resourceListenerRuleCreate,
+		Read:   resourceListenerRuleRead,
+		Update: resourceListenerRuleUpdate,
+		Delete: resourceListenerRuleDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -50,7 +50,7 @@ func ResourceListenerRule() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ValidateFunc: validateAwsLbListenerRulePriority,
+				ValidateFunc: validListenerRulePriority,
 			},
 			"action": {
 				Type:     schema.TypeList,
@@ -476,7 +476,7 @@ func suppressIfActionTypeNot(t string) schema.SchemaDiffSuppressFunc {
 	}
 }
 
-func resourceAwsLbListenerRuleCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceListenerRuleCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBV2Conn
 	listenerArn := d.Get("listener_arn").(string)
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -546,10 +546,10 @@ func resourceAwsLbListenerRuleCreate(d *schema.ResourceData, meta interface{}) e
 
 	d.SetId(aws.StringValue(resp.Rules[0].RuleArn))
 
-	return resourceAwsLbListenerRuleRead(d, meta)
+	return resourceListenerRuleRead(d, meta)
 }
 
-func resourceAwsLbListenerRuleRead(d *schema.ResourceData, meta interface{}) error {
+func resourceListenerRuleRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBV2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -790,7 +790,7 @@ func resourceAwsLbListenerRuleRead(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func resourceAwsLbListenerRuleUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceListenerRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBV2Conn
 
 	if d.HasChange("priority") {
@@ -870,10 +870,10 @@ func resourceAwsLbListenerRuleUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
-	return resourceAwsLbListenerRuleRead(d, meta)
+	return resourceListenerRuleRead(d, meta)
 }
 
-func resourceAwsLbListenerRuleDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceListenerRuleDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBV2Conn
 
 	_, err := conn.DeleteRule(&elbv2.DeleteRuleInput{
@@ -885,7 +885,7 @@ func resourceAwsLbListenerRuleDelete(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func validateAwsLbListenerRulePriority(v interface{}, k string) (ws []string, errors []error) {
+func validListenerRulePriority(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(int)
 	if value < 1 || (value > 50000 && value != 99999) {
 		errors = append(errors, fmt.Errorf("%q must be in the range 1-50000 for normal rule or 99999 for default rule", k))

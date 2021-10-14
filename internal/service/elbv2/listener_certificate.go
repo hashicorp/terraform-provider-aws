@@ -99,7 +99,7 @@ func resourceListenerCertificateRead(d *schema.ResourceData, meta interface{}) e
 	var certificate *elbv2.Certificate
 	err = resource.Retry(1*time.Minute, func() *resource.RetryError {
 		var err error
-		certificate, err = findAwsLbListenerCertificate(certificateArn, listenerArn, true, nil, conn)
+		certificate, err = findListenerCertificate(certificateArn, listenerArn, true, nil, conn)
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
@@ -115,7 +115,7 @@ func resourceListenerCertificateRead(d *schema.ResourceData, meta interface{}) e
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		certificate, err = findAwsLbListenerCertificate(certificateArn, listenerArn, true, nil, conn)
+		certificate, err = findListenerCertificate(certificateArn, listenerArn, true, nil, conn)
 	}
 	if err != nil {
 		if certificate == nil {
@@ -163,7 +163,7 @@ func resourceListenerCertificateDelete(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
-func findAwsLbListenerCertificate(certificateArn, listenerArn string, skipDefault bool, nextMarker *string, conn *elbv2.ELBV2) (*elbv2.Certificate, error) {
+func findListenerCertificate(certificateArn, listenerArn string, skipDefault bool, nextMarker *string, conn *elbv2.ELBV2) (*elbv2.Certificate, error) {
 	params := &elbv2.DescribeListenerCertificatesInput{
 		ListenerArn: aws.String(listenerArn),
 		PageSize:    aws.Int64(400),
@@ -188,7 +188,7 @@ func findAwsLbListenerCertificate(certificateArn, listenerArn string, skipDefaul
 	}
 
 	if resp.NextMarker != nil {
-		return findAwsLbListenerCertificate(certificateArn, listenerArn, skipDefault, resp.NextMarker, conn)
+		return findListenerCertificate(certificateArn, listenerArn, skipDefault, resp.NextMarker, conn)
 	}
 	return nil, nil
 }
