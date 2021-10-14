@@ -7,10 +7,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceLaunchPaths() *schema.Resource {
@@ -57,7 +58,7 @@ func DataSourceLaunchPaths() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"tags": tagsSchemaComputed(),
+						"tags": tftags.TagsSchemaComputed(),
 					},
 				},
 			},
@@ -84,7 +85,7 @@ func dataSourceLaunchPathsRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func flattenServiceCatalogLaunchPathSummary(apiObject *servicecatalog.LaunchPathSummary, ignoreTagsConfig *keyvaluetags.IgnoreConfig) map[string]interface{} {
+func flattenServiceCatalogLaunchPathSummary(apiObject *servicecatalog.LaunchPathSummary, ignoreTagsConfig *tftags.IgnoreConfig) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -103,14 +104,14 @@ func flattenServiceCatalogLaunchPathSummary(apiObject *servicecatalog.LaunchPath
 		tfMap["name"] = aws.StringValue(apiObject.Name)
 	}
 
-	tags := keyvaluetags.ServicecatalogKeyValueTags(apiObject.Tags)
+	tags := tftags.ServicecatalogKeyValueTags(apiObject.Tags)
 
 	tfMap["tags"] = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()
 
 	return tfMap
 }
 
-func flattenServiceCatalogLaunchPathSummaries(apiObjects []*servicecatalog.LaunchPathSummary, ignoreTagsConfig *keyvaluetags.IgnoreConfig) []interface{} {
+func flattenServiceCatalogLaunchPathSummaries(apiObjects []*servicecatalog.LaunchPathSummary, ignoreTagsConfig *tftags.IgnoreConfig) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}

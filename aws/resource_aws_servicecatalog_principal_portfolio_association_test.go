@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // add sweeper to delete known test servicecat principal portfolio associations

@@ -1,20 +1,21 @@
 //go:build !generate
 // +build !generate
 
-package keyvaluetags
+package servicecatalog
 
 import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // Custom Service Catalog tag service update functions using the same format as generated code.
 
-func ServiceCatalogPortfolioUpdateTags(conn *servicecatalog.ServiceCatalog, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
-	oldTags := New(oldTagsMap)
-	newTags := New(newTagsMap)
+func portfolioUpdateTags(conn *servicecatalog.ServiceCatalog, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := tftags.New(oldTagsMap)
+	newTags := tftags.New(newTagsMap)
 
 	input := &servicecatalog.UpdatePortfolioInput{
 		Id: aws.String(identifier),
@@ -37,9 +38,9 @@ func ServiceCatalogPortfolioUpdateTags(conn *servicecatalog.ServiceCatalog, iden
 	return nil
 }
 
-func ServiceCatalogProductUpdateTags(conn *servicecatalog.ServiceCatalog, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
-	oldTags := New(oldTagsMap)
-	newTags := New(newTagsMap)
+func productUpdateTags(conn *servicecatalog.ServiceCatalog, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := tftags.New(oldTagsMap)
+	newTags := tftags.New(newTagsMap)
 
 	input := &servicecatalog.UpdateProductInput{
 		Id: aws.String(identifier),
@@ -62,12 +63,12 @@ func ServiceCatalogProductUpdateTags(conn *servicecatalog.ServiceCatalog, identi
 	return nil
 }
 
-func ServicecatalogRecordKeyValueTags(tags []*servicecatalog.RecordTag) KeyValueTags {
+func recordKeyValueTags(tags []*servicecatalog.RecordTag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
 		m[aws.StringValue(tag.Key)] = tag.Value
 	}
 
-	return New(m)
+	return tftags.New(m)
 }
