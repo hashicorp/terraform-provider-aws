@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/inspector"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSInspectorResourceGroup_basic(t *testing.T) {
@@ -16,8 +17,8 @@ func TestAccAWSInspectorResourceGroup_basic(t *testing.T) {
 	resourceName := "aws_inspector_resource_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, inspector.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, inspector.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
@@ -25,7 +26,7 @@ func TestAccAWSInspectorResourceGroup_basic(t *testing.T) {
 				Config: testAccAWSInspectorResourceGroup,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSInspectorResourceGroupExists(resourceName, &v1),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "inspector", regexp.MustCompile(`resourcegroup/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "inspector", regexp.MustCompile(`resourcegroup/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "foo"),
 				),
 			},
@@ -33,7 +34,7 @@ func TestAccAWSInspectorResourceGroup_basic(t *testing.T) {
 				Config: testAccCheckAWSInspectorResourceGroupModified,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSInspectorResourceGroupExists(resourceName, &v2),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "inspector", regexp.MustCompile(`resourcegroup/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "inspector", regexp.MustCompile(`resourcegroup/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "bar"),
 					testAccCheckAWSInspectorResourceGroupRecreated(&v1, &v2),
 				),

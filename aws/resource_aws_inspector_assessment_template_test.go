@@ -8,19 +8,20 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/inspector"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSInspectorTemplate_basic(t *testing.T) {
 	var v inspector.AssessmentTemplate
 	resourceName := "aws_inspector_assessment_template.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, inspector.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, inspector.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSInspectorTemplateDestroy,
 		Steps: []resource.TestStep{
@@ -28,7 +29,7 @@ func TestAccAWSInspectorTemplate_basic(t *testing.T) {
 				Config: testAccAWSInspectorTemplateAssessmentBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSInspectorTemplateExists(resourceName, &v),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "inspector", regexp.MustCompile(`target/.+/template/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "inspector", regexp.MustCompile(`target/.+/template/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "duration", "3600"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "rules_package_arns.#", "data.aws_inspector_rules_packages.available", "arns.#"),
@@ -48,11 +49,11 @@ func TestAccAWSInspectorTemplate_basic(t *testing.T) {
 func TestAccAWSInspectorTemplate_disappears(t *testing.T) {
 	var v inspector.AssessmentTemplate
 	resourceName := "aws_inspector_assessment_template.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, inspector.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, inspector.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSInspectorTemplateDestroy,
 		Steps: []resource.TestStep{
@@ -71,11 +72,11 @@ func TestAccAWSInspectorTemplate_disappears(t *testing.T) {
 func TestAccAWSInspectorTemplate_tags(t *testing.T) {
 	var v inspector.AssessmentTemplate
 	resourceName := "aws_inspector_assessment_template.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, inspector.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, inspector.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSInspectorTemplateDestroy,
 		Steps: []resource.TestStep{
