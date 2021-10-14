@@ -69,7 +69,7 @@ func testSweepSesConfigurationSets(region string) error {
 }
 
 func TestAccAWSSESConfigurationSet_basic(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ses_configuration_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -78,7 +78,7 @@ func TestAccAWSSESConfigurationSet_basic(t *testing.T) {
 			testAccPreCheckAWSSES(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSESConfigurationSetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -103,7 +103,7 @@ func TestAccAWSSESConfigurationSet_basic(t *testing.T) {
 }
 
 func TestAccAWSSESConfigurationSet_sendingEnabled(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ses_configuration_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -112,7 +112,7 @@ func TestAccAWSSESConfigurationSet_sendingEnabled(t *testing.T) {
 			testAccPreCheckAWSSES(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSESConfigurationSetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -149,7 +149,7 @@ func TestAccAWSSESConfigurationSet_sendingEnabled(t *testing.T) {
 }
 
 func TestAccAWSSESConfigurationSet_reputationMetricsEnabled(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ses_configuration_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -158,7 +158,7 @@ func TestAccAWSSESConfigurationSet_reputationMetricsEnabled(t *testing.T) {
 			testAccPreCheckAWSSES(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSESConfigurationSetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -192,7 +192,7 @@ func TestAccAWSSESConfigurationSet_reputationMetricsEnabled(t *testing.T) {
 }
 
 func TestAccAWSSESConfigurationSet_deliveryOptions(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ses_configuration_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -201,7 +201,7 @@ func TestAccAWSSESConfigurationSet_deliveryOptions(t *testing.T) {
 			testAccPreCheckAWSSES(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSESConfigurationSetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -222,7 +222,7 @@ func TestAccAWSSESConfigurationSet_deliveryOptions(t *testing.T) {
 }
 
 func TestAccAWSSESConfigurationSet_update_deliveryOptions(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ses_configuration_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -231,7 +231,7 @@ func TestAccAWSSESConfigurationSet_update_deliveryOptions(t *testing.T) {
 			testAccPreCheckAWSSES(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSESConfigurationSetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -278,7 +278,7 @@ func TestAccAWSSESConfigurationSet_update_deliveryOptions(t *testing.T) {
 }
 
 func TestAccAWSSESConfigurationSet_emptyDeliveryOptions(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ses_configuration_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -287,7 +287,7 @@ func TestAccAWSSESConfigurationSet_emptyDeliveryOptions(t *testing.T) {
 			testAccPreCheckAWSSES(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSESConfigurationSetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -308,7 +308,7 @@ func TestAccAWSSESConfigurationSet_emptyDeliveryOptions(t *testing.T) {
 }
 
 func TestAccAWSSESConfigurationSet_update_emptyDeliveryOptions(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ses_configuration_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -317,7 +317,7 @@ func TestAccAWSSESConfigurationSet_update_emptyDeliveryOptions(t *testing.T) {
 			testAccPreCheckAWSSES(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSESConfigurationSetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -357,7 +357,7 @@ func TestAccAWSSESConfigurationSet_update_emptyDeliveryOptions(t *testing.T) {
 }
 
 func TestAccAWSSESConfigurationSet_disappears(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ses_configuration_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -366,14 +366,14 @@ func TestAccAWSSESConfigurationSet_disappears(t *testing.T) {
 			testAccPreCheckAWSSES(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSESConfigurationSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSESConfigurationSetBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSESConfigurationSetExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSesConfigurationSet(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSesConfigurationSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -392,7 +392,7 @@ func testAccCheckAwsSESConfigurationSetExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("SES configuration set ID not set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).sesconn
+		conn := acctest.Provider.Meta().(*AWSClient).sesconn
 
 		response, err := conn.DescribeConfigurationSet(&ses.DescribeConfigurationSetInput{
 			ConfigurationSetName: aws.String(rs.Primary.ID),
@@ -411,7 +411,7 @@ func testAccCheckAwsSESConfigurationSetExists(n string) resource.TestCheckFunc {
 }
 
 func testAccCheckSESConfigurationSetDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).sesconn
+	conn := acctest.Provider.Meta().(*AWSClient).sesconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ses_configuration_set" {

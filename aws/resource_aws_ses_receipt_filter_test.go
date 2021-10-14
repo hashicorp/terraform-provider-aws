@@ -14,12 +14,12 @@ import (
 
 func TestAccAWSSESReceiptFilter_basic(t *testing.T) {
 	resourceName := "aws_ses_receipt_filter.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSES(t); testAccPreCheckSESReceiptRule(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSESReceiptFilterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -43,19 +43,19 @@ func TestAccAWSSESReceiptFilter_basic(t *testing.T) {
 
 func TestAccAWSSESReceiptFilter_disappears(t *testing.T) {
 	resourceName := "aws_ses_receipt_filter.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSES(t); testAccPreCheckSESReceiptRule(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSESReceiptFilterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSESReceiptFilterConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSESReceiptFilterExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSesReceiptFilter(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSesReceiptFilter(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -64,7 +64,7 @@ func TestAccAWSSESReceiptFilter_disappears(t *testing.T) {
 }
 
 func testAccCheckSESReceiptFilterDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).sesconn
+	conn := acctest.Provider.Meta().(*AWSClient).sesconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ses_receipt_filter" {
@@ -98,7 +98,7 @@ func testAccCheckAwsSESReceiptFilterExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("SES receipt filter ID not set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).sesconn
+		conn := acctest.Provider.Meta().(*AWSClient).sesconn
 
 		response, err := conn.ListReceiptFilters(&ses.ListReceiptFiltersInput{})
 		if err != nil {
