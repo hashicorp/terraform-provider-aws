@@ -7,14 +7,14 @@ import (
 func TestAccAWSFms_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"AdminAccount": {
-			"basic": testAccAwsFmsAdminAccount_basic,
+			"basic": testAccAdminAccount_basic,
 		},
 		"Policy": {
-			"basic":                  testAccAWSFmsPolicy_basic,
-			"cloudfrontDistribution": testAccAWSFmsPolicy_cloudfrontDistribution,
-			"includeMap":             testAccAWSFmsPolicy_includeMap,
-			"update":                 testAccAWSFmsPolicy_update,
-			"tags":                   testAccAWSFmsPolicy_tags,
+			"basic":                  testAccPolicy_basic,
+			"cloudfrontDistribution": testAccPolicy_cloudFrontDistribution,
+			"includeMap":             testAccPolicy_includeMap,
+			"update":                 testAccPolicy_update,
+			"tags":                   testAccPolicy_tags,
 		},
 	}
 

@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func testAccAwsFmsAdminAccount_basic(t *testing.T) {
+func testAccAdminAccount_basic(t *testing.T) {
 	resourceName := "aws_fms_admin_account.test"
 
 	resource.Test(t, resource.TestCase{
