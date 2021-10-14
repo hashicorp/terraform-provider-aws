@@ -1,4 +1,4 @@
-package aws
+package backup
 
 import (
 	"fmt"
@@ -12,13 +12,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/backup/waiter"
-	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfbackup "github.com/hashicorp/terraform-provider-aws/internal/service/backup"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
@@ -154,7 +152,7 @@ func resourceSelectionRead(d *schema.ResourceData, meta interface{}) error {
 
 	var resp *backup.GetBackupSelectionOutput
 
-	err := resource.Retry(tfbackup.propagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 
 		resp, err = conn.GetBackupSelection(input)
