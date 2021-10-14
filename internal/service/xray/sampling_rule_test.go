@@ -19,13 +19,13 @@ func TestAccAWSXraySamplingRule_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSXray(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, xray.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSXraySamplingRuleDestroy,
+		CheckDestroy: testAccCheckSamplingRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSXraySamplingRuleConfig_basic(rName),
+				Config: testAccSamplingRuleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckXraySamplingRuleExists(resourceName, &samplingRule),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "xray", fmt.Sprintf("sampling-rule/%s", rName)),
@@ -60,13 +60,13 @@ func TestAccAWSXraySamplingRule_update(t *testing.T) {
 	updatedReservoirSize := sdkacctest.RandIntRange(0, 2147483647)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSXray(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, xray.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSXraySamplingRuleDestroy,
+		CheckDestroy: testAccCheckSamplingRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSXraySamplingRuleConfig_update(rName, sdkacctest.RandIntRange(0, 9999), sdkacctest.RandIntRange(0, 2147483647)),
+				Config: testAccSamplingRuleConfig_update(rName, sdkacctest.RandIntRange(0, 9999), sdkacctest.RandIntRange(0, 2147483647)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckXraySamplingRuleExists(resourceName, &samplingRule),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "xray", fmt.Sprintf("sampling-rule/%s", rName)),
@@ -84,7 +84,7 @@ func TestAccAWSXraySamplingRule_update(t *testing.T) {
 				),
 			},
 			{ // Update attributes
-				Config: testAccAWSXraySamplingRuleConfig_update(rName, updatedPriority, updatedReservoirSize),
+				Config: testAccSamplingRuleConfig_update(rName, updatedPriority, updatedReservoirSize),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckXraySamplingRuleExists(resourceName, &samplingRule),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "xray", fmt.Sprintf("sampling-rule/%s", rName)),
@@ -116,13 +116,13 @@ func TestAccAWSXraySamplingRule_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSXray(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, xray.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSXraySamplingRuleDestroy,
+		CheckDestroy: testAccCheckSamplingRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSXraySamplingRuleConfigTags1(rName, "key1", "value1"),
+				Config: testAccSamplingRuleTags1Config(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckXraySamplingRuleExists(resourceName, &samplingRule),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -135,7 +135,7 @@ func TestAccAWSXraySamplingRule_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSXraySamplingRuleConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccSamplingRuleTags2Config(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckXraySamplingRuleExists(resourceName, &samplingRule),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -144,7 +144,7 @@ func TestAccAWSXraySamplingRule_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSXraySamplingRuleConfigTags1(rName, "key2", "value2"),
+				Config: testAccSamplingRuleTags1Config(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckXraySamplingRuleExists(resourceName, &samplingRule),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -161,13 +161,13 @@ func TestAccAWSXraySamplingRule_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSXray(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, xray.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSXraySamplingRuleDestroy,
+		CheckDestroy: testAccCheckSamplingRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSXraySamplingRuleConfig_basic(rName),
+				Config: testAccSamplingRuleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckXraySamplingRuleExists(resourceName, &samplingRule),
 					acctest.CheckResourceDisappears(acctest.Provider, tfxray.ResourceSamplingRule(), resourceName),
@@ -202,7 +202,7 @@ func testAccCheckXraySamplingRuleExists(n string, samplingRule *xray.SamplingRul
 	}
 }
 
-func testAccCheckAWSXraySamplingRuleDestroy(s *terraform.State) error {
+func testAccCheckSamplingRuleDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_xray_sampling_rule" {
 			continue
@@ -224,7 +224,7 @@ func testAccCheckAWSXraySamplingRuleDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccPreCheckAWSXray(t *testing.T) {
+func testAccPreCheck(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).XRayConn
 
 	input := &xray.GetSamplingRulesInput{}
@@ -240,7 +240,7 @@ func testAccPreCheckAWSXray(t *testing.T) {
 	}
 }
 
-func testAccAWSXraySamplingRuleConfig_basic(ruleName string) string {
+func testAccSamplingRuleConfig_basic(ruleName string) string {
 	return fmt.Sprintf(`
 resource "aws_xray_sampling_rule" "test" {
   rule_name      = "%s"
@@ -262,7 +262,7 @@ resource "aws_xray_sampling_rule" "test" {
 `, ruleName)
 }
 
-func testAccAWSXraySamplingRuleConfig_update(ruleName string, priority int, reservoirSize int) string {
+func testAccSamplingRuleConfig_update(ruleName string, priority int, reservoirSize int) string {
 	return fmt.Sprintf(`
 resource "aws_xray_sampling_rule" "test" {
   rule_name      = "%s"
@@ -280,7 +280,7 @@ resource "aws_xray_sampling_rule" "test" {
 `, ruleName, priority, reservoirSize)
 }
 
-func testAccAWSXraySamplingRuleConfigTags1(ruleName, tagKey1, tagValue1 string) string {
+func testAccSamplingRuleTags1Config(ruleName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_xray_sampling_rule" "test" {
   rule_name      = %[1]q
@@ -306,7 +306,7 @@ resource "aws_xray_sampling_rule" "test" {
 `, ruleName, tagKey1, tagValue1)
 }
 
-func testAccAWSXraySamplingRuleConfigTags2(ruleName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccSamplingRuleTags2Config(ruleName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_xray_sampling_rule" "test" {
   rule_name      = %[1]q

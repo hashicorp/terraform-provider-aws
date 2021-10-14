@@ -25,10 +25,10 @@ func TestAccAWSXrayGroup_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, xray.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSXrayGroupDestroy,
+		CheckDestroy: testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSXrayGroupBasicConfig(rName, "responsetime > 5"),
+				Config: testAccGroupBasicConfig(rName, "responsetime > 5"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckXrayGroupExists(resourceName, &Group),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "xray", regexp.MustCompile(`group/.+`)),
@@ -42,7 +42,7 @@ func TestAccAWSXrayGroup_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSXrayGroupBasicConfig(rName, "responsetime > 10"),
+				Config: testAccGroupBasicConfig(rName, "responsetime > 10"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckXrayGroupExists(resourceName, &Group),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "xray", regexp.MustCompile(`group/.+`)),
@@ -63,10 +63,10 @@ func TestAccAWSXrayGroup_tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, xray.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSXrayGroupDestroy,
+		CheckDestroy: testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSXrayGroupBasicConfigTags1(rName, "key1", "value1"),
+				Config: testAccGroupBasicTags1Config(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckXrayGroupExists(resourceName, &Group),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -79,7 +79,7 @@ func TestAccAWSXrayGroup_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSXrayGroupBasicConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccGroupBasicTags2Config(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckXrayGroupExists(resourceName, &Group),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -88,7 +88,7 @@ func TestAccAWSXrayGroup_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSXrayGroupBasicConfigTags1(rName, "key2", "value2"),
+				Config: testAccGroupBasicTags1Config(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckXrayGroupExists(resourceName, &Group),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -107,10 +107,10 @@ func TestAccAWSXrayGroup_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, xray.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSXrayGroupDestroy,
+		CheckDestroy: testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSXrayGroupBasicConfig(rName, "responsetime > 5"),
+				Config: testAccGroupBasicConfig(rName, "responsetime > 5"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckXrayGroupExists(resourceName, &Group),
 					acctest.CheckResourceDisappears(acctest.Provider, tfxray.ResourceGroup(), resourceName),
@@ -149,7 +149,7 @@ func testAccCheckXrayGroupExists(n string, Group *xray.Group) resource.TestCheck
 	}
 }
 
-func testAccCheckAWSXrayGroupDestroy(s *terraform.State) error {
+func testAccCheckGroupDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_xray_group" {
 			continue
@@ -179,7 +179,7 @@ func testAccCheckAWSXrayGroupDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSXrayGroupBasicConfig(rName, expression string) string {
+func testAccGroupBasicConfig(rName, expression string) string {
 	return fmt.Sprintf(`
 resource "aws_xray_group" "test" {
   group_name        = %[1]q
@@ -188,7 +188,7 @@ resource "aws_xray_group" "test" {
 `, rName, expression)
 }
 
-func testAccAWSXrayGroupBasicConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccGroupBasicTags1Config(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_xray_group" "test" {
   group_name        = %[1]q
@@ -201,7 +201,7 @@ resource "aws_xray_group" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccAWSXrayGroupBasicConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccGroupBasicTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_xray_group" "test" {
   group_name        = %[1]q
