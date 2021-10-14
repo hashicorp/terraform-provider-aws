@@ -16,9 +16,9 @@ import (
 
 func ResourceFileSystemPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEfsFileSystemPolicyPut,
+		Create: resourceFileSystemPolicyPut,
 		Read:   resourceFileSystemPolicyRead,
-		Update: resourceAwsEfsFileSystemPolicyPut,
+		Update: resourceFileSystemPolicyPut,
 		Delete: resourceFileSystemPolicyDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -45,7 +45,7 @@ func ResourceFileSystemPolicy() *schema.Resource {
 	}
 }
 
-func resourceAwsEfsFileSystemPolicyPut(d *schema.ResourceData, meta interface{}) error {
+func resourceFileSystemPolicyPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EFSConn
 
 	fsID := d.Get("file_system_id").(string)
