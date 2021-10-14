@@ -1,4 +1,4 @@
-package aws
+package elasticbeanstalk_test
 
 import (
 	"testing"
