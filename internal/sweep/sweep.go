@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -23,6 +24,8 @@ import (
 
 const (
 	SweepThrottlingRetryTimeout = 10 * time.Minute
+
+	ResourcePrefix = "tf-acc-test"
 )
 
 const defaultSweeperAssumeRoleDurationSeconds = 3600
@@ -212,4 +215,18 @@ func DeleteResource(resource *schema.Resource, d *schema.ResourceData, meta inte
 	}
 
 	return resource.Delete(d, meta)
+}
+
+func Partition(region string) string {
+	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), region); ok {
+		return partition.ID()
+	}
+	return "aws"
+}
+
+func PartitionDNSSuffix(region string) string {
+	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), region); ok {
+		return partition.DNSSuffix()
+	}
+	return "amazonaws.com"
 }
