@@ -15,7 +15,7 @@ import (
 )
 
 func TestAccAWSQuickSightGroupMembership_basic(t *testing.T) {
-	groupName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	groupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	memberName := "tfacctest" + sdkacctest.RandString(10)
 	resourceName := "aws_quicksight_group_membership.default"
 
@@ -23,7 +23,7 @@ func TestAccAWSQuickSightGroupMembership_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, quicksight.EndpointsID),
 		CheckDestroy: testAccCheckQuickSightGroupMembershipDestroy,
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSQuickSightGroupMembershipConfig(groupName, memberName),
@@ -41,21 +41,21 @@ func TestAccAWSQuickSightGroupMembership_basic(t *testing.T) {
 }
 
 func TestAccAWSQuickSightGroupMembership_disappears(t *testing.T) {
-	groupName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	groupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	memberName := "tfacctest" + sdkacctest.RandString(10)
 	resourceName := "aws_quicksight_group_membership.default"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, quicksight.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckQuickSightGroupMembershipDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSQuickSightGroupMembershipConfig(groupName, memberName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQuickSightGroupMembershipExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsQuickSightGroupMembership(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsQuickSightGroupMembership(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -64,7 +64,7 @@ func TestAccAWSQuickSightGroupMembership_disappears(t *testing.T) {
 }
 
 func testAccCheckQuickSightGroupMembershipDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).quicksightconn
+	conn := acctest.Provider.Meta().(*AWSClient).quicksightconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_quicksight_group_membership" {
@@ -108,7 +108,7 @@ func testAccCheckQuickSightGroupMembershipExists(resourceName string) resource.T
 			return err
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).quicksightconn
+		conn := acctest.Provider.Meta().(*AWSClient).quicksightconn
 
 		listInput := &quicksight.ListGroupMembershipsInput{
 			AwsAccountId: aws.String(awsAccountID),
