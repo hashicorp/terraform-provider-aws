@@ -165,7 +165,7 @@ func resourceAwsSesEventDestinationCreate(d *schema.ResourceData, meta interface
 		EventDestination: &ses.EventDestination{
 			Name:               aws.String(eventDestinationName),
 			Enabled:            aws.Bool(enabled),
-			MatchingEventTypes: expandStringSet(matchingEventTypes),
+			MatchingEventTypes: flex.ExpandStringSet(matchingEventTypes),
 		},
 	}
 
@@ -249,7 +249,7 @@ func resourceAwsSesEventDestinationRead(d *schema.ResourceData, meta interface{}
 	if err := d.Set("kinesis_destination", flattenSesKinesisFirehoseDestination(thisEventDestination.KinesisFirehoseDestination)); err != nil {
 		return fmt.Errorf("error setting kinesis_destination: %w", err)
 	}
-	if err := d.Set("matching_types", flattenStringSet(thisEventDestination.MatchingEventTypes)); err != nil {
+	if err := d.Set("matching_types", flex.FlattenStringSet(thisEventDestination.MatchingEventTypes)); err != nil {
 		return fmt.Errorf("error setting matching_types: %w", err)
 	}
 	if err := d.Set("sns_destination", flattenSesSnsDestination(thisEventDestination.SNSDestination)); err != nil {
