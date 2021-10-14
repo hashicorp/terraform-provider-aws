@@ -16,12 +16,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsAppconfigEnvironment() *schema.Resource {
+func ResourceEnvironment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAppconfigEnvironmentCreate,
-		Read:   resourceAwsAppconfigEnvironmentRead,
-		Update: resourceAwsAppconfigEnvironmentUpdate,
-		Delete: resourceAwsAppconfigEnvironmentDelete,
+		Create: resourceEnvironmentCreate,
+		Read:   resourceEnvironmentRead,
+		Update: resourceEnvironmentUpdate,
+		Delete: resourceEnvironmentDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -84,7 +84,7 @@ func resourceAwsAppconfigEnvironment() *schema.Resource {
 	}
 }
 
-func resourceAwsAppconfigEnvironmentCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceEnvironmentCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppConfigConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -118,10 +118,10 @@ func resourceAwsAppconfigEnvironmentCreate(d *schema.ResourceData, meta interfac
 	d.Set("environment_id", environment.Id)
 	d.SetId(fmt.Sprintf("%s:%s", aws.StringValue(environment.Id), aws.StringValue(environment.ApplicationId)))
 
-	return resourceAwsAppconfigEnvironmentRead(d, meta)
+	return resourceEnvironmentRead(d, meta)
 }
 
-func resourceAwsAppconfigEnvironmentRead(d *schema.ResourceData, meta interface{}) error {
+func resourceEnvironmentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppConfigConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -193,7 +193,7 @@ func resourceAwsAppconfigEnvironmentRead(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func resourceAwsAppconfigEnvironmentUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceEnvironmentUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppConfigConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -234,10 +234,10 @@ func resourceAwsAppconfigEnvironmentUpdate(d *schema.ResourceData, meta interfac
 		}
 	}
 
-	return resourceAwsAppconfigEnvironmentRead(d, meta)
+	return resourceEnvironmentRead(d, meta)
 }
 
-func resourceAwsAppconfigEnvironmentDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceEnvironmentDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppConfigConn
 
 	envID, appID, err := resourceAwsAppconfigEnvironmentParseID(d.Id())

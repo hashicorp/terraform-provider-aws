@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -69,7 +70,7 @@ func testSweepAppConfigConfigurationProfiles(region string) error {
 					id := fmt.Sprintf("%s:%s", aws.StringValue(item.Id), appId)
 
 					log.Printf("[INFO] Deleting AppConfig Configuration Profile (%s)", id)
-					r := resourceAwsAppconfigConfigurationProfile()
+					r := ResourceConfigurationProfile()
 					d := r.Data(nil)
 					d.SetId(id)
 
@@ -150,7 +151,7 @@ func TestAccAWSAppConfigConfigurationProfile_disappears(t *testing.T) {
 				Config: testAccAWSAppConfigConfigurationProfileConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAppConfigConfigurationProfileExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsAppconfigConfigurationProfile(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceConfigurationProfile(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

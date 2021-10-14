@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsAppconfigApplication() *schema.Resource {
+func ResourceApplication() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAppconfigApplicationCreate,
-		Read:   resourceAwsAppconfigApplicationRead,
-		Update: resourceAwsAppconfigApplicationUpdate,
-		Delete: resourceAwsAppconfigApplicationDelete,
+		Create: resourceApplicationCreate,
+		Read:   resourceApplicationRead,
+		Update: resourceApplicationUpdate,
+		Delete: resourceApplicationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -46,7 +46,7 @@ func resourceAwsAppconfigApplication() *schema.Resource {
 	}
 }
 
-func resourceAwsAppconfigApplicationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppConfigConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -74,10 +74,10 @@ func resourceAwsAppconfigApplicationCreate(d *schema.ResourceData, meta interfac
 
 	d.SetId(aws.StringValue(app.Id))
 
-	return resourceAwsAppconfigApplicationRead(d, meta)
+	return resourceApplicationRead(d, meta)
 }
 
-func resourceAwsAppconfigApplicationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppConfigConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -134,7 +134,7 @@ func resourceAwsAppconfigApplicationRead(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func resourceAwsAppconfigApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppConfigConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -165,10 +165,10 @@ func resourceAwsAppconfigApplicationUpdate(d *schema.ResourceData, meta interfac
 		}
 	}
 
-	return resourceAwsAppconfigApplicationRead(d, meta)
+	return resourceApplicationRead(d, meta)
 }
 
-func resourceAwsAppconfigApplicationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceApplicationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppConfigConn
 
 	input := &appconfig.DeleteApplicationInput{

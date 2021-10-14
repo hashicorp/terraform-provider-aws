@@ -17,12 +17,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsAppconfigDeployment() *schema.Resource {
+func ResourceDeployment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAppconfigDeploymentCreate,
-		Read:   resourceAwsAppconfigDeploymentRead,
-		Update: resourceAwsAppconfigDeploymentUpdate,
-		Delete: resourceAwsAppconfigDeploymentDelete,
+		Create: resourceDeploymentCreate,
+		Read:   resourceDeploymentRead,
+		Update: resourceDeploymentUpdate,
+		Delete: resourceDeploymentDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -83,7 +83,7 @@ func resourceAwsAppconfigDeployment() *schema.Resource {
 	}
 }
 
-func resourceAwsAppconfigDeploymentCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceDeploymentCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppConfigConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -114,10 +114,10 @@ func resourceAwsAppconfigDeploymentCreate(d *schema.ResourceData, meta interface
 
 	d.SetId(fmt.Sprintf("%s/%s/%d", appID, envID, deployNum))
 
-	return resourceAwsAppconfigDeploymentRead(d, meta)
+	return resourceDeploymentRead(d, meta)
 }
 
-func resourceAwsAppconfigDeploymentRead(d *schema.ResourceData, meta interface{}) error {
+func resourceDeploymentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppConfigConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -188,7 +188,7 @@ func resourceAwsAppconfigDeploymentRead(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceAwsAppconfigDeploymentUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceDeploymentUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppConfigConn
 
 	if d.HasChange("tags_all") {
@@ -199,10 +199,10 @@ func resourceAwsAppconfigDeploymentUpdate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	return resourceAwsAppconfigDeploymentRead(d, meta)
+	return resourceDeploymentRead(d, meta)
 }
 
-func resourceAwsAppconfigDeploymentDelete(_ *schema.ResourceData, _ interface{}) error {
+func resourceDeploymentDelete(_ *schema.ResourceData, _ interface{}) error {
 	log.Printf("[WARN] Cannot destroy AppConfig Deployment. Terraform will remove this resource from the state file, however this resource remains.")
 	return nil
 }

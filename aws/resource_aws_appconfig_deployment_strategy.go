@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsAppconfigDeploymentStrategy() *schema.Resource {
+func ResourceDeploymentStrategy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAppconfigDeploymentStrategyCreate,
-		Read:   resourceAwsAppconfigDeploymentStrategyRead,
-		Update: resourceAwsAppconfigDeploymentStrategyUpdate,
-		Delete: resourceAwsAppconfigDeploymentStrategyDelete,
+		Create: resourceDeploymentStrategyCreate,
+		Read:   resourceDeploymentStrategyRead,
+		Update: resourceDeploymentStrategyUpdate,
+		Delete: resourceDeploymentStrategyDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -74,7 +74,7 @@ func resourceAwsAppconfigDeploymentStrategy() *schema.Resource {
 	}
 }
 
-func resourceAwsAppconfigDeploymentStrategyCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceDeploymentStrategyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppConfigConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -106,10 +106,10 @@ func resourceAwsAppconfigDeploymentStrategyCreate(d *schema.ResourceData, meta i
 
 	d.SetId(aws.StringValue(strategy.Id))
 
-	return resourceAwsAppconfigDeploymentStrategyRead(d, meta)
+	return resourceDeploymentStrategyRead(d, meta)
 }
 
-func resourceAwsAppconfigDeploymentStrategyRead(d *schema.ResourceData, meta interface{}) error {
+func resourceDeploymentStrategyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppConfigConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -171,7 +171,7 @@ func resourceAwsAppconfigDeploymentStrategyRead(d *schema.ResourceData, meta int
 	return nil
 }
 
-func resourceAwsAppconfigDeploymentStrategyUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceDeploymentStrategyUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppConfigConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -213,10 +213,10 @@ func resourceAwsAppconfigDeploymentStrategyUpdate(d *schema.ResourceData, meta i
 		}
 	}
 
-	return resourceAwsAppconfigDeploymentStrategyRead(d, meta)
+	return resourceDeploymentStrategyRead(d, meta)
 }
 
-func resourceAwsAppconfigDeploymentStrategyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDeploymentStrategyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppConfigConn
 
 	input := &appconfig.DeleteDeploymentStrategyInput{
