@@ -9,8 +9,9 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceProtectionGroup() *schema.Resource {
@@ -63,17 +64,17 @@ func ResourceProtectionGroup() *schema.Resource {
 				ConflictsWith: []string{"members"},
 				ValidateFunc:  validation.StringInSlice(shield.ProtectedResourceType_Values(), false),
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceProtectionGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ShieldConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	protectionGroupID := d.Get("protection_group_id").(string)
 	input := &shield.CreateProtectionGroupInput{
@@ -138,7 +139,7 @@ func resourceProtectionGroupRead(d *schema.ResourceData, meta interface{}) error
 		d.Set("resource_type", resp.ProtectionGroup.ResourceType)
 	}
 
-	tags, err := keyvaluetags.ShieldListTags(conn, arn)
+	tags, err := tftags.ShieldListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Shield Protection Group (%s): %w", arn, err)
@@ -184,7 +185,7 @@ func resourceProtectionGroupUpdate(d *schema.ResourceData, meta interface{}) err
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := keyvaluetags.ShieldUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := tftags.ShieldUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %w", err)
 		}
 	}
