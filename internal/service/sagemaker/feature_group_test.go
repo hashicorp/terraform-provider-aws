@@ -62,15 +62,15 @@ func sweepFeatureGroups(region string) error {
 	return nil
 }
 
-func TestAccAWSSagemakerFeatureGroup_serial(t *testing.T) {
+func TestAccSageMakerFeatureGroup_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		"basic":                         testAccFeatureGroup_basic,
 		"description":                   testAccFeatureGroup_description,
-		"disappears":                    TestAccAWSSagemakerFeatureGroup_disappears,
+		"disappears":                    TestAccSageMakerFeatureGroup_disappears,
 		"multipleFeatures":              testAccFeatureGroup_multipleFeatures,
 		"offlineConfig_basic":           testAccFeatureGroup_offlineConfig_basic,
 		"offlineConfig_createCatalog":   testAccFeatureGroup_offlineConfig_createCatalog,
-		"offlineConfig_providedCatalog": TestAccAWSSagemakerFeatureGroup_offlineConfig_providedCatalog,
+		"offlineConfig_providedCatalog": TestAccSageMakerFeatureGroup_Offline_providedCatalog,
 		"onlineConfigSecurityConfig":    testAccFeatureGroup_onlineConfigSecurityConfig,
 		"tags":                          testAccFeatureGroup_tags,
 	}
@@ -325,7 +325,7 @@ func testAccFeatureGroup_offlineConfig_createCatalog(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerFeatureGroup_offlineConfig_providedCatalog(t *testing.T) {
+func TestAccSageMakerFeatureGroup_Offline_providedCatalog(t *testing.T) {
 	var featureGroup sagemaker.DescribeFeatureGroupOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_feature_group.test"
@@ -361,7 +361,7 @@ func TestAccAWSSagemakerFeatureGroup_offlineConfig_providedCatalog(t *testing.T)
 	})
 }
 
-func TestAccAWSSagemakerFeatureGroup_disappears(t *testing.T) {
+func TestAccSageMakerFeatureGroup_disappears(t *testing.T) {
 	var featureGroup sagemaker.DescribeFeatureGroupOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_feature_group.test"

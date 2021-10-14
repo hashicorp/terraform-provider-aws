@@ -65,7 +65,7 @@ func sweepStudioLifecyclesConfig(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSSagemakerStudioLifecycleConfig_basic(t *testing.T) {
+func TestAccSageMakerStudioLifecycleConfig_basic(t *testing.T) {
 	var config sagemaker.DescribeStudioLifecycleConfigOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_studio_lifecycle_config.test"
@@ -96,7 +96,7 @@ func TestAccAWSSagemakerStudioLifecycleConfig_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerStudioLifecycleConfig_tags(t *testing.T) {
+func TestAccSageMakerStudioLifecycleConfig_tags(t *testing.T) {
 	var config sagemaker.DescribeStudioLifecycleConfigOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_studio_lifecycle_config.test"
@@ -141,7 +141,7 @@ func TestAccAWSSagemakerStudioLifecycleConfig_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerStudioLifecycleConfig_disappears(t *testing.T) {
+func TestAccSageMakerStudioLifecycleConfig_disappears(t *testing.T) {
 	var config sagemaker.DescribeStudioLifecycleConfigOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_studio_lifecycle_config.test"

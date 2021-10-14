@@ -61,7 +61,7 @@ func sweepImages(region string) error {
 	return nil
 }
 
-func TestAccAWSSagemakerImage_basic(t *testing.T) {
+func TestAccSageMakerImage_basic(t *testing.T) {
 	var image sagemaker.DescribeImageOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_image.test"
@@ -91,7 +91,7 @@ func TestAccAWSSagemakerImage_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerImage_description(t *testing.T) {
+func TestAccSageMakerImage_description(t *testing.T) {
 	var image sagemaker.DescribeImageOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_image.test"
@@ -132,7 +132,7 @@ func TestAccAWSSagemakerImage_description(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerImage_displayName(t *testing.T) {
+func TestAccSageMakerImage_displayName(t *testing.T) {
 	var image sagemaker.DescribeImageOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_image.test"
@@ -173,7 +173,7 @@ func TestAccAWSSagemakerImage_displayName(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerImage_tags(t *testing.T) {
+func TestAccSageMakerImage_tags(t *testing.T) {
 	var image sagemaker.DescribeImageOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_image.test"
@@ -218,7 +218,7 @@ func TestAccAWSSagemakerImage_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerImage_disappears(t *testing.T) {
+func TestAccSageMakerImage_disappears(t *testing.T) {
 	var image sagemaker.DescribeImageOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_image.test"

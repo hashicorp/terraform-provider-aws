@@ -61,7 +61,7 @@ func sweepModels(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSSagemakerModel_basic(t *testing.T) {
+func TestAccSageMakerModel_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_model.test"
 
@@ -96,7 +96,7 @@ func TestAccAWSSagemakerModel_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerModel_inferenceExecutionConfig(t *testing.T) {
+func TestAccSageMakerModel_inferenceExecution(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_model.test"
 
@@ -123,7 +123,7 @@ func TestAccAWSSagemakerModel_inferenceExecutionConfig(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerModel_tags(t *testing.T) {
+func TestAccSageMakerModel_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_model.test"
 
@@ -167,7 +167,7 @@ func TestAccAWSSagemakerModel_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerModel_primaryContainerModelDataUrl(t *testing.T) {
+func TestAccSageMakerModel_primaryContainerModelDataURL(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_model.test"
 
@@ -193,7 +193,7 @@ func TestAccAWSSagemakerModel_primaryContainerModelDataUrl(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerModel_primaryContainerHostname(t *testing.T) {
+func TestAccSageMakerModel_primaryContainerHostname(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_model.test"
 
@@ -219,7 +219,7 @@ func TestAccAWSSagemakerModel_primaryContainerHostname(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerModel_primaryContainerImageConfig(t *testing.T) {
+func TestAccSageMakerModel_primaryContainerImage(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_model.test"
 
@@ -246,7 +246,7 @@ func TestAccAWSSagemakerModel_primaryContainerImageConfig(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerModel_primaryContainerEnvironment(t *testing.T) {
+func TestAccSageMakerModel_primaryContainerEnvironment(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_model.test"
 
@@ -273,7 +273,7 @@ func TestAccAWSSagemakerModel_primaryContainerEnvironment(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerModel_primaryContainerModeSingle(t *testing.T) {
+func TestAccSageMakerModel_primaryContainerModeSingle(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_model.test"
 
@@ -299,7 +299,7 @@ func TestAccAWSSagemakerModel_primaryContainerModeSingle(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerModel_containers(t *testing.T) {
+func TestAccSageMakerModel_containers(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_model.test"
 
@@ -327,7 +327,7 @@ func TestAccAWSSagemakerModel_containers(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerModel_vpcConfig(t *testing.T) {
+func TestAccSageMakerModel_vpc(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_model.test"
 
@@ -355,7 +355,7 @@ func TestAccAWSSagemakerModel_vpcConfig(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerModel_networkIsolation(t *testing.T) {
+func TestAccSageMakerModel_networkIsolation(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_model.test"
 
@@ -381,7 +381,7 @@ func TestAccAWSSagemakerModel_networkIsolation(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerModel_disappears(t *testing.T) {
+func TestAccSageMakerModel_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_model.test"
 

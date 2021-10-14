@@ -69,7 +69,7 @@ func sweepNotebookInstanceLifecycleConfiguration(region string) error {
 	return nil
 }
 
-func TestAccAWSSagemakerNotebookInstanceLifecycleConfiguration_basic(t *testing.T) {
+func TestAccSageMakerNotebookInstanceLifecycleConfiguration_basic(t *testing.T) {
 	var lifecycleConfig sagemaker.DescribeNotebookInstanceLifecycleConfigOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_notebook_instance_lifecycle_configuration.test"
@@ -100,7 +100,7 @@ func TestAccAWSSagemakerNotebookInstanceLifecycleConfiguration_basic(t *testing.
 	})
 }
 
-func TestAccAWSSagemakerNotebookInstanceLifecycleConfiguration_Update(t *testing.T) {
+func TestAccSageMakerNotebookInstanceLifecycleConfiguration_update(t *testing.T) {
 	var lifecycleConfig sagemaker.DescribeNotebookInstanceLifecycleConfigOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_notebook_instance_lifecycle_configuration.test"

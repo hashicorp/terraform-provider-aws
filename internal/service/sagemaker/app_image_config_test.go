@@ -74,7 +74,7 @@ func sweepAppImagesConfig(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSSagemakerAppImageConfig_basic(t *testing.T) {
+func TestAccSageMakerAppImageConfig_basic(t *testing.T) {
 	var config sagemaker.DescribeAppImageConfigOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_app_image_config.test"
@@ -104,7 +104,7 @@ func TestAccAWSSagemakerAppImageConfig_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerAppImageConfig_kernelGatewayImageConfig_kernalSpecs(t *testing.T) {
+func TestAccSageMakerAppImageConfig_KernelGatewayImage_kernelSpecs(t *testing.T) {
 	var config sagemaker.DescribeAppImageConfigOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_app_image_config.test"
@@ -147,7 +147,7 @@ func TestAccAWSSagemakerAppImageConfig_kernelGatewayImageConfig_kernalSpecs(t *t
 	})
 }
 
-func TestAccAWSSagemakerAppImageConfig_kernelGatewayImageConfig_fileSystemConfig(t *testing.T) {
+func TestAccSageMakerAppImageConfig_KernelGatewayImage_fileSystem(t *testing.T) {
 	var config sagemaker.DescribeAppImageConfigOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_app_image_config.test"
@@ -193,7 +193,7 @@ func TestAccAWSSagemakerAppImageConfig_kernelGatewayImageConfig_fileSystemConfig
 	})
 }
 
-func TestAccAWSSagemakerAppImageConfig_tags(t *testing.T) {
+func TestAccSageMakerAppImageConfig_tags(t *testing.T) {
 	var app sagemaker.DescribeAppImageConfigOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_app_image_config.test"
@@ -238,7 +238,7 @@ func TestAccAWSSagemakerAppImageConfig_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerAppImageConfig_disappears(t *testing.T) {
+func TestAccSageMakerAppImageConfig_disappears(t *testing.T) {
 	var config sagemaker.DescribeAppImageConfigOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_app_image_config.test"

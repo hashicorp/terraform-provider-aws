@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccAWSSagemakerModelPackageGroupPolicy_basic(t *testing.T) {
+func TestAccSageMakerModelPackageGroupPolicy_basic(t *testing.T) {
 	var mpg sagemaker.GetModelPackageGroupPolicyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_model_package_group_policy.test"
@@ -41,7 +41,7 @@ func TestAccAWSSagemakerModelPackageGroupPolicy_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerModelPackageGroupPolicy_disappears(t *testing.T) {
+func TestAccSageMakerModelPackageGroupPolicy_disappears(t *testing.T) {
 	var mpg sagemaker.GetModelPackageGroupPolicyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_model_package_group_policy.test"
@@ -65,7 +65,7 @@ func TestAccAWSSagemakerModelPackageGroupPolicy_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerModelPackageGroupPolicy_disappears_modelPackageGroup(t *testing.T) {
+func TestAccSageMakerModelPackageGroupPolicy_Disappears_modelPackageGroup(t *testing.T) {
 	var mpg sagemaker.GetModelPackageGroupPolicyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_model_package_group_policy.test"

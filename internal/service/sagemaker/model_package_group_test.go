@@ -61,7 +61,7 @@ func sweepModelPackageGroups(region string) error {
 	return nil
 }
 
-func TestAccAWSSagemakerModelPackageGroup_basic(t *testing.T) {
+func TestAccSageMakerModelPackageGroup_basic(t *testing.T) {
 	var mpg sagemaker.DescribeModelPackageGroupOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_model_package_group.test"
@@ -90,7 +90,7 @@ func TestAccAWSSagemakerModelPackageGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerModelPackageGroup_description(t *testing.T) {
+func TestAccSageMakerModelPackageGroup_description(t *testing.T) {
 	var mpg sagemaker.DescribeModelPackageGroupOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_model_package_group.test"
@@ -117,7 +117,7 @@ func TestAccAWSSagemakerModelPackageGroup_description(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerModelPackageGroup_tags(t *testing.T) {
+func TestAccSageMakerModelPackageGroup_tags(t *testing.T) {
 	var mpg sagemaker.DescribeModelPackageGroupOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_model_package_group.test"
@@ -162,7 +162,7 @@ func TestAccAWSSagemakerModelPackageGroup_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerModelPackageGroup_disappears(t *testing.T) {
+func TestAccSageMakerModelPackageGroup_disappears(t *testing.T) {
 	var mpg sagemaker.DescribeModelPackageGroupOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_model_package_group.test"

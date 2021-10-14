@@ -62,7 +62,7 @@ func sweepHumanTaskUIs(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSSagemakerHumanTaskUi_basic(t *testing.T) {
+func TestAccSageMakerHumanTaskUI_basic(t *testing.T) {
 	var humanTaskUi sagemaker.DescribeHumanTaskUiOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_human_task_ui.test"
@@ -93,7 +93,7 @@ func TestAccAWSSagemakerHumanTaskUi_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerHumanTaskUi_tags(t *testing.T) {
+func TestAccSageMakerHumanTaskUI_tags(t *testing.T) {
 	var humanTaskUi sagemaker.DescribeHumanTaskUiOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_human_task_ui.test"
@@ -139,7 +139,7 @@ func TestAccAWSSagemakerHumanTaskUi_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerHumanTaskUi_disappears(t *testing.T) {
+func TestAccSageMakerHumanTaskUI_disappears(t *testing.T) {
 	var humanTaskUi sagemaker.DescribeHumanTaskUiOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_human_task_ui.test"

@@ -9,7 +9,7 @@ import (
 	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
 )
 
-func TestAccAWSSageMakerPrebuiltECRImage_basic(t *testing.T) {
+func TestAccSageMakerPrebuiltECRImageDataSource_basic(t *testing.T) {
 	expectedID := tfsagemaker.PrebuiltECRImageIDByRegion_FactorMachines[acctest.Region()]
 
 	dataSourceName := "data.aws_sagemaker_prebuilt_ecr_image.test"
@@ -31,7 +31,7 @@ func TestAccAWSSageMakerPrebuiltECRImage_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSageMakerPrebuiltECRImage_region(t *testing.T) {
+func TestAccSageMakerPrebuiltECRImageDataSource_region(t *testing.T) {
 	expectedID := tfsagemaker.PrebuiltECRImageIDByRegion_SparkML[acctest.Region()]
 
 	dataSourceName := "data.aws_sagemaker_prebuilt_ecr_image.test"

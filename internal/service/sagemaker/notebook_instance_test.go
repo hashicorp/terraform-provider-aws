@@ -77,7 +77,7 @@ func sweepNotebookInstances(region string) error {
 	return nil
 }
 
-func TestAccAWSSagemakerNotebookInstance_basic(t *testing.T) {
+func TestAccSageMakerNotebookInstance_basic(t *testing.T) {
 	var notebook sagemaker.DescribeNotebookInstanceOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_notebook_instance.test"
@@ -115,7 +115,7 @@ func TestAccAWSSagemakerNotebookInstance_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerNotebookInstance_update(t *testing.T) {
+func TestAccSageMakerNotebookInstance_update(t *testing.T) {
 	var notebook sagemaker.DescribeNotebookInstanceOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_notebook_instance.test"
@@ -150,7 +150,7 @@ func TestAccAWSSagemakerNotebookInstance_update(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerNotebookInstance_volumesize(t *testing.T) {
+func TestAccSageMakerNotebookInstance_volumeSize(t *testing.T) {
 	var notebook1, notebook2, notebook3 sagemaker.DescribeNotebookInstanceOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	var resourceName = "aws_sagemaker_notebook_instance.test"
@@ -192,7 +192,7 @@ func TestAccAWSSagemakerNotebookInstance_volumesize(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerNotebookInstance_LifecycleConfigName(t *testing.T) {
+func TestAccSageMakerNotebookInstance_lifecycleName(t *testing.T) {
 	var notebook sagemaker.DescribeNotebookInstanceOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_notebook_instance.test"
@@ -234,7 +234,7 @@ func TestAccAWSSagemakerNotebookInstance_LifecycleConfigName(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerNotebookInstance_tags(t *testing.T) {
+func TestAccSageMakerNotebookInstance_tags(t *testing.T) {
 	var notebook sagemaker.DescribeNotebookInstanceOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_notebook_instance.test"
@@ -279,7 +279,7 @@ func TestAccAWSSagemakerNotebookInstance_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerNotebookInstance_kms(t *testing.T) {
+func TestAccSageMakerNotebookInstance_kms(t *testing.T) {
 	var notebook sagemaker.DescribeNotebookInstanceOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_notebook_instance.test"
@@ -306,7 +306,7 @@ func TestAccAWSSagemakerNotebookInstance_kms(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerNotebookInstance_disappears(t *testing.T) {
+func TestAccSageMakerNotebookInstance_disappears(t *testing.T) {
 	var notebook sagemaker.DescribeNotebookInstanceOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_notebook_instance.test"
@@ -404,7 +404,7 @@ func testAccCheckNotebookInstanceRecreated(i, j *sagemaker.DescribeNotebookInsta
 	}
 }
 
-func TestAccAWSSagemakerNotebookInstance_root_access(t *testing.T) {
+func TestAccSageMakerNotebookInstance_Root_access(t *testing.T) {
 	var notebook sagemaker.DescribeNotebookInstanceOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_notebook_instance.test"
@@ -438,7 +438,7 @@ func TestAccAWSSagemakerNotebookInstance_root_access(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerNotebookInstance_platform_identifier(t *testing.T) {
+func TestAccSageMakerNotebookInstance_Platform_identifier(t *testing.T) {
 	var notebook sagemaker.DescribeNotebookInstanceOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_notebook_instance.test"
@@ -472,7 +472,7 @@ func TestAccAWSSagemakerNotebookInstance_platform_identifier(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerNotebookInstance_direct_internet_access(t *testing.T) {
+func TestAccSageMakerNotebookInstance_DirectInternet_access(t *testing.T) {
 	var notebook sagemaker.DescribeNotebookInstanceOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_notebook_instance.test"
@@ -512,7 +512,7 @@ func TestAccAWSSagemakerNotebookInstance_direct_internet_access(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerNotebookInstance_default_code_repository(t *testing.T) {
+func TestAccSageMakerNotebookInstance_DefaultCode_repository(t *testing.T) {
 	var notebook sagemaker.DescribeNotebookInstanceOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	var resourceName = "aws_sagemaker_notebook_instance.test"
@@ -552,7 +552,7 @@ func TestAccAWSSagemakerNotebookInstance_default_code_repository(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerNotebookInstance_additional_code_repositories(t *testing.T) {
+func TestAccSageMakerNotebookInstance_AdditionalCode_repositories(t *testing.T) {
 	var notebook sagemaker.DescribeNotebookInstanceOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	var resourceName = "aws_sagemaker_notebook_instance.test"
@@ -603,7 +603,7 @@ func TestAccAWSSagemakerNotebookInstance_additional_code_repositories(t *testing
 	})
 }
 
-func TestAccAWSSagemakerNotebookInstance_default_code_repository_sagemakerRepo(t *testing.T) {
+func TestAccSageMakerNotebookInstance_DefaultCodeRepository_sageMakerRepo(t *testing.T) {
 	var notebook sagemaker.DescribeNotebookInstanceOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	var resourceName = "aws_sagemaker_notebook_instance.test"
