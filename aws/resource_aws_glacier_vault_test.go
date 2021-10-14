@@ -9,9 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glacier"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -76,12 +77,12 @@ func testSweepGlacierVaults(region string) error {
 
 func TestAccAWSGlacierVault_basic(t *testing.T) {
 	var vault glacier.DescribeVaultOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glacier_vault.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glacier.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glacier.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlacierVaultDestroy,
 		Steps: []resource.TestStep{
@@ -91,7 +92,7 @@ func TestAccAWSGlacierVault_basic(t *testing.T) {
 					testAccCheckGlacierVaultExists(resourceName, &vault),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "glacier", regexp.MustCompile(`vaults/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "glacier", regexp.MustCompile(`vaults/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "notification.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "access_policy", ""),
 				),
@@ -107,13 +108,13 @@ func TestAccAWSGlacierVault_basic(t *testing.T) {
 
 func TestAccAWSGlacierVault_notification(t *testing.T) {
 	var vault glacier.DescribeVaultOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glacier_vault.test"
 	snsResourceName := "aws_sns_topic.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glacier.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glacier.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlacierVaultDestroy,
 		Steps: []resource.TestStep{
@@ -154,12 +155,12 @@ func TestAccAWSGlacierVault_notification(t *testing.T) {
 
 func TestAccAWSGlacierVault_policy(t *testing.T) {
 	var vault glacier.DescribeVaultOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glacier_vault.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glacier.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glacier.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlacierVaultDestroy,
 		Steps: []resource.TestStep{
@@ -199,12 +200,12 @@ func TestAccAWSGlacierVault_policy(t *testing.T) {
 
 func TestAccAWSGlacierVault_tags(t *testing.T) {
 	var vault glacier.DescribeVaultOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glacier_vault.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glacier.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glacier.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlacierVaultDestroy,
 		Steps: []resource.TestStep{
@@ -244,12 +245,12 @@ func TestAccAWSGlacierVault_tags(t *testing.T) {
 
 func TestAccAWSGlacierVault_disappears(t *testing.T) {
 	var vault glacier.DescribeVaultOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glacier_vault.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glacier.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glacier.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlacierVaultDestroy,
 		Steps: []resource.TestStep{
@@ -257,7 +258,7 @@ func TestAccAWSGlacierVault_disappears(t *testing.T) {
 				Config: testAccGlacierVaultBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlacierVaultExists(resourceName, &vault),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsGlacierVault(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsGlacierVault(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

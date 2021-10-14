@@ -6,20 +6,21 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glacier"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSGlacierVaultLock_basic(t *testing.T) {
 	var vaultLock1 glacier.GetVaultLockOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	glacierVaultResourceName := "aws_glacier_vault.test"
 	resourceName := "aws_glacier_vault_lock.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glacier.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glacier.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlacierVaultLockDestroy,
 		Steps: []resource.TestStep{
@@ -45,13 +46,13 @@ func TestAccAWSGlacierVaultLock_basic(t *testing.T) {
 
 func TestAccAWSGlacierVaultLock_CompleteLock(t *testing.T) {
 	var vaultLock1 glacier.GetVaultLockOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	glacierVaultResourceName := "aws_glacier_vault.test"
 	resourceName := "aws_glacier_vault_lock.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glacier.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glacier.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlacierVaultLockDestroy,
 		Steps: []resource.TestStep{
