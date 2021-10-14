@@ -15,6 +15,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
+	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
+	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
 )
 
 func TestAccAWSEFSFileSystemPolicy_basic(t *testing.T) {
@@ -118,7 +121,7 @@ func testAccCheckEfsFileSystemPolicyDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.FileSystemPolicyByID(conn, rs.Primary.ID)
+		_, err := tfefs.FindFileSystemPolicyByID(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -147,7 +150,7 @@ func testAccCheckEfsFileSystemPolicyExists(n string, v *efs.DescribeFileSystemPo
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn
 
-		output, err := finder.FileSystemPolicyByID(conn, rs.Primary.ID)
+		output, err := tfefs.FindFileSystemPolicyByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

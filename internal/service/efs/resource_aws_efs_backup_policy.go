@@ -15,6 +15,28 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
+	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
+	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
+	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
+	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
+	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
+	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
+	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
+	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
+	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
+	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
+	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
+	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
+	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
+	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
+	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
+	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
+	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
+	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
+	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
+	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
+	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
 )
 
 func ResourceBackupPolicy() *schema.Resource {
@@ -72,7 +94,7 @@ func resourceBackupPolicyCreate(d *schema.ResourceData, meta interface{}) error 
 func resourceBackupPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EFSConn
 
-	output, err := finder.BackupPolicyByID(conn, d.Id())
+	output, err := tfefs.FindBackupPolicyByID(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EFS Backup Policy (%s) not found, removing from state", d.Id())
@@ -137,11 +159,11 @@ func efsBackupPolicyPut(conn *efs.EFS, fsID string, tfMap map[string]interface{}
 	}
 
 	if aws.StringValue(input.BackupPolicy.Status) == efs.StatusEnabled {
-		if _, err := waiter.BackupPolicyEnabled(conn, fsID); err != nil {
+		if _, err := tfefs.waitBackupPolicyEnabled(conn, fsID); err != nil {
 			return fmt.Errorf("error waiting for EFS Backup Policy (%s) to enable: %w", fsID, err)
 		}
 	} else {
-		if _, err := waiter.BackupPolicyDisabled(conn, fsID); err != nil {
+		if _, err := tfefs.waitBackupPolicyDisabled(conn, fsID); err != nil {
 			return fmt.Errorf("error waiting for EFS Backup Policy (%s) to disable: %w", fsID, err)
 		}
 	}

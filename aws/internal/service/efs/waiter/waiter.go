@@ -10,26 +10,26 @@ import (
 
 const (
 	// Maximum amount of time to wait for an Operation to return Success
-	AccessPointCreatedTimeout       = 10 * time.Minute
-	AccessPointDeletedTimeout       = 10 * time.Minute
-	FileSystemAvailableTimeout      = 10 * time.Minute
-	FileSystemAvailableDelayTimeout = 2 * time.Second
-	FileSystemAvailableMinTimeout   = 3 * time.Second
-	FileSystemDeletedTimeout        = 10 * time.Minute
-	FileSystemDeletedDelayTimeout   = 2 * time.Second
-	FileSystemDeletedMinTimeout     = 3 * time.Second
+	accessPointCreatedTimeout       = 10 * time.Minute
+	accessPointDeletedTimeout       = 10 * time.Minute
+	fileSystemAvailableTimeout      = 10 * time.Minute
+	fileSystemAvailableDelayTimeout = 2 * time.Second
+	fileSystemAvailableMinTimeout   = 3 * time.Second
+	fileSystemDeletedTimeout        = 10 * time.Minute
+	fileSystemDeletedDelayTimeout   = 2 * time.Second
+	fileSystemDeletedMinTimeout     = 3 * time.Second
 
-	BackupPolicyDisabledTimeout = 10 * time.Minute
-	BackupPolicyEnabledTimeout  = 10 * time.Minute
+	backupPolicyDisabledTimeout = 10 * time.Minute
+	backupPolicyEnabledTimeout  = 10 * time.Minute
 )
 
-// AccessPointCreated waits for an Operation to return Success
-func AccessPointCreated(conn *efs.EFS, accessPointId string) (*efs.AccessPointDescription, error) {
+// waitAccessPointCreated waits for an Operation to return Success
+func waitAccessPointCreated(conn *efs.EFS, accessPointId string) (*efs.AccessPointDescription, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{efs.LifeCycleStateCreating},
 		Target:  []string{efs.LifeCycleStateAvailable},
-		Refresh: AccessPointLifeCycleState(conn, accessPointId),
-		Timeout: AccessPointCreatedTimeout,
+		Refresh: statusAccessPointLifeCycleState(conn, accessPointId),
+		Timeout: accessPointCreatedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -41,13 +41,13 @@ func AccessPointCreated(conn *efs.EFS, accessPointId string) (*efs.AccessPointDe
 	return nil, err
 }
 
-// AccessPointDeleted waits for an Access Point to return Deleted
-func AccessPointDeleted(conn *efs.EFS, accessPointId string) (*efs.AccessPointDescription, error) {
+// waitAccessPointDeleted waits for an Access Point to return Deleted
+func waitAccessPointDeleted(conn *efs.EFS, accessPointId string) (*efs.AccessPointDescription, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{efs.LifeCycleStateAvailable, efs.LifeCycleStateDeleting, efs.LifeCycleStateDeleted},
 		Target:  []string{},
-		Refresh: AccessPointLifeCycleState(conn, accessPointId),
-		Timeout: AccessPointDeletedTimeout,
+		Refresh: statusAccessPointLifeCycleState(conn, accessPointId),
+		Timeout: accessPointDeletedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -59,14 +59,14 @@ func AccessPointDeleted(conn *efs.EFS, accessPointId string) (*efs.AccessPointDe
 	return nil, err
 }
 
-func FileSystemAvailable(conn *efs.EFS, fileSystemID string) (*efs.FileSystemDescription, error) {
+func waitFileSystemAvailable(conn *efs.EFS, fileSystemID string) (*efs.FileSystemDescription, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{efs.LifeCycleStateCreating, efs.LifeCycleStateUpdating},
 		Target:     []string{efs.LifeCycleStateAvailable},
-		Refresh:    FileSystemLifeCycleState(conn, fileSystemID),
-		Timeout:    FileSystemAvailableTimeout,
-		Delay:      FileSystemAvailableDelayTimeout,
-		MinTimeout: FileSystemAvailableMinTimeout,
+		Refresh:    statusFileSystemLifeCycleState(conn, fileSystemID),
+		Timeout:    fileSystemAvailableTimeout,
+		Delay:      fileSystemAvailableDelayTimeout,
+		MinTimeout: fileSystemAvailableMinTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -78,14 +78,14 @@ func FileSystemAvailable(conn *efs.EFS, fileSystemID string) (*efs.FileSystemDes
 	return nil, err
 }
 
-func FileSystemDeleted(conn *efs.EFS, fileSystemID string) (*efs.FileSystemDescription, error) {
+func waitFileSystemDeleted(conn *efs.EFS, fileSystemID string) (*efs.FileSystemDescription, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{efs.LifeCycleStateAvailable, efs.LifeCycleStateDeleting},
 		Target:     []string{},
-		Refresh:    FileSystemLifeCycleState(conn, fileSystemID),
-		Timeout:    FileSystemDeletedTimeout,
-		Delay:      FileSystemDeletedDelayTimeout,
-		MinTimeout: FileSystemDeletedMinTimeout,
+		Refresh:    statusFileSystemLifeCycleState(conn, fileSystemID),
+		Timeout:    fileSystemDeletedTimeout,
+		Delay:      fileSystemDeletedDelayTimeout,
+		MinTimeout: fileSystemDeletedMinTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -97,12 +97,12 @@ func FileSystemDeleted(conn *efs.EFS, fileSystemID string) (*efs.FileSystemDescr
 	return nil, err
 }
 
-func BackupPolicyDisabled(conn *efs.EFS, id string) (*efs.BackupPolicy, error) {
+func waitBackupPolicyDisabled(conn *efs.EFS, id string) (*efs.BackupPolicy, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{efs.StatusDisabling},
 		Target:  []string{efs.StatusDisabled},
-		Refresh: BackupPolicyStatus(conn, id),
-		Timeout: BackupPolicyDisabledTimeout,
+		Refresh: statusBackupPolicy(conn, id),
+		Timeout: backupPolicyDisabledTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -114,12 +114,12 @@ func BackupPolicyDisabled(conn *efs.EFS, id string) (*efs.BackupPolicy, error) {
 	return nil, err
 }
 
-func BackupPolicyEnabled(conn *efs.EFS, id string) (*efs.BackupPolicy, error) {
+func waitBackupPolicyEnabled(conn *efs.EFS, id string) (*efs.BackupPolicy, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{efs.StatusEnabling},
 		Target:  []string{efs.StatusEnabled},
-		Refresh: BackupPolicyStatus(conn, id),
-		Timeout: BackupPolicyEnabledTimeout,
+		Refresh: statusBackupPolicy(conn, id),
+		Timeout: backupPolicyEnabledTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()

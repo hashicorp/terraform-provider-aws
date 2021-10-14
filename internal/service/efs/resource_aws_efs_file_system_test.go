@@ -20,6 +20,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
+	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
+	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
 )
 
 func init() {
@@ -442,7 +445,7 @@ func testAccCheckEfsFileSystemDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.FileSystemByID(conn, rs.Primary.ID)
+		_, err := tfefs.FindFileSystemByID(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -471,7 +474,7 @@ func testAccCheckEfsFileSystem(resourceID string, fDesc *efs.FileSystemDescripti
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn
 
-		fs, err := finder.FileSystemByID(conn, rs.Primary.ID)
+		fs, err := tfefs.FindFileSystemByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

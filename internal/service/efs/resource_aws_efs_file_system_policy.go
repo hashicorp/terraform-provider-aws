@@ -14,6 +14,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
+	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
+	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
 )
 
 func ResourceFileSystemPolicy() *schema.Resource {
@@ -72,7 +75,7 @@ func resourceAwsEfsFileSystemPolicyPut(d *schema.ResourceData, meta interface{})
 func resourceFileSystemPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EFSConn
 
-	output, err := finder.FileSystemPolicyByID(conn, d.Id())
+	output, err := tfefs.FindFileSystemPolicyByID(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EFS File System Policy (%s) not found, removing from state", d.Id())
