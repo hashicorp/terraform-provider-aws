@@ -9,17 +9,18 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eks"
 	multierror "github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/naming"
 	tfeks "github.com/hashicorp/terraform-provider-aws/aws/internal/service/eks"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/eks/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
-	RegisterServiceErrorCheckFunc(eks.EndpointsID, testAccErrorCheckSkipEKS)
+	acctest.RegisterServiceErrorCheckFunc(eks.EndpointsID, testAccErrorCheckSkipEKS)
 
 	resource.AddTestSweepers("aws_eks_node_group", &resource.Sweeper{
 		Name: "aws_eks_node_group",
@@ -95,14 +96,14 @@ func testSweepEksNodeGroups(region string) error {
 
 func TestAccAWSEksNodeGroup_basic(t *testing.T) {
 	var nodeGroup eks.Nodegroup
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	eksClusterResourceName := "aws_eks_cluster.test"
 	iamRoleResourceName := "aws_iam_role.node"
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
-		ErrorCheck:   testAccErrorCheck(t, eks.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
 		Steps: []resource.TestStep{
@@ -111,7 +112,7 @@ func TestAccAWSEksNodeGroup_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup),
 					resource.TestCheckResourceAttr(resourceName, "ami_type", eks.AMITypesAl2X8664),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "eks", regexp.MustCompile(fmt.Sprintf("nodegroup/%[1]s/%[1]s/.+", rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "eks", regexp.MustCompile(fmt.Sprintf("nodegroup/%[1]s/%[1]s/.+", rName))),
 					resource.TestCheckResourceAttrPair(resourceName, "cluster_name", eksClusterResourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "capacity_type", eks.CapacityTypesOnDemand),
 					resource.TestCheckResourceAttr(resourceName, "disk_size", "20"),
@@ -147,12 +148,12 @@ func TestAccAWSEksNodeGroup_basic(t *testing.T) {
 
 func TestAccAWSEksNodeGroup_Name_Generated(t *testing.T) {
 	var nodeGroup eks.Nodegroup
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
-		ErrorCheck:   testAccErrorCheck(t, eks.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
 		Steps: []resource.TestStep{
@@ -175,12 +176,12 @@ func TestAccAWSEksNodeGroup_Name_Generated(t *testing.T) {
 
 func TestAccAWSEksNodeGroup_NamePrefix(t *testing.T) {
 	var nodeGroup eks.Nodegroup
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
-		ErrorCheck:   testAccErrorCheck(t, eks.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
 		Steps: []resource.TestStep{
@@ -203,12 +204,12 @@ func TestAccAWSEksNodeGroup_NamePrefix(t *testing.T) {
 
 func TestAccAWSEksNodeGroup_disappears(t *testing.T) {
 	var nodeGroup eks.Nodegroup
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
-		ErrorCheck:   testAccErrorCheck(t, eks.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
 		Steps: []resource.TestStep{
@@ -216,7 +217,7 @@ func TestAccAWSEksNodeGroup_disappears(t *testing.T) {
 				Config: testAccAWSEksNodeGroupConfigNodeGroupName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsEksNodeGroup(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsEksNodeGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -226,12 +227,12 @@ func TestAccAWSEksNodeGroup_disappears(t *testing.T) {
 
 func TestAccAWSEksNodeGroup_AmiType(t *testing.T) {
 	var nodeGroup1, nodeGroup2 eks.Nodegroup
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
-		ErrorCheck:   testAccErrorCheck(t, eks.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
 		Steps: []resource.TestStep{
@@ -260,12 +261,12 @@ func TestAccAWSEksNodeGroup_AmiType(t *testing.T) {
 
 func TestAccAWSEksNodeGroup_CapacityType_Spot(t *testing.T) {
 	var nodeGroup1 eks.Nodegroup
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
-		ErrorCheck:   testAccErrorCheck(t, eks.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
 		Steps: []resource.TestStep{
@@ -287,12 +288,12 @@ func TestAccAWSEksNodeGroup_CapacityType_Spot(t *testing.T) {
 
 func TestAccAWSEksNodeGroup_DiskSize(t *testing.T) {
 	var nodeGroup1 eks.Nodegroup
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
-		ErrorCheck:   testAccErrorCheck(t, eks.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
 		Steps: []resource.TestStep{
@@ -314,12 +315,12 @@ func TestAccAWSEksNodeGroup_DiskSize(t *testing.T) {
 
 func TestAccAWSEksNodeGroup_ForceUpdateVersion(t *testing.T) {
 	var nodeGroup1 eks.Nodegroup
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
-		ErrorCheck:   testAccErrorCheck(t, eks.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
 		Steps: []resource.TestStep{
@@ -349,13 +350,13 @@ func TestAccAWSEksNodeGroup_ForceUpdateVersion(t *testing.T) {
 
 func TestAccAWSEksNodeGroup_InstanceTypes_Multiple(t *testing.T) {
 	var nodeGroup1 eks.Nodegroup
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	ec2InstanceTypeOfferingsDataSourceName := "data.aws_ec2_instance_type_offerings.available"
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
-		ErrorCheck:   testAccErrorCheck(t, eks.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
 		Steps: []resource.TestStep{
@@ -377,12 +378,12 @@ func TestAccAWSEksNodeGroup_InstanceTypes_Multiple(t *testing.T) {
 
 func TestAccAWSEksNodeGroup_InstanceTypes_Single(t *testing.T) {
 	var nodeGroup1 eks.Nodegroup
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
-		ErrorCheck:   testAccErrorCheck(t, eks.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
 		Steps: []resource.TestStep{
@@ -404,12 +405,12 @@ func TestAccAWSEksNodeGroup_InstanceTypes_Single(t *testing.T) {
 
 func TestAccAWSEksNodeGroup_Labels(t *testing.T) {
 	var nodeGroup1, nodeGroup2, nodeGroup3 eks.Nodegroup
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
-		ErrorCheck:   testAccErrorCheck(t, eks.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
 		Steps: []resource.TestStep{
@@ -449,14 +450,14 @@ func TestAccAWSEksNodeGroup_Labels(t *testing.T) {
 
 func TestAccAWSEksNodeGroup_LaunchTemplate_Id(t *testing.T) {
 	var nodeGroup1, nodeGroup2 eks.Nodegroup
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	launchTemplateResourceName1 := "aws_launch_template.test1"
 	launchTemplateResourceName2 := "aws_launch_template.test2"
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
-		ErrorCheck:   testAccErrorCheck(t, eks.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
 		Steps: []resource.TestStep{
@@ -488,14 +489,14 @@ func TestAccAWSEksNodeGroup_LaunchTemplate_Id(t *testing.T) {
 
 func TestAccAWSEksNodeGroup_LaunchTemplate_Name(t *testing.T) {
 	var nodeGroup1, nodeGroup2 eks.Nodegroup
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	launchTemplateResourceName1 := "aws_launch_template.test1"
 	launchTemplateResourceName2 := "aws_launch_template.test2"
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
-		ErrorCheck:   testAccErrorCheck(t, eks.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
 		Steps: []resource.TestStep{
@@ -527,13 +528,13 @@ func TestAccAWSEksNodeGroup_LaunchTemplate_Name(t *testing.T) {
 
 func TestAccAWSEksNodeGroup_LaunchTemplate_Version(t *testing.T) {
 	var nodeGroup1, nodeGroup2 eks.Nodegroup
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	launchTemplateResourceName := "aws_launch_template.test"
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
-		ErrorCheck:   testAccErrorCheck(t, eks.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
 		Steps: []resource.TestStep{
@@ -565,13 +566,13 @@ func TestAccAWSEksNodeGroup_LaunchTemplate_Version(t *testing.T) {
 
 func TestAccAWSEksNodeGroup_ReleaseVersion(t *testing.T) {
 	var nodeGroup1, nodeGroup2 eks.Nodegroup
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	ssmParameterDataSourceName := "data.aws_ssm_parameter.test"
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
-		ErrorCheck:   testAccErrorCheck(t, eks.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
 		Steps: []resource.TestStep{
@@ -601,17 +602,17 @@ func TestAccAWSEksNodeGroup_ReleaseVersion(t *testing.T) {
 
 func TestAccAWSEksNodeGroup_RemoteAccess_Ec2SshKey(t *testing.T) {
 	var nodeGroup1 eks.Nodegroup
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_node_group.test"
 
-	publicKey, _, err := acctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
-		ErrorCheck:   testAccErrorCheck(t, eks.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
 		Steps: []resource.TestStep{
@@ -634,17 +635,17 @@ func TestAccAWSEksNodeGroup_RemoteAccess_Ec2SshKey(t *testing.T) {
 
 func TestAccAWSEksNodeGroup_RemoteAccess_SourceSecurityGroupIds(t *testing.T) {
 	var nodeGroup1 eks.Nodegroup
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_node_group.test"
 
-	publicKey, _, err := acctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
-		ErrorCheck:   testAccErrorCheck(t, eks.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
 		Steps: []resource.TestStep{
@@ -667,12 +668,12 @@ func TestAccAWSEksNodeGroup_RemoteAccess_SourceSecurityGroupIds(t *testing.T) {
 
 func TestAccAWSEksNodeGroup_ScalingConfig_DesiredSize(t *testing.T) {
 	var nodeGroup1, nodeGroup2 eks.Nodegroup
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
-		ErrorCheck:   testAccErrorCheck(t, eks.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
 		Steps: []resource.TestStep{
@@ -708,12 +709,12 @@ func TestAccAWSEksNodeGroup_ScalingConfig_DesiredSize(t *testing.T) {
 
 func TestAccAWSEksNodeGroup_ScalingConfig_MaxSize(t *testing.T) {
 	var nodeGroup1, nodeGroup2 eks.Nodegroup
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
-		ErrorCheck:   testAccErrorCheck(t, eks.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
 		Steps: []resource.TestStep{
@@ -749,12 +750,12 @@ func TestAccAWSEksNodeGroup_ScalingConfig_MaxSize(t *testing.T) {
 
 func TestAccAWSEksNodeGroup_ScalingConfig_MinSize(t *testing.T) {
 	var nodeGroup1, nodeGroup2 eks.Nodegroup
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
-		ErrorCheck:   testAccErrorCheck(t, eks.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
 		Steps: []resource.TestStep{
@@ -790,12 +791,12 @@ func TestAccAWSEksNodeGroup_ScalingConfig_MinSize(t *testing.T) {
 
 func TestAccAWSEksNodeGroup_ScalingConfig_Zero_DesiredSize_MinSize(t *testing.T) {
 	var nodeGroup1, nodeGroup2 eks.Nodegroup
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
-		ErrorCheck:   testAccErrorCheck(t, eks.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
 		Steps: []resource.TestStep{
@@ -841,12 +842,12 @@ func TestAccAWSEksNodeGroup_ScalingConfig_Zero_DesiredSize_MinSize(t *testing.T)
 
 func TestAccAWSEksNodeGroup_Tags(t *testing.T) {
 	var nodeGroup1, nodeGroup2, nodeGroup3 eks.Nodegroup
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
-		ErrorCheck:   testAccErrorCheck(t, eks.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
 		Steps: []resource.TestStep{
@@ -888,12 +889,12 @@ func TestAccAWSEksNodeGroup_Tags(t *testing.T) {
 
 func TestAccAWSEksNodeGroup_Taints(t *testing.T) {
 	var nodeGroup1 eks.Nodegroup
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
-		ErrorCheck:   testAccErrorCheck(t, eks.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
 		Steps: []resource.TestStep{
@@ -951,12 +952,12 @@ func TestAccAWSEksNodeGroup_Taints(t *testing.T) {
 
 func TestAccAWSEksNodeGroup_UpdateConfig(t *testing.T) {
 	var nodeGroup1 eks.Nodegroup
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
-		ErrorCheck:   testAccErrorCheck(t, eks.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
 		Steps: []resource.TestStep{
@@ -989,12 +990,12 @@ func TestAccAWSEksNodeGroup_UpdateConfig(t *testing.T) {
 
 func TestAccAWSEksNodeGroup_Version(t *testing.T) {
 	var nodeGroup1, nodeGroup2 eks.Nodegroup
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
-		ErrorCheck:   testAccErrorCheck(t, eks.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
 		Steps: []resource.TestStep{
@@ -1023,7 +1024,7 @@ func TestAccAWSEksNodeGroup_Version(t *testing.T) {
 }
 
 func testAccErrorCheckSkipEKS(t *testing.T) resource.ErrorCheckFunc {
-	return testAccErrorCheckSkipMessagesContaining(t,
+	return acctest.ErrorCheckSkipMessagesContaining(t,
 		"InvalidParameterException: The following supplied instance types do not exist",
 	)
 }
@@ -1252,7 +1253,7 @@ resource "aws_subnet" "test" {
 }
 
 func testAccAWSEksNodeGroupConfigBase(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSEksNodeGroupConfigBaseIamAndVpc(rName),
 		fmt.Sprintf(`
 resource "aws_eks_cluster" "test" {
@@ -1272,7 +1273,7 @@ resource "aws_eks_cluster" "test" {
 }
 
 func testAccAWSEksNodeGroupConfigBaseVersion(rName string, version string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSEksNodeGroupConfigBaseIamAndVpc(rName),
 		fmt.Sprintf(`
 resource "aws_eks_cluster" "test" {
@@ -1293,7 +1294,7 @@ resource "aws_eks_cluster" "test" {
 }
 
 func testAccAWSEksNodeGroupConfigNodeGroupName(rName string) string {
-	return composeConfig(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
 resource "aws_eks_node_group" "test" {
   cluster_name    = aws_eks_cluster.test.name
   node_group_name = %[1]q
@@ -1316,7 +1317,7 @@ resource "aws_eks_node_group" "test" {
 }
 
 func testAccAWSEksNodeGroupConfigNodeGroupNameGenerated(rName string) string {
-	return composeConfig(testAccAWSEksNodeGroupConfigBase(rName), `
+	return acctest.ConfigCompose(testAccAWSEksNodeGroupConfigBase(rName), `
 resource "aws_eks_node_group" "test" {
   cluster_name  = aws_eks_cluster.test.name
   node_role_arn = aws_iam_role.node.arn
@@ -1338,7 +1339,7 @@ resource "aws_eks_node_group" "test" {
 }
 
 func testAccAWSEksNodeGroupConfigNodeGroupNamePrefix(rName, namePrefix string) string {
-	return composeConfig(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
 resource "aws_eks_node_group" "test" {
   cluster_name           = aws_eks_cluster.test.name
   node_group_name_prefix = %[1]q
@@ -1361,7 +1362,7 @@ resource "aws_eks_node_group" "test" {
 }
 
 func testAccAWSEksNodeGroupConfigAmiType(rName, amiType string) string {
-	return composeConfig(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
 resource "aws_eks_node_group" "test" {
   ami_type        = %[2]q
   cluster_name    = aws_eks_cluster.test.name
@@ -1385,7 +1386,7 @@ resource "aws_eks_node_group" "test" {
 }
 
 func testAccAWSEksNodeGroupConfigCapacityType(rName, capacityType string) string {
-	return composeConfig(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
 resource "aws_eks_node_group" "test" {
   capacity_type   = %[2]q
   cluster_name    = aws_eks_cluster.test.name
@@ -1409,7 +1410,7 @@ resource "aws_eks_node_group" "test" {
 }
 
 func testAccAWSEksNodeGroupConfigDiskSize(rName string, diskSize int) string {
-	return composeConfig(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
 resource "aws_eks_node_group" "test" {
   cluster_name    = aws_eks_cluster.test.name
   disk_size       = %[2]d
@@ -1433,7 +1434,7 @@ resource "aws_eks_node_group" "test" {
 }
 
 func testAccAWSEksNodeGroupConfigForceUpdateVersion(rName, version string) string {
-	return composeConfig(testAccAWSEksNodeGroupConfigBaseVersion(rName, version), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSEksNodeGroupConfigBaseVersion(rName, version), fmt.Sprintf(`
 resource "aws_eks_node_group" "test" {
   cluster_name         = aws_eks_cluster.test.name
   force_update_version = true
@@ -1458,7 +1459,7 @@ resource "aws_eks_node_group" "test" {
 }
 
 func testAccAWSEksNodeGroupConfigInstanceTypesMultiple(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSEksNodeGroupConfigBase(rName),
 		fmt.Sprintf(`
 data "aws_ec2_instance_type_offerings" "available" {
@@ -1491,7 +1492,7 @@ resource "aws_eks_node_group" "test" {
 }
 
 func testAccAWSEksNodeGroupConfigInstanceTypesSingle(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSEksNodeGroupConfigBase(rName),
 		fmt.Sprintf(`
 data "aws_ec2_instance_type_offering" "available" {
@@ -1526,7 +1527,7 @@ resource "aws_eks_node_group" "test" {
 }
 
 func testAccAWSEksNodeGroupConfigLabels1(rName, labelKey1, labelValue1 string) string {
-	return composeConfig(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
 resource "aws_eks_node_group" "test" {
   cluster_name    = aws_eks_cluster.test.name
   node_group_name = %[1]q
@@ -1553,7 +1554,7 @@ resource "aws_eks_node_group" "test" {
 }
 
 func testAccAWSEksNodeGroupConfigLabels2(rName, labelKey1, labelValue1, labelKey2, labelValue2 string) string {
-	return composeConfig(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
 resource "aws_eks_node_group" "test" {
   cluster_name    = aws_eks_cluster.test.name
   node_group_name = %[1]q
@@ -1581,7 +1582,7 @@ resource "aws_eks_node_group" "test" {
 }
 
 func testAccAWSEksNodeGroupConfigLaunchTemplateId1(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSEksNodeGroupConfigBase(rName),
 		fmt.Sprintf(`
 data "aws_ssm_parameter" "test" {
@@ -1629,7 +1630,7 @@ resource "aws_eks_node_group" "test" {
 }
 
 func testAccAWSEksNodeGroupConfigLaunchTemplateId2(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSEksNodeGroupConfigBase(rName),
 		fmt.Sprintf(`
 data "aws_ssm_parameter" "test" {
@@ -1677,7 +1678,7 @@ resource "aws_eks_node_group" "test" {
 }
 
 func testAccAWSEksNodeGroupConfigLaunchTemplateName1(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSEksNodeGroupConfigBase(rName),
 		fmt.Sprintf(`
 data "aws_ssm_parameter" "test" {
@@ -1725,7 +1726,7 @@ resource "aws_eks_node_group" "test" {
 }
 
 func testAccAWSEksNodeGroupConfigLaunchTemplateName2(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSEksNodeGroupConfigBase(rName),
 		fmt.Sprintf(`
 data "aws_ssm_parameter" "test" {
@@ -1773,7 +1774,7 @@ resource "aws_eks_node_group" "test" {
 }
 
 func testAccAWSEksNodeGroupConfigLaunchTemplateVersion1(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSEksNodeGroupConfigBase(rName),
 		fmt.Sprintf(`
 data "aws_ssm_parameter" "test" {
@@ -1815,7 +1816,7 @@ resource "aws_eks_node_group" "test" {
 }
 
 func testAccAWSEksNodeGroupConfigLaunchTemplateVersion2(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSEksNodeGroupConfigBase(rName),
 		fmt.Sprintf(`
 data "aws_ssm_parameter" "test" {
@@ -1857,7 +1858,7 @@ resource "aws_eks_node_group" "test" {
 }
 
 func testAccAWSEksNodeGroupConfigReleaseVersion(rName string, version string) string {
-	return composeConfig(testAccAWSEksNodeGroupConfigBaseVersion(rName, version), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSEksNodeGroupConfigBaseVersion(rName, version), fmt.Sprintf(`
 data "aws_ssm_parameter" "test" {
   name = "/aws/service/eks/optimized-ami/${aws_eks_cluster.test.version}/amazon-linux-2/recommended/release_version"
 }
@@ -1886,7 +1887,7 @@ resource "aws_eks_node_group" "test" {
 }
 
 func testAccAWSEksNodeGroupConfigRemoteAccessEc2SshKey(rName, publicKey string) string {
-	return composeConfig(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
 resource "aws_key_pair" "test" {
   key_name   = %[1]q
   public_key = %[2]q
@@ -1918,7 +1919,7 @@ resource "aws_eks_node_group" "test" {
 }
 
 func testAccAWSEksNodeGroupConfigRemoteAccessSourceSecurityGroupIds1(rName, publicKey string) string {
-	return composeConfig(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
 resource "aws_key_pair" "test" {
   key_name   = %[1]q
   public_key = %[2]q
@@ -1951,7 +1952,7 @@ resource "aws_eks_node_group" "test" {
 }
 
 func testAccAWSEksNodeGroupConfigScalingConfigSizes(rName string, desiredSize, maxSize, minSize int) string {
-	return composeConfig(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
 resource "aws_eks_node_group" "test" {
   cluster_name    = aws_eks_cluster.test.name
   node_group_name = %[1]q
@@ -1974,7 +1975,7 @@ resource "aws_eks_node_group" "test" {
 }
 
 func testAccAWSEksNodeGroupConfigTags1(rName, tagKey1, tagValue1 string) string {
-	return composeConfig(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
 resource "aws_eks_node_group" "test" {
   cluster_name    = aws_eks_cluster.test.name
   node_group_name = %[1]q
@@ -2001,7 +2002,7 @@ resource "aws_eks_node_group" "test" {
 }
 
 func testAccAWSEksNodeGroupConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return composeConfig(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
 resource "aws_eks_node_group" "test" {
   cluster_name    = aws_eks_cluster.test.name
   node_group_name = %[1]q
@@ -2029,7 +2030,7 @@ resource "aws_eks_node_group" "test" {
 }
 
 func testAccAWSEksNodeGroupConfigTaints1(rName, taintKey1, taintValue1, taintEffect1 string) string {
-	return composeConfig(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
 resource "aws_eks_node_group" "test" {
   cluster_name    = aws_eks_cluster.test.name
   node_group_name = %[1]q
@@ -2058,7 +2059,7 @@ resource "aws_eks_node_group" "test" {
 }
 
 func testAccAWSEksNodeGroupConfigTaints2(rName, taintKey1, taintValue1, taintEffect1, taintKey2, taintValue2, taintEffect2 string) string {
-	return composeConfig(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
 resource "aws_eks_node_group" "test" {
   cluster_name    = aws_eks_cluster.test.name
   node_group_name = %[1]q
@@ -2093,7 +2094,7 @@ resource "aws_eks_node_group" "test" {
 }
 
 func testAccAWSEksNodeGroupConfigUpdateConfig1(rName string) string {
-	return composeConfig(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
 resource "aws_eks_node_group" "test" {
   cluster_name    = aws_eks_cluster.test.name
   node_group_name = %[1]q
@@ -2120,7 +2121,7 @@ resource "aws_eks_node_group" "test" {
 }
 
 func testAccAWSEksNodeGroupConfigUpdateConfig2(rName string) string {
-	return composeConfig(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
 resource "aws_eks_node_group" "test" {
   cluster_name    = aws_eks_cluster.test.name
   node_group_name = %[1]q
@@ -2147,7 +2148,7 @@ resource "aws_eks_node_group" "test" {
 }
 
 func testAccAWSEksNodeGroupConfigVersion(rName, version string) string {
-	return composeConfig(testAccAWSEksNodeGroupConfigBaseVersion(rName, version), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSEksNodeGroupConfigBaseVersion(rName, version), fmt.Sprintf(`
 resource "aws_eks_node_group" "test" {
   cluster_name    = aws_eks_cluster.test.name
   node_group_name = %[1]q

@@ -5,19 +5,20 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/eks"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSEksNodegroupDataSource_basic(t *testing.T) {
 	var nodeGroup eks.Nodegroup
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dataSourceResourceName := "data.aws_eks_node_group.test"
 	resourceName := "aws_eks_node_group.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
-		ErrorCheck:   testAccErrorCheck(t, eks.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEksClusterDestroy,
 		Steps: []resource.TestStep{
@@ -56,7 +57,7 @@ func TestAccAWSEksNodegroupDataSource_basic(t *testing.T) {
 }
 
 func testAccAWSEksNodeGroupDataSourceConfig(rName string) string {
-	return composeConfig(testAccAWSEksNodeGroupConfigNodeGroupName(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSEksNodeGroupConfigNodeGroupName(rName), fmt.Sprintf(`
 data "aws_eks_node_group" "test" {
   cluster_name    = aws_eks_cluster.test.name
   node_group_name = %[1]q
