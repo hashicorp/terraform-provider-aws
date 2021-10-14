@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSResourceGroup_basic(t *testing.T) {
+func TestAccResourceGroupsGroup_Resource_basic(t *testing.T) {
 	var v resourcegroups.Group
 	resourceName := "aws_resourcegroups_group.test"
 	n := fmt.Sprintf("test-group-%d", sdkacctest.RandInt())
@@ -68,7 +68,7 @@ func TestAccAWSResourceGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSResourceGroup_tags(t *testing.T) {
+func TestAccResourceGroupsGroup_Resource_tags(t *testing.T) {
 	var v resourcegroups.Group
 	resourceName := "aws_resourcegroups_group.test"
 	n := fmt.Sprintf("test-group-%d", sdkacctest.RandInt())
