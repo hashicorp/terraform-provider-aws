@@ -253,7 +253,7 @@ func testAccCheckAWSDynamoDbItemDestroy(s *terraform.State) error {
 			ExpressionAttributeNames: buildDynamoDbExpressionAttributeNames(attributes),
 		})
 		if err != nil {
-			if isAWSErr(err, dynamodb.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeResourceNotFoundException, "") {
 				return nil
 			}
 			return fmt.Errorf("Error retrieving DynamoDB table item: %s", err)

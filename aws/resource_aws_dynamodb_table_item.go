@@ -173,7 +173,7 @@ func resourceAwsDynamoDbTableItemRead(d *schema.ResourceData, meta interface{}) 
 		ExpressionAttributeNames: buildDynamoDbExpressionAttributeNames(attributes),
 	})
 	if err != nil {
-		if isAWSErr(err, dynamodb.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeResourceNotFoundException, "") {
 			log.Printf("[WARN] Dynamodb Table Item (%s) not found, error code (404)", d.Id())
 			d.SetId("")
 			return nil
