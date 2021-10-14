@@ -8,15 +8,16 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSGroupMembership_basic(t *testing.T) {
 	var group iam.GetGroupOutput
 
-	rString := acctest.RandString(8)
+	rString := sdkacctest.RandString(8)
 	groupName := fmt.Sprintf("tf-acc-group-gm-basic-%s", rString)
 	userName := fmt.Sprintf("tf-acc-user-gm-basic-%s", rString)
 	userName2 := fmt.Sprintf("tf-acc-user-gm-basic-two-%s", rString)
@@ -24,8 +25,8 @@ func TestAccAWSGroupMembership_basic(t *testing.T) {
 	membershipName := fmt.Sprintf("tf-acc-membership-gm-basic-%s", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGroupMembershipDestroy,
 		Steps: []resource.TestStep{
@@ -59,14 +60,14 @@ func TestAccAWSGroupMembership_basic(t *testing.T) {
 func TestAccAWSGroupMembership_paginatedUserList(t *testing.T) {
 	var group iam.GetGroupOutput
 
-	rString := acctest.RandString(8)
+	rString := sdkacctest.RandString(8)
 	groupName := fmt.Sprintf("tf-acc-group-gm-pul-%s", rString)
 	membershipName := fmt.Sprintf("tf-acc-membership-gm-pul-%s", rString)
 	userNamePrefix := fmt.Sprintf("tf-acc-user-gm-pul-%s-", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGroupMembershipDestroy,
 		Steps: []resource.TestStep{

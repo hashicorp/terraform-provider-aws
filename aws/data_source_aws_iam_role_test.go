@@ -5,18 +5,19 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSDataSourceIAMRole_basic(t *testing.T) {
-	roleName := acctest.RandomWithPrefix("tf-acc-test")
+	roleName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_iam_role.test"
 	resourceName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, iam.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -38,13 +39,13 @@ func TestAccAWSDataSourceIAMRole_basic(t *testing.T) {
 }
 
 func TestAccAWSDataSourceIAMRole_tags(t *testing.T) {
-	roleName := acctest.RandomWithPrefix("tf-acc-test")
+	roleName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_iam_role.test"
 	resourceName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, iam.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{

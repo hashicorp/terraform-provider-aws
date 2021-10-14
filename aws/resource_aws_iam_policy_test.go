@@ -9,9 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -96,7 +97,7 @@ func testSweepIamPolicies(region string) error {
 
 func TestAccAWSIAMPolicy_basic(t *testing.T) {
 	var out iam.GetPolicyOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_iam_policy.test"
 	expectedPolicyText := `{
   "Version": "2012-10-17",
@@ -112,8 +113,8 @@ func TestAccAWSIAMPolicy_basic(t *testing.T) {
 }
 `
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIAMPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -121,7 +122,7 @@ func TestAccAWSIAMPolicy_basic(t *testing.T) {
 				Config: testAccAWSIAMPolicyConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSIAMPolicyExists(resourceName, &out),
-					testAccCheckResourceAttrGlobalARN(resourceName, "arn", "iam", fmt.Sprintf("policy/%s", rName)),
+					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "iam", fmt.Sprintf("policy/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "path", "/"),
@@ -141,12 +142,12 @@ func TestAccAWSIAMPolicy_basic(t *testing.T) {
 
 func TestAccAWSIAMPolicy_description(t *testing.T) {
 	var out iam.GetPolicyOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_iam_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIAMPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -168,12 +169,12 @@ func TestAccAWSIAMPolicy_description(t *testing.T) {
 
 func TestAccAWSIAMPolicy_tags(t *testing.T) {
 	var out iam.GetPolicyOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_iam_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIAMPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -213,12 +214,12 @@ func TestAccAWSIAMPolicy_tags(t *testing.T) {
 
 func TestAccAWSIAMPolicy_disappears(t *testing.T) {
 	var out iam.GetPolicyOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_iam_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIAMPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -226,7 +227,7 @@ func TestAccAWSIAMPolicy_disappears(t *testing.T) {
 				Config: testAccAWSIAMPolicyConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSIAMPolicyExists(resourceName, &out),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsIamPolicy(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsIamPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -240,8 +241,8 @@ func TestAccAWSIAMPolicy_namePrefix(t *testing.T) {
 	resourceName := "aws_iam_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIAMPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -264,12 +265,12 @@ func TestAccAWSIAMPolicy_namePrefix(t *testing.T) {
 
 func TestAccAWSIAMPolicy_path(t *testing.T) {
 	var out iam.GetPolicyOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_iam_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIAMPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -291,14 +292,14 @@ func TestAccAWSIAMPolicy_path(t *testing.T) {
 
 func TestAccAWSIAMPolicy_policy(t *testing.T) {
 	var out iam.GetPolicyOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_iam_policy.test"
 	policy1 := "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Action\":[\"ec2:Describe*\"],\"Effect\":\"Allow\",\"Resource\":\"*\"}]}"
 	policy2 := "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Action\":[\"ec2:*\"],\"Effect\":\"Allow\",\"Resource\":\"*\"}]}"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIAMPolicyDestroy,
 		Steps: []resource.TestStep{

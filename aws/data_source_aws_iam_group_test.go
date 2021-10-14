@@ -5,16 +5,17 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSDataSourceIAMGroup_basic(t *testing.T) {
-	groupName := fmt.Sprintf("test-datasource-user-%d", acctest.RandInt())
+	groupName := fmt.Sprintf("test-datasource-user-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, iam.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -23,7 +24,7 @@ func TestAccAWSDataSourceIAMGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet("data.aws_iam_group.test", "group_id"),
 					resource.TestCheckResourceAttr("data.aws_iam_group.test", "path", "/"),
 					resource.TestCheckResourceAttr("data.aws_iam_group.test", "group_name", groupName),
-					testAccCheckResourceAttrGlobalARN("data.aws_iam_group.test", "arn", "iam", fmt.Sprintf("group/%s", groupName)),
+					acctest.CheckResourceAttrGlobalARN("data.aws_iam_group.test", "arn", "iam", fmt.Sprintf("group/%s", groupName)),
 				),
 			},
 		},
@@ -31,14 +32,14 @@ func TestAccAWSDataSourceIAMGroup_basic(t *testing.T) {
 }
 
 func TestAccAWSDataSourceIAMGroup_users(t *testing.T) {
-	groupName := fmt.Sprintf("test-datasource-group-%d", acctest.RandInt())
-	userName := fmt.Sprintf("test-datasource-user-%d", acctest.RandInt())
-	groupMemberShipName := fmt.Sprintf("test-datasource-group-membership-%d", acctest.RandInt())
+	groupName := fmt.Sprintf("test-datasource-group-%d", sdkacctest.RandInt())
+	userName := fmt.Sprintf("test-datasource-user-%d", sdkacctest.RandInt())
+	groupMemberShipName := fmt.Sprintf("test-datasource-group-membership-%d", sdkacctest.RandInt())
 	userCount := 101
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, iam.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -47,7 +48,7 @@ func TestAccAWSDataSourceIAMGroup_users(t *testing.T) {
 					resource.TestCheckResourceAttrSet("data.aws_iam_group.test", "group_id"),
 					resource.TestCheckResourceAttr("data.aws_iam_group.test", "path", "/"),
 					resource.TestCheckResourceAttr("data.aws_iam_group.test", "group_name", groupName),
-					testAccCheckResourceAttrGlobalARN("data.aws_iam_group.test", "arn", "iam", fmt.Sprintf("group/%s", groupName)),
+					acctest.CheckResourceAttrGlobalARN("data.aws_iam_group.test", "arn", "iam", fmt.Sprintf("group/%s", groupName)),
 					resource.TestCheckResourceAttr("data.aws_iam_group.test", "users.#", fmt.Sprint(userCount)),
 					resource.TestCheckResourceAttrSet("data.aws_iam_group.test", "users.0.arn"),
 					resource.TestCheckResourceAttrSet("data.aws_iam_group.test", "users.0.user_id"),

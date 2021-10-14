@@ -7,21 +7,22 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSRolePolicyAttachment_basic(t *testing.T) {
 	var out iam.ListAttachedRolePoliciesOutput
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	testPolicy := fmt.Sprintf("tf-acctest-%d", rInt)
 	testPolicy2 := fmt.Sprintf("tf-acctest2-%d", rInt)
 	testPolicy3 := fmt.Sprintf("tf-acctest3-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRolePolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -67,12 +68,12 @@ func TestAccAWSRolePolicyAttachment_basic(t *testing.T) {
 func TestAccAWSRolePolicyAttachment_disappears(t *testing.T) {
 	var attachedRolePolicies iam.ListAttachedRolePoliciesOutput
 
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_iam_role_policy_attachment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRolePolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -92,13 +93,13 @@ func TestAccAWSRolePolicyAttachment_disappears_Role(t *testing.T) {
 	var attachedRolePolicies iam.ListAttachedRolePoliciesOutput
 	var role iam.Role
 
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	iamRoleResourceName := "aws_iam_role.test"
 	resourceName := "aws_iam_role_policy_attachment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRolePolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -109,7 +110,7 @@ func TestAccAWSRolePolicyAttachment_disappears_Role(t *testing.T) {
 					testAccCheckAWSRolePolicyAttachmentExists(resourceName, 1, &attachedRolePolicies),
 					// DeleteConflict: Cannot delete entity, must detach all policies first.
 					testAccCheckAWSIAMRolePolicyAttachmentDisappears(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsIamRole(), iamRoleResourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsIamRole(), iamRoleResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

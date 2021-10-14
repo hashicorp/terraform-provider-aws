@@ -7,16 +7,17 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSIAMRolesDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_iam_roles.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, iam.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -30,13 +31,13 @@ func TestAccAWSIAMRolesDataSource_basic(t *testing.T) {
 }
 
 func TestAccAWSIAMRolesDataSource_nameRegex(t *testing.T) {
-	rCount := strconv.Itoa(acctest.RandIntRange(1, 4))
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rCount := strconv.Itoa(sdkacctest.RandIntRange(1, 4))
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_iam_roles.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, iam.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -51,14 +52,14 @@ func TestAccAWSIAMRolesDataSource_nameRegex(t *testing.T) {
 }
 
 func TestAccAWSIAMRolesDataSource_pathPrefix(t *testing.T) {
-	rCount := strconv.Itoa(acctest.RandIntRange(1, 4))
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	rPathPrefix := acctest.RandomWithPrefix("tf-acc-path")
+	rCount := strconv.Itoa(sdkacctest.RandIntRange(1, 4))
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rPathPrefix := sdkacctest.RandomWithPrefix("tf-acc-path")
 	dataSourceName := "data.aws_iam_roles.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, iam.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -76,8 +77,8 @@ func TestAccAWSIAMRolesDataSource_nonExistentPathPrefix(t *testing.T) {
 	dataSourceName := "data.aws_iam_roles.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, iam.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -92,14 +93,14 @@ func TestAccAWSIAMRolesDataSource_nonExistentPathPrefix(t *testing.T) {
 }
 
 func TestAccAWSIAMRolesDataSource_nameRegexAndPathPrefix(t *testing.T) {
-	rCount := strconv.Itoa(acctest.RandIntRange(1, 4))
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	rPathPrefix := acctest.RandomWithPrefix("tf-acc-path")
+	rCount := strconv.Itoa(sdkacctest.RandIntRange(1, 4))
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rPathPrefix := sdkacctest.RandomWithPrefix("tf-acc-path")
 	dataSourceName := "data.aws_iam_roles.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, iam.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
