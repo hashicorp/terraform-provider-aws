@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSRDSEngineVersionDataSource_basic(t *testing.T) {
@@ -107,7 +108,7 @@ func TestAccAWSRDSEngineVersionDataSource_defaultOnly(t *testing.T) {
 }
 
 func testAccAWSRDSEngineVersionPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).rdsconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 	input := &rds.DescribeDBEngineVersionsInput{
 		Engine:      aws.String("mysql"),

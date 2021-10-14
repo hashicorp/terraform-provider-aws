@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsDbSnapshot() *schema.Resource {
@@ -115,8 +116,8 @@ func resourceAwsDbSnapshot() *schema.Resource {
 }
 
 func resourceAwsDbSnapshotCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).RDSConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 	dBInstanceIdentifier := d.Get("db_instance_identifier").(string)
 
@@ -151,9 +152,9 @@ func resourceAwsDbSnapshotCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsDbSnapshotRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).RDSConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	params := &rds.DescribeDBSnapshotsInput{
 		DBSnapshotIdentifier: aws.String(d.Id()),
@@ -213,7 +214,7 @@ func resourceAwsDbSnapshotRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsDbSnapshotDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*conns.AWSClient).RDSConn
 
 	params := &rds.DeleteDBSnapshotInput{
 		DBSnapshotIdentifier: aws.String(d.Id()),
@@ -231,7 +232,7 @@ func resourceAwsDbSnapshotDelete(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsDbSnapshotUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*conns.AWSClient).RDSConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -247,7 +248,7 @@ func resourceAwsDbSnapshotUpdate(d *schema.ResourceData, meta interface{}) error
 func resourceAwsDbSnapshotStateRefreshFunc(
 	d *schema.ResourceData, meta interface{}) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		conn := meta.(*AWSClient).rdsconn
+		conn := meta.(*conns.AWSClient).RDSConn
 
 		opts := &rds.DescribeDBSnapshotsInput{
 			DBSnapshotIdentifier: aws.String(d.Id()),

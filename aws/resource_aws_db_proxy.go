@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsDbProxy() *schema.Resource {
@@ -117,8 +118,8 @@ func resourceAwsDbProxy() *schema.Resource {
 }
 
 func resourceAwsDbProxyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).RDSConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	params := rds.CreateDBProxyInput{
@@ -246,9 +247,9 @@ func flattenDbProxyAuths(userAuthConfigs []*rds.UserAuthConfigInfo) []interface{
 }
 
 func resourceAwsDbProxyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).RDSConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	params := rds.DescribeDBProxiesInput{
 		DBProxyName: aws.String(d.Id()),
@@ -314,7 +315,7 @@ func resourceAwsDbProxyRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsDbProxyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*conns.AWSClient).RDSConn
 
 	if d.HasChanges(
 		"auth",
@@ -380,7 +381,7 @@ func resourceAwsDbProxyUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsDbProxyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*conns.AWSClient).RDSConn
 
 	params := rds.DeleteDBProxyInput{
 		DBProxyName: aws.String(d.Id()),

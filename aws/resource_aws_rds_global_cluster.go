@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/rds/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 const (
@@ -109,7 +110,7 @@ func resourceAwsRDSGlobalCluster() *schema.Resource {
 }
 
 func resourceAwsRDSGlobalClusterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*conns.AWSClient).RDSConn
 
 	input := &rds.CreateGlobalClusterInput{
 		GlobalClusterIdentifier: aws.String(d.Get("global_cluster_identifier").(string)),
@@ -161,7 +162,7 @@ func resourceAwsRDSGlobalClusterCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsRDSGlobalClusterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*conns.AWSClient).RDSConn
 
 	globalCluster, err := rdsDescribeGlobalCluster(conn, d.Id())
 
@@ -205,7 +206,7 @@ func resourceAwsRDSGlobalClusterRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsRDSGlobalClusterUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*conns.AWSClient).RDSConn
 
 	input := &rds.ModifyGlobalClusterInput{
 		DeletionProtection:      aws.Bool(d.Get("deletion_protection").(bool)),
@@ -250,7 +251,7 @@ func resourceAwsRDSGlobalClusterGetIdByArn(conn *rds.RDS, arn string) string {
 }
 
 func resourceAwsRDSGlobalClusterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*conns.AWSClient).RDSConn
 
 	if d.Get("force_destroy").(bool) {
 		for _, globalClusterMemberRaw := range d.Get("global_cluster_members").(*schema.Set).List() {

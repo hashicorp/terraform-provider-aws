@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsDbEventCategories() *schema.Resource {
@@ -29,7 +30,7 @@ func dataSourceAwsDbEventCategories() *schema.Resource {
 }
 
 func dataSourceAwsDbEventCategoriesRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*conns.AWSClient).RDSConn
 
 	req := &rds.DescribeEventCategoriesInput{}
 
@@ -55,7 +56,7 @@ func dataSourceAwsDbEventCategoriesRead(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	d.SetId(meta.(*AWSClient).region)
+	d.SetId(meta.(*conns.AWSClient).Region)
 	if err := d.Set("event_categories", eventCategories); err != nil {
 		return fmt.Errorf("Error setting Event Categories: %w", err)
 	}

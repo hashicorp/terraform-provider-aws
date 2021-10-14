@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSRDSClusterEndpoint_basic(t *testing.T) {
@@ -140,7 +141,7 @@ func testAccCheckAWSClusterEndpointDestroy(s *terraform.State) error {
 }
 
 func testAccCheckAWSClusterEndpointDestroyWithProvider(s *terraform.State, provider *schema.Provider) error {
-	conn := provider.Meta().(*AWSClient).rdsconn
+	conn := provider.Meta().(*conns.AWSClient).RDSConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_rds_cluster_endpoint" {
@@ -189,7 +190,7 @@ func testAccCheckAWSRDSClusterEndpointExistsWithProvider(resourceName string, en
 			return fmt.Errorf("DBClusterEndpoint ID is not set")
 		}
 
-		conn := provider.Meta().(*AWSClient).rdsconn
+		conn := provider.Meta().(*conns.AWSClient).RDSConn
 
 		response, err := conn.DescribeDBClusterEndpoints(&rds.DescribeDBClusterEndpointsInput{
 			DBClusterEndpointIdentifier: aws.String(rs.Primary.ID),

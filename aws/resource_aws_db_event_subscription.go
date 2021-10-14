@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/rds/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/rds/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsDbEventSubscription() *schema.Resource {
@@ -93,8 +94,8 @@ func resourceAwsDbEventSubscription() *schema.Resource {
 }
 
 func resourceAwsDbEventSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).RDSConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	name := naming.Generate(d.Get("name").(string), d.Get("name_prefix").(string))
@@ -137,9 +138,9 @@ func resourceAwsDbEventSubscriptionCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsDbEventSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).RDSConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	sub, err := finder.EventSubscriptionByID(conn, d.Id())
 
@@ -185,7 +186,7 @@ func resourceAwsDbEventSubscriptionRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsDbEventSubscriptionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*conns.AWSClient).RDSConn
 
 	if d.HasChangesExcept("tags", "tags_all", "source_ids") {
 		input := &rds.ModifyEventSubscriptionInput{
@@ -264,7 +265,7 @@ func resourceAwsDbEventSubscriptionUpdate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsDbEventSubscriptionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*conns.AWSClient).RDSConn
 
 	log.Printf("[DEBUG] Deleting RDS Event Subscription: (%s)", d.Id())
 	_, err := conn.DeleteEventSubscription(&rds.DeleteEventSubscriptionInput{

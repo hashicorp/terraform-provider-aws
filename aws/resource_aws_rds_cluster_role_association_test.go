@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/rds/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSRDSClusterRoleAssociation_basic(t *testing.T) {
@@ -130,7 +131,7 @@ func testAccCheckAWSRDSClusterRoleAssociationExists(resourceName string, v *rds.
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).rdsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 		role, err := finder.DBClusterRoleByDBClusterIDAndRoleARN(conn, dbClusterID, roleARN)
 
@@ -145,7 +146,7 @@ func testAccCheckAWSRDSClusterRoleAssociationExists(resourceName string, v *rds.
 }
 
 func testAccCheckAWSRDSClusterRoleAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).rdsconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_db_cluster_role_association" {

@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/rds/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/rds/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsRDSClusterRoleAssociation() *schema.Resource {
@@ -46,7 +47,7 @@ func resourceAwsRDSClusterRoleAssociation() *schema.Resource {
 }
 
 func resourceAwsRDSClusterRoleAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*conns.AWSClient).RDSConn
 
 	dbClusterID := d.Get("db_cluster_identifier").(string)
 	roleARN := d.Get("role_arn").(string)
@@ -75,7 +76,7 @@ func resourceAwsRDSClusterRoleAssociationCreate(d *schema.ResourceData, meta int
 }
 
 func resourceAwsRDSClusterRoleAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*conns.AWSClient).RDSConn
 
 	dbClusterID, roleARN, err := tfrds.ClusterRoleAssociationParseResourceID(d.Id())
 
@@ -103,7 +104,7 @@ func resourceAwsRDSClusterRoleAssociationRead(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsRDSClusterRoleAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*conns.AWSClient).RDSConn
 
 	dbClusterID, roleARN, err := tfrds.ClusterRoleAssociationParseResourceID(d.Id())
 
