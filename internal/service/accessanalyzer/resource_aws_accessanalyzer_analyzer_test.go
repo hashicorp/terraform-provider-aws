@@ -1,4 +1,4 @@
-package aws
+package accessanalyzer_test
 
 import (
 	"fmt"
