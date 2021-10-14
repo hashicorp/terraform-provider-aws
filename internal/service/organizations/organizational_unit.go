@@ -85,7 +85,7 @@ func resourceOrganizationalUnitCreate(d *schema.ResourceData, meta interface{}) 
 	createOpts := &organizations.CreateOrganizationalUnitInput{
 		Name:     aws.String(d.Get("name").(string)),
 		ParentId: aws.String(d.Get("parent_id").(string)),
-		Tags:     tags.IgnoreAws().OrganizationsTags(),
+		Tags:     Tags(tags.IgnoreAws()),
 	}
 
 	var err error
@@ -181,7 +181,7 @@ func resourceOrganizationalUnitRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("name", ou.Name)
 	d.Set("parent_id", parentId)
 
-	tags, err := tftags.OrganizationsListTags(conn, d.Id())
+	tags, err := ListTags(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Organizations Organizational Unit (%s): %w", d.Id(), err)
@@ -219,7 +219,7 @@ func resourceOrganizationalUnitUpdate(d *schema.ResourceData, meta interface{}) 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.OrganizationsUpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating Organizations Organizational Unit (%s) tags: %w", d.Id(), err)
 		}
 	}
