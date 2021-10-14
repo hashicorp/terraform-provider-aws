@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsWorkLinkFleet() *schema.Resource {
@@ -120,7 +121,7 @@ func resourceAwsWorkLinkFleet() *schema.Resource {
 }
 
 func resourceAwsWorkLinkFleetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).worklinkconn
+	conn := meta.(*conns.AWSClient).WorkLinkConn
 
 	input := &worklink.CreateFleetInput{
 		FleetName:                  aws.String(d.Get("name").(string)),
@@ -158,7 +159,7 @@ func resourceAwsWorkLinkFleetCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsWorkLinkFleetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).worklinkconn
+	conn := meta.(*conns.AWSClient).WorkLinkConn
 
 	resp, err := conn.DescribeFleetMetadata(&worklink.DescribeFleetMetadataInput{
 		FleetArn: aws.String(d.Id()),
@@ -222,7 +223,7 @@ func resourceAwsWorkLinkFleetRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsWorkLinkFleetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).worklinkconn
+	conn := meta.(*conns.AWSClient).WorkLinkConn
 
 	input := &worklink.UpdateFleetMetadataInput{
 		FleetArn:                   aws.String(d.Id()),
@@ -273,7 +274,7 @@ func resourceAwsWorkLinkFleetUpdate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsWorkLinkFleetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).worklinkconn
+	conn := meta.(*conns.AWSClient).WorkLinkConn
 
 	input := &worklink.DeleteFleetInput{
 		FleetArn: aws.String(d.Id()),
