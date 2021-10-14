@@ -19,15 +19,15 @@ func TestAccAWSMediaStoreContainerPolicy_basic(t *testing.T) {
 	resourceName := "aws_media_store_container_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSMediaStore(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, mediastore.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsMediaStoreContainerPolicyDestroy,
+		CheckDestroy: testAccCheckContainerPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMediaStoreContainerPolicyConfig(rname, sdkacctest.RandString(5)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsMediaStoreContainerPolicyExists(resourceName),
+					testAccCheckContainerPolicyExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "container_name"),
 					resource.TestCheckResourceAttrSet(resourceName, "policy"),
 				),
@@ -40,7 +40,7 @@ func TestAccAWSMediaStoreContainerPolicy_basic(t *testing.T) {
 			{
 				Config: testAccMediaStoreContainerPolicyConfig(rname, sdkacctest.RandString(5)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsMediaStoreContainerPolicyExists(resourceName),
+					testAccCheckContainerPolicyExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "container_name"),
 					resource.TestCheckResourceAttrSet(resourceName, "policy"),
 				),
@@ -49,7 +49,7 @@ func TestAccAWSMediaStoreContainerPolicy_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsMediaStoreContainerPolicyDestroy(s *terraform.State) error {
+func testAccCheckContainerPolicyDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaStoreConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -80,7 +80,7 @@ func testAccCheckAwsMediaStoreContainerPolicyDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAwsMediaStoreContainerPolicyExists(name string) resource.TestCheckFunc {
+func testAccCheckContainerPolicyExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
