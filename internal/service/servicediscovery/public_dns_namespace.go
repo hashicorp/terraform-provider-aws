@@ -68,7 +68,7 @@ func resourcePublicDNSNamespaceCreate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if len(tags) > 0 {
-		input.Tags = tags.IgnoreAws().ServicediscoveryTags()
+		input.Tags = Tags(tags.IgnoreAws())
 	}
 
 	output, err := conn.CreatePublicDnsNamespace(input)
@@ -124,7 +124,7 @@ func resourcePublicDNSNamespaceRead(d *schema.ResourceData, meta interface{}) er
 		d.Set("hosted_zone", resp.Namespace.Properties.DnsProperties.HostedZoneId)
 	}
 
-	tags, err := tftags.ServicediscoveryListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for resource (%s): %s", arn, err)
@@ -149,7 +149,7 @@ func resourcePublicDNSNamespaceUpdate(d *schema.ResourceData, meta interface{}) 
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.ServicediscoveryUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating Service Discovery Public DNS Namespace (%s) tags: %s", d.Id(), err)
 		}
 	}

@@ -64,7 +64,7 @@ func resourceHTTPNamespaceCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if len(tags) > 0 {
-		input.Tags = tags.IgnoreAws().ServicediscoveryTags()
+		input.Tags = Tags(tags.IgnoreAws())
 	}
 
 	output, err := conn.CreateHttpNamespace(input)
@@ -117,7 +117,7 @@ func resourceHTTPNamespaceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("description", resp.Namespace.Description)
 	d.Set("arn", arn)
 
-	tags, err := tftags.ServicediscoveryListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for resource (%s): %s", arn, err)
@@ -142,7 +142,7 @@ func resourceHTTPNamespaceUpdate(d *schema.ResourceData, meta interface{}) error
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.ServicediscoveryUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating Service Discovery HTTP Namespace (%s) tags: %s", d.Id(), err)
 		}
 	}

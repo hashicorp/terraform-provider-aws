@@ -82,7 +82,7 @@ func resourcePrivateDNSNamespaceCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	if len(tags) > 0 {
-		input.Tags = tags.IgnoreAws().ServicediscoveryTags()
+		input.Tags = Tags(tags.IgnoreAws())
 	}
 
 	output, err := conn.CreatePrivateDnsNamespace(input)
@@ -138,7 +138,7 @@ func resourcePrivateDNSNamespaceRead(d *schema.ResourceData, meta interface{}) e
 		d.Set("hosted_zone", resp.Namespace.Properties.DnsProperties.HostedZoneId)
 	}
 
-	tags, err := tftags.ServicediscoveryListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for resource (%s): %s", arn, err)
@@ -163,7 +163,7 @@ func resourcePrivateDNSNamespaceUpdate(d *schema.ResourceData, meta interface{})
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.ServicediscoveryUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating Service Discovery Private DNS Namespace (%s) tags: %s", d.Id(), err)
 		}
 	}
