@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfelasticsearch "github.com/hashicorp/terraform-provider-aws/internal/service/elasticsearch"
 )
 
 func TestAccAWSElasticSearchDomainSAMLOptions_basic(t *testing.T) {
@@ -64,7 +65,7 @@ func TestAccAWSElasticSearchDomainSAMLOptions_disappears(t *testing.T) {
 				Config: testAccESDomainSAMLOptionsConfig(rUserName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckESDomainSAMLOptions(esDomainResourceName, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceDomainSAMLOptions(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfelasticsearch.ResourceDomainSAMLOptions(), resourceName),
 				),
 			},
 		},
@@ -87,7 +88,7 @@ func TestAccAWSElasticSearchDomainSAMLOptions_disappears_Domain(t *testing.T) {
 				Config: testAccESDomainSAMLOptionsConfig(rUserName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckESDomainSAMLOptions(esDomainResourceName, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceDomain(), esDomainResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfelasticsearch.ResourceDomain(), esDomainResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

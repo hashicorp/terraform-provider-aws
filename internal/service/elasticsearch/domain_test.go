@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfelasticsearch "github.com/hashicorp/terraform-provider-aws/internal/service/elasticsearch"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -91,7 +92,7 @@ func testSweepElasticSearchDomains(region string) error {
 			continue
 		}
 
-		r := ResourceDomain()
+		r := tfelasticsearch.ResourceDomain()
 		d := r.Data(nil)
 		d.SetId(name)
 		d.Set("domain_name", name)
@@ -418,7 +419,7 @@ func TestAccAWSElasticSearchDomain_duplicate(t *testing.T) {
 						t.Fatal(err)
 					}
 
-					err = waitForElasticSearchDomainCreation(conn, resourceId, resourceId)
+					err = tfelasticsearch.WaitForDomainCreation(conn, resourceId, resourceId)
 					if err != nil {
 						t.Fatal(err)
 					}
