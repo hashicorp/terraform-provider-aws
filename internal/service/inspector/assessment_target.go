@@ -16,10 +16,10 @@ import (
 
 func ResourceAssessmentTarget() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsInspectorAssessmentTargetCreate,
-		Read:   resourceAwsInspectorAssessmentTargetRead,
-		Update: resourceAwsInspectorAssessmentTargetUpdate,
-		Delete: resourceAwsInspectorAssessmentTargetDelete,
+		Create: resourceAssessmentTargetCreate,
+		Read:   resourceAssessmentTargetRead,
+		Update: resourceAssessmentTargetUpdate,
+		Delete: resourceAssessmentTargetDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -42,7 +42,7 @@ func ResourceAssessmentTarget() *schema.Resource {
 	}
 }
 
-func resourceAwsInspectorAssessmentTargetCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAssessmentTargetCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).InspectorConn
 
 	input := &inspector.CreateAssessmentTargetInput{
@@ -60,10 +60,10 @@ func resourceAwsInspectorAssessmentTargetCreate(d *schema.ResourceData, meta int
 
 	d.SetId(aws.StringValue(resp.AssessmentTargetArn))
 
-	return resourceAwsInspectorAssessmentTargetRead(d, meta)
+	return resourceAssessmentTargetRead(d, meta)
 }
 
-func resourceAwsInspectorAssessmentTargetRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAssessmentTargetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).InspectorConn
 
 	assessmentTarget, err := DescribeAssessmentTarget(conn, d.Id())
@@ -85,7 +85,7 @@ func resourceAwsInspectorAssessmentTargetRead(d *schema.ResourceData, meta inter
 	return nil
 }
 
-func resourceAwsInspectorAssessmentTargetUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAssessmentTargetUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).InspectorConn
 
 	input := inspector.UpdateAssessmentTargetInput{
@@ -102,10 +102,10 @@ func resourceAwsInspectorAssessmentTargetUpdate(d *schema.ResourceData, meta int
 		return fmt.Errorf("error updating Inspector Assessment Target (%s): %s", d.Id(), err)
 	}
 
-	return resourceAwsInspectorAssessmentTargetRead(d, meta)
+	return resourceAssessmentTargetRead(d, meta)
 }
 
-func resourceAwsInspectorAssessmentTargetDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAssessmentTargetDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).InspectorConn
 	input := &inspector.DeleteAssessmentTargetInput{
 		AssessmentTargetArn: aws.String(d.Id()),

@@ -16,10 +16,10 @@ import (
 
 func ResourceAssessmentTemplate() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsInspectorAssessmentTemplateCreate,
-		Read:   resourceAwsInspectorAssessmentTemplateRead,
-		Update: resourceAwsInspectorAssessmentTemplateUpdate,
-		Delete: resourceAwsInspectorAssessmentTemplateDelete,
+		Create: resourceAssessmentTemplateCreate,
+		Read:   resourceAssessmentTemplateRead,
+		Update: resourceAssessmentTemplateUpdate,
+		Delete: resourceAssessmentTemplateDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -59,7 +59,7 @@ func ResourceAssessmentTemplate() *schema.Resource {
 	}
 }
 
-func resourceAwsInspectorAssessmentTemplateCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAssessmentTemplateCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).InspectorConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
@@ -85,10 +85,10 @@ func resourceAwsInspectorAssessmentTemplateCreate(d *schema.ResourceData, meta i
 		}
 	}
 
-	return resourceAwsInspectorAssessmentTemplateRead(d, meta)
+	return resourceAssessmentTemplateRead(d, meta)
 }
 
-func resourceAwsInspectorAssessmentTemplateRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAssessmentTemplateRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).InspectorConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -138,7 +138,7 @@ func resourceAwsInspectorAssessmentTemplateRead(d *schema.ResourceData, meta int
 	return nil
 }
 
-func resourceAwsInspectorAssessmentTemplateUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAssessmentTemplateUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).InspectorConn
 
 	if d.HasChange("tags_all") {
@@ -149,10 +149,10 @@ func resourceAwsInspectorAssessmentTemplateUpdate(d *schema.ResourceData, meta i
 		}
 	}
 
-	return resourceAwsInspectorAssessmentTemplateRead(d, meta)
+	return resourceAssessmentTemplateRead(d, meta)
 }
 
-func resourceAwsInspectorAssessmentTemplateDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAssessmentTemplateDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).InspectorConn
 
 	_, err := conn.DeleteAssessmentTemplate(&inspector.DeleteAssessmentTemplateInput{

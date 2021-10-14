@@ -12,9 +12,9 @@ import (
 
 func ResourceResourceGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsInspectorResourceGroupCreate,
-		Read:   resourceAwsInspectorResourceGroupRead,
-		Delete: resourceAwsInspectorResourceGroupDelete,
+		Create: resourceResourceGroupCreate,
+		Read:   resourceResourceGroupRead,
+		Delete: resourceResourceGroupDelete,
 
 		Schema: map[string]*schema.Schema{
 			"tags": {
@@ -31,7 +31,7 @@ func ResourceResourceGroup() *schema.Resource {
 	}
 }
 
-func resourceAwsInspectorResourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceResourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).InspectorConn
 
 	req := &inspector.CreateResourceGroupInput{
@@ -46,10 +46,10 @@ func resourceAwsInspectorResourceGroupCreate(d *schema.ResourceData, meta interf
 
 	d.SetId(aws.StringValue(resp.ResourceGroupArn))
 
-	return resourceAwsInspectorResourceGroupRead(d, meta)
+	return resourceResourceGroupRead(d, meta)
 }
 
-func resourceAwsInspectorResourceGroupRead(d *schema.ResourceData, meta interface{}) error {
+func resourceResourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).InspectorConn
 
 	resp, err := conn.DescribeResourceGroups(&inspector.DescribeResourceGroupsInput{
@@ -86,7 +86,7 @@ func resourceAwsInspectorResourceGroupRead(d *schema.ResourceData, meta interfac
 	return nil
 }
 
-func resourceAwsInspectorResourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceResourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
