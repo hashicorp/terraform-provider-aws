@@ -97,7 +97,7 @@ func sweepPublicDNSNamespaces(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSServiceDiscoveryPublicDnsNamespace_basic(t *testing.T) {
+func TestAccServiceDiscoveryPublicDNSNamespace_basic(t *testing.T) {
 	resourceName := "aws_service_discovery_public_dns_namespace.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -130,7 +130,7 @@ func TestAccAWSServiceDiscoveryPublicDnsNamespace_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSServiceDiscoveryPublicDnsNamespace_disappears(t *testing.T) {
+func TestAccServiceDiscoveryPublicDNSNamespace_disappears(t *testing.T) {
 	resourceName := "aws_service_discovery_public_dns_namespace.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -156,7 +156,7 @@ func TestAccAWSServiceDiscoveryPublicDnsNamespace_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSServiceDiscoveryPublicDnsNamespace_Description(t *testing.T) {
+func TestAccServiceDiscoveryPublicDNSNamespace_description(t *testing.T) {
 	resourceName := "aws_service_discovery_public_dns_namespace.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -181,7 +181,7 @@ func TestAccAWSServiceDiscoveryPublicDnsNamespace_Description(t *testing.T) {
 	})
 }
 
-func TestAccAWSServiceDiscoveryPublicDnsNamespace_Tags(t *testing.T) {
+func TestAccServiceDiscoveryPublicDNSNamespace_tags(t *testing.T) {
 	resourceName := "aws_service_discovery_public_dns_namespace.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
