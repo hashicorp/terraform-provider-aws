@@ -5,19 +5,20 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/sqs"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSSQSQueuePolicy_basic(t *testing.T) {
 	var queueAttributes map[string]string
 	resourceName := "aws_sqs_queue_policy.test"
 	queueResourceName := "aws_sqs_queue.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sqs.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, sqs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
 		Steps: []resource.TestStep{
@@ -48,11 +49,11 @@ func TestAccAWSSQSQueuePolicy_disappears(t *testing.T) {
 	var queueAttributes map[string]string
 	resourceName := "aws_sqs_queue_policy.test"
 	queueResourceName := "aws_sqs_queue.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sqs.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, sqs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
 		Steps: []resource.TestStep{
@@ -60,7 +61,7 @@ func TestAccAWSSQSQueuePolicy_disappears(t *testing.T) {
 				Config: testAccAWSSQSQueuePolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSQSQueueExists(queueResourceName, &queueAttributes),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsSqsQueuePolicy(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSqsQueuePolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -71,11 +72,11 @@ func TestAccAWSSQSQueuePolicy_disappears(t *testing.T) {
 func TestAccAWSSQSQueuePolicy_disappears_queue(t *testing.T) {
 	var queueAttributes map[string]string
 	queueResourceName := "aws_sqs_queue.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sqs.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, sqs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
 		Steps: []resource.TestStep{
@@ -83,7 +84,7 @@ func TestAccAWSSQSQueuePolicy_disappears_queue(t *testing.T) {
 				Config: testAccAWSSQSQueuePolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSQSQueueExists(queueResourceName, &queueAttributes),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsSqsQueue(), queueResourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSqsQueue(), queueResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -95,11 +96,11 @@ func TestAccAWSSQSQueuePolicy_Update(t *testing.T) {
 	var queueAttributes map[string]string
 	resourceName := "aws_sqs_queue_policy.test"
 	queueResourceName := "aws_sqs_queue.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sqs.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, sqs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
 		Steps: []resource.TestStep{
