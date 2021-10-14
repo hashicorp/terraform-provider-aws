@@ -20,15 +20,15 @@ func TestAccAWSIdentityStoreGroupDataSource_DisplayName(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckAWSSSOAdminInstances(t)
-			testAccPreCheckAWSIdentityStoreGroupName(t)
+			testAccPreCheckSSOAdminInstances(t)
+			testAccPreCheckGroupName(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, identitystore.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSIdentityStoreGroupDataSourceConfigDisplayName(name),
+				Config: testAccGroupDisplayNameDataSourceConfig(name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "group_id"),
 					resource.TestCheckResourceAttr(dataSourceName, "display_name", name),
@@ -46,16 +46,16 @@ func TestAccAWSIdentityStoreGroupDataSource_GroupID(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckAWSSSOAdminInstances(t)
-			testAccPreCheckAWSIdentityStoreGroupName(t)
-			testAccPreCheckAWSIdentityStoreGroupID(t)
+			testAccPreCheckSSOAdminInstances(t)
+			testAccPreCheckGroupName(t)
+			testAccPreCheckGroupID(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, identitystore.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSIdentityStoreGroupDataSourceConfigGroupID(name, groupID),
+				Config: testAccGroupGroupIDDataSourceConfig(name, groupID),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "group_id", groupID),
 					resource.TestCheckResourceAttrSet(dataSourceName, "display_name"),
@@ -67,34 +67,34 @@ func TestAccAWSIdentityStoreGroupDataSource_GroupID(t *testing.T) {
 
 func TestAccAWSIdentityStoreGroupDataSource_NonExistent(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSSOAdminInstances(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckSSOAdminInstances(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, identitystore.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAWSIdentityStoreGroupDataSourceConfigNonExistent,
+				Config:      testAccGroupNonExistentDataSourceConfig,
 				ExpectError: regexp.MustCompile(`no Identity Store Group found matching criteria`),
 			},
 		},
 	})
 }
 
-func testAccPreCheckAWSIdentityStoreGroupName(t *testing.T) {
+func testAccPreCheckGroupName(t *testing.T) {
 	if os.Getenv("AWS_IDENTITY_STORE_GROUP_NAME") == "" {
 		t.Skip("AWS_IDENTITY_STORE_GROUP_NAME env var must be set for AWS Identity Store Group acceptance test. " +
 			"This is required until ListGroups API returns results without filtering by name.")
 	}
 }
 
-func testAccPreCheckAWSIdentityStoreGroupID(t *testing.T) {
+func testAccPreCheckGroupID(t *testing.T) {
 	if os.Getenv("AWS_IDENTITY_STORE_GROUP_ID") == "" {
 		t.Skip("AWS_IDENTITY_STORE_GROUP_ID env var must be set for AWS Identity Store Group acceptance test. " +
 			"This is required until ListGroups API returns results without filtering by name.")
 	}
 }
 
-func testAccAWSIdentityStoreGroupDataSourceConfigDisplayName(name string) string {
+func testAccGroupDisplayNameDataSourceConfig(name string) string {
 	return fmt.Sprintf(`
 data "aws_ssoadmin_instances" "test" {}
 
@@ -108,7 +108,7 @@ data "aws_identitystore_group" "test" {
 `, name)
 }
 
-func testAccAWSIdentityStoreGroupDataSourceConfigGroupID(name, id string) string {
+func testAccGroupGroupIDDataSourceConfig(name, id string) string {
 	return fmt.Sprintf(`
 data "aws_ssoadmin_instances" "test" {}
 
@@ -125,7 +125,7 @@ data "aws_identitystore_group" "test" {
 `, name, id)
 }
 
-const testAccAWSIdentityStoreGroupDataSourceConfigNonExistent = `
+const testAccGroupNonExistentDataSourceConfig = `
 data "aws_ssoadmin_instances" "test" {}
 
 data "aws_identitystore_group" "test" {
@@ -137,7 +137,7 @@ data "aws_identitystore_group" "test" {
 }
 `
 
-func testAccPreCheckAWSSSOAdminInstances(t *testing.T) {
+func testAccPreCheckSSOAdminInstances(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn
 
 	var instances []*ssoadmin.InstanceMetadata
