@@ -8,10 +8,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appmesh"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/appmesh/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -103,13 +104,13 @@ func testAccAwsAppmeshGatewayRoute_basic(t *testing.T) {
 	var v appmesh.GatewayRouteData
 	resourceName := "aws_appmesh_gateway_route.test"
 	vsResourceName := "aws_appmesh_virtual_service.test.0"
-	meshName := acctest.RandomWithPrefix("tf-acc-test")
-	vgName := acctest.RandomWithPrefix("tf-acc-test")
-	grName := acctest.RandomWithPrefix("tf-acc-test")
+	meshName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	vgName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	grName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appmesh.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, appmesh.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAppmeshGatewayRouteDestroy,
 		Steps: []resource.TestStep{
@@ -118,7 +119,7 @@ func testAccAwsAppmeshGatewayRoute_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppmeshGatewayRouteExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					testAccCheckResourceAttrAccountID(resourceName, "mesh_owner"),
+					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
 					resource.TestCheckResourceAttr(resourceName, "name", grName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.#", "0"),
@@ -133,8 +134,8 @@ func testAccAwsAppmeshGatewayRoute_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "virtual_gateway_name", vgName),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					testAccCheckResourceAttrAccountID(resourceName, "resource_owner"),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
+					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
 				),
 			},
 			{
@@ -150,13 +151,13 @@ func testAccAwsAppmeshGatewayRoute_basic(t *testing.T) {
 func testAccAwsAppmeshGatewayRoute_disappears(t *testing.T) {
 	var v appmesh.GatewayRouteData
 	resourceName := "aws_appmesh_gateway_route.test"
-	meshName := acctest.RandomWithPrefix("tf-acc-test")
-	vgName := acctest.RandomWithPrefix("tf-acc-test")
-	grName := acctest.RandomWithPrefix("tf-acc-test")
+	meshName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	vgName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	grName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appmesh.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, appmesh.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAppmeshGatewayRouteDestroy,
 		Steps: []resource.TestStep{
@@ -164,7 +165,7 @@ func testAccAwsAppmeshGatewayRoute_disappears(t *testing.T) {
 				Config: testAccAppmeshGatewayRouteConfigHttpRoute(meshName, vgName, grName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppmeshGatewayRouteExists(resourceName, &v),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsAppmeshGatewayRoute(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsAppmeshGatewayRoute(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -177,13 +178,13 @@ func testAccAwsAppmeshGatewayRoute_GrpcRoute(t *testing.T) {
 	resourceName := "aws_appmesh_gateway_route.test"
 	vs1ResourceName := "aws_appmesh_virtual_service.test.0"
 	vs2ResourceName := "aws_appmesh_virtual_service.test.1"
-	meshName := acctest.RandomWithPrefix("tf-acc-test")
-	vgName := acctest.RandomWithPrefix("tf-acc-test")
-	grName := acctest.RandomWithPrefix("tf-acc-test")
+	meshName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	vgName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	grName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appmesh.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, appmesh.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAppmeshGatewayRouteDestroy,
 		Steps: []resource.TestStep{
@@ -192,7 +193,7 @@ func testAccAwsAppmeshGatewayRoute_GrpcRoute(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppmeshGatewayRouteExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					testAccCheckResourceAttrAccountID(resourceName, "mesh_owner"),
+					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
 					resource.TestCheckResourceAttr(resourceName, "name", grName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.#", "1"),
@@ -207,8 +208,8 @@ func testAccAwsAppmeshGatewayRoute_GrpcRoute(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "virtual_gateway_name", vgName),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					testAccCheckResourceAttrAccountID(resourceName, "resource_owner"),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
+					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
 				),
 			},
 			{
@@ -216,7 +217,7 @@ func testAccAwsAppmeshGatewayRoute_GrpcRoute(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppmeshGatewayRouteExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					testAccCheckResourceAttrAccountID(resourceName, "mesh_owner"),
+					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
 					resource.TestCheckResourceAttr(resourceName, "name", grName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.#", "1"),
@@ -231,8 +232,8 @@ func testAccAwsAppmeshGatewayRoute_GrpcRoute(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "virtual_gateway_name", vgName),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					testAccCheckResourceAttrAccountID(resourceName, "resource_owner"),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
+					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
 				),
 			},
 			{
@@ -250,13 +251,13 @@ func testAccAwsAppmeshGatewayRoute_HttpRoute(t *testing.T) {
 	resourceName := "aws_appmesh_gateway_route.test"
 	vs1ResourceName := "aws_appmesh_virtual_service.test.0"
 	vs2ResourceName := "aws_appmesh_virtual_service.test.1"
-	meshName := acctest.RandomWithPrefix("tf-acc-test")
-	vgName := acctest.RandomWithPrefix("tf-acc-test")
-	grName := acctest.RandomWithPrefix("tf-acc-test")
+	meshName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	vgName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	grName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appmesh.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, appmesh.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAppmeshGatewayRouteDestroy,
 		Steps: []resource.TestStep{
@@ -265,7 +266,7 @@ func testAccAwsAppmeshGatewayRoute_HttpRoute(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppmeshGatewayRouteExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					testAccCheckResourceAttrAccountID(resourceName, "mesh_owner"),
+					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
 					resource.TestCheckResourceAttr(resourceName, "name", grName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.#", "0"),
@@ -280,8 +281,8 @@ func testAccAwsAppmeshGatewayRoute_HttpRoute(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "virtual_gateway_name", vgName),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					testAccCheckResourceAttrAccountID(resourceName, "resource_owner"),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
+					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
 				),
 			},
 			{
@@ -289,7 +290,7 @@ func testAccAwsAppmeshGatewayRoute_HttpRoute(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppmeshGatewayRouteExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					testAccCheckResourceAttrAccountID(resourceName, "mesh_owner"),
+					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
 					resource.TestCheckResourceAttr(resourceName, "name", grName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.#", "0"),
@@ -304,8 +305,8 @@ func testAccAwsAppmeshGatewayRoute_HttpRoute(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "virtual_gateway_name", vgName),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					testAccCheckResourceAttrAccountID(resourceName, "resource_owner"),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
+					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
 				),
 			},
 			{
@@ -323,13 +324,13 @@ func testAccAwsAppmeshGatewayRoute_Http2Route(t *testing.T) {
 	resourceName := "aws_appmesh_gateway_route.test"
 	vs1ResourceName := "aws_appmesh_virtual_service.test.0"
 	vs2ResourceName := "aws_appmesh_virtual_service.test.1"
-	meshName := acctest.RandomWithPrefix("tf-acc-test")
-	vgName := acctest.RandomWithPrefix("tf-acc-test")
-	grName := acctest.RandomWithPrefix("tf-acc-test")
+	meshName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	vgName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	grName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appmesh.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, appmesh.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAppmeshGatewayRouteDestroy,
 		Steps: []resource.TestStep{
@@ -338,7 +339,7 @@ func testAccAwsAppmeshGatewayRoute_Http2Route(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppmeshGatewayRouteExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					testAccCheckResourceAttrAccountID(resourceName, "mesh_owner"),
+					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
 					resource.TestCheckResourceAttr(resourceName, "name", grName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.#", "0"),
@@ -353,8 +354,8 @@ func testAccAwsAppmeshGatewayRoute_Http2Route(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "virtual_gateway_name", vgName),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					testAccCheckResourceAttrAccountID(resourceName, "resource_owner"),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
+					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
 				),
 			},
 			{
@@ -362,7 +363,7 @@ func testAccAwsAppmeshGatewayRoute_Http2Route(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppmeshGatewayRouteExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					testAccCheckResourceAttrAccountID(resourceName, "mesh_owner"),
+					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
 					resource.TestCheckResourceAttr(resourceName, "name", grName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.#", "0"),
@@ -377,8 +378,8 @@ func testAccAwsAppmeshGatewayRoute_Http2Route(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "virtual_gateway_name", vgName),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					testAccCheckResourceAttrAccountID(resourceName, "resource_owner"),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
+					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
 				),
 			},
 			{
@@ -394,13 +395,13 @@ func testAccAwsAppmeshGatewayRoute_Http2Route(t *testing.T) {
 func testAccAwsAppmeshGatewayRoute_Tags(t *testing.T) {
 	var v appmesh.GatewayRouteData
 	resourceName := "aws_appmesh_gateway_route.test"
-	meshName := acctest.RandomWithPrefix("tf-acc-test")
-	vgName := acctest.RandomWithPrefix("tf-acc-test")
-	grName := acctest.RandomWithPrefix("tf-acc-test")
+	meshName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	vgName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	grName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appmesh.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, appmesh.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAppmeshGatewayRouteDestroy,
 		Steps: []resource.TestStep{
@@ -527,7 +528,7 @@ resource "aws_appmesh_virtual_service" "test" {
 }
 
 func testAccAppmeshGatewayRouteConfigGrpcRoute(meshName, vgName, grName string) string {
-	return composeConfig(testAccAppmeshGatewayRouteConfigBase(meshName, vgName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAppmeshGatewayRouteConfigBase(meshName, vgName), fmt.Sprintf(`
 resource "aws_appmesh_gateway_route" "test" {
   name                 = %[1]q
   mesh_name            = aws_appmesh_mesh.test.name
@@ -553,7 +554,7 @@ resource "aws_appmesh_gateway_route" "test" {
 }
 
 func testAccAppmeshGatewayRouteConfigGrpcRouteUpdated(meshName, vgName, grName string) string {
-	return composeConfig(testAccAppmeshGatewayRouteConfigBase(meshName, vgName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAppmeshGatewayRouteConfigBase(meshName, vgName), fmt.Sprintf(`
 resource "aws_appmesh_gateway_route" "test" {
   name                 = %[1]q
   mesh_name            = aws_appmesh_mesh.test.name
@@ -579,7 +580,7 @@ resource "aws_appmesh_gateway_route" "test" {
 }
 
 func testAccAppmeshGatewayRouteConfigHttpRoute(meshName, vgName, grName string) string {
-	return composeConfig(testAccAppmeshGatewayRouteConfigBase(meshName, vgName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAppmeshGatewayRouteConfigBase(meshName, vgName), fmt.Sprintf(`
 resource "aws_appmesh_gateway_route" "test" {
   name                 = %[1]q
   mesh_name            = aws_appmesh_mesh.test.name
@@ -605,7 +606,7 @@ resource "aws_appmesh_gateway_route" "test" {
 }
 
 func testAccAppmeshGatewayRouteConfigHttpRouteUpdated(meshName, vgName, grName string) string {
-	return composeConfig(testAccAppmeshGatewayRouteConfigBase(meshName, vgName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAppmeshGatewayRouteConfigBase(meshName, vgName), fmt.Sprintf(`
 resource "aws_appmesh_gateway_route" "test" {
   name                 = %[1]q
   mesh_name            = aws_appmesh_mesh.test.name
@@ -631,7 +632,7 @@ resource "aws_appmesh_gateway_route" "test" {
 }
 
 func testAccAppmeshGatewayRouteConfigHttp2Route(meshName, vgName, grName string) string {
-	return composeConfig(testAccAppmeshGatewayRouteConfigBase(meshName, vgName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAppmeshGatewayRouteConfigBase(meshName, vgName), fmt.Sprintf(`
 resource "aws_appmesh_gateway_route" "test" {
   name                 = %[1]q
   mesh_name            = aws_appmesh_mesh.test.name
@@ -657,7 +658,7 @@ resource "aws_appmesh_gateway_route" "test" {
 }
 
 func testAccAppmeshGatewayRouteConfigHttp2RouteUpdated(meshName, vgName, grName string) string {
-	return composeConfig(testAccAppmeshGatewayRouteConfigBase(meshName, vgName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAppmeshGatewayRouteConfigBase(meshName, vgName), fmt.Sprintf(`
 resource "aws_appmesh_gateway_route" "test" {
   name                 = %[1]q
   mesh_name            = aws_appmesh_mesh.test.name
@@ -683,7 +684,7 @@ resource "aws_appmesh_gateway_route" "test" {
 }
 
 func testAccAppmeshGatewayRouteConfigTags1(meshName, vgName, grName, tagKey1, tagValue1 string) string {
-	return composeConfig(testAccAppmeshGatewayRouteConfigBase(meshName, vgName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAppmeshGatewayRouteConfigBase(meshName, vgName), fmt.Sprintf(`
 resource "aws_appmesh_gateway_route" "test" {
   name                 = %[1]q
   mesh_name            = aws_appmesh_mesh.test.name
@@ -713,7 +714,7 @@ resource "aws_appmesh_gateway_route" "test" {
 }
 
 func testAccAppmeshGatewayRouteConfigTags2(meshName, vgName, grName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return composeConfig(testAccAppmeshGatewayRouteConfigBase(meshName, vgName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAppmeshGatewayRouteConfigBase(meshName, vgName), fmt.Sprintf(`
 resource "aws_appmesh_gateway_route" "test" {
   name                 = %[1]q
   mesh_name            = aws_appmesh_mesh.test.name

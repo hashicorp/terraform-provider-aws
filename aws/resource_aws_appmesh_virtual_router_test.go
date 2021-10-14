@@ -7,9 +7,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appmesh"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -84,12 +85,12 @@ func testSweepAppmeshVirtualRouters(region string) error {
 func testAccAwsAppmeshVirtualRouter_basic(t *testing.T) {
 	var vr appmesh.VirtualRouterData
 	resourceName := "aws_appmesh_virtual_router.test"
-	meshName := acctest.RandomWithPrefix("tf-acc-test")
-	vrName := acctest.RandomWithPrefix("tf-acc-test")
+	meshName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	vrName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appmesh.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, appmesh.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAppmeshVirtualRouterDestroy,
 		Steps: []resource.TestStep{
@@ -99,7 +100,7 @@ func testAccAwsAppmeshVirtualRouter_basic(t *testing.T) {
 					testAccCheckAppmeshVirtualRouterExists(resourceName, &vr),
 					resource.TestCheckResourceAttr(resourceName, "name", vrName),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					testAccCheckResourceAttrAccountID(resourceName, "mesh_owner"),
+					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.#", "1"),
@@ -107,8 +108,8 @@ func testAccAwsAppmeshVirtualRouter_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.protocol", "http"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					testAccCheckResourceAttrAccountID(resourceName, "resource_owner"),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualRouter/%s", meshName, vrName)),
+					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualRouter/%s", meshName, vrName)),
 				),
 			},
 			{
@@ -117,7 +118,7 @@ func testAccAwsAppmeshVirtualRouter_basic(t *testing.T) {
 					testAccCheckAppmeshVirtualRouterExists(resourceName, &vr),
 					resource.TestCheckResourceAttr(resourceName, "name", vrName),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					testAccCheckResourceAttrAccountID(resourceName, "mesh_owner"),
+					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.#", "1"),
@@ -138,12 +139,12 @@ func testAccAwsAppmeshVirtualRouter_basic(t *testing.T) {
 func testAccAwsAppmeshVirtualRouter_tags(t *testing.T) {
 	var vr appmesh.VirtualRouterData
 	resourceName := "aws_appmesh_virtual_router.test"
-	meshName := acctest.RandomWithPrefix("tf-acc-test")
-	vrName := acctest.RandomWithPrefix("tf-acc-test")
+	meshName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	vrName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appmesh.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, appmesh.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAppmeshVirtualRouterDestroy,
 		Steps: []resource.TestStep{
