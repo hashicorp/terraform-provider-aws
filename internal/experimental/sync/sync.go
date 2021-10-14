@@ -6,7 +6,6 @@ import (
 	"os"
 	"strconv"
 	"testing"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Semaphore can be used to limit concurrent executions. This can be used to work with resources with low quotas

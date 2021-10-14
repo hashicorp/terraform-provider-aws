@@ -8,7 +8,6 @@ import (
 
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Retryable is a function that is used to decide if a function's error is retryable or not.

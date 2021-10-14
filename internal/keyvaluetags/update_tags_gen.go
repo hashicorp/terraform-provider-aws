@@ -126,7 +126,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/worklink"
 	"github.com/aws/aws-sdk-go/service/workspaces"
 	"github.com/aws/aws-sdk-go/service/xray"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // AccessanalyzerUpdateTags updates accessanalyzer service tags.

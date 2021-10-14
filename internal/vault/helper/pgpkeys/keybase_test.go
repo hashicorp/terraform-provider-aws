@@ -9,7 +9,6 @@ import (
 
 	"github.com/keybase/go-crypto/openpgp"
 	"github.com/keybase/go-crypto/openpgp/packet"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func TestFetchKeybasePubkeys(t *testing.T) {

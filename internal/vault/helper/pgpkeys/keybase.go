@@ -7,9 +7,8 @@ import (
 	"strings"
 
 	cleanhttp "github.com/hashicorp/go-cleanhttp"
-	"github.com/keybase/go-crypto/openpgp"
 	"github.com/hashicorp/terraform-provider-aws/internal/vault/sdk/helper/jsonutil"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/keybase/go-crypto/openpgp"
 )
 
 const (

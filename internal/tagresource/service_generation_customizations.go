@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // ServiceIdentifierAttributeName determines the schema identifier attribute name.

@@ -7,7 +7,6 @@ import (
 
 	"github.com/keybase/go-crypto/openpgp"
 	"github.com/keybase/go-crypto/openpgp/packet"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // EncryptShares takes an ordered set of byte slices to encrypt and the

@@ -13,7 +13,6 @@ import (
 	"text/template"
 
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const filename = `update_tags_gen.go`
