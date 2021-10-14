@@ -3,7 +3,6 @@ package quicksight
 import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/quicksight"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func FindGroupMembership(conn *quicksight.QuickSight, listInput *quicksight.ListGroupMembershipsInput, userName string) (bool, error) {
