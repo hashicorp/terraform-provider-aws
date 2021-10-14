@@ -23,7 +23,7 @@ func ResourceUserGroup() *schema.Resource {
 		Delete: resourceUserGroupDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsCognitoUserGroupImport,
+			State: resourceUserGroupImport,
 		},
 
 		// https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_CreateGroup.html
@@ -165,7 +165,7 @@ func resourceUserGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsCognitoUserGroupImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceUserGroupImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	idSplit := strings.Split(d.Id(), "/")
 	if len(idSplit) != 2 {
 		return nil, errors.New("Error importing Cognito User Group. Must specify user_pool_id/group_name")

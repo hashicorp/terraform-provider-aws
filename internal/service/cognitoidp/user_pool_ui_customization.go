@@ -16,9 +16,9 @@ import (
 
 func ResourceUserPoolUICustomization() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCognitoUserPoolUICustomizationPut,
+		Create: resourceUserPoolUICustomizationPut,
 		Read:   resourceUserPoolUICustomizationRead,
-		Update: resourceAwsCognitoUserPoolUICustomizationPut,
+		Update: resourceUserPoolUICustomizationPut,
 		Delete: resourceUserPoolUICustomizationDelete,
 
 		Importer: &schema.ResourceImporter{
@@ -72,7 +72,7 @@ func ResourceUserPoolUICustomization() *schema.Resource {
 	}
 }
 
-func resourceAwsCognitoUserPoolUICustomizationPut(d *schema.ResourceData, meta interface{}) error {
+func resourceUserPoolUICustomizationPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CognitoIDPConn
 
 	clientId := d.Get("client_id").(string)

@@ -24,7 +24,7 @@ func ResourceUserPoolClient() *schema.Resource {
 		Delete: resourceUserPoolClientDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsCognitoUserPoolClientImport,
+			State: resourceUserPoolClientImport,
 		},
 
 		// https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_CreateUserPoolClient.html
@@ -310,11 +310,11 @@ func resourceUserPoolClientCreate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if v, ok := d.GetOk("analytics_configuration"); ok {
-		params.AnalyticsConfiguration = expandAwsCognitoUserPoolClientAnalyticsConfig(v.([]interface{}))
+		params.AnalyticsConfiguration = expandUserPoolClientAnalyticsConfig(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("token_validity_units"); ok {
-		params.TokenValidityUnits = expandAwsCognitoUserPoolClientTokenValidityUnitsType(v.([]interface{}))
+		params.TokenValidityUnits = expandUserPoolClientTokenValidityUnitsType(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("prevent_user_existence_errors"); ok {
@@ -379,11 +379,11 @@ func resourceUserPoolClientRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("supported_identity_providers", flex.FlattenStringSet(userPoolClient.SupportedIdentityProviders))
 	d.Set("enable_token_revocation", userPoolClient.EnableTokenRevocation)
 
-	if err := d.Set("analytics_configuration", flattenAwsCognitoUserPoolClientAnalyticsConfig(userPoolClient.AnalyticsConfiguration)); err != nil {
+	if err := d.Set("analytics_configuration", flattenUserPoolClientAnalyticsConfig(userPoolClient.AnalyticsConfiguration)); err != nil {
 		return fmt.Errorf("error setting analytics_configuration: %w", err)
 	}
 
-	if err := d.Set("token_validity_units", flattenAwsCognitoUserPoolClientTokenValidityUnitsType(userPoolClient.TokenValidityUnits)); err != nil {
+	if err := d.Set("token_validity_units", flattenUserPoolClientTokenValidityUnitsType(userPoolClient.TokenValidityUnits)); err != nil {
 		return fmt.Errorf("error setting token_validity_units: %w", err)
 	}
 
@@ -460,11 +460,11 @@ func resourceUserPoolClientUpdate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if v, ok := d.GetOk("analytics_configuration"); ok {
-		params.AnalyticsConfiguration = expandAwsCognitoUserPoolClientAnalyticsConfig(v.([]interface{}))
+		params.AnalyticsConfiguration = expandUserPoolClientAnalyticsConfig(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("token_validity_units"); ok {
-		params.TokenValidityUnits = expandAwsCognitoUserPoolClientTokenValidityUnitsType(v.([]interface{}))
+		params.TokenValidityUnits = expandUserPoolClientTokenValidityUnitsType(v.([]interface{}))
 	}
 
 	log.Printf("[DEBUG] Updating Cognito User Pool Client: %s", params)
@@ -502,7 +502,7 @@ func resourceUserPoolClientDelete(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func resourceAwsCognitoUserPoolClientImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceUserPoolClientImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	if len(strings.Split(d.Id(), "/")) != 2 || len(d.Id()) < 3 {
 		return []*schema.ResourceData{}, fmt.Errorf("wrong format of resource: %s. Please follow 'user-pool-id/client-id'", d.Id())
 	}
@@ -515,7 +515,7 @@ func resourceAwsCognitoUserPoolClientImport(d *schema.ResourceData, meta interfa
 	return []*schema.ResourceData{d}, nil
 }
 
-func expandAwsCognitoUserPoolClientAnalyticsConfig(l []interface{}) *cognitoidentityprovider.AnalyticsConfigurationType {
+func expandUserPoolClientAnalyticsConfig(l []interface{}) *cognitoidentityprovider.AnalyticsConfigurationType {
 	if len(l) == 0 {
 		return nil
 	}
@@ -547,7 +547,7 @@ func expandAwsCognitoUserPoolClientAnalyticsConfig(l []interface{}) *cognitoiden
 	return analyticsConfig
 }
 
-func flattenAwsCognitoUserPoolClientAnalyticsConfig(analyticsConfig *cognitoidentityprovider.AnalyticsConfigurationType) []interface{} {
+func flattenUserPoolClientAnalyticsConfig(analyticsConfig *cognitoidentityprovider.AnalyticsConfigurationType) []interface{} {
 	if analyticsConfig == nil {
 		return []interface{}{}
 	}
@@ -575,7 +575,7 @@ func flattenAwsCognitoUserPoolClientAnalyticsConfig(analyticsConfig *cognitoiden
 	return []interface{}{m}
 }
 
-func expandAwsCognitoUserPoolClientTokenValidityUnitsType(l []interface{}) *cognitoidentityprovider.TokenValidityUnitsType {
+func expandUserPoolClientTokenValidityUnitsType(l []interface{}) *cognitoidentityprovider.TokenValidityUnitsType {
 	if len(l) == 0 {
 		return nil
 	}
@@ -599,7 +599,7 @@ func expandAwsCognitoUserPoolClientTokenValidityUnitsType(l []interface{}) *cogn
 	return tokenValidityConfig
 }
 
-func flattenAwsCognitoUserPoolClientTokenValidityUnitsType(tokenValidityConfig *cognitoidentityprovider.TokenValidityUnitsType) []interface{} {
+func flattenUserPoolClientTokenValidityUnitsType(tokenValidityConfig *cognitoidentityprovider.TokenValidityUnitsType) []interface{} {
 	if tokenValidityConfig == nil {
 		return nil
 	}
