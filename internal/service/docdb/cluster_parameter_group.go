@@ -267,10 +267,10 @@ func resourceClusterParameterGroupDelete(d *schema.ResourceData, meta interface{
 		return err
 	}
 
-	return waitForDocDBClusterParameterGroupDeletion(conn, d.Id())
+	return WaitForClusterParameterGroupDeletion(conn, d.Id())
 }
 
-func waitForDocDBClusterParameterGroupDeletion(conn *docdb.DocDB, name string) error {
+func WaitForClusterParameterGroupDeletion(conn *docdb.DocDB, name string) error {
 	params := &docdb.DescribeDBClusterParameterGroupsInput{
 		DBClusterParameterGroupName: aws.String(name),
 	}

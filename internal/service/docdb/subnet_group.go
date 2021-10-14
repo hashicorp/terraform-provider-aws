@@ -215,10 +215,10 @@ func resourceSubnetGroupDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting DocDB Subnet Group (%s): %s", d.Id(), err)
 	}
 
-	return waitForDocDBSubnetGroupDeletion(conn, d.Id())
+	return WaitForSubnetGroupDeletion(conn, d.Id())
 }
 
-func waitForDocDBSubnetGroupDeletion(conn *docdb.DocDB, name string) error {
+func WaitForSubnetGroupDeletion(conn *docdb.DocDB, name string) error {
 	params := &docdb.DescribeDBSubnetGroupsInput{
 		DBSubnetGroupName: aws.String(name),
 	}
