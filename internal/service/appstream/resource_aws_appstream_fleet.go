@@ -1,4 +1,4 @@
-package aws
+package appstream
 
 import (
 	"context"
@@ -13,23 +13,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/appstream/waiter"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
-	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
-	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
-	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
-	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
-	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
-	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
-	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
-	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
-	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
-	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
-	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
 )
 
 func ResourceFleet() *schema.Resource {
@@ -259,7 +246,7 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	var err error
 	var output *appstream.CreateFleetOutput
-	err = resource.RetryContext(ctx, tfappstream.fleetOperationTimeout, func() *resource.RetryError {
+	err = resource.RetryContext(ctx, fleetOperationTimeout, func() *resource.RetryError {
 		output, err = conn.CreateFleetWithContext(ctx, input)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
@@ -287,7 +274,7 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.FromErr(fmt.Errorf("error starting Appstream Fleet (%s): %w", d.Id(), err))
 	}
 
-	if _, err = tfappstream.waitFleetStateRunning(ctx, conn, aws.StringValue(output.Fleet.Name)); err != nil {
+	if _, err = waitFleetStateRunning(ctx, conn, aws.StringValue(output.Fleet.Name)); err != nil {
 		return diag.FromErr(fmt.Errorf("error waiting for Appstream Fleet (%s) to be running: %w", d.Id(), err))
 	}
 
@@ -400,7 +387,7 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		if err != nil {
 			return diag.FromErr(fmt.Errorf("error stopping Appstream Fleet (%s): %w", d.Id(), err))
 		}
-		if _, err = tfappstream.waitFleetStateStopped(ctx, conn, d.Id()); err != nil {
+		if _, err = waitFleetStateStopped(ctx, conn, d.Id()); err != nil {
 			return diag.FromErr(fmt.Errorf("error waiting for Appstream Fleet (%s) to be stopped: %w", d.Id(), err))
 		}
 	}
@@ -484,7 +471,7 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			return diag.FromErr(fmt.Errorf("error starting Appstream Fleet (%s): %w", d.Id(), err))
 		}
 
-		if _, err = tfappstream.waitFleetStateRunning(ctx, conn, d.Id()); err != nil {
+		if _, err = waitFleetStateRunning(ctx, conn, d.Id()); err != nil {
 			return diag.FromErr(fmt.Errorf("error waiting for Appstream Fleet (%s) to be running: %w", d.Id(), err))
 		}
 	}
@@ -503,7 +490,7 @@ func resourceFleetDelete(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.FromErr(fmt.Errorf("error stopping Appstream Fleet (%s): %w", d.Id(), err))
 	}
 
-	if _, err = tfappstream.waitFleetStateStopped(ctx, conn, d.Id()); err != nil {
+	if _, err = waitFleetStateStopped(ctx, conn, d.Id()); err != nil {
 		return diag.FromErr(fmt.Errorf("error waiting for Appstream Fleet (%s) to be stopped: %w", d.Id(), err))
 	}
 
