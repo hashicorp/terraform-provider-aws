@@ -75,7 +75,7 @@ func TestAccAWSCloudFrontMonitoringSubscription_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckCloudFrontMonitoringSubscriptionDestroy,
 		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
 		Steps: []resource.TestStep{
@@ -104,7 +104,7 @@ func TestAccAWSCloudFrontMonitoringSubscription_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckCloudFrontMonitoringSubscriptionDestroy,
 		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
 		Steps: []resource.TestStep{
@@ -112,7 +112,7 @@ func TestAccAWSCloudFrontMonitoringSubscription_disappears(t *testing.T) {
 				Config: testAccAWSCloudFrontMonitoringSubscriptionConfig("Enabled"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontMonitoringSubscriptionExists(resourceName, &v),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsCloudFrontMonitoringSubscription(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsCloudFrontMonitoringSubscription(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -126,7 +126,7 @@ func TestAccAWSCloudFrontMonitoringSubscription_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckCloudFrontMonitoringSubscriptionDestroy,
 		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
 		Steps: []resource.TestStep{
@@ -160,7 +160,7 @@ func TestAccAWSCloudFrontMonitoringSubscription_update(t *testing.T) {
 }
 
 func testAccCheckCloudFrontMonitoringSubscriptionDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).cloudfrontconn
+	conn := acctest.Provider.Meta().(*AWSClient).cloudfrontconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudfront_monitoring_subscription" {
@@ -195,7 +195,7 @@ func testAccCheckCloudFrontMonitoringSubscriptionExists(n string, v *cloudfront.
 			return fmt.Errorf("No CloudFront Monitoring Subscription ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).cloudfrontconn
+		conn := acctest.Provider.Meta().(*AWSClient).cloudfrontconn
 		out, err := finder.MonitoringSubscriptionByDistributionId(conn, rs.Primary.ID)
 		if err != nil {
 			return err
