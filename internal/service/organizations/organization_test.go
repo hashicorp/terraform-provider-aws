@@ -67,7 +67,7 @@ func testAccOrganization_AwsServiceAccessPrincipals(t *testing.T) {
 		CheckDestroy: testAccCheckOrganizationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationAwsServiceAccessPrincipals1Config("config.amazonaws.com"),
+				Config: testAccServiceAccessPrincipals1Config("config.amazonaws.com"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationExists(resourceName, &organization),
 					resource.TestCheckResourceAttr(resourceName, "aws_service_access_principals.#", "1"),
@@ -80,7 +80,7 @@ func testAccOrganization_AwsServiceAccessPrincipals(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccOrganizationAwsServiceAccessPrincipals2Config("config.amazonaws.com", "ds.amazonaws.com"),
+				Config: testAccServiceAccessPrincipals2Config("config.amazonaws.com", "ds.amazonaws.com"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationExists(resourceName, &organization),
 					resource.TestCheckResourceAttr(resourceName, "aws_service_access_principals.#", "2"),
@@ -89,7 +89,7 @@ func testAccOrganization_AwsServiceAccessPrincipals(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccOrganizationAwsServiceAccessPrincipals1Config("fms.amazonaws.com"),
+				Config: testAccServiceAccessPrincipals1Config("fms.amazonaws.com"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationExists(resourceName, &organization),
 					resource.TestCheckResourceAttr(resourceName, "aws_service_access_principals.#", "1"),
@@ -343,7 +343,7 @@ func testAccCheckOrganizationExists(n string, org *organizations.Organization) r
 
 const testAccOrganizationConfig = "resource \"aws_organizations_organization\" \"test\" {}"
 
-func testAccOrganizationAwsServiceAccessPrincipals1Config(principal1 string) string {
+func testAccServiceAccessPrincipals1Config(principal1 string) string {
 	return fmt.Sprintf(`
 resource "aws_organizations_organization" "test" {
   aws_service_access_principals = [%q]
@@ -351,7 +351,7 @@ resource "aws_organizations_organization" "test" {
 `, principal1)
 }
 
-func testAccOrganizationAwsServiceAccessPrincipals2Config(principal1, principal2 string) string {
+func testAccServiceAccessPrincipals2Config(principal1, principal2 string) string {
 	return fmt.Sprintf(`
 resource "aws_organizations_organization" "test" {
   aws_service_access_principals = [%q, %q]

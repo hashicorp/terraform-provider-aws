@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAwsOrganizationsDelegatedAdministrators_basic(t *testing.T) {
+func TestAccOrganizationsDelegatedAdministratorsDataSource_basic(t *testing.T) {
 	var providers []*schema.Provider
 	dataSourceName := "data.aws_organizations_delegated_administrators.test"
 	servicePrincipal := "config-multiaccountsetup.amazonaws.com"
@@ -37,7 +37,7 @@ func TestAccDataSourceAwsOrganizationsDelegatedAdministrators_basic(t *testing.T
 	})
 }
 
-func TestAccDataSourceAwsOrganizationsDelegatedAdministrators_multiple(t *testing.T) {
+func TestAccOrganizationsDelegatedAdministratorsDataSource_multiple(t *testing.T) {
 	var providers []*schema.Provider
 	dataSourceName := "data.aws_organizations_delegated_administrators.test"
 	servicePrincipal := "config-multiaccountsetup.amazonaws.com"
@@ -65,7 +65,7 @@ func TestAccDataSourceAwsOrganizationsDelegatedAdministrators_multiple(t *testin
 	})
 }
 
-func TestAccDataSourceAwsOrganizationsDelegatedAdministrators_servicePrincipal(t *testing.T) {
+func TestAccOrganizationsDelegatedAdministratorsDataSource_servicePrincipal(t *testing.T) {
 	var providers []*schema.Provider
 	dataSourceName := "data.aws_organizations_delegated_administrators.test"
 	servicePrincipal := "config-multiaccountsetup.amazonaws.com"
@@ -92,7 +92,7 @@ func TestAccDataSourceAwsOrganizationsDelegatedAdministrators_servicePrincipal(t
 	})
 }
 
-func TestAccDataSourceAwsOrganizationsDelegatedAdministrators_empty(t *testing.T) {
+func TestAccOrganizationsDelegatedAdministratorsDataSource_empty(t *testing.T) {
 	dataSourceName := "data.aws_organizations_delegated_administrators.test"
 	servicePrincipal := "config-multiaccountsetup.amazonaws.com"
 
