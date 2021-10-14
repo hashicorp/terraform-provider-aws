@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/aws/internal/service/securityhub"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/securityhub/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func testAccAWSSecurityHubStandardsControl_basic(t *testing.T) {
@@ -18,8 +19,8 @@ func testAccAWSSecurityHubStandardsControl_basic(t *testing.T) {
 	resourceName := "aws_securityhub_standards_control.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, securityhub.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: nil, //lintignore:AT001
 		Steps: []resource.TestStep{
@@ -47,8 +48,8 @@ func testAccAWSSecurityHubStandardsControl_disabledControlStatus(t *testing.T) {
 	resourceName := "aws_securityhub_standards_control.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, securityhub.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: nil, //lintignore:AT001
 		Steps: []resource.TestStep{
@@ -66,8 +67,8 @@ func testAccAWSSecurityHubStandardsControl_disabledControlStatus(t *testing.T) {
 
 func testAccAWSSecurityHubStandardsControl_enabledControlStatusAndDisabledReason(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, securityhub.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: nil, //lintignore:AT001
 		Steps: []resource.TestStep{
@@ -111,7 +112,7 @@ func testAccCheckAWSSecurityHubStandardsControlExists(n string, control *securit
 }
 
 func testAccAWSSecurityHubStandardsControlConfig_basic() string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSSecurityHubStandardsSubscriptionConfig_basic,
 		`
 resource aws_securityhub_standards_control test {
@@ -122,7 +123,7 @@ resource aws_securityhub_standards_control test {
 }
 
 func testAccAWSSecurityHubStandardsControlConfig_disabledControlStatus() string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSSecurityHubStandardsSubscriptionConfig_basic,
 		`
 resource aws_securityhub_standards_control test {
@@ -134,7 +135,7 @@ resource aws_securityhub_standards_control test {
 }
 
 func testAccAWSSecurityHubStandardsControlConfig_enabledControlStatus() string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSSecurityHubStandardsSubscriptionConfig_basic,
 		`
 resource aws_securityhub_standards_control test {

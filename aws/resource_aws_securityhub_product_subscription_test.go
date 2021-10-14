@@ -9,12 +9,13 @@ import (
 	"github.com/aws/aws-sdk-go/service/securityhub"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func testAccAWSSecurityHubProductSubscription_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, securityhub.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityHubAccountDestroy,
 		Steps: []resource.TestStep{
@@ -32,9 +33,9 @@ func testAccAWSSecurityHubProductSubscription_basic(t *testing.T) {
 				PreConfig: func() {
 					conn := testAccProvider.Meta().(*AWSClient).securityhubconn
 					productSubscriptionARN := arn.ARN{
-						AccountID: testAccGetAccountID(),
-						Partition: testAccGetPartition(),
-						Region:    testAccGetRegion(),
+						AccountID: acctest.AccountID(),
+						Partition: acctest.Partition(),
+						Region:    acctest.Region(),
 						Resource:  "product-subscription/aws/guardduty",
 						Service:   "securityhub",
 					}.String()
