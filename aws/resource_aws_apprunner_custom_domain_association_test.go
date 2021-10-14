@@ -23,14 +23,14 @@ func TestAccAwsAppRunnerCustomDomainAssociation_basic(t *testing.T) {
 		t.Skip("Environment variable APPRUNNER_CUSTOM_DOMAIN is not set")
 	}
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_apprunner_custom_domain_association.test"
 	serviceResourceName := "aws_apprunner_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAppRunner(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apprunner.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsAppRunnerCustomDomainAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -61,20 +61,20 @@ func TestAccAwsAppRunnerCustomDomainAssociation_disappears(t *testing.T) {
 		t.Skip("Environment variable APPRUNNER_CUSTOM_DOMAIN is not set")
 	}
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_apprunner_custom_domain_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAppRunner(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apprunner.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsAppRunnerCustomDomainAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppRunnerCustomDomainAssociation_basic(rName, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppRunnerCustomDomainAssociationExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsAppRunnerCustomDomainAssociation(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsAppRunnerCustomDomainAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -88,7 +88,7 @@ func testAccCheckAwsAppRunnerCustomDomainAssociationDestroy(s *terraform.State) 
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).apprunnerconn
+		conn := acctest.Provider.Meta().(*AWSClient).apprunnerconn
 
 		domainName, serviceArn, err := tfapprunner.CustomDomainAssociationParseID(rs.Primary.ID)
 
@@ -131,7 +131,7 @@ func testAccCheckAwsAppRunnerCustomDomainAssociationExists(n string) resource.Te
 			return err
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).apprunnerconn
+		conn := acctest.Provider.Meta().(*AWSClient).apprunnerconn
 
 		customDomain, err := finder.CustomDomain(context.Background(), conn, domainName, serviceArn)
 
