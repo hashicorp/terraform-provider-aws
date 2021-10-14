@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSAppautoScalingTarget_basic(t *testing.T) {
@@ -70,7 +71,7 @@ func TestAccAWSAppautoScalingTarget_disappears(t *testing.T) {
 				Config: testAccAWSAppautoscalingTargetConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAppautoscalingTargetExists(resourceName, &target),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsAppautoscalingTarget(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceTarget(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

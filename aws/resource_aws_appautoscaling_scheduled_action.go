@@ -18,12 +18,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsAppautoscalingScheduledAction() *schema.Resource {
+func ResourceScheduledAction() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsAppautoscalingScheduledActionPut,
-		Read:   resourceAwsAppautoscalingScheduledActionRead,
+		Read:   resourceScheduledActionRead,
 		Update: resourceAwsAppautoscalingScheduledActionPut,
-		Delete: resourceAwsAppautoscalingScheduledActionDelete,
+		Delete: resourceScheduledActionDelete,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -144,7 +144,7 @@ func resourceAwsAppautoscalingScheduledActionPut(d *schema.ResourceData, meta in
 		}
 	}
 
-	return resourceAwsAppautoscalingScheduledActionRead(d, meta)
+	return resourceScheduledActionRead(d, meta)
 }
 
 func appautoscalingScheduledActionPopulateInputForCreate(input *applicationautoscaling.PutScheduledActionInput, d *schema.ResourceData) {
@@ -198,7 +198,7 @@ func appautoscalingScheduledActionPopulateInputForUpdate(input *applicationautos
 	return hasChange
 }
 
-func resourceAwsAppautoscalingScheduledActionRead(d *schema.ResourceData, meta interface{}) error {
+func resourceScheduledActionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ApplicationAutoScalingConn
 
 	scheduledAction, err := finder.ScheduledAction(conn, d.Get("name").(string), d.Get("service_namespace").(string), d.Get("resource_id").(string))
@@ -228,7 +228,7 @@ func resourceAwsAppautoscalingScheduledActionRead(d *schema.ResourceData, meta i
 	return nil
 }
 
-func resourceAwsAppautoscalingScheduledActionDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceScheduledActionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ApplicationAutoScalingConn
 
 	input := &applicationautoscaling.DeleteScheduledActionInput{
