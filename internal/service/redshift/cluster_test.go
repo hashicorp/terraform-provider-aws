@@ -74,7 +74,7 @@ func sweepClusters(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func TestAccAWSRedshiftCluster_basic(t *testing.T) {
+func TestAccRedshiftCluster_basic(t *testing.T) {
 	var v redshift.Cluster
 
 	ri := sdkacctest.RandInt()
@@ -111,7 +111,7 @@ func TestAccAWSRedshiftCluster_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSRedshiftCluster_withFinalSnapshot(t *testing.T) {
+func TestAccRedshiftCluster_withFinalSnapshot(t *testing.T) {
 	var v redshift.Cluster
 
 	rInt := sdkacctest.RandInt()
@@ -142,7 +142,7 @@ func TestAccAWSRedshiftCluster_withFinalSnapshot(t *testing.T) {
 	})
 }
 
-func TestAccAWSRedshiftCluster_kmsKey(t *testing.T) {
+func TestAccRedshiftCluster_kmsKey(t *testing.T) {
 	var v redshift.Cluster
 
 	resourceName := "aws_redshift_cluster.default"
@@ -179,7 +179,7 @@ func TestAccAWSRedshiftCluster_kmsKey(t *testing.T) {
 	})
 }
 
-func TestAccAWSRedshiftCluster_enhancedVpcRoutingEnabled(t *testing.T) {
+func TestAccRedshiftCluster_enhancedVPCRoutingEnabled(t *testing.T) {
 	var v redshift.Cluster
 
 	ri := sdkacctest.RandInt()
@@ -222,7 +222,7 @@ func TestAccAWSRedshiftCluster_enhancedVpcRoutingEnabled(t *testing.T) {
 	})
 }
 
-func TestAccAWSRedshiftCluster_loggingEnabled(t *testing.T) {
+func TestAccRedshiftCluster_loggingEnabled(t *testing.T) {
 	var v redshift.Cluster
 	rInt := sdkacctest.RandInt()
 
@@ -264,7 +264,7 @@ func TestAccAWSRedshiftCluster_loggingEnabled(t *testing.T) {
 	})
 }
 
-func TestAccAWSRedshiftCluster_snapshotCopy(t *testing.T) {
+func TestAccRedshiftCluster_snapshotCopy(t *testing.T) {
 	var providers []*schema.Provider
 	var v redshift.Cluster
 	rInt := sdkacctest.RandInt()
@@ -300,7 +300,7 @@ func TestAccAWSRedshiftCluster_snapshotCopy(t *testing.T) {
 	})
 }
 
-func TestAccAWSRedshiftCluster_iamRoles(t *testing.T) {
+func TestAccRedshiftCluster_iamRoles(t *testing.T) {
 	var v redshift.Cluster
 
 	ri := sdkacctest.RandInt()
@@ -334,7 +334,7 @@ func TestAccAWSRedshiftCluster_iamRoles(t *testing.T) {
 	})
 }
 
-func TestAccAWSRedshiftCluster_publiclyAccessible(t *testing.T) {
+func TestAccRedshiftCluster_publiclyAccessible(t *testing.T) {
 	var v redshift.Cluster
 	rInt := sdkacctest.RandInt()
 
@@ -365,7 +365,7 @@ func TestAccAWSRedshiftCluster_publiclyAccessible(t *testing.T) {
 	})
 }
 
-func TestAccAWSRedshiftCluster_updateNodeCount(t *testing.T) {
+func TestAccRedshiftCluster_updateNodeCount(t *testing.T) {
 	var v redshift.Cluster
 
 	ri := sdkacctest.RandInt()
@@ -403,7 +403,7 @@ func TestAccAWSRedshiftCluster_updateNodeCount(t *testing.T) {
 	})
 }
 
-func TestAccAWSRedshiftCluster_updateNodeType(t *testing.T) {
+func TestAccRedshiftCluster_updateNodeType(t *testing.T) {
 	var v redshift.Cluster
 
 	ri := sdkacctest.RandInt()
@@ -441,7 +441,7 @@ func TestAccAWSRedshiftCluster_updateNodeType(t *testing.T) {
 	})
 }
 
-func TestAccAWSRedshiftCluster_tags(t *testing.T) {
+func TestAccRedshiftCluster_tags(t *testing.T) {
 	var v redshift.Cluster
 
 	ri := sdkacctest.RandInt()
@@ -477,7 +477,7 @@ func TestAccAWSRedshiftCluster_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSRedshiftCluster_forceNewUsername(t *testing.T) {
+func TestAccRedshiftCluster_forceNewUsername(t *testing.T) {
 	var first, second redshift.Cluster
 
 	ri := sdkacctest.RandInt()
@@ -511,7 +511,7 @@ func TestAccAWSRedshiftCluster_forceNewUsername(t *testing.T) {
 	})
 }
 
-func TestAccAWSRedshiftCluster_changeAvailabilityZone(t *testing.T) {
+func TestAccRedshiftCluster_changeAvailabilityZone(t *testing.T) {
 	var first, second redshift.Cluster
 
 	ri := sdkacctest.RandInt()
@@ -543,7 +543,7 @@ func TestAccAWSRedshiftCluster_changeAvailabilityZone(t *testing.T) {
 	})
 }
 
-func TestAccAWSRedshiftCluster_changeEncryption1(t *testing.T) {
+func TestAccRedshiftCluster_changeEncryption1(t *testing.T) {
 	var cluster1, cluster2 redshift.Cluster
 
 	ri := sdkacctest.RandInt()
@@ -576,7 +576,7 @@ func TestAccAWSRedshiftCluster_changeEncryption1(t *testing.T) {
 	})
 }
 
-func TestAccAWSRedshiftCluster_changeEncryption2(t *testing.T) {
+func TestAccRedshiftCluster_changeEncryption2(t *testing.T) {
 	var cluster1, cluster2 redshift.Cluster
 
 	ri := sdkacctest.RandInt()

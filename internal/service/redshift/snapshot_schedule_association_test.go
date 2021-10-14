@@ -14,7 +14,7 @@ import (
 	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
 )
 
-func TestAccAWSRedshiftSnapshotScheduleAssociation_basic(t *testing.T) {
+func TestAccRedshiftSnapshotScheduleAssociation_basic(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 	rName := sdkacctest.RandString(8)
 	resourceName := "aws_redshift_snapshot_schedule_association.default"

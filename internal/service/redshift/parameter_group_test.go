@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSRedshiftParameterGroup_basic(t *testing.T) {
+func TestAccRedshiftParameterGroup_basic(t *testing.T) {
 	var v redshift.ClusterParameterGroup
 	resourceName := "aws_redshift_parameter_group.test"
 	rInt := sdkacctest.RandInt()
@@ -40,7 +40,7 @@ func TestAccAWSRedshiftParameterGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSRedshiftParameterGroup_withParameters(t *testing.T) {
+func TestAccRedshiftParameterGroup_withParameters(t *testing.T) {
 	var v redshift.ClusterParameterGroup
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_redshift_parameter_group.test"
@@ -84,7 +84,7 @@ func TestAccAWSRedshiftParameterGroup_withParameters(t *testing.T) {
 	})
 }
 
-func TestAccAWSRedshiftParameterGroup_withoutParameters(t *testing.T) {
+func TestAccRedshiftParameterGroup_withoutParameters(t *testing.T) {
 	var v redshift.ClusterParameterGroup
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_redshift_parameter_group.test"
@@ -116,7 +116,7 @@ func TestAccAWSRedshiftParameterGroup_withoutParameters(t *testing.T) {
 	})
 }
 
-func TestAccAWSRedshiftParameterGroup_withTags(t *testing.T) {
+func TestAccRedshiftParameterGroup_withTags(t *testing.T) {
 	var v redshift.ClusterParameterGroup
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_redshift_parameter_group.test"

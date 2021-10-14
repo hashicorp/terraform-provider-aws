@@ -68,7 +68,7 @@ func sweepScheduledActions(region string) error {
 	return nil
 }
 
-func TestAccAWSRedshiftScheduledAction_basicPauseCluster(t *testing.T) {
+func TestAccRedshiftScheduledAction_basicPauseCluster(t *testing.T) {
 	var v redshift.ScheduledAction
 	resourceName := "aws_redshift_scheduled_action.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -122,7 +122,7 @@ func TestAccAWSRedshiftScheduledAction_basicPauseCluster(t *testing.T) {
 	})
 }
 
-func TestAccAWSRedshiftScheduledAction_PauseClusterWithOptions(t *testing.T) {
+func TestAccRedshiftScheduledAction_pauseClusterWithOptions(t *testing.T) {
 	var v redshift.ScheduledAction
 	resourceName := "aws_redshift_scheduled_action.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -161,7 +161,7 @@ func TestAccAWSRedshiftScheduledAction_PauseClusterWithOptions(t *testing.T) {
 	})
 }
 
-func TestAccAWSRedshiftScheduledAction_basicResumeCluster(t *testing.T) {
+func TestAccRedshiftScheduledAction_basicResumeCluster(t *testing.T) {
 	var v redshift.ScheduledAction
 	resourceName := "aws_redshift_scheduled_action.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -215,7 +215,7 @@ func TestAccAWSRedshiftScheduledAction_basicResumeCluster(t *testing.T) {
 	})
 }
 
-func TestAccAWSRedshiftScheduledAction_basicResizeCluster(t *testing.T) {
+func TestAccRedshiftScheduledAction_basicResizeCluster(t *testing.T) {
 	var v redshift.ScheduledAction
 	resourceName := "aws_redshift_scheduled_action.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -269,7 +269,7 @@ func TestAccAWSRedshiftScheduledAction_basicResizeCluster(t *testing.T) {
 	})
 }
 
-func TestAccAWSRedshiftScheduledAction_ResizeClusterWithOptions(t *testing.T) {
+func TestAccRedshiftScheduledAction_resizeClusterWithOptions(t *testing.T) {
 	var v redshift.ScheduledAction
 	resourceName := "aws_redshift_scheduled_action.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -310,7 +310,7 @@ func TestAccAWSRedshiftScheduledAction_ResizeClusterWithOptions(t *testing.T) {
 	})
 }
 
-func TestAccAWSRedshiftScheduledAction_disappears(t *testing.T) {
+func TestAccRedshiftScheduledAction_disappears(t *testing.T) {
 	var v redshift.ScheduledAction
 	resourceName := "aws_redshift_scheduled_action.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

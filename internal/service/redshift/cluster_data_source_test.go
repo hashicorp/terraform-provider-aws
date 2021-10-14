@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSDataSourceRedshiftCluster_basic(t *testing.T) {
+func TestAccRedshiftClusterDataSource_basic(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
@@ -44,7 +44,7 @@ func TestAccAWSDataSourceRedshiftCluster_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataSourceRedshiftCluster_vpc(t *testing.T) {
+func TestAccRedshiftClusterDataSource_vpc(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
@@ -64,7 +64,7 @@ func TestAccAWSDataSourceRedshiftCluster_vpc(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataSourceRedshiftCluster_logging(t *testing.T) {
+func TestAccRedshiftClusterDataSource_logging(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },

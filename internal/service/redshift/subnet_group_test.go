@@ -83,7 +83,7 @@ func sweepSubnetGroups(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func TestAccAWSRedshiftSubnetGroup_basic(t *testing.T) {
+func TestAccRedshiftSubnetGroup_basic(t *testing.T) {
 	var v redshift.ClusterSubnetGroup
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_redshift_subnet_group.test"
@@ -115,7 +115,7 @@ func TestAccAWSRedshiftSubnetGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSRedshiftSubnetGroup_disappears(t *testing.T) {
+func TestAccRedshiftSubnetGroup_disappears(t *testing.T) {
 	var clusterSubnetGroup redshift.ClusterSubnetGroup
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_redshift_subnet_group.test"
@@ -138,7 +138,7 @@ func TestAccAWSRedshiftSubnetGroup_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSRedshiftSubnetGroup_updateDescription(t *testing.T) {
+func TestAccRedshiftSubnetGroup_updateDescription(t *testing.T) {
 	var v redshift.ClusterSubnetGroup
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_redshift_subnet_group.test"
@@ -176,7 +176,7 @@ func TestAccAWSRedshiftSubnetGroup_updateDescription(t *testing.T) {
 	})
 }
 
-func TestAccAWSRedshiftSubnetGroup_updateSubnetIds(t *testing.T) {
+func TestAccRedshiftSubnetGroup_updateSubnetIDs(t *testing.T) {
 	var v redshift.ClusterSubnetGroup
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_redshift_subnet_group.test"
@@ -214,7 +214,7 @@ func TestAccAWSRedshiftSubnetGroup_updateSubnetIds(t *testing.T) {
 	})
 }
 
-func TestAccAWSRedshiftSubnetGroup_tags(t *testing.T) {
+func TestAccRedshiftSubnetGroup_tags(t *testing.T) {
 	var v redshift.ClusterSubnetGroup
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_redshift_subnet_group.test"

@@ -68,7 +68,7 @@ func sweepEventSubscriptions(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func TestAccAWSRedshiftEventSubscription_basicUpdate(t *testing.T) {
+func TestAccRedshiftEventSubscription_basicUpdate(t *testing.T) {
 	var v redshift.EventSubscription
 	rInt := sdkacctest.RandInt()
 	rName := fmt.Sprintf("tf-acc-test-redshift-event-subs-%d", rInt)
@@ -109,7 +109,7 @@ func TestAccAWSRedshiftEventSubscription_basicUpdate(t *testing.T) {
 	})
 }
 
-func TestAccAWSRedshiftEventSubscription_withPrefix(t *testing.T) {
+func TestAccRedshiftEventSubscription_withPrefix(t *testing.T) {
 	var v redshift.EventSubscription
 	rInt := sdkacctest.RandInt()
 	rName := fmt.Sprintf("tf-acc-test-redshift-event-subs-%d", rInt)
@@ -143,7 +143,7 @@ func TestAccAWSRedshiftEventSubscription_withPrefix(t *testing.T) {
 	})
 }
 
-func TestAccAWSRedshiftEventSubscription_withSourceIds(t *testing.T) {
+func TestAccRedshiftEventSubscription_withSourceIDs(t *testing.T) {
 	var v redshift.EventSubscription
 	rInt := sdkacctest.RandInt()
 	rName := fmt.Sprintf("tf-acc-test-redshift-event-subs-with-ids-%d", rInt)
@@ -191,7 +191,7 @@ func TestAccAWSRedshiftEventSubscription_withSourceIds(t *testing.T) {
 	})
 }
 
-func TestAccAWSRedshiftEventSubscription_categoryUpdate(t *testing.T) {
+func TestAccRedshiftEventSubscription_categoryUpdate(t *testing.T) {
 	var v redshift.EventSubscription
 	rInt := sdkacctest.RandInt()
 	rName := fmt.Sprintf("tf-acc-test-redshift-event-subs-%d", rInt)
@@ -233,7 +233,7 @@ func TestAccAWSRedshiftEventSubscription_categoryUpdate(t *testing.T) {
 	})
 }
 
-func TestAccAWSRedshiftEventSubscription_tagsUpdate(t *testing.T) {
+func TestAccRedshiftEventSubscription_tagsUpdate(t *testing.T) {
 	var v redshift.EventSubscription
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_redshift_event_subscription.bar"
