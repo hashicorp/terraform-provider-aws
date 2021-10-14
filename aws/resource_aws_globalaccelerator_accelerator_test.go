@@ -9,11 +9,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/globalaccelerator"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/globalaccelerator/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -151,13 +152,13 @@ func sweepGlobalAcceleratorEndpointGroups(client interface{}, listenerArn *strin
 
 func TestAccAwsGlobalAcceleratorAccelerator_basic(t *testing.T) {
 	resourceName := "aws_globalaccelerator_accelerator.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	ipRegex := regexp.MustCompile(`\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}`)
 	dnsNameRegex := regexp.MustCompile(`^a[a-f0-9]{16}\.awsglobalaccelerator\.com$`)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckGlobalAccelerator(t) },
-		ErrorCheck:   testAccErrorCheck(t, globalaccelerator.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckGlobalAccelerator(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlobalAcceleratorAcceleratorDestroy,
 		Steps: []resource.TestStep{
@@ -192,11 +193,11 @@ func TestAccAwsGlobalAcceleratorAccelerator_basic(t *testing.T) {
 
 func TestAccAwsGlobalAcceleratorAccelerator_disappears(t *testing.T) {
 	resourceName := "aws_globalaccelerator_accelerator.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckGlobalAccelerator(t) },
-		ErrorCheck:   testAccErrorCheck(t, globalaccelerator.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckGlobalAccelerator(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlobalAcceleratorAcceleratorDestroy,
 		Steps: []resource.TestStep{
@@ -204,7 +205,7 @@ func TestAccAwsGlobalAcceleratorAccelerator_disappears(t *testing.T) {
 				Config: testAccGlobalAcceleratorAcceleratorConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalAcceleratorAcceleratorExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsGlobalAcceleratorAccelerator(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsGlobalAcceleratorAccelerator(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -214,12 +215,12 @@ func TestAccAwsGlobalAcceleratorAccelerator_disappears(t *testing.T) {
 
 func TestAccAwsGlobalAcceleratorAccelerator_update(t *testing.T) {
 	resourceName := "aws_globalaccelerator_accelerator.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	newName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	newName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckGlobalAccelerator(t) },
-		ErrorCheck:   testAccErrorCheck(t, globalaccelerator.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckGlobalAccelerator(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlobalAcceleratorAcceleratorDestroy,
 		Steps: []resource.TestStep{
@@ -259,11 +260,11 @@ func TestAccAwsGlobalAcceleratorAccelerator_update(t *testing.T) {
 func TestAccAwsGlobalAcceleratorAccelerator_attributes(t *testing.T) {
 	resourceName := "aws_globalaccelerator_accelerator.test"
 	s3BucketResourceName := "aws_s3_bucket.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckGlobalAccelerator(t) },
-		ErrorCheck:   testAccErrorCheck(t, globalaccelerator.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckGlobalAccelerator(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlobalAcceleratorAcceleratorDestroy,
 		Steps: []resource.TestStep{
@@ -318,11 +319,11 @@ func TestAccAwsGlobalAcceleratorAccelerator_attributes(t *testing.T) {
 
 func TestAccAwsGlobalAcceleratorAccelerator_tags(t *testing.T) {
 	resourceName := "aws_globalaccelerator_accelerator.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckGlobalAccelerator(t) },
-		ErrorCheck:   testAccErrorCheck(t, globalaccelerator.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckGlobalAccelerator(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlobalAcceleratorAcceleratorDestroy,
 		Steps: []resource.TestStep{
@@ -368,7 +369,7 @@ func testAccPreCheckGlobalAccelerator(t *testing.T) {
 
 	_, err := conn.ListAccelerators(input)
 
-	if testAccPreCheckSkipError(err) {
+	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
