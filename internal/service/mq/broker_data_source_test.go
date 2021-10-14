@@ -23,7 +23,7 @@ func TestAccDataSourceAWSMqBroker_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAWSMqBrokerConfig_byId(rName),
+				Config: testAccBrokerDataSourceConfig_byID(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceByIdName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceByIdName, "broker_name", resourceName, "broker_name"),
@@ -48,7 +48,7 @@ func TestAccDataSourceAWSMqBroker_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDataSourceAWSMqBrokerConfig_byName(rName),
+				Config: testAccBrokerDataSourceConfig_byName(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceByNameName, "broker_id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceByNameName, "broker_name", resourceName, "broker_name"),
@@ -58,7 +58,7 @@ func TestAccDataSourceAWSMqBroker_basic(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAWSMqBrokerConfig_base(rName string) string {
+func testAccBrokerDataSourceConfig_base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -171,16 +171,16 @@ resource "aws_mq_broker" "test" {
 `, rName)
 }
 
-func testAccDataSourceAWSMqBrokerConfig_byId(rName string) string {
-	return acctest.ConfigCompose(testAccDataSourceAWSMqBrokerConfig_base(rName), `
+func testAccBrokerDataSourceConfig_byID(rName string) string {
+	return acctest.ConfigCompose(testAccBrokerDataSourceConfig_base(rName), `
 data "aws_mq_broker" "by_id" {
   broker_id = aws_mq_broker.test.id
 }
 `)
 }
 
-func testAccDataSourceAWSMqBrokerConfig_byName(rName string) string {
-	return acctest.ConfigCompose(testAccDataSourceAWSMqBrokerConfig_base(rName), `
+func testAccBrokerDataSourceConfig_byName(rName string) string {
+	return acctest.ConfigCompose(testAccBrokerDataSourceConfig_base(rName), `
 data "aws_mq_broker" "by_name" {
   broker_name = aws_mq_broker.test.broker_name
 }

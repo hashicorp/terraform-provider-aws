@@ -23,16 +23,16 @@ func TestAccAWSMqConfiguration_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(mq.EndpointsID, t)
-			testAccPreCheckAWSMq(t)
+			testAccPreCheck(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, mq.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsMqConfigurationDestroy,
+		CheckDestroy: testAccCheckConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMqConfigurationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsMqConfigurationExists(resourceName),
+					testAccCheckConfigurationExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexp.MustCompile(`configuration:+.`)),
 					resource.TestCheckResourceAttr(resourceName, "authentication_strategy", "simple"),
 					resource.TestCheckResourceAttr(resourceName, "description", "TfAccTest MQ Configuration"),
@@ -50,7 +50,7 @@ func TestAccAWSMqConfiguration_basic(t *testing.T) {
 			{
 				Config: testAccMqConfigurationConfig_descriptionUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsMqConfigurationExists(resourceName),
+					testAccCheckConfigurationExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexp.MustCompile(`configuration:+.`)),
 					resource.TestCheckResourceAttr(resourceName, "description", "TfAccTest MQ Configuration Updated"),
 					resource.TestCheckResourceAttr(resourceName, "engine_type", "ActiveMQ"),
@@ -71,16 +71,16 @@ func TestAccAWSMqConfiguration_withData(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(mq.EndpointsID, t)
-			testAccPreCheckAWSMq(t)
+			testAccPreCheck(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, mq.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsMqConfigurationDestroy,
+		CheckDestroy: testAccCheckConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMqConfigurationWithDataConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsMqConfigurationExists(resourceName),
+					testAccCheckConfigurationExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexp.MustCompile(`configuration:+.`)),
 					resource.TestCheckResourceAttr(resourceName, "description", "TfAccTest MQ Configuration"),
 					resource.TestCheckResourceAttr(resourceName, "engine_type", "ActiveMQ"),
@@ -106,16 +106,16 @@ func TestAccAWSMqConfiguration_withLdapData(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(mq.EndpointsID, t)
-			testAccPreCheckAWSMq(t)
+			testAccPreCheck(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, mq.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsMqConfigurationDestroy,
+		CheckDestroy: testAccCheckConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMqConfigurationWithLdapDataConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsMqConfigurationExists(resourceName),
+					testAccCheckConfigurationExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexp.MustCompile(`configuration:+.`)),
 					resource.TestCheckResourceAttr(resourceName, "authentication_strategy", "ldap"),
 					resource.TestCheckResourceAttr(resourceName, "description", "TfAccTest MQ Configuration"),
@@ -142,16 +142,16 @@ func TestAccAWSMqConfiguration_updateTags(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(mq.EndpointsID, t)
-			testAccPreCheckAWSMq(t)
+			testAccPreCheck(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, mq.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsMqConfigurationDestroy,
+		CheckDestroy: testAccCheckConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMqConfigurationConfig_updateTags1(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsMqConfigurationExists(resourceName),
+					testAccCheckConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.env", "test"),
 				),
@@ -164,7 +164,7 @@ func TestAccAWSMqConfiguration_updateTags(t *testing.T) {
 			{
 				Config: testAccMqConfigurationConfig_updateTags2(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsMqConfigurationExists(resourceName),
+					testAccCheckConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.env", "test2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.role", "test-role"),
@@ -173,7 +173,7 @@ func TestAccAWSMqConfiguration_updateTags(t *testing.T) {
 			{
 				Config: testAccMqConfigurationConfig_updateTags3(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsMqConfigurationExists(resourceName),
+					testAccCheckConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.role", "test-role"),
 				),
@@ -182,7 +182,7 @@ func TestAccAWSMqConfiguration_updateTags(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsMqConfigurationDestroy(s *terraform.State) error {
+func testAccCheckConfigurationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).MQConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -210,7 +210,7 @@ func testAccCheckAwsMqConfigurationDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAwsMqConfigurationExists(name string) resource.TestCheckFunc {
+func testAccCheckConfigurationExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		_, ok := s.RootModule().Resources[name]
 		if !ok {
