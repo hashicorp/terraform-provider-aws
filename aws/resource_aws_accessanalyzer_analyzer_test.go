@@ -16,13 +16,13 @@ import (
 func testAccAWSAccessAnalyzerAnalyzer_basic(t *testing.T) {
 	var analyzer accessanalyzer.AnalyzerSummary
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_accessanalyzer_analyzer.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSAccessAnalyzer(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, accessanalyzer.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAccessAnalyzerAnalyzerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -48,13 +48,13 @@ func testAccAWSAccessAnalyzerAnalyzer_basic(t *testing.T) {
 func testAccAWSAccessAnalyzerAnalyzer_disappears(t *testing.T) {
 	var analyzer accessanalyzer.AnalyzerSummary
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_accessanalyzer_analyzer.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSAccessAnalyzer(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, accessanalyzer.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAccessAnalyzerAnalyzerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -73,13 +73,13 @@ func testAccAWSAccessAnalyzerAnalyzer_disappears(t *testing.T) {
 func testAccAWSAccessAnalyzerAnalyzer_Tags(t *testing.T) {
 	var analyzer accessanalyzer.AnalyzerSummary
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_accessanalyzer_analyzer.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSAccessAnalyzer(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, accessanalyzer.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAccessAnalyzerAnalyzerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -120,7 +120,7 @@ func testAccAWSAccessAnalyzerAnalyzer_Tags(t *testing.T) {
 func testAccAWSAccessAnalyzerAnalyzer_Type_Organization(t *testing.T) {
 	var analyzer accessanalyzer.AnalyzerSummary
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_accessanalyzer_analyzer.test"
 
 	resource.Test(t, resource.TestCase{
@@ -130,7 +130,7 @@ func testAccAWSAccessAnalyzerAnalyzer_Type_Organization(t *testing.T) {
 			acctest.PreCheckOrganizationsAccount(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, accessanalyzer.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAccessAnalyzerAnalyzerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -150,7 +150,7 @@ func testAccAWSAccessAnalyzerAnalyzer_Type_Organization(t *testing.T) {
 }
 
 func testAccCheckAccessAnalyzerAnalyzerDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).accessanalyzerconn
+	conn := acctest.Provider.Meta().(*AWSClient).accessanalyzerconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_accessanalyzer_analyzer" {
@@ -182,7 +182,7 @@ func testAccCheckAccessAnalyzerAnalyzerDestroy(s *terraform.State) error {
 
 func testAccCheckAwsAccessAnalyzerAnalyzerDisappears(analyzer *accessanalyzer.AnalyzerSummary) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).accessanalyzerconn
+		conn := acctest.Provider.Meta().(*AWSClient).accessanalyzerconn
 
 		input := &accessanalyzer.DeleteAnalyzerInput{
 			AnalyzerName: analyzer.Name,
@@ -205,7 +205,7 @@ func testAccCheckAwsAccessAnalyzerAnalyzerExists(resourceName string, analyzer *
 			return fmt.Errorf("Resource (%s) ID not set", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).accessanalyzerconn
+		conn := acctest.Provider.Meta().(*AWSClient).accessanalyzerconn
 
 		input := &accessanalyzer.GetAnalyzerInput{
 			AnalyzerName: aws.String(rs.Primary.ID),
