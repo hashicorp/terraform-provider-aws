@@ -24,12 +24,12 @@ func TestAccAwsRamPrincipalAssociation_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ram.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsRamPrincipalAssociationDestroy,
+		CheckDestroy: testAccCheckPrincipalAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsRamPrincipalAssociationConfig(rName),
+				Config: testAccPrincipalAssociationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsRamPrincipalAssociationExists(resourceName, &association),
+					testAccCheckPrincipalAssociationExists(resourceName, &association),
 				),
 			},
 			{
@@ -50,12 +50,12 @@ func TestAccAwsRamPrincipalAssociation_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ram.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsRamPrincipalAssociationDestroy,
+		CheckDestroy: testAccCheckPrincipalAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsRamPrincipalAssociationConfig(rName),
+				Config: testAccPrincipalAssociationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsRamPrincipalAssociationExists(resourceName, &association),
+					testAccCheckPrincipalAssociationExists(resourceName, &association),
 					acctest.CheckResourceDisappears(acctest.Provider, tfram.ResourcePrincipalAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -64,7 +64,7 @@ func TestAccAwsRamPrincipalAssociation_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsRamPrincipalAssociationExists(resourceName string, resourceShare *ram.ResourceShareAssociation) resource.TestCheckFunc {
+func testAccCheckPrincipalAssociationExists(resourceName string, resourceShare *ram.ResourceShareAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RAMConn
 
@@ -110,7 +110,7 @@ func testAccCheckAwsRamPrincipalAssociationExists(resourceName string, resourceS
 	}
 }
 
-func testAccCheckAwsRamPrincipalAssociationDestroy(s *terraform.State) error {
+func testAccCheckPrincipalAssociationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).RAMConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -138,7 +138,7 @@ func testAccCheckAwsRamPrincipalAssociationDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAwsRamPrincipalAssociationConfig(rName string) string {
+func testAccPrincipalAssociationConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ram_resource_share" "test" {
   allow_external_principals = true

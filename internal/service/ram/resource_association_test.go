@@ -23,12 +23,12 @@ func TestAccAwsRamResourceAssociation_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ram.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsRamResourceAssociationDestroy,
+		CheckDestroy: testAccCheckResourceAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsRamResourceAssociationConfig(rName),
+				Config: testAccResourceAssociationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsRamResourceAssociationExists(resourceName, &resourceShareAssociation1),
+					testAccCheckResourceAssociationExists(resourceName, &resourceShareAssociation1),
 				),
 			},
 			{
@@ -49,13 +49,13 @@ func TestAccAwsRamResourceAssociation_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ram.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsRamResourceAssociationDestroy,
+		CheckDestroy: testAccCheckResourceAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsRamResourceAssociationConfig(rName),
+				Config: testAccResourceAssociationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsRamResourceAssociationExists(resourceName, &resourceShareAssociation1),
-					testAccCheckAwsRamResourceAssociationDisappears(&resourceShareAssociation1),
+					testAccCheckResourceAssociationExists(resourceName, &resourceShareAssociation1),
+					testAccCheckResourceAssociationDisappears(&resourceShareAssociation1),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -63,7 +63,7 @@ func TestAccAwsRamResourceAssociation_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsRamResourceAssociationDisappears(resourceShareAssociation *ram.ResourceShareAssociation) resource.TestCheckFunc {
+func testAccCheckResourceAssociationDisappears(resourceShareAssociation *ram.ResourceShareAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RAMConn
 
@@ -81,7 +81,7 @@ func testAccCheckAwsRamResourceAssociationDisappears(resourceShareAssociation *r
 	}
 }
 
-func testAccCheckAwsRamResourceAssociationExists(resourceName string, association *ram.ResourceShareAssociation) resource.TestCheckFunc {
+func testAccCheckResourceAssociationExists(resourceName string, association *ram.ResourceShareAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RAMConn
 
@@ -117,7 +117,7 @@ func testAccCheckAwsRamResourceAssociationExists(resourceName string, associatio
 	}
 }
 
-func testAccCheckAwsRamResourceAssociationDestroy(s *terraform.State) error {
+func testAccCheckResourceAssociationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).RAMConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -145,7 +145,7 @@ func testAccCheckAwsRamResourceAssociationDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAwsRamResourceAssociationConfig(rName string) string {
+func testAccResourceAssociationConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"

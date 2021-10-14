@@ -31,12 +31,12 @@ func TestAccAwsRamResourceShareAccepter_basic(t *testing.T) {
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, ram.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckAwsRamResourceShareAccepterDestroy,
+		CheckDestroy:      testAccCheckResourceShareAccepterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsRamResourceShareAccepterBasic(rName),
+				Config: testAccResourceShareAccepterBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsRamResourceShareAccepterExists(resourceName),
+					testAccCheckResourceShareAccepterExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "share_arn", principalAssociationResourceName, "resource_share_arn"),
 					acctest.MatchResourceAttrRegionalARNAccountID(resourceName, "invitation_arn", "ram", `\d{12}`, regexp.MustCompile(fmt.Sprintf("resource-share-invitation/%s$", verify.UUIDRegexPattern))),
 					resource.TestMatchResourceAttr(resourceName, "share_id", regexp.MustCompile(fmt.Sprintf(`^rs-%s$`, verify.UUIDRegexPattern))),
@@ -48,7 +48,7 @@ func TestAccAwsRamResourceShareAccepter_basic(t *testing.T) {
 				),
 			},
 			{
-				Config:            testAccAwsRamResourceShareAccepterBasic(rName),
+				Config:            testAccResourceShareAccepterBasic(rName),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -69,12 +69,12 @@ func TestAccAwsRamResourceShareAccepter_disappears(t *testing.T) {
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, ram.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckAwsRamResourceShareAccepterDestroy,
+		CheckDestroy:      testAccCheckResourceShareAccepterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsRamResourceShareAccepterBasic(rName),
+				Config: testAccResourceShareAccepterBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsRamResourceShareAccepterExists(resourceName),
+					testAccCheckResourceShareAccepterExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfram.ResourceResourceShareAccepter(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -96,12 +96,12 @@ func TestAccAwsRamResourceShareAccepter_resourceAssociation(t *testing.T) {
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, ram.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckAwsRamResourceShareAccepterDestroy,
+		CheckDestroy:      testAccCheckResourceShareAccepterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsRamResourceShareAccepterResourceAssociation(rName),
+				Config: testAccResourceShareAccepterResourceAssociation(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsRamResourceShareAccepterExists(resourceName),
+					testAccCheckResourceShareAccepterExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "share_arn", principalAssociationResourceName, "resource_share_arn"),
 					acctest.MatchResourceAttrRegionalARNAccountID(resourceName, "invitation_arn", "ram", `\d{12}`, regexp.MustCompile(fmt.Sprintf("resource-share-invitation/%s$", verify.UUIDRegexPattern))),
 					resource.TestMatchResourceAttr(resourceName, "share_id", regexp.MustCompile(fmt.Sprintf(`^rs-%s$`, verify.UUIDRegexPattern))),
@@ -113,7 +113,7 @@ func TestAccAwsRamResourceShareAccepter_resourceAssociation(t *testing.T) {
 				),
 			},
 			{
-				Config:            testAccAwsRamResourceShareAccepterResourceAssociation(rName),
+				Config:            testAccResourceShareAccepterResourceAssociation(rName),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -122,7 +122,7 @@ func TestAccAwsRamResourceShareAccepter_resourceAssociation(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsRamResourceShareAccepterDestroy(s *terraform.State) error {
+func testAccCheckResourceShareAccepterDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).RAMConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -151,7 +151,7 @@ func testAccCheckAwsRamResourceShareAccepterDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAwsRamResourceShareAccepterExists(name string) resource.TestCheckFunc {
+func testAccCheckResourceShareAccepterExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 
@@ -175,7 +175,7 @@ func testAccCheckAwsRamResourceShareAccepterExists(name string) resource.TestChe
 	}
 }
 
-func testAccAwsRamResourceShareAccepterBasic(rName string) string {
+func testAccResourceShareAccepterBasic(rName string) string {
 	return acctest.ConfigAlternateAccountProvider() + fmt.Sprintf(`
 resource "aws_ram_resource_share_accepter" "test" {
   share_arn = aws_ram_principal_association.test.resource_share_arn
@@ -203,8 +203,8 @@ data "aws_caller_identity" "receiver" {}
 `, rName)
 }
 
-func testAccAwsRamResourceShareAccepterResourceAssociation(rName string) string {
-	return acctest.ConfigCompose(testAccAwsRamResourceShareAccepterBasic(rName), fmt.Sprintf(`
+func testAccResourceShareAccepterResourceAssociation(rName string) string {
+	return acctest.ConfigCompose(testAccResourceShareAccepterBasic(rName), fmt.Sprintf(`
 resource "aws_ram_resource_association" "test" {
   provider = "awsalternate"
 
