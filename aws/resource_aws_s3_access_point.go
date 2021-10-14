@@ -15,12 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsS3AccessPoint() *schema.Resource {
+func ResourceAccessPoint() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsS3AccessPointCreate,
-		Read:   resourceAwsS3AccessPointRead,
-		Update: resourceAwsS3AccessPointUpdate,
-		Delete: resourceAwsS3AccessPointDelete,
+		Create: resourceAccessPointCreate,
+		Read:   resourceAccessPointRead,
+		Update: resourceAccessPointUpdate,
+		Delete: resourceAccessPointDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -122,7 +122,7 @@ func resourceAwsS3AccessPoint() *schema.Resource {
 	}
 }
 
-func resourceAwsS3AccessPointCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAccessPointCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3ControlConn
 
 	accountId := meta.(*conns.AWSClient).AccountID
@@ -172,10 +172,10 @@ func resourceAwsS3AccessPointCreate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
-	return resourceAwsS3AccessPointRead(d, meta)
+	return resourceAccessPointRead(d, meta)
 }
 
-func resourceAwsS3AccessPointRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAccessPointRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3ControlConn
 
 	accountId, name, err := s3AccessPointParseId(d.Id())
@@ -288,7 +288,7 @@ func resourceAwsS3AccessPointRead(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func resourceAwsS3AccessPointUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAccessPointUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3ControlConn
 
 	accountId, name, err := s3AccessPointParseId(d.Id())
@@ -321,10 +321,10 @@ func resourceAwsS3AccessPointUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
-	return resourceAwsS3AccessPointRead(d, meta)
+	return resourceAccessPointRead(d, meta)
 }
 
-func resourceAwsS3AccessPointDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAccessPointDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3ControlConn
 
 	accountId, name, err := s3AccessPointParseId(d.Id())

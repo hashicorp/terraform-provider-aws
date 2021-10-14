@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsS3ControlBucketPolicy() *schema.Resource {
+func ResourceBucketPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsS3ControlBucketPolicyCreate,
-		Read:   resourceAwsS3ControlBucketPolicyRead,
-		Update: resourceAwsS3ControlBucketPolicyUpdate,
-		Delete: resourceAwsS3ControlBucketPolicyDelete,
+		Create: resourceBucketPolicyCreate,
+		Read:   resourceBucketPolicyRead,
+		Update: resourceBucketPolicyUpdate,
+		Delete: resourceBucketPolicyDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -41,7 +41,7 @@ func resourceAwsS3ControlBucketPolicy() *schema.Resource {
 	}
 }
 
-func resourceAwsS3ControlBucketPolicyCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceBucketPolicyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3ControlConn
 
 	bucket := d.Get("bucket").(string)
@@ -59,10 +59,10 @@ func resourceAwsS3ControlBucketPolicyCreate(d *schema.ResourceData, meta interfa
 
 	d.SetId(bucket)
 
-	return resourceAwsS3ControlBucketPolicyRead(d, meta)
+	return resourceBucketPolicyRead(d, meta)
 }
 
-func resourceAwsS3ControlBucketPolicyRead(d *schema.ResourceData, meta interface{}) error {
+func resourceBucketPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3ControlConn
 
 	parsedArn, err := arn.Parse(d.Id())
@@ -114,7 +114,7 @@ func resourceAwsS3ControlBucketPolicyRead(d *schema.ResourceData, meta interface
 	return nil
 }
 
-func resourceAwsS3ControlBucketPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceBucketPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3ControlConn
 
 	input := &s3control.PutBucketPolicyInput{
@@ -128,10 +128,10 @@ func resourceAwsS3ControlBucketPolicyUpdate(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("error updating S3 Control Bucket Policy (%s): %w", d.Id(), err)
 	}
 
-	return resourceAwsS3ControlBucketPolicyRead(d, meta)
+	return resourceBucketPolicyRead(d, meta)
 }
 
-func resourceAwsS3ControlBucketPolicyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceBucketPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3ControlConn
 
 	parsedArn, err := arn.Parse(d.Id())

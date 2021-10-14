@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsS3AccountPublicAccessBlock() *schema.Resource {
+func ResourceAccountPublicAccessBlock() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsS3AccountPublicAccessBlockCreate,
-		Read:   resourceAwsS3AccountPublicAccessBlockRead,
-		Update: resourceAwsS3AccountPublicAccessBlockUpdate,
-		Delete: resourceAwsS3AccountPublicAccessBlockDelete,
+		Create: resourceAccountPublicAccessBlockCreate,
+		Read:   resourceAccountPublicAccessBlockRead,
+		Update: resourceAccountPublicAccessBlockUpdate,
+		Delete: resourceAccountPublicAccessBlockDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -56,7 +56,7 @@ func resourceAwsS3AccountPublicAccessBlock() *schema.Resource {
 	}
 }
 
-func resourceAwsS3AccountPublicAccessBlockCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAccountPublicAccessBlockCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3ControlConn
 
 	accountID := meta.(*conns.AWSClient).AccountID
@@ -82,10 +82,10 @@ func resourceAwsS3AccountPublicAccessBlockCreate(d *schema.ResourceData, meta in
 
 	d.SetId(accountID)
 
-	return resourceAwsS3AccountPublicAccessBlockRead(d, meta)
+	return resourceAccountPublicAccessBlockRead(d, meta)
 }
 
-func resourceAwsS3AccountPublicAccessBlockRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAccountPublicAccessBlockRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3ControlConn
 
 	input := &s3control.GetPublicAccessBlockInput{
@@ -136,7 +136,7 @@ func resourceAwsS3AccountPublicAccessBlockRead(d *schema.ResourceData, meta inte
 	return nil
 }
 
-func resourceAwsS3AccountPublicAccessBlockUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAccountPublicAccessBlockUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3ControlConn
 
 	input := &s3control.PutPublicAccessBlockInput{
@@ -179,10 +179,10 @@ func resourceAwsS3AccountPublicAccessBlockUpdate(d *schema.ResourceData, meta in
 		}
 	}
 
-	return resourceAwsS3AccountPublicAccessBlockRead(d, meta)
+	return resourceAccountPublicAccessBlockRead(d, meta)
 }
 
-func resourceAwsS3AccountPublicAccessBlockDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAccountPublicAccessBlockDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3ControlConn
 
 	input := &s3control.DeletePublicAccessBlockInput{
