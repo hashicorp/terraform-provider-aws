@@ -6,20 +6,21 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/cloudformation"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAwsCloudformationTypeDataSource_Arn_Private(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	typeName := fmt.Sprintf("HashiCorp::TerraformAwsProvider::TfAccTest%s", acctest.RandString(8))
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	typeName := fmt.Sprintf("HashiCorp::TerraformAwsProvider::TfAccTest%s", sdkacctest.RandString(8))
 	zipPath := testAccAwsCloudformationTypeZipGenerator(t, typeName)
 	resourceName := "aws_cloudformation_type.test"
 	dataSourceName := "data.aws_cloudformation_type.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, cloudformation.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudformation.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsCloudformationTypeDestroy,
 		Steps: []resource.TestStep{
@@ -49,15 +50,15 @@ func TestAccAwsCloudformationTypeDataSource_Arn_Public(t *testing.T) {
 	dataSourceName := "data.aws_cloudformation_type.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, cloudformation.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudformation.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsCloudformationTypeDataSourceConfigArnPublic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourceAttrRegionalARNNoAccount(dataSourceName, "arn", "cloudformation", "type/resource/AWS-Athena-WorkGroup"),
+					acctest.CheckResourceAttrRegionalARNNoAccount(dataSourceName, "arn", "cloudformation", "type/resource/AWS-Athena-WorkGroup"),
 					resource.TestCheckResourceAttr(dataSourceName, "deprecated_status", cloudformation.DeprecatedStatusLive),
 					resource.TestMatchResourceAttr(dataSourceName, "description", regexp.MustCompile(`.*`)),
 					resource.TestCheckResourceAttr(dataSourceName, "documentation_url", ""),
@@ -76,15 +77,15 @@ func TestAccAwsCloudformationTypeDataSource_Arn_Public(t *testing.T) {
 }
 
 func TestAccAwsCloudformationTypeDataSource_TypeName_Private(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	typeName := fmt.Sprintf("HashiCorp::TerraformAwsProvider::TfAccTest%s", acctest.RandString(8))
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	typeName := fmt.Sprintf("HashiCorp::TerraformAwsProvider::TfAccTest%s", sdkacctest.RandString(8))
 	zipPath := testAccAwsCloudformationTypeZipGenerator(t, typeName)
 	resourceName := "aws_cloudformation_type.test"
 	dataSourceName := "data.aws_cloudformation_type.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, cloudformation.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudformation.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsCloudformationTypeDestroy,
 		Steps: []resource.TestStep{
@@ -114,15 +115,15 @@ func TestAccAwsCloudformationTypeDataSource_TypeName_Public(t *testing.T) {
 	dataSourceName := "data.aws_cloudformation_type.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, cloudformation.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudformation.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsCloudformationTypeDataSourceConfigTypeNamePublic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourceAttrRegionalARNNoAccount(dataSourceName, "arn", "cloudformation", "type/resource/AWS-Athena-WorkGroup"),
+					acctest.CheckResourceAttrRegionalARNNoAccount(dataSourceName, "arn", "cloudformation", "type/resource/AWS-Athena-WorkGroup"),
 					resource.TestCheckResourceAttr(dataSourceName, "deprecated_status", cloudformation.DeprecatedStatusLive),
 					resource.TestMatchResourceAttr(dataSourceName, "description", regexp.MustCompile(`.*`)),
 					resource.TestCheckResourceAttr(dataSourceName, "documentation_url", ""),
@@ -164,7 +165,7 @@ resource "aws_cloudformation_type" "test" {
 }
 
 func testAccAwsCloudformationTypeDataSourceConfigArnPrivate(rName string, zipPath string, typeName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccCloudformationTypeConfigPrivateBase(rName, zipPath, typeName),
 		`
 data "aws_cloudformation_type" "test" {
@@ -186,7 +187,7 @@ data "aws_cloudformation_type" "test" {
 }
 
 func testAccAwsCloudformationTypeDataSourceConfigTypeNamePrivate(rName string, zipPath string, typeName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccCloudformationTypeConfigPrivateBase(rName, zipPath, typeName),
 		`
 data "aws_cloudformation_type" "test" {

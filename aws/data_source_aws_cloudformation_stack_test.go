@@ -6,17 +6,18 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/cloudformation"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSCloudFormationStack_dataSource_basic(t *testing.T) {
-	stackName := acctest.RandomWithPrefix("tf-acc-ds-basic")
+	stackName := sdkacctest.RandomWithPrefix("tf-acc-ds-basic")
 	resourceName := "data.aws_cloudformation_stack.network"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, cloudformation.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, cloudformation.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -97,12 +98,12 @@ data "aws_cloudformation_stack" "network" {
 }
 
 func TestAccAWSCloudFormationStack_dataSource_yaml(t *testing.T) {
-	stackName := acctest.RandomWithPrefix("tf-acc-ds-yaml")
+	stackName := sdkacctest.RandomWithPrefix("tf-acc-ds-yaml")
 	resourceName := "data.aws_cloudformation_stack.yaml"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, cloudformation.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, cloudformation.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{

@@ -8,12 +8,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	multierror "github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	tfcloudformation "github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudformation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudformation/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -98,13 +99,13 @@ func testSweepCloudformationStackSetInstances(region string) error {
 
 func TestAccAWSCloudFormationStackSetInstance_basic(t *testing.T) {
 	var stackInstance1 cloudformation.StackInstance
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	cloudformationStackSetResourceName := "aws_cloudformation_stack_set.test"
 	resourceName := "aws_cloudformation_stack_set_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCloudFormationStackSet(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudformation.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCloudFormationStackSet(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudformation.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudFormationStackSetInstanceDestroy,
 		Steps: []resource.TestStep{
@@ -112,10 +113,10 @@ func TestAccAWSCloudFormationStackSetInstance_basic(t *testing.T) {
 				Config: testAccAWSCloudFormationStackSetInstanceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFormationStackSetInstanceExists(resourceName, &stackInstance1),
-					testAccCheckResourceAttrAccountID(resourceName, "account_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_targets.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "parameter_overrides.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "region", testAccGetRegion()),
+					resource.TestCheckResourceAttr(resourceName, "region", acctest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "retain_stack", "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "stack_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "stack_set_name", cloudformationStackSetResourceName, "name"),
@@ -135,12 +136,12 @@ func TestAccAWSCloudFormationStackSetInstance_basic(t *testing.T) {
 
 func TestAccAWSCloudFormationStackSetInstance_disappears(t *testing.T) {
 	var stackInstance1 cloudformation.StackInstance
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudformation_stack_set_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCloudFormationStackSet(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudformation.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCloudFormationStackSet(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudformation.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudFormationStackSetInstanceDestroy,
 		Steps: []resource.TestStep{
@@ -148,7 +149,7 @@ func TestAccAWSCloudFormationStackSetInstance_disappears(t *testing.T) {
 				Config: testAccAWSCloudFormationStackSetInstanceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFormationStackSetInstanceExists(resourceName, &stackInstance1),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsCloudFormationStackSetInstance(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsCloudFormationStackSetInstance(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -159,13 +160,13 @@ func TestAccAWSCloudFormationStackSetInstance_disappears(t *testing.T) {
 func TestAccAWSCloudFormationStackSetInstance_disappears_StackSet(t *testing.T) {
 	var stackInstance1 cloudformation.StackInstance
 	var stackSet1 cloudformation.StackSet
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	stackSetResourceName := "aws_cloudformation_stack_set.test"
 	resourceName := "aws_cloudformation_stack_set_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCloudFormationStackSet(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudformation.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCloudFormationStackSet(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudformation.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudFormationStackSetInstanceDestroy,
 		Steps: []resource.TestStep{
@@ -174,8 +175,8 @@ func TestAccAWSCloudFormationStackSetInstance_disappears_StackSet(t *testing.T) 
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFormationStackSetExists(stackSetResourceName, &stackSet1),
 					testAccCheckCloudFormationStackSetInstanceExists(resourceName, &stackInstance1),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsCloudFormationStackSetInstance(), resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsCloudFormationStackSet(), stackSetResourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsCloudFormationStackSetInstance(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsCloudFormationStackSet(), stackSetResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -185,12 +186,12 @@ func TestAccAWSCloudFormationStackSetInstance_disappears_StackSet(t *testing.T) 
 
 func TestAccAWSCloudFormationStackSetInstance_ParameterOverrides(t *testing.T) {
 	var stackInstance1, stackInstance2, stackInstance3, stackInstance4 cloudformation.StackInstance
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudformation_stack_set_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCloudFormationStackSet(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudformation.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCloudFormationStackSet(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudformation.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudFormationStackSetInstanceDestroy,
 		Steps: []resource.TestStep{
@@ -249,12 +250,12 @@ func TestAccAWSCloudFormationStackSetInstance_ParameterOverrides(t *testing.T) {
 func TestAccAWSCloudFormationStackSetInstance_RetainStack(t *testing.T) {
 	var stack1 cloudformation.Stack
 	var stackInstance1, stackInstance2, stackInstance3 cloudformation.StackInstance
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudformation_stack_set_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCloudFormationStackSet(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudformation.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCloudFormationStackSet(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudformation.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudFormationStackSetInstanceDestroy,
 		Steps: []resource.TestStep{
@@ -302,19 +303,19 @@ func TestAccAWSCloudFormationStackSetInstance_RetainStack(t *testing.T) {
 }
 
 func TestAccAWSCloudFormationStackSetInstance_DeploymentTargets(t *testing.T) {
-	TestAccSkip(t, "API does not support enabling Organizations access (in particular, creating the Stack Sets IAM Service-Linked Role)")
+	acctest.Skip(t, "API does not support enabling Organizations access (in particular, creating the Stack Sets IAM Service-Linked Role)")
 
 	var stackInstance cloudformation.StackInstance
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudformation_stack_set_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			acctest.PreCheck(t)
 			testAccPreCheckAWSCloudFormationStackSet(t)
-			testAccOrganizationsAccountPreCheck(t)
+			acctest.PreCheckOrganizationsAccount(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, cloudformation.EndpointsID, "organizations"),
+		ErrorCheck:   acctest.ErrorCheck(t, cloudformation.EndpointsID, "organizations"),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudFormationStackSetInstanceDestroy,
 		Steps: []resource.TestStep{
@@ -725,7 +726,7 @@ TEMPLATE
 }
 
 func testAccAWSCloudFormationStackSetInstanceConfigDeploymentTargets(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSCloudFormationStackSetInstanceConfigBase_ServiceManagedStackSet(rName),
 		`
 resource "aws_cloudformation_stack_set_instance" "test" {
@@ -741,7 +742,7 @@ resource "aws_cloudformation_stack_set_instance" "test" {
 }
 
 func testAccAWSCloudFormationStackSetInstanceConfig_ServiceManagedStackSet(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSCloudFormationStackSetInstanceConfigBase_ServiceManagedStackSet(rName),
 		`
 resource "aws_cloudformation_stack_set_instance" "test" {

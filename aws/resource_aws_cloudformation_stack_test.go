@@ -9,9 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -77,12 +78,12 @@ func testSweepCloudformationStacks(region string) error {
 
 func TestAccAWSCloudFormationStack_basic(t *testing.T) {
 	var stack cloudformation.Stack
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudformation_stack.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudformation.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudformation.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudFormationDestroy,
 		Steps: []resource.TestStep{
@@ -104,11 +105,11 @@ func TestAccAWSCloudFormationStack_basic(t *testing.T) {
 }
 
 func TestAccAWSCloudFormationStack_CreationFailure_DoNothing(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudformation.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudformation.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudFormationDestroy,
 		Steps: []resource.TestStep{
@@ -121,11 +122,11 @@ func TestAccAWSCloudFormationStack_CreationFailure_DoNothing(t *testing.T) {
 }
 
 func TestAccAWSCloudFormationStack_CreationFailure_Delete(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudformation.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudformation.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudFormationDestroy,
 		Steps: []resource.TestStep{
@@ -138,11 +139,11 @@ func TestAccAWSCloudFormationStack_CreationFailure_Delete(t *testing.T) {
 }
 
 func TestAccAWSCloudFormationStack_CreationFailure_Rollback(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudformation.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudformation.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudFormationDestroy,
 		Steps: []resource.TestStep{
@@ -156,15 +157,15 @@ func TestAccAWSCloudFormationStack_CreationFailure_Rollback(t *testing.T) {
 
 func TestAccAWSCloudFormationStack_UpdateFailure(t *testing.T) {
 	var stack cloudformation.Stack
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudformation_stack.test"
 
 	vpcCidrInitial := "10.0.0.0/16"
 	vpcCidrInvalid := "1000.0.0.0/16"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudformation.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudformation.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudFormationDestroy,
 		Steps: []resource.TestStep{
@@ -184,12 +185,12 @@ func TestAccAWSCloudFormationStack_UpdateFailure(t *testing.T) {
 
 func TestAccAWSCloudFormationStack_disappears(t *testing.T) {
 	var stack cloudformation.Stack
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudformation_stack.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudformation.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudformation.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudFormationDestroy,
 		Steps: []resource.TestStep{
@@ -197,7 +198,7 @@ func TestAccAWSCloudFormationStack_disappears(t *testing.T) {
 				Config: testAccAWSCloudFormationStackConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFormationStackExists(resourceName, &stack),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsCloudFormationStack(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsCloudFormationStack(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -207,12 +208,12 @@ func TestAccAWSCloudFormationStack_disappears(t *testing.T) {
 
 func TestAccAWSCloudFormationStack_yaml(t *testing.T) {
 	var stack cloudformation.Stack
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudformation_stack.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudformation.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudformation.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudFormationDestroy,
 		Steps: []resource.TestStep{
@@ -233,12 +234,12 @@ func TestAccAWSCloudFormationStack_yaml(t *testing.T) {
 
 func TestAccAWSCloudFormationStack_defaultParams(t *testing.T) {
 	var stack cloudformation.Stack
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudformation_stack.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudformation.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudformation.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudFormationDestroy,
 		Steps: []resource.TestStep{
@@ -260,13 +261,13 @@ func TestAccAWSCloudFormationStack_defaultParams(t *testing.T) {
 
 func TestAccAWSCloudFormationStack_allAttributes(t *testing.T) {
 	var stack cloudformation.Stack
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudformation_stack.test"
 	expectedPolicyBody := "{\"Statement\":[{\"Action\":\"Update:*\",\"Effect\":\"Deny\",\"Principal\":\"*\",\"Resource\":\"LogicalResourceId/StaticVPC\"},{\"Action\":\"Update:*\",\"Effect\":\"Allow\",\"Principal\":\"*\",\"Resource\":\"*\"}]}"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudformation.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudformation.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudFormationDestroy,
 		Steps: []resource.TestStep{
@@ -319,15 +320,15 @@ func TestAccAWSCloudFormationStack_allAttributes(t *testing.T) {
 // Regression for https://github.com/hashicorp/terraform/issues/4332
 func TestAccAWSCloudFormationStack_withParams(t *testing.T) {
 	var stack cloudformation.Stack
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudformation_stack.test"
 
 	vpcCidrInitial := "10.0.0.0/16"
 	vpcCidrUpdated := "12.0.0.0/16"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudformation.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudformation.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudFormationDestroy,
 		Steps: []resource.TestStep{
@@ -360,12 +361,12 @@ func TestAccAWSCloudFormationStack_withParams(t *testing.T) {
 // Regression for https://github.com/hashicorp/terraform/issues/4534
 func TestAccAWSCloudFormationStack_withUrl_withParams(t *testing.T) {
 	var stack cloudformation.Stack
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudformation_stack.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudformation.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudformation.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudFormationDestroy,
 		Steps: []resource.TestStep{
@@ -393,12 +394,12 @@ func TestAccAWSCloudFormationStack_withUrl_withParams(t *testing.T) {
 
 func TestAccAWSCloudFormationStack_withUrl_withParams_withYaml(t *testing.T) {
 	var stack cloudformation.Stack
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudformation_stack.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudformation.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudformation.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudFormationDestroy,
 		Steps: []resource.TestStep{
@@ -421,12 +422,12 @@ func TestAccAWSCloudFormationStack_withUrl_withParams_withYaml(t *testing.T) {
 // Test for https://github.com/hashicorp/terraform/issues/5653
 func TestAccAWSCloudFormationStack_withUrl_withParams_noUpdate(t *testing.T) {
 	var stack cloudformation.Stack
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudformation_stack.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudformation.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudformation.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudFormationDestroy,
 		Steps: []resource.TestStep{
@@ -454,12 +455,12 @@ func TestAccAWSCloudFormationStack_withUrl_withParams_noUpdate(t *testing.T) {
 
 func TestAccAWSCloudFormationStack_withTransform(t *testing.T) {
 	var stack cloudformation.Stack
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudformation_stack.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudformation.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudformation.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudFormationDestroy,
 		Steps: []resource.TestStep{
@@ -483,12 +484,12 @@ func TestAccAWSCloudFormationStack_withTransform(t *testing.T) {
 // TestAccAWSCloudFormationStack_onFailure verifies https://github.com/hashicorp/terraform-provider-aws/issues/5204
 func TestAccAWSCloudFormationStack_onFailure(t *testing.T) {
 	var stack cloudformation.Stack
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudformation_stack.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudformation.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudformation.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudFormationDestroy,
 		Steps: []resource.TestStep{
