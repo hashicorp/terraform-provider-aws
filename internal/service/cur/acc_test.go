@@ -101,10 +101,4 @@ func testAccGetCurRegion() string {
 	return testAccCurRegion
 }
 
-func testAccRegionSupportsCur(region, partition string) bool {
-	if rs, ok := endpoints.RegionsForService(endpoints.DefaultPartitions(), partition, costandusagereportservice.ServiceName); ok {
-		_, ok := rs[region]
-		return ok
-	}
-	return false
-}
+
