@@ -7,8 +7,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	events "github.com/aws/aws-sdk-go/service/cloudwatchevents"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceBus() *schema.Resource {
@@ -38,18 +39,18 @@ func ResourceBus() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceBusCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	eventBusName := d.Get("name").(string)
 	input := &events.CreateEventBusInput{
@@ -103,7 +104,7 @@ func resourceBusRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", output.Arn)
 	d.Set("name", output.Name)
 
-	tags, err := keyvaluetags.CloudwatcheventsListTags(conn, aws.StringValue(output.Arn))
+	tags, err := tftags.CloudwatcheventsListTags(conn, aws.StringValue(output.Arn))
 	if err != nil {
 		return fmt.Errorf("error listing tags for CloudWatch Events event bus (%s): %w", d.Id(), err)
 	}
@@ -128,7 +129,7 @@ func resourceBusUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := keyvaluetags.CloudwatcheventsUpdateTags(conn, arn, o, n); err != nil {
+		if err := tftags.CloudwatcheventsUpdateTags(conn, arn, o, n); err != nil {
 			return fmt.Errorf("error updating CloudwWatch Events event bus (%s) tags: %w", arn, err)
 		}
 	}

@@ -12,10 +12,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	tfevents "github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudwatchevents"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudwatchevents/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceTarget() *schema.Resource {
@@ -216,7 +217,7 @@ func ResourceTarget() *schema.Resource {
 							Default:      events.PropagateTagsTaskDefinition,
 							ValidateFunc: validation.StringInSlice(events.PropagateTags_Values(), false),
 						},
-						"tags": tagsSchema(),
+						"tags": tftags.TagsSchema(),
 						"task_count": {
 							Type:         schema.TypeInt,
 							Optional:     true,
@@ -672,7 +673,7 @@ func expandAwsCloudWatchEventTargetEcsParameters(config []interface{}) *events.E
 	ecsParameters := &events.EcsParameters{}
 	for _, c := range config {
 		param := c.(map[string]interface{})
-		tags := keyvaluetags.New(param["tags"].(map[string]interface{}))
+		tags := tftags.New(param["tags"].(map[string]interface{}))
 
 		if val, ok := param["group"].(string); ok && val != "" {
 			ecsParameters.Group = aws.String(val)
@@ -887,7 +888,7 @@ func flattenAwsCloudWatchEventTargetEcsParameters(ecsParameters *events.EcsParam
 		config["placement_constraint"] = flattenAwsCloudWatchEventTargetPlacementConstraints(ecsParameters.PlacementConstraints)
 	}
 
-	config["tags"] = keyvaluetags.CloudwatcheventsKeyValueTags(ecsParameters.Tags).IgnoreAws().Map()
+	config["tags"] = tftags.CloudwatcheventsKeyValueTags(ecsParameters.Tags).IgnoreAws().Map()
 	config["enable_execute_command"] = aws.BoolValue(ecsParameters.EnableExecuteCommand)
 	config["enable_ecs_managed_tags"] = aws.BoolValue(ecsParameters.EnableECSManagedTags)
 	config["task_count"] = aws.Int64Value(ecsParameters.TaskCount)
