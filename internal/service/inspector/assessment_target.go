@@ -66,7 +66,7 @@ func resourceAwsInspectorAssessmentTargetCreate(d *schema.ResourceData, meta int
 func resourceAwsInspectorAssessmentTargetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).InspectorConn
 
-	assessmentTarget, err := describeInspectorAssessmentTarget(conn, d.Id())
+	assessmentTarget, err := DescribeAssessmentTarget(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error describing Inspector Assessment Target (%s): %s", d.Id(), err)
@@ -132,7 +132,7 @@ func resourceAwsInspectorAssessmentTargetDelete(d *schema.ResourceData, meta int
 	return nil
 }
 
-func describeInspectorAssessmentTarget(conn *inspector.Inspector, arn string) (*inspector.AssessmentTarget, error) {
+func DescribeAssessmentTarget(conn *inspector.Inspector, arn string) (*inspector.AssessmentTarget, error) {
 	input := &inspector.DescribeAssessmentTargetsInput{
 		AssessmentTargetArns: []*string{aws.String(arn)},
 	}

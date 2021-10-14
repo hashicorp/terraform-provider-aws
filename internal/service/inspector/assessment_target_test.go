@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfinspector "github.com/hashicorp/terraform-provider-aws/internal/service/inspector"
 )
 
 func TestAccAWSInspectorTarget_basic(t *testing.T) {
@@ -158,7 +159,7 @@ func testAccCheckAWSInspectorTargetAssessmentDestroy(s *terraform.State) error {
 			continue
 		}
 
-		assessmentTarget, err := describeInspectorAssessmentTarget(conn, rs.Primary.ID)
+		assessmentTarget, err := tfinspector.DescribeAssessmentTarget(conn, rs.Primary.ID)
 
 		if err != nil {
 			return fmt.Errorf("Error finding Inspector Assessment Target: %s", err)
@@ -181,7 +182,7 @@ func testAccCheckAWSInspectorTargetExists(name string, target *inspector.Assessm
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorConn
 
-		assessmentTarget, err := describeInspectorAssessmentTarget(conn, rs.Primary.ID)
+		assessmentTarget, err := tfinspector.DescribeAssessmentTarget(conn, rs.Primary.ID)
 
 		if err != nil {
 			return fmt.Errorf("Error finding Inspector Assessment Target: %s", err)
