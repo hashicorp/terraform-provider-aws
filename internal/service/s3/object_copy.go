@@ -365,7 +365,7 @@ func resourceObjectCopyRead(d *schema.ResourceData, meta interface{}) error {
 
 	// Retry due to S3 eventual consistency
 	tagsRaw, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
-		return objectListTags(conn, bucket, key)
+		return ObjectListTags(conn, bucket, key)
 	})
 
 	if err != nil {
@@ -460,7 +460,7 @@ func resourceObjectCopyDelete(d *schema.ResourceData, meta interface{}) error {
 
 	var err error
 	if _, ok := d.GetOk("version_id"); ok {
-		err = deleteAllS3ObjectVersions(conn, bucket, key, d.Get("force_destroy").(bool), false)
+		err = DeleteAllObjectVersions(conn, bucket, key, d.Get("force_destroy").(bool), false)
 	} else {
 		err = deleteS3ObjectVersion(conn, bucket, key, "", false)
 	}

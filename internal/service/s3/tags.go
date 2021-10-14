@@ -22,9 +22,9 @@ const (
 
 // Custom S3 tag service update functions using the same format as generated code.
 
-// bucketListTags lists S3 bucket tags.
+// BucketListTags lists S3 bucket tags.
 // The identifier is the bucket name.
-func bucketListTags(conn *s3.S3, identifier string) (tftags.KeyValueTags, error) {
+func BucketListTags(conn *s3.S3, identifier string) (tftags.KeyValueTags, error) {
 	input := &s3.GetBucketTaggingInput{
 		Bucket: aws.String(identifier),
 	}
@@ -45,14 +45,14 @@ func bucketListTags(conn *s3.S3, identifier string) (tftags.KeyValueTags, error)
 	return S3KeyValueTags(output.TagSet), nil
 }
 
-// bucketUpdateTags updates S3 bucket tags.
+// BucketUpdateTags updates S3 bucket tags.
 // The identifier is the bucket name.
-func bucketUpdateTags(conn *s3.S3, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func BucketUpdateTags(conn *s3.S3, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
 	// We need to also consider any existing ignored tags.
-	allTags, err := bucketListTags(conn, identifier)
+	allTags, err := BucketListTags(conn, identifier)
 
 	if err != nil {
 		return fmt.Errorf("error listing resource tags (%s): %w", identifier, err)
@@ -88,8 +88,8 @@ func bucketUpdateTags(conn *s3.S3, identifier string, oldTagsMap interface{}, ne
 	return nil
 }
 
-// objectListTags lists S3 object tags.
-func objectListTags(conn *s3.S3, bucket, key string) (tftags.KeyValueTags, error) {
+// ObjectListTags lists S3 object tags.
+func ObjectListTags(conn *s3.S3, bucket, key string) (tftags.KeyValueTags, error) {
 	input := &s3.GetObjectTaggingInput{
 		Bucket: aws.String(bucket),
 		Key:    aws.String(key),
@@ -128,13 +128,13 @@ func objectListTags(conn *s3.S3, bucket, key string) (tftags.KeyValueTags, error
 	return S3KeyValueTags(output.TagSet), nil
 }
 
-// objectUpdateTags updates S3 object tags.
-func objectUpdateTags(conn *s3.S3, bucket, key string, oldTagsMap interface{}, newTagsMap interface{}) error {
+// ObjectUpdateTags updates S3 object tags.
+func ObjectUpdateTags(conn *s3.S3, bucket, key string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
 	// We need to also consider any existing ignored tags.
-	allTags, err := objectListTags(conn, bucket, key)
+	allTags, err := ObjectListTags(conn, bucket, key)
 
 	if err != nil {
 		return fmt.Errorf("error listing resource tags (%s/%s): %w", bucket, key, err)

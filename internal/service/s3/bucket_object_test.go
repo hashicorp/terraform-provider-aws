@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -97,7 +98,7 @@ func testSweepS3BucketObjects(region string) error {
 		}
 
 		// Delete everything including locked objects. Ignore any object errors.
-		err = deleteAllS3ObjectVersions(conn, bucketName, "", objectLockEnabled, true)
+		err = tfs3.DeleteAllObjectVersions(conn, bucketName, "", objectLockEnabled, true)
 
 		if err != nil {
 			return fmt.Errorf("error listing S3 Bucket (%s) Objects: %s", bucketName, err)
@@ -1619,7 +1620,7 @@ func testAccCheckAWSS3BucketObjectUpdateTags(n string, oldTags, newTags map[stri
 		rs := s.RootModule().Resources[n]
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
 
-		return objectUpdateTags(conn, rs.Primary.Attributes["bucket"], rs.Primary.Attributes["key"], oldTags, newTags)
+		return tfs3.ObjectUpdateTags(conn, rs.Primary.Attributes["bucket"], rs.Primary.Attributes["key"], oldTags, newTags)
 	}
 }
 
@@ -1628,7 +1629,7 @@ func testAccCheckAWSS3BucketObjectCheckTags(n string, expectedTags map[string]st
 		rs := s.RootModule().Resources[n]
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
 
-		got, err := objectListTags(conn, rs.Primary.Attributes["bucket"], rs.Primary.Attributes["key"])
+		got, err := tfs3.ObjectListTags(conn, rs.Primary.Attributes["bucket"], rs.Primary.Attributes["key"])
 		if err != nil {
 			return err
 		}

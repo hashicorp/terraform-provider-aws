@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
 )
 
 func TestAccAWSS3BucketAnalyticsConfiguration_basic(t *testing.T) {
@@ -462,12 +463,12 @@ func testAccCheckAWSS3BucketAnalyticsConfigurationDestroy(s *terraform.State) er
 			continue
 		}
 
-		bucket, name, err := resourceAwsS3BucketAnalyticsConfigurationParseID(rs.Primary.ID)
+		bucket, name, err := tfs3.BucketAnalyticsConfigurationParseID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		return waitForDeleteS3BucketAnalyticsConfiguration(conn, bucket, name, 1*time.Minute)
+		return tfs3.WaitForDeleteBucketAnalyticsConfiguration(conn, bucket, name, 1*time.Minute)
 
 	}
 	return nil
@@ -503,7 +504,7 @@ func testAccCheckAWSS3BucketAnalyticsConfigurationExists(n string, ac *s3.Analyt
 func testAccCheckAWSS3BucketAnalyticsConfigurationRemoved(name, bucket string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
-		return waitForDeleteS3BucketAnalyticsConfiguration(conn, bucket, name, 1*time.Minute)
+		return tfs3.WaitForDeleteBucketAnalyticsConfiguration(conn, bucket, name, 1*time.Minute)
 	}
 }
 
@@ -824,7 +825,7 @@ func TestExpandS3AnalyticsFilter(t *testing.T) {
 	}
 
 	for k, tc := range testCases {
-		value := expandS3AnalyticsFilter(tc.Input)
+		value := tfs3.ExpandAnalyticsFilter(tc.Input)
 
 		if value == nil {
 			if tc.Expected == nil {
@@ -993,7 +994,7 @@ func TestExpandS3StorageClassAnalysis(t *testing.T) {
 	}
 
 	for k, tc := range testCases {
-		value := expandS3StorageClassAnalysis(tc.Input)
+		value := tfs3.ExpandStorageClassAnalysis(tc.Input)
 
 		if !reflect.DeepEqual(value, tc.Expected) {
 			t.Errorf("Case %q:\nGot:\n%v\nExpected:\n%v", k, value, tc.Expected)
@@ -1113,7 +1114,7 @@ func TestFlattenS3AnalyticsFilter(t *testing.T) {
 	}
 
 	for k, tc := range testCases {
-		value := flattenS3AnalyticsFilter(tc.Input)
+		value := tfs3.FlattenAnalyticsFilter(tc.Input)
 
 		if !reflect.DeepEqual(value, tc.Expected) {
 			t.Errorf("Case %q: Got:\n%v\n\nExpected:\n%v", k, value, tc.Expected)
@@ -1231,7 +1232,7 @@ func TestFlattenS3StorageClassAnalysis(t *testing.T) {
 	}
 
 	for k, tc := range testCases {
-		value := flattenS3StorageClassAnalysis(tc.Input)
+		value := tfs3.FlattenStorageClassAnalysis(tc.Input)
 
 		if !reflect.DeepEqual(value, tc.Expected) {
 			t.Errorf("Case %q:\nGot:\n%v\nExpected:\n%v", k, value, tc.Expected)

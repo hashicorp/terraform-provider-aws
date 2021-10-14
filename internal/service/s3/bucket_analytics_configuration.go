@@ -137,8 +137,8 @@ func resourceAwsS3BucketAnalyticsConfigurationPut(d *schema.ResourceData, meta i
 
 	analyticsConfiguration := &s3.AnalyticsConfiguration{
 		Id:                   aws.String(name),
-		Filter:               expandS3AnalyticsFilter(d.Get("filter").([]interface{})),
-		StorageClassAnalysis: expandS3StorageClassAnalysis(d.Get("storage_class_analysis").([]interface{})),
+		Filter:               ExpandAnalyticsFilter(d.Get("filter").([]interface{})),
+		StorageClassAnalysis: ExpandStorageClassAnalysis(d.Get("storage_class_analysis").([]interface{})),
 	}
 
 	input := &s3.PutBucketAnalyticsConfigurationInput{
@@ -176,7 +176,7 @@ func resourceAwsS3BucketAnalyticsConfigurationPut(d *schema.ResourceData, meta i
 func resourceBucketAnalyticsConfigurationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3Conn
 
-	bucket, name, err := resourceAwsS3BucketAnalyticsConfigurationParseID(d.Id())
+	bucket, name, err := BucketAnalyticsConfigurationParseID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -212,11 +212,11 @@ func resourceBucketAnalyticsConfigurationRead(d *schema.ResourceData, meta inter
 		return fmt.Errorf("error getting S3 Bucket Analytics Configuration (%s): empty response", d.Id())
 	}
 
-	if err := d.Set("filter", flattenS3AnalyticsFilter(output.AnalyticsConfiguration.Filter)); err != nil {
+	if err := d.Set("filter", FlattenAnalyticsFilter(output.AnalyticsConfiguration.Filter)); err != nil {
 		return fmt.Errorf("error setting filter: %w", err)
 	}
 
-	if err = d.Set("storage_class_analysis", flattenS3StorageClassAnalysis(output.AnalyticsConfiguration.StorageClassAnalysis)); err != nil {
+	if err = d.Set("storage_class_analysis", FlattenStorageClassAnalysis(output.AnalyticsConfiguration.StorageClassAnalysis)); err != nil {
 		return fmt.Errorf("error setting storage class anyalytics: %w", err)
 	}
 
@@ -226,7 +226,7 @@ func resourceBucketAnalyticsConfigurationRead(d *schema.ResourceData, meta inter
 func resourceBucketAnalyticsConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3Conn
 
-	bucket, name, err := resourceAwsS3BucketAnalyticsConfigurationParseID(d.Id())
+	bucket, name, err := BucketAnalyticsConfigurationParseID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -245,10 +245,10 @@ func resourceBucketAnalyticsConfigurationDelete(d *schema.ResourceData, meta int
 		return fmt.Errorf("Error deleting S3 analytics configuration: %w", err)
 	}
 
-	return waitForDeleteS3BucketAnalyticsConfiguration(conn, bucket, name, 1*time.Minute)
+	return WaitForDeleteBucketAnalyticsConfiguration(conn, bucket, name, 1*time.Minute)
 }
 
-func resourceAwsS3BucketAnalyticsConfigurationParseID(id string) (string, string, error) {
+func BucketAnalyticsConfigurationParseID(id string) (string, string, error) {
 	idParts := strings.Split(id, ":")
 	if len(idParts) != 2 {
 		return "", "", fmt.Errorf("please make sure the ID is in the form BUCKET:NAME (i.e. my-bucket:EntireBucket")
@@ -258,7 +258,7 @@ func resourceAwsS3BucketAnalyticsConfigurationParseID(id string) (string, string
 	return bucket, name, nil
 }
 
-func expandS3AnalyticsFilter(l []interface{}) *s3.AnalyticsFilter {
+func ExpandAnalyticsFilter(l []interface{}) *s3.AnalyticsFilter {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -296,7 +296,7 @@ func expandS3AnalyticsFilter(l []interface{}) *s3.AnalyticsFilter {
 	return analyticsFilter
 }
 
-func expandS3StorageClassAnalysis(l []interface{}) *s3.StorageClassAnalysis {
+func ExpandStorageClassAnalysis(l []interface{}) *s3.StorageClassAnalysis {
 	result := &s3.StorageClassAnalysis{}
 
 	if len(l) == 0 || l[0] == nil {
@@ -352,7 +352,7 @@ func expandS3AnalyticsS3BucketDestination(bdl []interface{}) *s3.AnalyticsS3Buck
 	return result
 }
 
-func flattenS3AnalyticsFilter(analyticsFilter *s3.AnalyticsFilter) []map[string]interface{} {
+func FlattenAnalyticsFilter(analyticsFilter *s3.AnalyticsFilter) []map[string]interface{} {
 	if analyticsFilter == nil {
 		return nil
 	}
@@ -379,7 +379,7 @@ func flattenS3AnalyticsFilter(analyticsFilter *s3.AnalyticsFilter) []map[string]
 	return []map[string]interface{}{result}
 }
 
-func flattenS3StorageClassAnalysis(storageClassAnalysis *s3.StorageClassAnalysis) []map[string]interface{} {
+func FlattenStorageClassAnalysis(storageClassAnalysis *s3.StorageClassAnalysis) []map[string]interface{} {
 	if storageClassAnalysis == nil || storageClassAnalysis.DataExport == nil {
 		return []map[string]interface{}{}
 	}
@@ -430,7 +430,7 @@ func flattenS3AnalyticsS3BucketDestination(bucketDestination *s3.AnalyticsS3Buck
 	return []interface{}{result}
 }
 
-func waitForDeleteS3BucketAnalyticsConfiguration(conn *s3.S3, bucket, name string, timeout time.Duration) error {
+func WaitForDeleteBucketAnalyticsConfiguration(conn *s3.S3, bucket, name string, timeout time.Duration) error {
 	input := &s3.GetBucketAnalyticsConfigurationInput{
 		Bucket: aws.String(bucket),
 		Id:     aws.String(name),
