@@ -8,21 +8,22 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloud9"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSCloud9EnvironmentEc2_basic(t *testing.T) {
 	var conf cloud9.Environment
 
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	rNameUpdated := acctest.RandomWithPrefix("tf-acc-test-updated")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rNameUpdated := sdkacctest.RandomWithPrefix("tf-acc-test-updated")
 	resourceName := "aws_cloud9_environment_ec2.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloud9.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, cloud9.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloud9.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloud9.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloud9EnvironmentEc2Destroy,
 		Steps: []resource.TestStep{
@@ -33,7 +34,7 @@ func TestAccAWSCloud9EnvironmentEc2_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "instance_type", "t2.micro"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "cloud9", regexp.MustCompile(`environment:.+$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "cloud9", regexp.MustCompile(`environment:.+$`)),
 					resource.TestCheckResourceAttrPair(resourceName, "owner_arn", "data.aws_caller_identity.current", "arn"),
 				),
 			},
@@ -50,7 +51,7 @@ func TestAccAWSCloud9EnvironmentEc2_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "instance_type", "t2.micro"),
 					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "cloud9", regexp.MustCompile(`environment:.+$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "cloud9", regexp.MustCompile(`environment:.+$`)),
 					resource.TestCheckResourceAttrPair(resourceName, "owner_arn", "data.aws_caller_identity.current", "arn"),
 				),
 			},
@@ -61,16 +62,16 @@ func TestAccAWSCloud9EnvironmentEc2_basic(t *testing.T) {
 func TestAccAWSCloud9EnvironmentEc2_allFields(t *testing.T) {
 	var conf cloud9.Environment
 
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	rNameUpdated := acctest.RandomWithPrefix("tf-acc-test-updated")
-	description := acctest.RandomWithPrefix("Tf Acc Test")
-	uDescription := acctest.RandomWithPrefix("Tf Acc Test Updated")
-	userName := acctest.RandomWithPrefix("tf_acc_cloud9_env")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rNameUpdated := sdkacctest.RandomWithPrefix("tf-acc-test-updated")
+	description := sdkacctest.RandomWithPrefix("Tf Acc Test")
+	uDescription := sdkacctest.RandomWithPrefix("Tf Acc Test Updated")
+	userName := sdkacctest.RandomWithPrefix("tf_acc_cloud9_env")
 	resourceName := "aws_cloud9_environment_ec2.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloud9.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, cloud9.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloud9.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloud9.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloud9EnvironmentEc2Destroy,
 		Steps: []resource.TestStep{
@@ -80,7 +81,7 @@ func TestAccAWSCloud9EnvironmentEc2_allFields(t *testing.T) {
 					testAccCheckAWSCloud9EnvironmentEc2Exists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "instance_type", "t2.micro"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "cloud9", regexp.MustCompile(`environment:.+$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "cloud9", regexp.MustCompile(`environment:.+$`)),
 					resource.TestCheckResourceAttrPair(resourceName, "owner_arn", "aws_iam_user.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "type", "ec2"),
 				),
@@ -97,7 +98,7 @@ func TestAccAWSCloud9EnvironmentEc2_allFields(t *testing.T) {
 					testAccCheckAWSCloud9EnvironmentEc2Exists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "instance_type", "t2.micro"),
 					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "cloud9", regexp.MustCompile(`environment:.+$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "cloud9", regexp.MustCompile(`environment:.+$`)),
 					resource.TestCheckResourceAttrPair(resourceName, "owner_arn", "aws_iam_user.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "type", "ec2"),
 				),
@@ -109,12 +110,12 @@ func TestAccAWSCloud9EnvironmentEc2_allFields(t *testing.T) {
 func TestAccAWSCloud9EnvironmentEc2_tags(t *testing.T) {
 	var conf cloud9.Environment
 
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloud9_environment_ec2.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloud9.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, cloud9.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloud9.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloud9.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloud9EnvironmentEc2Destroy,
 		Steps: []resource.TestStep{
@@ -156,12 +157,12 @@ func TestAccAWSCloud9EnvironmentEc2_tags(t *testing.T) {
 func TestAccAWSCloud9EnvironmentEc2_disappears(t *testing.T) {
 	var conf cloud9.Environment
 
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloud9_environment_ec2.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloud9.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, cloud9.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloud9.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloud9.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloud9EnvironmentEc2Destroy,
 		Steps: []resource.TestStep{
