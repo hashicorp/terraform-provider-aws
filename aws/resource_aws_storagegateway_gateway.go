@@ -760,7 +760,7 @@ func expandStorageGatewayGatewayDomain(l []interface{}, gatewayArn string) *stor
 	}
 
 	if v, ok := tfMap["domain_controllers"].(*schema.Set); ok && v.Len() > 0 {
-		domain.DomainControllers = expandStringSet(v)
+		domain.DomainControllers = flex.ExpandStringSet(v)
 	}
 
 	return domain

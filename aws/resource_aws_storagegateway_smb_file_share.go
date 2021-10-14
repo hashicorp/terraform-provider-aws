@@ -220,7 +220,7 @@ func resourceAwsStorageGatewaySmbFileShareCreate(d *schema.ResourceData, meta in
 	}
 
 	if v, ok := d.GetOk("admin_user_list"); ok && v.(*schema.Set).Len() > 0 {
-		input.AdminUserList = expandStringSet(v.(*schema.Set))
+		input.AdminUserList = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("audit_destination_arn"); ok {
@@ -252,7 +252,7 @@ func resourceAwsStorageGatewaySmbFileShareCreate(d *schema.ResourceData, meta in
 	}
 
 	if v, ok := d.GetOk("invalid_user_list"); ok && v.(*schema.Set).Len() > 0 {
-		input.InvalidUserList = expandStringSet(v.(*schema.Set))
+		input.InvalidUserList = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("kms_key_arn"); ok {
@@ -272,7 +272,7 @@ func resourceAwsStorageGatewaySmbFileShareCreate(d *schema.ResourceData, meta in
 	}
 
 	if v, ok := d.GetOk("valid_user_list"); ok && v.(*schema.Set).Len() > 0 {
-		input.ValidUserList = expandStringSet(v.(*schema.Set))
+		input.ValidUserList = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("vpc_endpoint_dns_name"); ok {
@@ -381,7 +381,7 @@ func resourceAwsStorageGatewaySmbFileShareUpdate(d *schema.ResourceData, meta in
 		}
 
 		if d.HasChange("admin_user_list") {
-			input.AdminUserList = expandStringSet(d.Get("admin_user_list").(*schema.Set))
+			input.AdminUserList = flex.ExpandStringSet(d.Get("admin_user_list").(*schema.Set))
 		}
 
 		if d.HasChange("audit_destination_arn") {
@@ -405,7 +405,7 @@ func resourceAwsStorageGatewaySmbFileShareUpdate(d *schema.ResourceData, meta in
 		}
 
 		if d.HasChange("invalid_user_list") {
-			input.InvalidUserList = expandStringSet(d.Get("invalid_user_list").(*schema.Set))
+			input.InvalidUserList = flex.ExpandStringSet(d.Get("invalid_user_list").(*schema.Set))
 		}
 
 		// This value can only be set when KMSEncrypted is true.
@@ -426,7 +426,7 @@ func resourceAwsStorageGatewaySmbFileShareUpdate(d *schema.ResourceData, meta in
 		}
 
 		if d.HasChange("valid_user_list") {
-			input.ValidUserList = expandStringSet(d.Get("valid_user_list").(*schema.Set))
+			input.ValidUserList = flex.ExpandStringSet(d.Get("valid_user_list").(*schema.Set))
 		}
 
 		log.Printf("[DEBUG] Updating Storage Gateway SMB File Share: %s", input)
