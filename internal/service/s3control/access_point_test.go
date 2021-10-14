@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfs3control "github.com/hashicorp/terraform-provider-aws/internal/service/s3control"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	awspolicy "github.com/jen20/awspolicyequivalence"
 )
@@ -399,7 +400,7 @@ func testAccCheckAWSS3AccessPointDisappears(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No S3 Access Point ID is set")
 		}
 
-		accountId, name, err := s3AccessPointParseId(rs.Primary.ID)
+		accountId, name, err := tfs3control.AccessPointParseID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -426,7 +427,7 @@ func testAccCheckAWSS3AccessPointDestroy(s *terraform.State) error {
 			continue
 		}
 
-		accountId, name, err := s3AccessPointParseId(rs.Primary.ID)
+		accountId, name, err := tfs3control.AccessPointParseID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -453,7 +454,7 @@ func testAccCheckAWSS3AccessPointExists(n string, output *s3control.GetAccessPoi
 			return fmt.Errorf("No S3 Access Point ID is set")
 		}
 
-		accountId, name, err := s3AccessPointParseId(rs.Primary.ID)
+		accountId, name, err := tfs3control.AccessPointParseID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -485,7 +486,7 @@ func testAccCheckAWSS3AccessPointHasPolicy(n string, fn func() string) resource.
 			return fmt.Errorf("No S3 Access Point ID is set")
 		}
 
-		accountId, name, err := s3AccessPointParseId(rs.Primary.ID)
+		accountId, name, err := tfs3control.AccessPointParseID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}

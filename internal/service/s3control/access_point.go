@@ -178,7 +178,7 @@ func resourceAccessPointCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceAccessPointRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3ControlConn
 
-	accountId, name, err := s3AccessPointParseId(d.Id())
+	accountId, name, err := AccessPointParseID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -291,7 +291,7 @@ func resourceAccessPointRead(d *schema.ResourceData, meta interface{}) error {
 func resourceAccessPointUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3ControlConn
 
-	accountId, name, err := s3AccessPointParseId(d.Id())
+	accountId, name, err := AccessPointParseID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -327,7 +327,7 @@ func resourceAccessPointUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceAccessPointDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3ControlConn
 
-	accountId, name, err := s3AccessPointParseId(d.Id())
+	accountId, name, err := AccessPointParseID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -349,8 +349,8 @@ func resourceAccessPointDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-// s3AccessPointParseId returns the Account ID and Access Point Name (S3) or ARN (S3 on Outposts)
-func s3AccessPointParseId(id string) (string, string, error) {
+// AccessPointParseID returns the Account ID and Access Point Name (S3) or ARN (S3 on Outposts)
+func AccessPointParseID(id string) (string, string, error) {
 	parsedARN, err := arn.Parse(id)
 
 	if err == nil {

@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfs3control "github.com/hashicorp/terraform-provider-aws/internal/service/s3control"
 )
 
 func TestAccAWSS3ControlBucketPolicy_basic(t *testing.T) {
@@ -57,7 +58,7 @@ func TestAccAWSS3ControlBucketPolicy_disappears(t *testing.T) {
 				Config: testAccAWSS3ControlBucketPolicyConfig_Policy(rName, "s3-outposts:*"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3ControlBucketPolicyExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceBucketPolicy(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfs3control.ResourceBucketPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
