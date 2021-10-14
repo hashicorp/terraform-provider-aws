@@ -41,7 +41,7 @@ func testSweepSsoAdminPermissionSets(region string) error {
 
 	err = ds.Read(dsData, client)
 
-	if testSweepSkipResourceError(err) {
+	if tfawserr.ErrCodeContains(err, "AccessDenied") {
 		log.Printf("[WARN] Skipping SSO Permission Set sweep for %s: %s", region, err)
 		return nil
 	}
