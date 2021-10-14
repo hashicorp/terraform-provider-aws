@@ -39,7 +39,7 @@ func testSweepSsoAdminAccountAssignments(region string) error {
 
 	// Need to Read the SSO Instance first; assumes the first instance returned
 	// is where the permission sets exist as AWS SSO currently supports only 1 instance
-	ds := DataSourceInstances()
+	ds := tfssoadmin.DataSourceInstances()
 	dsData := ds.Data(nil)
 
 	err = ds.Read(dsData, client)
@@ -94,7 +94,7 @@ func testSweepSsoAdminAccountAssignments(region string) error {
 					targetID := aws.StringValue(a.AccountId)
 					targetType := ssoadmin.TargetTypeAwsAccount // only valid value currently accepted by API
 
-					r := ResourceAccountAssignment()
+					r := tfssoadmin.ResourceAccountAssignment()
 					d := r.Data(nil)
 					d.SetId(fmt.Sprintf("%s,%s,%s,%s,%s,%s", principalID, principalType, targetID, targetType, permissionSetArn, instanceArn))
 
@@ -220,7 +220,7 @@ func TestAccAWSSSOAdminAccountAssignment_Disappears(t *testing.T) {
 				Config: testAccAWSSSOAdminAccountAssignmentBasicGroupConfig(groupName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSOAdminAccountAssignmentExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceAccountAssignment(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfssoadmin.ResourceAccountAssignment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -236,7 +236,7 @@ func testAccCheckAWSSSOAdminAccountAssignmentDestroy(s *terraform.State) error {
 			continue
 		}
 
-		idParts, err := parseSsoAdminAccountAssignmentID(rs.Primary.ID)
+		idParts, err := tfssoadmin.ParseAccountAssignmentID(rs.Primary.ID)
 
 		if err != nil {
 			return fmt.Errorf("error parsing SSO Account Assignment ID (%s): %w", rs.Primary.ID, err)
@@ -279,7 +279,7 @@ func testAccCheckAWSSSOAdminAccountAssignmentExists(resourceName string) resourc
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn
 
-		idParts, err := parseSsoAdminAccountAssignmentID(rs.Primary.ID)
+		idParts, err := tfssoadmin.ParseAccountAssignmentID(rs.Primary.ID)
 
 		if err != nil {
 			return fmt.Errorf("error parsing SSO Account Assignment ID (%s): %w", rs.Primary.ID, err)

@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfssoadmin "github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -39,7 +40,7 @@ func testSweepSsoAdminPermissionSets(region string) error {
 
 	// Need to Read the SSO Instance first; assumes the first instance returned
 	// is where the permission sets exist as AWS SSO currently supports only 1 instance
-	ds := DataSourceInstances()
+	ds := tfssoadmin.DataSourceInstances()
 	dsData := ds.Data(nil)
 
 	err = ds.Read(dsData, client)
@@ -73,7 +74,7 @@ func testSweepSsoAdminPermissionSets(region string) error {
 
 			log.Printf("[INFO] Deleting SSO Permission Set: %s", arn)
 
-			r := ResourcePermissionSet()
+			r := tfssoadmin.ResourcePermissionSet()
 			d := r.Data(nil)
 			d.SetId(fmt.Sprintf("%s,%s", arn, instanceArn))
 
@@ -361,7 +362,7 @@ func testAccCheckAWSSSOAdminPermissionSetDestroy(s *terraform.State) error {
 			continue
 		}
 
-		arn, instanceArn, err := parseSsoAdminResourceID(rs.Primary.ID)
+		arn, instanceArn, err := tfssoadmin.ParseResourceID(rs.Primary.ID)
 
 		if err != nil {
 			return fmt.Errorf("error parsing SSO Permission Set ID (%s): %w", rs.Primary.ID, err)
@@ -401,7 +402,7 @@ func testAccCheckAWSSOAdminPermissionSetExists(resourceName string) resource.Tes
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn
 
-		arn, instanceArn, err := parseSsoAdminResourceID(rs.Primary.ID)
+		arn, instanceArn, err := tfssoadmin.ParseResourceID(rs.Primary.ID)
 
 		if err != nil {
 			return fmt.Errorf("error parsing SSO Permission Set ID (%s): %w", rs.Primary.ID, err)

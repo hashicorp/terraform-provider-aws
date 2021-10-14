@@ -129,7 +129,7 @@ func resourceAccountAssignmentCreate(d *schema.ResourceData, meta interface{}) e
 func resourceAccountAssignmentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSOAdminConn
 
-	idParts, err := parseSsoAdminAccountAssignmentID(d.Id())
+	idParts, err := ParseAccountAssignmentID(d.Id())
 	if err != nil {
 		return fmt.Errorf("error parsing SSO Account Assignment ID: %w", err)
 	}
@@ -176,7 +176,7 @@ func resourceAccountAssignmentRead(d *schema.ResourceData, meta interface{}) err
 func resourceAccountAssignmentDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSOAdminConn
 
-	idParts, err := parseSsoAdminAccountAssignmentID(d.Id())
+	idParts, err := ParseAccountAssignmentID(d.Id())
 	if err != nil {
 		return fmt.Errorf("error parsing SSO Account Assignment ID: %w", err)
 	}
@@ -219,7 +219,7 @@ func resourceAccountAssignmentDelete(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func parseSsoAdminAccountAssignmentID(id string) ([]string, error) {
+func ParseAccountAssignmentID(id string) ([]string, error) {
 	idParts := strings.Split(id, ",")
 	if len(idParts) != 6 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" ||
 		idParts[3] == "" || idParts[4] == "" || idParts[5] == "" {
