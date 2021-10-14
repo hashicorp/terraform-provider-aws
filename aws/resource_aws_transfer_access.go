@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceAccess() *schema.Resource {
@@ -70,8 +71,8 @@ func ResourceAccess() *schema.Resource {
 			"policy": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				ValidateFunc:     validateIAMPolicyJson,
-				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
+				ValidateFunc:     verify.ValidIAMPolicyJSON,
+				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
 			},
 
 			"posix_profile": {
@@ -102,14 +103,14 @@ func ResourceAccess() *schema.Resource {
 				// Although Role is required in the API it is not currently returned on Read.
 				// Required:     true,
 				Optional:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 
 			"server_id": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateTransferServerID,
+				ValidateFunc: validServerID,
 			},
 		},
 	}
