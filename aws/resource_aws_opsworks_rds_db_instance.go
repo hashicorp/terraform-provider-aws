@@ -80,7 +80,7 @@ func resourceAwsOpsworksRdsDbInstanceDeregister(d *schema.ResourceData, meta int
 
 	_, err := client.DeregisterRdsDbInstance(req)
 	if err != nil {
-		if isAWSErr(err, "ResourceNotFoundException", "") {
+		if tfawserr.ErrMessageContains(err, "ResourceNotFoundException", "") {
 			log.Printf("[INFO] The db instance could not be found. Remove it from state.")
 			d.SetId("")
 			return nil

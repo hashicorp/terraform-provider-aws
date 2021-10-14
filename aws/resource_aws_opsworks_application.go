@@ -262,7 +262,7 @@ func resourceAwsOpsworksApplicationRead(d *schema.ResourceData, meta interface{}
 
 	resp, err := client.DescribeApps(req)
 	if err != nil {
-		if isAWSErr(err, opsworks.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, opsworks.ErrCodeResourceNotFoundException, "") {
 			log.Printf("[INFO] App not found: %s", d.Id())
 			d.SetId("")
 			return nil
