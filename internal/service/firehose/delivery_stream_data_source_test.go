@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAwsKinesisFirehoseDeliveryStream_basic(t *testing.T) {
+func TestAccFirehoseDeliveryStreamDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_kinesis_firehose_delivery_stream.test"
 	resourceName := "aws_kinesis_firehose_delivery_stream.test"
