@@ -9,18 +9,19 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/s3control"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSS3ControlBucketLifecycleConfiguration_basic(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_s3control_bucket_lifecycle_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3control.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3ControlBucketLifecycleConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -48,12 +49,12 @@ func TestAccAWSS3ControlBucketLifecycleConfiguration_basic(t *testing.T) {
 }
 
 func TestAccAWSS3ControlBucketLifecycleConfiguration_disappears(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_s3control_bucket_lifecycle_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3control.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3ControlBucketLifecycleConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -61,7 +62,7 @@ func TestAccAWSS3ControlBucketLifecycleConfiguration_disappears(t *testing.T) {
 				Config: testAccAWSS3ControlBucketLifecycleConfigurationConfig_Rule_Id(rName, "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3ControlBucketLifecycleConfigurationExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsS3ControlBucketLifecycleConfiguration(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsS3ControlBucketLifecycleConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -70,12 +71,12 @@ func TestAccAWSS3ControlBucketLifecycleConfiguration_disappears(t *testing.T) {
 }
 
 func TestAccAWSS3ControlBucketLifecycleConfiguration_Rule_AbortIncompleteMultipartUpload_DaysAfterInitiation(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_s3control_bucket_lifecycle_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3control.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3ControlBucketLifecycleConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -111,14 +112,14 @@ func TestAccAWSS3ControlBucketLifecycleConfiguration_Rule_AbortIncompleteMultipa
 }
 
 func TestAccAWSS3ControlBucketLifecycleConfiguration_Rule_Expiration_Date(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_s3control_bucket_lifecycle_configuration.test"
 	date1 := time.Now().AddDate(0, 0, 1).Format("2006-01-02")
 	date2 := time.Now().AddDate(0, 0, 2).Format("2006-01-02")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3control.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3ControlBucketLifecycleConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -154,12 +155,12 @@ func TestAccAWSS3ControlBucketLifecycleConfiguration_Rule_Expiration_Date(t *tes
 }
 
 func TestAccAWSS3ControlBucketLifecycleConfiguration_Rule_Expiration_Days(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_s3control_bucket_lifecycle_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3control.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3ControlBucketLifecycleConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -195,13 +196,13 @@ func TestAccAWSS3ControlBucketLifecycleConfiguration_Rule_Expiration_Days(t *tes
 }
 
 func TestAccAWSS3ControlBucketLifecycleConfiguration_Rule_Expiration_ExpiredObjectDeleteMarker(t *testing.T) {
-	TestAccSkip(t, "S3 on Outposts does not error or save it in the API when receiving this parameter")
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	acctest.Skip(t, "S3 on Outposts does not error or save it in the API when receiving this parameter")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_s3control_bucket_lifecycle_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3control.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3ControlBucketLifecycleConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -237,12 +238,12 @@ func TestAccAWSS3ControlBucketLifecycleConfiguration_Rule_Expiration_ExpiredObje
 }
 
 func TestAccAWSS3ControlBucketLifecycleConfiguration_Rule_Filter_Prefix(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_s3control_bucket_lifecycle_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3control.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3ControlBucketLifecycleConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -278,12 +279,12 @@ func TestAccAWSS3ControlBucketLifecycleConfiguration_Rule_Filter_Prefix(t *testi
 }
 
 func TestAccAWSS3ControlBucketLifecycleConfiguration_Rule_Filter_Tags(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_s3control_bucket_lifecycle_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3control.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3ControlBucketLifecycleConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -337,12 +338,12 @@ func TestAccAWSS3ControlBucketLifecycleConfiguration_Rule_Filter_Tags(t *testing
 }
 
 func TestAccAWSS3ControlBucketLifecycleConfiguration_Rule_Id(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_s3control_bucket_lifecycle_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3control.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3ControlBucketLifecycleConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -376,12 +377,12 @@ func TestAccAWSS3ControlBucketLifecycleConfiguration_Rule_Id(t *testing.T) {
 }
 
 func TestAccAWSS3ControlBucketLifecycleConfiguration_Rule_Status(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_s3control_bucket_lifecycle_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3control.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3ControlBucketLifecycleConfigurationDestroy,
 		Steps: []resource.TestStep{
