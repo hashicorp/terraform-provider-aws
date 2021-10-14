@@ -20,7 +20,7 @@ func ResourceApp() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAppCreate,
 		Read:   resourceAppRead,
-		Update: resourceAwsCodeDeployUpdate,
+		Update: resourceUpdate,
 		Delete: resourceAppDelete,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
@@ -127,7 +127,7 @@ func resourceAppRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	application := resourceAwsCodeDeployAppParseId(d.Id())
+	application := resourceAppParseID(d.Id())
 	name := d.Get("name").(string)
 	if name != "" && application != name {
 		application = name
@@ -189,7 +189,7 @@ func resourceAppRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsCodeDeployUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodeDeployConn
 
 	if d.HasChange("name") {
@@ -234,7 +234,7 @@ func resourceAppDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsCodeDeployAppParseId(id string) string {
+func resourceAppParseID(id string) string {
 	parts := strings.SplitN(id, ":", 2)
 	// We currently omit the application ID as it is not currently used anywhere
 	return parts[1]

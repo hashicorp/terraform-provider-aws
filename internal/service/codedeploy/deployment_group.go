@@ -370,11 +370,11 @@ func ResourceDeploymentGroup() *schema.Resource {
 									},
 								},
 							},
-							Set: resourceAwsCodeDeployTagFilterHash,
+							Set: resourceTagFilterHash,
 						},
 					},
 				},
-				Set: resourceAwsCodeDeployTagSetHash,
+				Set: resourceTagSetHash,
 			},
 
 			"ec2_tag_filter": {
@@ -399,7 +399,7 @@ func ResourceDeploymentGroup() *schema.Resource {
 						},
 					},
 				},
-				Set: resourceAwsCodeDeployTagFilterHash,
+				Set: resourceTagFilterHash,
 			},
 
 			"ecs_service": {
@@ -444,7 +444,7 @@ func ResourceDeploymentGroup() *schema.Resource {
 						},
 					},
 				},
-				Set: resourceAwsCodeDeployTagFilterHash,
+				Set: resourceTagFilterHash,
 			},
 
 			"trigger_configuration": {
@@ -474,7 +474,7 @@ func ResourceDeploymentGroup() *schema.Resource {
 						},
 					},
 				},
-				Set: resourceAwsCodeDeployTriggerConfigHash,
+				Set: resourceTriggerHashConfig,
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
@@ -1211,7 +1211,7 @@ func ec2TagSetToMap(tagSet *codedeploy.EC2TagSet) []map[string]interface{} {
 				filtersAsIntfSlice = append(filtersAsIntfSlice, item)
 			}
 			tagFilters := map[string]interface{}{
-				"ec2_tag_filter": schema.NewSet(resourceAwsCodeDeployTagFilterHash, filtersAsIntfSlice),
+				"ec2_tag_filter": schema.NewSet(resourceTagFilterHash, filtersAsIntfSlice),
 			}
 			result = append(result, tagFilters)
 		}
@@ -1448,7 +1448,7 @@ func FlattenBlueGreenDeploymentConfig(config *codedeploy.BlueGreenDeploymentConf
 	return list
 }
 
-func resourceAwsCodeDeployTagFilterHash(v interface{}) int {
+func resourceTagFilterHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 
@@ -1467,19 +1467,19 @@ func resourceAwsCodeDeployTagFilterHash(v interface{}) int {
 	return create.StringHashcode(buf.String())
 }
 
-func resourceAwsCodeDeployTagSetHash(v interface{}) int {
+func resourceTagSetHash(v interface{}) int {
 	tagSetMap := v.(map[string]interface{})
 	filterSet := tagSetMap["ec2_tag_filter"]
 	filterSetSlice := filterSet.(*schema.Set).List()
 
 	var x uint64 = 1
 	for i, filter := range filterSetSlice {
-		x = ((x << 7) | (x >> (64 - 7))) ^ uint64(i) ^ uint64(resourceAwsCodeDeployTagFilterHash(filter))
+		x = ((x << 7) | (x >> (64 - 7))) ^ uint64(i) ^ uint64(resourceTagFilterHash(filter))
 	}
 	return int(x)
 }
 
-func resourceAwsCodeDeployTriggerConfigHash(v interface{}) int {
+func resourceTriggerHashConfig(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 	buf.WriteString(fmt.Sprintf("%s-", m["trigger_name"].(string)))

@@ -145,8 +145,8 @@ func resourceDeploymentConfigCreate(d *schema.ResourceData, meta interface{}) er
 	input := &codedeploy.CreateDeploymentConfigInput{
 		DeploymentConfigName: aws.String(d.Get("deployment_config_name").(string)),
 		ComputePlatform:      aws.String(d.Get("compute_platform").(string)),
-		MinimumHealthyHosts:  expandAwsCodeDeployConfigMinimumHealthHosts(d),
-		TrafficRoutingConfig: expandAwsCodeDeployTrafficRoutingConfig(d),
+		MinimumHealthyHosts:  expandMinimumHealthHostsConfig(d),
+		TrafficRoutingConfig: expandTrafficRoutingConfig(d),
 	}
 
 	_, err := conn.CreateDeploymentConfig(input)
@@ -182,11 +182,11 @@ func resourceDeploymentConfigRead(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("Cannot find DeploymentConfig %q", d.Id())
 	}
 
-	if err := d.Set("minimum_healthy_hosts", flattenAwsCodeDeployConfigMinimumHealthHosts(resp.DeploymentConfigInfo.MinimumHealthyHosts)); err != nil {
+	if err := d.Set("minimum_healthy_hosts", flattenMinimumHealthHostsConfig(resp.DeploymentConfigInfo.MinimumHealthyHosts)); err != nil {
 		return err
 	}
 
-	if err := d.Set("traffic_routing_config", flattenAwsCodeDeployTrafficRoutingConfig(resp.DeploymentConfigInfo.TrafficRoutingConfig)); err != nil {
+	if err := d.Set("traffic_routing_config", flattenTrafficRoutingConfig(resp.DeploymentConfigInfo.TrafficRoutingConfig)); err != nil {
 		return err
 	}
 
@@ -208,7 +208,7 @@ func resourceDeploymentConfigDelete(d *schema.ResourceData, meta interface{}) er
 	return err
 }
 
-func expandAwsCodeDeployConfigMinimumHealthHosts(d *schema.ResourceData) *codedeploy.MinimumHealthyHosts {
+func expandMinimumHealthHostsConfig(d *schema.ResourceData) *codedeploy.MinimumHealthyHosts {
 	hosts, ok := d.GetOk("minimum_healthy_hosts")
 	if !ok {
 		return nil
@@ -223,7 +223,7 @@ func expandAwsCodeDeployConfigMinimumHealthHosts(d *schema.ResourceData) *codede
 	return &minimumHealthyHost
 }
 
-func expandAwsCodeDeployTrafficRoutingConfig(d *schema.ResourceData) *codedeploy.TrafficRoutingConfig {
+func expandTrafficRoutingConfig(d *schema.ResourceData) *codedeploy.TrafficRoutingConfig {
 	block, ok := d.GetOk("traffic_routing_config")
 	if !ok {
 		return nil
@@ -236,17 +236,17 @@ func expandAwsCodeDeployTrafficRoutingConfig(d *schema.ResourceData) *codedeploy
 	}
 	if canary, ok := config["time_based_canary"]; ok && len(canary.([]interface{})) > 0 {
 		canaryConfig := canary.([]interface{})[0].(map[string]interface{})
-		trafficRoutingConfig.TimeBasedCanary = expandAwsCodeDeployTrafficTimeBasedCanaryConfig(canaryConfig)
+		trafficRoutingConfig.TimeBasedCanary = expandTrafficTimeBasedCanaryConfig(canaryConfig)
 	}
 	if linear, ok := config["time_based_linear"]; ok && len(linear.([]interface{})) > 0 {
 		linearConfig := linear.([]interface{})[0].(map[string]interface{})
-		trafficRoutingConfig.TimeBasedLinear = expandAwsCodeDeployTrafficTimeBasedLinearConfig(linearConfig)
+		trafficRoutingConfig.TimeBasedLinear = expandTrafficTimeBasedLinearConfig(linearConfig)
 	}
 
 	return &trafficRoutingConfig
 }
 
-func expandAwsCodeDeployTrafficTimeBasedCanaryConfig(config map[string]interface{}) *codedeploy.TimeBasedCanary {
+func expandTrafficTimeBasedCanaryConfig(config map[string]interface{}) *codedeploy.TimeBasedCanary {
 	canary := codedeploy.TimeBasedCanary{}
 	if interval, ok := config["interval"]; ok {
 		canary.CanaryInterval = aws.Int64(int64(interval.(int)))
@@ -257,7 +257,7 @@ func expandAwsCodeDeployTrafficTimeBasedCanaryConfig(config map[string]interface
 	return &canary
 }
 
-func expandAwsCodeDeployTrafficTimeBasedLinearConfig(config map[string]interface{}) *codedeploy.TimeBasedLinear {
+func expandTrafficTimeBasedLinearConfig(config map[string]interface{}) *codedeploy.TimeBasedLinear {
 	linear := codedeploy.TimeBasedLinear{}
 	if interval, ok := config["interval"]; ok {
 		linear.LinearInterval = aws.Int64(int64(interval.(int)))
@@ -268,7 +268,7 @@ func expandAwsCodeDeployTrafficTimeBasedLinearConfig(config map[string]interface
 	return &linear
 }
 
-func flattenAwsCodeDeployConfigMinimumHealthHosts(hosts *codedeploy.MinimumHealthyHosts) []map[string]interface{} {
+func flattenMinimumHealthHostsConfig(hosts *codedeploy.MinimumHealthyHosts) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0)
 	if hosts == nil {
 		return result
@@ -282,7 +282,7 @@ func flattenAwsCodeDeployConfigMinimumHealthHosts(hosts *codedeploy.MinimumHealt
 	return append(result, item)
 }
 
-func flattenAwsCodeDeployTrafficRoutingConfig(config *codedeploy.TrafficRoutingConfig) []map[string]interface{} {
+func flattenTrafficRoutingConfig(config *codedeploy.TrafficRoutingConfig) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0)
 	if config == nil {
 		return result
@@ -291,13 +291,13 @@ func flattenAwsCodeDeployTrafficRoutingConfig(config *codedeploy.TrafficRoutingC
 	item := make(map[string]interface{})
 
 	item["type"] = aws.StringValue(config.Type)
-	item["time_based_canary"] = flattenAwsCodeDeployTrafficRoutingCanaryConfig(config.TimeBasedCanary)
-	item["time_based_linear"] = flattenAwsCodeDeployTrafficRoutingLinearConfig(config.TimeBasedLinear)
+	item["time_based_canary"] = flattenTrafficRoutingCanaryConfig(config.TimeBasedCanary)
+	item["time_based_linear"] = flattenTrafficRoutingLinearConfig(config.TimeBasedLinear)
 
 	return append(result, item)
 }
 
-func flattenAwsCodeDeployTrafficRoutingCanaryConfig(canary *codedeploy.TimeBasedCanary) []map[string]interface{} {
+func flattenTrafficRoutingCanaryConfig(canary *codedeploy.TimeBasedCanary) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0)
 	if canary == nil {
 		return result
@@ -310,7 +310,7 @@ func flattenAwsCodeDeployTrafficRoutingCanaryConfig(canary *codedeploy.TimeBased
 	return append(result, item)
 }
 
-func flattenAwsCodeDeployTrafficRoutingLinearConfig(linear *codedeploy.TimeBasedLinear) []map[string]interface{} {
+func flattenTrafficRoutingLinearConfig(linear *codedeploy.TimeBasedLinear) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0)
 	if linear == nil {
 		return result
