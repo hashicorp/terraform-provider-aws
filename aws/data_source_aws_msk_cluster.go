@@ -12,9 +12,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsMskCluster() *schema.Resource {
+func DataSourceCluster() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsMskClusterRead,
+		Read: dataSourceClusterRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -59,7 +59,7 @@ func dataSourceAwsMskCluster() *schema.Resource {
 	}
 }
 
-func dataSourceAwsMskClusterRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KafkaConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

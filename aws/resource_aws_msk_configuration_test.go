@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -50,7 +51,7 @@ func testSweepMskConfigurations(region string) error {
 			arn := aws.StringValue(configuration.Arn)
 			log.Printf("[INFO] Deleting MSK Configuration: %s", arn)
 
-			r := resourceAwsMskConfiguration()
+			r := ResourceConfiguration()
 			d := r.Data(nil)
 			d.SetId(arn)
 			err := r.Delete(d, client)
@@ -124,7 +125,7 @@ func TestAccAWSMskConfiguration_disappears(t *testing.T) {
 				Config: testAccMskConfigurationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMskConfigurationExists(resourceName, &configuration1),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsMskConfiguration(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

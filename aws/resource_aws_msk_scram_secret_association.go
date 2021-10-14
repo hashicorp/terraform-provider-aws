@@ -19,12 +19,12 @@ const (
 	ScramSecretBatchSize = 10
 )
 
-func resourceAwsMskScramSecretAssociation() *schema.Resource {
+func ResourceScramSecretAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsMskScramSecretAssociationCreate,
-		Read:   resourceAwsMskScramSecretAssociationRead,
-		Update: resourceAwsMskScramSecretAssociationUpdate,
-		Delete: resourceAwsMskScramSecretAssociationDelete,
+		Create: resourceScramSecretAssociationCreate,
+		Read:   resourceScramSecretAssociationRead,
+		Update: resourceScramSecretAssociationUpdate,
+		Delete: resourceScramSecretAssociationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -47,7 +47,7 @@ func resourceAwsMskScramSecretAssociation() *schema.Resource {
 	}
 }
 
-func resourceAwsMskScramSecretAssociationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceScramSecretAssociationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KafkaConn
 
 	clusterArn := d.Get("cluster_arn").(string)
@@ -64,10 +64,10 @@ func resourceAwsMskScramSecretAssociationCreate(d *schema.ResourceData, meta int
 		return unprocessedScramSecretsError(output.ClusterArn, output.UnprocessedScramSecrets, AssociatingSecret)
 	}
 
-	return resourceAwsMskScramSecretAssociationRead(d, meta)
+	return resourceScramSecretAssociationRead(d, meta)
 }
 
-func resourceAwsMskScramSecretAssociationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceScramSecretAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KafkaConn
 
 	secretArnList, err := finder.ScramSecrets(conn, d.Id())
@@ -89,7 +89,7 @@ func resourceAwsMskScramSecretAssociationRead(d *schema.ResourceData, meta inter
 	return nil
 }
 
-func resourceAwsMskScramSecretAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceScramSecretAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KafkaConn
 
 	o, n := d.GetChange("secret_arn_list")
@@ -121,10 +121,10 @@ func resourceAwsMskScramSecretAssociationUpdate(d *schema.ResourceData, meta int
 		}
 	}
 
-	return resourceAwsMskScramSecretAssociationRead(d, meta)
+	return resourceScramSecretAssociationRead(d, meta)
 }
 
-func resourceAwsMskScramSecretAssociationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceScramSecretAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KafkaConn
 
 	secretArnList, err := finder.ScramSecrets(conn, d.Id())

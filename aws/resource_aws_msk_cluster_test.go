@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -40,7 +41,7 @@ func testSweepMskClusters(region string) error {
 		}
 
 		for _, cluster := range page.ClusterInfoList {
-			r := resourceAwsMskCluster()
+			r := ResourceCluster()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(cluster.ClusterArn))
 

@@ -20,12 +20,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsMskCluster() *schema.Resource {
+func ResourceCluster() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsMskClusterCreate,
-		Read:   resourceAwsMskClusterRead,
-		Update: resourceAwsMskClusterUpdate,
-		Delete: resourceAwsMskClusterDelete,
+		Create: resourceClusterCreate,
+		Read:   resourceClusterRead,
+		Update: resourceClusterUpdate,
+		Delete: resourceClusterDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -380,7 +380,7 @@ func resourceAwsMskCluster() *schema.Resource {
 	}
 }
 
-func resourceAwsMskClusterCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KafkaConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -414,10 +414,10 @@ func resourceAwsMskClusterCreate(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error waiting for MSK Cluster (%s) create: %w", d.Id(), err)
 	}
 
-	return resourceAwsMskClusterRead(d, meta)
+	return resourceClusterRead(d, meta)
 }
 
-func resourceAwsMskClusterRead(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KafkaConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -498,7 +498,7 @@ func resourceAwsMskClusterRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsMskClusterUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KafkaConn
 
 	if d.HasChange("broker_node_group_info.0.ebs_volume_size") {
@@ -652,10 +652,10 @@ func resourceAwsMskClusterUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	return resourceAwsMskClusterRead(d, meta)
+	return resourceClusterRead(d, meta)
 }
 
-func resourceAwsMskClusterDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KafkaConn
 
 	log.Printf("[DEBUG] Deleting MSK Cluster: %s", d.Id())

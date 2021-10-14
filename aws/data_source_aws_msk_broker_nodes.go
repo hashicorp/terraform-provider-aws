@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsMskBrokerNodes() *schema.Resource {
+func DataSourceBrokerNodes() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsMskBrokerNodesRead,
+		Read: dataSourceBrokerNodesRead,
 
 		Schema: map[string]*schema.Schema{
 			"cluster_arn": {
@@ -58,7 +58,7 @@ func dataSourceAwsMskBrokerNodes() *schema.Resource {
 	}
 }
 
-func dataSourceAwsMskBrokerNodesRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceBrokerNodesRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KafkaConn
 
 	clusterARN := d.Get("cluster_arn").(string)

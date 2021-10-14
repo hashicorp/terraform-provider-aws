@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/msk/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAwsMskScramSecretAssociation_basic(t *testing.T) {
@@ -106,7 +107,7 @@ func TestAccAwsMskScramSecretAssociation_disappears(t *testing.T) {
 				Config: testAccMskScramSecretAssociation_basic(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMskScramSecretAssociationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsMskScramSecretAssociation(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceScramSecretAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -129,7 +130,7 @@ func TestAccAwsMskScramSecretAssociation_disappears_Cluster(t *testing.T) {
 				Config: testAccMskScramSecretAssociation_basic(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMskScramSecretAssociationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsMskCluster(), clusterResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceCluster(), clusterResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
