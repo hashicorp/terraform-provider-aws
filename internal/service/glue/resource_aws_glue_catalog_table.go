@@ -1,4 +1,4 @@
-package aws
+package glue
 
 import (
 	"fmt"
@@ -11,19 +11,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/glue/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
 )
 
 func ResourceCatalogTable() *schema.Resource {
@@ -397,7 +387,7 @@ func resourceCatalogTableRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	out, err := tfglue.FindTableByName(conn, catalogID, dbName, name)
+	out, err := FindTableByName(conn, catalogID, dbName, name)
 	if err != nil {
 
 		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {

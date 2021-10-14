@@ -1,4 +1,4 @@
-package aws
+package glue
 
 import (
 	"fmt"
@@ -9,62 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	tfglue "github.com/hashicorp/terraform-provider-aws/aws/internal/service/glue"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/glue/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/glue/waiter"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
 )
 
 func ResourceRegistry() *schema.Resource {
@@ -133,7 +81,7 @@ func resourceRegistryRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	output, err := tfglue.FindRegistryByID(conn, d.Id())
+	output, err := FindRegistryByID(conn, d.Id())
 	if err != nil {
 		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 			log.Printf("[WARN] Glue Registry (%s) not found, removing from state", d.Id())
@@ -179,7 +127,7 @@ func resourceRegistryUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChanges("description") {
 		input := &glue.UpdateRegistryInput{
-			RegistryId: tfglue.createRegistryID(d.Id()),
+			RegistryId: createRegistryID(d.Id()),
 		}
 
 		if v, ok := d.GetOk("description"); ok {
@@ -208,7 +156,7 @@ func resourceRegistryDelete(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Deleting Glue Registry: %s", d.Id())
 	input := &glue.DeleteRegistryInput{
-		RegistryId: tfglue.createRegistryID(d.Id()),
+		RegistryId: createRegistryID(d.Id()),
 	}
 
 	_, err := conn.DeleteRegistry(input)
@@ -219,7 +167,7 @@ func resourceRegistryDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting Glue Registry (%s): %w", d.Id(), err)
 	}
 
-	_, err = tfglue.waitRegistryDeleted(conn, d.Id())
+	_, err = waitRegistryDeleted(conn, d.Id())
 	if err != nil {
 		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 			return nil

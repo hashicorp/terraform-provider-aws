@@ -1,4 +1,4 @@
-package aws
+package glue
 
 import (
 	"fmt"
@@ -10,21 +10,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/glue/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
 )
 
 func ResourceConnection() *schema.Resource {
@@ -151,7 +141,7 @@ func resourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	connection, err := tfglue.FindConnectionByName(conn, connectionName, catalogID)
+	connection, err := FindConnectionByName(conn, connectionName, catalogID)
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Glue Connection (%s) not found, removing from state", d.Id())
 		d.SetId("")

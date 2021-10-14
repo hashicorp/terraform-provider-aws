@@ -1,4 +1,4 @@
-package aws
+package glue
 
 import (
 	"fmt"
@@ -9,62 +9,10 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tfglue "github.com/hashicorp/terraform-provider-aws/aws/internal/service/glue"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/glue/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/glue/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
 )
 
 func ResourcePartitionIndex() *schema.Resource {
@@ -143,9 +91,9 @@ func resourcePartitionIndexCreate(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error creating Glue Partition Index: %w", err)
 	}
 
-	d.SetId(tfglue.createPartitionIndexID(catalogID, dbName, tableName, aws.StringValue(input.PartitionIndex.IndexName)))
+	d.SetId(createPartitionIndexID(catalogID, dbName, tableName, aws.StringValue(input.PartitionIndex.IndexName)))
 
-	if _, err := tfglue.waitGluePartitionIndexCreated(conn, d.Id()); err != nil {
+	if _, err := waitGluePartitionIndexCreated(conn, d.Id()); err != nil {
 		return fmt.Errorf("error while waiting for Glue Partition Index (%s) to become available: %w", d.Id(), err)
 	}
 
@@ -155,13 +103,13 @@ func resourcePartitionIndexCreate(d *schema.ResourceData, meta interface{}) erro
 func resourcePartitionIndexRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 
-	catalogID, dbName, tableName, _, tableErr := tfglue.readPartitionIndexID(d.Id())
+	catalogID, dbName, tableName, _, tableErr := readPartitionIndexID(d.Id())
 	if tableErr != nil {
 		return tableErr
 	}
 
 	log.Printf("[DEBUG] Reading Glue Partition Index: %s", d.Id())
-	partition, err := tfglue.FindPartitionIndexByName(conn, d.Id())
+	partition, err := FindPartitionIndexByName(conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Glue Partition Index (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -186,7 +134,7 @@ func resourcePartitionIndexRead(d *schema.ResourceData, meta interface{}) error 
 func resourcePartitionIndexDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 
-	catalogID, dbName, tableName, partIndex, tableErr := tfglue.readPartitionIndexID(d.Id())
+	catalogID, dbName, tableName, partIndex, tableErr := readPartitionIndexID(d.Id())
 	if tableErr != nil {
 		return tableErr
 	}
@@ -205,7 +153,7 @@ func resourcePartitionIndexDelete(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("Error deleting Glue Partition Index: %w", err)
 	}
 
-	if _, err := tfglue.waitGluePartitionIndexDeleted(conn, d.Id()); err != nil {
+	if _, err := waitGluePartitionIndexDeleted(conn, d.Id()); err != nil {
 		return fmt.Errorf("error while waiting for Glue Partition Index (%s) to be deleted: %w", d.Id(), err)
 	}
 

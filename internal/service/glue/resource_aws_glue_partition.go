@@ -1,4 +1,4 @@
-package aws
+package glue
 
 import (
 	"fmt"
@@ -9,30 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tfglue "github.com/hashicorp/terraform-provider-aws/aws/internal/service/glue"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/glue/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
 )
 
 func ResourcePartition() *schema.Resource {
@@ -239,7 +218,7 @@ func resourcePartitionCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error creating Glue Partition: %w", err)
 	}
 
-	d.SetId(tfglue.createPartitionID(catalogID, dbName, tableName, values))
+	d.SetId(createPartitionID(catalogID, dbName, tableName, values))
 
 	return resourcePartitionRead(d, meta)
 }
@@ -248,7 +227,7 @@ func resourcePartitionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 
 	log.Printf("[DEBUG] Reading Glue Partition: %s", d.Id())
-	partition, err := tfglue.FindPartitionByValues(conn, d.Id())
+	partition, err := FindPartitionByValues(conn, d.Id())
 	if err != nil {
 		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 			log.Printf("[WARN] Glue Partition (%s) not found, removing from state", d.Id())
@@ -289,7 +268,7 @@ func resourcePartitionRead(d *schema.ResourceData, meta interface{}) error {
 func resourcePartitionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 
-	catalogID, dbName, tableName, values, err := tfglue.readPartitionID(d.Id())
+	catalogID, dbName, tableName, values, err := readPartitionID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -313,7 +292,7 @@ func resourcePartitionUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourcePartitionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 
-	catalogID, dbName, tableName, values, tableErr := tfglue.readPartitionID(d.Id())
+	catalogID, dbName, tableName, values, tableErr := readPartitionID(d.Id())
 	if tableErr != nil {
 		return tableErr
 	}
