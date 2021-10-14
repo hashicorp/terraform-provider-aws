@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSCognitoUserPoolClient_basic(t *testing.T) {
@@ -577,7 +578,7 @@ func testAccAWSCognitoUserPoolClientImportStateIDFunc(resourceName string) resou
 			return "", errors.New("No Cognito User Pool Client ID set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).cognitoidpconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
 		userPoolId := rs.Primary.Attributes["user_pool_id"]
 		clientId := rs.Primary.ID
 
@@ -597,7 +598,7 @@ func testAccAWSCognitoUserPoolClientImportStateIDFunc(resourceName string) resou
 }
 
 func testAccCheckAWSCognitoUserPoolClientDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).cognitoidpconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cognito_user_pool_client" {
@@ -633,7 +634,7 @@ func testAccCheckAWSCognitoUserPoolClientExists(name string, client *cognitoiden
 			return errors.New("No Cognito User Pool Client ID set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).cognitoidpconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
 
 		params := &cognitoidentityprovider.DescribeUserPoolClientInput{
 			ClientId:   aws.String(rs.Primary.ID),
@@ -875,7 +876,7 @@ resource "aws_cognito_user_pool_client" "test" {
 }
 
 func testAccPreCheckAWSPinpointApp(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).pinpointconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn
 
 	input := &pinpoint.GetAppsInput{}
 

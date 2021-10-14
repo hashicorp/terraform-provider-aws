@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cognitoidentityprovider/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSCognitoUserPoolUICustomization_AllClients_CSS(t *testing.T) {
@@ -493,7 +494,7 @@ func TestAccAWSCognitoUserPoolUICustomization_UpdateAllToClient_CSS(t *testing.T
 }
 
 func testAccCheckAWSCognitoUserPoolUICustomizationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).cognitoidpconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cognito_user_pool_ui_customization" {
@@ -547,7 +548,7 @@ func testAccCheckAWSCognitoUserPoolUICustomizationExists(name string) resource.T
 			return fmt.Errorf("error parsing Cognito User Pool UI customization ID (%s): %w", rs.Primary.ID, err)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).cognitoidpconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
 
 		output, err := finder.CognitoUserPoolUICustomization(conn, userPoolId, clientId)
 

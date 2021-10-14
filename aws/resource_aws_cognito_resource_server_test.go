@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSCognitoResourceServer_basic(t *testing.T) {
@@ -114,7 +115,7 @@ func testAccCheckAWSCognitoResourceServerExists(n string, resourceServer *cognit
 			return errors.New("No Cognito Resource Server ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).cognitoidpconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
 
 		userPoolID, identifier, err := decodeCognitoResourceServerID(rs.Primary.ID)
 		if err != nil {
@@ -141,7 +142,7 @@ func testAccCheckAWSCognitoResourceServerExists(n string, resourceServer *cognit
 }
 
 func testAccCheckAWSCognitoResourceServerDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).cognitoidpconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cognito_resource_server" {

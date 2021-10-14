@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsCognitoUserPools() *schema.Resource {
@@ -32,7 +33,7 @@ func dataSourceAwsCognitoUserPools() *schema.Resource {
 }
 
 func dataSourceAwsCognitoUserPoolsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cognitoidpconn
+	conn := meta.(*conns.AWSClient).CognitoIDPConn
 	name := d.Get("name").(string)
 	var ids []string
 	var arns []string
@@ -45,10 +46,10 @@ func dataSourceAwsCognitoUserPoolsRead(d *schema.ResourceData, meta interface{})
 		if name == aws.StringValue(pool.Name) {
 			id := aws.StringValue(pool.Id)
 			arn := arn.ARN{
-				Partition: meta.(*AWSClient).partition,
+				Partition: meta.(*conns.AWSClient).Partition,
 				Service:   "cognito-idp",
-				Region:    meta.(*AWSClient).region,
-				AccountID: meta.(*AWSClient).accountid,
+				Region:    meta.(*conns.AWSClient).Region,
+				AccountID: meta.(*conns.AWSClient).AccountID,
 				Resource:  fmt.Sprintf("userpool/%s", id),
 			}.String()
 

@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cognitoidentityprovider/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsCognitoUserPoolDomain() *schema.Resource {
@@ -60,7 +61,7 @@ func resourceAwsCognitoUserPoolDomain() *schema.Resource {
 }
 
 func resourceAwsCognitoUserPoolDomainCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cognitoidpconn
+	conn := meta.(*conns.AWSClient).CognitoIDPConn
 
 	domain := d.Get("domain").(string)
 
@@ -96,7 +97,7 @@ func resourceAwsCognitoUserPoolDomainCreate(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsCognitoUserPoolDomainRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cognitoidpconn
+	conn := meta.(*conns.AWSClient).CognitoIDPConn
 	log.Printf("[DEBUG] Reading Cognito User Pool Domain: %s", d.Id())
 
 	domain, err := conn.DescribeUserPoolDomain(&cognitoidentityprovider.DescribeUserPoolDomainInput{
@@ -134,7 +135,7 @@ func resourceAwsCognitoUserPoolDomainRead(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsCognitoUserPoolDomainDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cognitoidpconn
+	conn := meta.(*conns.AWSClient).CognitoIDPConn
 	log.Printf("[DEBUG] Deleting Cognito User Pool Domain: %s", d.Id())
 
 	_, err := conn.DeleteUserPoolDomain(&cognitoidentityprovider.DeleteUserPoolDomainInput{
