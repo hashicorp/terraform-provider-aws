@@ -15,7 +15,7 @@ import (
 	tfprometheus "github.com/hashicorp/terraform-provider-aws/internal/service/prometheus"
 )
 
-func TestAccAWSAMPWorkspace_basic(t *testing.T) {
+func TestAccPrometheusWorkspace_AMP_basic(t *testing.T) {
 	workspaceAlias := sdkacctest.RandomWithPrefix("tf_amp_workspace")
 	resourceName := "aws_prometheus_workspace.test"
 
@@ -54,7 +54,7 @@ func TestAccAWSAMPWorkspace_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAMPWorkspace_disappears(t *testing.T) {
+func TestAccPrometheusWorkspace_AMP_disappears(t *testing.T) {
 	resourceName := "aws_prometheus_workspace.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
