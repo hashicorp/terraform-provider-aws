@@ -46,7 +46,7 @@ func testSweepRedshiftClusters(region string) error {
 		}
 
 		for _, c := range resp.Clusters {
-			r := ResourceCluster()
+			r := tfredshift.ResourceCluster()
 			d := r.Data(nil)
 			d.Set("skip_final_snapshot", true)
 			d.SetId(aws.StringValue(c.ClusterIdentifier))

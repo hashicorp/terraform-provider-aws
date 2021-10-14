@@ -5,7 +5,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/redshift"
 )
 
-func expandParameters(configured []interface{}) []*redshift.Parameter {
+func ExpandParameters(configured []interface{}) []*redshift.Parameter {
 	var parameters []*redshift.Parameter
 
 	// Loop over our configured parameters and create
@@ -45,7 +45,7 @@ func flattenLogging(ls *redshift.LoggingStatus) []interface{} {
 }
 
 // Flattens an array of Redshift Parameters into a []map[string]interface{}
-func flattenParameters(list []*redshift.Parameter) []map[string]interface{} {
+func FlattenParameters(list []*redshift.Parameter) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, len(list))
 	for _, i := range list {
 		result = append(result, map[string]interface{}{

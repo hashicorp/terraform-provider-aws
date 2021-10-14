@@ -12,7 +12,7 @@ import (
 // See http://docs.aws.amazon.com/redshift/latest/mgmt/db-auditing.html#db-auditing-bucket-permissions
 // See https://docs.aws.amazon.com/govcloud-us/latest/UserGuide/govcloud-redshift.html
 // See https://docs.amazonaws.cn/en_us/redshift/latest/mgmt/db-auditing.html#db-auditing-bucket-permissions
-var redshiftServiceAccountPerRegionMap = map[string]string{
+var ServiceAccountPerRegionMap = map[string]string{
 	endpoints.AfSouth1RegionID:     "365689465814",
 	endpoints.ApEast1RegionID:      "313564881002",
 	endpoints.ApNortheast1RegionID: "404641285394",
@@ -63,7 +63,7 @@ func dataSourceServiceAccountRead(d *schema.ResourceData, meta interface{}) erro
 		region = v.(string)
 	}
 
-	if accid, ok := redshiftServiceAccountPerRegionMap[region]; ok {
+	if accid, ok := ServiceAccountPerRegionMap[region]; ok {
 		d.SetId(accid)
 		arn := arn.ARN{
 			Partition: meta.(*conns.AWSClient).Partition,

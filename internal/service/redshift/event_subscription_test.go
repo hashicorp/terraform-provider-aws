@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -41,7 +42,7 @@ func testSweepRedshiftEventSubscriptions(region string) error {
 		}
 
 		for _, eventSubscription := range page.EventSubscriptionsList {
-			r := ResourceEventSubscription()
+			r := tfredshift.ResourceEventSubscription()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(eventSubscription.CustSubscriptionId))
 

@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -56,7 +57,7 @@ func testSweepRedshiftSubnetGroups(region string) error {
 				continue
 			}
 
-			r := ResourceSubnetGroup()
+			r := tfredshift.ResourceSubnetGroup()
 			d := r.Data(nil)
 			d.SetId(name)
 
@@ -129,7 +130,7 @@ func TestAccAWSRedshiftSubnetGroup_disappears(t *testing.T) {
 				Config: testAccRedshiftSubnetGroupConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRedshiftSubnetGroupExists(resourceName, &clusterSubnetGroup),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceSubnetGroup(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfredshift.ResourceSubnetGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

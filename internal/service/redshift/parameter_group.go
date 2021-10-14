@@ -109,7 +109,7 @@ func resourceParameterGroupCreate(d *schema.ResourceData, meta interface{}) erro
 	d.SetId(aws.StringValue(createOpts.ParameterGroupName))
 
 	if v := d.Get("parameter").(*schema.Set); v.Len() > 0 {
-		parameters := expandParameters(v.List())
+		parameters := ExpandParameters(v.List())
 
 		modifyOpts := redshift.ModifyClusterParameterGroupInput{
 			ParameterGroupName: aws.String(d.Id()),
@@ -178,7 +178,7 @@ func resourceParameterGroupRead(d *schema.ResourceData, meta interface{}) error 
 		return err
 	}
 
-	d.Set("parameter", flattenParameters(describeParametersResp.Parameters))
+	d.Set("parameter", FlattenParameters(describeParametersResp.Parameters))
 	return nil
 }
 
@@ -198,7 +198,7 @@ func resourceParameterGroupUpdate(d *schema.ResourceData, meta interface{}) erro
 		ns := n.(*schema.Set)
 
 		// Expand the "parameter" set to aws-sdk-go compat []redshift.Parameter
-		parameters := expandParameters(ns.Difference(os).List())
+		parameters := ExpandParameters(ns.Difference(os).List())
 
 		if len(parameters) > 0 {
 			modifyOpts := redshift.ModifyClusterParameterGroupInput{
@@ -241,7 +241,7 @@ func resourceAwsRedshiftParameterHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 	buf.WriteString(fmt.Sprintf("%s-", m["name"].(string)))
-	// Store the value as a lower case string, to match how we store them in flattenParameters
+	// Store the value as a lower case string, to match how we store them in FlattenParameters
 	buf.WriteString(fmt.Sprintf("%s-", strings.ToLower(m["value"].(string))))
 
 	return create.StringHashcode(buf.String())

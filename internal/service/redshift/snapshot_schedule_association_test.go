@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
 )
 
 func TestAccAWSRedshiftSnapshotScheduleAssociation_basic(t *testing.T) {
@@ -50,7 +51,7 @@ func testAccCheckAWSRedshiftSnapshotScheduleAssociationDestroy(s *terraform.Stat
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
-		clusterIdentifier, scheduleIdentifier, err := resourceAwsRedshiftSnapshotScheduleAssociationParseId(rs.Primary.ID)
+		clusterIdentifier, scheduleIdentifier, err := tfredshift.SnapshotScheduleAssociationParseID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -85,7 +86,7 @@ func testAccCheckAWSRedshiftSnapshotScheduleAssociationExists(n string) resource
 			return fmt.Errorf("No Redshift Cluster Snapshot Schedule Association ID is set")
 		}
 
-		clusterIdentifier, scheduleIdentifier, err := resourceAwsRedshiftSnapshotScheduleAssociationParseId(rs.Primary.ID)
+		clusterIdentifier, scheduleIdentifier, err := tfredshift.SnapshotScheduleAssociationParseID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}

@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
 )
 
 func TestAccAWSRedshiftSnapshotCopyGrant_basic(t *testing.T) {
@@ -99,7 +100,7 @@ func TestAccAWSRedshiftSnapshotCopyGrant_disappears(t *testing.T) {
 				Config: testAccAWSRedshiftSnapshotCopyGrant_Basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRedshiftSnapshotCopyGrantExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceSnapshotCopyGrant(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfredshift.ResourceSnapshotCopyGrant(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -115,7 +116,7 @@ func testAccCheckAWSRedshiftSnapshotCopyGrantDestroy(s *terraform.State) error {
 			continue
 		}
 
-		err := waitForAwsRedshiftSnapshotCopyGrantToBeDeleted(conn, rs.Primary.ID)
+		err := tfredshift.WaitForSnapshotCopyGrantToBeDeleted(conn, rs.Primary.ID)
 		return err
 	}
 

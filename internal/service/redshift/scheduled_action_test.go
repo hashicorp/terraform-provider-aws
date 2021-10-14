@@ -40,7 +40,7 @@ func testSweepRedshiftScheduledActions(region string) error {
 		}
 
 		for _, scheduledAction := range page.ScheduledActions {
-			r := ResourceScheduledAction()
+			r := tfredshift.ResourceScheduledAction()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(scheduledAction.ScheduledActionName))
 
@@ -325,7 +325,7 @@ func TestAccAWSRedshiftScheduledAction_disappears(t *testing.T) {
 				Config: testAccAWSRedshiftScheduledActionConfigPauseCluster(rName, "cron(00 23 * * ? *)"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRedshiftScheduledActionExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceScheduledAction(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfredshift.ResourceScheduledAction(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
