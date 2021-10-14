@@ -15,12 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsKinesisVideoStream() *schema.Resource {
+func ResourceStream() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsKinesisVideoStreamCreate,
-		Read:   resourceAwsKinesisVideoStreamRead,
-		Update: resourceAwsKinesisVideoStreamUpdate,
-		Delete: resourceAwsKinesisVideoStreamDelete,
+		Create: resourceStreamCreate,
+		Read:   resourceStreamRead,
+		Update: resourceStreamUpdate,
+		Delete: resourceStreamDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -90,7 +90,7 @@ func resourceAwsKinesisVideoStream() *schema.Resource {
 	}
 }
 
-func resourceAwsKinesisVideoStreamCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceStreamCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KinesisVideoConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -137,10 +137,10 @@ func resourceAwsKinesisVideoStreamCreate(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("Error waiting for creating Kinesis Video Stream (%s): %s", d.Id(), err)
 	}
 
-	return resourceAwsKinesisVideoStreamRead(d, meta)
+	return resourceStreamRead(d, meta)
 }
 
-func resourceAwsKinesisVideoStreamRead(d *schema.ResourceData, meta interface{}) error {
+func resourceStreamRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KinesisVideoConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -190,7 +190,7 @@ func resourceAwsKinesisVideoStreamRead(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
-func resourceAwsKinesisVideoStreamUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceStreamUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KinesisVideoConn
 
 	updateOpts := &kinesisvideo.UpdateStreamInput{
@@ -236,10 +236,10 @@ func resourceAwsKinesisVideoStreamUpdate(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("Error waiting for updating Kinesis Video Stream (%s): %s", d.Id(), err)
 	}
 
-	return resourceAwsKinesisVideoStreamRead(d, meta)
+	return resourceStreamRead(d, meta)
 }
 
-func resourceAwsKinesisVideoStreamDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceStreamDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KinesisVideoConn
 
 	if _, err := conn.DeleteStream(&kinesisvideo.DeleteStreamInput{
