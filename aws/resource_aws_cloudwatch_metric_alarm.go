@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudwatch/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceMetricAlarm() *schema.Resource {
@@ -179,8 +180,8 @@ func ResourceMetricAlarm() *schema.Resource {
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 					ValidateFunc: validation.Any(
-						validateArn,
-						validateEC2AutomateARN,
+						verify.ValidARN,
+						validEC2AutomateARN,
 					),
 				},
 				Set: schema.HashString,
@@ -208,8 +209,8 @@ func ResourceMetricAlarm() *schema.Resource {
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 					ValidateFunc: validation.Any(
-						validateArn,
-						validateEC2AutomateARN,
+						verify.ValidARN,
+						validEC2AutomateARN,
 					),
 				},
 			},
@@ -220,8 +221,8 @@ func ResourceMetricAlarm() *schema.Resource {
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 					ValidateFunc: validation.Any(
-						validateArn,
-						validateEC2AutomateARN,
+						verify.ValidARN,
+						validEC2AutomateARN,
 					),
 				},
 			},
