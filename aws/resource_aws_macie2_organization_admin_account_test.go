@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func testAccAwsMacie2OrganizationAdminAccount_basic(t *testing.T) {
@@ -76,7 +77,7 @@ func testAccCheckAwsMacie2OrganizationAdminAccountExists(resourceName string) re
 			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).macie2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn
 
 		adminAccount, err := getMacie2OrganizationAdminAccount(conn, rs.Primary.ID)
 
@@ -93,7 +94,7 @@ func testAccCheckAwsMacie2OrganizationAdminAccountExists(resourceName string) re
 }
 
 func testAccCheckAwsMacie2OrganizationAdminAccountDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).macie2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_macie2_organization_admin_account" {

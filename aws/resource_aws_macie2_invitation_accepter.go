@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsMacie2InvitationAccepter() *schema.Resource {
@@ -41,7 +42,7 @@ func resourceAwsMacie2InvitationAccepter() *schema.Resource {
 }
 
 func resourceMacie2InvitationAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).macie2conn
+	conn := meta.(*conns.AWSClient).Macie2Conn
 
 	adminAccountID := d.Get("administrator_account_id").(string)
 	var invitationID string
@@ -102,7 +103,7 @@ func resourceMacie2InvitationAccepterCreate(ctx context.Context, d *schema.Resou
 }
 
 func resourceMacie2InvitationAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).macie2conn
+	conn := meta.(*conns.AWSClient).Macie2Conn
 
 	var err error
 
@@ -131,7 +132,7 @@ func resourceMacie2InvitationAccepterRead(ctx context.Context, d *schema.Resourc
 }
 
 func resourceMacie2InvitationAccepterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).macie2conn
+	conn := meta.(*conns.AWSClient).Macie2Conn
 
 	input := &macie2.DisassociateFromAdministratorAccountInput{}
 

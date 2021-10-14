@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/naming"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func testAccAwsMacie2ClassificationJob_basic(t *testing.T) {
@@ -276,7 +277,7 @@ func testAccCheckAwsMacie2ClassificationJobExists(resourceName string, macie2Ses
 			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).macie2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn
 		input := &macie2.DescribeClassificationJobInput{JobId: aws.String(rs.Primary.ID)}
 
 		resp, err := conn.DescribeClassificationJob(input)
@@ -296,7 +297,7 @@ func testAccCheckAwsMacie2ClassificationJobExists(resourceName string, macie2Ses
 }
 
 func testAccCheckAwsMacie2ClassificationJobDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).macie2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_macie2_classification_job" {

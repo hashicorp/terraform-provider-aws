@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsMacie2OrganizationAdminAccount() *schema.Resource {
@@ -33,7 +34,7 @@ func resourceAwsMacie2OrganizationAdminAccount() *schema.Resource {
 }
 
 func resourceMacie2OrganizationAdminAccountCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).macie2conn
+	conn := meta.(*conns.AWSClient).Macie2Conn
 	adminAccountID := d.Get("admin_account_id").(string)
 	input := &macie2.EnableOrganizationAdminAccountInput{
 		AdminAccountId: aws.String(adminAccountID),
@@ -69,7 +70,7 @@ func resourceMacie2OrganizationAdminAccountCreate(ctx context.Context, d *schema
 }
 
 func resourceMacie2OrganizationAdminAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).macie2conn
+	conn := meta.(*conns.AWSClient).Macie2Conn
 
 	var err error
 
@@ -97,7 +98,7 @@ func resourceMacie2OrganizationAdminAccountRead(ctx context.Context, d *schema.R
 }
 
 func resourceMacie2OrganizationAdminAccountDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).macie2conn
+	conn := meta.(*conns.AWSClient).Macie2Conn
 
 	input := &macie2.DisableOrganizationAdminAccountInput{
 		AdminAccountId: aws.String(d.Id()),

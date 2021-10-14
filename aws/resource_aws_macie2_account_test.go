@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func testAccAwsMacie2Account_basic(t *testing.T) {
@@ -187,7 +188,7 @@ func testAccAwsMacie2Account_disappears(t *testing.T) {
 }
 
 func testAccCheckAwsMacie2AccountDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).macie2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_macie2_account" {
@@ -221,7 +222,7 @@ func testAccCheckAwsMacie2AccountExists(resourceName string, macie2Session *maci
 			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).macie2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn
 		input := &macie2.GetMacieSessionInput{}
 
 		resp, err := conn.GetMacieSession(input)
