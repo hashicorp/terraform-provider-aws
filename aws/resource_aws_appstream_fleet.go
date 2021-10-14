@@ -18,12 +18,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsAppStreamFleet() *schema.Resource {
+func ResourceFleet() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceAwsAppStreamFleetCreate,
-		ReadWithoutTimeout:   resourceAwsAppStreamFleetRead,
-		UpdateWithoutTimeout: resourceAwsAppStreamFleetUpdate,
-		DeleteWithoutTimeout: resourceAwsAppStreamFleetDelete,
+		CreateWithoutTimeout: resourceFleetCreate,
+		ReadWithoutTimeout:   resourceFleetRead,
+		UpdateWithoutTimeout: resourceFleetUpdate,
+		DeleteWithoutTimeout: resourceFleetDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -184,7 +184,7 @@ func resourceAwsAppStreamFleet() *schema.Resource {
 	}
 }
 
-func resourceAwsAppStreamFleetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppStreamConn
 	input := &appstream.CreateFleetInput{
 		Name:            aws.String(d.Get("name").(string)),
@@ -279,10 +279,10 @@ func resourceAwsAppStreamFleetCreate(ctx context.Context, d *schema.ResourceData
 
 	d.SetId(aws.StringValue(output.Fleet.Name))
 
-	return resourceAwsAppStreamFleetRead(ctx, d, meta)
+	return resourceFleetRead(ctx, d, meta)
 }
 
-func resourceAwsAppStreamFleetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppStreamConn
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -367,7 +367,7 @@ func resourceAwsAppStreamFleetRead(ctx context.Context, d *schema.ResourceData, 
 	return nil
 }
 
-func resourceAwsAppStreamFleetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppStreamConn
 	input := &appstream.UpdateFleetInput{
 		Name: aws.String(d.Id()),
@@ -475,10 +475,10 @@ func resourceAwsAppStreamFleetUpdate(ctx context.Context, d *schema.ResourceData
 		}
 	}
 
-	return resourceAwsAppStreamFleetRead(ctx, d, meta)
+	return resourceFleetRead(ctx, d, meta)
 }
 
-func resourceAwsAppStreamFleetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFleetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppStreamConn
 
 	// Stop fleet workflow

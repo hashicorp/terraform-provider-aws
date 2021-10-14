@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/appstream/lister"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -55,7 +56,7 @@ func testSweepAppStreamFleet(region string) error {
 
 			id := aws.StringValue(fleet.Name)
 
-			r := resourceAwsAppStreamImageBuilder()
+			r := ResourceImageBuilder()
 			d := r.Data(nil)
 			d.SetId(id)
 
@@ -141,7 +142,7 @@ func TestAccAwsAppStreamFleet_disappears(t *testing.T) {
 				Config: testAccAwsAppStreamFleetConfig(rName, instanceType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppStreamFleetExists(resourceName, &fleetOutput),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsAppStreamFleet(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceFleet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

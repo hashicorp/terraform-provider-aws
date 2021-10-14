@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/appstream/lister"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -54,7 +55,7 @@ func testSweepAppStreamImageBuilder(region string) error {
 
 			id := aws.StringValue(imageBuilder.Name)
 
-			r := resourceAwsAppStreamImageBuilder()
+			r := ResourceImageBuilder()
 			d := r.Data(nil)
 			d.SetId(id)
 
@@ -125,7 +126,7 @@ func TestAccAwsAppStreamImageBuilder_disappears(t *testing.T) {
 				Config: testAccAwsAppStreamImageBuilderConfig(instanceType, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppStreamImageBuilderExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsAppStreamImageBuilder(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceImageBuilder(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
