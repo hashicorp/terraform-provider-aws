@@ -91,7 +91,7 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		Description:   aws.String(d.Get("description").(string)),
 		Name:          aws.String(d.Get("name").(string)),
 		ResourceQuery: extractResourceGroupResourceQuery(d.Get("resource_query").([]interface{})),
-		Tags:          tags.IgnoreAws().ResourcegroupsTags(),
+		Tags:          Tags(tags.IgnoreAws()),
 	}
 
 	res, err := conn.CreateGroup(&input)
@@ -143,7 +143,7 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting resource_query: %s", err)
 	}
 
-	tags, err := tftags.ResourcegroupsListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 	if err != nil {
 		return fmt.Errorf("error listing tags for resource (%s): %s", arn, err)
 	}
@@ -190,7 +190,7 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.ResourcegroupsUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)
 		}
 	}
