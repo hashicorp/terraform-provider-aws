@@ -9,12 +9,13 @@ import (
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	multierror "github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 // add sweeper to delete known test servicecat principal portfolio associations
@@ -100,11 +101,11 @@ func testSweepServiceCatalogPrincipalPortfolioAssociations(region string) error 
 
 func TestAccAWSServiceCatalogPrincipalPortfolioAssociation_basic(t *testing.T) {
 	resourceName := "aws_servicecatalog_principal_portfolio_association.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, servicecatalog.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceCatalogPrincipalPortfolioAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -127,11 +128,11 @@ func TestAccAWSServiceCatalogPrincipalPortfolioAssociation_basic(t *testing.T) {
 
 func TestAccAWSServiceCatalogPrincipalPortfolioAssociation_disappears(t *testing.T) {
 	resourceName := "aws_servicecatalog_principal_portfolio_association.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, servicecatalog.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceCatalogPrincipalPortfolioAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -139,7 +140,7 @@ func TestAccAWSServiceCatalogPrincipalPortfolioAssociation_disappears(t *testing
 				Config: testAccAWSServiceCatalogPrincipalPortfolioAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogPrincipalPortfolioAssociationExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsServiceCatalogPrincipalPortfolioAssociation(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsServiceCatalogPrincipalPortfolioAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -229,7 +230,7 @@ resource "aws_servicecatalog_portfolio" "test" {
 }
 
 func testAccAWSServiceCatalogPrincipalPortfolioAssociationConfig_basic(rName string) string {
-	return composeConfig(testAccAWSServiceCatalogPrincipalPortfolioAssociationConfig_base(rName), `
+	return acctest.ConfigCompose(testAccAWSServiceCatalogPrincipalPortfolioAssociationConfig_base(rName), `
 resource "aws_servicecatalog_principal_portfolio_association" "test" {
   portfolio_id  = aws_servicecatalog_portfolio.test.id
   principal_arn = aws_iam_role.test.arn

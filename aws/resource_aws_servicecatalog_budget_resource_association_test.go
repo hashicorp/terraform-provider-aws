@@ -8,12 +8,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	multierror "github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 // add sweeper to delete known test servicecat budget resource associations
@@ -138,11 +139,11 @@ func testSweepServiceCatalogBudgetResourceAssociations(region string) error {
 
 func TestAccAWSServiceCatalogBudgetResourceAssociation_basic(t *testing.T) {
 	resourceName := "aws_servicecatalog_budget_resource_association.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("budgets", t) },
-		ErrorCheck:   testAccErrorCheck(t, servicecatalog.EndpointsID, "budgets"),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService("budgets", t) },
+		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID, "budgets"),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceCatalogBudgetResourceAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -165,11 +166,11 @@ func TestAccAWSServiceCatalogBudgetResourceAssociation_basic(t *testing.T) {
 
 func TestAccAWSServiceCatalogBudgetResourceAssociation_disappears(t *testing.T) {
 	resourceName := "aws_servicecatalog_budget_resource_association.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("budgets", t) },
-		ErrorCheck:   testAccErrorCheck(t, servicecatalog.EndpointsID, "budgets"),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService("budgets", t) },
+		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID, "budgets"),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceCatalogBudgetResourceAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -177,7 +178,7 @@ func TestAccAWSServiceCatalogBudgetResourceAssociation_disappears(t *testing.T) 
 				Config: testAccAWSServiceCatalogBudgetResourceAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogBudgetResourceAssociationExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsServiceCatalogBudgetResourceAssociation(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsServiceCatalogBudgetResourceAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -259,7 +260,7 @@ resource "aws_budgets_budget" "test" {
 }
 
 func testAccAWSServiceCatalogBudgetResourceAssociationConfig_basic(rName string) string {
-	return composeConfig(testAccAWSServiceCatalogBudgetResourceAssociationConfig_base(rName, "COST", "100.0", "USD", "2017-01-01_12:00", "MONTHLY"), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSServiceCatalogBudgetResourceAssociationConfig_base(rName, "COST", "100.0", "USD", "2017-01-01_12:00", "MONTHLY"), fmt.Sprintf(`
 resource "aws_servicecatalog_budget_resource_association" "test" {
   resource_id = aws_servicecatalog_portfolio.test.id
   budget_name = %[1]q

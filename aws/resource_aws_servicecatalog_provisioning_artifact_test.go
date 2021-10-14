@@ -9,10 +9,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	multierror "github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 // add sweeper to delete known test servicecat provisioning artifacts
@@ -107,13 +108,13 @@ func testSweepServiceCatalogProvisioningArtifacts(region string) error {
 
 func TestAccAWSServiceCatalogProvisioningArtifact_basic(t *testing.T) {
 	resourceName := "aws_servicecatalog_provisioning_artifact.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
-	domain := fmt.Sprintf("http://%s", testAccRandomDomainName())
+	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, servicecatalog.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceCatalogProvisioningArtifactDestroy,
 		Steps: []resource.TestStep{
@@ -130,7 +131,7 @@ func TestAccAWSServiceCatalogProvisioningArtifact_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "product_id", "aws_servicecatalog_product.test", "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "template_url"),
 					resource.TestCheckResourceAttr(resourceName, "type", servicecatalog.ProductTypeCloudFormationTemplate),
-					testAccCheckResourceAttrRfc3339(resourceName, "created_time"),
+					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
 				),
 			},
 			{
@@ -149,13 +150,13 @@ func TestAccAWSServiceCatalogProvisioningArtifact_basic(t *testing.T) {
 
 func TestAccAWSServiceCatalogProvisioningArtifact_disappears(t *testing.T) {
 	resourceName := "aws_servicecatalog_provisioning_artifact.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
-	domain := fmt.Sprintf("http://%s", testAccRandomDomainName())
+	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, servicecatalog.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceCatalogProvisioningArtifactDestroy,
 		Steps: []resource.TestStep{
@@ -163,7 +164,7 @@ func TestAccAWSServiceCatalogProvisioningArtifact_disappears(t *testing.T) {
 				Config: testAccAWSServiceCatalogProvisioningArtifactConfig_basic(rName, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogProvisioningArtifactExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsServiceCatalogProvisioningArtifact(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsServiceCatalogProvisioningArtifact(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -173,13 +174,13 @@ func TestAccAWSServiceCatalogProvisioningArtifact_disappears(t *testing.T) {
 
 func TestAccAWSServiceCatalogProvisioningArtifact_update(t *testing.T) {
 	resourceName := "aws_servicecatalog_provisioning_artifact.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
-	domain := fmt.Sprintf("http://%s", testAccRandomDomainName())
+	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, servicecatalog.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceCatalogProvisioningArtifactDestroy,
 		Steps: []resource.TestStep{
@@ -220,13 +221,13 @@ func TestAccAWSServiceCatalogProvisioningArtifact_update(t *testing.T) {
 
 func TestAccAWSServiceCatalogProvisioningArtifact_physicalID(t *testing.T) {
 	resourceName := "aws_servicecatalog_provisioning_artifact.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
-	domain := fmt.Sprintf("http://%s", testAccRandomDomainName())
+	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, servicecatalog.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceCatalogProvisioningArtifactDestroy,
 		Steps: []resource.TestStep{
@@ -243,7 +244,7 @@ func TestAccAWSServiceCatalogProvisioningArtifact_physicalID(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "product_id", "aws_servicecatalog_product.test", "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "template_physical_id"),
 					resource.TestCheckResourceAttr(resourceName, "type", servicecatalog.ProductTypeCloudFormationTemplate),
-					testAccCheckResourceAttrRfc3339(resourceName, "created_time"),
+					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
 				),
 			},
 			{
@@ -389,7 +390,7 @@ resource "aws_servicecatalog_product" "test" {
 }
 
 func testAccAWSServiceCatalogProvisioningArtifactConfig_basic(rName, domain string) string {
-	return composeConfig(testAccAWSServiceCatalogProvisioningArtifactConfigTemplateURLBase(rName, domain), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSServiceCatalogProvisioningArtifactConfigTemplateURLBase(rName, domain), fmt.Sprintf(`
 resource "aws_servicecatalog_provisioning_artifact" "test" {
   accept_language             = "en"
   active                      = true
@@ -405,7 +406,7 @@ resource "aws_servicecatalog_provisioning_artifact" "test" {
 }
 
 func testAccAWSServiceCatalogProvisioningArtifactConfig_update(rName, domain string) string {
-	return composeConfig(testAccAWSServiceCatalogProvisioningArtifactConfigTemplateURLBase(rName, domain), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSServiceCatalogProvisioningArtifactConfigTemplateURLBase(rName, domain), fmt.Sprintf(`
 resource "aws_servicecatalog_provisioning_artifact" "test" {
   accept_language             = "jp"
   active                      = false
@@ -469,7 +470,7 @@ resource "aws_servicecatalog_product" "test" {
 }
 
 func testAccAWSServiceCatalogProvisioningArtifactConfig_physicalID(rName, domain string) string {
-	return composeConfig(testAccAWSServiceCatalogProvisioningArtifactConfigPhysicalIDBase(rName, domain), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSServiceCatalogProvisioningArtifactConfigPhysicalIDBase(rName, domain), fmt.Sprintf(`
 resource "aws_servicecatalog_provisioning_artifact" "test" {
   accept_language             = "en"
   active                      = true

@@ -10,12 +10,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	multierror "github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 // add sweeper to delete known test servicecat product portfolio associations
@@ -121,13 +122,13 @@ func testSweepServiceCatalogProductPortfolioAssociations(region string) error {
 
 func TestAccAWSServiceCatalogProductPortfolioAssociation_basic(t *testing.T) {
 	resourceName := "aws_servicecatalog_product_portfolio_association.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
-	domain := fmt.Sprintf("http://%s", testAccRandomDomainName())
+	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, servicecatalog.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceCatalogProductPortfolioAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -150,13 +151,13 @@ func TestAccAWSServiceCatalogProductPortfolioAssociation_basic(t *testing.T) {
 
 func TestAccAWSServiceCatalogProductPortfolioAssociation_disappears(t *testing.T) {
 	resourceName := "aws_servicecatalog_product_portfolio_association.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
-	domain := fmt.Sprintf("http://%s", testAccRandomDomainName())
+	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, servicecatalog.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceCatalogProductPortfolioAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -164,7 +165,7 @@ func TestAccAWSServiceCatalogProductPortfolioAssociation_disappears(t *testing.T
 				Config: testAccAWSServiceCatalogProductPortfolioAssociationConfig_basic(rName, domain, testAccDefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogProductPortfolioAssociationExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsServiceCatalogProductPortfolioAssociation(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsServiceCatalogProductPortfolioAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -284,7 +285,7 @@ resource "aws_servicecatalog_portfolio" "test" {
 }
 
 func testAccAWSServiceCatalogProductPortfolioAssociationConfig_basic(rName, domain, email string) string {
-	return composeConfig(testAccAWSServiceCatalogProductPortfolioAssociationConfig_base(rName, domain, email), `
+	return acctest.ConfigCompose(testAccAWSServiceCatalogProductPortfolioAssociationConfig_base(rName, domain, email), `
 resource "aws_servicecatalog_product_portfolio_association" "test" {
   portfolio_id = aws_servicecatalog_portfolio.test.id
   product_id   = aws_servicecatalog_product.test.id

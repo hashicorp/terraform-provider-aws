@@ -9,10 +9,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	multierror "github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 // add sweeper to delete known test servicecat constraints
@@ -95,11 +96,11 @@ func testSweepServiceCatalogConstraints(region string) error {
 
 func TestAccAWSServiceCatalogConstraint_basic(t *testing.T) {
 	resourceName := "aws_servicecatalog_constraint.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, servicecatalog.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceCatalogConstraintDestroy,
 		Steps: []resource.TestStep{
@@ -128,11 +129,11 @@ func TestAccAWSServiceCatalogConstraint_basic(t *testing.T) {
 
 func TestAccAWSServiceCatalogConstraint_disappears(t *testing.T) {
 	resourceName := "aws_servicecatalog_constraint.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, servicecatalog.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceCatalogConstraintDestroy,
 		Steps: []resource.TestStep{
@@ -140,7 +141,7 @@ func TestAccAWSServiceCatalogConstraint_disappears(t *testing.T) {
 				Config: testAccAWSServiceCatalogConstraintConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogConstraintExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsServiceCatalogConstraint(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsServiceCatalogConstraint(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -150,12 +151,12 @@ func TestAccAWSServiceCatalogConstraint_disappears(t *testing.T) {
 
 func TestAccAWSServiceCatalogConstraint_update(t *testing.T) {
 	resourceName := "aws_servicecatalog_constraint.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	rName2 := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName2 := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, servicecatalog.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceCatalogConstraintDestroy,
 		Steps: []resource.TestStep{
@@ -294,7 +295,7 @@ resource "aws_servicecatalog_product_portfolio_association" "test" {
 }
 
 func testAccAWSServiceCatalogConstraintConfig_basic(rName, description string) string {
-	return composeConfig(testAccAWSServiceCatalogConstraintConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSServiceCatalogConstraintConfig_base(rName), fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q
 }
