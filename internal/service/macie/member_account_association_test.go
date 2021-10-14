@@ -21,15 +21,15 @@ func TestAccAWSMacieMemberAccountAssociation_basic(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSMacie(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, macie.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSMacieMemberAccountAssociationDestroy,
+		CheckDestroy: testAccCheckMemberAccountAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSMacieMemberAccountAssociationConfig_basic(memberAcctId),
+				Config: testAccMemberAccountAssociationConfig_basic(memberAcctId),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSMacieMemberAccountAssociationExists("aws_macie_member_account_association.test"),
+					testAccCheckMemberAccountAssociationExists("aws_macie_member_account_association.test"),
 				),
 			},
 		},
@@ -38,23 +38,23 @@ func TestAccAWSMacieMemberAccountAssociation_basic(t *testing.T) {
 
 func TestAccAWSMacieMemberAccountAssociation_self(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckAWSMacie(t) },
+		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, macie.EndpointsID),
 		Providers:  acctest.Providers,
 		// master account associated with Macie it can't be disassociated.
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSMacieMemberAccountAssociationConfig_self,
+				Config: testAccMemberAccountAssociationConfig_self,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSMacieMemberAccountAssociationExists("aws_macie_member_account_association.test"),
+					testAccCheckMemberAccountAssociationExists("aws_macie_member_account_association.test"),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckAWSMacieMemberAccountAssociationDestroy(s *terraform.State) error {
+func testAccCheckMemberAccountAssociationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).MacieConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -86,7 +86,7 @@ func testAccCheckAWSMacieMemberAccountAssociationDestroy(s *terraform.State) err
 	return nil
 }
 
-func testAccCheckAWSMacieMemberAccountAssociationExists(name string) resource.TestCheckFunc {
+func testAccCheckMemberAccountAssociationExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).MacieConn
 
@@ -120,7 +120,7 @@ func testAccCheckAWSMacieMemberAccountAssociationExists(name string) resource.Te
 	}
 }
 
-func testAccAWSMacieMemberAccountAssociationConfig_basic(memberAcctId string) string {
+func testAccMemberAccountAssociationConfig_basic(memberAcctId string) string {
 	return fmt.Sprintf(`
 resource "aws_macie_member_account_association" "test" {
   member_account_id = "%s"
@@ -128,7 +128,7 @@ resource "aws_macie_member_account_association" "test" {
 `, memberAcctId)
 }
 
-const testAccAWSMacieMemberAccountAssociationConfig_self = `
+const testAccMemberAccountAssociationConfig_self = `
 data "aws_caller_identity" "current" {}
 
 resource "aws_macie_member_account_association" "test" {
