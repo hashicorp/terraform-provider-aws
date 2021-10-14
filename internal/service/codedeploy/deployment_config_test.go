@@ -24,12 +24,12 @@ func TestAccAWSCodeDeployDeploymentConfig_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCodeDeployDeploymentConfigDestroy,
+		CheckDestroy: testAccCheckDeploymentDestroyConfig,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCodeDeployDeploymentConfigFleet(rName, 75),
+				Config: testAccDeploymentFleetConfig(rName, 75),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCodeDeployDeploymentConfigExists(resourceName, &config1),
+					testAccCheckDeploymentExistsConfig(resourceName, &config1),
 					resource.TestCheckResourceAttr(resourceName, "deployment_config_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "compute_platform", "Server"),
 					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.#", "0"),
@@ -53,12 +53,12 @@ func TestAccAWSCodeDeployDeploymentConfig_fleetPercent(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCodeDeployDeploymentConfigDestroy,
+		CheckDestroy: testAccCheckDeploymentDestroyConfig,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCodeDeployDeploymentConfigFleet(rName, 75),
+				Config: testAccDeploymentFleetConfig(rName, 75),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCodeDeployDeploymentConfigExists(resourceName, &config1),
+					testAccCheckDeploymentExistsConfig(resourceName, &config1),
 					resource.TestCheckResourceAttr(resourceName, "minimum_healthy_hosts.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "minimum_healthy_hosts.0.type", "FLEET_PERCENT"),
 					resource.TestCheckResourceAttr(resourceName, "minimum_healthy_hosts.0.value", "75"),
@@ -67,10 +67,10 @@ func TestAccAWSCodeDeployDeploymentConfig_fleetPercent(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSCodeDeployDeploymentConfigFleet(rName, 50),
+				Config: testAccDeploymentFleetConfig(rName, 50),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCodeDeployDeploymentConfigExists(resourceName, &config2),
-					testAccCheckAWSCodeDeployDeploymentConfigRecreated(&config1, &config2),
+					testAccCheckDeploymentExistsConfig(resourceName, &config2),
+					testAccCheckDeploymentRecreatedConfig(&config1, &config2),
 					resource.TestCheckResourceAttr(resourceName, "minimum_healthy_hosts.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "minimum_healthy_hosts.0.type", "FLEET_PERCENT"),
 					resource.TestCheckResourceAttr(resourceName, "minimum_healthy_hosts.0.value", "50"),
@@ -96,12 +96,12 @@ func TestAccAWSCodeDeployDeploymentConfig_hostCount(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCodeDeployDeploymentConfigDestroy,
+		CheckDestroy: testAccCheckDeploymentDestroyConfig,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCodeDeployDeploymentConfigHostCount(rName, 1),
+				Config: testAccDeploymentHostCountConfig(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCodeDeployDeploymentConfigExists(resourceName, &config1),
+					testAccCheckDeploymentExistsConfig(resourceName, &config1),
 					resource.TestCheckResourceAttr(resourceName, "minimum_healthy_hosts.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "minimum_healthy_hosts.0.type", "HOST_COUNT"),
 					resource.TestCheckResourceAttr(resourceName, "minimum_healthy_hosts.0.value", "1"),
@@ -110,10 +110,10 @@ func TestAccAWSCodeDeployDeploymentConfig_hostCount(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSCodeDeployDeploymentConfigHostCount(rName, 2),
+				Config: testAccDeploymentHostCountConfig(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCodeDeployDeploymentConfigExists(resourceName, &config2),
-					testAccCheckAWSCodeDeployDeploymentConfigRecreated(&config1, &config2),
+					testAccCheckDeploymentExistsConfig(resourceName, &config2),
+					testAccCheckDeploymentRecreatedConfig(&config1, &config2),
 					resource.TestCheckResourceAttr(resourceName, "minimum_healthy_hosts.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "minimum_healthy_hosts.0.type", "HOST_COUNT"),
 					resource.TestCheckResourceAttr(resourceName, "minimum_healthy_hosts.0.value", "2"),
@@ -139,12 +139,12 @@ func TestAccAWSCodeDeployDeploymentConfig_trafficCanary(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCodeDeployDeploymentConfigDestroy,
+		CheckDestroy: testAccCheckDeploymentDestroyConfig,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCodeDeployDeploymentConfigTrafficCanary(rName, 10, 50),
+				Config: testAccDeploymentTrafficCanaryConfig(rName, 10, 50),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCodeDeployDeploymentConfigExists(resourceName, &config1),
+					testAccCheckDeploymentExistsConfig(resourceName, &config1),
 					resource.TestCheckResourceAttr(resourceName, "compute_platform", "Lambda"),
 					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.0.type", "TimeBasedCanary"),
@@ -156,10 +156,10 @@ func TestAccAWSCodeDeployDeploymentConfig_trafficCanary(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSCodeDeployDeploymentConfigTrafficCanary(rName, 3, 10),
+				Config: testAccDeploymentTrafficCanaryConfig(rName, 3, 10),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCodeDeployDeploymentConfigExists(resourceName, &config2),
-					testAccCheckAWSCodeDeployDeploymentConfigRecreated(&config1, &config2),
+					testAccCheckDeploymentExistsConfig(resourceName, &config2),
+					testAccCheckDeploymentRecreatedConfig(&config1, &config2),
 					resource.TestCheckResourceAttr(resourceName, "compute_platform", "Lambda"),
 					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.0.type", "TimeBasedCanary"),
@@ -188,12 +188,12 @@ func TestAccAWSCodeDeployDeploymentConfig_trafficLinear(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCodeDeployDeploymentConfigDestroy,
+		CheckDestroy: testAccCheckDeploymentDestroyConfig,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCodeDeployDeploymentConfigTrafficLinear(rName, 10, 50),
+				Config: testAccDeploymentTrafficLinearConfig(rName, 10, 50),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCodeDeployDeploymentConfigExists(resourceName, &config1),
+					testAccCheckDeploymentExistsConfig(resourceName, &config1),
 					resource.TestCheckResourceAttr(resourceName, "compute_platform", "Lambda"),
 					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.0.type", "TimeBasedLinear"),
@@ -205,10 +205,10 @@ func TestAccAWSCodeDeployDeploymentConfig_trafficLinear(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSCodeDeployDeploymentConfigTrafficLinear(rName, 3, 10),
+				Config: testAccDeploymentTrafficLinearConfig(rName, 3, 10),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCodeDeployDeploymentConfigExists(resourceName, &config2),
-					testAccCheckAWSCodeDeployDeploymentConfigRecreated(&config1, &config2),
+					testAccCheckDeploymentExistsConfig(resourceName, &config2),
+					testAccCheckDeploymentRecreatedConfig(&config1, &config2),
 					resource.TestCheckResourceAttr(resourceName, "compute_platform", "Lambda"),
 					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.0.type", "TimeBasedLinear"),
@@ -228,7 +228,7 @@ func TestAccAWSCodeDeployDeploymentConfig_trafficLinear(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSCodeDeployDeploymentConfigDestroy(s *terraform.State) error {
+func testAccCheckDeploymentDestroyConfig(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeDeployConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -256,7 +256,7 @@ func testAccCheckAWSCodeDeployDeploymentConfigDestroy(s *terraform.State) error 
 	return nil
 }
 
-func testAccCheckAWSCodeDeployDeploymentConfigExists(name string, config *codedeploy.DeploymentConfigInfo) resource.TestCheckFunc {
+func testAccCheckDeploymentExistsConfig(name string, config *codedeploy.DeploymentConfigInfo) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -279,7 +279,7 @@ func testAccCheckAWSCodeDeployDeploymentConfigExists(name string, config *codede
 	}
 }
 
-func testAccCheckAWSCodeDeployDeploymentConfigRecreated(i, j *codedeploy.DeploymentConfigInfo) resource.TestCheckFunc {
+func testAccCheckDeploymentRecreatedConfig(i, j *codedeploy.DeploymentConfigInfo) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.TimeValue(i.CreateTime).Equal(aws.TimeValue(j.CreateTime)) {
 			return errors.New("CodeDeploy Deployment Config was not recreated")
@@ -289,7 +289,7 @@ func testAccCheckAWSCodeDeployDeploymentConfigRecreated(i, j *codedeploy.Deploym
 	}
 }
 
-func testAccAWSCodeDeployDeploymentConfigFleet(rName string, value int) string {
+func testAccDeploymentFleetConfig(rName string, value int) string {
 	return fmt.Sprintf(`
 resource "aws_codedeploy_deployment_config" "test" {
   deployment_config_name = %q
@@ -302,7 +302,7 @@ resource "aws_codedeploy_deployment_config" "test" {
 `, rName, value)
 }
 
-func testAccAWSCodeDeployDeploymentConfigHostCount(rName string, value int) string {
+func testAccDeploymentHostCountConfig(rName string, value int) string {
 	return fmt.Sprintf(`
 resource "aws_codedeploy_deployment_config" "test" {
   deployment_config_name = %q
@@ -315,7 +315,7 @@ resource "aws_codedeploy_deployment_config" "test" {
 `, rName, value)
 }
 
-func testAccAWSCodeDeployDeploymentConfigTrafficCanary(rName string, interval, percentage int) string {
+func testAccDeploymentTrafficCanaryConfig(rName string, interval, percentage int) string {
 	return fmt.Sprintf(`
 resource "aws_codedeploy_deployment_config" "test" {
   deployment_config_name = %q
@@ -333,7 +333,7 @@ resource "aws_codedeploy_deployment_config" "test" {
 `, rName, interval, percentage)
 }
 
-func testAccAWSCodeDeployDeploymentConfigTrafficLinear(rName string, interval, percentage int) string {
+func testAccDeploymentTrafficLinearConfig(rName string, interval, percentage int) string {
 	return fmt.Sprintf(`
 resource "aws_codedeploy_deployment_config" "test" {
   deployment_config_name = %q
