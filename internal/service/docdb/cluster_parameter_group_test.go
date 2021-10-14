@@ -27,13 +27,13 @@ func TestAccAWSDocDBClusterParameterGroup_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, docdb.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDocDBClusterParameterGroupDestroy,
+		CheckDestroy: testAccCheckClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDocDBClusterParameterGroupConfig(parameterGroupName),
+				Config: testAccClusterParameterGroupConfig(parameterGroupName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDocDBClusterParameterGroupExists(resourceName, &v),
-					testAccCheckAWSDocDBClusterParameterGroupAttributes(&v, parameterGroupName),
+					testAccCheckClusterParameterGroupExists(resourceName, &v),
+					testAccCheckClusterParameterGroupAttributes(&v, parameterGroupName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(fmt.Sprintf("cluster-pg:%s$", parameterGroupName))),
 					resource.TestCheckResourceAttr(resourceName, "name", parameterGroupName),
 					resource.TestCheckResourceAttr(resourceName, "family", "docdb3.6"),
@@ -61,13 +61,13 @@ func TestAccAWSDocDBClusterParameterGroup_systemParameter(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, docdb.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDocDBClusterParameterGroupDestroy,
+		CheckDestroy: testAccCheckClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDocDBClusterParameterGroupConfig_SystemParameter(parameterGroupName),
+				Config: testAccClusterParameterGroupConfig_SystemParameter(parameterGroupName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDocDBClusterParameterGroupExists(resourceName, &v),
-					testAccCheckAWSDocDBClusterParameterGroupAttributes(&v, parameterGroupName),
+					testAccCheckClusterParameterGroupExists(resourceName, &v),
+					testAccCheckClusterParameterGroupAttributes(&v, parameterGroupName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(fmt.Sprintf("cluster-pg:%s$", parameterGroupName))),
 					resource.TestCheckResourceAttr(resourceName, "name", parameterGroupName),
 					resource.TestCheckResourceAttr(resourceName, "family", "docdb3.6"),
@@ -93,12 +93,12 @@ func TestAccAWSDocDBClusterParameterGroup_namePrefix(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, docdb.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDocDBClusterParameterGroupDestroy,
+		CheckDestroy: testAccCheckClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDocDBClusterParameterGroupConfig_namePrefix,
+				Config: testAccClusterParameterGroupConfig_namePrefix,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDocDBClusterParameterGroupExists("aws_docdb_cluster_parameter_group.test", &v),
+					testAccCheckClusterParameterGroupExists("aws_docdb_cluster_parameter_group.test", &v),
 					resource.TestMatchResourceAttr("aws_docdb_cluster_parameter_group.test", "name", regexp.MustCompile("^tf-test-")),
 				),
 			},
@@ -119,12 +119,12 @@ func TestAccAWSDocDBClusterParameterGroup_generatedName(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, docdb.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDocDBClusterParameterGroupDestroy,
+		CheckDestroy: testAccCheckClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDocDBClusterParameterGroupConfig_generatedName,
+				Config: testAccClusterParameterGroupConfig_generatedName,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDocDBClusterParameterGroupExists("aws_docdb_cluster_parameter_group.test", &v),
+					testAccCheckClusterParameterGroupExists("aws_docdb_cluster_parameter_group.test", &v),
 				),
 			},
 			{
@@ -146,13 +146,13 @@ func TestAccAWSDocDBClusterParameterGroup_Description(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, docdb.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDocDBClusterParameterGroupDestroy,
+		CheckDestroy: testAccCheckClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDocDBClusterParameterGroupConfig_Description(parameterGroupName, "custom description"),
+				Config: testAccClusterParameterGroupConfig_Description(parameterGroupName, "custom description"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDocDBClusterParameterGroupExists(resourceName, &v),
-					testAccCheckAWSDocDBClusterParameterGroupAttributes(&v, parameterGroupName),
+					testAccCheckClusterParameterGroupExists(resourceName, &v),
+					testAccCheckClusterParameterGroupAttributes(&v, parameterGroupName),
 					resource.TestCheckResourceAttr(resourceName, "description", "custom description"),
 				),
 			},
@@ -175,13 +175,13 @@ func TestAccAWSDocDBClusterParameterGroup_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, docdb.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDocDBClusterParameterGroupDestroy,
+		CheckDestroy: testAccCheckClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDocDBClusterParameterGroupConfig(parameterGroupName),
+				Config: testAccClusterParameterGroupConfig(parameterGroupName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDocDBClusterParameterGroupExists(resourceName, &v),
-					testAccCheckAWSDocDBClusterParameterGroupDisappears(&v),
+					testAccCheckClusterParameterGroupExists(resourceName, &v),
+					testAccCheckClusterParameterGroupDisappears(&v),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -199,13 +199,13 @@ func TestAccAWSDocDBClusterParameterGroup_Parameter(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, docdb.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDocDBClusterParameterGroupDestroy,
+		CheckDestroy: testAccCheckClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDocDBClusterParameterGroupConfig_Parameter(parameterGroupName, "tls", "disabled"),
+				Config: testAccClusterParameterGroupConfig_Parameter(parameterGroupName, "tls", "disabled"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDocDBClusterParameterGroupExists(resourceName, &v),
-					testAccCheckAWSDocDBClusterParameterGroupAttributes(&v, parameterGroupName),
+					testAccCheckClusterParameterGroupExists(resourceName, &v),
+					testAccCheckClusterParameterGroupAttributes(&v, parameterGroupName),
 					resource.TestCheckResourceAttr(resourceName, "parameter.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"apply_method": "pending-reboot",
@@ -220,10 +220,10 @@ func TestAccAWSDocDBClusterParameterGroup_Parameter(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSDocDBClusterParameterGroupConfig_Parameter(parameterGroupName, "tls", "enabled"),
+				Config: testAccClusterParameterGroupConfig_Parameter(parameterGroupName, "tls", "enabled"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDocDBClusterParameterGroupExists(resourceName, &v),
-					testAccCheckAWSDocDBClusterParameterGroupAttributes(&v, parameterGroupName),
+					testAccCheckClusterParameterGroupExists(resourceName, &v),
+					testAccCheckClusterParameterGroupAttributes(&v, parameterGroupName),
 					resource.TestCheckResourceAttr(resourceName, "parameter.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"apply_method": "pending-reboot",
@@ -246,13 +246,13 @@ func TestAccAWSDocDBClusterParameterGroup_Tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, docdb.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDocDBClusterParameterGroupDestroy,
+		CheckDestroy: testAccCheckClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDocDBClusterParameterGroupConfig_Tags(parameterGroupName, "key1", "value1"),
+				Config: testAccClusterParameterGroupConfig_Tags(parameterGroupName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDocDBClusterParameterGroupExists(resourceName, &v),
-					testAccCheckAWSDocDBClusterParameterGroupAttributes(&v, parameterGroupName),
+					testAccCheckClusterParameterGroupExists(resourceName, &v),
+					testAccCheckClusterParameterGroupAttributes(&v, parameterGroupName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -263,19 +263,19 @@ func TestAccAWSDocDBClusterParameterGroup_Tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSDocDBClusterParameterGroupConfig_Tags(parameterGroupName, "key1", "value2"),
+				Config: testAccClusterParameterGroupConfig_Tags(parameterGroupName, "key1", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDocDBClusterParameterGroupExists(resourceName, &v),
-					testAccCheckAWSDocDBClusterParameterGroupAttributes(&v, parameterGroupName),
+					testAccCheckClusterParameterGroupExists(resourceName, &v),
+					testAccCheckClusterParameterGroupAttributes(&v, parameterGroupName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value2"),
 				),
 			},
 			{
-				Config: testAccAWSDocDBClusterParameterGroupConfig_Tags(parameterGroupName, "key2", "value2"),
+				Config: testAccClusterParameterGroupConfig_Tags(parameterGroupName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDocDBClusterParameterGroupExists(resourceName, &v),
-					testAccCheckAWSDocDBClusterParameterGroupAttributes(&v, parameterGroupName),
+					testAccCheckClusterParameterGroupExists(resourceName, &v),
+					testAccCheckClusterParameterGroupAttributes(&v, parameterGroupName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -284,7 +284,7 @@ func TestAccAWSDocDBClusterParameterGroup_Tags(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSDocDBClusterParameterGroupDestroy(s *terraform.State) error {
+func testAccCheckClusterParameterGroupDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -315,7 +315,7 @@ func testAccCheckAWSDocDBClusterParameterGroupDestroy(s *terraform.State) error 
 	return nil
 }
 
-func testAccCheckAWSDocDBClusterParameterGroupDisappears(group *docdb.DBClusterParameterGroup) resource.TestCheckFunc {
+func testAccCheckClusterParameterGroupDisappears(group *docdb.DBClusterParameterGroup) resource.TestCheckFunc {
 
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn
@@ -333,7 +333,7 @@ func testAccCheckAWSDocDBClusterParameterGroupDisappears(group *docdb.DBClusterP
 	}
 }
 
-func testAccCheckAWSDocDBClusterParameterGroupAttributes(v *docdb.DBClusterParameterGroup, name string) resource.TestCheckFunc {
+func testAccCheckClusterParameterGroupAttributes(v *docdb.DBClusterParameterGroup, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 
 		if *v.DBClusterParameterGroupName != name {
@@ -348,7 +348,7 @@ func testAccCheckAWSDocDBClusterParameterGroupAttributes(v *docdb.DBClusterParam
 	}
 }
 
-func testAccCheckAWSDocDBClusterParameterGroupExists(n string, v *docdb.DBClusterParameterGroup) resource.TestCheckFunc {
+func testAccCheckClusterParameterGroupExists(n string, v *docdb.DBClusterParameterGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -382,7 +382,7 @@ func testAccCheckAWSDocDBClusterParameterGroupExists(n string, v *docdb.DBCluste
 	}
 }
 
-func testAccAWSDocDBClusterParameterGroupConfig(name string) string {
+func testAccClusterParameterGroupConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_docdb_cluster_parameter_group" "bar" {
   family = "docdb3.6"
@@ -391,7 +391,7 @@ resource "aws_docdb_cluster_parameter_group" "bar" {
 `, name)
 }
 
-func testAccAWSDocDBClusterParameterGroupConfig_SystemParameter(name string) string {
+func testAccClusterParameterGroupConfig_SystemParameter(name string) string {
 	return fmt.Sprintf(`
 resource "aws_docdb_cluster_parameter_group" "bar" {
   family = "docdb3.6"
@@ -406,7 +406,7 @@ resource "aws_docdb_cluster_parameter_group" "bar" {
 `, name)
 }
 
-func testAccAWSDocDBClusterParameterGroupConfig_Description(name, description string) string {
+func testAccClusterParameterGroupConfig_Description(name, description string) string {
 	return fmt.Sprintf(`
 resource "aws_docdb_cluster_parameter_group" "bar" {
   family      = "docdb3.6"
@@ -416,7 +416,7 @@ resource "aws_docdb_cluster_parameter_group" "bar" {
 `, description, name)
 }
 
-func testAccAWSDocDBClusterParameterGroupConfig_Parameter(name, pName, pValue string) string {
+func testAccClusterParameterGroupConfig_Parameter(name, pName, pValue string) string {
 	return fmt.Sprintf(`
 resource "aws_docdb_cluster_parameter_group" "bar" {
   name   = "%s"
@@ -430,7 +430,7 @@ resource "aws_docdb_cluster_parameter_group" "bar" {
 `, name, pName, pValue)
 }
 
-func testAccAWSDocDBClusterParameterGroupConfig_Tags(name, tKey, tValue string) string {
+func testAccClusterParameterGroupConfig_Tags(name, tKey, tValue string) string {
 	return fmt.Sprintf(`
 resource "aws_docdb_cluster_parameter_group" "bar" {
   name   = "%s"
@@ -443,13 +443,13 @@ resource "aws_docdb_cluster_parameter_group" "bar" {
 `, name, tKey, tValue)
 }
 
-const testAccAWSDocDBClusterParameterGroupConfig_namePrefix = `
+const testAccClusterParameterGroupConfig_namePrefix = `
 resource "aws_docdb_cluster_parameter_group" "test" {
   name_prefix = "tf-test-"
   family      = "docdb3.6"
 }
 `
-const testAccAWSDocDBClusterParameterGroupConfig_generatedName = `
+const testAccClusterParameterGroupConfig_generatedName = `
 resource "aws_docdb_cluster_parameter_group" "test" {
   family = "docdb3.6"
 }

@@ -29,10 +29,10 @@ func TestAccAWSDocDBClusterInstance_basic(t *testing.T) {
 		CheckDestroy: testAccCheckDocDBClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDocDBClusterInstanceConfig(rName),
+				Config: testAccClusterInstanceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDocDBClusterInstanceExists(resourceName, &v),
-					testAccCheckAWSDocDBClusterInstanceAttributes(&v),
+					testAccCheckClusterInstanceExists(resourceName, &v),
+					testAccCheckClusterInstanceAttributes(&v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(`db:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
 					resource.TestCheckResourceAttrSet(resourceName, "preferred_maintenance_window"),
@@ -45,10 +45,10 @@ func TestAccAWSDocDBClusterInstance_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSDocDBClusterInstanceConfigModified(rName),
+				Config: testAccClusterInstanceModifiedConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDocDBClusterInstanceExists(resourceName, &v),
-					testAccCheckAWSDocDBClusterInstanceAttributes(&v),
+					testAccCheckClusterInstanceExists(resourceName, &v),
+					testAccCheckClusterInstanceAttributes(&v),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
 				),
 			},
@@ -78,10 +78,10 @@ func TestAccAWSDocDBClusterInstance_az(t *testing.T) {
 		CheckDestroy: testAccCheckDocDBClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDocDBClusterInstanceConfig_az(rName),
+				Config: testAccClusterInstanceConfig_az(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDocDBClusterInstanceExists(resourceName, &v),
-					testAccCheckAWSDocDBClusterInstanceAttributes(&v),
+					testAccCheckClusterInstanceExists(resourceName, &v),
+					testAccCheckClusterInstanceAttributes(&v),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
 				),
 			},
@@ -112,10 +112,10 @@ func TestAccAWSDocDBClusterInstance_namePrefix(t *testing.T) {
 		CheckDestroy: testAccCheckDocDBClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDocDBClusterInstanceConfig_namePrefix(rName, rNamePrefix),
+				Config: testAccClusterInstanceConfig_namePrefix(rName, rNamePrefix),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDocDBClusterInstanceExists(resourceName, &v),
-					testAccCheckAWSDocDBClusterInstanceAttributes(&v),
+					testAccCheckClusterInstanceExists(resourceName, &v),
+					testAccCheckClusterInstanceAttributes(&v),
 					resource.TestCheckResourceAttr(resourceName, "db_subnet_group_name", rName),
 					resource.TestMatchResourceAttr(resourceName, "identifier", regexp.MustCompile(fmt.Sprintf("^%s", rNamePrefix))),
 				),
@@ -146,10 +146,10 @@ func TestAccAWSDocDBClusterInstance_generatedName(t *testing.T) {
 		CheckDestroy: testAccCheckDocDBClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDocDBClusterInstanceConfig_generatedName(rName),
+				Config: testAccClusterInstanceConfig_generatedName(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDocDBClusterInstanceExists(resourceName, &v),
-					testAccCheckAWSDocDBClusterInstanceAttributes(&v),
+					testAccCheckClusterInstanceExists(resourceName, &v),
+					testAccCheckClusterInstanceAttributes(&v),
 					resource.TestMatchResourceAttr(resourceName, "identifier", regexp.MustCompile("^tf-")),
 				),
 			},
@@ -179,9 +179,9 @@ func TestAccAWSDocDBClusterInstance_kmsKey(t *testing.T) {
 		CheckDestroy: testAccCheckDocDBClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDocDBClusterInstanceConfigKmsKey(rName),
+				Config: testAccClusterInstanceKMSKeyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDocDBClusterInstanceExists(resourceName, &v),
+					testAccCheckClusterInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", "aws_kms_key.foo", "arn"),
 				),
 			},
@@ -212,10 +212,10 @@ func TestAccAWSDocDBClusterInstance_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckDocDBClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDocDBClusterInstanceConfig(rName),
+				Config: testAccClusterInstanceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDocDBClusterInstanceExists(resourceName, &v),
-					testAccAWSDocDBClusterInstanceDisappears(&v),
+					testAccCheckClusterInstanceExists(resourceName, &v),
+					testAccClusterInstanceDisappears(&v),
 				),
 				// A non-empty plan is what we want. A crash is what we don't want. :)
 				ExpectNonEmptyPlan: true,
@@ -224,7 +224,7 @@ func TestAccAWSDocDBClusterInstance_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSDocDBClusterInstanceAttributes(v *docdb.DBInstance) resource.TestCheckFunc {
+func testAccCheckClusterInstanceAttributes(v *docdb.DBInstance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 
 		if *v.Engine != "docdb" {
@@ -239,7 +239,7 @@ func testAccCheckAWSDocDBClusterInstanceAttributes(v *docdb.DBInstance) resource
 	}
 }
 
-func testAccAWSDocDBClusterInstanceDisappears(v *docdb.DBInstance) resource.TestCheckFunc {
+func testAccClusterInstanceDisappears(v *docdb.DBInstance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn
 		opts := &docdb.DeleteDBInstanceInput{
@@ -267,7 +267,7 @@ func testAccAWSDocDBClusterInstanceDisappears(v *docdb.DBInstance) resource.Test
 	}
 }
 
-func testAccCheckAWSDocDBClusterInstanceExists(n string, v *docdb.DBInstance) resource.TestCheckFunc {
+func testAccCheckClusterInstanceExists(n string, v *docdb.DBInstance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -299,7 +299,7 @@ func testAccCheckAWSDocDBClusterInstanceExists(n string, v *docdb.DBInstance) re
 }
 
 // Add some random to the name, to avoid collision
-func testAccAWSDocDBClusterInstanceConfig(rName string) string {
+func testAccClusterInstanceConfig(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_docdb_cluster" "default" {
   cluster_identifier  = %[1]q
@@ -323,7 +323,7 @@ resource "aws_docdb_cluster_instance" "cluster_instances" {
 `, rName))
 }
 
-func testAccAWSDocDBClusterInstanceConfigModified(rName string) string {
+func testAccClusterInstanceModifiedConfig(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_docdb_cluster" "default" {
   cluster_identifier  = %[1]q
@@ -348,7 +348,7 @@ resource "aws_docdb_cluster_instance" "cluster_instances" {
 `, rName))
 }
 
-func testAccAWSDocDBClusterInstanceConfig_az(rName string) string {
+func testAccClusterInstanceConfig_az(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_docdb_cluster" "default" {
   cluster_identifier  = %[1]q
@@ -373,7 +373,7 @@ resource "aws_docdb_cluster_instance" "cluster_instances" {
 `, rName))
 }
 
-func testAccAWSDocDBClusterInstanceConfig_namePrefix(rName, rNamePrefix string) string {
+func testAccClusterInstanceConfig_namePrefix(rName, rNamePrefix string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 data "aws_docdb_orderable_db_instance" "test" {
   engine                     = "docdb"
@@ -429,7 +429,7 @@ resource "aws_docdb_subnet_group" "test" {
 `, rName, rNamePrefix))
 }
 
-func testAccAWSDocDBClusterInstanceConfig_generatedName(rName string) string {
+func testAccClusterInstanceConfig_generatedName(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 data "aws_docdb_orderable_db_instance" "test" {
   engine                     = "docdb"
@@ -484,7 +484,7 @@ resource "aws_docdb_subnet_group" "test" {
 `, rName))
 }
 
-func testAccAWSDocDBClusterInstanceConfigKmsKey(rName string) string {
+func testAccClusterInstanceKMSKeyConfig(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_kms_key" "foo" {
   description = "Terraform acc test %[1]s"

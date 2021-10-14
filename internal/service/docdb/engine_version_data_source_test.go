@@ -18,13 +18,13 @@ func TestAccAWSDocDBEngineVersionDataSource_basic(t *testing.T) {
 	version := "3.6.0"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccAWSDocDBEngineVersionPreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccEngineVersionPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, docdb.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDocDBEngineVersionDataSourceBasicConfig(engine, version),
+				Config: testAccEngineVersionBasicDataSourceConfig(engine, version),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "engine", engine),
 					resource.TestCheckResourceAttr(dataSourceName, "version", version),
@@ -44,13 +44,13 @@ func TestAccAWSDocDBEngineVersionDataSource_preferred(t *testing.T) {
 	dataSourceName := "data.aws_docdb_engine_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccAWSDocDBEngineVersionPreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccEngineVersionPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, docdb.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDocDBEngineVersionDataSourcePreferredConfig(),
+				Config: testAccEngineVersionPreferredDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "version", "3.6.0"),
 				),
@@ -63,13 +63,13 @@ func TestAccAWSDocDBEngineVersionDataSource_defaultOnly(t *testing.T) {
 	dataSourceName := "data.aws_docdb_engine_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccAWSDocDBEngineVersionPreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccEngineVersionPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, docdb.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDocDBEngineVersionDataSourceDefaultOnlyConfig(),
+				Config: testAccEngineVersionDefaultOnlyDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "engine", "docdb"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "version"),
@@ -79,7 +79,7 @@ func TestAccAWSDocDBEngineVersionDataSource_defaultOnly(t *testing.T) {
 	})
 }
 
-func testAccAWSDocDBEngineVersionPreCheck(t *testing.T) {
+func testAccEngineVersionPreCheck(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn
 
 	input := &docdb.DescribeDBEngineVersionsInput{
@@ -98,7 +98,7 @@ func testAccAWSDocDBEngineVersionPreCheck(t *testing.T) {
 	}
 }
 
-func testAccAWSDocDBEngineVersionDataSourceBasicConfig(engine, version string) string {
+func testAccEngineVersionBasicDataSourceConfig(engine, version string) string {
 	return fmt.Sprintf(`
 data "aws_docdb_engine_version" "test" {
   engine  = %q
@@ -107,7 +107,7 @@ data "aws_docdb_engine_version" "test" {
 `, engine, version)
 }
 
-func testAccAWSDocDBEngineVersionDataSourcePreferredConfig() string {
+func testAccEngineVersionPreferredDataSourceConfig() string {
 	return `
 data "aws_docdb_engine_version" "test" {
   preferred_versions = ["34.6.1", "3.6.0", "2.6.0"]
@@ -115,7 +115,7 @@ data "aws_docdb_engine_version" "test" {
 `
 }
 
-func testAccAWSDocDBEngineVersionDataSourceDefaultOnlyConfig() string {
+func testAccEngineVersionDefaultOnlyDataSourceConfig() string {
 	return `
 data "aws_docdb_engine_version" "test" {}
 `

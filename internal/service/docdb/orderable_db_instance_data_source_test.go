@@ -19,13 +19,13 @@ func TestAccAWSDocdbOrderableDbInstanceDataSource_basic(t *testing.T) {
 	license := "na"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSDocdbOrderableDbInstance(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckOrderableDBInstance(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, docdb.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDocdbOrderableDbInstanceDataSourceConfigBasic(class, engine, engineVersion, license),
+				Config: testAccOrderableDBInstanceBasicDataSourceConfig(class, engine, engineVersion, license),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "instance_class", class),
 					resource.TestCheckResourceAttr(dataSourceName, "engine", engine),
@@ -45,13 +45,13 @@ func TestAccAWSDocdbOrderableDbInstanceDataSource_preferred(t *testing.T) {
 	preferredOption := "db.r5.large"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSDocdbOrderableDbInstance(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckOrderableDBInstance(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, docdb.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDocdbOrderableDbInstanceDataSourceConfigPreferred(engine, engineVersion, license, preferredOption),
+				Config: testAccOrderableDBInstancePreferredDataSourceConfig(engine, engineVersion, license, preferredOption),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "engine", engine),
 					resource.TestCheckResourceAttr(dataSourceName, "engine_version", engineVersion),
@@ -63,7 +63,7 @@ func TestAccAWSDocdbOrderableDbInstanceDataSource_preferred(t *testing.T) {
 	})
 }
 
-func testAccPreCheckAWSDocdbOrderableDbInstance(t *testing.T) {
+func testAccPreCheckOrderableDBInstance(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn
 
 	input := &docdb.DescribeOrderableDBInstanceOptionsInput{
@@ -81,7 +81,7 @@ func testAccPreCheckAWSDocdbOrderableDbInstance(t *testing.T) {
 	}
 }
 
-func testAccAWSDocdbOrderableDbInstanceDataSourceConfigBasic(class, engine, version, license string) string {
+func testAccOrderableDBInstanceBasicDataSourceConfig(class, engine, version, license string) string {
 	return fmt.Sprintf(`
 data "aws_docdb_orderable_db_instance" "test" {
   instance_class = %q
@@ -92,7 +92,7 @@ data "aws_docdb_orderable_db_instance" "test" {
 `, class, engine, version, license)
 }
 
-func testAccAWSDocdbOrderableDbInstanceDataSourceConfigPreferred(engine, version, license, preferredOption string) string {
+func testAccOrderableDBInstancePreferredDataSourceConfig(engine, version, license, preferredOption string) string {
 	return fmt.Sprintf(`
 data "aws_docdb_orderable_db_instance" "test" {
   engine         = %q

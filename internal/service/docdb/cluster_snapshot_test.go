@@ -27,7 +27,7 @@ func TestAccAWSDocDBClusterSnapshot_basic(t *testing.T) {
 		CheckDestroy: testAccCheckDocDBClusterSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsDocDBClusterSnapshotConfig(rName),
+				Config: testAccClusterSnapshotConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocDBClusterSnapshotExists(resourceName, &dbClusterSnapshot),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zones.#"),
@@ -112,7 +112,7 @@ func testAccCheckDocDBClusterSnapshotExists(resourceName string, dbClusterSnapsh
 	}
 }
 
-func testAccAwsDocDBClusterSnapshotConfig(rName string) string {
+func testAccClusterSnapshotConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"

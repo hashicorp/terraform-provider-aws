@@ -63,7 +63,7 @@ func TestAccAWSDocDBSubnetGroup_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocDBSubnetGroupExists(
 						"aws_docdb_subnet_group.foo", &v),
-					testAccCheckAWSDocDBSubnetGroupDisappears(&v),
+					testAccCheckSubnetGroupDisappears(&v),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -193,7 +193,7 @@ func testAccCheckDocDBSubnetGroupDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSDocDBSubnetGroupDisappears(group *docdb.DBSubnetGroup) resource.TestCheckFunc {
+func testAccCheckSubnetGroupDisappears(group *docdb.DBSubnetGroup) resource.TestCheckFunc {
 
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn
