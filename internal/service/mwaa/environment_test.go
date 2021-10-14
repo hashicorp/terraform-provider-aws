@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfmwaa "github.com/hashicorp/terraform-provider-aws/internal/service/mwaa"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -40,7 +41,7 @@ func testSweepMwaaEnvironment(region string) error {
 	}
 	for _, environment := range listOutput.Environments {
 		name := aws.StringValue(environment)
-		r := ResourceEnvironment()
+		r := tfmwaa.ResourceEnvironment()
 		d := r.Data(nil)
 		d.SetId(name)
 
@@ -130,7 +131,7 @@ func TestAccAWSMwaaEnvironment_disappears(t *testing.T) {
 				Config: testAccAWSMwaaEnvironmentBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSMwaaEnvironmentExists(resourceName, &environment),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceEnvironment(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfmwaa.ResourceEnvironment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
