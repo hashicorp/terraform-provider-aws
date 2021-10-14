@@ -118,7 +118,7 @@ func resourceAwsInspectorAssessmentTemplateRead(d *schema.ResourceData, meta int
 		return fmt.Errorf("error setting rules_package_arns: %s", err)
 	}
 
-	tags, err := tftags.InspectorListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Inspector assessment template (%s): %s", arn, err)
