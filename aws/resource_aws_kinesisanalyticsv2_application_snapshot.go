@@ -18,11 +18,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsKinesisAnalyticsV2ApplicationSnapshot() *schema.Resource {
+func ResourceApplicationSnapshot() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsKinesisAnalyticsV2ApplicationSnapshotCreate,
-		Read:   resourceAwsKinesisAnalyticsV2ApplicationSnapshotRead,
-		Delete: resourceAwsKinesisAnalyticsV2ApplicationSnapshotDelete,
+		Create: resourceApplicationSnapshotCreate,
+		Read:   resourceApplicationSnapshotRead,
+		Delete: resourceApplicationSnapshotDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -62,7 +62,7 @@ func resourceAwsKinesisAnalyticsV2ApplicationSnapshot() *schema.Resource {
 	}
 }
 
-func resourceAwsKinesisAnalyticsV2ApplicationSnapshotCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceApplicationSnapshotCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KinesisAnalyticsV2Conn
 	applicationName := d.Get("application_name").(string)
 	snapshotName := d.Get("snapshot_name").(string)
@@ -88,10 +88,10 @@ func resourceAwsKinesisAnalyticsV2ApplicationSnapshotCreate(d *schema.ResourceDa
 		return fmt.Errorf("error waiting for Kinesis Analytics v2 Application Snapshot (%s) creation: %w", d.Id(), err)
 	}
 
-	return resourceAwsKinesisAnalyticsV2ApplicationSnapshotRead(d, meta)
+	return resourceApplicationSnapshotRead(d, meta)
 }
 
-func resourceAwsKinesisAnalyticsV2ApplicationSnapshotRead(d *schema.ResourceData, meta interface{}) error {
+func resourceApplicationSnapshotRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KinesisAnalyticsV2Conn
 
 	applicationName, snapshotName, err := tfkinesisanalyticsv2.ApplicationSnapshotParseID(d.Id())
@@ -120,7 +120,7 @@ func resourceAwsKinesisAnalyticsV2ApplicationSnapshotRead(d *schema.ResourceData
 	return nil
 }
 
-func resourceAwsKinesisAnalyticsV2ApplicationSnapshotDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceApplicationSnapshotDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KinesisAnalyticsV2Conn
 
 	applicationName, snapshotName, err := tfkinesisanalyticsv2.ApplicationSnapshotParseID(d.Id())
