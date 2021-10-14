@@ -1,22 +1,23 @@
 //go:build !generate
 // +build !generate
 
-package keyvaluetags
+package inspector
 
 import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/inspector"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // Custom Inspector tag service update functions using the same format as generated code.
 
-// InspectorUpdateTags updates WorkSpaces resource tags.
+// updateTags updates WorkSpaces resource tags.
 // The identifier is the resource ARN.
-func InspectorUpdateTags(conn *inspector.Inspector, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
-	oldTags := New(oldTagsMap)
-	newTags := New(newTagsMap)
+func updateTags(conn *inspector.Inspector, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := tftags.New(oldTagsMap)
+	newTags := tftags.New(newTagsMap)
 
 	if len(newTags) > 0 {
 		input := &inspector.SetTagsForResourceInput{

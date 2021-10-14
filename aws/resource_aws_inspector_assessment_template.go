@@ -8,8 +8,9 @@ import (
 	// "github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/inspector"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceAssessmentTemplate() *schema.Resource {
@@ -49,18 +50,18 @@ func ResourceAssessmentTemplate() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceAwsInspectorAssessmentTemplateCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).InspectorConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	req := &inspector.CreateAssessmentTemplateInput{
 		AssessmentTargetArn:    aws.String(d.Get("target_arn").(string)),
@@ -78,7 +79,7 @@ func resourceAwsInspectorAssessmentTemplateCreate(d *schema.ResourceData, meta i
 	d.SetId(aws.StringValue(resp.AssessmentTemplateArn))
 
 	if len(tags) > 0 {
-		if err := keyvaluetags.InspectorUpdateTags(conn, d.Id(), nil, tags); err != nil {
+		if err := updateTags(conn, d.Id(), nil, tags); err != nil {
 			return fmt.Errorf("error adding Inspector assessment template (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -116,7 +117,7 @@ func resourceAwsInspectorAssessmentTemplateRead(d *schema.ResourceData, meta int
 		return fmt.Errorf("error setting rules_package_arns: %s", err)
 	}
 
-	tags, err := keyvaluetags.InspectorListTags(conn, arn)
+	tags, err := tftags.InspectorListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Inspector assessment template (%s): %s", arn, err)
@@ -142,7 +143,7 @@ func resourceAwsInspectorAssessmentTemplateUpdate(d *schema.ResourceData, meta i
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := keyvaluetags.InspectorUpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := updateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating Inspector assessment template (%s) tags: %s", d.Id(), err)
 		}
 	}
