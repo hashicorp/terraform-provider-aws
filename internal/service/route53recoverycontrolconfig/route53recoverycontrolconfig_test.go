@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestAccAWSRoute53RecoveryControlConfig_serial(t *testing.T) {
+func TestAccRoute53RecoveryControlConfig_serial(t *testing.T) {
 	// These tests are only non-parallel because of low quota limits.
 	// ServiceQuotaExceededException: AwsAccountId(X) has 2 Meridian clusters. Limit 2
 	testCases := map[string]map[string]func(t *testing.T){
