@@ -18,11 +18,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_config_configuration_recorder", &resource.Sweeper{
 		Name: "aws_config_configuration_recorder",
-		F:    testSweepConfigConfigurationRecorder,
+		F:    sweepConfigurationRecorder,
 	})
 }
 
-func testSweepConfigConfigurationRecorder(region string) error {
+func sweepConfigurationRecorder(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)

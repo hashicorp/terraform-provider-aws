@@ -20,11 +20,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_config_aggregate_authorization", &resource.Sweeper{
 		Name: "aws_config_aggregate_authorization",
-		F:    testSweepConfigAggregateAuthorizations,
+		F:    sweepAggregateAuthorizations,
 	})
 }
 
-func testSweepConfigAggregateAuthorizations(region string) error {
+func sweepAggregateAuthorizations(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %s", err)
@@ -70,10 +70,10 @@ func TestAccAWSConfigAggregateAuthorization_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSConfigAggregateAuthorizationDestroy,
+		CheckDestroy: testAccCheckAggregateAuthorizationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSConfigAggregateAuthorizationConfig_basic(rString),
+				Config: testAccAggregateAuthorizationConfig_basic(rString),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "account_id", rString),
 					resource.TestCheckResourceAttrPair(resourceName, "region", dataSourceName, "name"),
@@ -97,10 +97,10 @@ func TestAccAWSConfigAggregateAuthorization_tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSConfigAggregateAuthorizationDestroy,
+		CheckDestroy: testAccCheckAggregateAuthorizationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSConfigAggregateAuthorizationConfig_tags(rString, "foo", "bar", "fizz", "buzz"),
+				Config: testAccAggregateAuthorizationConfig_tags(rString, "foo", "bar", "fizz", "buzz"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rString),
@@ -109,7 +109,7 @@ func TestAccAWSConfigAggregateAuthorization_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSConfigAggregateAuthorizationConfig_tags(rString, "foo", "bar2", "fizz2", "buzz2"),
+				Config: testAccAggregateAuthorizationConfig_tags(rString, "foo", "bar2", "fizz2", "buzz2"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rString),
@@ -123,7 +123,7 @@ func TestAccAWSConfigAggregateAuthorization_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSConfigAggregateAuthorizationConfig_basic(rString),
+				Config: testAccAggregateAuthorizationConfig_basic(rString),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -132,7 +132,7 @@ func TestAccAWSConfigAggregateAuthorization_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSConfigAggregateAuthorizationDestroy(s *terraform.State) error {
+func testAccCheckAggregateAuthorizationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -161,7 +161,7 @@ func testAccCheckAWSConfigAggregateAuthorizationDestroy(s *terraform.State) erro
 	return nil
 }
 
-func testAccAWSConfigAggregateAuthorizationConfig_basic(rString string) string {
+func testAccAggregateAuthorizationConfig_basic(rString string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 
@@ -172,7 +172,7 @@ resource "aws_config_aggregate_authorization" "example" {
 `, rString)
 }
 
-func testAccAWSConfigAggregateAuthorizationConfig_tags(rString, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccAggregateAuthorizationConfig_tags(rString, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 

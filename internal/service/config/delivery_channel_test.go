@@ -23,11 +23,11 @@ func init() {
 		Dependencies: []string{
 			"aws_config_configuration_recorder",
 		},
-		F: testSweepConfigDeliveryChannels,
+		F: sweepDeliveryChannels,
 	})
 }
 
-func testSweepConfigDeliveryChannels(region string) error {
+func sweepDeliveryChannels(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
