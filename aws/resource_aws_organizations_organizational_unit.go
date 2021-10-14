@@ -12,9 +12,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceOrganizationalUnit() *schema.Resource {
@@ -67,18 +68,18 @@ func ResourceOrganizationalUnit() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringMatch(regexp.MustCompile("^(r-[0-9a-z]{4,32})|(ou-[0-9a-z]{4,32}-[a-z0-9]{8,32})$"), "see https://docs.aws.amazon.com/organizations/latest/APIReference/API_CreateOrganizationalUnit.html#organizations-CreateOrganizationalUnit-request-ParentId"),
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceOrganizationalUnitCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).OrganizationsConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	// Create the organizational unit
 	createOpts := &organizations.CreateOrganizationalUnitInput{
@@ -180,7 +181,7 @@ func resourceOrganizationalUnitRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("name", ou.Name)
 	d.Set("parent_id", parentId)
 
-	tags, err := keyvaluetags.OrganizationsListTags(conn, d.Id())
+	tags, err := tftags.OrganizationsListTags(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Organizations Organizational Unit (%s): %w", d.Id(), err)
@@ -218,7 +219,7 @@ func resourceOrganizationalUnitUpdate(d *schema.ResourceData, meta interface{}) 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := keyvaluetags.OrganizationsUpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := tftags.OrganizationsUpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating Organizations Organizational Unit (%s) tags: %w", d.Id(), err)
 		}
 	}
