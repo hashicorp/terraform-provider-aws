@@ -319,7 +319,7 @@ func dataSourceTableRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting ttl: %w", err)
 	}
 
-	tags, err := tftags.DynamodbListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(conn, d.Get("arn").(string))
 
 	if err != nil && !tfawserr.ErrMessageContains(err, "UnknownOperationException", "Tagging is not currently supported in DynamoDB Local.") {
 		return fmt.Errorf("error listing tags for DynamoDB Table (%s): %w", d.Get("arn").(string), err)
