@@ -76,7 +76,7 @@ func resourceJobQueueCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(tags) > 0 {
-		input.Tags = tags.IgnoreAws().BatchTags()
+		input.Tags = Tags(tags.IgnoreAws())
 	}
 
 	name := d.Get("name").(string)
@@ -141,7 +141,7 @@ func resourceJobQueueRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("priority", jq.Priority)
 	d.Set("state", jq.State)
 
-	tags := tftags.BatchKeyValueTags(jq.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(jq.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -188,7 +188,7 @@ func resourceJobQueueUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.BatchUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)
 		}
 	}

@@ -208,7 +208,7 @@ func resourceJobDefinitionCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if len(tags) > 0 {
-		input.Tags = tags.IgnoreAws().BatchTags()
+		input.Tags = Tags(tags.IgnoreAws())
 	}
 
 	if v, ok := d.GetOk("timeout"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -268,7 +268,7 @@ func resourceJobDefinitionRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("retry_strategy", nil)
 	}
 
-	tags := tftags.BatchKeyValueTags(jobDefinition.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(jobDefinition.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -299,7 +299,7 @@ func resourceJobDefinitionUpdate(d *schema.ResourceData, meta interface{}) error
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.BatchUpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %w", err)
 		}
 	}
