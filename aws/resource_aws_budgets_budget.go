@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/shopspring/decimal"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/naming"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfbudgets "github.com/hashicorp/terraform-provider-aws/aws/internal/service/budgets"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/budgets/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
@@ -232,7 +232,7 @@ func resourceAwsBudgetsBudgetCreate(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("failed unmarshalling budget: %v", err)
 	}
 
-	name := naming.Generate(d.Get("name").(string), d.Get("name_prefix").(string))
+	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	budget.BudgetName = aws.String(name)
 
 	accountID := d.Get("account_id").(string)
@@ -312,7 +312,7 @@ func resourceAwsBudgetsBudgetRead(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	d.Set("name", budget.BudgetName)
-	d.Set("name_prefix", naming.NamePrefixFromName(aws.StringValue(budget.BudgetName)))
+	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(budget.BudgetName)))
 
 	if budget.TimePeriod != nil {
 		d.Set("time_period_end", tfbudgets.TimePeriodTimestampToString(budget.TimePeriod.End))

@@ -13,7 +13,7 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/naming"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfbudgets "github.com/hashicorp/terraform-provider-aws/aws/internal/service/budgets"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/budgets/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
@@ -148,7 +148,7 @@ func TestAccAWSBudgetsBudget_Name_Generated(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cost_filters.Service", "Amazon Redshift"),
 					resource.TestCheckResourceAttr(resourceName, "limit_amount", "100.0"),
 					resource.TestCheckResourceAttr(resourceName, "limit_unit", "PERCENTAGE"),
-					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 					resource.TestCheckResourceAttr(resourceName, "notification.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "time_period_end"),
@@ -184,7 +184,7 @@ func TestAccAWSBudgetsBudget_NamePrefix(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cost_filters.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "limit_amount", "100.0"),
 					resource.TestCheckResourceAttr(resourceName, "limit_unit", "PERCENTAGE"),
-					naming.TestCheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
+					create.TestCheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
 					resource.TestCheckResourceAttr(resourceName, "notification.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "time_period_end"),
