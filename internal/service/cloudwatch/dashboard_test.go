@@ -17,7 +17,7 @@ import (
 	tfcloudwatch "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatch"
 )
 
-func TestAccAWSCloudWatchDashboard_basic(t *testing.T) {
+func TestAccCloudWatchDashboard_basic(t *testing.T) {
 	var dashboard cloudwatch.GetDashboardOutput
 	resourceName := "aws_cloudwatch_dashboard.test"
 	rInt := sdkacctest.RandInt()
@@ -44,7 +44,7 @@ func TestAccAWSCloudWatchDashboard_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchDashboard_update(t *testing.T) {
+func TestAccCloudWatchDashboard_update(t *testing.T) {
 	var dashboard cloudwatch.GetDashboardOutput
 	resourceName := "aws_cloudwatch_dashboard.test"
 	rInt := sdkacctest.RandInt()
@@ -80,7 +80,7 @@ func TestAccAWSCloudWatchDashboard_update(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchDashboard_updateName(t *testing.T) {
+func TestAccCloudWatchDashboard_updateName(t *testing.T) {
 	var dashboard cloudwatch.GetDashboardOutput
 	resourceName := "aws_cloudwatch_dashboard.test"
 	rInt := sdkacctest.RandInt()
