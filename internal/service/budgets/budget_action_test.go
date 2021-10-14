@@ -76,7 +76,7 @@ func sweepBudgetActionss(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSBudgetsBudgetAction_basic(t *testing.T) {
+func TestAccBudgetsBudgetAction_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_budgets_budget_action.test"
 	var conf budgets.Action
@@ -116,7 +116,7 @@ func TestAccAWSBudgetsBudgetAction_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSBudgetsBudgetAction_disappears(t *testing.T) {
+func TestAccBudgetsBudgetAction_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_budgets_budget_action.test"
 	var conf budgets.Action

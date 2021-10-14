@@ -80,7 +80,7 @@ func sweepBudgets(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSBudgetsBudget_basic(t *testing.T) {
+func TestAccBudgetsBudget_basic(t *testing.T) {
 	var budget budgets.Budget
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_budgets_budget.test"
@@ -124,7 +124,7 @@ func TestAccAWSBudgetsBudget_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSBudgetsBudget_Name_Generated(t *testing.T) {
+func TestAccBudgetsBudget_Name_generated(t *testing.T) {
 	var budget budgets.Budget
 	resourceName := "aws_budgets_budget.test"
 
@@ -166,7 +166,7 @@ func TestAccAWSBudgetsBudget_Name_Generated(t *testing.T) {
 	})
 }
 
-func TestAccAWSBudgetsBudget_NamePrefix(t *testing.T) {
+func TestAccBudgetsBudget_namePrefix(t *testing.T) {
 	var budget budgets.Budget
 	resourceName := "aws_budgets_budget.test"
 
@@ -202,7 +202,7 @@ func TestAccAWSBudgetsBudget_NamePrefix(t *testing.T) {
 	})
 }
 
-func TestAccAWSBudgetsBudget_disappears(t *testing.T) {
+func TestAccBudgetsBudget_disappears(t *testing.T) {
 	var budget budgets.Budget
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_budgets_budget.test"
@@ -225,7 +225,7 @@ func TestAccAWSBudgetsBudget_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSBudgetsBudget_CostTypes(t *testing.T) {
+func TestAccBudgetsBudget_costTypes(t *testing.T) {
 	var budget budgets.Budget
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_budgets_budget.test"
@@ -325,7 +325,7 @@ func TestAccAWSBudgetsBudget_CostTypes(t *testing.T) {
 	})
 }
 
-func TestAccAWSBudgetsBudget_Notifications(t *testing.T) {
+func TestAccBudgetsBudget_notifications(t *testing.T) {
 	var budget budgets.Budget
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_budgets_budget.test"
