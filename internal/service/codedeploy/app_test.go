@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfcodedeploy "github.com/hashicorp/terraform-provider-aws/internal/service/codedeploy"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -45,7 +46,7 @@ func testSweepCodeDeployApps(region string) error {
 			}
 
 			appName := aws.StringValue(app)
-			r := ResourceApp()
+			r := tfcodedeploy.ResourceApp()
 			d := r.Data(nil)
 			d.SetId(fmt.Sprintf("%s:%s", "xxxx", appName))
 			d.Set("name", appName)
@@ -291,7 +292,7 @@ func TestAccAWSCodeDeployApp_disappears(t *testing.T) {
 				Config: testAccAWSCodeDeployAppConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeDeployAppExists(resourceName, &application1),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceApp(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcodedeploy.ResourceApp(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
