@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfbatch "github.com/hashicorp/terraform-provider-aws/internal/service/batch"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
 func TestAccBatchJobQueue_basic(t *testing.T) {
