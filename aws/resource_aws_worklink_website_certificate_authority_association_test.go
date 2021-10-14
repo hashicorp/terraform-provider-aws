@@ -21,7 +21,7 @@ func TestAccAWSWorkLinkWorkLinkWebsiteCertificateAuthorityAssociation_basic(t *t
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWorkLink(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, worklink.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSWorkLinkWebsiteCertificateAuthorityAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -51,7 +51,7 @@ func TestAccAWSWorkLinkWorkLinkWebsiteCertificateAuthorityAssociation_DisplayNam
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWorkLink(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, worklink.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSWorkLinkWebsiteCertificateAuthorityAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -84,7 +84,7 @@ func TestAccAWSWorkLinkWorkLinkWebsiteCertificateAuthorityAssociation_Disappears
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWorkLink(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, worklink.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSWorkLinkWebsiteCertificateAuthorityAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -100,7 +100,7 @@ func TestAccAWSWorkLinkWorkLinkWebsiteCertificateAuthorityAssociation_Disappears
 }
 
 func testAccCheckAWSWorkLinkWebsiteCertificateAuthorityAssociationDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).worklinkconn
+	conn := acctest.Provider.Meta().(*AWSClient).worklinkconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_worklink_website_certificate_authority_association" {
@@ -136,7 +136,7 @@ func testAccCheckAWSWorkLinkWebsiteCertificateAuthorityAssociationDisappears(res
 			return fmt.Errorf("No resource ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).worklinkconn
+		conn := acctest.Provider.Meta().(*AWSClient).worklinkconn
 		fleetArn, websiteCaID, err := decodeWorkLinkWebsiteCertificateAuthorityAssociationResourceID(rs.Primary.ID)
 		if err != nil {
 			return err
@@ -182,7 +182,7 @@ func testAccCheckAWSWorkLinkWebsiteCertificateAuthorityAssociationExists(n strin
 			return fmt.Errorf("WorkLink Fleet ARN is missing, should be set.")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).worklinkconn
+		conn := acctest.Provider.Meta().(*AWSClient).worklinkconn
 		fleetArn, websiteCaID, err := decodeWorkLinkWebsiteCertificateAuthorityAssociationResourceID(rs.Primary.ID)
 		if err != nil {
 			return err

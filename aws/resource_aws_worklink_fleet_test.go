@@ -21,7 +21,7 @@ func TestAccAWSWorkLinkFleet_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWorkLink(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, worklink.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSWorkLinkFleetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -49,7 +49,7 @@ func TestAccAWSWorkLinkFleet_DisplayName(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWorkLink(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, worklink.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSWorkLinkFleetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -82,7 +82,7 @@ func TestAccAWSWorkLinkFleet_OptimizeForEndUserLocation(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWorkLink(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, worklink.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSWorkLinkFleetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -115,7 +115,7 @@ func TestAccAWSWorkLinkFleet_AuditStreamArn(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWorkLink(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, worklink.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSWorkLinkFleetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -141,7 +141,7 @@ func TestAccAWSWorkLinkFleet_Network(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWorkLink(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, worklink.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSWorkLinkFleetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -185,7 +185,7 @@ func TestAccAWSWorkLinkFleet_DeviceCaCertificate(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWorkLink(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, worklink.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSWorkLinkFleetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -219,7 +219,7 @@ func TestAccAWSWorkLinkFleet_IdentityProvider(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWorkLink(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, worklink.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSWorkLinkFleetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -250,7 +250,7 @@ func TestAccAWSWorkLinkFleet_Disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWorkLink(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, worklink.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSWorkLinkFleetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -276,7 +276,7 @@ func testAccCheckAWSWorkLinkFleetDisappears(resourceName string) resource.TestCh
 			return fmt.Errorf("No resource ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).worklinkconn
+		conn := acctest.Provider.Meta().(*AWSClient).worklinkconn
 
 		input := &worklink.DeleteFleetInput{
 			FleetArn: aws.String(rs.Primary.ID),
@@ -302,7 +302,7 @@ func testAccCheckAWSWorkLinkFleetDisappears(resourceName string) resource.TestCh
 }
 
 func testAccCheckAWSWorkLinkFleetDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).worklinkconn
+	conn := acctest.Provider.Meta().(*AWSClient).worklinkconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_worklink_fleet" {
@@ -339,7 +339,7 @@ func testAccCheckAWSWorkLinkFleetExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No Worklink Fleet ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).worklinkconn
+		conn := acctest.Provider.Meta().(*AWSClient).worklinkconn
 		_, err := conn.DescribeFleetMetadata(&worklink.DescribeFleetMetadataInput{
 			FleetArn: aws.String(rs.Primary.ID),
 		})
@@ -349,7 +349,7 @@ func testAccCheckAWSWorkLinkFleetExists(n string) resource.TestCheckFunc {
 }
 
 func testAccPreCheckAWSWorkLink(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).worklinkconn
+	conn := acctest.Provider.Meta().(*AWSClient).worklinkconn
 
 	input := &worklink.ListFleetsInput{
 		MaxResults: aws.Int64(1),
