@@ -123,7 +123,7 @@ func resourceMacie2MemberCreate(ctx context.Context, d *schema.ResourceData, met
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.CreateMemberWithContext(ctx, input)
 	}
 
@@ -167,7 +167,7 @@ func resourceMacie2MemberCreate(ctx context.Context, d *schema.ResourceData, met
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		output, err = conn.CreateInvitationsWithContext(ctx, inputInvite)
 	}
 
@@ -284,7 +284,7 @@ func resourceMacie2MemberUpdate(ctx context.Context, d *schema.ResourceData, met
 				return nil
 			})
 
-			if isResourceTimeoutError(err) {
+			if tfresource.TimedOut(err) {
 				output, err = conn.CreateInvitationsWithContext(ctx, inputInvite)
 			}
 

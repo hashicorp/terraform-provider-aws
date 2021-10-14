@@ -55,7 +55,7 @@ func resourceMacie2OrganizationAdminAccountCreate(ctx context.Context, d *schema
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.EnableOrganizationAdminAccountWithContext(ctx, input)
 	}
 

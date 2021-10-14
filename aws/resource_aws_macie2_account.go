@@ -81,7 +81,7 @@ func resourceMacie2AccountCreate(ctx context.Context, d *schema.ResourceData, me
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.EnableMacieWithContext(ctx, input)
 	}
 
@@ -165,7 +165,7 @@ func resourceMacie2AccountDelete(ctx context.Context, d *schema.ResourceData, me
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.DisableMacieWithContext(ctx, input)
 	}
 

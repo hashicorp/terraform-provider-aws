@@ -142,7 +142,7 @@ func resourceMacie2CustomDataIdentifierCreate(ctx context.Context, d *schema.Res
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		output, err = conn.CreateCustomDataIdentifierWithContext(ctx, input)
 	}
 
