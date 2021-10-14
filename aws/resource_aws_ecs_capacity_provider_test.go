@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -52,7 +53,7 @@ func testSweepEcsCapacityProviders(region string) error {
 				continue
 			}
 
-			r := resourceAwsEcsCapacityProvider()
+			r := ResourceCapacityProvider()
 			d := r.Data(nil)
 			d.SetId(arn)
 
@@ -131,7 +132,7 @@ func TestAccAWSEcsCapacityProvider_disappears(t *testing.T) {
 				Config: testAccAWSEcsCapacityProviderConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsCapacityProviderExists(resourceName, &provider),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsEcsCapacityProvider(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceCapacityProvider(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

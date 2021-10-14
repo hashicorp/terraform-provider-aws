@@ -24,12 +24,12 @@ const (
 	ecsClusterTimeoutUpdate = 10 * time.Minute
 )
 
-func resourceAwsEcsCluster() *schema.Resource {
+func ResourceCluster() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEcsClusterCreate,
-		Read:   resourceAwsEcsClusterRead,
-		Update: resourceAwsEcsClusterUpdate,
-		Delete: resourceAwsEcsClusterDelete,
+		Create: resourceClusterCreate,
+		Read:   resourceClusterRead,
+		Update: resourceClusterUpdate,
+		Delete: resourceClusterDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsEcsClusterImport,
 		},
@@ -170,7 +170,7 @@ func resourceAwsEcsClusterImport(d *schema.ResourceData, meta interface{}) ([]*s
 	return []*schema.ResourceData{d}, nil
 }
 
-func resourceAwsEcsClusterCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ECSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -230,10 +230,10 @@ func resourceAwsEcsClusterCreate(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error waiting for ECS Cluster (%s) to become Available: %w", d.Id(), err)
 	}
 
-	return resourceAwsEcsClusterRead(d, meta)
+	return resourceClusterRead(d, meta)
 }
 
-func resourceAwsEcsClusterRead(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ECSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -325,7 +325,7 @@ func resourceAwsEcsClusterRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsEcsClusterUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ECSConn
 
 	if d.HasChanges("setting", "configuration") {
@@ -397,7 +397,7 @@ func resourceAwsEcsClusterUpdate(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func resourceAwsEcsClusterDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ECSConn
 
 	log.Printf("[DEBUG] Deleting ECS cluster %s", d.Id())

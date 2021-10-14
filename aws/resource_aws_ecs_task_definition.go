@@ -19,13 +19,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsEcsTaskDefinition() *schema.Resource {
+func ResourceTaskDefinition() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
-		Create: resourceAwsEcsTaskDefinitionCreate,
-		Read:   resourceAwsEcsTaskDefinitionRead,
-		Update: resourceAwsEcsTaskDefinitionUpdate,
-		Delete: resourceAwsEcsTaskDefinitionDelete,
+		Create: resourceTaskDefinitionCreate,
+		Read:   resourceTaskDefinitionRead,
+		Update: resourceTaskDefinitionUpdate,
+		Delete: resourceTaskDefinitionDelete,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				d.Set("arn", d.Id())
@@ -412,7 +412,7 @@ func validateAwsEcsTaskDefinitionContainerDefinitions(v interface{}, k string) (
 	return
 }
 
-func resourceAwsEcsTaskDefinitionCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceTaskDefinitionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ECSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -506,10 +506,10 @@ func resourceAwsEcsTaskDefinitionCreate(d *schema.ResourceData, meta interface{}
 	d.SetId(aws.StringValue(taskDefinition.Family))
 	d.Set("arn", taskDefinition.TaskDefinitionArn)
 
-	return resourceAwsEcsTaskDefinitionRead(d, meta)
+	return resourceTaskDefinitionRead(d, meta)
 }
 
-func resourceAwsEcsTaskDefinitionRead(d *schema.ResourceData, meta interface{}) error {
+func resourceTaskDefinitionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ECSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -633,7 +633,7 @@ func flattenProxyConfiguration(pc *ecs.ProxyConfiguration) []map[string]interfac
 	}
 }
 
-func resourceAwsEcsTaskDefinitionUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceTaskDefinitionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ECSConn
 
 	if d.HasChange("tags_all") {
@@ -647,7 +647,7 @@ func resourceAwsEcsTaskDefinitionUpdate(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceAwsEcsTaskDefinitionDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceTaskDefinitionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ECSConn
 
 	_, err := conn.DeregisterTaskDefinition(&ecs.DeregisterTaskDefinitionInput{
