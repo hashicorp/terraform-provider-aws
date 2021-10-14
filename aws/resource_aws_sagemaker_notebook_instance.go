@@ -219,7 +219,7 @@ func resourceAwsSagemakerNotebookInstanceRead(d *schema.ResourceData, meta inter
 	}
 	notebookInstance, err := conn.DescribeNotebookInstance(describeNotebookInput)
 	if err != nil {
-		if isAWSErr(err, "ValidationException", "RecordNotFound") {
+		if tfawserr.ErrMessageContains(err, "ValidationException", "RecordNotFound") {
 			d.SetId("")
 			log.Printf("[WARN] Unable to find sageMaker notebook instance (%s); removing from state", d.Id())
 			return nil
@@ -419,7 +419,7 @@ func resourceAwsSagemakerNotebookInstanceUpdate(d *schema.ResourceData, meta int
 
 				return nil
 			})
-			if isResourceTimeoutError(err) {
+			if tfresource.TimedOut(err) {
 				_, err = conn.StartNotebookInstance(startOpts)
 				if err != nil {
 					return fmt.Errorf("error starting sagemaker notebook instance (%s): %s", d.Id(), err)
@@ -448,7 +448,7 @@ func resourceAwsSagemakerNotebookInstanceDelete(d *schema.ResourceData, meta int
 	}
 	notebook, err := conn.DescribeNotebookInstance(describeNotebookInput)
 	if err != nil {
-		if isAWSErr(err, "ValidationException", "RecordNotFound") {
+		if tfawserr.ErrMessageContains(err, "ValidationException", "RecordNotFound") {
 			return nil
 		}
 		return fmt.Errorf("unable to find sagemaker notebook instance to delete (%s): %s", d.Id(), err)
@@ -470,7 +470,7 @@ func resourceAwsSagemakerNotebookInstanceDelete(d *schema.ResourceData, meta int
 	}
 
 	if _, err := waiter.NotebookInstanceDeleted(conn, d.Id()); err != nil {
-		if isAWSErr(err, "ValidationException", "RecordNotFound") {
+		if tfawserr.ErrMessageContains(err, "ValidationException", "RecordNotFound") {
 			return nil
 		}
 		return fmt.Errorf("error waiting for sagemaker notebook instance (%s) to delete: %w", d.Id(), err)
@@ -485,7 +485,7 @@ func stopSagemakerNotebookInstance(conn *sagemaker.SageMaker, id string) error {
 	}
 	notebook, err := conn.DescribeNotebookInstance(describeNotebookInput)
 	if err != nil {
-		if isAWSErr(err, "ValidationException", "RecordNotFound") {
+		if tfawserr.ErrMessageContains(err, "ValidationException", "RecordNotFound") {
 			return nil
 		}
 		return fmt.Errorf("unable to find sagemaker notebook instance (%s): %s", id, err)
@@ -516,7 +516,7 @@ func sagemakerNotebookInstanceStateRefreshFunc(conn *sagemaker.SageMaker, name s
 		}
 		notebook, err := conn.DescribeNotebookInstance(describeNotebookInput)
 		if err != nil {
-			if isAWSErr(err, "ValidationException", "RecordNotFound") {
+			if tfawserr.ErrMessageContains(err, "ValidationException", "RecordNotFound") {
 				return 1, "", nil
 			}
 			return nil, "", err

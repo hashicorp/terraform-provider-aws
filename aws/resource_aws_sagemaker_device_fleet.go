@@ -209,7 +209,7 @@ func resourceAwsSagemakerDeviceFleetDelete(d *schema.ResourceData, meta interfac
 	}
 
 	if _, err := conn.DeleteDeviceFleet(input); err != nil {
-		if isAWSErr(err, "ValidationException", "DeviceFleet with name") {
+		if tfawserr.ErrMessageContains(err, "ValidationException", "DeviceFleet with name") {
 			return nil
 		}
 		return fmt.Errorf("error deleting SageMaker Device Fleet (%s): %w", d.Id(), err)

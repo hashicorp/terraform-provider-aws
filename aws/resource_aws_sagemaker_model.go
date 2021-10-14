@@ -284,7 +284,7 @@ func resourceAwsSagemakerModelRead(d *schema.ResourceData, meta interface{}) err
 
 	model, err := conn.DescribeModel(request)
 	if err != nil {
-		if isAWSErr(err, "ValidationException", "") {
+		if tfawserr.ErrMessageContains(err, "ValidationException", "") {
 			log.Printf("[INFO] unable to find the sagemaker model resource and therefore it is removed from the state: %s", d.Id())
 			d.SetId("")
 			return nil
@@ -374,12 +374,12 @@ func resourceAwsSagemakerModelDelete(d *schema.ResourceData, meta interface{}) e
 			return nil
 		}
 
-		if isAWSErr(err, "ResourceNotFound", "") {
+		if tfawserr.ErrMessageContains(err, "ResourceNotFound", "") {
 			return resource.RetryableError(err)
 		}
 		return resource.NonRetryableError(err)
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.DeleteModel(deleteOpts)
 	}
 	if err != nil {

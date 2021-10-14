@@ -92,7 +92,7 @@ func resourceAwsSagemakerModelPackageGroupRead(d *schema.ResourceData, meta inte
 
 	mpg, err := finder.ModelPackageGroupByName(conn, d.Id())
 	if err != nil {
-		if isAWSErr(err, "ValidationException", "does not exist") {
+		if tfawserr.ErrMessageContains(err, "ValidationException", "does not exist") {
 			d.SetId("")
 			log.Printf("[WARN] Unable to find Sagemaker Model Package Group (%s); removing from state", d.Id())
 			return nil
@@ -148,14 +148,14 @@ func resourceAwsSagemakerModelPackageGroupDelete(d *schema.ResourceData, meta in
 	}
 
 	if _, err := conn.DeleteModelPackageGroup(input); err != nil {
-		if isAWSErr(err, "ValidationException", "does not exist") {
+		if tfawserr.ErrMessageContains(err, "ValidationException", "does not exist") {
 			return nil
 		}
 		return fmt.Errorf("error deleting SageMaker Model Package Group (%s): %w", d.Id(), err)
 	}
 
 	if _, err := waiter.ModelPackageGroupDeleted(conn, d.Id()); err != nil {
-		if isAWSErr(err, "ValidationException", "does not exist") {
+		if tfawserr.ErrMessageContains(err, "ValidationException", "does not exist") {
 			return nil
 		}
 		return fmt.Errorf("error waiting for SageMaker Model Package Group (%s) to delete: %w", d.Id(), err)

@@ -169,7 +169,7 @@ func testAccCheckSagemakerEndpointDestroy(s *terraform.State) error {
 
 		_, err := conn.DescribeEndpoint(describeInput)
 
-		if isAWSErr(err, "ValidationException", "") {
+		if tfawserr.ErrMessageContains(err, "ValidationException", "") {
 			continue
 		}
 

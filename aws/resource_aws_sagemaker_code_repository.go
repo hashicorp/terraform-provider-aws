@@ -92,7 +92,7 @@ func resourceAwsSagemakerCodeRepositoryRead(d *schema.ResourceData, meta interfa
 
 	codeRepository, err := finder.CodeRepositoryByName(conn, d.Id())
 	if err != nil {
-		if isAWSErr(err, "ValidationException", "Cannot find CodeRepository") {
+		if tfawserr.ErrMessageContains(err, "ValidationException", "Cannot find CodeRepository") {
 			d.SetId("")
 			log.Printf("[WARN] Unable to find SageMaker code repository (%s); removing from state", d.Id())
 			return nil
@@ -136,7 +136,7 @@ func resourceAwsSagemakerCodeRepositoryDelete(d *schema.ResourceData, meta inter
 	}
 
 	if _, err := conn.DeleteCodeRepository(input); err != nil {
-		if isAWSErr(err, "ValidationException", "Cannot find CodeRepository") {
+		if tfawserr.ErrMessageContains(err, "ValidationException", "Cannot find CodeRepository") {
 			return nil
 		}
 		return fmt.Errorf("error deleting SageMaker code repository (%s): %w", d.Id(), err)

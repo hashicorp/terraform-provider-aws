@@ -232,10 +232,10 @@ func resourceAwsSagemakerFeatureGroupCreate(d *schema.ResourceData, meta interfa
 	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		_, err := conn.CreateFeatureGroup(input)
 		if err != nil {
-			if isAWSErr(err, "ValidationException", "The execution role ARN is invalid.") {
+			if tfawserr.ErrMessageContains(err, "ValidationException", "The execution role ARN is invalid.") {
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, "ValidationException", "Invalid S3Uri provided") {
+			if tfawserr.ErrMessageContains(err, "ValidationException", "Invalid S3Uri provided") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -243,7 +243,7 @@ func resourceAwsSagemakerFeatureGroupCreate(d *schema.ResourceData, meta interfa
 
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.CreateFeatureGroup(input)
 	}
 

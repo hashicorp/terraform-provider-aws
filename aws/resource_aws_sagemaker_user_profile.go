@@ -295,7 +295,7 @@ func resourceAwsSagemakerUserProfileRead(d *schema.ResourceData, meta interface{
 
 	UserProfile, err := finder.UserProfileByName(conn, domainID, userProfileName)
 	if err != nil {
-		if isAWSErr(err, sagemaker.ErrCodeResourceNotFound, "") {
+		if tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "") {
 			d.SetId("")
 			log.Printf("[WARN] Unable to find SageMaker User Profile (%s), removing from state", d.Id())
 			return nil
@@ -382,13 +382,13 @@ func resourceAwsSagemakerUserProfileDelete(d *schema.ResourceData, meta interfac
 	}
 
 	if _, err := conn.DeleteUserProfile(input); err != nil {
-		if !isAWSErr(err, sagemaker.ErrCodeResourceNotFound, "") {
+		if !tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "") {
 			return fmt.Errorf("error deleting SageMaker User Profile (%s): %w", d.Id(), err)
 		}
 	}
 
 	if _, err := waiter.UserProfileDeleted(conn, domainID, userProfileName); err != nil {
-		if !isAWSErr(err, sagemaker.ErrCodeResourceNotFound, "") {
+		if !tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "") {
 			return fmt.Errorf("error waiting for SageMaker User Profile (%s) to delete: %w", d.Id(), err)
 		}
 	}

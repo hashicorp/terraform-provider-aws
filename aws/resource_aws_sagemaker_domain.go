@@ -326,7 +326,7 @@ func resourceAwsSagemakerDomainRead(d *schema.ResourceData, meta interface{}) er
 
 	domain, err := finder.DomainByName(conn, d.Id())
 	if err != nil {
-		if isAWSErr(err, sagemaker.ErrCodeResourceNotFound, "") {
+		if tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "") {
 			d.SetId("")
 			log.Printf("[WARN] Unable to find SageMaker domain (%s), removing from state", d.Id())
 			return nil
@@ -416,13 +416,13 @@ func resourceAwsSagemakerDomainDelete(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if _, err := conn.DeleteDomain(input); err != nil {
-		if !isAWSErr(err, sagemaker.ErrCodeResourceNotFound, "") {
+		if !tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "") {
 			return fmt.Errorf("error deleting SageMaker domain (%s): %w", d.Id(), err)
 		}
 	}
 
 	if _, err := waiter.DomainDeleted(conn, d.Id()); err != nil {
-		if !isAWSErr(err, sagemaker.ErrCodeResourceNotFound, "") {
+		if !tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "") {
 			return fmt.Errorf("error waiting for SageMaker domain (%s) to delete: %w", d.Id(), err)
 		}
 	}
