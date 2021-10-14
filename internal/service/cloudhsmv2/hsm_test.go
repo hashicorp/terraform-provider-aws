@@ -43,7 +43,7 @@ func testSweepCloudhsmv2Hsms(region string) error {
 			}
 
 			for _, hsm := range cluster.Hsms {
-				r := ResourceHSM()
+				r := tfcloudhsmv2.ResourceHSM()
 				d := r.Data(nil)
 				d.SetId(aws.StringValue(hsm.HsmId))
 				d.Set("cluster_id", cluster.ClusterId)
@@ -116,9 +116,9 @@ func testAccAWSCloudHsmV2Hsm_disappears(t *testing.T) {
 				Config: testAccAWSCloudHsmV2HsmConfigSubnetId(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCloudHsmV2ClusterExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceHSM(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcloudhsmv2.ResourceHSM(), resourceName),
 					// Verify Delete error handling
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceHSM(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcloudhsmv2.ResourceHSM(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -140,8 +140,8 @@ func testAccAWSCloudHsmV2Hsm_disappears_Cluster(t *testing.T) {
 				Config: testAccAWSCloudHsmV2HsmConfigSubnetId(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCloudHsmV2ClusterExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceHSM(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceCluster(), clusterResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcloudhsmv2.ResourceHSM(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcloudhsmv2.ResourceCluster(), clusterResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
