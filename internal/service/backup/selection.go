@@ -25,7 +25,7 @@ func ResourceSelection() *schema.Resource {
 		Read:   resourceSelectionRead,
 		Delete: resourceSelectionDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsBackupSelectionImportState,
+			State: resourceSelectionImportState,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -241,7 +241,7 @@ func resourceSelectionDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsBackupSelectionImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceSelectionImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	idParts := strings.Split(d.Id(), "|")
 	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 		return nil, fmt.Errorf("unexpected format of ID (%q), expected <plan-id>|<selection-id>", d.Id())

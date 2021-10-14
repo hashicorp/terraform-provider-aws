@@ -16,8 +16,8 @@ import (
 
 func ResourceVaultPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsBackupVaultPolicyPut,
-		Update: resourceAwsBackupVaultPolicyPut,
+		Create: resourceVaultPolicyPut,
+		Update: resourceVaultPolicyPut,
 		Read:   resourceVaultPolicyRead,
 		Delete: resourceVaultPolicyDelete,
 		Importer: &schema.ResourceImporter{
@@ -44,7 +44,7 @@ func ResourceVaultPolicy() *schema.Resource {
 	}
 }
 
-func resourceAwsBackupVaultPolicyPut(d *schema.ResourceData, meta interface{}) error {
+func resourceVaultPolicyPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BackupConn
 
 	name := d.Get("backup_vault_name").(string)
