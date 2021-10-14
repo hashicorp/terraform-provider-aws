@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSElasticTranscoderPipeline_basic(t *testing.T) {
@@ -234,7 +235,7 @@ func testAccCheckAWSElasticTranscoderPipelineExists(n string, res *elastictransc
 			return fmt.Errorf("No Pipeline ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).elastictranscoderconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticTranscoderConn
 
 		out, err := conn.ReadPipeline(&elastictranscoder.ReadPipelineInput{
 			Id: aws.String(rs.Primary.ID),
@@ -251,7 +252,7 @@ func testAccCheckAWSElasticTranscoderPipelineExists(n string, res *elastictransc
 }
 
 func testAccCheckElasticTranscoderPipelineDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).elastictranscoderconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticTranscoderConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_elastictranscoder_pipline" {
@@ -276,7 +277,7 @@ func testAccCheckElasticTranscoderPipelineDestroy(s *terraform.State) error {
 }
 
 func testAccPreCheckAWSElasticTranscoder(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).elastictranscoderconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticTranscoderConn
 
 	input := &elastictranscoder.ListPipelinesInput{}
 

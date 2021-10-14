@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsElasticTranscoderPipeline() *schema.Resource {
@@ -224,7 +225,7 @@ func resourceAwsElasticTranscoderPipeline() *schema.Resource {
 }
 
 func resourceAwsElasticTranscoderPipelineCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elastictranscoderconn
+	conn := meta.(*conns.AWSClient).ElasticTranscoderConn
 
 	req := &elastictranscoder.CreatePipelineInput{
 		AwsKmsKeyArn:    aws.String(d.Get("aws_kms_key_arn").(string)),
@@ -400,7 +401,7 @@ func flattenETPermList(perms []*elastictranscoder.Permission) []map[string]inter
 }
 
 func resourceAwsElasticTranscoderPipelineUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elastictranscoderconn
+	conn := meta.(*conns.AWSClient).ElasticTranscoderConn
 
 	req := &elastictranscoder.UpdatePipelineInput{
 		Id: aws.String(d.Id()),
@@ -449,7 +450,7 @@ func resourceAwsElasticTranscoderPipelineUpdate(d *schema.ResourceData, meta int
 }
 
 func resourceAwsElasticTranscoderPipelineRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elastictranscoderconn
+	conn := meta.(*conns.AWSClient).ElasticTranscoderConn
 
 	resp, err := conn.ReadPipeline(&elastictranscoder.ReadPipelineInput{
 		Id: aws.String(d.Id()),
@@ -522,7 +523,7 @@ func resourceAwsElasticTranscoderPipelineRead(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsElasticTranscoderPipelineDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elastictranscoderconn
+	conn := meta.(*conns.AWSClient).ElasticTranscoderConn
 
 	log.Printf("[DEBUG] Elastic Transcoder Delete Pipeline: %s", d.Id())
 	_, err := conn.DeletePipeline(&elastictranscoder.DeletePipelineInput{
