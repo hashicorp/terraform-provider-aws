@@ -75,10 +75,10 @@ func TestAccAWSSchemasSchema_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(schemas.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, schemas.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSchemasSchemaDestroy,
+		CheckDestroy: testAccCheckSchemaDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSchemasSchemaConfig(rName),
+				Config: testAccSchemaConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemasSchemaExists(resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "schemas", fmt.Sprintf("schema/%s/%s", rName, rName)),
@@ -111,10 +111,10 @@ func TestAccAWSSchemasSchema_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(schemas.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, schemas.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSchemasSchemaDestroy,
+		CheckDestroy: testAccCheckSchemaDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSchemasSchemaConfig(rName),
+				Config: testAccSchemaConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemasSchemaExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfschemas.ResourceSchema(), resourceName),
@@ -134,10 +134,10 @@ func TestAccAWSSchemasSchema_ContentDescription(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(schemas.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, schemas.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSchemasSchemaDestroy,
+		CheckDestroy: testAccCheckSchemaDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSchemasSchemaConfigContentDescription(rName, testAccSchemaContent, "description1"),
+				Config: testAccSchemaContentDescriptionConfig(rName, testAccSchemaContent, "description1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemasSchemaExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "content", testAccSchemaContent),
@@ -151,7 +151,7 @@ func TestAccAWSSchemasSchema_ContentDescription(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSSchemasSchemaConfigContentDescription(rName, testAccSchemaContentUpdated, "description2"),
+				Config: testAccSchemaContentDescriptionConfig(rName, testAccSchemaContentUpdated, "description2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemasSchemaExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "content", testAccSchemaContentUpdated),
@@ -160,7 +160,7 @@ func TestAccAWSSchemasSchema_ContentDescription(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSSchemasSchemaConfig(rName),
+				Config: testAccSchemaConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemasSchemaExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
@@ -180,10 +180,10 @@ func TestAccAWSSchemasSchema_Tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(schemas.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, schemas.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSchemasSchemaDestroy,
+		CheckDestroy: testAccCheckSchemaDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSchemasSchemaConfigTags1(rName, "key1", "value1"),
+				Config: testAccSchemaTags1Config(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemasSchemaExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -196,7 +196,7 @@ func TestAccAWSSchemasSchema_Tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSSchemasSchemaConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccSchemaTags2Config(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemasSchemaExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -205,7 +205,7 @@ func TestAccAWSSchemasSchema_Tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSSchemasSchemaConfigTags1(rName, "key2", "value2"),
+				Config: testAccSchemaTags1Config(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemasSchemaExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -216,7 +216,7 @@ func TestAccAWSSchemasSchema_Tags(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSSchemasSchemaDestroy(s *terraform.State) error {
+func testAccCheckSchemaDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).SchemasConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -277,7 +277,7 @@ func testAccCheckSchemasSchemaExists(n string, v *schemas.DescribeSchemaOutput) 
 	}
 }
 
-func testAccAWSSchemasSchemaConfig(rName string) string {
+func testAccSchemaConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_schemas_registry" "test" {
   name = %[1]q
@@ -292,7 +292,7 @@ resource "aws_schemas_schema" "test" {
 `, rName, testAccSchemaContent)
 }
 
-func testAccAWSSchemasSchemaConfigContentDescription(rName, content, description string) string {
+func testAccSchemaContentDescriptionConfig(rName, content, description string) string {
 	return fmt.Sprintf(`
 resource "aws_schemas_registry" "test" {
   name = %[1]q
@@ -308,7 +308,7 @@ resource "aws_schemas_schema" "test" {
 `, rName, content, description)
 }
 
-func testAccAWSSchemasSchemaConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccSchemaTags1Config(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_schemas_registry" "test" {
   name = %[1]q
@@ -327,7 +327,7 @@ resource "aws_schemas_schema" "test" {
 `, rName, testAccSchemaContent, tagKey1, tagValue1)
 }
 
-func testAccAWSSchemasSchemaConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccSchemaTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`	
 resource "aws_schemas_registry" "test" {
   name = %[1]q
