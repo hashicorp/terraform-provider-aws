@@ -22,11 +22,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_cloudfront_realtime_log_config", &resource.Sweeper{
 		Name: "aws_cloudfront_realtime_log_config",
-		F:    testSweepCloudFrontRealtimeLogConfigs,
+		F:    sweepRealtimeLogsConfig,
 	})
 }
 
-func testSweepCloudFrontRealtimeLogConfigs(region string) error {
+func sweepRealtimeLogsConfig(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -88,7 +88,7 @@ func TestAccAWSCloudFrontRealtimeLogConfig_basic(t *testing.T) {
 		CheckDestroy: testAccCheckCloudFrontRealtimeLogConfigDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudFrontRealtimeLogConfigConfig(rName, samplingRate),
+				Config: testAccRealtimeLogConfig(rName, samplingRate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontRealtimeLogConfigExists(resourceName, &v),
 					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "cloudfront", fmt.Sprintf("realtime-log-config/%s", rName)),
@@ -126,7 +126,7 @@ func TestAccAWSCloudFrontRealtimeLogConfig_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckCloudFrontRealtimeLogConfigDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudFrontRealtimeLogConfigConfig(rName, samplingRate),
+				Config: testAccRealtimeLogConfig(rName, samplingRate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontRealtimeLogConfigExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcloudfront.ResourceRealtimeLogConfig(), resourceName),
@@ -155,7 +155,7 @@ func TestAccAWSCloudFrontRealtimeLogConfig_updates(t *testing.T) {
 		CheckDestroy: testAccCheckCloudFrontRealtimeLogConfigDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudFrontRealtimeLogConfigConfig(rName, samplingRate1),
+				Config: testAccRealtimeLogConfig(rName, samplingRate1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontRealtimeLogConfigExists(resourceName, &v),
 					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "cloudfront", fmt.Sprintf("realtime-log-config/%s", rName)),
@@ -172,7 +172,7 @@ func TestAccAWSCloudFrontRealtimeLogConfig_updates(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSCloudFrontRealtimeLogConfigConfigUpdated(rName, samplingRate2),
+				Config: testAccRealtimeLogUpdatedConfig(rName, samplingRate2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontRealtimeLogConfigExists(resourceName, &v),
 					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "cloudfront", fmt.Sprintf("realtime-log-config/%s", rName)),
@@ -244,7 +244,7 @@ func testAccCheckCloudFrontRealtimeLogConfigExists(n string, v *cloudfront.Realt
 	}
 }
 
-func testAccAWSCloudFrontRealtimeLogConfigConfigBase(rName string, count int) string {
+func testAccRealtimeLogBaseConfig(rName string, count int) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_stream" "test" {
   count = %[2]d
@@ -297,9 +297,9 @@ EOF
 `, rName, count)
 }
 
-func testAccAWSCloudFrontRealtimeLogConfigConfig(rName string, samplingRate int) string {
+func testAccRealtimeLogConfig(rName string, samplingRate int) string {
 	return acctest.ConfigCompose(
-		testAccAWSCloudFrontRealtimeLogConfigConfigBase(rName, 1),
+		testAccRealtimeLogBaseConfig(rName, 1),
 		fmt.Sprintf(`
 resource "aws_cloudfront_realtime_log_config" "test" {
   name          = %[1]q
@@ -320,9 +320,9 @@ resource "aws_cloudfront_realtime_log_config" "test" {
 `, rName, samplingRate))
 }
 
-func testAccAWSCloudFrontRealtimeLogConfigConfigUpdated(rName string, samplingRate int) string {
+func testAccRealtimeLogUpdatedConfig(rName string, samplingRate int) string {
 	return acctest.ConfigCompose(
-		testAccAWSCloudFrontRealtimeLogConfigConfigBase(rName, 2),
+		testAccRealtimeLogBaseConfig(rName, 2),
 		fmt.Sprintf(`
 resource "aws_cloudfront_realtime_log_config" "test" {
   name          = %[1]q

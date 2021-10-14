@@ -21,7 +21,7 @@ func TestAccDataSourceAWSCloudfrontFunction_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAWSCloudfrontFunctionConfigBasic(rName),
+				Config: testAccFunctionBasicDataSourceConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "code", resourceName, "code"),
@@ -37,7 +37,7 @@ func TestAccDataSourceAWSCloudfrontFunction_basic(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAWSCloudfrontFunctionConfigBasic(rName string) string {
+func testAccFunctionBasicDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_function" "test" {
   name    = %[1]q

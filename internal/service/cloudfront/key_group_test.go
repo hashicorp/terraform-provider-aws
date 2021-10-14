@@ -21,11 +21,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_cloudfront_key_group", &resource.Sweeper{
 		Name: "aws_cloudfront_key_group",
-		F:    testSweepCloudFrontKeyGroup,
+		F:    sweepKeyGroup,
 	})
 }
 
-func testSweepCloudFrontKeyGroup(region string) error {
+func sweepKeyGroup(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
@@ -85,7 +85,7 @@ func TestAccAWSCloudFrontKeyGroup_basic(t *testing.T) {
 		CheckDestroy: testAccCheckCloudFrontKeyGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudFrontKeyGroupConfig(rName),
+				Config: testAccKeyGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontKeyGroupExistence(resourceName),
 					resource.TestCheckResourceAttr("aws_cloudfront_key_group.test", "comment", "test key group"),
@@ -115,7 +115,7 @@ func TestAccAWSCloudFrontKeyGroup_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckCloudFrontKeyGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudFrontKeyGroupConfig(rName),
+				Config: testAccKeyGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontKeyGroupExistence(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcloudfront.ResourceKeyGroup(), resourceName),
@@ -140,7 +140,7 @@ func TestAccAWSCloudFrontKeyGroup_Comment(t *testing.T) {
 		CheckDestroy: testAccCheckCloudFrontKeyGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudFrontKeyGroupConfigComment(rName, firstComment),
+				Config: testAccKeyGroupCommentConfig(rName, firstComment),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontKeyGroupExistence(resourceName),
 					resource.TestCheckResourceAttr("aws_cloudfront_key_group.test", "comment", firstComment),
@@ -152,7 +152,7 @@ func TestAccAWSCloudFrontKeyGroup_Comment(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSCloudFrontKeyGroupConfigComment(rName, secondComment),
+				Config: testAccKeyGroupCommentConfig(rName, secondComment),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontKeyGroupExistence(resourceName),
 					resource.TestCheckResourceAttr("aws_cloudfront_key_group.test", "comment", secondComment),
@@ -173,7 +173,7 @@ func TestAccAWSCloudFrontKeyGroup_Items(t *testing.T) {
 		CheckDestroy: testAccCheckCloudFrontKeyGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudFrontKeyGroupConfig(rName),
+				Config: testAccKeyGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontKeyGroupExistence(resourceName),
 					resource.TestCheckResourceAttr("aws_cloudfront_key_group.test", "items.#", "1"),
@@ -185,7 +185,7 @@ func TestAccAWSCloudFrontKeyGroup_Items(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSCloudFrontKeyGroupConfigItems(rName),
+				Config: testAccKeyGroupItemsConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontKeyGroupExistence(resourceName),
 					resource.TestCheckResourceAttr("aws_cloudfront_key_group.test", "items.#", "2"),
@@ -244,7 +244,7 @@ func testAccCheckCloudFrontKeyGroupDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSCloudFrontKeyGroupConfigBase(rName string) string {
+func testAccKeyGroupBaseConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_public_key" "test" {
   comment     = "test key"
@@ -254,8 +254,8 @@ resource "aws_cloudfront_public_key" "test" {
 `, rName)
 }
 
-func testAccAWSCloudFrontKeyGroupConfig(rName string) string {
-	return testAccAWSCloudFrontKeyGroupConfigBase(rName) + fmt.Sprintf(`
+func testAccKeyGroupConfig(rName string) string {
+	return testAccKeyGroupBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_cloudfront_key_group" "test" {
   comment = "test key group"
   items   = [aws_cloudfront_public_key.test.id]
@@ -264,8 +264,8 @@ resource "aws_cloudfront_key_group" "test" {
 `, rName)
 }
 
-func testAccAWSCloudFrontKeyGroupConfigComment(rName string, comment string) string {
-	return testAccAWSCloudFrontKeyGroupConfigBase(rName) + fmt.Sprintf(`
+func testAccKeyGroupCommentConfig(rName string, comment string) string {
+	return testAccKeyGroupBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_cloudfront_key_group" "test" {
   comment = %q
   items   = [aws_cloudfront_public_key.test.id]
@@ -274,8 +274,8 @@ resource "aws_cloudfront_key_group" "test" {
 `, comment, rName)
 }
 
-func testAccAWSCloudFrontKeyGroupConfigItems(rName string) string {
-	return testAccAWSCloudFrontKeyGroupConfigBase(rName) + fmt.Sprintf(`
+func testAccKeyGroupItemsConfig(rName string) string {
+	return testAccKeyGroupBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_cloudfront_public_key" "test2" {
   comment     = "second test key"
   encoded_key = file("test-fixtures/cloudfront-public-key.pem")

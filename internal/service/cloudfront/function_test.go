@@ -23,7 +23,7 @@ func init() {
 
 	resource.AddTestSweepers("aws_cloudfront_function", &resource.Sweeper{
 		Name: "aws_cloudfront_function",
-		F:    testSweepCloudfrontFunctions,
+		F:    sweepFunctions,
 	})
 }
 
@@ -33,7 +33,7 @@ func testAccErrorCheckSkipFunction(t *testing.T) resource.ErrorCheckFunc {
 	)
 }
 
-func testSweepCloudfrontFunctions(region string) error {
+func sweepFunctions(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -104,9 +104,9 @@ func TestAccAWSCloudfrontFunction_basic(t *testing.T) {
 		CheckDestroy: testAccCheckCloudfrontFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudfrontConfigBasic(rName),
+				Config: testAccBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsCloudfrontFunctionExists(resourceName, &conf),
+					testAccCheckFunctionExists(resourceName, &conf),
 					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "cloudfront", fmt.Sprintf("function/%s", rName)),
 					resource.TestCheckResourceAttrSet(resourceName, "code"),
 					resource.TestCheckResourceAttr(resourceName, "comment", ""),
@@ -140,9 +140,9 @@ func TestAccAWSCloudfrontFunction_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckCloudfrontFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudfrontConfigBasic(rName),
+				Config: testAccBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsCloudfrontFunctionExists(resourceName, &conf),
+					testAccCheckFunctionExists(resourceName, &conf),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcloudfront.ResourceFunction(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -163,9 +163,9 @@ func TestAccAWSCloudfrontFunction_Publish(t *testing.T) {
 		CheckDestroy: testAccCheckCloudfrontFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudfrontConfigPublish(rName, false),
+				Config: testAccPublishConfig(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsCloudfrontFunctionExists(resourceName, &conf),
+					testAccCheckFunctionExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "publish", "false"),
 					resource.TestCheckResourceAttr(resourceName, "status", "UNPUBLISHED"),
 				),
@@ -177,9 +177,9 @@ func TestAccAWSCloudfrontFunction_Publish(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"publish"},
 			},
 			{
-				Config: testAccAWSCloudfrontConfigPublish(rName, true),
+				Config: testAccPublishConfig(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsCloudfrontFunctionExists(resourceName, &conf),
+					testAccCheckFunctionExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "publish", "true"),
 					resource.TestCheckResourceAttr(resourceName, "status", "UNASSOCIATED"),
 				),
@@ -202,18 +202,18 @@ func TestAccAWSCloudfrontFunction_Associated(t *testing.T) {
 		CheckDestroy: testAccCheckCloudfrontFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudfrontConfigAssociated(rName),
+				Config: testAccAssociatedConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsCloudfrontFunctionExists(resourceName, &conf),
+					testAccCheckFunctionExists(resourceName, &conf),
 					// After creation the function will be in UNASSOCIATED status.
 					// Apply the same configuration and it will move to DEPLOYED status.
 					resource.TestCheckResourceAttr(resourceName, "status", "UNASSOCIATED"),
 				),
 			},
 			{
-				Config: testAccAWSCloudfrontConfigAssociated(rName),
+				Config: testAccAssociatedConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsCloudfrontFunctionExists(resourceName, &conf),
+					testAccCheckFunctionExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "status", "DEPLOYED"),
 				),
 			},
@@ -224,9 +224,9 @@ func TestAccAWSCloudfrontFunction_Associated(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"publish"},
 			},
 			{
-				Config: testAccAWSCloudfrontConfigUnassociated(rName),
+				Config: testAccUnassociatedConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsCloudfrontFunctionExists(resourceName, &conf),
+					testAccCheckFunctionExists(resourceName, &conf),
 				),
 			},
 		},
@@ -245,16 +245,16 @@ func TestAccAWSCloudfrontFunction_Update_Code(t *testing.T) {
 		CheckDestroy: testAccCheckCloudfrontFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudfrontConfigBasic(rName),
+				Config: testAccBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsCloudfrontFunctionExists(resourceName, &conf),
+					testAccCheckFunctionExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "etag", "ETVPDKIKX0DER"),
 				),
 			},
 			{
-				Config: testAccAWSCloudfrontConfigCodeUpdate(rName),
+				Config: testAccCodeUpdateConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsCloudfrontFunctionExists(resourceName, &conf),
+					testAccCheckFunctionExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "etag", "E3UN6WX5RRO2AG"),
 				),
 			},
@@ -280,16 +280,16 @@ func TestAccAWSCloudfrontFunction_Update_Comment(t *testing.T) {
 		CheckDestroy: testAccCheckCloudfrontFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudfrontConfigComment(rName, "test 1"),
+				Config: testAccCommentConfig(rName, "test 1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsCloudfrontFunctionExists(resourceName, &conf),
+					testAccCheckFunctionExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "comment", "test 1"),
 				),
 			},
 			{
-				Config: testAccAWSCloudfrontConfigComment(rName, "test 2"),
+				Config: testAccCommentConfig(rName, "test 2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsCloudfrontFunctionExists(resourceName, &conf),
+					testAccCheckFunctionExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "comment", "test 2"),
 				),
 			},
@@ -328,7 +328,7 @@ func testAccCheckCloudfrontFunctionDestroy(s *terraform.State) error {
 
 }
 
-func testAccCheckAwsCloudfrontFunctionExists(n string, v *cloudfront.DescribeFunctionOutput) resource.TestCheckFunc {
+func testAccCheckFunctionExists(n string, v *cloudfront.DescribeFunctionOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -353,7 +353,7 @@ func testAccCheckAwsCloudfrontFunctionExists(n string, v *cloudfront.DescribeFun
 	}
 }
 
-func testAccAWSCloudfrontConfigBasic(rName string) string {
+func testAccBasicConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_function" "test" {
   name    = %[1]q
@@ -375,7 +375,7 @@ EOT
 `, rName)
 }
 
-func testAccAWSCloudfrontConfigPublish(rName string, publish bool) string {
+func testAccPublishConfig(rName string, publish bool) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_function" "test" {
   name    = %[1]q
@@ -399,7 +399,7 @@ EOT
 `, rName, publish)
 }
 
-func testAccAWSCloudfrontConfigAssociated(rName string) string {
+func testAccAssociatedConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_distribution" "test" {
   origin {
@@ -471,10 +471,10 @@ EOT
 
   publish = true
 }
-`, rName, testAccAWSCloudFrontDistributionRetainConfig())
+`, rName, testAccDistributionRetainConfig())
 }
 
-func testAccAWSCloudfrontConfigUnassociated(rName string) string {
+func testAccUnassociatedConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_distribution" "test" {
   origin {
@@ -541,10 +541,10 @@ EOT
 
   publish = true
 }
-`, rName, testAccAWSCloudFrontDistributionRetainConfig())
+`, rName, testAccDistributionRetainConfig())
 }
 
-func testAccAWSCloudfrontConfigCodeUpdate(rName string) string {
+func testAccCodeUpdateConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_function" "test" {
   name    = %[1]q
@@ -567,7 +567,7 @@ EOT
 `, rName)
 }
 
-func testAccAWSCloudfrontConfigComment(rName, comment string) string {
+func testAccCommentConfig(rName, comment string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_function" "test" {
   name    = %[1]q

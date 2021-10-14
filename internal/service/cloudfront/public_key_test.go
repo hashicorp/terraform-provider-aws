@@ -27,7 +27,7 @@ func TestAccAWSCloudFrontPublicKey_basic(t *testing.T) {
 		CheckDestroy: testAccCheckCloudFrontPublicKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudFrontPublicKeyConfig(rInt),
+				Config: testAccPublicKeyConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontPublicKeyExistence(resourceName),
 					resource.TestCheckResourceAttr("aws_cloudfront_public_key.example", "comment", "test key"),
@@ -55,7 +55,7 @@ func TestAccAWSCloudFrontPublicKey_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckCloudFrontPublicKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudFrontPublicKeyConfig(rInt),
+				Config: testAccPublicKeyConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontPublicKeyExistence(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcloudfront.ResourcePublicKey(), resourceName),
@@ -77,7 +77,7 @@ func TestAccAWSCloudFrontPublicKey_namePrefix(t *testing.T) {
 		CheckDestroy: testAccCheckCloudFrontPublicKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudFrontPublicKeyConfig_namePrefix(),
+				Config: testAccPublicKeyConfig_namePrefix(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontPublicKeyExistence(resourceName),
 					resource.TestMatchResourceAttr("aws_cloudfront_public_key.example", "name", startsWithPrefix),
@@ -106,7 +106,7 @@ func TestAccAWSCloudFrontPublicKey_update(t *testing.T) {
 		CheckDestroy: testAccCheckCloudFrontPublicKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudFrontPublicKeyConfig(rInt),
+				Config: testAccPublicKeyConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontPublicKeyExistence(resourceName),
 					resource.TestCheckResourceAttr("aws_cloudfront_public_key.example", "comment", "test key"),
@@ -118,7 +118,7 @@ func TestAccAWSCloudFrontPublicKey_update(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSCloudFrontPublicKeyConfigUpdate(rInt),
+				Config: testAccPublicKeyUpdateConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontPublicKeyExistence(resourceName),
 					resource.TestCheckResourceAttr("aws_cloudfront_public_key.example", "comment", "test key1"),
@@ -177,7 +177,7 @@ func testAccCheckCloudFrontPublicKeyDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSCloudFrontPublicKeyConfig(rInt int) string {
+func testAccPublicKeyConfig(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_public_key" "example" {
   comment     = "test key"
@@ -187,7 +187,7 @@ resource "aws_cloudfront_public_key" "example" {
 `, rInt)
 }
 
-func testAccAWSCloudFrontPublicKeyConfig_namePrefix() string {
+func testAccPublicKeyConfig_namePrefix() string {
 	return `
 resource "aws_cloudfront_public_key" "example" {
   comment     = "test key"
@@ -197,7 +197,7 @@ resource "aws_cloudfront_public_key" "example" {
 `
 }
 
-func testAccAWSCloudFrontPublicKeyConfigUpdate(rInt int) string {
+func testAccPublicKeyUpdateConfig(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_public_key" "example" {
   comment     = "test key1"

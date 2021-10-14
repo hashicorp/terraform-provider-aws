@@ -21,7 +21,7 @@ func TestAccAWSCloudFrontOriginRequestPolicy_basic(t *testing.T) {
 		CheckDestroy: testAccCheckCloudFrontPublicKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudFrontOriginRequestPolicyConfig(rInt),
+				Config: testAccOriginRequestPolicyConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "comment", "test comment"),
 					resource.TestCheckResourceAttr(resourceName, "cookies_config.0.cookie_behavior", "whitelist"),
@@ -53,7 +53,7 @@ func TestAccAWSCloudFrontOriginRequestPolicy_update(t *testing.T) {
 		CheckDestroy: testAccCheckCloudFrontPublicKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudFrontOriginRequestPolicyConfig(rInt),
+				Config: testAccOriginRequestPolicyConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "comment", "test comment"),
 					resource.TestCheckResourceAttr(resourceName, "cookies_config.0.cookie_behavior", "whitelist"),
@@ -65,7 +65,7 @@ func TestAccAWSCloudFrontOriginRequestPolicy_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSCloudFrontOriginRequestPolicyConfigUpdate(rInt),
+				Config: testAccOriginRequestPolicyUpdateConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "comment", "test comment updated"),
 					resource.TestCheckResourceAttr(resourceName, "cookies_config.0.cookies.0.items.0", "test2"),
@@ -95,7 +95,7 @@ func TestAccAWSCloudFrontOriginRequestPolicy_noneBehavior(t *testing.T) {
 		CheckDestroy: testAccCheckCloudFrontPublicKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudFrontOriginRequestPolicyConfigNoneBehavior(rInt),
+				Config: testAccOriginRequestPolicyNoneBehaviorConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "comment", "test comment"),
 					resource.TestCheckResourceAttr(resourceName, "cookies_config.0.cookie_behavior", "none"),
@@ -116,7 +116,7 @@ func TestAccAWSCloudFrontOriginRequestPolicy_noneBehavior(t *testing.T) {
 	})
 }
 
-func testAccAWSCloudFrontOriginRequestPolicyConfig(rInt int) string {
+func testAccOriginRequestPolicyConfig(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_origin_request_policy" "example" {
   name    = "test-policyz%[1]d"
@@ -143,7 +143,7 @@ resource "aws_cloudfront_origin_request_policy" "example" {
 `, rInt)
 }
 
-func testAccAWSCloudFrontOriginRequestPolicyConfigUpdate(rInt int) string {
+func testAccOriginRequestPolicyUpdateConfig(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_origin_request_policy" "example" {
   name    = "test-policy-updated%[1]d"
@@ -167,7 +167,7 @@ resource "aws_cloudfront_origin_request_policy" "example" {
 `, rInt)
 }
 
-func testAccAWSCloudFrontOriginRequestPolicyConfigNoneBehavior(rInt int) string {
+func testAccOriginRequestPolicyNoneBehaviorConfig(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_origin_request_policy" "example" {
   name    = "test-policy-updated%[1]d"

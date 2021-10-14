@@ -19,7 +19,7 @@ func TestAccDataSourceAWSCloudFrontLogDeliveryCanonicalUserId_basic(t *testing.T
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAWSCloudFrontLogDeliveryCanonicalUserIdConfig(""),
+				Config: testAccLogDeliveryCanonicalUserIdDataSourceConfig(""),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "id", "c4c1ede66af53448b93c283ce9448c4ba468c9432aa01d700d3878632f77d2d0"),
 				),
@@ -37,7 +37,7 @@ func TestAccDataSourceAWSCloudFrontLogDeliveryCanonicalUserId_default(t *testing
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAWSCloudFrontLogDeliveryCanonicalUserIdConfig(endpoints.UsWest2RegionID),
+				Config: testAccLogDeliveryCanonicalUserIdDataSourceConfig(endpoints.UsWest2RegionID),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "id", "c4c1ede66af53448b93c283ce9448c4ba468c9432aa01d700d3878632f77d2d0"),
 				),
@@ -55,7 +55,7 @@ func TestAccDataSourceAWSCloudFrontLogDeliveryCanonicalUserId_cn(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAWSCloudFrontLogDeliveryCanonicalUserIdConfig(endpoints.CnNorthwest1RegionID),
+				Config: testAccLogDeliveryCanonicalUserIdDataSourceConfig(endpoints.CnNorthwest1RegionID),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "id", "a52cb28745c0c06e84ec548334e44bfa7fc2a85c54af20cd59e4969344b7af56"),
 				),
@@ -64,7 +64,7 @@ func TestAccDataSourceAWSCloudFrontLogDeliveryCanonicalUserId_cn(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAWSCloudFrontLogDeliveryCanonicalUserIdConfig(region string) string {
+func testAccLogDeliveryCanonicalUserIdDataSourceConfig(region string) string {
 	if region == "" {
 		region = "null"
 	}

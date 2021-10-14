@@ -7,7 +7,7 @@ import (
 	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
 )
 
-func TestAwsCloudFrontDistributionMigrateState(t *testing.T) {
+func TestDistributionMigrateState(t *testing.T) {
 	testCases := map[string]struct {
 		StateVersion int
 		Attributes   map[string]string

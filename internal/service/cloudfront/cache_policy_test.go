@@ -21,7 +21,7 @@ func TestAccAWSCloudFrontCachePolicy_basic(t *testing.T) {
 		CheckDestroy: testAccCheckCloudFrontPublicKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudFrontCachePolicyConfig(rInt),
+				Config: testAccCachePolicyConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "comment", "test comment"),
 					resource.TestCheckResourceAttr(resourceName, "default_ttl", "50"),
@@ -56,7 +56,7 @@ func TestAccAWSCloudFrontCachePolicy_update(t *testing.T) {
 		CheckDestroy: testAccCheckCloudFrontPublicKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudFrontCachePolicyConfig(rInt),
+				Config: testAccCachePolicyConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "comment", "test comment"),
 					resource.TestCheckResourceAttr(resourceName, "default_ttl", "50"),
@@ -71,7 +71,7 @@ func TestAccAWSCloudFrontCachePolicy_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSCloudFrontCachePolicyConfigUpdate(rInt),
+				Config: testAccCachePolicyUpdateConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "comment", "test comment updated"),
 					resource.TestCheckResourceAttr(resourceName, "default_ttl", "51"),
@@ -106,7 +106,7 @@ func TestAccAWSCloudFrontCachePolicy_noneBehavior(t *testing.T) {
 		CheckDestroy: testAccCheckCloudFrontPublicKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudFrontCachePolicyConfigNoneBehavior(rInt),
+				Config: testAccCachePolicyNoneBehaviorConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "comment", "test comment"),
 					resource.TestCheckResourceAttr(resourceName, "default_ttl", "50"),
@@ -130,7 +130,7 @@ func TestAccAWSCloudFrontCachePolicy_noneBehavior(t *testing.T) {
 	})
 }
 
-func testAccAWSCloudFrontCachePolicyConfig(rInt int) string {
+func testAccCachePolicyConfig(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_cache_policy" "example" {
   name        = "test-policy%[1]d"
@@ -162,7 +162,7 @@ resource "aws_cloudfront_cache_policy" "example" {
 `, rInt)
 }
 
-func testAccAWSCloudFrontCachePolicyConfigUpdate(rInt int) string {
+func testAccCachePolicyUpdateConfig(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_cache_policy" "example" {
   name        = "test-policy-updated%[1]d"
@@ -191,7 +191,7 @@ resource "aws_cloudfront_cache_policy" "example" {
 `, rInt)
 }
 
-func testAccAWSCloudFrontCachePolicyConfigNoneBehavior(rInt int) string {
+func testAccCachePolicyNoneBehaviorConfig(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_cache_policy" "example" {
   name        = "test-policy-updated%[1]d"

@@ -25,7 +25,7 @@ func TestAccAWSCloudFrontOriginAccessIdentity_basic(t *testing.T) {
 		CheckDestroy: testAccCheckCloudFrontOriginAccessIdentityDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudFrontOriginAccessIdentityConfig,
+				Config: testAccOriginAccessIdentityConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontOriginAccessIdentityExistence(resourceName, &origin),
 					resource.TestCheckResourceAttr(resourceName, "comment", "some comment"),
@@ -56,7 +56,7 @@ func TestAccAWSCloudFrontOriginAccessIdentity_noComment(t *testing.T) {
 		CheckDestroy: testAccCheckCloudFrontOriginAccessIdentityDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudFrontOriginAccessIdentityNoCommentConfig,
+				Config: testAccOriginAccessIdentityNoCommentConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontOriginAccessIdentityExistence(resourceName, &origin),
 					resource.TestMatchResourceAttr(resourceName, "caller_reference", regexp.MustCompile(fmt.Sprintf("^%s", resource.UniqueIdPrefix))),
@@ -86,7 +86,7 @@ func TestAccAWSCloudFrontOriginAccessIdentity_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckCloudFrontOriginAccessIdentityDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudFrontOriginAccessIdentityConfig,
+				Config: testAccOriginAccessIdentityConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontOriginAccessIdentityExistence(resourceName, &origin),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcloudfront.ResourceOriginAccessIdentity(), resourceName),
@@ -145,13 +145,13 @@ func testAccCheckCloudFrontOriginAccessIdentityExistence(r string, origin *cloud
 	}
 }
 
-const testAccAWSCloudFrontOriginAccessIdentityConfig = `
+const testAccOriginAccessIdentityConfig = `
 resource "aws_cloudfront_origin_access_identity" "test" {
   comment = "some comment"
 }
 `
 
-const testAccAWSCloudFrontOriginAccessIdentityNoCommentConfig = `
+const testAccOriginAccessIdentityNoCommentConfig = `
 resource "aws_cloudfront_origin_access_identity" "test" {
 }
 `

@@ -21,7 +21,7 @@ func TestAccAWSCloudFrontDataSourceOriginRequestPolicy_basic(t *testing.T) {
 		CheckDestroy: testAccCheckCloudFrontPublicKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudFrontDataSourceOriginRequestPolicyConfig(rInt),
+				Config: testAccOriginRequestPolicyDataSourceConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "comment", "test comment"),
 					resource.TestCheckResourceAttr(dataSourceName, "cookies_config.0.cookie_behavior", "whitelist"),
@@ -36,7 +36,7 @@ func TestAccAWSCloudFrontDataSourceOriginRequestPolicy_basic(t *testing.T) {
 	})
 }
 
-func testAccAWSCloudFrontDataSourceOriginRequestPolicyConfig(rInt int) string {
+func testAccOriginRequestPolicyDataSourceConfig(rInt int) string {
 	return fmt.Sprintf(`
 data "aws_cloudfront_origin_request_policy" "example" {
   name = aws_cloudfront_origin_request_policy.example.name

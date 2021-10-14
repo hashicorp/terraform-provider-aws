@@ -20,11 +20,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_cloudfront_monitoring_subscription", &resource.Sweeper{
 		Name: "aws_cloudfront_monitoring_subscription",
-		F:    testSweepCloudFrontMonitoringSubscriptions,
+		F:    sweepMonitoringSubscriptions,
 	})
 }
 
-func testSweepCloudFrontMonitoringSubscriptions(region string) error {
+func sweepMonitoringSubscriptions(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -83,7 +83,7 @@ func TestAccAWSCloudFrontMonitoringSubscription_basic(t *testing.T) {
 		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudFrontMonitoringSubscriptionConfig("Enabled"),
+				Config: testAccMonitoringSubscriptionConfig("Enabled"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontMonitoringSubscriptionExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "distribution_id"),
@@ -112,7 +112,7 @@ func TestAccAWSCloudFrontMonitoringSubscription_disappears(t *testing.T) {
 		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudFrontMonitoringSubscriptionConfig("Enabled"),
+				Config: testAccMonitoringSubscriptionConfig("Enabled"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontMonitoringSubscriptionExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcloudfront.ResourceMonitoringSubscription(), resourceName),
@@ -134,7 +134,7 @@ func TestAccAWSCloudFrontMonitoringSubscription_update(t *testing.T) {
 		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudFrontMonitoringSubscriptionConfig("Enabled"),
+				Config: testAccMonitoringSubscriptionConfig("Enabled"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontMonitoringSubscriptionExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "distribution_id"),
@@ -149,7 +149,7 @@ func TestAccAWSCloudFrontMonitoringSubscription_update(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSCloudFrontMonitoringSubscriptionConfig("Disabled"),
+				Config: testAccMonitoringSubscriptionConfig("Disabled"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontMonitoringSubscriptionExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "distribution_id"),
@@ -210,7 +210,7 @@ func testAccCheckCloudFrontMonitoringSubscriptionExists(n string, v *cloudfront.
 	}
 }
 
-func testAccAWSCloudFrontMonitoringSubscriptionConfigBase() string {
+func testAccMonitoringSubscriptionBaseConfig() string {
 	return `
 resource "aws_cloudfront_distribution" "test" {
   enabled          = true
@@ -256,9 +256,9 @@ resource "aws_cloudfront_distribution" "test" {
 `
 }
 
-func testAccAWSCloudFrontMonitoringSubscriptionConfig(status string) string {
+func testAccMonitoringSubscriptionConfig(status string) string {
 	return acctest.ConfigCompose(
-		testAccAWSCloudFrontMonitoringSubscriptionConfigBase(),
+		testAccMonitoringSubscriptionBaseConfig(),
 		fmt.Sprintf(`
 resource "aws_cloudfront_monitoring_subscription" "test" {
   distribution_id = aws_cloudfront_distribution.test.id
