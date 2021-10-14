@@ -8,12 +8,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/apprunner"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	tfapprunner "github.com/hashicorp/terraform-provider-aws/aws/internal/service/apprunner"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/apprunner/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/apprunner/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAwsAppRunnerCustomDomainAssociation_basic(t *testing.T) {
@@ -22,13 +23,13 @@ func TestAccAwsAppRunnerCustomDomainAssociation_basic(t *testing.T) {
 		t.Skip("Environment variable APPRUNNER_CUSTOM_DOMAIN is not set")
 	}
 
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_apprunner_custom_domain_association.test"
 	serviceResourceName := "aws_apprunner_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAppRunner(t) },
-		ErrorCheck:   testAccErrorCheck(t, apprunner.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAppRunner(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, apprunner.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppRunnerCustomDomainAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -60,12 +61,12 @@ func TestAccAwsAppRunnerCustomDomainAssociation_disappears(t *testing.T) {
 		t.Skip("Environment variable APPRUNNER_CUSTOM_DOMAIN is not set")
 	}
 
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_apprunner_custom_domain_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAppRunner(t) },
-		ErrorCheck:   testAccErrorCheck(t, apprunner.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAppRunner(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, apprunner.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppRunnerCustomDomainAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -73,7 +74,7 @@ func TestAccAwsAppRunnerCustomDomainAssociation_disappears(t *testing.T) {
 				Config: testAccAppRunnerCustomDomainAssociation_basic(rName, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppRunnerCustomDomainAssociationExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsAppRunnerCustomDomainAssociation(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsAppRunnerCustomDomainAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

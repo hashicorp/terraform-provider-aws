@@ -11,9 +11,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/apprunner"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -78,12 +79,12 @@ func testSweepAppRunnerServices(region string) error {
 }
 
 func TestAccAwsAppRunnerService_ImageRepository_basic(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_apprunner_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAppRunner(t) },
-		ErrorCheck:   testAccErrorCheck(t, apprunner.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAppRunner(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, apprunner.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppRunnerServiceDestroy,
 		Steps: []resource.TestStep{
@@ -92,8 +93,8 @@ func TestAccAwsAppRunnerService_ImageRepository_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppRunnerServiceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "service_name", rName),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "apprunner", regexp.MustCompile(fmt.Sprintf(`service/%s/.+`, rName))),
-					testAccMatchResourceAttrRegionalARN(resourceName, "auto_scaling_configuration_arn", "apprunner", regexp.MustCompile(`autoscalingconfiguration/DefaultConfiguration/1/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "apprunner", regexp.MustCompile(fmt.Sprintf(`service/%s/.+`, rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "auto_scaling_configuration_arn", "apprunner", regexp.MustCompile(`autoscalingconfiguration/DefaultConfiguration/1/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "health_check_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_configuration.0.protocol", apprunner.HealthCheckProtocolTcp),
 					resource.TestCheckResourceAttr(resourceName, "health_check_configuration.0.path", "/"),
@@ -129,13 +130,13 @@ func TestAccAwsAppRunnerService_ImageRepository_basic(t *testing.T) {
 }
 
 func TestAccAwsAppRunnerService_ImageRepository_AutoScalingConfiguration(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_apprunner_service.test"
 	autoScalingResourceName := "aws_apprunner_auto_scaling_configuration_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAppRunner(t) },
-		ErrorCheck:   testAccErrorCheck(t, apprunner.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAppRunner(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, apprunner.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppRunnerServiceDestroy,
 		Steps: []resource.TestStep{
@@ -162,13 +163,13 @@ func TestAccAwsAppRunnerService_ImageRepository_AutoScalingConfiguration(t *test
 }
 
 func TestAccAwsAppRunnerService_ImageRepository_EncryptionConfiguration(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_apprunner_service.test"
 	kmsResourceName := "aws_kms_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAppRunner(t) },
-		ErrorCheck:   testAccErrorCheck(t, apprunner.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAppRunner(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, apprunner.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppRunnerServiceDestroy,
 		Steps: []resource.TestStep{
@@ -198,12 +199,12 @@ func TestAccAwsAppRunnerService_ImageRepository_EncryptionConfiguration(t *testi
 }
 
 func TestAccAwsAppRunnerService_ImageRepository_HealthCheckConfiguration(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_apprunner_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAppRunner(t) },
-		ErrorCheck:   testAccErrorCheck(t, apprunner.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAppRunner(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, apprunner.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppRunnerServiceDestroy,
 		Steps: []resource.TestStep{
@@ -247,13 +248,13 @@ func TestAccAwsAppRunnerService_ImageRepository_HealthCheckConfiguration(t *test
 }
 
 func TestAccAwsAppRunnerService_ImageRepository_InstanceConfiguration(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_apprunner_service.test"
 	roleResourceName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAppRunner(t) },
-		ErrorCheck:   testAccErrorCheck(t, apprunner.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAppRunner(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, apprunner.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppRunnerServiceDestroy,
 		Steps: []resource.TestStep{
@@ -302,12 +303,12 @@ func TestAccAwsAppRunnerService_ImageRepository_InstanceConfiguration(t *testing
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/19469
 func TestAccAwsAppRunnerService_ImageRepository_RuntimeEnvironmentVars(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_apprunner_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAppRunner(t) },
-		ErrorCheck:   testAccErrorCheck(t, apprunner.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAppRunner(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, apprunner.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppRunnerServiceDestroy,
 		Steps: []resource.TestStep{
@@ -332,12 +333,12 @@ func TestAccAwsAppRunnerService_ImageRepository_RuntimeEnvironmentVars(t *testin
 }
 
 func TestAccAwsAppRunnerService_disappears(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_apprunner_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAppRunner(t) },
-		ErrorCheck:   testAccErrorCheck(t, apprunner.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAppRunner(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, apprunner.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppRunnerServiceDestroy,
 		Steps: []resource.TestStep{
@@ -345,7 +346,7 @@ func TestAccAwsAppRunnerService_disappears(t *testing.T) {
 				Config: testAccAppRunnerService_imageRepository(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppRunnerServiceExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsAppRunnerService(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsAppRunnerService(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -354,12 +355,12 @@ func TestAccAwsAppRunnerService_disappears(t *testing.T) {
 }
 
 func TestAccAwsAppRunnerService_tags(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_apprunner_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAppRunner(t) },
-		ErrorCheck:   testAccErrorCheck(t, apprunner.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAppRunner(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, apprunner.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppRunnerServiceDestroy,
 		Steps: []resource.TestStep{
@@ -466,7 +467,7 @@ func testAccPreCheckAppRunner(t *testing.T) {
 
 	_, err := conn.ListServicesWithContext(ctx, input)
 
-	if testAccPreCheckSkipError(err) {
+	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
@@ -643,7 +644,7 @@ EOF
 }
 
 func testAccAppRunnerService_imageRepository_instanceConfiguration(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAppRunnerIAMRole(rName),
 		fmt.Sprintf(`
 resource "aws_apprunner_service" "test" {
@@ -670,7 +671,7 @@ resource "aws_apprunner_service" "test" {
 }
 
 func testAccAppRunnerService_imageRepository_updateInstanceConfiguration(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAppRunnerIAMRole(rName),
 		fmt.Sprintf(`
 resource "aws_apprunner_service" "test" {
