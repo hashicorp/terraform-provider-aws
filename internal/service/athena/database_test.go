@@ -23,12 +23,12 @@ func TestAccAWSAthenaDatabase_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAthenaDatabaseDestroy,
+		CheckDestroy: testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAthenaDatabaseConfig(rInt, dbName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAthenaDatabaseExists("aws_athena_database.hoge"),
+					testAccCheckDatabaseExists("aws_athena_database.hoge"),
 				),
 			},
 		},
@@ -42,12 +42,12 @@ func TestAccAWSAthenaDatabase_encryption(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAthenaDatabaseDestroy,
+		CheckDestroy: testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAthenaDatabaseWithKMSConfig(rInt, dbName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAthenaDatabaseExists("aws_athena_database.hoge"),
+					testAccCheckDatabaseExists("aws_athena_database.hoge"),
 					resource.TestCheckResourceAttr("aws_athena_database.hoge", "encryption_configuration.0.encryption_option", "SSE_KMS"),
 				),
 			},
@@ -62,12 +62,12 @@ func TestAccAWSAthenaDatabase_nameStartsWithUnderscore(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAthenaDatabaseDestroy,
+		CheckDestroy: testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAthenaDatabaseConfig(rInt, dbName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAthenaDatabaseExists("aws_athena_database.hoge"),
+					testAccCheckDatabaseExists("aws_athena_database.hoge"),
 					resource.TestCheckResourceAttr("aws_athena_database.hoge", "name", dbName),
 				),
 			},
@@ -82,7 +82,7 @@ func TestAccAWSAthenaDatabase_nameCantHaveUppercase(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAthenaDatabaseDestroy,
+		CheckDestroy: testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAthenaDatabaseConfig(rInt, dbName, false),
@@ -99,15 +99,15 @@ func TestAccAWSAthenaDatabase_destroyFailsIfTablesExist(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAthenaDatabaseDestroy,
+		CheckDestroy: testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAthenaDatabaseConfig(rInt, dbName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAthenaDatabaseExists("aws_athena_database.hoge"),
-					testAccAWSAthenaDatabaseCreateTables(dbName),
-					testAccCheckAWSAthenaDatabaseDropFails(dbName),
-					testAccAWSAthenaDatabaseDestroyTables(dbName),
+					testAccCheckDatabaseExists("aws_athena_database.hoge"),
+					testAccDatabaseCreateTables(dbName),
+					testAccCheckDatabaseDropFails(dbName),
+					testAccDatabaseDestroyTables(dbName),
 				),
 			},
 		},
@@ -121,13 +121,13 @@ func TestAccAWSAthenaDatabase_forceDestroyAlwaysSucceeds(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAthenaDatabaseDestroy,
+		CheckDestroy: testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAthenaDatabaseConfig(rInt, dbName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAthenaDatabaseExists("aws_athena_database.hoge"),
-					testAccAWSAthenaDatabaseCreateTables(dbName),
+					testAccCheckDatabaseExists("aws_athena_database.hoge"),
+					testAccDatabaseCreateTables(dbName),
 				),
 			},
 		},
@@ -136,7 +136,7 @@ func TestAccAWSAthenaDatabase_forceDestroyAlwaysSucceeds(t *testing.T) {
 
 // StartQueryExecution requires OutputLocation but terraform destroy deleted S3 bucket as well.
 // So temporary S3 bucket as OutputLocation is created to confirm whether the database is actually deleted.
-func testAccCheckAWSAthenaDatabaseDestroy(s *terraform.State) error {
+func testAccCheckDatabaseDestroy(s *terraform.State) error {
 	athenaconn := acctest.Provider.Meta().(*conns.AWSClient).AthenaConn
 	s3conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
 	for _, rs := range s.RootModule().Resources {
@@ -222,7 +222,7 @@ func testAccCheckAWSAthenaDatabaseDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSAthenaDatabaseExists(name string) resource.TestCheckFunc {
+func testAccCheckDatabaseExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		_, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -232,7 +232,7 @@ func testAccCheckAWSAthenaDatabaseExists(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccAWSAthenaDatabaseCreateTables(dbName string) resource.TestCheckFunc {
+func testAccDatabaseCreateTables(dbName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		bucketName, err := testAccAthenaDatabaseFindBucketName(s, dbName)
 		if err != nil {
@@ -262,7 +262,7 @@ func testAccAWSAthenaDatabaseCreateTables(dbName string) resource.TestCheckFunc 
 	}
 }
 
-func testAccAWSAthenaDatabaseDestroyTables(dbName string) resource.TestCheckFunc {
+func testAccDatabaseDestroyTables(dbName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		bucketName, err := testAccAthenaDatabaseFindBucketName(s, dbName)
 		if err != nil {
@@ -291,7 +291,7 @@ func testAccAWSAthenaDatabaseDestroyTables(dbName string) resource.TestCheckFunc
 	}
 }
 
-func testAccCheckAWSAthenaDatabaseDropFails(dbName string) resource.TestCheckFunc {
+func testAccCheckDatabaseDropFails(dbName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		bucketName, err := testAccAthenaDatabaseFindBucketName(s, dbName)
 		if err != nil {

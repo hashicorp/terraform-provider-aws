@@ -21,12 +21,12 @@ func TestAccAWSAthenaNamedQuery_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAthenaNamedQueryDestroy,
+		CheckDestroy: testAccCheckNamedQueryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAthenaNamedQueryConfig(sdkacctest.RandInt(), sdkacctest.RandString(5)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAthenaNamedQueryExists(resourceName),
+					testAccCheckNamedQueryExists(resourceName),
 				),
 			},
 			{
@@ -45,12 +45,12 @@ func TestAccAWSAthenaNamedQuery_withWorkGroup(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAthenaNamedQueryDestroy,
+		CheckDestroy: testAccCheckNamedQueryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAthenaNamedWorkGroupQueryConfig(sdkacctest.RandInt(), sdkacctest.RandString(5)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAthenaNamedQueryExists(resourceName),
+					testAccCheckNamedQueryExists(resourceName),
 				),
 			},
 			{
@@ -62,7 +62,7 @@ func TestAccAWSAthenaNamedQuery_withWorkGroup(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSAthenaNamedQueryDestroy(s *terraform.State) error {
+func testAccCheckNamedQueryDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).AthenaConn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_athena_named_query" {
@@ -87,7 +87,7 @@ func testAccCheckAWSAthenaNamedQueryDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSAthenaNamedQueryExists(name string) resource.TestCheckFunc {
+func testAccCheckNamedQueryExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {

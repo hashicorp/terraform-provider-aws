@@ -23,12 +23,12 @@ func TestAccAWSAthenaWorkGroup_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
+		CheckDestroy: testAccCheckWorkGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAthenaWorkGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup1),
+					testAccCheckWorkGroupExists(resourceName, &workgroup1),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "athena", fmt.Sprintf("workgroup/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.enforce_workgroup_configuration", "true"),
@@ -59,13 +59,13 @@ func TestAccAWSAthenaWorkGroup_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
+		CheckDestroy: testAccCheckWorkGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAthenaWorkGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup1),
-					testAccCheckAWSAthenaWorkGroupDisappears(&workgroup1),
+					testAccCheckWorkGroupExists(resourceName, &workgroup1),
+					testAccCheckWorkGroupDisappears(&workgroup1),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -82,12 +82,12 @@ func TestAccAWSAthenaWorkGroup_Configuration_BytesScannedCutoffPerQuery(t *testi
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
+		CheckDestroy: testAccCheckWorkGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAthenaWorkGroupConfigConfigurationBytesScannedCutoffPerQuery(rName, 12582912),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup1),
+					testAccCheckWorkGroupExists(resourceName, &workgroup1),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.bytes_scanned_cutoff_per_query", "12582912"),
 				),
@@ -101,7 +101,7 @@ func TestAccAWSAthenaWorkGroup_Configuration_BytesScannedCutoffPerQuery(t *testi
 			{
 				Config: testAccAthenaWorkGroupConfigConfigurationBytesScannedCutoffPerQuery(rName, 10485760),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup2),
+					testAccCheckWorkGroupExists(resourceName, &workgroup2),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.bytes_scanned_cutoff_per_query", "10485760"),
 				),
@@ -119,12 +119,12 @@ func TestAccAWSAthenaWorkGroup_Configuration_EnforceWorkgroupConfiguration(t *te
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
+		CheckDestroy: testAccCheckWorkGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAthenaWorkGroupConfigConfigurationEnforceWorkgroupConfiguration(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup1),
+					testAccCheckWorkGroupExists(resourceName, &workgroup1),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.enforce_workgroup_configuration", "false"),
 				),
@@ -138,7 +138,7 @@ func TestAccAWSAthenaWorkGroup_Configuration_EnforceWorkgroupConfiguration(t *te
 			{
 				Config: testAccAthenaWorkGroupConfigConfigurationEnforceWorkgroupConfiguration(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup2),
+					testAccCheckWorkGroupExists(resourceName, &workgroup2),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.enforce_workgroup_configuration", "true"),
 				),
@@ -156,12 +156,12 @@ func TestAccAWSAthenaWorkGroup_Configuration_PublishCloudWatchMetricsEnabled(t *
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
+		CheckDestroy: testAccCheckWorkGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAthenaWorkGroupConfigConfigurationPublishCloudWatchMetricsEnabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup1),
+					testAccCheckWorkGroupExists(resourceName, &workgroup1),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.publish_cloudwatch_metrics_enabled", "false"),
 				),
@@ -175,7 +175,7 @@ func TestAccAWSAthenaWorkGroup_Configuration_PublishCloudWatchMetricsEnabled(t *
 			{
 				Config: testAccAthenaWorkGroupConfigConfigurationPublishCloudWatchMetricsEnabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup2),
+					testAccCheckWorkGroupExists(resourceName, &workgroup2),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.publish_cloudwatch_metrics_enabled", "true"),
 				),
@@ -193,12 +193,12 @@ func TestAccAWSAthenaWorkGroup_Configuration_ResultConfiguration_EncryptionConfi
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
+		CheckDestroy: testAccCheckWorkGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAthenaWorkGroupConfigConfigurationResultConfigurationEncryptionConfigurationEncryptionOptionSseS3(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup1),
+					testAccCheckWorkGroupExists(resourceName, &workgroup1),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.0.encryption_configuration.#", "1"),
@@ -226,12 +226,12 @@ func TestAccAWSAthenaWorkGroup_Configuration_ResultConfiguration_EncryptionConfi
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
+		CheckDestroy: testAccCheckWorkGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAthenaWorkGroupConfigConfigurationResultConfigurationEncryptionConfigurationEncryptionOptionWithKms(rName, rEncryption),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup1),
+					testAccCheckWorkGroupExists(resourceName, &workgroup1),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.0.encryption_configuration.#", "1"),
@@ -247,7 +247,7 @@ func TestAccAWSAthenaWorkGroup_Configuration_ResultConfiguration_EncryptionConfi
 			{
 				Config: testAccAthenaWorkGroupConfigConfigurationResultConfigurationEncryptionConfigurationEncryptionOptionWithKms(rName, rEncryption2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup2),
+					testAccCheckWorkGroupExists(resourceName, &workgroup2),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.0.encryption_configuration.#", "1"),
@@ -269,12 +269,12 @@ func TestAccAWSAthenaWorkGroup_Configuration_ResultConfiguration_OutputLocation(
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
+		CheckDestroy: testAccCheckWorkGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAthenaWorkGroupConfigConfigurationResultConfigurationOutputLocation(rName, rOutputLocation1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup1),
+					testAccCheckWorkGroupExists(resourceName, &workgroup1),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.0.output_location", "s3://"+rOutputLocation1+"/test/output"),
@@ -289,7 +289,7 @@ func TestAccAWSAthenaWorkGroup_Configuration_ResultConfiguration_OutputLocation(
 			{
 				Config: testAccAthenaWorkGroupConfigConfigurationResultConfigurationOutputLocation(rName, rOutputLocation2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup2),
+					testAccCheckWorkGroupExists(resourceName, &workgroup2),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.0.output_location", "s3://"+rOutputLocation2+"/test/output"),
@@ -308,12 +308,12 @@ func TestAccAWSAthenaWorkGroup_Configuration_RequesterPaysEnabled(t *testing.T) 
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
+		CheckDestroy: testAccCheckWorkGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAthenaWorkGroupConfigConfigurationRequesterPaysEnabled(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup1),
+					testAccCheckWorkGroupExists(resourceName, &workgroup1),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "athena", fmt.Sprintf("workgroup/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.requester_pays_enabled", "true"),
@@ -328,7 +328,7 @@ func TestAccAWSAthenaWorkGroup_Configuration_RequesterPaysEnabled(t *testing.T) 
 			{
 				Config: testAccAthenaWorkGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup1),
+					testAccCheckWorkGroupExists(resourceName, &workgroup1),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "athena", fmt.Sprintf("workgroup/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.requester_pays_enabled", "false"),
@@ -349,12 +349,12 @@ func TestAccAWSAthenaWorkGroup_Configuration_ResultConfiguration_OutputLocation_
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
+		CheckDestroy: testAccCheckWorkGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAthenaWorkGroupConfigConfigurationResultConfigurationOutputLocationForceDestroy(rName, rOutputLocation1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup1),
+					testAccCheckWorkGroupExists(resourceName, &workgroup1),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.0.output_location", "s3://"+rOutputLocation1+"/test/output"),
@@ -369,7 +369,7 @@ func TestAccAWSAthenaWorkGroup_Configuration_ResultConfiguration_OutputLocation_
 			{
 				Config: testAccAthenaWorkGroupConfigConfigurationResultConfigurationOutputLocationForceDestroy(rName, rOutputLocation2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup2),
+					testAccCheckWorkGroupExists(resourceName, &workgroup2),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.0.output_location", "s3://"+rOutputLocation2+"/test/output"),
@@ -390,12 +390,12 @@ func TestAccAWSAthenaWorkGroup_Description(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
+		CheckDestroy: testAccCheckWorkGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAthenaWorkGroupConfigDescription(rName, rDescription),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup1),
+					testAccCheckWorkGroupExists(resourceName, &workgroup1),
 					resource.TestCheckResourceAttr(resourceName, "description", rDescription),
 				),
 			},
@@ -408,7 +408,7 @@ func TestAccAWSAthenaWorkGroup_Description(t *testing.T) {
 			{
 				Config: testAccAthenaWorkGroupConfigDescription(rName, rDescriptionUpdate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup2),
+					testAccCheckWorkGroupExists(resourceName, &workgroup2),
 					resource.TestCheckResourceAttr(resourceName, "description", rDescriptionUpdate),
 				),
 			},
@@ -425,12 +425,12 @@ func TestAccAWSAthenaWorkGroup_State(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
+		CheckDestroy: testAccCheckWorkGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAthenaWorkGroupConfigState(rName, athena.WorkGroupStateDisabled),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup1),
+					testAccCheckWorkGroupExists(resourceName, &workgroup1),
 					resource.TestCheckResourceAttr(resourceName, "state", athena.WorkGroupStateDisabled),
 				),
 			},
@@ -443,14 +443,14 @@ func TestAccAWSAthenaWorkGroup_State(t *testing.T) {
 			{
 				Config: testAccAthenaWorkGroupConfigState(rName, athena.WorkGroupStateEnabled),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup2),
+					testAccCheckWorkGroupExists(resourceName, &workgroup2),
 					resource.TestCheckResourceAttr(resourceName, "state", athena.WorkGroupStateEnabled),
 				),
 			},
 			{
 				Config: testAccAthenaWorkGroupConfigState(rName, athena.WorkGroupStateDisabled),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup3),
+					testAccCheckWorkGroupExists(resourceName, &workgroup3),
 					resource.TestCheckResourceAttr(resourceName, "state", athena.WorkGroupStateDisabled),
 				),
 			},
@@ -470,14 +470,14 @@ func TestAccAWSAthenaWorkGroup_ForceDestroy(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
+		CheckDestroy: testAccCheckWorkGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAthenaWorkGroupConfigForceDestroy(rName, dbName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup),
-					testAccCheckAWSAthenaCreateNamedQuery(&workgroup, dbName, queryName1, fmt.Sprintf("SELECT * FROM %s limit 10;", rName)),
-					testAccCheckAWSAthenaCreateNamedQuery(&workgroup, dbName, queryName2, fmt.Sprintf("SELECT * FROM %s limit 100;", rName)),
+					testAccCheckWorkGroupExists(resourceName, &workgroup),
+					testAccCheckCreateNamedQuery(&workgroup, dbName, queryName1, fmt.Sprintf("SELECT * FROM %s limit 10;", rName)),
+					testAccCheckCreateNamedQuery(&workgroup, dbName, queryName2, fmt.Sprintf("SELECT * FROM %s limit 100;", rName)),
 				),
 			},
 			{
@@ -499,12 +499,12 @@ func TestAccAWSAthenaWorkGroup_Tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
+		CheckDestroy: testAccCheckWorkGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAthenaWorkGroupConfigTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup1),
+					testAccCheckWorkGroupExists(resourceName, &workgroup1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -518,7 +518,7 @@ func TestAccAWSAthenaWorkGroup_Tags(t *testing.T) {
 			{
 				Config: testAccAthenaWorkGroupConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup2),
+					testAccCheckWorkGroupExists(resourceName, &workgroup2),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -527,7 +527,7 @@ func TestAccAWSAthenaWorkGroup_Tags(t *testing.T) {
 			{
 				Config: testAccAthenaWorkGroupConfigTags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup3),
+					testAccCheckWorkGroupExists(resourceName, &workgroup3),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -536,7 +536,7 @@ func TestAccAWSAthenaWorkGroup_Tags(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSAthenaCreateNamedQuery(workGroup *athena.WorkGroup, databaseName, queryName, query string) resource.TestCheckFunc {
+func testAccCheckCreateNamedQuery(workGroup *athena.WorkGroup, databaseName, queryName, query string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AthenaConn
 
@@ -556,7 +556,7 @@ func testAccCheckAWSAthenaCreateNamedQuery(workGroup *athena.WorkGroup, database
 	}
 }
 
-func testAccCheckAWSAthenaWorkGroupDestroy(s *terraform.State) error {
+func testAccCheckWorkGroupDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).AthenaConn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_athena_workgroup" {
@@ -584,7 +584,7 @@ func testAccCheckAWSAthenaWorkGroupDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSAthenaWorkGroupExists(name string, workgroup *athena.WorkGroup) resource.TestCheckFunc {
+func testAccCheckWorkGroupExists(name string, workgroup *athena.WorkGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -609,7 +609,7 @@ func testAccCheckAWSAthenaWorkGroupExists(name string, workgroup *athena.WorkGro
 	}
 }
 
-func testAccCheckAWSAthenaWorkGroupDisappears(workgroup *athena.WorkGroup) resource.TestCheckFunc {
+func testAccCheckWorkGroupDisappears(workgroup *athena.WorkGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AthenaConn
 
