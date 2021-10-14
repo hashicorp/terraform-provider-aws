@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSCodeBuildWebhook_Bitbucket(t *testing.T) {
@@ -269,7 +270,7 @@ func testAccCheckAWSCodeBuildWebhookFilter(webhook *codebuild.Webhook, expectedF
 }
 
 func testAccCheckAWSCodeBuildWebhookDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).codebuildconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_codebuild_webhook" {
@@ -305,7 +306,7 @@ func testAccCheckAWSCodeBuildWebhookExists(name string, webhook *codebuild.Webho
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).codebuildconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn
 
 		resp, err := conn.BatchGetProjects(&codebuild.BatchGetProjectsInput{
 			Names: []*string{

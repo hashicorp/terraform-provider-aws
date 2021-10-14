@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsCodeBuildProject() *schema.Resource {
@@ -678,8 +679,8 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 }
 
 func resourceAwsCodeBuildProjectCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codebuildconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).CodeBuildConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	projectEnv := expandProjectEnvironment(d)
@@ -1233,9 +1234,9 @@ func expandProjectSourceData(data map[string]interface{}) codebuild.ProjectSourc
 }
 
 func resourceAwsCodeBuildProjectRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codebuildconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).CodeBuildConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	resp, err := conn.BatchGetProjects(&codebuild.BatchGetProjectsInput{
 		Names: []*string{
@@ -1328,8 +1329,8 @@ func resourceAwsCodeBuildProjectRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsCodeBuildProjectUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codebuildconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).CodeBuildConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	params := &codebuild.UpdateProjectInput{
@@ -1466,7 +1467,7 @@ func resourceAwsCodeBuildProjectUpdate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsCodeBuildProjectDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codebuildconn
+	conn := meta.(*conns.AWSClient).CodeBuildConn
 
 	_, err := conn.DeleteProject(&codebuild.DeleteProjectInput{
 		Name: aws.String(d.Id()),

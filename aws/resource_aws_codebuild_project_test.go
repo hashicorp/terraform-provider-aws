@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -2348,7 +2349,7 @@ func testAccCheckAWSCodeBuildProjectExists(n string, project *codebuild.Project)
 			return fmt.Errorf("No CodeBuild Project ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).codebuildconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn
 
 		out, err := conn.BatchGetProjects(&codebuild.BatchGetProjectsInput{
 			Names: []*string{
@@ -2371,7 +2372,7 @@ func testAccCheckAWSCodeBuildProjectExists(n string, project *codebuild.Project)
 }
 
 func testAccCheckAWSCodeBuildProjectDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).codebuildconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_codebuild_project" {
@@ -2408,7 +2409,7 @@ func testAccCheckAWSCodeBuildProjectCertificate(project *codebuild.Project, expe
 }
 
 func testAccPreCheckAWSCodeBuild(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).codebuildconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn
 
 	input := &codebuild.BatchGetProjectsInput{
 		Names: []*string{aws.String("tf-acc-test-precheck")},
