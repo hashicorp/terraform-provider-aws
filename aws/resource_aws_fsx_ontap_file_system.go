@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceOntapFileSystem() *schema.Resource {
@@ -135,7 +136,7 @@ func ResourceOntapFileSystem() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ValidateFunc: validateIpv4CIDRNetworkAddress,
+				ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
 			},
 			"fsx_admin_password": {
 				Type:         schema.TypeString,
@@ -148,7 +149,7 @@ func ResourceOntapFileSystem() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"network_interface_ids": {
 				// As explained in https://docs.aws.amazon.com/fsx/latest/OntapGuide/mounting-on-premises.html, the first

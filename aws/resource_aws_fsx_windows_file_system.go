@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceWindowsFileSystem() *schema.Resource {
@@ -76,7 +77,7 @@ func ResourceWindowsFileSystem() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 							StateFunc:    fsxWindowsAuditLogStateFunc,
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 								return strings.HasPrefix(old, fmt.Sprintf("%s:", new))
@@ -132,7 +133,7 @@ func ResourceWindowsFileSystem() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"network_interface_ids": {
 				Type:     schema.TypeSet,
