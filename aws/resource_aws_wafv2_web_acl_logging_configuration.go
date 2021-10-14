@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
@@ -599,7 +599,7 @@ func redactedFieldsHash(v interface{}) int {
 		}
 	}
 
-	return hashcode.String(buf.String())
+	return create.StringHashcode(buf.String())
 }
 
 func suppressRedactedFieldsDiff(k, old, new string, d *schema.ResourceData) bool {
