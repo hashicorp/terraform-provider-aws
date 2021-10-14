@@ -7,11 +7,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/amplify/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
 )
 
-func DomainAssociationStatus(conn *amplify.Amplify, appID, domainName string) resource.StateRefreshFunc {
+func statusDomainAssociation(conn *amplify.Amplify, appID, domainName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		domainAssociation, err := finder.DomainAssociationByAppIDAndDomainName(conn, appID, domainName)
+		domainAssociation, err := tfamplify.FindDomainAssociationByAppIDAndDomainName(conn, appID, domainName)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

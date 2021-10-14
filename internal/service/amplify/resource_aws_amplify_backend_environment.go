@@ -16,6 +16,18 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
 )
 
 func ResourceBackendEnvironment() *schema.Resource {
@@ -106,7 +118,7 @@ func resourceBackendEnvironmentRead(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("error parsing Amplify Backend Environment ID: %w", err)
 	}
 
-	backendEnvironment, err := finder.BackendEnvironmentByAppIDAndEnvironmentName(conn, appID, environmentName)
+	backendEnvironment, err := tfamplify.FindBackendEnvironmentByAppIDAndEnvironmentName(conn, appID, environmentName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Amplify Backend Environment (%s) not found, removing from state", d.Id())

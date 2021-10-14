@@ -12,16 +12,16 @@ import (
 )
 
 const (
-	DomainAssociationCreatedTimeout  = 5 * time.Minute
-	DomainAssociationVerifiedTimeout = 15 * time.Minute
+	domainAssociationCreatedTimeout  = 5 * time.Minute
+	domainAssociationVerifiedTimeout = 15 * time.Minute
 )
 
-func DomainAssociationCreated(conn *amplify.Amplify, appID, domainName string) (*amplify.DomainAssociation, error) {
+func waitDomainAssociationCreated(conn *amplify.Amplify, appID, domainName string) (*amplify.DomainAssociation, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{amplify.DomainStatusCreating, amplify.DomainStatusInProgress, amplify.DomainStatusRequestingCertificate},
 		Target:  []string{amplify.DomainStatusPendingVerification, amplify.DomainStatusPendingDeployment, amplify.DomainStatusAvailable},
-		Refresh: DomainAssociationStatus(conn, appID, domainName),
-		Timeout: DomainAssociationCreatedTimeout,
+		Refresh: statusDomainAssociation(conn, appID, domainName),
+		Timeout: domainAssociationCreatedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -37,12 +37,12 @@ func DomainAssociationCreated(conn *amplify.Amplify, appID, domainName string) (
 	return nil, err
 }
 
-func DomainAssociationVerified(conn *amplify.Amplify, appID, domainName string) (*amplify.DomainAssociation, error) {
+func waitDomainAssociationVerified(conn *amplify.Amplify, appID, domainName string) (*amplify.DomainAssociation, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{amplify.DomainStatusUpdating, amplify.DomainStatusInProgress, amplify.DomainStatusPendingVerification},
 		Target:  []string{amplify.DomainStatusPendingDeployment, amplify.DomainStatusAvailable},
-		Refresh: DomainAssociationStatus(conn, appID, domainName),
-		Timeout: DomainAssociationVerifiedTimeout,
+		Refresh: statusDomainAssociation(conn, appID, domainName),
+		Timeout: domainAssociationVerifiedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()

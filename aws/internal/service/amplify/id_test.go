@@ -5,6 +5,13 @@ import (
 
 	tfamplify "github.com/hashicorp/terraform-provider-aws/aws/internal/service/amplify"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
 )
 
 func TestBranchParseResourceID(t *testing.T) {

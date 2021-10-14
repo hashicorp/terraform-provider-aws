@@ -18,6 +18,18 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
 )
 
 func testAccAWSAmplifyDomainAssociation_basic(t *testing.T) {
@@ -168,7 +180,7 @@ func testAccCheckAWSAmplifyDomainAssociationExists(resourceName string, v *ampli
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyConn
 
-		domainAssociation, err := finder.DomainAssociationByAppIDAndDomainName(conn, appID, domainName)
+		domainAssociation, err := tfamplify.FindDomainAssociationByAppIDAndDomainName(conn, appID, domainName)
 
 		if err != nil {
 			return err
@@ -194,7 +206,7 @@ func testAccCheckAWSAmplifyDomainAssociationDestroy(s *terraform.State) error {
 			return err
 		}
 
-		_, err = finder.DomainAssociationByAppIDAndDomainName(conn, appID, domainName)
+		_, err = tfamplify.FindDomainAssociationByAppIDAndDomainName(conn, appID, domainName)
 
 		if tfresource.NotFound(err) {
 			continue

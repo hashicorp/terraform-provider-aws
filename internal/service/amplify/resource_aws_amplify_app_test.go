@@ -23,6 +23,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
 )
 
 func init() {
@@ -41,7 +48,7 @@ func testSweepAmplifyApps(region string) error {
 	input := &amplify.ListAppsInput{}
 	var sweeperErrs *multierror.Error
 
-	err = lister.ListAppsPages(conn, input, func(page *amplify.ListAppsOutput, lastPage bool) bool {
+	err = tfamplify.ListAppsPages(conn, input, func(page *amplify.ListAppsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -646,7 +653,7 @@ func testAccCheckAWSAmplifyAppExists(n string, v *amplify.App) resource.TestChec
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyConn
 
-		output, err := finder.AppByID(conn, rs.Primary.ID)
+		output, err := tfamplify.FindAppByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -666,7 +673,7 @@ func testAccCheckAWSAmplifyAppDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.AppByID(conn, rs.Primary.ID)
+		_, err := tfamplify.FindAppByID(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue

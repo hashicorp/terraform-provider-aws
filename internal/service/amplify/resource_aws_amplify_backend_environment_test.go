@@ -17,6 +17,18 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
 )
 
 func testAccAWSAmplifyBackendEnvironment_basic(t *testing.T) {
@@ -127,7 +139,7 @@ func testAccCheckAWSAmplifyBackendEnvironmentExists(resourceName string, v *ampl
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyConn
 
-		backendEnvironment, err := finder.BackendEnvironmentByAppIDAndEnvironmentName(conn, appID, environmentName)
+		backendEnvironment, err := tfamplify.FindBackendEnvironmentByAppIDAndEnvironmentName(conn, appID, environmentName)
 
 		if err != nil {
 			return err
@@ -153,7 +165,7 @@ func testAccCheckAWSAmplifyBackendEnvironmentDestroy(s *terraform.State) error {
 			return err
 		}
 
-		_, err = finder.BackendEnvironmentByAppIDAndEnvironmentName(conn, appID, environmentName)
+		_, err = tfamplify.FindBackendEnvironmentByAppIDAndEnvironmentName(conn, appID, environmentName)
 
 		if tfresource.NotFound(err) {
 			continue

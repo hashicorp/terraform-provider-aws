@@ -17,6 +17,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
 )
 
 func ResourceWebhook() *schema.Resource {
@@ -87,7 +92,7 @@ func resourceWebhookCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceWebhookRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AmplifyConn
 
-	webhook, err := finder.WebhookByID(conn, d.Id())
+	webhook, err := tfamplify.FindWebhookByID(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Amplify Webhook (%s) not found, removing from state", d.Id())

@@ -16,6 +16,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
 )
 
 func testAccAWSAmplifyWebhook_basic(t *testing.T) {
@@ -120,7 +125,7 @@ func testAccCheckAWSAmplifyWebhookExists(resourceName string, v *amplify.Webhook
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyConn
 
-		webhook, err := finder.WebhookByID(conn, rs.Primary.ID)
+		webhook, err := tfamplify.FindWebhookByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -140,7 +145,7 @@ func testAccCheckAWSAmplifyWebhookDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.WebhookByID(conn, rs.Primary.ID)
+		_, err := tfamplify.FindWebhookByID(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
