@@ -84,7 +84,7 @@ func sweepAccessPoints(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSS3AccessPoint_basic(t *testing.T) {
+func TestAccS3ControlAccessPoint_basic(t *testing.T) {
 	var v s3control.GetAccessPointOutput
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	accessPointName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -125,7 +125,7 @@ func TestAccAWSS3AccessPoint_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3AccessPoint_disappears(t *testing.T) {
+func TestAccS3ControlAccessPoint_disappears(t *testing.T) {
 	var v s3control.GetAccessPointOutput
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	accessPointName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -149,7 +149,7 @@ func TestAccAWSS3AccessPoint_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3AccessPoint_disappears_Bucket(t *testing.T) {
+func TestAccS3ControlAccessPoint_Disappears_bucket(t *testing.T) {
 	var v s3control.GetAccessPointOutput
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	accessPointName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -174,7 +174,7 @@ func TestAccAWSS3AccessPoint_disappears_Bucket(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3AccessPoint_Bucket_Arn(t *testing.T) {
+func TestAccS3ControlAccessPoint_Bucket_arn(t *testing.T) {
 	var v s3control.GetAccessPointOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_access_point.test"
@@ -215,7 +215,7 @@ func TestAccAWSS3AccessPoint_Bucket_Arn(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3AccessPoint_Policy(t *testing.T) {
+func TestAccS3ControlAccessPoint_policy(t *testing.T) {
 	var v s3control.GetAccessPointOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_access_point.test"
@@ -309,7 +309,7 @@ func TestAccAWSS3AccessPoint_Policy(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3AccessPoint_PublicAccessBlockConfiguration(t *testing.T) {
+func TestAccS3ControlAccessPoint_publicAccessBlock(t *testing.T) {
 	var v s3control.GetAccessPointOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_access_point.test"
@@ -348,7 +348,7 @@ func TestAccAWSS3AccessPoint_PublicAccessBlockConfiguration(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3AccessPoint_VpcConfiguration(t *testing.T) {
+func TestAccS3ControlAccessPoint_vpc(t *testing.T) {
 	var v s3control.GetAccessPointOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_access_point.test"
