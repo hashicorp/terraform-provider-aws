@@ -384,7 +384,7 @@ func TestAccAWSCloudWatchEventTarget_disappears(t *testing.T) {
 				Config: testAccAWSCloudWatchEventTargetConfig(ruleName, snsTopicName, targetID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventTargetExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceTarget(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcloudwatchevents.ResourceTarget(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

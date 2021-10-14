@@ -51,7 +51,7 @@ func testSweepCloudWatchEventBuses(region string) error {
 				continue
 			}
 
-			r := ResourceBus()
+			r := tfcloudwatchevents.ResourceBus()
 			d := r.Data(nil)
 			d.SetId(name)
 			err = r.Delete(d, client)
@@ -217,7 +217,7 @@ func TestAccAWSCloudWatchEventBus_disappears(t *testing.T) {
 				Config: testAccAWSCloudWatchEventBusConfig(busName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventBusExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceBus(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcloudwatchevents.ResourceBus(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

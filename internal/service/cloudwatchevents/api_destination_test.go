@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -247,7 +248,7 @@ func TestAccAWSCloudWatchEventApiDestination_disappears(t *testing.T) {
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventApiDestinationExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceAPIDestination(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcloudwatchevents.ResourceAPIDestination(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

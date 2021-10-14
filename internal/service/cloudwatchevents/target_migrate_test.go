@@ -2,6 +2,7 @@ package cloudwatchevents_test
 
 import (
 	"context"
+	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
 	"reflect"
 	"testing"
 )
@@ -45,7 +46,7 @@ func testResourceAwsCloudWatchEventTargetStateDataV1EventBusName() map[string]in
 
 func TestResourceAwsCloudWatchEventTargetStateUpgradeV0(t *testing.T) {
 	expected := testResourceAwsCloudWatchEventTargetStateDataV1()
-	actual, err := resourceAwsCloudWatchEventTargetStateUpgradeV0(context.Background(), testResourceAwsCloudWatchEventTargetStateDataV0(), nil)
+	actual, err := tfcloudwatchevents.TargetStateUpgradeV0(context.Background(), testResourceAwsCloudWatchEventTargetStateDataV0(), nil)
 	if err != nil {
 		t.Fatalf("error migrating state: %s", err)
 	}
@@ -57,7 +58,7 @@ func TestResourceAwsCloudWatchEventTargetStateUpgradeV0(t *testing.T) {
 
 func TestResourceAwsCloudWatchEventTargetStateUpgradeV0EventBusName(t *testing.T) {
 	expected := testResourceAwsCloudWatchEventTargetStateDataV1EventBusName()
-	actual, err := resourceAwsCloudWatchEventTargetStateUpgradeV0(context.Background(), testResourceAwsCloudWatchEventTargetStateDataV0EventBusName(), nil)
+	actual, err := tfcloudwatchevents.TargetStateUpgradeV0(context.Background(), testResourceAwsCloudWatchEventTargetStateDataV0EventBusName(), nil)
 	if err != nil {
 		t.Fatalf("error migrating state: %s", err)
 	}

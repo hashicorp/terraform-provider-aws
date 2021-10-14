@@ -611,7 +611,7 @@ func TestAccAWSCloudWatchEventConnection_disappears(t *testing.T) {
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventConnectionExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceConnection(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcloudwatchevents.ResourceConnection(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

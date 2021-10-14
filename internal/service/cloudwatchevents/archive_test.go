@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -149,7 +150,7 @@ func TestAccAWSCloudWatchEventArchive_disappears(t *testing.T) {
 				Config: testAccAWSCloudWatchEventArchiveConfig(archiveName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventArchiveExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceArchive(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcloudwatchevents.ResourceArchive(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

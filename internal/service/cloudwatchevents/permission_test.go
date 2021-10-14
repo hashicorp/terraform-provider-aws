@@ -50,7 +50,7 @@ func testSweepCloudWatchEventPermissions(region string) error {
 		return nil
 	}
 
-	var policyDoc CloudWatchEventPermissionPolicyDoc
+	var policyDoc tfcloudwatchevents.PermissionPolicyDoc
 	err = json.Unmarshal([]byte(policy), &policyDoc)
 	if err != nil {
 		return fmt.Errorf("Parsing CloudWatch Event Permissions policy %q failed: %w", policy, err)
@@ -309,7 +309,7 @@ func TestAccAWSCloudWatchEventPermission_Disappears(t *testing.T) {
 				Config: testAccCheckAwsCloudWatchEventPermissionResourceConfigBasic(principal, statementID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventPermissionExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourcePermission(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcloudwatchevents.ResourcePermission(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -345,13 +345,13 @@ func testAccCheckCloudWatchEventPermissionExists(pr string) resource.TestCheckFu
 			return fmt.Errorf("Not found: %s", pr)
 		}
 
-		var policyDoc CloudWatchEventPermissionPolicyDoc
+		var policyDoc tfcloudwatchevents.PermissionPolicyDoc
 		err = json.Unmarshal([]byte(*debo.Policy), &policyDoc)
 		if err != nil {
 			return fmt.Errorf("Reading CloudWatch Events bus policy for '%s' failed: %w", pr, err)
 		}
 
-		_, err = findCloudWatchEventPermissionPolicyStatementByID(&policyDoc, statementID)
+		_, err = tfcloudwatchevents.FindPermissionPolicyStatementByID(&policyDoc, statementID)
 		return err
 	}
 }
@@ -383,13 +383,13 @@ func testAccCheckCloudWatchEventPermissionDestroy(s *terraform.State) error {
 				return nil
 			}
 
-			var policyDoc CloudWatchEventPermissionPolicyDoc
+			var policyDoc tfcloudwatchevents.PermissionPolicyDoc
 			err = json.Unmarshal([]byte(*debo.Policy), &policyDoc)
 			if err != nil {
 				return resource.NonRetryableError(fmt.Errorf("Reading CloudWatch Events permission '%s' failed: %w", rs.Primary.ID, err))
 			}
 
-			_, err = findCloudWatchEventPermissionPolicyStatementByID(&policyDoc, statementID)
+			_, err = tfcloudwatchevents.FindPermissionPolicyStatementByID(&policyDoc, statementID)
 			if err == nil {
 				return resource.RetryableError(fmt.Errorf("CloudWatch Events permission exists: %s", rs.Primary.ID))
 			}

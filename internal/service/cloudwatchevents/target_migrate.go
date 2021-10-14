@@ -169,7 +169,7 @@ func resourceAwsCloudWatchEventTargetV0() *schema.Resource {
 	}
 }
 
-func resourceAwsCloudWatchEventTargetStateUpgradeV0(_ context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+func TargetStateUpgradeV0(_ context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
 	if rawState == nil {
 		rawState = map[string]interface{}{}
 	}
