@@ -1,4 +1,4 @@
-package aws
+package codeartifact_test
 
 import (
 	"fmt"
