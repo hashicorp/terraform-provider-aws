@@ -38,7 +38,7 @@ func ResourceApplication() *schema.Resource {
 		),
 
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsKinesisAnalyticsV2ApplicationImport,
+			State: resourceApplicationImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -1539,7 +1539,7 @@ func resourceApplicationDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsKinesisAnalyticsV2ApplicationImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceApplicationImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	arn, err := arn.Parse(d.Id())
 	if err != nil {
 		return []*schema.ResourceData{}, fmt.Errorf("Error parsing ARN %q: %w", d.Id(), err)
