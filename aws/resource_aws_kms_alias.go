@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/naming"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfkms "github.com/hashicorp/terraform-provider-aws/aws/internal/service/kms"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/kms/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/kms/waiter"
@@ -72,7 +72,7 @@ func resourceAwsKmsAliasCreate(d *schema.ResourceData, meta interface{}) error {
 	if namePrefix == "" {
 		namePrefix = tfkms.AliasNamePrefix
 	}
-	name := naming.Generate(d.Get("name").(string), namePrefix)
+	name := create.Name(d.Get("name").(string), namePrefix)
 
 	input := &kms.CreateAliasInput{
 		AliasName:   aws.String(name),
@@ -123,7 +123,7 @@ func resourceAwsKmsAliasRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("arn", aliasARN)
 	d.Set("name", alias.AliasName)
-	d.Set("name_prefix", naming.NamePrefixFromName(aws.StringValue(alias.AliasName)))
+	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(alias.AliasName)))
 	d.Set("target_key_arn", targetKeyARN)
 	d.Set("target_key_id", targetKeyID)
 
