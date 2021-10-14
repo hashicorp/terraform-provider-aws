@@ -23,7 +23,7 @@ func ResourceEventDestination() *schema.Resource {
 		Read:   resourceEventDestinationRead,
 		Delete: resourceEventDestinationDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsSesEventDestinationImport,
+			State: resourceEventDestinationImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -283,7 +283,7 @@ func resourceEventDestinationDelete(d *schema.ResourceData, meta interface{}) er
 	return err
 }
 
-func resourceAwsSesEventDestinationImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceEventDestinationImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 2 {
 		return []*schema.ResourceData{}, fmt.Errorf("Wrong format of resource: %s. Please follow 'configuration-set-name/event-destination-name'", d.Id())

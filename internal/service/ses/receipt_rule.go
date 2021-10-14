@@ -27,7 +27,7 @@ func ResourceReceiptRule() *schema.Resource {
 		Read:   resourceReceiptRuleRead,
 		Delete: resourceReceiptRuleDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsSesReceiptRuleImport,
+			State: resourceReceiptRuleImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -397,7 +397,7 @@ func ResourceReceiptRule() *schema.Resource {
 	}
 }
 
-func resourceAwsSesReceiptRuleImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceReceiptRuleImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	idParts := strings.Split(d.Id(), ":")
 	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 		return nil, fmt.Errorf("unexpected format of ID (%q), expected <ruleset-name>:<rule-name>", d.Id())

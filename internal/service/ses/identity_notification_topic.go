@@ -15,9 +15,9 @@ import (
 
 func ResourceIdentityNotificationTopic() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSesNotificationTopicSet,
+		Create: resourceNotificationTopicSet,
 		Read:   resourceIdentityNotificationTopicRead,
-		Update: resourceAwsSesNotificationTopicSet,
+		Update: resourceNotificationTopicSet,
 		Delete: resourceIdentityNotificationTopicDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -56,7 +56,7 @@ func ResourceIdentityNotificationTopic() *schema.Resource {
 	}
 }
 
-func resourceAwsSesNotificationTopicSet(d *schema.ResourceData, meta interface{}) error {
+func resourceNotificationTopicSet(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SESConn
 	notification := d.Get("notification_type").(string)
 	identity := d.Get("identity").(string)

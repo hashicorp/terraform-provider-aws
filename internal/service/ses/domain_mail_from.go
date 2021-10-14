@@ -12,9 +12,9 @@ import (
 
 func ResourceDomainMailFrom() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSesDomainMailFromSet,
+		Create: resourceDomainMailFromSet,
 		Read:   resourceDomainMailFromRead,
-		Update: resourceAwsSesDomainMailFromSet,
+		Update: resourceDomainMailFromSet,
 		Delete: resourceDomainMailFromDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -39,7 +39,7 @@ func ResourceDomainMailFrom() *schema.Resource {
 	}
 }
 
-func resourceAwsSesDomainMailFromSet(d *schema.ResourceData, meta interface{}) error {
+func resourceDomainMailFromSet(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SESConn
 
 	behaviorOnMxFailure := d.Get("behavior_on_mx_failure").(string)
