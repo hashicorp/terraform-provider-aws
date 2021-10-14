@@ -4,7 +4,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func FindSubscriptionByARN(conn *sns.SNS, id string) (*sns.GetSubscriptionAttributesOutput, error) {
