@@ -1,4 +1,4 @@
-package aws
+package cloudwatch
 
 import (
 	"context"
@@ -11,13 +11,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudwatch/finder"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfcloudwatch "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatch"
-	tfcloudwatch "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatch"
 )
 
 func ResourceCompositeAlarm() *schema.Resource {
@@ -118,7 +115,7 @@ func resourceCompositeAlarmRead(ctx context.Context, d *schema.ResourceData, met
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 	name := d.Id()
 
-	alarm, err := tfcloudwatch.FindCompositeAlarmByName(ctx, conn, name)
+	alarm, err := FindCompositeAlarmByName(ctx, conn, name)
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cloudwatch.ErrCodeResourceNotFound) {
 		log.Printf("[WARN] CloudWatch Composite Alarm %s not found, removing from state", name)
 		d.SetId("")
