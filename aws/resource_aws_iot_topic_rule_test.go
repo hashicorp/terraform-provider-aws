@@ -8,9 +8,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -68,12 +69,12 @@ func testSweepIotTopicRules(region string) error {
 }
 
 func TestAccAWSIoTTopicRule_basic(t *testing.T) {
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 	resourceName := "aws_iot_topic_rule.rule"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iot.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
 		Steps: []resource.TestStep{
@@ -99,12 +100,12 @@ func TestAccAWSIoTTopicRule_basic(t *testing.T) {
 }
 
 func TestAccAWSIoTTopicRule_cloudwatchalarm(t *testing.T) {
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 	resourceName := "aws_iot_topic_rule.rule"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iot.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
 		Steps: []resource.TestStep{
@@ -124,12 +125,12 @@ func TestAccAWSIoTTopicRule_cloudwatchalarm(t *testing.T) {
 }
 
 func TestAccAWSIoTTopicRule_cloudwatchmetric(t *testing.T) {
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 	resourceName := "aws_iot_topic_rule.rule"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iot.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
 		Steps: []resource.TestStep{
@@ -149,12 +150,12 @@ func TestAccAWSIoTTopicRule_cloudwatchmetric(t *testing.T) {
 }
 
 func TestAccAWSIoTTopicRule_dynamodb(t *testing.T) {
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 	resourceName := "aws_iot_topic_rule.rule"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iot.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
 		Steps: []resource.TestStep{
@@ -180,11 +181,11 @@ func TestAccAWSIoTTopicRule_dynamodb(t *testing.T) {
 }
 
 func TestAccAWSIoTTopicRule_dynamoDbv2(t *testing.T) {
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iot.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
 		Steps: []resource.TestStep{
@@ -199,12 +200,12 @@ func TestAccAWSIoTTopicRule_dynamoDbv2(t *testing.T) {
 }
 
 func TestAccAWSIoTTopicRule_elasticsearch(t *testing.T) {
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 	resourceName := "aws_iot_topic_rule.rule"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iot.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
 		Steps: []resource.TestStep{
@@ -224,12 +225,12 @@ func TestAccAWSIoTTopicRule_elasticsearch(t *testing.T) {
 }
 
 func TestAccAWSIoTTopicRule_firehose(t *testing.T) {
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 	resourceName := "aws_iot_topic_rule.rule"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iot.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
 		Steps: []resource.TestStep{
@@ -249,12 +250,12 @@ func TestAccAWSIoTTopicRule_firehose(t *testing.T) {
 }
 
 func TestAccAWSIoTTopicRule_firehose_separator(t *testing.T) {
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 	resourceName := "aws_iot_topic_rule.rule"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iot.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
 		Steps: []resource.TestStep{
@@ -280,12 +281,12 @@ func TestAccAWSIoTTopicRule_firehose_separator(t *testing.T) {
 }
 
 func TestAccAWSIoTTopicRule_kinesis(t *testing.T) {
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 	resourceName := "aws_iot_topic_rule.rule"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iot.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
 		Steps: []resource.TestStep{
@@ -305,12 +306,12 @@ func TestAccAWSIoTTopicRule_kinesis(t *testing.T) {
 }
 
 func TestAccAWSIoTTopicRule_lambda(t *testing.T) {
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 	resourceName := "aws_iot_topic_rule.rule"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iot.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
 		Steps: []resource.TestStep{
@@ -330,12 +331,12 @@ func TestAccAWSIoTTopicRule_lambda(t *testing.T) {
 }
 
 func TestAccAWSIoTTopicRule_republish(t *testing.T) {
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 	resourceName := "aws_iot_topic_rule.rule"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iot.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
 		Steps: []resource.TestStep{
@@ -355,12 +356,12 @@ func TestAccAWSIoTTopicRule_republish(t *testing.T) {
 }
 
 func TestAccAWSIoTTopicRule_republish_with_qos(t *testing.T) {
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 	resourceName := "aws_iot_topic_rule.rule"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iot.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
 		Steps: []resource.TestStep{
@@ -380,12 +381,12 @@ func TestAccAWSIoTTopicRule_republish_with_qos(t *testing.T) {
 }
 
 func TestAccAWSIoTTopicRule_s3(t *testing.T) {
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 	resourceName := "aws_iot_topic_rule.rule"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iot.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
 		Steps: []resource.TestStep{
@@ -405,12 +406,12 @@ func TestAccAWSIoTTopicRule_s3(t *testing.T) {
 }
 
 func TestAccAWSIoTTopicRule_sns(t *testing.T) {
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 	resourceName := "aws_iot_topic_rule.rule"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iot.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
 		Steps: []resource.TestStep{
@@ -430,12 +431,12 @@ func TestAccAWSIoTTopicRule_sns(t *testing.T) {
 }
 
 func TestAccAWSIoTTopicRule_sqs(t *testing.T) {
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 	resourceName := "aws_iot_topic_rule.rule"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iot.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
 		Steps: []resource.TestStep{
@@ -455,12 +456,12 @@ func TestAccAWSIoTTopicRule_sqs(t *testing.T) {
 }
 
 func TestAccAWSIoTTopicRule_step_functions(t *testing.T) {
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 	resourceName := "aws_iot_topic_rule.rule"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iot.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
 		Steps: []resource.TestStep{
@@ -480,11 +481,11 @@ func TestAccAWSIoTTopicRule_step_functions(t *testing.T) {
 }
 
 func TestAccAWSIoTTopicRule_iot_analytics(t *testing.T) {
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iot.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
 		Steps: []resource.TestStep{
@@ -499,11 +500,11 @@ func TestAccAWSIoTTopicRule_iot_analytics(t *testing.T) {
 }
 
 func TestAccAWSIoTTopicRule_iot_events(t *testing.T) {
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iot.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
 		Steps: []resource.TestStep{
@@ -518,12 +519,12 @@ func TestAccAWSIoTTopicRule_iot_events(t *testing.T) {
 }
 
 func TestAccAWSIoTTopicRule_Tags(t *testing.T) {
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 	resourceName := "aws_iot_topic_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iot.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
 		Steps: []resource.TestStep{
@@ -562,12 +563,12 @@ func TestAccAWSIoTTopicRule_Tags(t *testing.T) {
 }
 
 func TestAccAWSIoTTopicRule_errorAction(t *testing.T) {
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 	resourceName := "aws_iot_topic_rule.rule"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iot.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
 		Steps: []resource.TestStep{
@@ -588,12 +589,12 @@ func TestAccAWSIoTTopicRule_errorAction(t *testing.T) {
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/16115
 func TestAccAWSIoTTopicRule_updateKinesisErrorAction(t *testing.T) {
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 	resourceName := "aws_iot_topic_rule.rule"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iot.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
 		Steps: []resource.TestStep{
@@ -739,7 +740,7 @@ resource "aws_iot_topic_rule" "rule" {
 }
 
 func testAccAWSIoTTopicRule_cloudwatchalarm(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSIoTTopicRuleRole(rName),
 		fmt.Sprintf(`
 resource "aws_iot_topic_rule" "rule" {
@@ -760,7 +761,7 @@ resource "aws_iot_topic_rule" "rule" {
 }
 
 func testAccAWSIoTTopicRule_cloudwatchmetric(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSIoTTopicRuleRole(rName),
 		fmt.Sprintf(`
 resource "aws_iot_topic_rule" "rule" {
@@ -782,7 +783,7 @@ resource "aws_iot_topic_rule" "rule" {
 }
 
 func testAccAWSIoTTopicRule_dynamoDbv2(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSIoTTopicRuleRole(rName),
 		fmt.Sprintf(`
 resource "aws_iot_topic_rule" "rule" {
@@ -804,7 +805,7 @@ resource "aws_iot_topic_rule" "rule" {
 }
 
 func testAccAWSIoTTopicRule_dynamodb(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSIoTTopicRuleRole(rName),
 		fmt.Sprintf(`
 resource "aws_iot_topic_rule" "rule" {
@@ -826,7 +827,7 @@ resource "aws_iot_topic_rule" "rule" {
 }
 
 func testAccAWSIoTTopicRule_dynamodb_rangekeys(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSIoTTopicRuleRole(rName),
 		fmt.Sprintf(`
 resource "aws_iot_topic_rule" "rule" {
@@ -852,7 +853,7 @@ resource "aws_iot_topic_rule" "rule" {
 }
 
 func testAccAWSIoTTopicRule_elasticsearch(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSIoTTopicRuleRole(rName),
 		fmt.Sprintf(`
 data "aws_region" "current" {}
@@ -876,7 +877,7 @@ resource "aws_iot_topic_rule" "rule" {
 }
 
 func testAccAWSIoTTopicRule_firehose(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSIoTTopicRuleRole(rName),
 		fmt.Sprintf(`
 resource "aws_iot_topic_rule" "rule" {
@@ -895,7 +896,7 @@ resource "aws_iot_topic_rule" "rule" {
 }
 
 func testAccAWSIoTTopicRule_firehose_separator(rName, separator string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSIoTTopicRuleRole(rName),
 		fmt.Sprintf(`
 resource "aws_iot_topic_rule" "rule" {
@@ -915,7 +916,7 @@ resource "aws_iot_topic_rule" "rule" {
 }
 
 func testAccAWSIoTTopicRule_kinesis(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSIoTTopicRuleRole(rName),
 		fmt.Sprintf(`
 resource "aws_iot_topic_rule" "rule" {
@@ -954,7 +955,7 @@ resource "aws_iot_topic_rule" "rule" {
 }
 
 func testAccAWSIoTTopicRule_republish(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSIoTTopicRuleRole(rName),
 		fmt.Sprintf(`
 resource "aws_iot_topic_rule" "rule" {
@@ -973,7 +974,7 @@ resource "aws_iot_topic_rule" "rule" {
 }
 
 func testAccAWSIoTTopicRule_republish_with_qos(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSIoTTopicRuleRole(rName),
 		fmt.Sprintf(`
 resource "aws_iot_topic_rule" "rule" {
@@ -993,7 +994,7 @@ resource "aws_iot_topic_rule" "rule" {
 }
 
 func testAccAWSIoTTopicRule_s3(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSIoTTopicRuleRole(rName),
 		fmt.Sprintf(`
 resource "aws_iot_topic_rule" "rule" {
@@ -1013,7 +1014,7 @@ resource "aws_iot_topic_rule" "rule" {
 }
 
 func testAccAWSIoTTopicRule_sns(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSIoTTopicRuleRole(rName),
 		fmt.Sprintf(`
 data "aws_region" "current" {}
@@ -1034,7 +1035,7 @@ resource "aws_iot_topic_rule" "rule" {
 }
 
 func testAccAWSIoTTopicRule_sqs(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSIoTTopicRuleRole(rName),
 		fmt.Sprintf(`
 resource "aws_iot_topic_rule" "rule" {
@@ -1054,7 +1055,7 @@ resource "aws_iot_topic_rule" "rule" {
 }
 
 func testAccAWSIoTTopicRule_step_functions(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSIoTTopicRuleRole(rName),
 		fmt.Sprintf(`
 resource "aws_iot_topic_rule" "rule" {
@@ -1074,7 +1075,7 @@ resource "aws_iot_topic_rule" "rule" {
 }
 
 func testAccAWSIoTTopicRule_iot_analytics(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSIoTTopicRuleRole(rName),
 		fmt.Sprintf(`
 resource "aws_iot_topic_rule" "rule" {
@@ -1093,7 +1094,7 @@ resource "aws_iot_topic_rule" "rule" {
 }
 
 func testAccAWSIoTTopicRule_iot_events(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSIoTTopicRuleRole(rName),
 		fmt.Sprintf(`
 resource "aws_iot_topic_rule" "rule" {
@@ -1144,7 +1145,7 @@ resource "aws_iot_topic_rule" "test" {
 }
 
 func testAccAWSIoTTopicRule_errorAction(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSIoTTopicRuleRole(rName),
 		fmt.Sprintf(`
 resource "aws_iot_topic_rule" "rule" {

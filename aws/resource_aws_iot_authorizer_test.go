@@ -5,21 +5,22 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/iot"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/iot/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSIoTAuthorizer_basic(t *testing.T) {
 	var conf iot.AuthorizerDescription
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_iot_authorizer.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iot.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTAuthorizerDestroy,
 		Steps: []resource.TestStep{
@@ -27,7 +28,7 @@ func TestAccAWSIoTAuthorizer_basic(t *testing.T) {
 				Config: testAccAWSIoTAuthorizerConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSIoTAuthorizerExists(resourceName, &conf),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "iot", fmt.Sprintf("authorizer/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "iot", fmt.Sprintf("authorizer/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "signing_disabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "status", "ACTIVE"),
@@ -47,12 +48,12 @@ func TestAccAWSIoTAuthorizer_basic(t *testing.T) {
 
 func TestAccAWSIoTAuthorizer_disappears(t *testing.T) {
 	var conf iot.AuthorizerDescription
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_iot_authorizer.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iot.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTAuthorizerDestroy,
 		Steps: []resource.TestStep{
@@ -60,7 +61,7 @@ func TestAccAWSIoTAuthorizer_disappears(t *testing.T) {
 				Config: testAccAWSIoTAuthorizerConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSIoTAuthorizerExists(resourceName, &conf),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsIoTAuthorizer(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsIoTAuthorizer(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -70,12 +71,12 @@ func TestAccAWSIoTAuthorizer_disappears(t *testing.T) {
 
 func TestAccAWSIoTAuthorizer_SigningDisabled(t *testing.T) {
 	var conf iot.AuthorizerDescription
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_iot_authorizer.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iot.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTAuthorizerDestroy,
 		Steps: []resource.TestStep{
@@ -83,7 +84,7 @@ func TestAccAWSIoTAuthorizer_SigningDisabled(t *testing.T) {
 				Config: testAccAWSIoTAuthorizerConfigSigningDisabled(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSIoTAuthorizerExists(resourceName, &conf),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "iot", fmt.Sprintf("authorizer/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "iot", fmt.Sprintf("authorizer/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "signing_disabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "status", "INACTIVE"),
@@ -102,12 +103,12 @@ func TestAccAWSIoTAuthorizer_SigningDisabled(t *testing.T) {
 
 func TestAccAWSIoTAuthorizer_Update(t *testing.T) {
 	var conf iot.AuthorizerDescription
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_iot_authorizer.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iot.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTAuthorizerDestroy,
 		Steps: []resource.TestStep{
@@ -115,7 +116,7 @@ func TestAccAWSIoTAuthorizer_Update(t *testing.T) {
 				Config: testAccAWSIoTAuthorizerConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSIoTAuthorizerExists(resourceName, &conf),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "iot", fmt.Sprintf("authorizer/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "iot", fmt.Sprintf("authorizer/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "signing_disabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "status", "ACTIVE"),
@@ -128,7 +129,7 @@ func TestAccAWSIoTAuthorizer_Update(t *testing.T) {
 				Config: testAccAWSIoTAuthorizerConfigUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSIoTAuthorizerExists(resourceName, &conf),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "iot", fmt.Sprintf("authorizer/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "iot", fmt.Sprintf("authorizer/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "signing_disabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "status", "INACTIVE"),
@@ -225,7 +226,7 @@ resource "aws_lambda_function" "test" {
 }
 
 func testAccAWSIoTAuthorizerConfigBasic(rName string) string {
-	return composeConfig(testAccAWSIoTAuthorizerConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSIoTAuthorizerConfigBase(rName), fmt.Sprintf(`
 resource "aws_iot_authorizer" "test" {
   name                    = %[1]q
   authorizer_function_arn = aws_lambda_function.test.arn
@@ -239,7 +240,7 @@ resource "aws_iot_authorizer" "test" {
 }
 
 func testAccAWSIoTAuthorizerConfigUpdated(rName string) string {
-	return composeConfig(testAccAWSIoTAuthorizerConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSIoTAuthorizerConfigBase(rName), fmt.Sprintf(`
 resource "aws_iot_authorizer" "test" {
   name                    = %[1]q
   authorizer_function_arn = aws_lambda_function.test.arn
@@ -256,7 +257,7 @@ resource "aws_iot_authorizer" "test" {
 }
 
 func testAccAWSIoTAuthorizerConfigSigningDisabled(rName string) string {
-	return composeConfig(testAccAWSIoTAuthorizerConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSIoTAuthorizerConfigBase(rName), fmt.Sprintf(`
 resource "aws_iot_authorizer" "test" {
   name                    = %[1]q
   authorizer_function_arn = aws_lambda_function.test.arn
