@@ -59,7 +59,7 @@ func ResourceEnvironment() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		SchemaVersion: 1,
-		MigrateState:  resourceAwsElasticBeanstalkEnvironmentMigrateState,
+		MigrateState:  EnvironmentMigrateState,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -756,10 +756,10 @@ func resourceEnvironmentDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error waiting for Elastic Beanstalk Environment %q to be ready before terminating: %w", d.Id(), err)
 	}
 
-	return deleteElasticBeanstalkEnvironment(conn, d.Id(), waitForReadyTimeOut, pollInterval)
+	return DeleteEnvironment(conn, d.Id(), waitForReadyTimeOut, pollInterval)
 }
 
-func deleteElasticBeanstalkEnvironment(conn *elasticbeanstalk.ElasticBeanstalk, id string, timeout, pollInterval time.Duration) error {
+func DeleteEnvironment(conn *elasticbeanstalk.ElasticBeanstalk, id string, timeout, pollInterval time.Duration) error {
 	opts := elasticbeanstalk.TerminateEnvironmentInput{
 		EnvironmentId:      aws.String(id),
 		TerminateResources: aws.Bool(true),

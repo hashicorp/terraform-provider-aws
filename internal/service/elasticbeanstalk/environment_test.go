@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfelasticbeanstalk "github.com/hashicorp/terraform-provider-aws/internal/service/elasticbeanstalk"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
@@ -59,7 +60,7 @@ func testSweepElasticBeanstalkEnvironments(region string) error {
 		environmentID := aws.StringValue(bse.EnvironmentId)
 		log.Printf("Trying to terminate (%s) (%s)", environmentName, environmentID)
 
-		err := deleteElasticBeanstalkEnvironment(conn, environmentID, 5*time.Minute, 10*time.Second)
+		err := tfelasticbeanstalk.DeleteEnvironment(conn, environmentID, 5*time.Minute, 10*time.Second)
 		if err != nil {
 			errors = multierror.Append(fmt.Errorf("error deleting Elastic Beanstalk Environment %q: %w", environmentID, err))
 		}
