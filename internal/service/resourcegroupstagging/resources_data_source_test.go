@@ -21,7 +21,7 @@ func TestAccDataSourceAwsResourceGroupsTaggingAPIResources_TagFilter(t *testing.
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsResourceGroupsTaggingAPIResourcesConfigTagFilter(rName),
+				Config: testAccResourcesTagFilterDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "resource_tag_mapping_list.*", map[string]string{
 						"tags.Key": rName,
@@ -43,7 +43,7 @@ func TestAccDataSourceAwsResourceGroupsTaggingAPIResources_IncludeComplianceDeta
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsResourceGroupsTaggingAPIResourcesConfigIncludeComplianceDetails(rName),
+				Config: testAccResourcesIncludeComplianceDetailsDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "resource_tag_mapping_list.0.compliance_details.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "resource_tag_mapping_list.0.compliance_details.0.compliance_status", "true"),
@@ -64,7 +64,7 @@ func TestAccDataSourceAwsResourceGroupsTaggingAPIResources_ResourceTypeFilters(t
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsResourceGroupsTaggingAPIResourcesConfigResourceTypeFilters(rName),
+				Config: testAccResourcesResourceTypeFiltersDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "resource_tag_mapping_list.*", map[string]string{
 						"tags.Key": rName,
@@ -87,7 +87,7 @@ func TestAccDataSourceAwsResourceGroupsTaggingAPIResources_ResourceArnList(t *te
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsResourceGroupsTaggingAPIResourcesConfigResourceARNList(rName),
+				Config: testAccResourcesResourceARNListDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "resource_tag_mapping_list.*", map[string]string{
 						"tags.Key": rName,
@@ -99,7 +99,7 @@ func TestAccDataSourceAwsResourceGroupsTaggingAPIResources_ResourceArnList(t *te
 	})
 }
 
-func testAccDataSourceAwsResourceGroupsTaggingAPIResourcesConfigTagFilter(rName string) string {
+func testAccResourcesTagFilterDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -118,7 +118,7 @@ data "aws_resourcegroupstaggingapi_resources" "test" {
 `, rName)
 }
 
-func testAccDataSourceAwsResourceGroupsTaggingAPIResourcesConfigResourceTypeFilters(rName string) string {
+func testAccResourcesResourceTypeFiltersDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -136,7 +136,7 @@ data "aws_resourcegroupstaggingapi_resources" "test" {
 `, rName)
 }
 
-func testAccDataSourceAwsResourceGroupsTaggingAPIResourcesConfigResourceARNList(rName string) string {
+func testAccResourcesResourceARNListDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -152,7 +152,7 @@ data "aws_resourcegroupstaggingapi_resources" "test" {
 `, rName)
 }
 
-func testAccDataSourceAwsResourceGroupsTaggingAPIResourcesConfigIncludeComplianceDetails(rName string) string {
+func testAccResourcesIncludeComplianceDetailsDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
