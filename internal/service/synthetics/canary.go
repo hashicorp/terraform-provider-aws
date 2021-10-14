@@ -238,7 +238,7 @@ func resourceCanaryCreate(d *schema.ResourceData, meta interface{}) error {
 		RuntimeVersion:     aws.String(d.Get("runtime_version").(string)),
 	}
 
-	code, err := expandAwsSyntheticsCanaryCode(d)
+	code, err := expandCanaryCode(d)
 
 	if err != nil {
 		return err
@@ -247,15 +247,15 @@ func resourceCanaryCreate(d *schema.ResourceData, meta interface{}) error {
 	input.Code = code
 
 	if v, ok := d.GetOk("run_config"); ok {
-		input.RunConfig = expandAwsSyntheticsCanaryRunConfig(v.([]interface{}))
+		input.RunConfig = expandCanaryRunConfig(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("schedule"); ok {
-		input.Schedule = expandAwsSyntheticsCanarySchedule(v.([]interface{}))
+		input.Schedule = expandCanarySchedule(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("vpc_config"); ok {
-		input.VpcConfig = expandAwsSyntheticsCanaryVpcConfig(v.([]interface{}))
+		input.VpcConfig = expandCanaryVPCConfig(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("failure_retention_period"); ok {
@@ -350,19 +350,19 @@ func resourceCanaryRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("status", canary.Status.State)
 	d.Set("success_retention_period", canary.SuccessRetentionPeriodInDays)
 
-	if err := d.Set("vpc_config", flattenAwsSyntheticsCanaryVpcConfig(canary.VpcConfig)); err != nil {
+	if err := d.Set("vpc_config", flattenCanaryVPCConfig(canary.VpcConfig)); err != nil {
 		return fmt.Errorf("error setting vpc config: %w", err)
 	}
 
-	if err := d.Set("run_config", flattenAwsSyntheticsCanaryRunConfig(canary.RunConfig)); err != nil {
+	if err := d.Set("run_config", flattenCanaryRunConfig(canary.RunConfig)); err != nil {
 		return fmt.Errorf("error setting run config: %w", err)
 	}
 
-	if err := d.Set("schedule", flattenAwsSyntheticsCanarySchedule(canary.Schedule)); err != nil {
+	if err := d.Set("schedule", flattenCanarySchedule(canary.Schedule)); err != nil {
 		return fmt.Errorf("error setting schedule: %w", err)
 	}
 
-	if err := d.Set("timeline", flattenAwsSyntheticsCanaryTimeline(canary.Timeline)); err != nil {
+	if err := d.Set("timeline", flattenCanaryTimeline(canary.Timeline)); err != nil {
 		return fmt.Errorf("error setting schedule: %w", err)
 	}
 
@@ -389,7 +389,7 @@ func resourceCanaryUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if d.HasChange("vpc_config") {
-			input.VpcConfig = expandAwsSyntheticsCanaryVpcConfig(d.Get("vpc_config").([]interface{}))
+			input.VpcConfig = expandCanaryVPCConfig(d.Get("vpc_config").([]interface{}))
 		}
 
 		if d.HasChange("runtime_version") {
@@ -397,7 +397,7 @@ func resourceCanaryUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if d.HasChanges("handler", "zip_file", "s3_bucket", "s3_key", "s3_version") {
-			code, err := expandAwsSyntheticsCanaryCode(d)
+			code, err := expandCanaryCode(d)
 			if err != nil {
 				return err
 			}
@@ -405,11 +405,11 @@ func resourceCanaryUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if d.HasChange("run_config") {
-			input.RunConfig = expandAwsSyntheticsCanaryRunConfig(d.Get("run_config").([]interface{}))
+			input.RunConfig = expandCanaryRunConfig(d.Get("run_config").([]interface{}))
 		}
 
 		if d.HasChange("schedule") {
-			input.Schedule = expandAwsSyntheticsCanarySchedule(d.Get("schedule").([]interface{}))
+			input.Schedule = expandCanarySchedule(d.Get("schedule").([]interface{}))
 		}
 
 		if d.HasChange("success_retention_period") {
@@ -517,7 +517,7 @@ func resourceCanaryDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func expandAwsSyntheticsCanaryCode(d *schema.ResourceData) (*synthetics.CanaryCodeInput, error) {
+func expandCanaryCode(d *schema.ResourceData) (*synthetics.CanaryCodeInput, error) {
 	codeConfig := &synthetics.CanaryCodeInput{
 		Handler: aws.String(d.Get("handler").(string)),
 	}
@@ -542,7 +542,7 @@ func expandAwsSyntheticsCanaryCode(d *schema.ResourceData) (*synthetics.CanaryCo
 	return codeConfig, nil
 }
 
-func expandAwsSyntheticsCanarySchedule(l []interface{}) *synthetics.CanaryScheduleInput {
+func expandCanarySchedule(l []interface{}) *synthetics.CanaryScheduleInput {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -560,7 +560,7 @@ func expandAwsSyntheticsCanarySchedule(l []interface{}) *synthetics.CanarySchedu
 	return codeConfig
 }
 
-func flattenAwsSyntheticsCanarySchedule(canarySchedule *synthetics.CanaryScheduleOutput) []interface{} {
+func flattenCanarySchedule(canarySchedule *synthetics.CanaryScheduleOutput) []interface{} {
 	if canarySchedule == nil {
 		return []interface{}{}
 	}
@@ -573,7 +573,7 @@ func flattenAwsSyntheticsCanarySchedule(canarySchedule *synthetics.CanarySchedul
 	return []interface{}{m}
 }
 
-func expandAwsSyntheticsCanaryRunConfig(l []interface{}) *synthetics.CanaryRunConfigInput {
+func expandCanaryRunConfig(l []interface{}) *synthetics.CanaryRunConfigInput {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -595,7 +595,7 @@ func expandAwsSyntheticsCanaryRunConfig(l []interface{}) *synthetics.CanaryRunCo
 	return codeConfig
 }
 
-func flattenAwsSyntheticsCanaryRunConfig(canaryCodeOut *synthetics.CanaryRunConfigOutput) []interface{} {
+func flattenCanaryRunConfig(canaryCodeOut *synthetics.CanaryRunConfigOutput) []interface{} {
 	if canaryCodeOut == nil {
 		return []interface{}{}
 	}
@@ -609,7 +609,7 @@ func flattenAwsSyntheticsCanaryRunConfig(canaryCodeOut *synthetics.CanaryRunConf
 	return []interface{}{m}
 }
 
-func flattenAwsSyntheticsCanaryVpcConfig(canaryVpcOutput *synthetics.VpcConfigOutput) []interface{} {
+func flattenCanaryVPCConfig(canaryVpcOutput *synthetics.VpcConfigOutput) []interface{} {
 	if canaryVpcOutput == nil {
 		return []interface{}{}
 	}
@@ -623,7 +623,7 @@ func flattenAwsSyntheticsCanaryVpcConfig(canaryVpcOutput *synthetics.VpcConfigOu
 	return []interface{}{m}
 }
 
-func expandAwsSyntheticsCanaryVpcConfig(l []interface{}) *synthetics.VpcConfigInput {
+func expandCanaryVPCConfig(l []interface{}) *synthetics.VpcConfigInput {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -638,7 +638,7 @@ func expandAwsSyntheticsCanaryVpcConfig(l []interface{}) *synthetics.VpcConfigIn
 	return codeConfig
 }
 
-func flattenAwsSyntheticsCanaryTimeline(timeline *synthetics.CanaryTimeline) []interface{} {
+func flattenCanaryTimeline(timeline *synthetics.CanaryTimeline) []interface{} {
 	if timeline == nil {
 		return []interface{}{}
 	}
