@@ -17,7 +17,7 @@ import (
 	tfquicksight "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
 )
 
-func TestAccAWSQuickSightUser_basic(t *testing.T) {
+func TestAccQuickSightUser_basic(t *testing.T) {
 	var user quicksight.User
 	rName1 := "tfacctest" + sdkacctest.RandString(10)
 	resourceName1 := "aws_quicksight_user." + rName1
@@ -50,7 +50,7 @@ func TestAccAWSQuickSightUser_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSQuickSightUser_withInvalidFormattedEmailStillWorks(t *testing.T) {
+func TestAccQuickSightUser_withInvalidFormattedEmailStillWorks(t *testing.T) {
 	var user quicksight.User
 	rName := "tfacctest" + sdkacctest.RandString(10)
 	resourceName := "aws_quicksight_user." + rName
@@ -79,7 +79,7 @@ func TestAccAWSQuickSightUser_withInvalidFormattedEmailStillWorks(t *testing.T) 
 	})
 }
 
-func TestAccAWSQuickSightUser_disappears(t *testing.T) {
+func TestAccQuickSightUser_disappears(t *testing.T) {
 	var user quicksight.User
 	rName := "tfacctest" + sdkacctest.RandString(10)
 	resourceName := "aws_quicksight_user." + rName

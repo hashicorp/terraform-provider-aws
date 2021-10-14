@@ -291,7 +291,7 @@ func TestQuickSightDataSourcePermissionsDiff(t *testing.T) {
 	}
 }
 
-func TestAccAWSQuickSightDataSource_basic(t *testing.T) {
+func TestAccQuickSightDataSource_basic(t *testing.T) {
 	var dataSource quicksight.DataSource
 	resourceName := "aws_quicksight_data_source.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -328,7 +328,7 @@ func TestAccAWSQuickSightDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSQuickSightDataSource_disappears(t *testing.T) {
+func TestAccQuickSightDataSource_disappears(t *testing.T) {
 	var dataSource quicksight.DataSource
 	resourceName := "aws_quicksight_data_source.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -352,7 +352,7 @@ func TestAccAWSQuickSightDataSource_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSQuickSightDataSource_Tags(t *testing.T) {
+func TestAccQuickSightDataSource_tags(t *testing.T) {
 	var dataSource quicksight.DataSource
 	resourceName := "aws_quicksight_data_source.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -398,7 +398,7 @@ func TestAccAWSQuickSightDataSource_Tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSQuickSightDataSource_Permissions(t *testing.T) {
+func TestAccQuickSightDataSource_permissions(t *testing.T) {
 	var dataSource quicksight.DataSource
 	resourceName := "aws_quicksight_data_source.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
