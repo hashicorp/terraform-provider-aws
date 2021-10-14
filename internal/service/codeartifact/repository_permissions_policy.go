@@ -15,8 +15,8 @@ import (
 
 func ResourceRepositoryPermissionsPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCodeArtifactRepositoryPermissionsPolicyPut,
-		Update: resourceAwsCodeArtifactRepositoryPermissionsPolicyPut,
+		Create: resourceRepositoryPermissionsPolicyPut,
+		Update: resourceRepositoryPermissionsPolicyPut,
 		Read:   resourceRepositoryPermissionsPolicyRead,
 		Delete: resourceRepositoryPermissionsPolicyDelete,
 		Importer: &schema.ResourceImporter{
@@ -59,7 +59,7 @@ func ResourceRepositoryPermissionsPolicy() *schema.Resource {
 	}
 }
 
-func resourceAwsCodeArtifactRepositoryPermissionsPolicyPut(d *schema.ResourceData, meta interface{}) error {
+func resourceRepositoryPermissionsPolicyPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodeArtifactConn
 	log.Print("[DEBUG] Creating CodeArtifact Repository Permissions Policy")
 
