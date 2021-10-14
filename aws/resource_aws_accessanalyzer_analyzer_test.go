@@ -6,21 +6,22 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/accessanalyzer"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 // This test can be run via the pattern: TestAccAWSAccessAnalyzer
 func testAccAWSAccessAnalyzerAnalyzer_basic(t *testing.T) {
 	var analyzer accessanalyzer.AnalyzerSummary
 
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_accessanalyzer_analyzer.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAccessAnalyzer(t) },
-		ErrorCheck:   testAccErrorCheck(t, accessanalyzer.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSAccessAnalyzer(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, accessanalyzer.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAccessAnalyzerAnalyzerDestroy,
 		Steps: []resource.TestStep{
@@ -29,7 +30,7 @@ func testAccAWSAccessAnalyzerAnalyzer_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAccessAnalyzerAnalyzerExists(resourceName, &analyzer),
 					resource.TestCheckResourceAttr(resourceName, "analyzer_name", rName),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "access-analyzer", fmt.Sprintf("analyzer/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "access-analyzer", fmt.Sprintf("analyzer/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "type", accessanalyzer.TypeAccount),
 				),
@@ -47,12 +48,12 @@ func testAccAWSAccessAnalyzerAnalyzer_basic(t *testing.T) {
 func testAccAWSAccessAnalyzerAnalyzer_disappears(t *testing.T) {
 	var analyzer accessanalyzer.AnalyzerSummary
 
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_accessanalyzer_analyzer.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAccessAnalyzer(t) },
-		ErrorCheck:   testAccErrorCheck(t, accessanalyzer.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSAccessAnalyzer(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, accessanalyzer.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAccessAnalyzerAnalyzerDestroy,
 		Steps: []resource.TestStep{
@@ -72,12 +73,12 @@ func testAccAWSAccessAnalyzerAnalyzer_disappears(t *testing.T) {
 func testAccAWSAccessAnalyzerAnalyzer_Tags(t *testing.T) {
 	var analyzer accessanalyzer.AnalyzerSummary
 
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_accessanalyzer_analyzer.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAccessAnalyzer(t) },
-		ErrorCheck:   testAccErrorCheck(t, accessanalyzer.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSAccessAnalyzer(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, accessanalyzer.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAccessAnalyzerAnalyzerDestroy,
 		Steps: []resource.TestStep{
@@ -119,16 +120,16 @@ func testAccAWSAccessAnalyzerAnalyzer_Tags(t *testing.T) {
 func testAccAWSAccessAnalyzerAnalyzer_Type_Organization(t *testing.T) {
 	var analyzer accessanalyzer.AnalyzerSummary
 
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_accessanalyzer_analyzer.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			acctest.PreCheck(t)
 			testAccPreCheckAWSAccessAnalyzer(t)
-			testAccOrganizationsAccountPreCheck(t)
+			acctest.PreCheckOrganizationsAccount(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, accessanalyzer.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, accessanalyzer.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAccessAnalyzerAnalyzerDestroy,
 		Steps: []resource.TestStep{
