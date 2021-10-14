@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceCluster() *schema.Resource {
@@ -147,7 +148,7 @@ func ResourceCluster() *schema.Resource {
 										ForceNew: true,
 										Elem: &schema.Schema{
 											Type:         schema.TypeString,
-											ValidateFunc: validateArn,
+											ValidateFunc: verify.ValidARN,
 										},
 									},
 								},
@@ -165,14 +166,14 @@ func ResourceCluster() *schema.Resource {
 			"configuration_info": {
 				Type:             schema.TypeList,
 				Optional:         true,
-				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				MaxItems:         1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 						"revision": {
 							Type:         schema.TypeInt,
@@ -189,7 +190,7 @@ func ResourceCluster() *schema.Resource {
 			"encryption_info": {
 				Type:             schema.TypeList,
 				Optional:         true,
-				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				ForceNew:         true,
 				MaxItems:         1,
 				Elem: &schema.Resource{
@@ -199,12 +200,12 @@ func ResourceCluster() *schema.Resource {
 							Optional:     true,
 							Computed:     true,
 							ForceNew:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 						"encryption_in_transit": {
 							Type:             schema.TypeList,
 							Optional:         true,
-							DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
+							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 							ForceNew:         true,
 							MaxItems:         1,
 							Elem: &schema.Resource{
@@ -246,7 +247,7 @@ func ResourceCluster() *schema.Resource {
 			"open_monitoring": {
 				Type:             schema.TypeList,
 				Optional:         true,
-				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				MaxItems:         1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -259,7 +260,7 @@ func ResourceCluster() *schema.Resource {
 									"jmx_exporter": {
 										Type:             schema.TypeList,
 										Optional:         true,
-										DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
+										DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 										MaxItems:         1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
@@ -273,7 +274,7 @@ func ResourceCluster() *schema.Resource {
 									"node_exporter": {
 										Type:             schema.TypeList,
 										Optional:         true,
-										DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
+										DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 										MaxItems:         1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
@@ -293,7 +294,7 @@ func ResourceCluster() *schema.Resource {
 			"logging_info": {
 				Type:             schema.TypeList,
 				Optional:         true,
-				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				MaxItems:         1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -306,7 +307,7 @@ func ResourceCluster() *schema.Resource {
 									"cloudwatch_logs": {
 										Type:             schema.TypeList,
 										Optional:         true,
-										DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
+										DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 										MaxItems:         1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
@@ -324,7 +325,7 @@ func ResourceCluster() *schema.Resource {
 									"firehose": {
 										Type:             schema.TypeList,
 										Optional:         true,
-										DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
+										DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 										MaxItems:         1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
@@ -342,7 +343,7 @@ func ResourceCluster() *schema.Resource {
 									"s3": {
 										Type:             schema.TypeList,
 										Optional:         true,
-										DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
+										DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 										MaxItems:         1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
