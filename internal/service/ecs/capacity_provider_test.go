@@ -18,65 +18,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_ecs_capacity_provider", &resource.Sweeper{
-		Name: "aws_ecs_capacity_provider",
-		F:    sweepCapacityProviders,
-		Dependencies: []string{
-			"aws_ecs_cluster",
-			"aws_ecs_service",
-		},
-	})
-}
 
-func sweepCapacityProviders(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-	conn := client.(*conns.AWSClient).ECSConn
-	input := &ecs.DescribeCapacityProvidersInput{}
-	var sweeperErrs *multierror.Error
-	sweepResources := make([]*sweep.SweepResource, 0)
 
-	err = tfecs.DescribeCapacityProvidersPages(conn, input, func(page *ecs.DescribeCapacityProvidersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
 
-		for _, capacityProvider := range page.CapacityProviders {
-			arn := aws.StringValue(capacityProvider.CapacityProviderArn)
-
-			if name := aws.StringValue(capacityProvider.Name); name == "FARGATE" || name == "FARGATE_SPOT" {
-				log.Printf("[INFO] Skipping AWS managed ECS Capacity Provider: %s", arn)
-				continue
-			}
-
-			r := tfecs.ResourceCapacityProvider()
-			d := r.Data(nil)
-			d.SetId(arn)
-
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping ECS Capacity Providers sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil()
-	}
-
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing ECS Capacity Providers for %s: %w", region, err))
-	}
-
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping ECS Capacity Providers for %s: %w", region, err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func TestAccECSCapacityProvider_basic(t *testing.T) {
 	var provider ecs.CapacityProvider

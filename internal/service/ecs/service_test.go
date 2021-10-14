@@ -21,94 +21,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_ecs_service", &resource.Sweeper{
-		Name: "aws_ecs_service",
-		F:    sweepServices,
-	})
-}
 
-func sweepServices(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).ECSConn
 
-	err = conn.ListClustersPages(&ecs.ListClustersInput{}, func(page *ecs.ListClustersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
 
-		for _, clusterARNPtr := range page.ClusterArns {
-			input := &ecs.ListServicesInput{
-				Cluster: clusterARNPtr,
-			}
-
-			err = conn.ListServicesPages(input, func(page *ecs.ListServicesOutput, lastPage bool) bool {
-				if page == nil {
-					return !lastPage
-				}
-
-				for _, serviceARNPtr := range page.ServiceArns {
-					describeServicesInput := &ecs.DescribeServicesInput{
-						Cluster:  clusterARNPtr,
-						Services: []*string{serviceARNPtr},
-					}
-					serviceARN := aws.StringValue(serviceARNPtr)
-
-					log.Printf("[DEBUG] Describing ECS Service: %s", serviceARN)
-					describeServicesOutput, err := conn.DescribeServices(describeServicesInput)
-
-					if tfawserr.ErrMessageContains(err, ecs.ErrCodeServiceNotFoundException, "") {
-						continue
-					}
-
-					if err != nil {
-						log.Printf("[ERROR] Error describing ECS Service (%s): %s", serviceARN, err)
-						continue
-					}
-
-					if describeServicesOutput == nil || len(describeServicesOutput.Services) == 0 {
-						continue
-					}
-
-					service := describeServicesOutput.Services[0]
-
-					if aws.StringValue(service.Status) == "INACTIVE" {
-						continue
-					}
-
-					deleteServiceInput := &ecs.DeleteServiceInput{
-						Cluster: service.ClusterArn,
-						Force:   aws.Bool(true),
-						Service: service.ServiceArn,
-					}
-
-					log.Printf("[INFO] Deleting ECS Service: %s", serviceARN)
-					_, err = conn.DeleteService(deleteServiceInput)
-
-					if err != nil {
-						log.Printf("[ERROR] Error deleting ECS Service (%s): %s", serviceARN, err)
-					}
-				}
-
-				return !lastPage
-			})
-		}
-
-		return !lastPage
-	})
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping ECS Service sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("error retrieving ECS Services: %s", err)
-	}
-
-	return nil
-}
 
 func TestAccECSService_withARN(t *testing.T) {
 	var service ecs.Service

@@ -21,55 +21,10 @@ import (
 func init() {
 	acctest.RegisterServiceErrorCheckFunc(ecs.EndpointsID, testAccErrorCheckSkipECS)
 
-	resource.AddTestSweepers("aws_ecs_task_definition", &resource.Sweeper{
-		Name: "aws_ecs_task_definition",
-		F:    sweepTaskDefinitions,
-		Dependencies: []string{
-			"aws_ecs_service",
-		},
-	})
+
 }
 
-func sweepTaskDefinitions(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).ECSConn
-	var sweeperErrs *multierror.Error
 
-	err = conn.ListTaskDefinitionsPages(&ecs.ListTaskDefinitionsInput{}, func(page *ecs.ListTaskDefinitionsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, taskDefinitionArn := range page.TaskDefinitionArns {
-			arn := aws.StringValue(taskDefinitionArn)
-
-			log.Printf("[INFO] Deleting ECS Task Definition: %s", arn)
-			_, err := conn.DeregisterTaskDefinition(&ecs.DeregisterTaskDefinitionInput{
-				TaskDefinition: aws.String(arn),
-			})
-			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting ECS Task Definition (%s): %w", arn, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
-		}
-
-		return !lastPage
-	})
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping ECS Task Definitions sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-	}
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving ECS Task Definitions: %w", err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func testAccErrorCheckSkipECS(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,

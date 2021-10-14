@@ -16,53 +16,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_ecs_cluster", &resource.Sweeper{
-		Name: "aws_ecs_cluster",
-		F:    sweepClusters,
-		Dependencies: []string{
-			"aws_ecs_service",
-		},
-	})
-}
 
-func sweepClusters(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).ECSConn
 
-	err = conn.ListClustersPages(&ecs.ListClustersInput{}, func(page *ecs.ListClustersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
 
-		for _, clusterARNPtr := range page.ClusterArns {
-			clusterARN := aws.StringValue(clusterARNPtr)
-
-			log.Printf("[INFO] Deleting ECS Cluster: %s", clusterARN)
-			r := tfecs.ResourceCluster()
-			d := r.Data(nil)
-			d.SetId(clusterARN)
-			err = r.Delete(d, client)
-			if err != nil {
-				log.Printf("[ERROR] Error deleting ECS Cluster (%s): %s", clusterARN, err)
-			}
-		}
-
-		return !lastPage
-	})
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping ECS Cluster sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("error retrieving ECS Clusters: %w", err)
-	}
-
-	return nil
-}
 
 func TestAccECSCluster_basic(t *testing.T) {
 	var cluster1 ecs.Cluster
