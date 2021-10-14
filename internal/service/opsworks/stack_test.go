@@ -18,7 +18,7 @@ import (
 //// Tests for the No-VPC case
 ///////////////////////////////
 
-func TestAccAWSOpsworksStack_noVpcBasic(t *testing.T) {
+func TestAccOpsWorksStack_noVPCBasic(t *testing.T) {
 	stackName := fmt.Sprintf("tf-opsworks-acc-%d", sdkacctest.RandInt())
 	resourceName := "aws_opsworks_stack.tf-acc"
 	var opsstack opsworks.Stack
@@ -49,7 +49,7 @@ func TestAccAWSOpsworksStack_noVpcBasic(t *testing.T) {
 	})
 }
 
-func TestAccAWSOpsworksStack_noVpcChangeServiceRoleForceNew(t *testing.T) {
+func TestAccOpsWorksStack_noVPCChangeServiceRoleForceNew(t *testing.T) {
 	stackName := fmt.Sprintf("tf-opsworks-acc-%d", sdkacctest.RandInt())
 	resourceName := "aws_opsworks_stack.tf-acc"
 	var before, after opsworks.Stack
@@ -86,7 +86,7 @@ func TestAccAWSOpsworksStack_noVpcChangeServiceRoleForceNew(t *testing.T) {
 	})
 }
 
-func TestAccAWSOpsworksStack_vpc(t *testing.T) {
+func TestAccOpsWorksStack_vpc(t *testing.T) {
 	stackName := fmt.Sprintf("tf-opsworks-acc-%d", sdkacctest.RandInt())
 	resourceName := "aws_opsworks_stack.tf-acc"
 	var opsstack opsworks.Stack
@@ -135,7 +135,7 @@ func TestAccAWSOpsworksStack_vpc(t *testing.T) {
 	})
 }
 
-func TestAccAWSOpsworksStack_noVpcCreateTags(t *testing.T) {
+func TestAccOpsWorksStack_noVPCCreateTags(t *testing.T) {
 	stackName := fmt.Sprintf("tf-opsworks-acc-%d", sdkacctest.RandInt())
 	resourceName := "aws_opsworks_stack.tf-acc"
 	var opsstack opsworks.Stack
@@ -179,7 +179,7 @@ func TestAccAWSOpsworksStack_noVpcCreateTags(t *testing.T) {
 // Tests for Custom Cookbooks
 /////////////////////////////
 
-func TestAccAWSOpsworksStack_CustomCookbooks_SetPrivateProperties(t *testing.T) {
+func TestAccOpsWorksStack_CustomCookbooks_setPrivateProperties(t *testing.T) {
 	resourceName := "aws_opsworks_stack.tf-acc"
 	stackName := fmt.Sprintf("tf-opsworks-acc-%d", sdkacctest.RandInt())
 	var opsstack opsworks.Stack
@@ -221,7 +221,7 @@ func TestAccAWSOpsworksStack_CustomCookbooks_SetPrivateProperties(t *testing.T) 
 // Tests the addition of regional endpoints and supporting the classic link used
 // to create Stack's prior to v0.9.0.
 // See https://github.com/hashicorp/terraform/issues/12842
-func TestAccAWSOpsworksStack_classicEndpoints(t *testing.T) {
+func TestAccOpsWorksStack_classicEndpoints(t *testing.T) {
 	stackName := fmt.Sprintf("tf-opsworks-acc-%d", sdkacctest.RandInt())
 	resourceName := "aws_opsworks_stack.main"
 	rInt := sdkacctest.RandInt()

@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSOpsworksInstance_basic(t *testing.T) {
+func TestAccOpsWorksInstance_basic(t *testing.T) {
 	stackName := fmt.Sprintf("tf-%d", sdkacctest.RandInt())
 	var opsinst opsworks.Instance
 	resourceName := "aws_opsworks_instance.tf-acc"
@@ -65,7 +65,7 @@ func TestAccAWSOpsworksInstance_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSOpsworksInstance_UpdateHostNameForceNew(t *testing.T) {
+func TestAccOpsWorksInstance_updateHostNameForceNew(t *testing.T) {
 	stackName := fmt.Sprintf("tf-%d", sdkacctest.RandInt())
 	resourceName := "aws_opsworks_instance.tf-acc"
 	var before, after opsworks.Instance

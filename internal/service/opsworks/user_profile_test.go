@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSOpsworksUserProfile_basic(t *testing.T) {
+func TestAccOpsWorksUserProfile_basic(t *testing.T) {
 	rName := fmt.Sprintf("test-user-%d", sdkacctest.RandInt())
 	updateRName := fmt.Sprintf("test-user-%d", sdkacctest.RandInt())
 	resource.ParallelTest(t, resource.TestCase{
