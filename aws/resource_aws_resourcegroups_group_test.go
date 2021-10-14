@@ -6,15 +6,16 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/resourcegroups"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSResourceGroup_basic(t *testing.T) {
 	var v resourcegroups.Group
 	resourceName := "aws_resourcegroups_group.test"
-	n := fmt.Sprintf("test-group-%d", acctest.RandInt())
+	n := fmt.Sprintf("test-group-%d", sdkacctest.RandInt())
 
 	desc1 := "Hello World"
 	desc2 := "Foo Bar"
@@ -34,8 +35,8 @@ func TestAccAWSResourceGroup_basic(t *testing.T) {
 }`
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, resourcegroups.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, resourcegroups.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSResourceGroupDestroy,
 		Steps: []resource.TestStep{
@@ -68,12 +69,12 @@ func TestAccAWSResourceGroup_basic(t *testing.T) {
 func TestAccAWSResourceGroup_tags(t *testing.T) {
 	var v resourcegroups.Group
 	resourceName := "aws_resourcegroups_group.test"
-	n := fmt.Sprintf("test-group-%d", acctest.RandInt())
+	n := fmt.Sprintf("test-group-%d", sdkacctest.RandInt())
 	desc1 := "Hello World"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, resourcegroups.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, resourcegroups.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSResourceGroupDestroy,
 		Steps: []resource.TestStep{
