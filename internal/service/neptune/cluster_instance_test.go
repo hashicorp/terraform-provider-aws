@@ -17,7 +17,7 @@ import (
 	tfneptune "github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
 )
 
-func TestAccAWSNeptuneClusterInstance_basic(t *testing.T) {
+func TestAccNeptuneClusterInstance_basic(t *testing.T) {
 	var v neptune.DBInstance
 	rInt := sdkacctest.RandInt()
 
@@ -72,7 +72,7 @@ func TestAccAWSNeptuneClusterInstance_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSNeptuneClusterInstance_withaz(t *testing.T) {
+func TestAccNeptuneClusterInstance_withAZ(t *testing.T) {
 	var v neptune.DBInstance
 	rInt := sdkacctest.RandInt()
 
@@ -98,7 +98,7 @@ func TestAccAWSNeptuneClusterInstance_withaz(t *testing.T) {
 	})
 }
 
-func TestAccAWSNeptuneClusterInstance_namePrefix(t *testing.T) {
+func TestAccNeptuneClusterInstance_namePrefix(t *testing.T) {
 	var v neptune.DBInstance
 	rInt := sdkacctest.RandInt()
 
@@ -124,7 +124,7 @@ func TestAccAWSNeptuneClusterInstance_namePrefix(t *testing.T) {
 	})
 }
 
-func TestAccAWSNeptuneClusterInstance_withSubnetGroup(t *testing.T) {
+func TestAccNeptuneClusterInstance_withSubnetGroup(t *testing.T) {
 	var v neptune.DBInstance
 	rInt := sdkacctest.RandInt()
 
@@ -149,7 +149,7 @@ func TestAccAWSNeptuneClusterInstance_withSubnetGroup(t *testing.T) {
 	})
 }
 
-func TestAccAWSNeptuneClusterInstance_generatedName(t *testing.T) {
+func TestAccNeptuneClusterInstance_generatedName(t *testing.T) {
 	var v neptune.DBInstance
 	rInt := sdkacctest.RandInt()
 
@@ -173,7 +173,7 @@ func TestAccAWSNeptuneClusterInstance_generatedName(t *testing.T) {
 	})
 }
 
-func TestAccAWSNeptuneClusterInstance_kmsKey(t *testing.T) {
+func TestAccNeptuneClusterInstance_kmsKey(t *testing.T) {
 	var v neptune.DBInstance
 	rInt := sdkacctest.RandInt()
 

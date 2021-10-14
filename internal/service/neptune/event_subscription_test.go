@@ -81,7 +81,7 @@ func sweepEventSubscriptions(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSNeptuneEventSubscription_basic(t *testing.T) {
+func TestAccNeptuneEventSubscription_basic(t *testing.T) {
 	var v neptune.EventSubscription
 	rInt := sdkacctest.RandInt()
 	rName := fmt.Sprintf("tf-acc-test-neptune-event-subs-%d", rInt)
@@ -125,7 +125,7 @@ func TestAccAWSNeptuneEventSubscription_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSNeptuneEventSubscription_withPrefix(t *testing.T) {
+func TestAccNeptuneEventSubscription_withPrefix(t *testing.T) {
 	var v neptune.EventSubscription
 	rInt := sdkacctest.RandInt()
 	startsWithPrefix := regexp.MustCompile("^tf-acc-test-neptune-event-subs-")
@@ -155,7 +155,7 @@ func TestAccAWSNeptuneEventSubscription_withPrefix(t *testing.T) {
 	})
 }
 
-func TestAccAWSNeptuneEventSubscription_withSourceIds(t *testing.T) {
+func TestAccNeptuneEventSubscription_withSourceIDs(t *testing.T) {
 	var v neptune.EventSubscription
 	rInt := sdkacctest.RandInt()
 
@@ -192,7 +192,7 @@ func TestAccAWSNeptuneEventSubscription_withSourceIds(t *testing.T) {
 	})
 }
 
-func TestAccAWSNeptuneEventSubscription_withCategories(t *testing.T) {
+func TestAccNeptuneEventSubscription_withCategories(t *testing.T) {
 	var v neptune.EventSubscription
 	rInt := sdkacctest.RandInt()
 	rName := fmt.Sprintf("tf-acc-test-neptune-event-subs-%d", rInt)

@@ -19,7 +19,7 @@ import (
 	tfneptune "github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
 )
 
-func TestAccAWSNeptuneCluster_basic(t *testing.T) {
+func TestAccNeptuneCluster_basic(t *testing.T) {
 	var dbCluster neptune.DBCluster
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_neptune_cluster.test"
@@ -61,7 +61,7 @@ func TestAccAWSNeptuneCluster_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSNeptuneCluster_copyTagsToSnapshot(t *testing.T) {
+func TestAccNeptuneCluster_copyTagsToSnapshot(t *testing.T) {
 	var dbCluster neptune.DBCluster
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_neptune_cluster.test"
@@ -108,7 +108,7 @@ func TestAccAWSNeptuneCluster_copyTagsToSnapshot(t *testing.T) {
 	})
 }
 
-func TestAccAWSNeptuneCluster_namePrefix(t *testing.T) {
+func TestAccNeptuneCluster_namePrefix(t *testing.T) {
 	var v neptune.DBCluster
 	rName := "tf-test-"
 	resourceName := "aws_neptune_cluster.test"
@@ -141,7 +141,7 @@ func TestAccAWSNeptuneCluster_namePrefix(t *testing.T) {
 	})
 }
 
-func TestAccAWSNeptuneCluster_takeFinalSnapshot(t *testing.T) {
+func TestAccNeptuneCluster_takeFinalSnapshot(t *testing.T) {
 	var v neptune.DBCluster
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_neptune_cluster.test"
@@ -173,7 +173,7 @@ func TestAccAWSNeptuneCluster_takeFinalSnapshot(t *testing.T) {
 	})
 }
 
-func TestAccAWSNeptuneCluster_tags(t *testing.T) {
+func TestAccNeptuneCluster_tags(t *testing.T) {
 	var v neptune.DBCluster
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_neptune_cluster.test"
@@ -224,7 +224,7 @@ func TestAccAWSNeptuneCluster_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSNeptuneCluster_updateIamRoles(t *testing.T) {
+func TestAccNeptuneCluster_updateIAMRoles(t *testing.T) {
 	var v neptune.DBCluster
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_neptune_cluster.test"
@@ -270,7 +270,7 @@ func TestAccAWSNeptuneCluster_updateIamRoles(t *testing.T) {
 	})
 }
 
-func TestAccAWSNeptuneCluster_kmsKey(t *testing.T) {
+func TestAccNeptuneCluster_kmsKey(t *testing.T) {
 	var v neptune.DBCluster
 	resourceName := "aws_neptune_cluster.test"
 	keyResourceName := "aws_kms_key.test"
@@ -304,7 +304,7 @@ func TestAccAWSNeptuneCluster_kmsKey(t *testing.T) {
 	})
 }
 
-func TestAccAWSNeptuneCluster_encrypted(t *testing.T) {
+func TestAccNeptuneCluster_encrypted(t *testing.T) {
 	var v neptune.DBCluster
 	resourceName := "aws_neptune_cluster.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
@@ -337,7 +337,7 @@ func TestAccAWSNeptuneCluster_encrypted(t *testing.T) {
 	})
 }
 
-func TestAccAWSNeptuneCluster_backupsUpdate(t *testing.T) {
+func TestAccNeptuneCluster_backupsUpdate(t *testing.T) {
 	var v neptune.DBCluster
 	resourceName := "aws_neptune_cluster.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
@@ -381,7 +381,7 @@ func TestAccAWSNeptuneCluster_backupsUpdate(t *testing.T) {
 	})
 }
 
-func TestAccAWSNeptuneCluster_iamAuth(t *testing.T) {
+func TestAccNeptuneCluster_iamAuth(t *testing.T) {
 	var v neptune.DBCluster
 	resourceName := "aws_neptune_cluster.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
@@ -414,7 +414,7 @@ func TestAccAWSNeptuneCluster_iamAuth(t *testing.T) {
 	})
 }
 
-func TestAccAWSNeptuneCluster_updateCloudwatchLogsExports(t *testing.T) {
+func TestAccNeptuneCluster_updateCloudWatchLogsExports(t *testing.T) {
 	var dbCluster neptune.DBCluster
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_neptune_cluster.test"
@@ -462,7 +462,7 @@ func TestAccAWSNeptuneCluster_updateCloudwatchLogsExports(t *testing.T) {
 	})
 }
 
-func TestAccAWSNeptuneCluster_deleteProtection(t *testing.T) {
+func TestAccNeptuneCluster_deleteProtection(t *testing.T) {
 	var dbCluster neptune.DBCluster
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_neptune_cluster.test"
@@ -509,7 +509,7 @@ func TestAccAWSNeptuneCluster_deleteProtection(t *testing.T) {
 	})
 }
 
-func TestAccAWSNeptuneCluster_disappears(t *testing.T) {
+func TestAccNeptuneCluster_disappears(t *testing.T) {
 	var dbCluster neptune.DBCluster
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_neptune_cluster.test"

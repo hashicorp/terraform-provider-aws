@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSNeptuneSubnetGroup_basic(t *testing.T) {
+func TestAccNeptuneSubnetGroup_basic(t *testing.T) {
 	var v neptune.DBSubnetGroup
 
 	rName := fmt.Sprintf("tf-test-%d", sdkacctest.RandInt())
@@ -46,7 +46,7 @@ func TestAccAWSNeptuneSubnetGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSNeptuneSubnetGroup_namePrefix(t *testing.T) {
+func TestAccNeptuneSubnetGroup_namePrefix(t *testing.T) {
 	var v neptune.DBSubnetGroup
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -74,7 +74,7 @@ func TestAccAWSNeptuneSubnetGroup_namePrefix(t *testing.T) {
 	})
 }
 
-func TestAccAWSNeptuneSubnetGroup_generatedName(t *testing.T) {
+func TestAccNeptuneSubnetGroup_generatedName(t *testing.T) {
 	var v neptune.DBSubnetGroup
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -99,7 +99,7 @@ func TestAccAWSNeptuneSubnetGroup_generatedName(t *testing.T) {
 	})
 }
 
-func TestAccAWSNeptuneSubnetGroup_updateDescription(t *testing.T) {
+func TestAccNeptuneSubnetGroup_updateDescription(t *testing.T) {
 	var v neptune.DBSubnetGroup
 
 	rName := fmt.Sprintf("tf-test-%d", sdkacctest.RandInt())
