@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfecr "github.com/hashicorp/terraform-provider-aws/internal/service/ecr"
 )
 
 func TestAccAWSEcrRepositoryPolicy_basic(t *testing.T) {
@@ -94,7 +95,7 @@ func TestAccAWSEcrRepositoryPolicy_disappears(t *testing.T) {
 				Config: testAccAWSEcrRepositoryPolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcrRepositoryPolicyExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceRepositoryPolicy(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfecr.ResourceRepositoryPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -116,7 +117,7 @@ func TestAccAWSEcrRepositoryPolicy_disappears_repository(t *testing.T) {
 				Config: testAccAWSEcrRepositoryPolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcrRepositoryPolicyExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceRepository(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfecr.ResourceRepository(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
