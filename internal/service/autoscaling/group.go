@@ -694,11 +694,11 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("tag"); ok {
-		createOpts.Tags = tftags.AutoscalingKeyValueTags(v, asgName, TagResourceTypeGroup).IgnoreAws().AutoscalingTags()
+		createOpts.Tags = Tags(KeyValueTags(v, asgName, TagResourceTypeGroup).IgnoreAws())
 	}
 
 	if v, ok := d.GetOk("tags"); ok {
-		createOpts.Tags = tftags.AutoscalingKeyValueTags(v, asgName, TagResourceTypeGroup).IgnoreAws().AutoscalingTags()
+		createOpts.Tags = Tags(KeyValueTags(v, asgName, TagResourceTypeGroup).IgnoreAws())
 	}
 
 	if v, ok := d.GetOk("capacity_rebalance"); ok {
@@ -887,23 +887,23 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	// Deprecated: In a future major version, this should always set all tags except those ignored.
 	//             Remove d.GetOk() and Only() handling.
 	if v, tagOk = d.GetOk("tag"); tagOk {
-		proposedStateTags := tftags.AutoscalingKeyValueTags(v, d.Id(), TagResourceTypeGroup)
+		proposedStateTags := KeyValueTags(v, d.Id(), TagResourceTypeGroup)
 
-		if err := d.Set("tag", tftags.AutoscalingKeyValueTags(g.Tags, d.Id(), TagResourceTypeGroup).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Only(proposedStateTags).AutoscalingListOfMap()); err != nil {
+		if err := d.Set("tag", ListOfMap(KeyValueTags(g.Tags, d.Id(), TagResourceTypeGroup).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Only(proposedStateTags))); err != nil {
 			return fmt.Errorf("error setting tag: %w", err)
 		}
 	}
 
 	if v, tagsOk = d.GetOk("tags"); tagsOk {
-		proposedStateTags := tftags.AutoscalingKeyValueTags(v, d.Id(), TagResourceTypeGroup)
+		proposedStateTags := KeyValueTags(v, d.Id(), TagResourceTypeGroup)
 
-		if err := d.Set("tags", tftags.AutoscalingKeyValueTags(g.Tags, d.Id(), TagResourceTypeGroup).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Only(proposedStateTags).AutoscalingListOfStringMap()); err != nil {
+		if err := d.Set("tags", ListOfStringMap(KeyValueTags(g.Tags, d.Id(), TagResourceTypeGroup).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Only(proposedStateTags))); err != nil {
 			return fmt.Errorf("error setting tags: %w", err)
 		}
 	}
 
 	if !tagOk && !tagsOk {
-		if err := d.Set("tag", tftags.AutoscalingKeyValueTags(g.Tags, d.Id(), TagResourceTypeGroup).IgnoreAws().IgnoreConfig(ignoreTagsConfig).AutoscalingListOfMap()); err != nil {
+		if err := d.Set("tag", ListOfMap(KeyValueTags(g.Tags, d.Id(), TagResourceTypeGroup).IgnoreAws().IgnoreConfig(ignoreTagsConfig))); err != nil {
 			return fmt.Errorf("error setting tag: %w", err)
 		}
 	}
@@ -1114,15 +1114,15 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 		oTagRaw, nTagRaw := d.GetChange("tag")
 		oTagsRaw, nTagsRaw := d.GetChange("tags")
 
-		oTag := tftags.AutoscalingKeyValueTags(oTagRaw, d.Id(), TagResourceTypeGroup)
-		oTags := tftags.AutoscalingKeyValueTags(oTagsRaw, d.Id(), TagResourceTypeGroup)
-		oldTags := oTag.Merge(oTags).AutoscalingTags()
+		oTag := KeyValueTags(oTagRaw, d.Id(), TagResourceTypeGroup)
+		oTags := KeyValueTags(oTagsRaw, d.Id(), TagResourceTypeGroup)
+		oldTags := Tags(oTag.Merge(oTags))
 
-		nTag := tftags.AutoscalingKeyValueTags(nTagRaw, d.Id(), TagResourceTypeGroup)
-		nTags := tftags.AutoscalingKeyValueTags(nTagsRaw, d.Id(), TagResourceTypeGroup)
-		newTags := nTag.Merge(nTags).AutoscalingTags()
+		nTag := KeyValueTags(nTagRaw, d.Id(), TagResourceTypeGroup)
+		nTags := KeyValueTags(nTagsRaw, d.Id(), TagResourceTypeGroup)
+		newTags := Tags(nTag.Merge(nTags))
 
-		if err := tftags.AutoscalingUpdateTags(conn, d.Id(), TagResourceTypeGroup, oldTags, newTags); err != nil {
+		if err := UpdateTags(conn, d.Id(), TagResourceTypeGroup, oldTags, newTags); err != nil {
 			return fmt.Errorf("error updating tags for Auto Scaling Group (%s): %w", d.Id(), err)
 		}
 	}
