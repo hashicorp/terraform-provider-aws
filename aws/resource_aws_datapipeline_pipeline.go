@@ -77,7 +77,7 @@ func resourceAwsDataPipelinePipelineRead(d *schema.ResourceData, meta interface{
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	v, err := resourceAwsDataPipelinePipelineRetrieve(d.Id(), conn)
-	if isAWSErr(err, datapipeline.ErrCodePipelineNotFoundException, "") || isAWSErr(err, datapipeline.ErrCodePipelineDeletedException, "") || v == nil {
+	if tfawserr.ErrMessageContains(err, datapipeline.ErrCodePipelineNotFoundException, "") || tfawserr.ErrMessageContains(err, datapipeline.ErrCodePipelineDeletedException, "") || v == nil {
 		log.Printf("[WARN] DataPipeline (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -124,7 +124,7 @@ func resourceAwsDataPipelinePipelineDelete(d *schema.ResourceData, meta interfac
 	}
 
 	_, err := conn.DeletePipeline(&opts)
-	if isAWSErr(err, datapipeline.ErrCodePipelineNotFoundException, "") || isAWSErr(err, datapipeline.ErrCodePipelineDeletedException, "") {
+	if tfawserr.ErrMessageContains(err, datapipeline.ErrCodePipelineNotFoundException, "") || tfawserr.ErrMessageContains(err, datapipeline.ErrCodePipelineDeletedException, "") {
 		return nil
 	}
 	if err != nil {
@@ -166,7 +166,7 @@ func waitForDataPipelineDeletion(conn *datapipeline.DataPipeline, pipelineID str
 	}
 	return resource.Retry(10*time.Minute, func() *resource.RetryError {
 		_, err := conn.DescribePipelines(params)
-		if isAWSErr(err, datapipeline.ErrCodePipelineNotFoundException, "") || isAWSErr(err, datapipeline.ErrCodePipelineDeletedException, "") {
+		if tfawserr.ErrMessageContains(err, datapipeline.ErrCodePipelineNotFoundException, "") || tfawserr.ErrMessageContains(err, datapipeline.ErrCodePipelineDeletedException, "") {
 			return nil
 		}
 		if err != nil {
