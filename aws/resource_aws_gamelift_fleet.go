@@ -18,12 +18,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsGameliftFleet() *schema.Resource {
+func ResourceFleet() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsGameliftFleetCreate,
-		Read:   resourceAwsGameliftFleetRead,
-		Update: resourceAwsGameliftFleetUpdate,
-		Delete: resourceAwsGameliftFleetDelete,
+		Create: resourceFleetCreate,
+		Read:   resourceFleetRead,
+		Update: resourceFleetUpdate,
+		Delete: resourceFleetDelete,
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(70 * time.Minute),
@@ -201,7 +201,7 @@ func resourceAwsGameliftFleet() *schema.Resource {
 	}
 }
 
-func resourceAwsGameliftFleetCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceFleetCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GameLiftConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -311,10 +311,10 @@ func resourceAwsGameliftFleetCreate(d *schema.ResourceData, meta interface{}) er
 		return err
 	}
 
-	return resourceAwsGameliftFleetRead(d, meta)
+	return resourceFleetRead(d, meta)
 }
 
-func resourceAwsGameliftFleetRead(d *schema.ResourceData, meta interface{}) error {
+func resourceFleetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GameLiftConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -374,7 +374,7 @@ func resourceAwsGameliftFleetRead(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func resourceAwsGameliftFleetUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceFleetUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GameLiftConn
 
 	log.Printf("[INFO] Updating Gamelift Fleet: %s", d.Id())
@@ -426,10 +426,10 @@ func resourceAwsGameliftFleetUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
-	return resourceAwsGameliftFleetRead(d, meta)
+	return resourceFleetRead(d, meta)
 }
 
-func resourceAwsGameliftFleetDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceFleetDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GameLiftConn
 
 	log.Printf("[INFO] Deleting Gamelift Fleet: %s", d.Id())

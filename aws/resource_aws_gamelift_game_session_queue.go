@@ -12,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsGameliftGameSessionQueue() *schema.Resource {
+func ResourceGameSessionQueue() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsGameliftGameSessionQueueCreate,
-		Read:   resourceAwsGameliftGameSessionQueueRead,
-		Update: resourceAwsGameliftGameSessionQueueUpdate,
-		Delete: resourceAwsGameliftGameSessionQueueDelete,
+		Create: resourceGameSessionQueueCreate,
+		Read:   resourceGameSessionQueueRead,
+		Update: resourceGameSessionQueueUpdate,
+		Delete: resourceGameSessionQueueDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -70,7 +70,7 @@ func resourceAwsGameliftGameSessionQueue() *schema.Resource {
 	}
 }
 
-func resourceAwsGameliftGameSessionQueueCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceGameSessionQueueCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GameLiftConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -90,10 +90,10 @@ func resourceAwsGameliftGameSessionQueueCreate(d *schema.ResourceData, meta inte
 
 	d.SetId(aws.StringValue(out.GameSessionQueue.Name))
 
-	return resourceAwsGameliftGameSessionQueueRead(d, meta)
+	return resourceGameSessionQueueRead(d, meta)
 }
 
-func resourceAwsGameliftGameSessionQueueRead(d *schema.ResourceData, meta interface{}) error {
+func resourceGameSessionQueueRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GameLiftConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -181,7 +181,7 @@ func flattenGameliftPlayerLatencyPolicies(playerLatencyPolicies []*gamelift.Play
 	return l
 }
 
-func resourceAwsGameliftGameSessionQueueUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceGameSessionQueueUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GameLiftConn
 
 	log.Printf("[INFO] Updating Gamelift Session Queue: %s", d.Id())
@@ -207,10 +207,10 @@ func resourceAwsGameliftGameSessionQueueUpdate(d *schema.ResourceData, meta inte
 		}
 	}
 
-	return resourceAwsGameliftGameSessionQueueRead(d, meta)
+	return resourceGameSessionQueueRead(d, meta)
 }
 
-func resourceAwsGameliftGameSessionQueueDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceGameSessionQueueDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GameLiftConn
 	log.Printf("[INFO] Deleting Gamelift Session Queue: %s", d.Id())
 	_, err := conn.DeleteGameSessionQueue(&gamelift.DeleteGameSessionQueueInput{
