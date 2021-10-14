@@ -1,4 +1,4 @@
-package aws
+package route53
 
 import (
 	"fmt"

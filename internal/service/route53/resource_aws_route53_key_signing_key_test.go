@@ -1,4 +1,4 @@
-package aws
+package route53_test
 
 import (
 	"context"
@@ -20,12 +20,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	tfroute53 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
+	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
 	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
 	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
 	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"

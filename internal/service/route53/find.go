@@ -7,22 +7,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	tfroute53 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
-	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
-	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
-	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
-	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
-	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
-	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
-	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
-	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
-	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
-	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
-	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
-	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
 )
 
 func FindHealthCheckByID(conn *route53.Route53, id string) (*route53.HealthCheck, error) {
@@ -92,7 +78,7 @@ func FindKeySigningKey(conn *route53.Route53, hostedZoneID string, name string) 
 }
 
 func FindKeySigningKeyByResourceID(conn *route53.Route53, resourceID string) (*route53.KeySigningKey, error) {
-	hostedZoneID, name, err := tfroute53.KeySigningKeyParseResourceID(resourceID)
+	hostedZoneID, name, err := KeySigningKeyParseResourceID(resourceID)
 
 	if err != nil {
 		return nil, fmt.Errorf("error parsing Route 53 Key Signing Key (%s) identifier: %w", resourceID, err)

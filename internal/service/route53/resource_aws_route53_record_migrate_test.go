@@ -1,4 +1,4 @@
-package aws
+package route53_test
 
 import (
 	"testing"

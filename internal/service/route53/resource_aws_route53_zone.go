@@ -1,4 +1,4 @@
-package aws
+package route53
 
 import (
 	"bytes"
@@ -18,23 +18,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
-	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
-	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
-	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
-	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
-	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
-	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
-	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
-	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
-	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
-	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
 )
 
 func ResourceZone() *schema.Resource {
@@ -532,7 +520,7 @@ func disableDNSSECForZone(conn *route53.Route53, hostedZoneId string) error {
 	}
 
 	if output != nil && output.ChangeInfo != nil {
-		if _, err := tfroute53.waitChangeInfoStatusInsync(conn, aws.StringValue(output.ChangeInfo.Id)); err != nil {
+		if _, err := waitChangeInfoStatusInsync(conn, aws.StringValue(output.ChangeInfo.Id)); err != nil {
 			return fmt.Errorf("waiting for Route 53 Hosted Zone DNSSEC (%s) disable: %w", hostedZoneId, err)
 		}
 	}

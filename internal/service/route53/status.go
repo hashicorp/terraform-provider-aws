@@ -4,12 +4,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
-	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
-	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
-	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
 )
 
 func statusChangeInfo(conn *route53.Route53, changeID string) resource.StateRefreshFunc {
@@ -34,7 +29,7 @@ func statusChangeInfo(conn *route53.Route53, changeID string) resource.StateRefr
 
 func statusHostedZoneDNSSEC(conn *route53.Route53, hostedZoneID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		hostedZoneDnssec, err := tfroute53.FindHostedZoneDNSSEC(conn, hostedZoneID)
+		hostedZoneDnssec, err := FindHostedZoneDNSSEC(conn, hostedZoneID)
 
 		if err != nil {
 			return nil, "", err
@@ -50,7 +45,7 @@ func statusHostedZoneDNSSEC(conn *route53.Route53, hostedZoneID string) resource
 
 func statusKeySigningKey(conn *route53.Route53, hostedZoneID string, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		keySigningKey, err := tfroute53.FindKeySigningKey(conn, hostedZoneID, name)
+		keySigningKey, err := FindKeySigningKey(conn, hostedZoneID, name)
 
 		if err != nil {
 			return nil, "", err
