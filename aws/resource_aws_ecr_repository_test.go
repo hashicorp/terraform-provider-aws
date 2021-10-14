@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func init() {
@@ -235,7 +236,7 @@ func TestAccAWSEcrRepository_encryption_kms(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.encryption_type", ecr.EncryptionTypeKms),
 					// This will be the default ECR service KMS key. We don't currently have a way to look this up.
-					acctest.MatchResourceAttrRegionalARN(resourceName, "encryption_configuration.0.kms_key", "kms", regexp.MustCompile(fmt.Sprintf("key/%s$", uuidRegexPattern))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "encryption_configuration.0.kms_key", "kms", regexp.MustCompile(fmt.Sprintf("key/%s$", verify.UUIDRegexPattern))),
 				),
 			},
 			{
