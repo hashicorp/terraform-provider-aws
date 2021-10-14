@@ -46,7 +46,7 @@ func testSweepAPIGatewayV2VpcLinks(region string) error {
 			_, err := conn.DeleteVpcLink(&apigatewayv2.DeleteVpcLinkInput{
 				VpcLinkId: link.VpcLinkId,
 			})
-			if isAWSErr(err, apigatewayv2.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
 				continue
 			}
 			if err != nil {
@@ -57,7 +57,7 @@ func testSweepAPIGatewayV2VpcLinks(region string) error {
 			}
 
 			_, err = waiter.VpcLinkDeleted(conn, aws.StringValue(link.VpcLinkId))
-			if isAWSErr(err, apigatewayv2.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
 				continue
 			}
 			if err != nil {
@@ -195,7 +195,7 @@ func testAccCheckAWSAPIGatewayV2VpcLinkDestroy(s *terraform.State) error {
 		_, err := conn.GetVpcLink(&apigatewayv2.GetVpcLinkInput{
 			VpcLinkId: aws.String(rs.Primary.ID),
 		})
-		if isAWSErr(err, apigatewayv2.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
 			continue
 		}
 		if err != nil {
@@ -219,7 +219,7 @@ func testAccCheckAWSAPIGatewayV2VpcLinkDisappears(v *apigatewayv2.GetVpcLinkOutp
 		}
 
 		_, err := waiter.VpcLinkDeleted(conn, aws.StringValue(v.VpcLinkId))
-		if isAWSErr(err, apigatewayv2.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
 			return nil
 		}
 		if err != nil {

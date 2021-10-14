@@ -95,7 +95,7 @@ func resourceAwsApiGatewayV2ModelRead(d *schema.ResourceData, meta interface{}) 
 		ApiId:   aws.String(d.Get("api_id").(string)),
 		ModelId: aws.String(d.Id()),
 	})
-	if isAWSErr(err, apigatewayv2.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
 		log.Printf("[WARN] API Gateway v2 model (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -149,7 +149,7 @@ func resourceAwsApiGatewayV2ModelDelete(d *schema.ResourceData, meta interface{}
 		ApiId:   aws.String(d.Get("api_id").(string)),
 		ModelId: aws.String(d.Id()),
 	})
-	if isAWSErr(err, apigatewayv2.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
 		return nil
 	}
 	if err != nil {

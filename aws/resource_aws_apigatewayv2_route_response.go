@@ -82,7 +82,7 @@ func resourceAwsApiGatewayV2RouteResponseRead(d *schema.ResourceData, meta inter
 		RouteId:         aws.String(d.Get("route_id").(string)),
 		RouteResponseId: aws.String(d.Id()),
 	})
-	if isAWSErr(err, apigatewayv2.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
 		log.Printf("[WARN] API Gateway v2 route response (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -136,7 +136,7 @@ func resourceAwsApiGatewayV2RouteResponseDelete(d *schema.ResourceData, meta int
 		RouteId:         aws.String(d.Get("route_id").(string)),
 		RouteResponseId: aws.String(d.Id()),
 	})
-	if isAWSErr(err, apigatewayv2.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
 		return nil
 	}
 	if err != nil {

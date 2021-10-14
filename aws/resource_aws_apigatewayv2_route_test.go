@@ -486,7 +486,7 @@ func testAccCheckAWSAPIGatewayV2RouteDestroy(s *terraform.State) error {
 			ApiId:   aws.String(rs.Primary.Attributes["api_id"]),
 			RouteId: aws.String(rs.Primary.ID),
 		})
-		if isAWSErr(err, apigatewayv2.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
 			continue
 		}
 		if err != nil {
