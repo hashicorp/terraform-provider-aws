@@ -39,12 +39,12 @@ func TestAccAwsDxHostedPrivateVirtualInterface_basic(t *testing.T) {
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckAwsDxHostedPrivateVirtualInterfaceDestroy,
+		CheckDestroy:      testAccCheckHostedPrivateVirtualInterfaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDxHostedPrivateVirtualInterfaceConfig_basic(connectionId, rName, bgpAsn, vlan),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDxHostedPrivateVirtualInterfaceExists(resourceName, &vif),
+					testAccCheckHostedPrivateVirtualInterfaceExists(resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_side_asn"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "directconnect", regexp.MustCompile(fmt.Sprintf("dxvif/%s", aws.StringValue(vif.VirtualInterfaceId)))),
@@ -98,12 +98,12 @@ func TestAccAwsDxHostedPrivateVirtualInterface_AccepterTags(t *testing.T) {
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckAwsDxHostedPrivateVirtualInterfaceDestroy,
+		CheckDestroy:      testAccCheckHostedPrivateVirtualInterfaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDxHostedPrivateVirtualInterfaceConfig_accepterTags(connectionId, rName, bgpAsn, vlan),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDxHostedPrivateVirtualInterfaceExists(resourceName, &vif),
+					testAccCheckHostedPrivateVirtualInterfaceExists(resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_side_asn"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "directconnect", regexp.MustCompile(fmt.Sprintf("dxvif/%s", aws.StringValue(vif.VirtualInterfaceId)))),
@@ -129,7 +129,7 @@ func TestAccAwsDxHostedPrivateVirtualInterface_AccepterTags(t *testing.T) {
 			{
 				Config: testAccDxHostedPrivateVirtualInterfaceConfig_accepterTagsUpdated(connectionId, rName, bgpAsn, vlan),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDxHostedPrivateVirtualInterfaceExists(resourceName, &vif),
+					testAccCheckHostedPrivateVirtualInterfaceExists(resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_side_asn"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "directconnect", regexp.MustCompile(fmt.Sprintf("dxvif/%s", aws.StringValue(vif.VirtualInterfaceId)))),
@@ -156,11 +156,11 @@ func TestAccAwsDxHostedPrivateVirtualInterface_AccepterTags(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsDxHostedPrivateVirtualInterfaceDestroy(s *terraform.State) error {
+func testAccCheckHostedPrivateVirtualInterfaceDestroy(s *terraform.State) error {
 	return testAccCheckDxVirtualInterfaceDestroy(s, "aws_dx_hosted_private_virtual_interface")
 }
 
-func testAccCheckAwsDxHostedPrivateVirtualInterfaceExists(name string, vif *directconnect.VirtualInterface) resource.TestCheckFunc {
+func testAccCheckHostedPrivateVirtualInterfaceExists(name string, vif *directconnect.VirtualInterface) resource.TestCheckFunc {
 	return testAccCheckDxVirtualInterfaceExists(name, vif)
 }
 

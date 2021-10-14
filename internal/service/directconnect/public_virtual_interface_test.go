@@ -38,12 +38,12 @@ func TestAccAwsDxPublicVirtualInterface_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsDxPublicVirtualInterfaceDestroy,
+		CheckDestroy: testAccCheckPublicVirtualInterfaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDxPublicVirtualInterfaceConfig_basic(connectionId, rName, amazonAddress, customerAddress, bgpAsn, vlan),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDxPublicVirtualInterfaceExists(resourceName, &vif),
+					testAccCheckPublicVirtualInterfaceExists(resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
 					resource.TestCheckResourceAttr(resourceName, "amazon_address", amazonAddress),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_side_asn"),
@@ -90,12 +90,12 @@ func TestAccAwsDxPublicVirtualInterface_Tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsDxPublicVirtualInterfaceDestroy,
+		CheckDestroy: testAccCheckPublicVirtualInterfaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDxPublicVirtualInterfaceConfig_tags(connectionId, rName, amazonAddress, customerAddress, bgpAsn, vlan),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDxPublicVirtualInterfaceExists(resourceName, &vif),
+					testAccCheckPublicVirtualInterfaceExists(resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
 					resource.TestCheckResourceAttr(resourceName, "amazon_address", amazonAddress),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_side_asn"),
@@ -119,7 +119,7 @@ func TestAccAwsDxPublicVirtualInterface_Tags(t *testing.T) {
 			{
 				Config: testAccDxPublicVirtualInterfaceConfig_tagsUpdated(connectionId, rName, amazonAddress, customerAddress, bgpAsn, vlan),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDxPublicVirtualInterfaceExists(resourceName, &vif),
+					testAccCheckPublicVirtualInterfaceExists(resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
 					resource.TestCheckResourceAttr(resourceName, "amazon_address", amazonAddress),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_side_asn"),
@@ -150,11 +150,11 @@ func TestAccAwsDxPublicVirtualInterface_Tags(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsDxPublicVirtualInterfaceDestroy(s *terraform.State) error {
+func testAccCheckPublicVirtualInterfaceDestroy(s *terraform.State) error {
 	return testAccCheckDxVirtualInterfaceDestroy(s, "aws_dx_public_virtual_interface")
 }
 
-func testAccCheckAwsDxPublicVirtualInterfaceExists(name string, vif *directconnect.VirtualInterface) resource.TestCheckFunc {
+func testAccCheckPublicVirtualInterfaceExists(name string, vif *directconnect.VirtualInterface) resource.TestCheckFunc {
 	return testAccCheckDxVirtualInterfaceExists(name, vif)
 }
 

@@ -22,11 +22,11 @@ func TestAccDataSourceAwsDxGateway_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccDataSourceAwsDxGatewayConfig_NonExistent,
+				Config:      testAccGatewayDataSourceConfig_NonExistent,
 				ExpectError: regexp.MustCompile(`Direct Connect Gateway not found`),
 			},
 			{
-				Config: testAccDataSourceAwsDxGatewayConfig_Name(rName, sdkacctest.RandIntRange(64512, 65534)),
+				Config: testAccGatewayDataSourceConfig_Name(rName, sdkacctest.RandIntRange(64512, 65534)),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "amazon_side_asn", resourceName, "amazon_side_asn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "id", resourceName, "id"),
@@ -38,7 +38,7 @@ func TestAccDataSourceAwsDxGateway_basic(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAwsDxGatewayConfig_Name(rName string, rBgpAsn int) string {
+func testAccGatewayDataSourceConfig_Name(rName string, rBgpAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_dx_gateway" "wrong" {
   amazon_side_asn = "%d"
@@ -56,7 +56,7 @@ data "aws_dx_gateway" "test" {
 `, rBgpAsn+1, rName, rBgpAsn, rName)
 }
 
-const testAccDataSourceAwsDxGatewayConfig_NonExistent = `
+const testAccGatewayDataSourceConfig_NonExistent = `
 data "aws_dx_gateway" "test" {
   name = "tf-acc-test-does-not-exist"
 }

@@ -22,12 +22,12 @@ func TestAccAWSDxConnectionAssociation_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsDxConnectionAssociationDestroy,
+		CheckDestroy: testAccCheckConnectionAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDxConnectionAssociationConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDxConnectionAssociationExists(resourceName),
+					testAccCheckConnectionAssociationExists(resourceName),
 				),
 			},
 		},
@@ -42,12 +42,12 @@ func TestAccAWSDxConnectionAssociation_LAGOnConnection(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsDxConnectionAssociationDestroy,
+		CheckDestroy: testAccCheckConnectionAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDxConnectionAssociationConfigLAGOnConnection(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDxConnectionAssociationExists(resourceName),
+					testAccCheckConnectionAssociationExists(resourceName),
 				),
 			},
 		},
@@ -63,20 +63,20 @@ func TestAccAWSDxConnectionAssociation_Multiple(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsDxConnectionAssociationDestroy,
+		CheckDestroy: testAccCheckConnectionAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDxConnectionAssociationConfigMultiple(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDxConnectionAssociationExists(resourceName1),
-					testAccCheckAwsDxConnectionAssociationExists(resourceName2),
+					testAccCheckConnectionAssociationExists(resourceName1),
+					testAccCheckConnectionAssociationExists(resourceName2),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckAwsDxConnectionAssociationDestroy(s *terraform.State) error {
+func testAccCheckConnectionAssociationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -100,7 +100,7 @@ func testAccCheckAwsDxConnectionAssociationDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAwsDxConnectionAssociationExists(name string) resource.TestCheckFunc {
+func testAccCheckConnectionAssociationExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn
 

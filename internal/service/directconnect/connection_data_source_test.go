@@ -21,7 +21,7 @@ func TestAccDataSourceAwsDxConnection_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsDxConnectionConfig(rName),
+				Config: testAccConnectionDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "aws_device", resourceName, "aws_device"),
@@ -37,7 +37,7 @@ func TestAccDataSourceAwsDxConnection_basic(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAwsDxConnectionConfig(rName string) string {
+func testAccConnectionDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_dx_locations" "test" {}
 

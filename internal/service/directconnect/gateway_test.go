@@ -21,14 +21,14 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_dx_gateway", &resource.Sweeper{
 		Name: "aws_dx_gateway",
-		F:    testSweepDirectConnectGateways,
+		F:    sweepGateways,
 		Dependencies: []string{
 			"aws_dx_gateway_association",
 		},
 	})
 }
 
-func testSweepDirectConnectGateways(region string) error {
+func sweepGateways(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -122,12 +122,12 @@ func TestAccAwsDxGateway_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsDxGatewayDestroy,
+		CheckDestroy: testAccCheckGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDxGatewayConfig(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDxGatewayExists(resourceName, &v),
+					testAccCheckGatewayExists(resourceName, &v),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_account_id"),
 				),
 			},
@@ -150,12 +150,12 @@ func TestAccAwsDxGateway_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsDxGatewayDestroy,
+		CheckDestroy: testAccCheckGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDxGatewayConfig(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDxGatewayExists(resourceName, &v),
+					testAccCheckGatewayExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfdirectconnect.ResourceGateway(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -174,12 +174,12 @@ func TestAccAwsDxGateway_complex(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsDxGatewayDestroy,
+		CheckDestroy: testAccCheckGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDxGatewayAssociationConfig_multiVpnGatewaysSingleAccount(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDxGatewayExists(resourceName, &v),
+					testAccCheckGatewayExists(resourceName, &v),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_account_id"),
 				),
 			},
@@ -192,7 +192,7 @@ func TestAccAwsDxGateway_complex(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsDxGatewayDestroy(s *terraform.State) error {
+func testAccCheckGatewayDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -215,7 +215,7 @@ func testAccCheckAwsDxGatewayDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAwsDxGatewayExists(name string, v *directconnect.Gateway) resource.TestCheckFunc {
+func testAccCheckGatewayExists(name string, v *directconnect.Gateway) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {

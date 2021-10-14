@@ -22,12 +22,12 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_dx_lag", &resource.Sweeper{
 		Name:         "aws_dx_lag",
-		F:            testSweepDxLags,
+		F:            sweepLags,
 		Dependencies: []string{"aws_dx_connection"},
 	})
 }
 
-func testSweepDxLags(region string) error {
+func sweepLags(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
@@ -94,12 +94,12 @@ func TestAccAwsDxLag_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsDxLagDestroy,
+		CheckDestroy: testAccCheckLagDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDxLagConfigBasic(rName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDxLagExists(resourceName, &lag),
+					testAccCheckLagExists(resourceName, &lag),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "directconnect", regexp.MustCompile(`dxlag/.+`)),
 					resource.TestCheckNoResourceAttr(resourceName, "connection_id"),
 					resource.TestCheckResourceAttr(resourceName, "connections_bandwidth", "1Gbps"),
@@ -116,7 +116,7 @@ func TestAccAwsDxLag_basic(t *testing.T) {
 			{
 				Config: testAccDxLagConfigBasic(rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDxLagExists(resourceName, &lag),
+					testAccCheckLagExists(resourceName, &lag),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "directconnect", regexp.MustCompile(`dxlag/.+`)),
 					resource.TestCheckNoResourceAttr(resourceName, "connection_id"),
 					resource.TestCheckResourceAttr(resourceName, "connections_bandwidth", "1Gbps"),
@@ -149,12 +149,12 @@ func TestAccAwsDxLag_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsDxLagDestroy,
+		CheckDestroy: testAccCheckLagDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDxLagConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDxLagExists(resourceName, &lag),
+					testAccCheckLagExists(resourceName, &lag),
 					acctest.CheckResourceDisappears(acctest.Provider, tfdirectconnect.ResourceLag(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -173,12 +173,12 @@ func TestAccAwsDxLag_ConnectionID(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsDxLagDestroy,
+		CheckDestroy: testAccCheckLagDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDxLagConfigConnectionID(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDxLagExists(resourceName, &lag),
+					testAccCheckLagExists(resourceName, &lag),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "directconnect", regexp.MustCompile(`dxlag/.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, "connection_id", connectionResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "connections_bandwidth", "1Gbps"),
@@ -211,12 +211,12 @@ func TestAccAwsDxLag_ProviderName(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsDxLagDestroy,
+		CheckDestroy: testAccCheckLagDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDxLagConfigProviderName(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDxLagExists(resourceName, &lag),
+					testAccCheckLagExists(resourceName, &lag),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "directconnect", regexp.MustCompile(`dxlag/.+`)),
 					resource.TestCheckNoResourceAttr(resourceName, "connection_id"),
 					resource.TestCheckResourceAttr(resourceName, "connections_bandwidth", "1Gbps"),
@@ -249,12 +249,12 @@ func TestAccAwsDxLag_Tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsDxLagDestroy,
+		CheckDestroy: testAccCheckLagDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDxLagConfigTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDxLagExists(resourceName, &lag),
+					testAccCheckLagExists(resourceName, &lag),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
@@ -269,7 +269,7 @@ func TestAccAwsDxLag_Tags(t *testing.T) {
 			{
 				Config: testAccDxLagConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDxLagExists(resourceName, &lag),
+					testAccCheckLagExists(resourceName, &lag),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
@@ -279,7 +279,7 @@ func TestAccAwsDxLag_Tags(t *testing.T) {
 			{
 				Config: testAccDxLagConfigTags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDxLagExists(resourceName, &lag),
+					testAccCheckLagExists(resourceName, &lag),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -289,7 +289,7 @@ func TestAccAwsDxLag_Tags(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsDxLagDestroy(s *terraform.State) error {
+func testAccCheckLagDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -313,7 +313,7 @@ func testAccCheckAwsDxLagDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAwsDxLagExists(name string, v *directconnect.Lag) resource.TestCheckFunc {
+func testAccCheckLagExists(name string, v *directconnect.Lag) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn
 

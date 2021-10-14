@@ -18,8 +18,8 @@ import (
 
 func TestAccAwsDxHostedTransitVirtualInterface_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
-		"basic":        testAccAwsDxHostedTransitVirtualInterface_basic,
-		"accepterTags": testAccAwsDxHostedTransitVirtualInterface_accepterTags,
+		"basic":        testAccHostedTransitVirtualInterface_basic,
+		"accepterTags": testAccHostedTransitVirtualInterface_accepterTags,
 	}
 
 	for name, tc := range testCases {
@@ -30,7 +30,7 @@ func TestAccAwsDxHostedTransitVirtualInterface_serial(t *testing.T) {
 	}
 }
 
-func testAccAwsDxHostedTransitVirtualInterface_basic(t *testing.T) {
+func testAccHostedTransitVirtualInterface_basic(t *testing.T) {
 	key := "DX_CONNECTION_ID"
 	connectionId := os.Getenv(key)
 	if connectionId == "" {
@@ -54,12 +54,12 @@ func testAccAwsDxHostedTransitVirtualInterface_basic(t *testing.T) {
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckAwsDxHostedTransitVirtualInterfaceDestroy,
+		CheckDestroy:      testAccCheckHostedTransitVirtualInterfaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDxHostedTransitVirtualInterfaceConfig_basic(connectionId, rName, amzAsn, bgpAsn, vlan),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDxHostedTransitVirtualInterfaceExists(resourceName, &vif),
+					testAccCheckHostedTransitVirtualInterfaceExists(resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_side_asn"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "directconnect", regexp.MustCompile(fmt.Sprintf("dxvif/%s", aws.StringValue(vif.VirtualInterfaceId)))),
@@ -90,7 +90,7 @@ func testAccAwsDxHostedTransitVirtualInterface_basic(t *testing.T) {
 	})
 }
 
-func testAccAwsDxHostedTransitVirtualInterface_accepterTags(t *testing.T) {
+func testAccHostedTransitVirtualInterface_accepterTags(t *testing.T) {
 	key := "DX_CONNECTION_ID"
 	connectionId := os.Getenv(key)
 	if connectionId == "" {
@@ -114,12 +114,12 @@ func testAccAwsDxHostedTransitVirtualInterface_accepterTags(t *testing.T) {
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckAwsDxHostedTransitVirtualInterfaceDestroy,
+		CheckDestroy:      testAccCheckHostedTransitVirtualInterfaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDxHostedTransitVirtualInterfaceConfig_accepterTags(connectionId, rName, amzAsn, bgpAsn, vlan),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDxHostedTransitVirtualInterfaceExists(resourceName, &vif),
+					testAccCheckHostedTransitVirtualInterfaceExists(resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_side_asn"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "directconnect", regexp.MustCompile(fmt.Sprintf("dxvif/%s", aws.StringValue(vif.VirtualInterfaceId)))),
@@ -145,7 +145,7 @@ func testAccAwsDxHostedTransitVirtualInterface_accepterTags(t *testing.T) {
 			{
 				Config: testAccDxHostedTransitVirtualInterfaceConfig_accepterTagsUpdated(connectionId, rName, amzAsn, bgpAsn, vlan),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDxHostedTransitVirtualInterfaceExists(resourceName, &vif),
+					testAccCheckHostedTransitVirtualInterfaceExists(resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_side_asn"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "directconnect", regexp.MustCompile(fmt.Sprintf("dxvif/%s", aws.StringValue(vif.VirtualInterfaceId)))),
@@ -172,11 +172,11 @@ func testAccAwsDxHostedTransitVirtualInterface_accepterTags(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsDxHostedTransitVirtualInterfaceExists(name string, vif *directconnect.VirtualInterface) resource.TestCheckFunc {
+func testAccCheckHostedTransitVirtualInterfaceExists(name string, vif *directconnect.VirtualInterface) resource.TestCheckFunc {
 	return testAccCheckDxVirtualInterfaceExists(name, vif)
 }
 
-func testAccCheckAwsDxHostedTransitVirtualInterfaceDestroy(s *terraform.State) error {
+func testAccCheckHostedTransitVirtualInterfaceDestroy(s *terraform.State) error {
 	return testAccCheckDxVirtualInterfaceDestroy(s, "aws_dx_hosted_transit_virtual_interface")
 }
 

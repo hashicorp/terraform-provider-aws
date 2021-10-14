@@ -27,12 +27,12 @@ func TestAccAwsDxBgpPeer_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsDxBgpPeerDestroy,
+		CheckDestroy: testAccCheckBGPPeerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDxBgpPeerConfig(vifId, bgpAsn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDxBgpPeerExists("aws_dx_bgp_peer.foo"),
+					testAccCheckBGPPeerExists("aws_dx_bgp_peer.foo"),
 					resource.TestCheckResourceAttr("aws_dx_bgp_peer.foo", "address_family", "ipv6"),
 				),
 			},
@@ -40,7 +40,7 @@ func TestAccAwsDxBgpPeer_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsDxBgpPeerDestroy(s *terraform.State) error {
+func testAccCheckBGPPeerDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -66,7 +66,7 @@ func testAccCheckAwsDxBgpPeerDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAwsDxBgpPeerExists(name string) resource.TestCheckFunc {
+func testAccCheckBGPPeerExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		_, ok := s.RootModule().Resources[name]
 		if !ok {

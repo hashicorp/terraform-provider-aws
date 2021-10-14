@@ -23,7 +23,7 @@ type testAccDxHostedConnectionEnv struct {
 }
 
 func TestAccAWSDxHostedConnection_basic(t *testing.T) {
-	env, err := testAccCheckAwsDxHostedConnectionEnv()
+	env, err := testAccCheckHostedConnectionEnv()
 	if err != nil {
 		acctest.Skip(t, err.Error())
 	}
@@ -35,12 +35,12 @@ func TestAccAWSDxHostedConnection_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsDxHostedConnectionDestroy(testAccDxHostedConnectionProvider),
+		CheckDestroy: testAccCheckHostedConnectionDestroy(testAccDxHostedConnectionProvider),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDxHostedConnectionConfig(connectionName, env.ConnectionId, env.OwnerAccountId),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDxHostedConnectionExists(resourceName),
+					testAccCheckHostedConnectionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", connectionName),
 					resource.TestCheckResourceAttr(resourceName, "connection_id", env.ConnectionId),
 					resource.TestCheckResourceAttr(resourceName, "owner_account_id", env.OwnerAccountId),
@@ -52,7 +52,7 @@ func TestAccAWSDxHostedConnection_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsDxHostedConnectionEnv() (*testAccDxHostedConnectionEnv, error) {
+func testAccCheckHostedConnectionEnv() (*testAccDxHostedConnectionEnv, error) {
 	result := &testAccDxHostedConnectionEnv{
 		ConnectionId:   os.Getenv("TEST_AWS_DX_CONNECTION_ID"),
 		OwnerAccountId: os.Getenv("TEST_AWS_DX_OWNER_ACCOUNT_ID"),
@@ -65,7 +65,7 @@ func testAccCheckAwsDxHostedConnectionEnv() (*testAccDxHostedConnectionEnv, erro
 	return result, nil
 }
 
-func testAccCheckAwsDxHostedConnectionDestroy(providerFunc func() *schema.Provider) resource.TestCheckFunc {
+func testAccCheckHostedConnectionDestroy(providerFunc func() *schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		provider := providerFunc()
 		conn := provider.Meta().(*conns.AWSClient).DirectConnectConn
@@ -92,7 +92,7 @@ func testAccCheckAwsDxHostedConnectionDestroy(providerFunc func() *schema.Provid
 	}
 }
 
-func testAccCheckAwsDxHostedConnectionExists(name string) resource.TestCheckFunc {
+func testAccCheckHostedConnectionExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn
 

@@ -33,12 +33,12 @@ func TestAccAwsDxPrivateVirtualInterface_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsDxPrivateVirtualInterfaceDestroy,
+		CheckDestroy: testAccCheckPrivateVirtualInterfaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDxPrivateVirtualInterfaceConfig_basic(connectionId, rName, bgpAsn, vlan),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDxPrivateVirtualInterfaceExists(resourceName, &vif),
+					testAccCheckPrivateVirtualInterfaceExists(resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_address"),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_side_asn"),
@@ -59,7 +59,7 @@ func TestAccAwsDxPrivateVirtualInterface_basic(t *testing.T) {
 			{
 				Config: testAccDxPrivateVirtualInterfaceConfig_updated(connectionId, rName, bgpAsn, vlan),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDxPrivateVirtualInterfaceExists(resourceName, &vif),
+					testAccCheckPrivateVirtualInterfaceExists(resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_address"),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_side_asn"),
@@ -105,12 +105,12 @@ func TestAccAwsDxPrivateVirtualInterface_Tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsDxPrivateVirtualInterfaceDestroy,
+		CheckDestroy: testAccCheckPrivateVirtualInterfaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDxPrivateVirtualInterfaceConfig_tags(connectionId, rName, bgpAsn, vlan),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDxPrivateVirtualInterfaceExists(resourceName, &vif),
+					testAccCheckPrivateVirtualInterfaceExists(resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_address"),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_side_asn"),
@@ -134,7 +134,7 @@ func TestAccAwsDxPrivateVirtualInterface_Tags(t *testing.T) {
 			{
 				Config: testAccDxPrivateVirtualInterfaceConfig_tagsUpdated(connectionId, rName, bgpAsn, vlan),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDxPrivateVirtualInterfaceExists(resourceName, &vif),
+					testAccCheckPrivateVirtualInterfaceExists(resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_address"),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_side_asn"),
@@ -184,12 +184,12 @@ func TestAccAwsDxPrivateVirtualInterface_DxGateway(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsDxPrivateVirtualInterfaceDestroy,
+		CheckDestroy: testAccCheckPrivateVirtualInterfaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDxPrivateVirtualInterfaceConfig_dxGateway(connectionId, rName, amzAsn, bgpAsn, vlan),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDxPrivateVirtualInterfaceExists(resourceName, &vif),
+					testAccCheckPrivateVirtualInterfaceExists(resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_address"),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_side_asn"),
@@ -217,11 +217,11 @@ func TestAccAwsDxPrivateVirtualInterface_DxGateway(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsDxPrivateVirtualInterfaceDestroy(s *terraform.State) error {
+func testAccCheckPrivateVirtualInterfaceDestroy(s *terraform.State) error {
 	return testAccCheckDxVirtualInterfaceDestroy(s, "aws_dx_private_virtual_interface")
 }
 
-func testAccCheckAwsDxPrivateVirtualInterfaceExists(name string, vif *directconnect.VirtualInterface) resource.TestCheckFunc {
+func testAccCheckPrivateVirtualInterfaceExists(name string, vif *directconnect.VirtualInterface) resource.TestCheckFunc {
 	return testAccCheckDxVirtualInterfaceExists(name, vif)
 }
 

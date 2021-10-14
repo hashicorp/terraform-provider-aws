@@ -17,7 +17,7 @@ import (
 )
 
 func TestAccAWSDxConnectionConfirmation_basic(t *testing.T) {
-	env, err := testAccCheckAwsDxHostedConnectionEnv()
+	env, err := testAccCheckHostedConnectionEnv()
 	if err != nil {
 		acctest.Skip(t, err.Error())
 	}
@@ -36,17 +36,17 @@ func TestAccAWSDxConnectionConfirmation_basic(t *testing.T) {
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckAwsDxHostedConnectionDestroy(altProviderFunc),
+		CheckDestroy:      testAccCheckHostedConnectionDestroy(altProviderFunc),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDxConnectionConfirmationConfig(connectionName, env.ConnectionId, env.OwnerAccountId),
-				Check:  testAccCheckAwsDxConnectionConfirmationExists(resourceName, providerFunc),
+				Check:  testAccCheckConnectionConfirmationExists(resourceName, providerFunc),
 			},
 		},
 	})
 }
 
-func testAccCheckAwsDxConnectionConfirmationExists(name string, providerFunc func() *schema.Provider) resource.TestCheckFunc {
+func testAccCheckConnectionConfirmationExists(name string, providerFunc func() *schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
