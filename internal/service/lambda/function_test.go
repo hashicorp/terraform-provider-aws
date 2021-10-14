@@ -3,7 +3,6 @@ package lambda_test
 import (
 	"archive/zip"
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -21,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
 func init() {

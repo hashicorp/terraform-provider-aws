@@ -2,7 +2,6 @@ package lambda_test
 
 import (
 	"fmt"
-	"log"
 	"strconv"
 	"testing"
 
@@ -15,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
 func TestAccLambdaLayerVersion_basic(t *testing.T) {
