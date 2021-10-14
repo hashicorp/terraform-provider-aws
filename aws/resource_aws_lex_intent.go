@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/lex/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/lex/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 const (
@@ -282,7 +283,7 @@ func hasIntentConfigChanges(d resourceDiffer) bool {
 }
 
 func resourceAwsLexIntentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lexmodelconn
+	conn := meta.(*conns.AWSClient).LexModelBuildingConn
 	name := d.Get("name").(string)
 
 	input := &lexmodelbuildingservice.PutIntentInput{
@@ -355,7 +356,7 @@ func resourceAwsLexIntentCreate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceAwsLexIntentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lexmodelconn
+	conn := meta.(*conns.AWSClient).LexModelBuildingConn
 
 	resp, err := conn.GetIntent(&lexmodelbuildingservice.GetIntentInput{
 		Name:    aws.String(d.Id()),
@@ -371,10 +372,10 @@ func resourceAwsLexIntentRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
+		Partition: meta.(*conns.AWSClient).Partition,
+		Region:    meta.(*conns.AWSClient).Region,
 		Service:   "lex",
-		AccountID: meta.(*AWSClient).accountid,
+		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("intent:%s", d.Id()),
 	}
 	d.Set("arn", arn.String())
@@ -433,7 +434,7 @@ func resourceAwsLexIntentRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsLexIntentUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lexmodelconn
+	conn := meta.(*conns.AWSClient).LexModelBuildingConn
 
 	input := &lexmodelbuildingservice.PutIntentInput{
 		Checksum:      aws.String(d.Get("checksum").(string)),
@@ -503,7 +504,7 @@ func resourceAwsLexIntentUpdate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceAwsLexIntentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lexmodelconn
+	conn := meta.(*conns.AWSClient).LexModelBuildingConn
 
 	input := &lexmodelbuildingservice.DeleteIntentInput{
 		Name: aws.String(d.Id()),

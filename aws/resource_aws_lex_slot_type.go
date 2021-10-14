@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/lex/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 const (
@@ -133,7 +134,7 @@ func hasSlotTypeConfigChanges(d resourceDiffer) bool {
 }
 
 func resourceAwsLexSlotTypeCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lexmodelconn
+	conn := meta.(*conns.AWSClient).LexModelBuildingConn
 	name := d.Get("name").(string)
 
 	input := &lexmodelbuildingservice.PutSlotTypeInput{
@@ -175,7 +176,7 @@ func resourceAwsLexSlotTypeCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsLexSlotTypeRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lexmodelconn
+	conn := meta.(*conns.AWSClient).LexModelBuildingConn
 
 	resp, err := conn.GetSlotType(&lexmodelbuildingservice.GetSlotTypeInput{
 		Name:    aws.String(d.Id()),
@@ -244,7 +245,7 @@ func getLatestLexSlotTypeVersion(conn *lexmodelbuildingservice.LexModelBuildingS
 }
 
 func resourceAwsLexSlotTypeUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lexmodelconn
+	conn := meta.(*conns.AWSClient).LexModelBuildingConn
 
 	input := &lexmodelbuildingservice.PutSlotTypeInput{
 		Checksum:               aws.String(d.Get("checksum").(string)),
@@ -283,7 +284,7 @@ func resourceAwsLexSlotTypeUpdate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsLexSlotTypeDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lexmodelconn
+	conn := meta.(*conns.AWSClient).LexModelBuildingConn
 
 	input := &lexmodelbuildingservice.DeleteSlotTypeInput{
 		Name: aws.String(d.Id()),

@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	tflex "github.com/hashicorp/terraform-provider-aws/aws/internal/service/lex"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/lex/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsLexBot() *schema.Resource {
@@ -87,7 +88,7 @@ func dataSourceAwsLexBot() *schema.Resource {
 }
 
 func dataSourceAwsLexBotRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lexmodelconn
+	conn := meta.(*conns.AWSClient).LexModelBuildingConn
 
 	name := d.Get("name").(string)
 	version := d.Get("version").(string)
@@ -98,10 +99,10 @@ func dataSourceAwsLexBotRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
+		Partition: meta.(*conns.AWSClient).Partition,
+		Region:    meta.(*conns.AWSClient).Region,
 		Service:   "lex",
-		AccountID: meta.(*AWSClient).accountid,
+		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("bot:%s", name),
 	}
 	d.Set("arn", arn.String())
