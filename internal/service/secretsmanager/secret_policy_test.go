@@ -68,7 +68,7 @@ func sweepSecretPolicies(region string) error {
 	return nil
 }
 
-func TestAccAwsSecretsManagerSecretPolicy_basic(t *testing.T) {
+func TestAccSecretsManagerSecretPolicy_basic(t *testing.T) {
 	var policy secretsmanager.GetResourcePolicyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_secretsmanager_secret_policy.test"
@@ -105,7 +105,7 @@ func TestAccAwsSecretsManagerSecretPolicy_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsSecretsManagerSecretPolicy_blockPublicPolicy(t *testing.T) {
+func TestAccSecretsManagerSecretPolicy_blockPublicPolicy(t *testing.T) {
 	var policy secretsmanager.GetResourcePolicyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_secretsmanager_secret_policy.test"
@@ -147,7 +147,7 @@ func TestAccAwsSecretsManagerSecretPolicy_blockPublicPolicy(t *testing.T) {
 	})
 }
 
-func TestAccAwsSecretsManagerSecretPolicy_disappears(t *testing.T) {
+func TestAccSecretsManagerSecretPolicy_disappears(t *testing.T) {
 	var policy secretsmanager.GetResourcePolicyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_secretsmanager_secret_policy.test"

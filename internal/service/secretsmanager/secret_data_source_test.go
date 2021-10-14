@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAwsSecretsManagerSecret_basic(t *testing.T) {
+func TestAccSecretsManagerSecretDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, secretsmanager.EndpointsID),
@@ -34,7 +34,7 @@ func TestAccDataSourceAwsSecretsManagerSecret_basic(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsSecretsManagerSecret_ARN(t *testing.T) {
+func TestAccSecretsManagerSecretDataSource_arn(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_secretsmanager_secret.test"
 	datasourceName := "data.aws_secretsmanager_secret.test"
@@ -54,7 +54,7 @@ func TestAccDataSourceAwsSecretsManagerSecret_ARN(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsSecretsManagerSecret_Name(t *testing.T) {
+func TestAccSecretsManagerSecretDataSource_name(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_secretsmanager_secret.test"
 	datasourceName := "data.aws_secretsmanager_secret.test"
@@ -74,7 +74,7 @@ func TestAccDataSourceAwsSecretsManagerSecret_Name(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsSecretsManagerSecret_Policy(t *testing.T) {
+func TestAccSecretsManagerSecretDataSource_policy(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_secretsmanager_secret.test"
 	datasourceName := "data.aws_secretsmanager_secret.test"

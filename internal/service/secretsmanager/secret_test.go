@@ -70,7 +70,7 @@ func sweepSecrets(region string) error {
 	return nil
 }
 
-func TestAccAwsSecretsManagerSecret_basic(t *testing.T) {
+func TestAccSecretsManagerSecret_basic(t *testing.T) {
 	var secret secretsmanager.DescribeSecretOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_secretsmanager_secret.test"
@@ -107,7 +107,7 @@ func TestAccAwsSecretsManagerSecret_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsSecretsManagerSecret_withNamePrefix(t *testing.T) {
+func TestAccSecretsManagerSecret_withNamePrefix(t *testing.T) {
 	var secret secretsmanager.DescribeSecretOutput
 	rPrefix := "tf-acc-test-"
 	resourceName := "aws_secretsmanager_secret.test"
@@ -136,7 +136,7 @@ func TestAccAwsSecretsManagerSecret_withNamePrefix(t *testing.T) {
 	})
 }
 
-func TestAccAwsSecretsManagerSecret_Description(t *testing.T) {
+func TestAccSecretsManagerSecret_description(t *testing.T) {
 	var secret secretsmanager.DescribeSecretOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_secretsmanager_secret.test"
@@ -171,7 +171,7 @@ func TestAccAwsSecretsManagerSecret_Description(t *testing.T) {
 	})
 }
 
-func TestAccAwsSecretsManagerSecret_basicReplica(t *testing.T) {
+func TestAccSecretsManagerSecret_basicReplica(t *testing.T) {
 	var providers []*schema.Provider
 	var secret secretsmanager.DescribeSecretOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -195,7 +195,7 @@ func TestAccAwsSecretsManagerSecret_basicReplica(t *testing.T) {
 	})
 }
 
-func TestAccAwsSecretsManagerSecret_overwriteReplica(t *testing.T) {
+func TestAccSecretsManagerSecret_overwriteReplica(t *testing.T) {
 	var providers []*schema.Provider
 	var secret secretsmanager.DescribeSecretOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -232,7 +232,7 @@ func TestAccAwsSecretsManagerSecret_overwriteReplica(t *testing.T) {
 	})
 }
 
-func TestAccAwsSecretsManagerSecret_KmsKeyID(t *testing.T) {
+func TestAccSecretsManagerSecret_kmsKeyID(t *testing.T) {
 	var secret secretsmanager.DescribeSecretOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_secretsmanager_secret.test"
@@ -267,7 +267,7 @@ func TestAccAwsSecretsManagerSecret_KmsKeyID(t *testing.T) {
 	})
 }
 
-func TestAccAwsSecretsManagerSecret_RecoveryWindowInDays_Recreate(t *testing.T) {
+func TestAccSecretsManagerSecret_RecoveryWindowInDays_recreate(t *testing.T) {
 	var secret secretsmanager.DescribeSecretOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_secretsmanager_secret.test"
@@ -303,7 +303,7 @@ func TestAccAwsSecretsManagerSecret_RecoveryWindowInDays_Recreate(t *testing.T) 
 	})
 }
 
-func TestAccAwsSecretsManagerSecret_RotationLambdaARN(t *testing.T) {
+func TestAccSecretsManagerSecret_rotationLambdaARN(t *testing.T) {
 	var secret secretsmanager.DescribeSecretOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_secretsmanager_secret.test"
@@ -356,7 +356,7 @@ func TestAccAwsSecretsManagerSecret_RotationLambdaARN(t *testing.T) {
 	})
 }
 
-func TestAccAwsSecretsManagerSecret_RotationRules(t *testing.T) {
+func TestAccSecretsManagerSecret_rotationRules(t *testing.T) {
 	var secret secretsmanager.DescribeSecretOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_secretsmanager_secret.test"
@@ -410,7 +410,7 @@ func TestAccAwsSecretsManagerSecret_RotationRules(t *testing.T) {
 	})
 }
 
-func TestAccAwsSecretsManagerSecret_Tags(t *testing.T) {
+func TestAccSecretsManagerSecret_tags(t *testing.T) {
 	var secret secretsmanager.DescribeSecretOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_secretsmanager_secret.test"
@@ -464,7 +464,7 @@ func TestAccAwsSecretsManagerSecret_Tags(t *testing.T) {
 	})
 }
 
-func TestAccAwsSecretsManagerSecret_policy(t *testing.T) {
+func TestAccSecretsManagerSecret_policy(t *testing.T) {
 	var secret secretsmanager.DescribeSecretOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_secretsmanager_secret.test"
