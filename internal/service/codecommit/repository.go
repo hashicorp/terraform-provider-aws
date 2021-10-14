@@ -93,7 +93,7 @@ func resourceRepositoryCreate(d *schema.ResourceData, meta interface{}) error {
 	d.Set("clone_url_ssh", out.RepositoryMetadata.CloneUrlSsh)
 
 	if _, ok := d.GetOk("default_branch"); ok {
-		if err := resourceAwsCodeCommitUpdateDefaultBranch(conn, d); err != nil {
+		if err := resourceUpdateDefaultBranch(conn, d); err != nil {
 			return fmt.Errorf("error updating CodeCommit Repository (%s) default branch: %s", d.Id(), err)
 		}
 	}
@@ -105,13 +105,13 @@ func resourceRepositoryUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodeCommitConn
 
 	if d.HasChange("default_branch") {
-		if err := resourceAwsCodeCommitUpdateDefaultBranch(conn, d); err != nil {
+		if err := resourceUpdateDefaultBranch(conn, d); err != nil {
 			return fmt.Errorf("error updating CodeCommit Repository (%s) default branch: %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("description") {
-		if err := resourceAwsCodeCommitUpdateDescription(conn, d); err != nil {
+		if err := resourceUpdateDescription(conn, d); err != nil {
 			return fmt.Errorf("error updating CodeCommit Repository (%s) description: %s", d.Id(), err)
 		}
 	}
@@ -194,7 +194,7 @@ func resourceRepositoryDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsCodeCommitUpdateDescription(conn *codecommit.CodeCommit, d *schema.ResourceData) error {
+func resourceUpdateDescription(conn *codecommit.CodeCommit, d *schema.ResourceData) error {
 	branchInput := &codecommit.UpdateRepositoryDescriptionInput{
 		RepositoryName:        aws.String(d.Id()),
 		RepositoryDescription: aws.String(d.Get("description").(string)),
@@ -208,7 +208,7 @@ func resourceAwsCodeCommitUpdateDescription(conn *codecommit.CodeCommit, d *sche
 	return nil
 }
 
-func resourceAwsCodeCommitUpdateDefaultBranch(conn *codecommit.CodeCommit, d *schema.ResourceData) error {
+func resourceUpdateDefaultBranch(conn *codecommit.CodeCommit, d *schema.ResourceData) error {
 	input := &codecommit.ListBranchesInput{
 		RepositoryName: aws.String(d.Id()),
 	}

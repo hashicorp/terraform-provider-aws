@@ -75,7 +75,7 @@ func resourceTriggerCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodeCommitConn
 
 	// Expand the "trigger" set to aws-sdk-go compat []*codecommit.RepositoryTrigger
-	triggers := expandAwsCodeCommitTriggers(d.Get("trigger").(*schema.Set).List())
+	triggers := expandTriggers(d.Get("trigger").(*schema.Set).List())
 
 	input := &codecommit.PutRepositoryTriggersInput{
 		RepositoryName: aws.String(d.Get("repository_name").(string)),
@@ -128,7 +128,7 @@ func resourceTriggerDelete(d *schema.ResourceData, meta interface{}) error {
 	return err
 }
 
-func expandAwsCodeCommitTriggers(configured []interface{}) []*codecommit.RepositoryTrigger {
+func expandTriggers(configured []interface{}) []*codecommit.RepositoryTrigger {
 	triggers := make([]*codecommit.RepositoryTrigger, 0, len(configured))
 	// Loop over our configured triggers and create
 	// an array of aws-sdk-go compatible objects
