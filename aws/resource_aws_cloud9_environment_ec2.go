@@ -9,9 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloud9"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceEnvironmentEC2() *schema.Resource {
@@ -64,18 +65,18 @@ func ResourceEnvironmentEC2() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceEnvironmentEC2Create(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Cloud9Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	params := &cloud9.CreateEnvironmentEC2Input{
 		InstanceType:       aws.String(d.Get("instance_type").(string)),
@@ -185,7 +186,7 @@ func resourceEnvironmentEC2Read(d *schema.ResourceData, meta interface{}) error 
 	d.Set("owner_arn", env.OwnerArn)
 	d.Set("type", env.Type)
 
-	tags, err := keyvaluetags.Cloud9ListTags(conn, arn)
+	tags, err := tftags.Cloud9ListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Cloud9 EC2 Environment (%s): %s", arn, err)
@@ -229,7 +230,7 @@ func resourceEnvironmentEC2Update(d *schema.ResourceData, meta interface{}) erro
 		o, n := d.GetChange("tags_all")
 		arn := d.Get("arn").(string)
 
-		if err := keyvaluetags.Cloud9UpdateTags(conn, arn, o, n); err != nil {
+		if err := tftags.Cloud9UpdateTags(conn, arn, o, n); err != nil {
 			return fmt.Errorf("error updating Cloud9 EC2 Environment (%s) tags: %s", arn, err)
 		}
 	}
