@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/xray/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceEncryptionConfig() *schema.Resource {
@@ -27,7 +28,7 @@ func ResourceEncryptionConfig() *schema.Resource {
 			"key_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"type": {
 				Type:     schema.TypeString,
