@@ -117,13 +117,13 @@ func resourceVaultCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if _, ok := d.GetOk("access_policy"); ok {
-		if err := resourceAwsGlacierVaultPolicyUpdate(conn, d); err != nil {
+		if err := resourceVaultPolicyUpdate(conn, d); err != nil {
 			return fmt.Errorf("error updating Glacier Vault (%s) access policy: %w", d.Id(), err)
 		}
 	}
 
 	if _, ok := d.GetOk("notification"); ok {
-		if err := resourceAwsGlacierVaultNotificationUpdate(conn, d); err != nil {
+		if err := resourceVaultNotificationUpdate(conn, d); err != nil {
 			return fmt.Errorf("error updating Glacier Vault (%s) notification: %w", d.Id(), err)
 		}
 	}
@@ -142,13 +142,13 @@ func resourceVaultUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("access_policy") {
-		if err := resourceAwsGlacierVaultPolicyUpdate(conn, d); err != nil {
+		if err := resourceVaultPolicyUpdate(conn, d); err != nil {
 			return fmt.Errorf("error updating Glacier Vault (%s) access policy: %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("notification") {
-		if err := resourceAwsGlacierVaultNotificationUpdate(conn, d); err != nil {
+		if err := resourceVaultNotificationUpdate(conn, d); err != nil {
 			return fmt.Errorf("error updating Glacier Vault (%s) notification: %w", d.Id(), err)
 		}
 	}
@@ -244,7 +244,7 @@ func resourceVaultDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsGlacierVaultNotificationUpdate(conn *glacier.Glacier, d *schema.ResourceData) error {
+func resourceVaultNotificationUpdate(conn *glacier.Glacier, d *schema.ResourceData) error {
 
 	if v, ok := d.GetOk("notification"); ok {
 		settings := v.([]interface{})
@@ -276,7 +276,7 @@ func resourceAwsGlacierVaultNotificationUpdate(conn *glacier.Glacier, d *schema.
 	return nil
 }
 
-func resourceAwsGlacierVaultPolicyUpdate(conn *glacier.Glacier, d *schema.ResourceData) error {
+func resourceVaultPolicyUpdate(conn *glacier.Glacier, d *schema.ResourceData) error {
 	vaultName := d.Id()
 	policyContents := d.Get("access_policy").(string)
 
