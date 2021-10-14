@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 func ResourceRolePolicyAttachment() *schema.Resource {
@@ -67,7 +68,7 @@ func resourceRolePolicyAttachmentRead(d *schema.ResourceData, meta interface{}) 
 
 	var hasPolicyAttachment bool
 
-	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 		var err error
 
 		hasPolicyAttachment, err = iamRoleHasPolicyARNAttachment(conn, role, policyARN)

@@ -10,6 +10,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 func DataSourceUsers() *schema.Resource {
@@ -45,7 +50,7 @@ func dataSourceUsersRead(d *schema.ResourceData, meta interface{}) error {
 	nameRegex := d.Get("name_regex").(string)
 	pathPrefix := d.Get("path_prefix").(string)
 
-	results, err := finder.Users(conn, nameRegex, pathPrefix)
+	results, err := tfiam.FindUsers(conn, nameRegex, pathPrefix)
 
 	if err != nil {
 		return fmt.Errorf("error reading IAM users: %w", err)

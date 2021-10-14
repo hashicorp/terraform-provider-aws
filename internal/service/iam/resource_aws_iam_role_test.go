@@ -23,6 +23,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 func init() {
@@ -941,7 +946,7 @@ func testAccCheckAWSRoleDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.RoleByName(conn, rs.Primary.ID)
+		_, err := tfiam.FindRoleByName(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -970,7 +975,7 @@ func testAccCheckAWSRoleExists(n string, v *iam.Role) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 
-		output, err := finder.RoleByName(conn, rs.Primary.ID)
+		output, err := tfiam.FindRoleByName(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

@@ -16,6 +16,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 func ResourceUserPolicyAttachment() *schema.Resource {
@@ -68,10 +74,10 @@ func resourceUserPolicyAttachmentRead(d *schema.ResourceData, meta interface{}) 
 
 	var attachedPolicy *iam.AttachedPolicy
 
-	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 		var err error
 
-		attachedPolicy, err = finder.UserAttachedPolicy(conn, user, arn)
+		attachedPolicy, err = tfiam.FindUserAttachedPolicy(conn, user, arn)
 
 		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			return resource.RetryableError(err)
@@ -91,7 +97,7 @@ func resourceUserPolicyAttachmentRead(d *schema.ResourceData, meta interface{}) 
 	})
 
 	if tfresource.TimedOut(err) {
-		attachedPolicy, err = finder.UserAttachedPolicy(conn, user, arn)
+		attachedPolicy, err = tfiam.FindUserAttachedPolicy(conn, user, arn)
 	}
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {

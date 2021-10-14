@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 func ResourceRolePolicy() *schema.Resource {
@@ -102,7 +103,7 @@ func resourceRolePolicyRead(d *schema.ResourceData, meta interface{}) error {
 
 	var getResp *iam.GetRolePolicyOutput
 
-	err = resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err = resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 		var err error
 
 		getResp, err = conn.GetRolePolicy(request)

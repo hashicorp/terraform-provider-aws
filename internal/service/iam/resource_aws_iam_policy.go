@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 func ResourcePolicy() *schema.Resource {
@@ -128,7 +129,7 @@ func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 
 	// Handle IAM eventual consistency
 	var getPolicyResponse *iam.GetPolicyOutput
-	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		getPolicyResponse, err = conn.GetPolicy(input)
 
@@ -191,7 +192,7 @@ func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 
 	// Handle IAM eventual consistency
 	var getPolicyVersionResponse *iam.GetPolicyVersionOutput
-	err = resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err = resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		getPolicyVersionResponse, err = conn.GetPolicyVersion(getPolicyVersionRequest)
 

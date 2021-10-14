@@ -17,6 +17,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 func DataSourcePolicy() *schema.Resource {
@@ -71,9 +77,9 @@ func dataSourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	var results []*iam.Policy
 
 	// Handle IAM eventual consistency
-	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 		var err error
-		results, err = finder.Policies(conn, arn, name, pathPrefix)
+		results, err = tfiam.FindPolicies(conn, arn, name, pathPrefix)
 
 		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			return resource.RetryableError(err)
@@ -87,7 +93,7 @@ func dataSourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if tfresource.TimedOut(err) {
-		results, err = finder.Policies(conn, arn, name, pathPrefix)
+		results, err = tfiam.FindPolicies(conn, arn, name, pathPrefix)
 	}
 
 	if err != nil {
@@ -141,7 +147,7 @@ func dataSourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 
 	// Handle IAM eventual consistency
 	var policyVersionOutput *iam.GetPolicyVersionOutput
-	err = resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err = resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		policyVersionOutput, err = conn.GetPolicyVersion(policyVersionInput)
 

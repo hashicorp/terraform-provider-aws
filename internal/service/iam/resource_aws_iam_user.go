@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 func ResourceUser() *schema.Resource {
@@ -120,7 +121,7 @@ func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 
 	var output *iam.GetUserOutput
 
-	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 		var err error
 
 		output, err = conn.GetUser(request)
@@ -419,7 +420,7 @@ func deleteAwsIamUserLoginProfile(svc *iam.IAM, username string) error {
 	input := &iam.DeleteLoginProfileInput{
 		UserName: aws.String(username),
 	}
-	err = resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err = resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 		_, err = svc.DeleteLoginProfile(input)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {

@@ -15,6 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 func DataSourceSessionContext() *schema.Resource {
@@ -69,10 +75,10 @@ func dataSourceSessionContextRead(d *schema.ResourceData, meta interface{}) erro
 
 	var role *iam.Role
 
-	err = resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err = resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 		var err error
 
-		role, err = finder.RoleByName(conn, roleName)
+		role, err = tfiam.FindRoleByName(conn, roleName)
 
 		if !d.IsNewResource() && tfresource.NotFound(err) {
 			return resource.RetryableError(err)
@@ -86,7 +92,7 @@ func dataSourceSessionContextRead(d *schema.ResourceData, meta interface{}) erro
 	})
 
 	if tfresource.TimedOut(err) {
-		role, err = finder.RoleByName(conn, roleName)
+		role, err = tfiam.FindRoleByName(conn, roleName)
 	}
 
 	if err != nil {

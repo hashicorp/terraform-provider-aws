@@ -22,6 +22,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 func ResourceRole() *schema.Resource {
@@ -194,7 +200,7 @@ func resourceRoleCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	outputRaw, err := tfresource.RetryWhen(
-		waiter.PropagationTimeout,
+		tfiam.PropagationTimeout,
 		func() (interface{}, error) {
 			return conn.CreateRole(request)
 		},
@@ -236,8 +242,8 @@ func resourceRoleRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(waiter.PropagationTimeout, func() (interface{}, error) {
-		return finder.RoleByName(conn, d.Id())
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(tfiam.PropagationTimeout, func() (interface{}, error) {
+		return tfiam.FindRoleByName(conn, d.Id())
 	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -312,7 +318,7 @@ func resourceRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		_, err := tfresource.RetryWhen(
-			waiter.PropagationTimeout,
+			tfiam.PropagationTimeout,
 			func() (interface{}, error) {
 				return conn.UpdateAssumeRolePolicy(assumeRolePolicyInput)
 			},
@@ -511,7 +517,7 @@ func deleteIamRole(conn *iam.IAM, roleName string, forceDetach, hasInline, hasMa
 	deleteRoleInput := &iam.DeleteRoleInput{
 		RoleName: aws.String(roleName),
 	}
-	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 		_, err := conn.DeleteRole(deleteRoleInput)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, iam.ErrCodeDeleteConflictException) {
