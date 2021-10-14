@@ -32,6 +32,7 @@ func testAccAWSFmsPolicy_basic(t *testing.T) {
 					testAccCheckResourceAttrRegionalARNIgnoreRegionAndAccount("aws_fms_policy.test", "arn", "fms", "policy/.+"),
 					resource.TestCheckResourceAttr("aws_fms_policy.test", "name", fmsPolicyName),
 					resource.TestCheckResourceAttr("aws_fms_policy.test", "security_service_policy_data.#", "1"),
+					resource.TestCheckResourceAttr("aws_fms_policy.test", "tags.%", "0"),
 				),
 			},
 			{
@@ -140,7 +141,7 @@ func testAccAWSFmsPolicy_update(t *testing.T) {
 	})
 }
 
-func testAccAWSFmsPolicy_tags(t *testing.T) {
+func testAccAWSFmsPolicy_resourceTags(t *testing.T) {
 	fmsPolicyName := fmt.Sprintf("tf-fms-%s", acctest.RandString(5))
 	wafRuleGroupName := fmt.Sprintf("tf-waf-rg-%s", acctest.RandString(5))
 
@@ -155,7 +156,7 @@ func testAccAWSFmsPolicy_tags(t *testing.T) {
 		CheckDestroy: testAccCheckAwsFmsPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFmsPolicyConfig_tags(fmsPolicyName, wafRuleGroupName),
+				Config: testAccFmsPolicyConfig_resourceTags(fmsPolicyName, wafRuleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsFmsPolicyExists("aws_fms_policy.test"),
 					resource.TestCheckResourceAttr("aws_fms_policy.test", "name", fmsPolicyName),
@@ -164,12 +165,50 @@ func testAccAWSFmsPolicy_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccFmsPolicyConfig_tagsChanged(fmsPolicyName, wafRuleGroupName),
+				Config: testAccFmsPolicyConfig_resourceTagsChanged(fmsPolicyName, wafRuleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsFmsPolicyExists("aws_fms_policy.test"),
 					resource.TestCheckResourceAttr("aws_fms_policy.test", "name", fmsPolicyName),
 					resource.TestCheckResourceAttr("aws_fms_policy.test", "resource_tags.%", "1"),
 					resource.TestCheckResourceAttr("aws_fms_policy.test", "resource_tags.Usage", "changed"),
+				),
+			},
+		},
+	})
+}
+
+func testAccAWSFmsPolicy_tags(t *testing.T) {
+	fmsPolicyName := fmt.Sprintf("tf-fms-%s", acctest.RandString(5))
+	wafRuleGroupName := fmt.Sprintf("tf-waf-rg-%s", acctest.RandString(5))
+	resourceName := "aws_fms_policy.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckFmsAdmin(t)
+			testAccOrganizationsAccountPreCheck(t)
+		},
+		ErrorCheck:   testAccErrorCheck(t, fms.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsFmsPolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFmsPolicyConfig_tags1(fmsPolicyName, wafRuleGroupName, "key1", "test"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsFmsPolicyExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", fmsPolicyName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "test"),
+				),
+			},
+			{
+				Config: testAccFmsPolicyConfig_tags2(fmsPolicyName, wafRuleGroupName, "key1", "changed", "key2", "test2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsFmsPolicyExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", fmsPolicyName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "changed"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "test2"),
 				),
 			},
 		},
@@ -406,7 +445,7 @@ resource "aws_wafregional_rule_group" "test" {
 `, name, group))
 }
 
-func testAccFmsPolicyConfig_tags(name string, group string) string {
+func testAccFmsPolicyConfig_resourceTags(name string, group string) string {
 	return composeConfig(
 		testAccFmsPolicyConfigBase(),
 		fmt.Sprintf(`
@@ -436,7 +475,7 @@ resource "aws_wafregional_rule_group" "test" {
 `, name, group))
 }
 
-func testAccFmsPolicyConfig_tagsChanged(name string, group string) string {
+func testAccFmsPolicyConfig_resourceTagsChanged(name string, group string) string {
 	return composeConfig(
 		testAccFmsPolicyConfigBase(),
 		fmt.Sprintf(`
@@ -463,4 +502,63 @@ resource "aws_wafregional_rule_group" "test" {
   name        = "%[2]s"
 }
 `, name, group))
+}
+
+func testAccFmsPolicyConfig_tags1(name string, group string, tagKey string, tagValue string) string {
+	return composeConfig(
+		testAccFmsPolicyConfigBase(),
+		fmt.Sprintf(`
+resource "aws_fms_policy" "test" {
+  exclude_resource_tags = false
+  name                  = "%[1]s"
+  remediation_enabled   = false
+  resource_type_list    = ["AWS::ElasticLoadBalancingV2::LoadBalancer"]
+
+  security_service_policy_data {
+    type                 = "WAF"
+    managed_service_data = "{\"type\": \"WAF\", \"ruleGroups\": [{\"id\":\"${aws_wafregional_rule_group.test.id}\", \"overrideAction\" : {\"type\": \"COUNT\"}}],\"defaultAction\": {\"type\": \"BLOCK\"}, \"overrideCustomerWebACLAssociation\": false}"
+  }
+
+  tags = {
+	%[3]s = %[4]q
+  }
+
+  depends_on = [aws_fms_admin_account.test]
+}
+
+resource "aws_wafregional_rule_group" "test" {
+  metric_name = "MyTest"
+  name        = "%[2]s"
+}
+`, name, group, tagKey, tagValue))
+}
+
+func testAccFmsPolicyConfig_tags2(name string, group string, tagKey1 string, tagValue1 string, tagKey2 string, tagValue2 string) string {
+	return composeConfig(
+		testAccFmsPolicyConfigBase(),
+		fmt.Sprintf(`
+resource "aws_fms_policy" "test" {
+  exclude_resource_tags = false
+  name                  = "%[1]s"
+  remediation_enabled   = false
+  resource_type_list    = ["AWS::ElasticLoadBalancingV2::LoadBalancer"]
+
+  security_service_policy_data {
+    type                 = "WAF"
+    managed_service_data = "{\"type\": \"WAF\", \"ruleGroups\": [{\"id\":\"${aws_wafregional_rule_group.test.id}\", \"overrideAction\" : {\"type\": \"COUNT\"}}],\"defaultAction\": {\"type\": \"BLOCK\"}, \"overrideCustomerWebACLAssociation\": false}"
+  }
+
+  tags = {
+	%[3]s = %[4]q
+    %[5]s = %[6]q
+  }
+
+  depends_on = [aws_fms_admin_account.test]
+}
+
+resource "aws_wafregional_rule_group" "test" {
+  metric_name = "MyTest"
+  name        = "%[2]s"
+}
+`, name, group, tagKey1, tagValue1, tagKey2, tagValue2))
 }
