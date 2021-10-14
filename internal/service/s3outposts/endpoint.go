@@ -21,7 +21,7 @@ func ResourceEndpoint() *schema.Resource {
 		Delete: resourceEndpointDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsS3OutpostsEndpointImportState,
+			State: resourceEndpointImportState,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -164,7 +164,7 @@ func resourceEndpointDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsS3OutpostsEndpointImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceEndpointImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	idParts := strings.Split(d.Id(), ",")
 
 	if len(idParts) != 3 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" {
