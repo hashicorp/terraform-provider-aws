@@ -12,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsAppsyncResolver() *schema.Resource {
+func ResourceResolver() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAppsyncResolverCreate,
-		Read:   resourceAwsAppsyncResolverRead,
-		Update: resourceAwsAppsyncResolverUpdate,
-		Delete: resourceAwsAppsyncResolverDelete,
+		Create: resourceResolverCreate,
+		Read:   resourceResolverRead,
+		Update: resourceResolverUpdate,
+		Delete: resourceResolverDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -107,7 +107,7 @@ func resourceAwsAppsyncResolver() *schema.Resource {
 	}
 }
 
-func resourceAwsAppsyncResolverCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceResolverCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppSyncConn
 
 	input := &appsync.CreateResolverInput{
@@ -141,8 +141,8 @@ func resourceAwsAppsyncResolverCreate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	mutexKey := fmt.Sprintf("appsync-schema-%s", d.Get("api_id").(string))
-	awsMutexKV.Lock(mutexKey)
-	defer awsMutexKV.Unlock(mutexKey)
+	conns.GlobalMutexKV.Lock(mutexKey)
+	defer conns.GlobalMutexKV.Unlock(mutexKey)
 
 	_, err := retryOnAwsCode(appsync.ErrCodeConcurrentModificationException, func() (interface{}, error) {
 		return conn.CreateResolver(input)
@@ -154,10 +154,10 @@ func resourceAwsAppsyncResolverCreate(d *schema.ResourceData, meta interface{}) 
 
 	d.SetId(d.Get("api_id").(string) + "-" + d.Get("type").(string) + "-" + d.Get("field").(string))
 
-	return resourceAwsAppsyncResolverRead(d, meta)
+	return resourceResolverRead(d, meta)
 }
 
-func resourceAwsAppsyncResolverRead(d *schema.ResourceData, meta interface{}) error {
+func resourceResolverRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppSyncConn
 
 	apiID, typeName, fieldName, err := decodeAppsyncResolverID(d.Id())
@@ -204,7 +204,7 @@ func resourceAwsAppsyncResolverRead(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func resourceAwsAppsyncResolverUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceResolverUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppSyncConn
 
 	input := &appsync.UpdateResolverInput{
@@ -238,8 +238,8 @@ func resourceAwsAppsyncResolverUpdate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	mutexKey := fmt.Sprintf("appsync-schema-%s", d.Get("api_id").(string))
-	awsMutexKV.Lock(mutexKey)
-	defer awsMutexKV.Unlock(mutexKey)
+	conns.GlobalMutexKV.Lock(mutexKey)
+	defer conns.GlobalMutexKV.Unlock(mutexKey)
 
 	_, err := retryOnAwsCode(appsync.ErrCodeConcurrentModificationException, func() (interface{}, error) {
 		return conn.UpdateResolver(input)
@@ -249,10 +249,10 @@ func resourceAwsAppsyncResolverUpdate(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("error updating AppSync Resolver (%s): %s", d.Id(), err)
 	}
 
-	return resourceAwsAppsyncResolverRead(d, meta)
+	return resourceResolverRead(d, meta)
 }
 
-func resourceAwsAppsyncResolverDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceResolverDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppSyncConn
 
 	apiID, typeName, fieldName, err := decodeAppsyncResolverID(d.Id())
@@ -268,8 +268,8 @@ func resourceAwsAppsyncResolverDelete(d *schema.ResourceData, meta interface{}) 
 	}
 
 	mutexKey := fmt.Sprintf("appsync-schema-%s", d.Get("api_id").(string))
-	awsMutexKV.Lock(mutexKey)
-	defer awsMutexKV.Unlock(mutexKey)
+	conns.GlobalMutexKV.Lock(mutexKey)
+	defer conns.GlobalMutexKV.Unlock(mutexKey)
 
 	_, err = retryOnAwsCode(appsync.ErrCodeConcurrentModificationException, func() (interface{}, error) {
 		return conn.DeleteResolver(input)

@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsAppsyncGraphqlApi() *schema.Resource {
+func ResourceGraphQLAPI() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAppsyncGraphqlApiCreate,
-		Read:   resourceAwsAppsyncGraphqlApiRead,
-		Update: resourceAwsAppsyncGraphqlApiUpdate,
-		Delete: resourceAwsAppsyncGraphqlApiDelete,
+		Create: resourceGraphQLAPICreate,
+		Read:   resourceGraphQLAPIRead,
+		Update: resourceGraphQLAPIUpdate,
+		Delete: resourceGraphQLAPIDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -209,7 +209,7 @@ func resourceAwsAppsyncGraphqlApi() *schema.Resource {
 	}
 }
 
-func resourceAwsAppsyncGraphqlApiCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceGraphQLAPICreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppSyncConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -254,10 +254,10 @@ func resourceAwsAppsyncGraphqlApiCreate(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("error creating AppSync GraphQL API (%s) Schema: %s", d.Id(), err)
 	}
 
-	return resourceAwsAppsyncGraphqlApiRead(d, meta)
+	return resourceGraphQLAPIRead(d, meta)
 }
 
-func resourceAwsAppsyncGraphqlApiRead(d *schema.ResourceData, meta interface{}) error {
+func resourceGraphQLAPIRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppSyncConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -320,7 +320,7 @@ func resourceAwsAppsyncGraphqlApiRead(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func resourceAwsAppsyncGraphqlApiUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceGraphQLAPIUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppSyncConn
 
 	if d.HasChange("tags_all") {
@@ -368,10 +368,10 @@ func resourceAwsAppsyncGraphqlApiUpdate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	return resourceAwsAppsyncGraphqlApiRead(d, meta)
+	return resourceGraphQLAPIRead(d, meta)
 }
 
-func resourceAwsAppsyncGraphqlApiDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceGraphQLAPIDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppSyncConn
 
 	input := &appsync.DeleteGraphqlApiInput{
