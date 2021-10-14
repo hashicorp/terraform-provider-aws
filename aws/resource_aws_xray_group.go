@@ -11,12 +11,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsXrayGroup() *schema.Resource {
+func ResourceGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsXrayGroupCreate,
-		Read:   resourceAwsXrayGroupRead,
-		Update: resourceAwsXrayGroupUpdate,
-		Delete: resourceAwsXrayGroupDelete,
+		Create: resourceGroupCreate,
+		Read:   resourceGroupRead,
+		Update: resourceGroupUpdate,
+		Delete: resourceGroupDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -44,7 +44,7 @@ func resourceAwsXrayGroup() *schema.Resource {
 	}
 }
 
-func resourceAwsXrayGroupCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).XRayConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -61,10 +61,10 @@ func resourceAwsXrayGroupCreate(d *schema.ResourceData, meta interface{}) error 
 
 	d.SetId(aws.StringValue(out.Group.GroupARN))
 
-	return resourceAwsXrayGroupRead(d, meta)
+	return resourceGroupRead(d, meta)
 }
 
-func resourceAwsXrayGroupRead(d *schema.ResourceData, meta interface{}) error {
+func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).XRayConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -108,7 +108,7 @@ func resourceAwsXrayGroupRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsXrayGroupUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).XRayConn
 
 	if d.HasChange("filter_expression") {
@@ -130,10 +130,10 @@ func resourceAwsXrayGroupUpdate(d *schema.ResourceData, meta interface{}) error 
 		}
 	}
 
-	return resourceAwsXrayGroupRead(d, meta)
+	return resourceGroupRead(d, meta)
 }
 
-func resourceAwsXrayGroupDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).XRayConn
 
 	log.Printf("[INFO] Deleting XRay Group: %s", d.Id())
