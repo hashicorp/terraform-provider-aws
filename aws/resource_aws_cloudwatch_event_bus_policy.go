@@ -94,14 +94,14 @@ func resourceAwsCloudWatchEventBusPolicyRead(d *schema.ResourceData, meta interf
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		output, err = conn.DescribeEventBus(&input)
 		if output != nil {
 			policy, err = getEventBusPolicy(output)
 		}
 	}
 
-	if isResourceNotFoundError(err) {
+	if tfresource.NotFound(err) {
 		log.Printf("[WARN] Policy on {%s} EventBus not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -144,7 +144,7 @@ func resourceAwsCloudWatchEventBusPolicyUpdate(d *schema.ResourceData, meta inte
 
 	log.Printf("[DEBUG] Update CloudWatch EventBus policy: %s", input)
 	_, err := conn.PutPermission(&input)
-	if isAWSErr(err, events.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, events.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] CloudWatch EventBus %q not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -169,7 +169,7 @@ func resourceAwsCloudWatchEventBusPolicyDelete(d *schema.ResourceData, meta inte
 
 	log.Printf("[DEBUG] Delete CloudWatch EventBus Policy: %s", input)
 	_, err := conn.RemovePermission(&input)
-	if isAWSErr(err, events.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, events.ErrCodeResourceNotFoundException, "") {
 		return nil
 	}
 	if err != nil {

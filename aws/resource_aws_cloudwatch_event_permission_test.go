@@ -369,7 +369,7 @@ func testAccCheckCloudWatchEventPermissionDestroy(s *terraform.State) error {
 		}
 		err = resource.Retry(1*time.Minute, func() *resource.RetryError {
 			debo, err := conn.DescribeEventBus(input)
-			if isAWSErr(err, events.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, events.ErrCodeResourceNotFoundException, "") {
 				return nil
 			}
 			if err != nil {
