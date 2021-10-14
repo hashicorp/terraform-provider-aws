@@ -6,20 +6,21 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/pinpoint"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSPinpointEventStream_basic(t *testing.T) {
 	var stream pinpoint.EventStream
 	resourceName := "aws_pinpoint_event_stream.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	rName2 := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName2 := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSPinpointApp(t) },
-		ErrorCheck:   testAccErrorCheck(t, pinpoint.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSPinpointApp(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, pinpoint.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSPinpointEventStreamDestroy,
 		Steps: []resource.TestStep{
@@ -53,11 +54,11 @@ func TestAccAWSPinpointEventStream_basic(t *testing.T) {
 func TestAccAWSPinpointEventStream_disappears(t *testing.T) {
 	var stream pinpoint.EventStream
 	resourceName := "aws_pinpoint_event_stream.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSPinpointApp(t) },
-		ErrorCheck:   testAccErrorCheck(t, pinpoint.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSPinpointApp(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, pinpoint.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSPinpointEventStreamDestroy,
 		Steps: []resource.TestStep{
@@ -65,7 +66,7 @@ func TestAccAWSPinpointEventStream_disappears(t *testing.T) {
 				Config: testAccAWSPinpointEventStreamConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSPinpointEventStreamExists(resourceName, &stream),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsPinpointEventStream(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsPinpointEventStream(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

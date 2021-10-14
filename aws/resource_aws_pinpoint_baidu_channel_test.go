@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/pinpoint"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSPinpointBaiduChannel_basic(t *testing.T) {
@@ -19,8 +20,8 @@ func TestAccAWSPinpointBaiduChannel_basic(t *testing.T) {
 	secretKey := "456"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSPinpointApp(t) },
-		ErrorCheck:   testAccErrorCheck(t, pinpoint.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSPinpointApp(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, pinpoint.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSPinpointBaiduChannelDestroy,
 		Steps: []resource.TestStep{

@@ -6,22 +6,23 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/pinpoint"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSPinpointEmailChannel_basic(t *testing.T) {
 	var channel pinpoint.EmailChannelResponse
 	resourceName := "aws_pinpoint_email_channel.test"
 
-	domain := testAccRandomDomainName()
-	address1 := testAccRandomEmailAddress(domain)
-	address2 := testAccRandomEmailAddress(domain)
+	domain := acctest.RandomDomainName()
+	address1 := acctest.RandomEmailAddress(domain)
+	address2 := acctest.RandomEmailAddress(domain)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSPinpointApp(t) },
-		ErrorCheck:   testAccErrorCheck(t, pinpoint.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSPinpointApp(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, pinpoint.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSPinpointEmailChannelDestroy,
 		Steps: []resource.TestStep{
@@ -57,14 +58,14 @@ func TestAccAWSPinpointEmailChannel_basic(t *testing.T) {
 func TestAccAWSPinpointEmailChannel_configurationSet(t *testing.T) {
 	var channel pinpoint.EmailChannelResponse
 	resourceName := "aws_pinpoint_email_channel.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
-	domain := testAccRandomDomainName()
-	address := testAccRandomEmailAddress(domain)
+	domain := acctest.RandomDomainName()
+	address := acctest.RandomEmailAddress(domain)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSPinpointApp(t) },
-		ErrorCheck:   testAccErrorCheck(t, pinpoint.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSPinpointApp(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, pinpoint.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSPinpointEmailChannelDestroy,
 		Steps: []resource.TestStep{
@@ -87,14 +88,14 @@ func TestAccAWSPinpointEmailChannel_configurationSet(t *testing.T) {
 func TestAccAWSPinpointEmailChannel_noRole(t *testing.T) {
 	var channel pinpoint.EmailChannelResponse
 	resourceName := "aws_pinpoint_email_channel.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
-	domain := testAccRandomDomainName()
-	address := testAccRandomEmailAddress(domain)
+	domain := acctest.RandomDomainName()
+	address := acctest.RandomEmailAddress(domain)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSPinpointApp(t) },
-		ErrorCheck:   testAccErrorCheck(t, pinpoint.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSPinpointApp(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, pinpoint.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSPinpointEmailChannelDestroy,
 		Steps: []resource.TestStep{
@@ -118,12 +119,12 @@ func TestAccAWSPinpointEmailChannel_disappears(t *testing.T) {
 	var channel pinpoint.EmailChannelResponse
 	resourceName := "aws_pinpoint_email_channel.test"
 
-	domain := testAccRandomDomainName()
-	address := testAccRandomEmailAddress(domain)
+	domain := acctest.RandomDomainName()
+	address := acctest.RandomEmailAddress(domain)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSPinpointApp(t) },
-		ErrorCheck:   testAccErrorCheck(t, pinpoint.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSPinpointApp(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, pinpoint.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSPinpointEmailChannelDestroy,
 		Steps: []resource.TestStep{
@@ -131,7 +132,7 @@ func TestAccAWSPinpointEmailChannel_disappears(t *testing.T) {
 				Config: testAccAWSPinpointEmailChannelConfig_FromAddress(domain, address),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSPinpointEmailChannelExists(resourceName, &channel),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsPinpointEmailChannel(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsPinpointEmailChannel(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

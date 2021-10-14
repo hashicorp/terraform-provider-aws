@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/pinpoint"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSPinpointSMSChannel_basic(t *testing.T) {
@@ -15,8 +16,8 @@ func TestAccAWSPinpointSMSChannel_basic(t *testing.T) {
 	resourceName := "aws_pinpoint_sms_channel.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSPinpointApp(t) },
-		ErrorCheck:   testAccErrorCheck(t, pinpoint.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSPinpointApp(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, pinpoint.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSPinpointSMSChannelDestroy,
 		Steps: []resource.TestStep{
@@ -60,8 +61,8 @@ func TestAccAWSPinpointSMSChannel_full(t *testing.T) {
 	newShortCode := "7890"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSPinpointApp(t) },
-		ErrorCheck:   testAccErrorCheck(t, pinpoint.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSPinpointApp(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, pinpoint.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSPinpointSMSChannelDestroy,
 		Steps: []resource.TestStep{
@@ -110,8 +111,8 @@ func TestAccAWSPinpointSMSChannel_disappears(t *testing.T) {
 	resourceName := "aws_pinpoint_sms_channel.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSPinpointApp(t) },
-		ErrorCheck:   testAccErrorCheck(t, pinpoint.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSPinpointApp(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, pinpoint.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSPinpointSMSChannelDestroy,
 		Steps: []resource.TestStep{
@@ -119,7 +120,7 @@ func TestAccAWSPinpointSMSChannel_disappears(t *testing.T) {
 				Config: testAccAWSPinpointSMSChannelConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSPinpointSMSChannelExists(resourceName, &channel),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsPinpointSMSChannel(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsPinpointSMSChannel(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/pinpoint"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 /**
@@ -47,8 +48,8 @@ func TestAccAWSPinpointADMChannel_basic(t *testing.T) {
 	config := testAccAwsPinpointADMChannelConfigurationFromEnv(t)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSPinpointApp(t) },
-		ErrorCheck:   testAccErrorCheck(t, pinpoint.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSPinpointApp(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, pinpoint.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSPinpointADMChannelDestroy,
 		Steps: []resource.TestStep{
