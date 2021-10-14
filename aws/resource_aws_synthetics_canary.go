@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/mitchellh/go-homedir"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const awsMutexCanary = `aws_synthetics_canary`
@@ -57,7 +58,7 @@ func ResourceCanary() *schema.Resource {
 			"execution_role_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"failure_retention_period": {
 				Type:         schema.TypeInt,
