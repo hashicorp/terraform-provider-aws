@@ -16,6 +16,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfds "github.com/hashicorp/terraform-provider-aws/internal/service/ds"
+	tfds "github.com/hashicorp/terraform-provider-aws/internal/service/ds"
+	tfds "github.com/hashicorp/terraform-provider-aws/internal/service/ds"
+	tfds "github.com/hashicorp/terraform-provider-aws/internal/service/ds"
+	tfds "github.com/hashicorp/terraform-provider-aws/internal/service/ds"
+	tfds "github.com/hashicorp/terraform-provider-aws/internal/service/ds"
 )
 
 func ResourceDirectory() *schema.Resource {
@@ -391,7 +397,7 @@ func resourceDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(directoryId)
 
-	_, err = waiter.DirectoryCreated(conn, d.Id())
+	_, err = tfds.waitDirectoryCreated(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Directory Service Directory (%s) to create: %w", d.Id(), err)
@@ -447,7 +453,7 @@ func resourceDirectoryRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	dir, err := finder.DirectoryByID(conn, d.Id())
+	dir, err := tfds.findDirectoryByID(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Directory Service Directory (%s) not found, removing from state", d.Id())
@@ -529,7 +535,7 @@ func resourceDirectoryDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting Directory Service Directory (%s): %w", d.Id(), err)
 	}
 
-	_, err = waiter.DirectoryDeleted(conn, d.Id())
+	_, err = tfds.waitDirectoryDeleted(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Directory Service Directory (%s) to delete: %w", d.Id(), err)

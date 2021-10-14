@@ -20,6 +20,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfds "github.com/hashicorp/terraform-provider-aws/internal/service/ds"
+	tfds "github.com/hashicorp/terraform-provider-aws/internal/service/ds"
 )
 
 func init() {
@@ -49,7 +51,7 @@ func testSweepDirectoryServiceDirectories(region string) error {
 
 	input := &directoryservice.DescribeDirectoriesInput{}
 
-	err = lister.DescribeDirectoriesPagesWithContext(context.TODO(), conn, input, func(page *directoryservice.DescribeDirectoriesOutput, lastPage bool) bool {
+	err = tfds.DescribeDirectoriesPagesWithContext(context.TODO(), conn, input, func(page *directoryservice.DescribeDirectoriesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}

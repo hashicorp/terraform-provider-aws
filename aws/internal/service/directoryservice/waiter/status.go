@@ -7,11 +7,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/directoryservice/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfds "github.com/hashicorp/terraform-provider-aws/internal/service/ds"
 )
 
-func DirectoryStage(conn *directoryservice.DirectoryService, id string) resource.StateRefreshFunc {
+func statusDirectoryStage(conn *directoryservice.DirectoryService, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.DirectoryByID(conn, id)
+		output, err := tfds.findDirectoryByID(conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

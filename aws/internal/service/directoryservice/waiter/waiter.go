@@ -12,16 +12,16 @@ import (
 )
 
 const (
-	DirectoryCreatedTimeout = 60 * time.Minute
-	DirectoryDeletedTimeout = 60 * time.Minute
+	directoryCreatedTimeout = 60 * time.Minute
+	directoryDeletedTimeout = 60 * time.Minute
 )
 
-func DirectoryCreated(conn *directoryservice.DirectoryService, id string) (*directoryservice.DirectoryDescription, error) {
+func waitDirectoryCreated(conn *directoryservice.DirectoryService, id string) (*directoryservice.DirectoryDescription, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{directoryservice.DirectoryStageRequested, directoryservice.DirectoryStageCreating, directoryservice.DirectoryStageCreated},
 		Target:  []string{directoryservice.DirectoryStageActive},
-		Refresh: DirectoryStage(conn, id),
-		Timeout: DirectoryCreatedTimeout,
+		Refresh: statusDirectoryStage(conn, id),
+		Timeout: directoryCreatedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -35,12 +35,12 @@ func DirectoryCreated(conn *directoryservice.DirectoryService, id string) (*dire
 	return nil, err
 }
 
-func DirectoryDeleted(conn *directoryservice.DirectoryService, id string) (*directoryservice.DirectoryDescription, error) {
+func waitDirectoryDeleted(conn *directoryservice.DirectoryService, id string) (*directoryservice.DirectoryDescription, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{directoryservice.DirectoryStageActive, directoryservice.DirectoryStageDeleting},
 		Target:  []string{},
-		Refresh: DirectoryStage(conn, id),
-		Timeout: DirectoryDeletedTimeout,
+		Refresh: statusDirectoryStage(conn, id),
+		Timeout: directoryDeletedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
