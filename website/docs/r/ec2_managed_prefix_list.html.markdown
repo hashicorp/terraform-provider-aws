@@ -75,7 +75,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Prefix Lists can be imported using the `id`, e.g.
+Prefix Lists can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_ec2_managed_prefix_list.default pl-0570a1d2d725c16be

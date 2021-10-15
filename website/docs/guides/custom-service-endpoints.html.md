@@ -26,7 +26,7 @@ This guide outlines how to get started with customizing endpoints, the available
 
 ## Getting Started with Custom Endpoints
 
-To configure the Terraform AWS Provider to use customized endpoints, it can be done within `provider` declarations using the `endpoints` configuration block, e.g.
+To configure the Terraform AWS Provider to use customized endpoints, it can be done within `provider` declarations using the `endpoints` configuration block, e.g.,
 
 ```terraform
 provider "aws" {

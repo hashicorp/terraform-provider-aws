@@ -46,7 +46,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_s3_account_public_access_block` can be imported by using the AWS account ID, e.g.
+`aws_s3_account_public_access_block` can be imported by using the AWS account ID, e.g.,
 
 ```
 $ terraform import aws_s3_account_public_access_block.example 123456789012

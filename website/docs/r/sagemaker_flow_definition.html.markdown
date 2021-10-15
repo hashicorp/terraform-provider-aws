@@ -168,7 +168,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Sagemaker Flow Definitions can be imported using the `flow_definition_name`, e.g.
+Sagemaker Flow Definitions can be imported using the `flow_definition_name`, e.g.,
 
 ```
 $ terraform import aws_sagemaker_flow_definition.example example

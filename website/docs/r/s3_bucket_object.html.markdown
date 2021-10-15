@@ -126,8 +126,8 @@ The following arguments are optional:
 * `content_base64` - (Optional, conflicts with `source` and `content`) Base64-encoded data that will be decoded and uploaded as raw bytes for the object content. This allows safely uploading non-UTF8 binary data, but is recommended only for small content such as the result of the `gzipbase64` function with small text strings. For larger objects, use `source` to stream the content from a disk file.
 * `content_disposition` - (Optional) Presentational information for the object. Read [w3c content_disposition](http://www.w3.org/Protocols/rfc2616/rfc2616-sec19.html#sec19.5.1) for further information.
 * `content_encoding` - (Optional) Content encodings that have been applied to the object and thus what decoding mechanisms must be applied to obtain the media-type referenced by the Content-Type header field. Read [w3c content encoding](http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.11) for further information.
-* `content_language` - (Optional) Language the content is in e.g. en-US or en-GB.
-* `content_type` - (Optional) Standard MIME type describing the format of the object data, e.g. application/octet-stream. All Valid MIME Types are valid for this input.
+* `content_language` - (Optional) Language the content is in e.g., en-US or en-GB.
+* `content_type` - (Optional) Standard MIME type describing the format of the object data, e.g., application/octet-stream. All Valid MIME Types are valid for this input.
 * `content` - (Optional, conflicts with `source` and `content_base64`) Literal string value to use as the object content, which will be uploaded as UTF-8-encoded text.
 * `etag` - (Optional) Triggers updates when the value changes. The only meaningful value is `filemd5("path/to/file")` (Terraform 0.11.12 or later) or `${md5(file("path/to/file"))}` (Terraform 0.11.11 or earlier). This attribute is not compatible with KMS encryption, `kms_key_id` or `server_side_encryption = "aws:kms"` (see `source_hash` instead).
 * `force_destroy` - (Optional) Whether to allow the object to be deleted by removing any legal hold on any object version. Default is `false`. This value should be set to `true` only if the bucket has S3 object lock enabled.
@@ -158,13 +158,13 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Objects can be imported using the `id`. The `id` is the bucket name and the key together e.g.
+Objects can be imported using the `id`. The `id` is the bucket name and the key together e.g.,
 
 ```
 $ terraform import aws_s3_bucket_object.object some-bucket-name/some/key.txt
 ```
 
-Additionally, s3 url syntax can be used, e.g.
+Additionally, s3 url syntax can be used, e.g.,
 
 ```
 $ terraform import aws_s3_bucket_object.object s3://some-bucket-name/some/key.txt

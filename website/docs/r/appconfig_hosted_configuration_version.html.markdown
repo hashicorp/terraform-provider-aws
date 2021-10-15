@@ -45,7 +45,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-AppConfig Hosted Configuration Versions can be imported by using the application ID, configuration profile ID, and version number separated by a slash (`/`), e.g.
+AppConfig Hosted Configuration Versions can be imported by using the application ID, configuration profile ID, and version number separated by a slash (`/`), e.g.,
 
 ```
 $ terraform import aws_appconfig_hosted_configuration_version.example 71abcde/11xxxxx/2

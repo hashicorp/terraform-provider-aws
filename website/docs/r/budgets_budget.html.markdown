@@ -201,6 +201,6 @@ Valid keys for `notification` parameter.
 
 ## Import
 
-Budgets can be imported using `AccountID:BudgetName`, e.g.
+Budgets can be imported using `AccountID:BudgetName`, e.g.,
 
 `$ terraform import aws_budgets_budget.myBudget 123456789012:myBudget`

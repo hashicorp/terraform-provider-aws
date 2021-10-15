@@ -132,7 +132,7 @@ Cluster nodes (for `cluster_nodes`) support the following attributes:
 
 ## Import
 
-Redshift Clusters can be imported using the `cluster_identifier`, e.g.
+Redshift Clusters can be imported using the `cluster_identifier`, e.g.,
 
 ```
 $ terraform import aws_redshift_cluster.myprodcluster tf-redshift-cluster-12345

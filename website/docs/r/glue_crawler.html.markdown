@@ -209,7 +209,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Glue Crawlers can be imported using `name`, e.g.
+Glue Crawlers can be imported using `name`, e.g.,
 
 ```
 $ terraform import aws_glue_crawler.MyJob MyJob

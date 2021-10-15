@@ -579,7 +579,7 @@ updates.
 These parameters can be used to ensure that service is being provided before
 Terraform moves on. If new instances don't pass the ELB's health checks for any
 reason, the Terraform apply will time out, and the ASG will be marked as
-tainted (i.e. marked to be destroyed in a follow up run).
+tainted (i.e., marked to be destroyed in a follow up run).
 
 As with ASG Capacity, Terraform will wait for up to `wait_for_capacity_timeout`
 for the proper number of instances to be healthy.
@@ -594,7 +594,7 @@ for more information.
 
 ## Import
 
-Auto Scaling Groups can be imported using the `name`, e.g.
+Auto Scaling Groups can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_autoscaling_group.web web-asg

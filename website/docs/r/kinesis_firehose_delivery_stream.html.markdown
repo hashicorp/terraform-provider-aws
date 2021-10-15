@@ -329,7 +329,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
 }
 ```
 
-### HTTP Endpoint (e.g. New Relic) Destination
+### HTTP Endpoint (e.g., New Relic) Destination
 
 ```terraform
 resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
@@ -632,7 +632,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Kinesis Firehose Delivery streams can be imported using the stream ARN, e.g.
+Kinesis Firehose Delivery streams can be imported using the stream ARN, e.g.,
 
 ```
 $ terraform import aws_kinesis_firehose_delivery_stream.foo arn:aws:firehose:us-east-1:XXX:deliverystream/example

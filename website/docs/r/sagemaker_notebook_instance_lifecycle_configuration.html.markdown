@@ -38,7 +38,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Models can be imported using the `name`, e.g.
+Models can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_sagemaker_notebook_instance_lifecycle_configuration.lc foo

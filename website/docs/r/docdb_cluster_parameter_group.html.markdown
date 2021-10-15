@@ -52,7 +52,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-DocumentDB Cluster Parameter Groups can be imported using the `name`, e.g.
+DocumentDB Cluster Parameter Groups can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_docdb_cluster_parameter_group.cluster_pg production-pg-1

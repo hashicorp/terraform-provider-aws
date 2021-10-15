@@ -41,7 +41,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-GuardDuty Organization Admin Account can be imported using the AWS account ID, e.g.
+GuardDuty Organization Admin Account can be imported using the AWS account ID, e.g.,
 
 ```
 $ terraform import aws_guardduty_organization_admin_account.example 123456789012

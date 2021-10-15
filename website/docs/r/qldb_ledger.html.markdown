@@ -40,7 +40,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-QLDB Ledgers can be imported using the `name`, e.g.
+QLDB Ledgers can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_qldb_ledger.sample-ledger sample-ledger

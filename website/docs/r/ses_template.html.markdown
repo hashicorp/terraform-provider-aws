@@ -39,7 +39,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-SES templates can be imported using the template name, e.g.
+SES templates can be imported using the template name, e.g.,
 
 ```
 $ terraform import aws_ses_template.MyTemplate MyTemplate
