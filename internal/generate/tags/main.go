@@ -48,6 +48,9 @@ var (
 	untagInNeedTagType    = flag.String("UntagInNeedTagType", "", "untagInNeedTagType")
 	untagInTagsElem       = flag.String("UntagInTagsElem", "TagKeys", "untagInTagsElem")
 	untagOp               = flag.String("UntagOp", "UntagResource", "untagOp")
+
+	parentNotFoundErrCode = flag.String("ParentNotFoundErrCode", "", "Parent 'NotFound' Error Code")
+	parentNotFoundErrMsg  = flag.String("ParentNotFoundErrMsg", "", "Parent 'NotFound' Error Message")
 )
 
 func usage() {
@@ -67,7 +70,8 @@ type TemplateData struct {
 	ListTagsInIDNeedSlice   string
 	ListTagsOp              string
 	ListTagsOutTagsElem     string
-	ParentNotFoundError     string
+	ParentNotFoundErrCode   string
+	ParentNotFoundErrMsg    string
 	RetryCreateOnNotFound   string
 	TagInCustomVal          string
 	TagInIDElem             string
@@ -128,7 +132,8 @@ func main() {
 		ListTagsInIDNeedSlice:   *listTagsInIDNeedSlice,
 		ListTagsOp:              *listTagsOp,
 		ListTagsOutTagsElem:     *listTagsOutTagsElem,
-		ParentNotFoundError:     parentNotFoundErrorForService(awsService),
+		ParentNotFoundErrCode:   *parentNotFoundErrCode,
+		ParentNotFoundErrMsg:    *parentNotFoundErrMsg,
 		TagInCustomVal:          *tagInCustomVal,
 		TagInIDElem:             *tagInIDElem,
 		TagInIDNeedSlice:        *tagInIDNeedSlice,
@@ -219,7 +224,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/{{ .AWSService }}"
-	{{- if .ParentNotFoundError }}
+	{{- if .ParentNotFoundErrCode }}
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	{{- end }}
@@ -308,7 +313,21 @@ func ListTags(conn {{ .ClientType }}, identifier string{{ if .TagResTypeElem }},
 
 	output, err := conn.{{ .ListTagsOp }}(input)
 
-	{{ .ParentNotFoundError }}
+	{{ if and ( .ParentNotFoundErrCode ) ( .ParentNotFoundErrMsg ) }}
+			if tfawserr.ErrMessageContains(err, "{{ .ParentNotFoundErrCode }}", "{{ .ParentNotFoundErrMsg }}") {
+				return nil, &resource.NotFoundError{
+					LastError:   err,
+					LastRequest: input,
+				}
+			}
+	{{- else if ( .ParentNotFoundErrCode ) }}
+			if tfawserr.ErrCodeEquals(err, "{{ .ParentNotFoundErrCode }}") {
+				return nil, &resource.NotFoundError{
+					LastError:   err,
+					LastRequest: input,
+				}
+			}
+	{{- end }}
 
 	if err != nil {
 		return tftags.New(nil), err
@@ -783,36 +802,6 @@ func awsServiceNameUpper(s string) (string, error) {
 	}
 
 	return "", fmt.Errorf("unable to find AWS service name for %s", s)
-}
-
-// parentNotFoundErrorForService returns service-specific
-// ResourceNotFound error handling in string format to
-// be used in template generation
-func parentNotFoundErrorForService(serviceName string) string {
-	var parentNotFoundErr string
-
-	switch serviceName {
-	case "dynamodb":
-		parentNotFoundErr = `
-		if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
-			return nil, &resource.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
-			}
-		}
-		`
-	case "ecs":
-		parentNotFoundErr = `
-		if tfawserr.ErrMessageContains(err, "InvalidParameterException", "The specified cluster is inactive. Specify an active cluster and try again.") {
-			return nil, &resource.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
-			}
-		}
-		`
-	}
-
-	return parentNotFoundErr
 }
 
 func ToSnakeCase(str string) string {
