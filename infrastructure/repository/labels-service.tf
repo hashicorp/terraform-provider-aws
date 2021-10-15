@@ -54,6 +54,7 @@ variable "service_labels" {
     "codestarconnections",
     "codestarnotifications",
     "cognito",
+    "cognitoidentityprovider",
     "comprehend",
     "comprehendmedical",
     "computeoptimizer",
@@ -89,7 +90,6 @@ variable "service_labels" {
     "elbv2",
     "emr",
     "emrcontainers",
-    "eventbridge",
     "firehose",
     "fms",
     "forecastservice",
@@ -222,7 +222,8 @@ variable "service_labels" {
 resource "github_issue_label" "service" {
   for_each = var.service_labels
 
-  repository = "terraform-provider-aws"
-  name       = "service/${each.value}"
-  color      = "7b42bc" # color:terraform (logomark)
+  repository  = "terraform-provider-aws"
+  name        = "service/${each.value}"
+  color       = "7b42bc" # color:terraform (logomark)
+  description = "Issues and PRs that pertain to the ${each.value} service."
 }

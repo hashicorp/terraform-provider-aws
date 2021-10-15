@@ -89,7 +89,7 @@ The following arguments are supported:
 
 #### `replica`
 
-* `region_name` - (Required) AWS region name of replica DynamoDB Table. e.g. `us-east-1`
+* `region_name` - (Required) AWS region name of replica DynamoDB TableE.g., `us-east-1`
 
 ## Attributes Reference
 
@@ -100,7 +100,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-DynamoDB Global Tables can be imported using the global table name, e.g.
+DynamoDB Global Tables can be imported using the global table name, e.g.,
 
 ```
 $ terraform import aws_dynamodb_global_table.MyTable MyTable

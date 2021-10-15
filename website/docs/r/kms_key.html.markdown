@@ -48,7 +48,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-KMS Keys can be imported using the `id`, e.g.
+KMS Keys can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_kms_key.a 1234abcd-12ab-34cd-56ef-1234567890ab

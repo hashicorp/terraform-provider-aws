@@ -116,7 +116,7 @@ The following arguments are optional:
 
 * `configuration_set` - (Optional) Email configuration set name from SES.
 * `email_sending_account` - (Optional) Email delivery method to use. `COGNITO_DEFAULT` for the default email functionality built into Cognito or `DEVELOPER` to use your Amazon SES configuration.
-* `from_email_address` - (Optional) Sender’s email address or sender’s display name with their email address (e.g. `john@example.com`, `John Smith <john@example.com>` or `\"John Smith Ph.D.\" <john@example.com>`). Escaped double quotes are required around display names that contain certain characters as specified in [RFC 5322](https://tools.ietf.org/html/rfc5322).
+* `from_email_address` - (Optional) Sender’s email address or sender’s display name with their email address (e.g., `john@example.com`, `John Smith <john@example.com>` or `\"John Smith Ph.D.\" <john@example.com>`). Escaped double quotes are required around display names that contain certain characters as specified in [RFC 5322](https://tools.ietf.org/html/rfc5322).
 * `reply_to_email_address` - (Optional) REPLY-TO email address.
 * `source_arn` - (Optional) ARN of the SES verified email identity to to use. Required if `email_sending_account` is set to `DEVELOPER`.
 
@@ -157,7 +157,7 @@ The following arguments are optional:
 
 ### schema
 
-~> **NOTE:** When defining an `attribute_data_type` of `String` or `Number`, the respective attribute constraints configuration block (e.g `string_attribute_constraints` or `number_attribute_constraints`) is **required** to prevent recreation of the Terraform resource. This requirement is true for both standard (e.g. name, email) and custom schema attributes.
+~> **NOTE:** When defining an `attribute_data_type` of `String` or `Number`, the respective attribute constraints configuration block (e.g `string_attribute_constraints` or `number_attribute_constraints`) is **required** to prevent recreation of the Terraform resource. This requirement is true for both standard (e.g., name, email) and custom schema attributes.
 
 * `attribute_data_type` - (Required) Attribute data type. Must be one of `Boolean`, `Number`, `String`, `DateTime`.
 * `developer_only_attribute` - (Optional) Whether the attribute type is developer only.
@@ -244,7 +244,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Cognito User Pools can be imported using the `id`, e.g.
+Cognito User Pools can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_cognito_user_pool.pool <id>

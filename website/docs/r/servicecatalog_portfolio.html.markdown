@@ -38,7 +38,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Service Catalog Portfolios can be imported using the `service catalog portfolio id`, e.g.
+Service Catalog Portfolios can be imported using the `service catalog portfolio id`, e.g.,
 
 ```
 $ terraform import aws_servicecatalog_portfolio.testfolio port-12344321

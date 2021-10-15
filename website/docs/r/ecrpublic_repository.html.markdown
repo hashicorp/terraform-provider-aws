@@ -71,7 +71,7 @@ configuration options:
 
 ## Import
 
-ECR Public Repositories can be imported using the `repository_name`, e.g.
+ECR Public Repositories can be imported using the `repository_name`, e.g.,
 
 ```
 $ terraform import aws_ecrpublic_repository.example example

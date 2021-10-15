@@ -48,7 +48,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Security Hub invite acceptance can be imported using the account ID, e.g.
+Security Hub invite acceptance can be imported using the account ID, e.g.,
 
 ```
 $ terraform import aws_securityhub_invite_accepter.example 123456789012

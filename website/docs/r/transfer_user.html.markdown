@@ -78,7 +78,7 @@ resource "aws_transfer_user" "foo" {
 
 The following arguments are supported:
 
-* `server_id` - (Required) The Server ID of the Transfer Server (e.g. `s-12345678`)
+* `server_id` - (Required) The Server ID of the Transfer Server (e.g., `s-12345678`)
 * `user_name` - (Required) The name used for log in to your SFTP server.
 * `home_directory` - (Optional) The landing directory (folder) for a user when they log in to the server using their SFTP client.  It should begin with a `/`.  The first item in the path is the name of the home bucket (accessible as `${Transfer:HomeBucket}` in the policy) and the rest is the home directory (accessible as `${Transfer:HomeDirectory}` in the policy). For example, `/example-bucket-1234/username` would set the home bucket to `example-bucket-1234` and the home directory to `username`.
 * `home_directory_mappings` - (Optional) Logical directory mappings that specify what S3 paths and keys should be visible to your user and how you want to make them visible. See [Home Directory Mappings](#home-directory-mappings) below.

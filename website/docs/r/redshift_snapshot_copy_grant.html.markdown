@@ -45,7 +45,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Redshift Snapshot Copy Grants support import by name, e.g.
+Redshift Snapshot Copy Grants support import by name, e.g.,
 
 ```console
 $ terraform import aws_redshift_snapshot_copy_grant.test my-grant

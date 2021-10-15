@@ -39,7 +39,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Route53 Recovery Readiness readiness checks can be imported via the readiness check name, e.g.
+Route53 Recovery Readiness readiness checks can be imported via the readiness check name, e.g.,
 
 ```
 $ terraform import aws_route53recoveryreadiness_readiness_check.my-cw-alarm-check

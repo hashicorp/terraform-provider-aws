@@ -94,7 +94,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Cloudfront Cache Policies can be imported using the `id`, e.g.
+Cloudfront Cache Policies can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_cloudfront_cache_policy.policy 658327ea-f89d-4fab-a63d-7e88639e58f6
