@@ -26,20 +26,24 @@ func ResourceVaultLockConfiguration() *schema.Resource {
 			"backup_vault_name": {
 				Type:         schema.TypeString,
 				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9\-\_\.]{1,50}$`), "must consist of lowercase letters, numbers, and hyphens."),
 			},
 			"changeable_for_days": {
 				Type:         schema.TypeInt,
 				Optional:     true,
+				ForceNew:     true,
 				ValidateFunc: validation.IntAtLeast(3),
 			},
 			"max_retention_days": {
 				Type:     schema.TypeInt,
 				Optional: true,
+				ForceNew: true,
 			},
 			"min_retention_days": {
 				Type:     schema.TypeInt,
 				Optional: true,
+				ForceNew: true,
 			},
 			"backup_vault_arn": {
 				Type:     schema.TypeString,
