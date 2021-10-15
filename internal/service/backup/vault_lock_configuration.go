@@ -91,7 +91,7 @@ func resourceVaultLockConfigurationRead(d *schema.ResourceData, meta interface{}
 
 	// note: BackupVaultLockConfiguration currently does not have a GetBackupVaultLockConfiguration
 	// Reference: https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/service/backup
-	// Instead use DescribeBackupVault since it returns BackupVaultArn, MaxRetentionDays, MinRetentionDays
+	// Instead use DescribeBackupVault since it returns BackupVaultName, BackupVaultArn, MaxRetentionDays, MinRetentionDays
 	resp, err := conn.DescribeBackupVault(input)
 	if tfawserr.ErrMessageContains(err, backup.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] Backup Vault %s not found, removing from state", d.Id())
@@ -107,6 +107,7 @@ func resourceVaultLockConfigurationRead(d *schema.ResourceData, meta interface{}
 	if err != nil {
 		return fmt.Errorf("error reading Backup Vault (%s): %s", d.Id(), err)
 	}
+	d.Set("backup_vault_name", resp.BackupVaultName)
 	d.Set("max_retention_days", resp.MaxRetentionDays)
 	d.Set("min_retention_days", resp.MinRetentionDays)
 	d.Set("backup_vault_arn", resp.BackupVaultArn)
