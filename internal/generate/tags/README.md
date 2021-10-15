@@ -7,7 +7,7 @@ This generator (`main.go`) generates files named `tags_gen`, such as `internal/s
 Control the code generated using flags of the directives that you include in a `generate.go` file for an individual service. For example, a file such as `internal/service/ecs/generate.go` may contain three directives (and a package declaration). This generator corresponds to the `../../generate/tags/main.go` directive. (The other directives are documented in their respective packages.)
 
 ```go
-//go:generate go run ../../generate/listpages/main.go -ListOps=DescribeCapacityProviders -Export
+//go:generate go run ../../generate/listpages/main.go -ListOps=DescribeCapacityProviders
 //go:generate go run ../../generate/tagresource/main.go
 //go:generate go run ../../generate/tags/main.go -GetTag -ListTags -ServiceTagsSlice -UpdateTags
 
