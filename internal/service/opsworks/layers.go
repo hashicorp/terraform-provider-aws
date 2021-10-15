@@ -446,7 +446,7 @@ func (lt *opsworksLayerType) Create(d *schema.ResourceData, meta interface{}) er
 			return err
 		}
 
-		layer := descResp.Layers[0]
+		layer := resp.Layers[0]
 		arn := aws.StringValue(layer.Arn)
 
 		if err := UpdateTags(conn, arn, nil, tags); err != nil {
