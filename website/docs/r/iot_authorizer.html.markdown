@@ -43,7 +43,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-IOT Authorizers can be imported using the name, e.g.
+IOT Authorizers can be imported using the name, e.g.,
 
 ```
 $ terraform import aws_iot_authorizer.example example

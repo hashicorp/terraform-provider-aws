@@ -41,7 +41,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-S3 Control Buckets can be imported using Amazon Resource Name (ARN), e.g.
+S3 Control Buckets can be imported using Amazon Resource Name (ARN), e.g.,
 
 ```
 $ terraform import aws_s3control_bucket.example arn:aws:s3-outposts:us-east-1:123456789012:outpost/op-12345678/bucket/example

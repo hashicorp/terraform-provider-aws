@@ -325,7 +325,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Elasticsearch domains can be imported using the `domain_name`, e.g.
+Elasticsearch domains can be imported using the `domain_name`, e.g.,
 
 ```
 $ terraform import aws_elasticsearch_domain.example domain_name

@@ -71,7 +71,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Glacier Vault Locks can be imported using the Glacier Vault name, e.g.
+Glacier Vault Locks can be imported using the Glacier Vault name, e.g.,
 
 ```
 $ terraform import aws_glacier_vault_lock.example example-vault

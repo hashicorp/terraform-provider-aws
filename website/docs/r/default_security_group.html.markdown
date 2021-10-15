@@ -119,7 +119,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Security Groups can be imported using the `security group id`, e.g.
+Security Groups can be imported using the `security group id`, e.g.,
 
 ```
 $ terraform import aws_default_security_group.default_sg sg-903004f8

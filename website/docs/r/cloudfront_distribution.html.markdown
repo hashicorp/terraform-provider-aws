@@ -626,7 +626,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Cloudfront Distributions can be imported using the `id`, e.g.
+Cloudfront Distributions can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_cloudfront_distribution.distribution E74FTE3EXAMPLE

@@ -59,7 +59,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-GuardDuty IPSet can be imported using the the primary GuardDuty detector ID and IPSet ID, e.g.
+GuardDuty IPSet can be imported using the the primary GuardDuty detector ID and IPSet ID, e.g.,
 
 ```
 $ terraform import aws_guardduty_ipset.MyIPSet 00b00fd5aecc0ab60a708659477e9617:123456789012

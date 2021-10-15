@@ -107,7 +107,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Default VPC route tables can be imported using the `vpc_id`, e.g.
+Default VPC route tables can be imported using the `vpc_id`, e.g.,
 
 ```
 $ terraform import aws_default_route_table.example vpc-33cc44dd

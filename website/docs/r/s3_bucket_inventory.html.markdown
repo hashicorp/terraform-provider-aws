@@ -125,7 +125,7 @@ No additional attributes are exported.
 
 ## Import
 
-S3 bucket inventory configurations can be imported using `bucket:inventory`, e.g.
+S3 bucket inventory configurations can be imported using `bucket:inventory`, e.g.,
 
 ```sh
 $ terraform import aws_s3_bucket_inventory.my-bucket-entire-bucket my-bucket:EntireBucket

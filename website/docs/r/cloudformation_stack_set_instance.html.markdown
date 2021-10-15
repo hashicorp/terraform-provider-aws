@@ -114,7 +114,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-CloudFormation StackSet Instances can be imported using the StackSet name, target AWS account ID, and target AWS region separated by commas (`,`) e.g.
+CloudFormation StackSet Instances can be imported using the StackSet name, target AWS account ID, and target AWS region separated by commas (`,`) e.g.,
 
 ```
 $ terraform import aws_cloudformation_stack_set_instance.example example,123456789012,us-east-1

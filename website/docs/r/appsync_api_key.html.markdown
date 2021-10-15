@@ -41,7 +41,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_appsync_api_key` can be imported using the AppSync API ID and key separated by `:`, e.g.
+`aws_appsync_api_key` can be imported using the AppSync API ID and key separated by `:`, e.g.,
 
 ```
 $ terraform import aws_appsync_api_key.example xxxxx:yyyyy

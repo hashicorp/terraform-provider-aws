@@ -73,7 +73,7 @@ rules:
         - aws/waf_helpers.go
         - aws/internal/generators/
         - aws/internal/keyvaluetags/
-        - awsproviderlint/vendor/
+        - providerlint/vendor/
       include:
         - aws/
     patterns:
@@ -108,7 +108,7 @@ rules:
         - aws/internal/generators/
         - aws/internal/keyvaluetags/
         - aws/internal/naming/
-        - awsproviderlint/vendor/
+        - providerlint/vendor/
       include:
         - aws/
     patterns:
@@ -572,7 +572,7 @@ rules:
     message: Do not call `fmt.Print` and variant
     paths:
       exclude:
-        - awsproviderlint/vendor/
+        - providerlint/vendor/
       include:
         - aws/
     patterns:
@@ -621,7 +621,7 @@ rules:
       include:
         - aws/
       exclude:
-        - awsproviderlint/vendor/
+        - providerlint/vendor/
     patterns:
       # This isn't technically the correct regex, but for some reason adding a '+' causes the regex to
       # miss some SSH keys. AFAICT, this is good enough.

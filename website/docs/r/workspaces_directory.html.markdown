@@ -202,7 +202,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Workspaces directory can be imported using the directory ID, e.g.
+Workspaces directory can be imported using the directory ID, e.g.,
 
 ```
 $ terraform import aws_workspaces_directory.main d-4444444444

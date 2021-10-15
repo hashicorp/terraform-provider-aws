@@ -61,7 +61,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Replication tasks can be imported using the `replication_task_id`, e.g.
+Replication tasks can be imported using the `replication_task_id`, e.g.,
 
 ```
 $ terraform import aws_dms_replication_task.test test-dms-replication-task-tf

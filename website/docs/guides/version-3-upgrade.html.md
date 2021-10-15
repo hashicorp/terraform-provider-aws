@@ -92,23 +92,23 @@ provider "aws" {
 Previously, the provider preferred credentials in the following order:
 
 - Static credentials (those defined in the Terraform configuration)
-- Environment variables (e.g. `AWS_ACCESS_KEY_ID` or `AWS_PROFILE`)
-- Shared credentials file (e.g. `~/.aws/credentials`)
+- Environment variables (e.g., `AWS_ACCESS_KEY_ID` or `AWS_PROFILE`)
+- Shared credentials file (e.g., `~/.aws/credentials`)
 - EC2 Instance Metadata Service
 - Default AWS Go SDK handling (shared configuration, CodeBuild/ECS/EKS)
 
 The provider now prefers the following credential ordering:
 
 - Static credentials (those defined in the Terraform configuration)
-- Environment variables (e.g. `AWS_ACCESS_KEY_ID` or `AWS_PROFILE`)
-- Shared credentials and/or configuration file (e.g. `~/.aws/credentials` and `~/.aws/config`)
+- Environment variables (e.g., `AWS_ACCESS_KEY_ID` or `AWS_PROFILE`)
+- Shared credentials and/or configuration file (e.g., `~/.aws/credentials` and `~/.aws/config`)
 - Default AWS Go SDK handling (shared configuration, CodeBuild/ECS/EKS, EC2 Instance Metadata Service)
 
 This means workarounds of disabling the EC2 Instance Metadata Service handling to enable CodeBuild/ECS/EKS credentials or to enable other credential methods such as `credential_process` in the AWS shared configuration are no longer necessary.
 
 ### Shared Configuration File Automatically Enabled
 
-The `AWS_SDK_LOAD_CONFIG` environment variable is no longer necessary for the provider to automatically load the AWS shared configuration file (e.g. `~/.aws/config`).
+The `AWS_SDK_LOAD_CONFIG` environment variable is no longer necessary for the provider to automatically load the AWS shared configuration file (e.g., `~/.aws/config`).
 
 ### Removal of AWS_METADATA_TIMEOUT Environment Variable Usage
 
@@ -237,14 +237,14 @@ Configuration that depend on the previous behavior will need to be updated.
 
 ### Removal of trailing period in domain_name argument
 
-Previously the data-source returned the Resolver Rule Domain Name directly from the API, which included a `.` suffix. This proves difficult when many other AWS services do not accept this trailing period (e.g. ACM Certificate). This period is now automatically removed. For example, when the attribute would previously return a Resolver Rule Domain Name such as `example.com.`, the attribute now will be returned as `example.com`.
+Previously the data-source returned the Resolver Rule Domain Name directly from the API, which included a `.` suffix. This proves difficult when many other AWS services do not accept this trailing period (e.g., ACM Certificate). This period is now automatically removed. For example, when the attribute would previously return a Resolver Rule Domain Name such as `example.com.`, the attribute now will be returned as `example.com`.
 While the returned value will omit the trailing period, use of configurations with trailing periods will not be interrupted.
 
 ## Data Source: aws_route53_zone
 
 ### Removal of trailing period in name argument
 
-Previously the data-source returned the Hosted Zone Domain Name directly from the API, which included a `.` suffix. This proves difficult when many other AWS services do not accept this trailing period (e.g. ACM Certificate). This period is now automatically removed. For example, when the attribute would previously return a Hosted Zone Domain Name such as `example.com.`, the attribute now will be returned as `example.com`.
+Previously the data-source returned the Hosted Zone Domain Name directly from the API, which included a `.` suffix. This proves difficult when many other AWS services do not accept this trailing period (e.g., ACM Certificate). This period is now automatically removed. For example, when the attribute would previously return a Hosted Zone Domain Name such as `example.com.`, the attribute now will be returned as `example.com`.
 While the returned value will omit the trailing period, use of configurations with trailing periods will not be interrupted.
 
 ## Resource: aws_acm_certificate
@@ -267,7 +267,7 @@ resources that the for_each depends on.
 
 The `domain_validation_options` attribute is now a set type and the resource will attempt to populate the information necessary during the planning phase to handle the above situation in most environments without workarounds. This change also prevents Terraform from showing unexpected differences if the API returns the results in varying order.
 
-Configuration references to this attribute will likely require updates since sets cannot be indexed (e.g. `domain_validation_options[0]` or the older `domain_validation_options.0.` syntax will return errors). If the `domain_validation_options` list previously contained only a single element like the two examples just shown, it may be possible to wrap these references using the [`tolist()` function](https://www.terraform.io/docs/configuration/functions/tolist.html) (e.g. `tolist(aws_acm_certificate.example.domain_validation_options)[0]`) as a quick configuration update, however given the complexity and workarounds required with the previous `domain_validation_options` attribute implementation, different environments will require different configuration updates and migration steps. Below is a more advanced example. Further questions on potential update steps can be submitted to the [community forums](https://discuss.hashicorp.com/c/terraform-providers/tf-aws/33).
+Configuration references to this attribute will likely require updates since sets cannot be indexed (e.g., `domain_validation_options[0]` or the older `domain_validation_options.0.` syntax will return errors). If the `domain_validation_options` list previously contained only a single element like the two examples just shown, it may be possible to wrap these references using the [`tolist()` function](https://www.terraform.io/docs/configuration/functions/tolist.html) (e.g., `tolist(aws_acm_certificate.example.domain_validation_options)[0]`) as a quick configuration update, however given the complexity and workarounds required with the previous `domain_validation_options` attribute implementation, different environments will require different configuration updates and migration steps. Below is a more advanced example. Further questions on potential update steps can be submitted to the [community forums](https://discuss.hashicorp.com/c/terraform-providers/tf-aws/33).
 
 For example, given this previous configuration using a `count` based resource approach that may have been used in certain environments:
 
@@ -479,7 +479,7 @@ Terraform will perform the following actions:
 Plan: 5 to add, 0 to change, 5 to destroy.
 ```
 
-Due to the type of configuration change, Terraform does not know that the previous `aws_route53_record` resources (indexed by number in the existing state) and the new resources (indexed by domain names in the updated configuration) are equivalent. Typically in this situation, the [`terraform state mv` command](https://www.terraform.io/docs/commands/state/mv.html) can be used to reduce the plan to show no changes. This is done by associating the count index (e.g. `[1]`) with the equivalent domain name index (e.g. `["existing2.example.com"]`), making one of the four commands to fix the above example: `terraform state mv 'aws_route53_record.existing[1]' 'aws_route53_record.existing["existing2.example.com"]'`. It is recommended to use this `terraform state mv` update process where possible to reduce chances of unexpected behaviors or changes in an environment.
+Due to the type of configuration change, Terraform does not know that the previous `aws_route53_record` resources (indexed by number in the existing state) and the new resources (indexed by domain names in the updated configuration) are equivalent. Typically in this situation, the [`terraform state mv` command](https://www.terraform.io/docs/commands/state/mv.html) can be used to reduce the plan to show no changes. This is done by associating the count index (e.g., `[1]`) with the equivalent domain name index (e.g., `["existing2.example.com"]`), making one of the four commands to fix the above example: `terraform state mv 'aws_route53_record.existing[1]' 'aws_route53_record.existing["existing2.example.com"]'`. It is recommended to use this `terraform state mv` update process where possible to reduce chances of unexpected behaviors or changes in an environment.
 
 If using `terraform state mv` to reduce the plan to show no changes, no additional steps are required.
 
@@ -671,7 +671,7 @@ Performing a plan against these resources will not cause any change in state, si
 
 ### subject_alternative_names Changed from List to Set
 
-Previously the `subject_alternative_names` argument was stored in the Terraform state as an ordered list while the API returned information in an unordered manner. The attribute is now configured as a set instead of a list. Certain Terraform configuration language features distinguish between these two attribute types such as not being able to index a set (e.g. `aws_acm_certificate.example.subject_alternative_names[0]` is no longer a valid reference). Depending on the implementation details of a particular configuration using `subject_alternative_names` as a reference, possible solutions include changing references to using `for`/`for_each` or using the `tolist()` function as a temporary workaround to keep the previous behavior until an appropriate configuration (properly using the unordered set) can be determined. Usage questions can be submitted to the [community forums](https://discuss.hashicorp.com/c/terraform-providers/tf-aws/33).
+Previously the `subject_alternative_names` argument was stored in the Terraform state as an ordered list while the API returned information in an unordered manner. The attribute is now configured as a set instead of a list. Certain Terraform configuration language features distinguish between these two attribute types such as not being able to index a set (e.g., `aws_acm_certificate.example.subject_alternative_names[0]` is no longer a valid reference). Depending on the implementation details of a particular configuration using `subject_alternative_names` as a reference, possible solutions include changing references to using `for`/`for_each` or using the `tolist()` function as a temporary workaround to keep the previous behavior until an appropriate configuration (properly using the unordered set) can be determined. Usage questions can be submitted to the [community forums](https://discuss.hashicorp.com/c/terraform-providers/tf-aws/33).
 
 ### certificate_body, certificate_chain, and private_key Arguments No Longer Stored as Hash
 
@@ -691,7 +691,7 @@ Specifying both the `availability_zones` and `vpc_zone_identifier` arguments pre
 
 ### Drift detection enabled for `load_balancers` and `target_group_arns` arguments
 
-If you previously set one of these arguments to an empty list to enable drift detection (e.g. when migrating an ASG from ELB to ALB), this can be updated as follows.
+If you previously set one of these arguments to an empty list to enable drift detection (e.g., when migrating an ASG from ELB to ALB), this can be updated as follows.
 
 For example, given this previous configuration:
 
@@ -712,7 +712,7 @@ resource "aws_autoscaling_group" "example" {
 }
 ```
 
-If `aws_autoscaling_attachment` resources reference your ASG configurations, you will need to add the [`lifecycle` configuration block](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html) with an `ignore_changes` argument to prevent Terraform non-empty plans (i.e. forcing resource update) during the next state refresh.
+If `aws_autoscaling_attachment` resources reference your ASG configurations, you will need to add the [`lifecycle` configuration block](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html) with an `ignore_changes` argument to prevent Terraform non-empty plans (i.e., forcing resource update) during the next state refresh.
 
 For example, given this previous configuration:
 
@@ -1311,14 +1311,14 @@ Previously when the `min_capacity` argument in a `scaling_configuration` block w
 
 ### Removal of trailing period in domain_name argument
 
-Previously the resource returned the Resolver Rule Domain Name directly from the API, which included a `.` suffix. This proves difficult when many other AWS services do not accept this trailing period (e.g. ACM Certificate). This period is now automatically removed. For example, when the attribute would previously return a Resolver Rule Domain Name such as `example.com.`, the attribute now will be returned as `example.com`.
+Previously the resource returned the Resolver Rule Domain Name directly from the API, which included a `.` suffix. This proves difficult when many other AWS services do not accept this trailing period (e.g., ACM Certificate). This period is now automatically removed. For example, when the attribute would previously return a Resolver Rule Domain Name such as `example.com.`, the attribute now will be returned as `example.com`.
 While the returned value will omit the trailing period, use of configurations with trailing periods will not be interrupted.
 
 ## Resource: aws_route53_zone
 
 ### Removal of trailing period in name argument
 
-Previously the resource returned the Hosted Zone Domain Name directly from the API, which included a `.` suffix. This proves difficult when many other AWS services do not accept this trailing period (e.g. ACM Certificate). This period is now automatically removed. For example, when the attribute would previously return a Hosted Zone Domain Name such as `example.com.`, the attribute now will be returned as `example.com`.
+Previously the resource returned the Hosted Zone Domain Name directly from the API, which included a `.` suffix. This proves difficult when many other AWS services do not accept this trailing period (e.g., ACM Certificate). This period is now automatically removed. For example, when the attribute would previously return a Hosted Zone Domain Name such as `example.com.`, the attribute now will be returned as `example.com`.
 While the returned value will omit the trailing period, use of configurations with trailing periods will not be interrupted.
 
 ## Resource: aws_s3_bucket

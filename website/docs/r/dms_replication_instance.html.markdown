@@ -145,7 +145,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Replication instances can be imported using the `replication_instance_id`, e.g.
+Replication instances can be imported using the `replication_instance_id`, e.g.,
 
 ```
 $ terraform import aws_dms_replication_instance.test test-dms-replication-instance-tf
