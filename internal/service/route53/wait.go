@@ -15,6 +15,8 @@ const (
 	changeTimeout      = 30 * time.Minute
 	changeMinTimeout   = 5 * time.Second
 	changePollInterval = 15 * time.Second
+	changeMinDelay     = 10
+	changeMaxDelay     = 30
 
 	hostedZoneDNSSECStatusTimeout = 5 * time.Minute
 
@@ -29,7 +31,7 @@ func waitChangeInfoStatusInsync(conn *route53.Route53, changeID string) (*route5
 	stateConf := &resource.StateChangeConf{
 		Pending:      []string{route53.ChangeStatusPending},
 		Target:       []string{route53.ChangeStatusInsync},
-		Delay:        time.Duration(rand.Int63n(20)+10) * time.Second, //nolint:gomnd
+		Delay:        time.Duration(rand.Int63n(changeMaxDelay-changeMinDelay)+changeMinDelay) * time.Second,
 		MinTimeout:   changeMinTimeout,
 		PollInterval: changePollInterval,
 		Refresh:      statusChangeInfo(conn, changeID),

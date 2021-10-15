@@ -20,7 +20,7 @@ func NotFound(err error) bool {
 //  * TimeoutError.LastError is nil
 func TimedOut(err error) bool {
 	// This explicitly does *not* match wrapped TimeoutErrors
-	timeoutErr, ok := err.(*resource.TimeoutError) // nolint:errorlint
+	timeoutErr, ok := err.(*resource.TimeoutError) //nolint:errorlint // Explicitly does *not* match wrapped TimeoutErrors
 	return ok && timeoutErr.LastError == nil
 }
 
