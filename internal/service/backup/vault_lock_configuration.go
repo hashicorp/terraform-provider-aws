@@ -57,15 +57,15 @@ func resourceVaultLockConfigurationCreate(d *schema.ResourceData, meta interface
 	}
 
 	if v, ok := d.GetOk("changeable_for_days"); ok {
-		input.changeable_for_days = aws.Int64(int64(v.(int)))
+		input.ChangeableForDays = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("max_retention_days"); ok {
-		input.max_retention_days = aws.Int64(int64(v.(int)))
+		input.MaxRetentionDays = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("min_retention_days"); ok {
-		input.min_retention_days = aws.Int64(int64(v.(int)))
+		input.MinRetentionDays = aws.Int64(int64(v.(int)))
 	}
 
 	_, err := conn.PutBackupVaultLockConfiguration(input)
