@@ -90,7 +90,7 @@ with the pull request author.
    ```
      func dataSourceAws{ResourceName}() =>
      func DataSource{ResourceName}()
-   ``` 
+   ```
 
    **Data Source Generic Functions**
 
@@ -114,5 +114,5 @@ with the pull request author.
    ```
 
 1. Use `git status` to report the state of the merge. Review any merge
-   conflicts -- being sure to adopt the new naming conventions described in the 
+   conflicts -- being sure to adopt the new naming conventions described in the
    previous step where relevant. Use `git add` to add any new files to the commit.
