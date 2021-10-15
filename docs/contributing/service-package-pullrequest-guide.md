@@ -55,7 +55,7 @@ with the pull request author.
      internal/service/{service_name}/{resource_name}_data_source.go
    ```
 
-   **Data Source Tests**
+   **Data Source Test Files**
 
    ```
      mv aws/data_source_aws_{service_name}_{resource_name}_test.go \
