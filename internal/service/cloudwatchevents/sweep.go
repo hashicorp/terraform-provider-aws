@@ -167,7 +167,7 @@ func sweepBuses(region string) error {
 	input := &events.ListEventBusesInput{}
 	var sweeperErrs *multierror.Error
 
-	err = ListEventBusesPages(conn, input, func(page *events.ListEventBusesOutput, lastPage bool) bool {
+	err = listEventBusesPages(conn, input, func(page *events.ListEventBusesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -302,7 +302,7 @@ func sweepRules(region string) error {
 
 	rulesInput := &events.ListRulesInput{}
 
-	err = ListRulesPages(conn, rulesInput, func(rulesPage *events.ListRulesOutput, lastPage bool) bool {
+	err = listRulesPages(conn, rulesInput, func(rulesPage *events.ListRulesOutput, lastPage bool) bool {
 		if rulesPage == nil {
 			return !lastPage
 		}
@@ -351,7 +351,7 @@ func sweepTargets(region string) error {
 
 	rulesInput := &events.ListRulesInput{}
 
-	err = ListRulesPages(conn, rulesInput, func(rulesPage *events.ListRulesOutput, lastPage bool) bool {
+	err = listRulesPages(conn, rulesInput, func(rulesPage *events.ListRulesOutput, lastPage bool) bool {
 		if rulesPage == nil {
 			return !lastPage
 		}
@@ -366,7 +366,7 @@ func sweepTargets(region string) error {
 				Limit: aws.Int64(100), // Set limit to allowed maximum to prevent API throttling
 			}
 
-			err := ListTargetsByRulePages(conn, targetsInput, func(targetsPage *events.ListTargetsByRuleOutput, lastPage bool) bool {
+			err := listTargetsByRulePages(conn, targetsInput, func(targetsPage *events.ListTargetsByRuleOutput, lastPage bool) bool {
 				if targetsPage == nil {
 					return !lastPage
 				}

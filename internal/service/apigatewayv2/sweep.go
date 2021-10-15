@@ -89,7 +89,7 @@ func sweepDomainNames(region string) error {
 	input := &apigatewayv2.GetDomainNamesInput{}
 	var sweeperErrs *multierror.Error
 
-	err = GetDomainNamesPages(conn, input, func(page *apigatewayv2.GetDomainNamesOutput, lastPage bool) bool {
+	err = getDomainNamesPages(conn, input, func(page *apigatewayv2.GetDomainNamesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}

@@ -15,5 +15,5 @@ func ListAllTargetsForRulePages(conn *events.CloudWatchEvents, busName, ruleName
 		input.EventBusName = aws.String(busName)
 	}
 
-	return ListTargetsByRulePages(conn, input, fn)
+	return listTargetsByRulePages(conn, input, fn)
 }

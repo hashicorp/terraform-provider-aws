@@ -58,7 +58,7 @@ func sweepCapacityProviders(region string) error {
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]*sweep.SweepResource, 0)
 
-	err = DescribeCapacityProvidersPages(conn, input, func(page *ecs.DescribeCapacityProvidersOutput, lastPage bool) bool {
+	err = describeCapacityProvidersPages(conn, input, func(page *ecs.DescribeCapacityProvidersOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
