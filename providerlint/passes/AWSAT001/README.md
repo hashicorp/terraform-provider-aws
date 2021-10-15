@@ -12,12 +12,14 @@ another resource.
 
 Otherwise, available ARN testing check functions include:
 
-- `testAccCheckResourceAttrGlobalARN`
-- `testAccCheckResourceAttrGlobalARNNoAccount`
-- `testAccCheckResourceAttrRegionalARN`
-- `testAccMatchResourceAttrGlobalARN`
-- `testAccMatchResourceAttrRegionalARN`
-- `testAccMatchResourceAttrRegionalARNNoAccount`
+- `acctest.CheckResourceAttrGlobalARN`
+- `acctest.CheckResourceAttrGlobalARNNoAccount`
+- `acctest.CheckResourceAttrRegionalARN`
+- `acctest.MatchResourceAttrGlobalARN`
+- `acctest.MatchResourceAttrRegionalARN`
+- `acctest.CheckResourceAttrRegionalARNNoAccount`
+- `acctest.CheckResourceAttrRegionalARNAccountID`
+- `acctest.CheckResourceAttrGlobalARNAccountID`
 
 ## Flagged Code
 
@@ -30,7 +32,7 @@ resource.TestMatchResourceAttr("aws_lb_listener.test", "certificate_arn", regexp
 ```go
 resource.TestCheckResourceAttrPair("aws_lb_listener.test", "certificate_arn", "aws_acm_certificate.test", "arn")
 
-testAccMatchResourceAttrRegionalARN("aws_lb_listener.test", "certificate_arn", "acm", regexp.MustCompile(`certificate/.+`))
+acctest.MatchResourceAttrRegionalARN("aws_lb_listener.test", "certificate_arn", "acm", regexp.MustCompile(`certificate/.+`))
 ```
 
 ## Ignoring Check

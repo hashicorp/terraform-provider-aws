@@ -1568,7 +1568,7 @@ resource "aws_batch_compute_environment" "test" {
 func testAccComputeEnvironmentEC2WithDesiredVcpusEC2KeyPairImageIdAndComputeResourcesTagsConfig(rName, publicKey string) string {
 	return acctest.ConfigCompose(
 		testAccComputeEnvironmentBaseConfig(rName),
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
   compute_environment_name = %[1]q

@@ -1,5 +1,7 @@
 # Terraform AWS Provider Road Maps
 
+<!-- markdownlint-disable no-trailing-punctuation -->
+
 ## What is a road map?
 
 Every few months, the team will highlight areas of focus for our work and upcoming research.
@@ -8,7 +10,7 @@ We select items for inclusion in the road map from the Top 10 Community Issues, 
 
 ## Road Maps
 
-* [Latest Road Map](../ROADMAP.md)
+* [Latest Road Map](../../ROADMAP.md)
 * [May-July 2021](2021_May_to_July.md)
 * [February-April 2021](2021_February_to_April.md)
 * [November 2020-January 2021](2020_November_to_January.md)
