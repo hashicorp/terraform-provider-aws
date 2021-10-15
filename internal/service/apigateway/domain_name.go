@@ -144,7 +144,7 @@ func ResourceDomainName() *schema.Resource {
 			"ownership_verification_certificate_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 
 			"regional_certificate_arn": {
