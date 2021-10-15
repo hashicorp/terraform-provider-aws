@@ -81,7 +81,7 @@ func resourceVaultLockConfigurationCreate(d *schema.ResourceData, meta interface
 func resourceVaultLockConfigurationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BackupConn
 
-	input := &backup.GetBackupVaultLockConfigurationInput{
+	input := &backup.DescribeBackupVaultInput{
 		BackupVaultName: aws.String(d.Id()),
 	}
 
