@@ -157,7 +157,7 @@ func testAccCheckAutoscalingGroupTagExists(n string) resource.TestCheckFunc {
 func testAccAutoscalingGroupTagConfig(key string, value string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		fmt.Sprintf(`
 resource "aws_launch_template" "test" {
   name_prefix   = "terraform-test-"

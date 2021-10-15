@@ -275,7 +275,7 @@ func testAccCheckScalingScheduleHasNoDesiredCapacity(
 }
 
 func testAccScheduleConfig(r, start, end string) string {
-	return acctest.ConfigLatestAmazonLinuxHVMEBSAMI() + fmt.Sprintf(`
+	return acctest.ConfigLatestAmazonLinuxHvmEbsAmi() + fmt.Sprintf(`
 resource "aws_launch_configuration" "foobar" {
   name          = "%s"
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
@@ -322,7 +322,7 @@ resource "aws_autoscaling_schedule" "foobar" {
 }
 
 func testAccScheduleConfig_recurrence(r string) string {
-	return acctest.ConfigLatestAmazonLinuxHVMEBSAMI() + fmt.Sprintf(`
+	return acctest.ConfigLatestAmazonLinuxHvmEbsAmi() + fmt.Sprintf(`
 resource "aws_launch_configuration" "foobar" {
   name          = "%s"
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
@@ -369,7 +369,7 @@ resource "aws_autoscaling_schedule" "foobar" {
 }
 
 func testAccScheduleConfig_zeroValues(r, start, end string) string {
-	return acctest.ConfigLatestAmazonLinuxHVMEBSAMI() + fmt.Sprintf(`
+	return acctest.ConfigLatestAmazonLinuxHvmEbsAmi() + fmt.Sprintf(`
 resource "aws_launch_configuration" "foobar" {
   name          = "%s"
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
@@ -416,7 +416,7 @@ resource "aws_autoscaling_schedule" "foobar" {
 }
 
 func testAccScheduleConfig_negativeOne(r, start, end string) string {
-	return acctest.ConfigLatestAmazonLinuxHVMEBSAMI() + fmt.Sprintf(`
+	return acctest.ConfigLatestAmazonLinuxHvmEbsAmi() + fmt.Sprintf(`
 resource "aws_launch_configuration" "foobar" {
   name          = "%s"
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id

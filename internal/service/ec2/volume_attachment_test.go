@@ -313,7 +313,7 @@ func testAccCheckVolumeAttachmentDestroy(s *terraform.State) error {
 
 func testAccVolumeAttachmentInstanceOnlyConfigBase(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		acctest.AvailableEC2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 data "aws_availability_zones" "available" {

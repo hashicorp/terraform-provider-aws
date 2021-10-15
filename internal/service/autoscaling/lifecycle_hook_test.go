@@ -129,7 +129,7 @@ func testAccLifecycleHookImportStateIdFunc(resourceName string) resource.ImportS
 }
 
 func testAccLifecycleHookConfig(name string) string {
-	return acctest.ConfigLatestAmazonLinuxHVMEBSAMI() + fmt.Sprintf(`
+	return acctest.ConfigLatestAmazonLinuxHvmEbsAmi() + fmt.Sprintf(`
 resource "aws_launch_configuration" "foobar" {
   name          = "%s"
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
@@ -228,7 +228,7 @@ EOF
 }
 
 func testAccLifecycleHookConfig_omitDefaultResult(name string, rInt int) string {
-	return acctest.ConfigLatestAmazonLinuxHVMEBSAMI() + fmt.Sprintf(`
+	return acctest.ConfigLatestAmazonLinuxHvmEbsAmi() + fmt.Sprintf(`
 resource "aws_launch_configuration" "foobar" {
   name          = "%s"
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
