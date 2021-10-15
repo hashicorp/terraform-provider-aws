@@ -25,7 +25,7 @@ func DataSourceTransitGatewayVPCAttachment() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"filter": dataSourceFiltersSchema(),
+			"filter": DataSourceFiltersSchema(),
 			"id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -64,7 +64,7 @@ func dataSourceTransitGatewayVPCAttachmentRead(d *schema.ResourceData, meta inte
 	input := &ec2.DescribeTransitGatewayVpcAttachmentsInput{}
 
 	if v, ok := d.GetOk("filter"); ok {
-		input.Filters = buildFiltersDataSource(v.(*schema.Set))
+		input.Filters = BuildFiltersDataSource(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("id"); ok {
