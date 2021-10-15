@@ -181,6 +181,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/version"
 )
 
+// test, not a real thing
 type Config struct {
 	AccessKey     string
 	SecretKey     string
