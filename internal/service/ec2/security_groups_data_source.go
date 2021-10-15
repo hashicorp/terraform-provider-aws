@@ -17,7 +17,7 @@ func DataSourceSecurityGroups() *schema.Resource {
 		Read: dataSourceSecurityGroupsRead,
 
 		Schema: map[string]*schema.Schema{
-			"filter": dataSourceFiltersSchema(),
+			"filter": DataSourceFiltersSchema(),
 			"tags":   tftags.TagsSchemaComputed(),
 
 			"ids": {
@@ -52,7 +52,7 @@ func dataSourceSecurityGroupsRead(d *schema.ResourceData, meta interface{}) erro
 
 	if filtersOk {
 		req.Filters = append(req.Filters,
-			buildFiltersDataSource(filters.(*schema.Set))...)
+			BuildFiltersDataSource(filters.(*schema.Set))...)
 	}
 	if tagsOk {
 		req.Filters = append(req.Filters, BuildTagFilterList(

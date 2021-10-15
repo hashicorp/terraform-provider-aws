@@ -29,7 +29,7 @@ func DataSourcePrefixList() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"filter": dataSourceFiltersSchema(),
+			"filter": DataSourceFiltersSchema(),
 		},
 	}
 }
@@ -41,7 +41,7 @@ func dataSourcePrefixListRead(d *schema.ResourceData, meta interface{}) error {
 
 	req := &ec2.DescribePrefixListsInput{}
 	if filtersOk {
-		req.Filters = buildFiltersDataSource(filters.(*schema.Set))
+		req.Filters = BuildFiltersDataSource(filters.(*schema.Set))
 	}
 	if prefixListID := d.Get("prefix_list_id"); prefixListID != "" {
 		req.PrefixListIds = aws.StringSlice([]string{prefixListID.(string)})
