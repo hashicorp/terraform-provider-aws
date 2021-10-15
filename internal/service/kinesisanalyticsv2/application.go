@@ -928,10 +928,10 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 
 	applicationName := d.Get("name").(string)
 	input := &kinesisanalyticsv2.CreateApplicationInput{
-		ApplicationConfiguration: expandKinesisAnalyticsV2ApplicationConfiguration(d.Get("application_configuration").([]interface{})),
+		ApplicationConfiguration: expandApplicationConfiguration(d.Get("application_configuration").([]interface{})),
 		ApplicationDescription:   aws.String(d.Get("description").(string)),
 		ApplicationName:          aws.String(applicationName),
-		CloudWatchLoggingOptions: expandKinesisAnalyticsV2CloudWatchLoggingOptions(d.Get("cloudwatch_logging_options").([]interface{})),
+		CloudWatchLoggingOptions: expandCloudWatchLoggingOptions(d.Get("cloudwatch_logging_options").([]interface{})),
 		RuntimeEnvironment:       aws.String(d.Get("runtime_environment").(string)),
 		ServiceExecutionRole:     aws.String(d.Get("service_execution_role").(string)),
 	}
@@ -957,7 +957,7 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 	d.Set("create_timestamp", aws.TimeValue(output.ApplicationDetail.CreateTimestamp).Format(time.RFC3339))
 
 	if _, ok := d.GetOk("start_application"); ok {
-		if err := kinesisAnalyticsV2StartApplication(conn, expandKinesisAnalyticsV2StartApplicationInput(d)); err != nil {
+		if err := startApplication(conn, expandStartApplicationInput(d)); err != nil {
 			return err
 		}
 	}
@@ -993,11 +993,11 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("status", application.ApplicationStatus)
 	d.Set("version_id", application.ApplicationVersionId)
 
-	if err := d.Set("application_configuration", flattenKinesisAnalyticsV2ApplicationConfigurationDescription(application.ApplicationConfigurationDescription)); err != nil {
+	if err := d.Set("application_configuration", flattenApplicationConfigurationDescription(application.ApplicationConfigurationDescription)); err != nil {
 		return fmt.Errorf("error setting application_configuration: %w", err)
 	}
 
-	if err := d.Set("cloudwatch_logging_options", flattenKinesisAnalyticsV2CloudWatchLoggingOptionDescriptions(application.CloudWatchLoggingOptionDescriptions)); err != nil {
+	if err := d.Set("cloudwatch_logging_options", flattenCloudWatchLoggingOptionDescriptions(application.CloudWatchLoggingOptionDescriptions)); err != nil {
 		return fmt.Errorf("error setting cloudwatch_logging_options: %w", err)
 	}
 
@@ -1037,25 +1037,25 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 			applicationConfigurationUpdate := &kinesisanalyticsv2.ApplicationConfigurationUpdate{}
 
 			if d.HasChange("application_configuration.0.application_code_configuration") {
-				applicationConfigurationUpdate.ApplicationCodeConfigurationUpdate = expandKinesisAnalyticsV2ApplicationCodeConfigurationUpdate(d.Get("application_configuration.0.application_code_configuration").([]interface{}))
+				applicationConfigurationUpdate.ApplicationCodeConfigurationUpdate = expandApplicationCodeConfigurationUpdate(d.Get("application_configuration.0.application_code_configuration").([]interface{}))
 
 				updateApplication = true
 			}
 
 			if d.HasChange("application_configuration.0.application_snapshot_configuration") {
-				applicationConfigurationUpdate.ApplicationSnapshotConfigurationUpdate = expandKinesisAnalyticsV2ApplicationSnapshotConfigurationUpdate(d.Get("application_configuration.0.application_snapshot_configuration").([]interface{}))
+				applicationConfigurationUpdate.ApplicationSnapshotConfigurationUpdate = expandApplicationSnapshotConfigurationUpdate(d.Get("application_configuration.0.application_snapshot_configuration").([]interface{}))
 
 				updateApplication = true
 			}
 
 			if d.HasChange("application_configuration.0.environment_properties") {
-				applicationConfigurationUpdate.EnvironmentPropertyUpdates = expandKinesisAnalyticsV2EnvironmentPropertyUpdates(d.Get("application_configuration.0.environment_properties").([]interface{}))
+				applicationConfigurationUpdate.EnvironmentPropertyUpdates = expandEnvironmentPropertyUpdates(d.Get("application_configuration.0.environment_properties").([]interface{}))
 
 				updateApplication = true
 			}
 
 			if d.HasChange("application_configuration.0.flink_application_configuration") {
-				applicationConfigurationUpdate.FlinkApplicationConfigurationUpdate = expandKinesisAnalyticsV2ApplicationFlinkApplicationConfigurationUpdate(d.Get("application_configuration.0.flink_application_configuration").([]interface{}))
+				applicationConfigurationUpdate.FlinkApplicationConfigurationUpdate = expandApplicationFlinkApplicationConfigurationUpdate(d.Get("application_configuration.0.flink_application_configuration").([]interface{}))
 
 				updateApplication = true
 			}
@@ -1071,7 +1071,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 						input := &kinesisanalyticsv2.AddApplicationInputInput{
 							ApplicationName:             aws.String(applicationName),
 							CurrentApplicationVersionId: aws.Int64(currentApplicationVersionId),
-							Input:                       expandKinesisAnalyticsV2Input(n.([]interface{})),
+							Input:                       expandInput(n.([]interface{})),
 						}
 
 						log.Printf("[DEBUG] Adding Kinesis Analytics v2 Application (%s) input: %s", d.Id(), input)
@@ -1097,7 +1097,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 						return fmt.Errorf("error deleting Kinesis Analytics v2 Application (%s) input", d.Id())
 					} else {
 						// Update existing input.
-						inputUpdate := expandKinesisAnalyticsV2InputUpdate(n.([]interface{}))
+						inputUpdate := expandInputUpdate(n.([]interface{}))
 
 						if d.HasChange("application_configuration.0.sql_application_configuration.0.input.0.input_processing_configuration") {
 							o, n := d.GetChange("application_configuration.0.sql_application_configuration.0.input.0.input_processing_configuration")
@@ -1110,7 +1110,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 									ApplicationName:              aws.String(applicationName),
 									CurrentApplicationVersionId:  aws.Int64(currentApplicationVersionId),
 									InputId:                      inputUpdate.InputId,
-									InputProcessingConfiguration: expandKinesisAnalyticsV2InputProcessingConfiguration(n.([]interface{})),
+									InputProcessingConfiguration: expandInputProcessingConfiguration(n.([]interface{})),
 								}
 
 								log.Printf("[DEBUG] Adding Kinesis Analytics v2 Application (%s) input processing configuration: %s", d.Id(), input)
@@ -1224,7 +1224,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 						input := &kinesisanalyticsv2.AddApplicationOutputInput{
 							ApplicationName:             aws.String(applicationName),
 							CurrentApplicationVersionId: aws.Int64(currentApplicationVersionId),
-							Output:                      expandKinesisAnalyticsV2Output(vOutput),
+							Output:                      expandOutput(vOutput),
 						}
 
 						log.Printf("[DEBUG] Adding Kinesis Analytics v2 Application (%s) output: %s", d.Id(), input)
@@ -1255,7 +1255,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 						input := &kinesisanalyticsv2.AddApplicationReferenceDataSourceInput{
 							ApplicationName:             aws.String(applicationName),
 							CurrentApplicationVersionId: aws.Int64(currentApplicationVersionId),
-							ReferenceDataSource:         expandKinesisAnalyticsV2ReferenceDataSource(n.([]interface{})),
+							ReferenceDataSource:         expandReferenceDataSource(n.([]interface{})),
 						}
 
 						log.Printf("[DEBUG] Adding Kinesis Analytics v2 Application (%s) reference data source: %s", d.Id(), input)
@@ -1304,7 +1304,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 						currentApplicationVersionId = aws.Int64Value(output.ApplicationVersionId)
 					} else {
 						// Update existing reference data source.
-						referenceDataSourceUpdate := expandKinesisAnalyticsV2ReferenceDataSourceUpdate(n.([]interface{}))
+						referenceDataSourceUpdate := expandReferenceDataSourceUpdate(n.([]interface{}))
 
 						sqlApplicationConfigurationUpdate.ReferenceDataSourceUpdates = []*kinesisanalyticsv2.ReferenceDataSourceUpdate{referenceDataSourceUpdate}
 
@@ -1323,7 +1323,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 					input := &kinesisanalyticsv2.AddApplicationVpcConfigurationInput{
 						ApplicationName:             aws.String(applicationName),
 						CurrentApplicationVersionId: aws.Int64(currentApplicationVersionId),
-						VpcConfiguration:            expandKinesisAnalyticsV2VpcConfiguration(n.([]interface{})),
+						VpcConfiguration:            expandVPCConfiguration(n.([]interface{})),
 					}
 
 					log.Printf("[DEBUG] Adding Kinesis Analytics v2 Application (%s) VPC configuration: %s", d.Id(), input)
@@ -1372,7 +1372,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 					currentApplicationVersionId = aws.Int64Value(output.ApplicationVersionId)
 				} else {
 					// Update existing VPC configuration.
-					vpcConfigurationUpdate := expandKinesisAnalyticsV2VpcConfigurationUpdate(n.([]interface{}))
+					vpcConfigurationUpdate := expandVPCConfigurationUpdate(n.([]interface{}))
 
 					applicationConfigurationUpdate.VpcConfigurationUpdates = []*kinesisanalyticsv2.VpcConfigurationUpdate{vpcConfigurationUpdate}
 
@@ -1493,11 +1493,11 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("start_application") {
 		if _, ok := d.GetOk("start_application"); ok {
-			if err := kinesisAnalyticsV2StartApplication(conn, expandKinesisAnalyticsV2StartApplicationInput(d)); err != nil {
+			if err := startApplication(conn, expandStartApplicationInput(d)); err != nil {
 				return err
 			}
 		} else {
-			if err := kinesisAnalyticsV2StopApplication(conn, expandKinesisAnalyticsV2StopApplicationInput(d)); err != nil {
+			if err := stopApplication(conn, expandStopApplicationInput(d)); err != nil {
 				return err
 			}
 		}
@@ -1556,7 +1556,7 @@ func resourceApplicationImport(d *schema.ResourceData, meta interface{}) ([]*sch
 	return []*schema.ResourceData{d}, nil
 }
 
-func kinesisAnalyticsV2StartApplication(conn *kinesisanalyticsv2.KinesisAnalyticsV2, input *kinesisanalyticsv2.StartApplicationInput) error {
+func startApplication(conn *kinesisanalyticsv2.KinesisAnalyticsV2, input *kinesisanalyticsv2.StartApplicationInput) error {
 	applicationName := aws.StringValue(input.ApplicationName)
 
 	application, err := FindApplicationDetailByName(conn, applicationName)
@@ -1595,7 +1595,7 @@ func kinesisAnalyticsV2StartApplication(conn *kinesisanalyticsv2.KinesisAnalytic
 	return nil
 }
 
-func kinesisAnalyticsV2StopApplication(conn *kinesisanalyticsv2.KinesisAnalyticsV2, input *kinesisanalyticsv2.StopApplicationInput) error {
+func stopApplication(conn *kinesisanalyticsv2.KinesisAnalyticsV2, input *kinesisanalyticsv2.StopApplicationInput) error {
 	applicationName := aws.StringValue(input.ApplicationName)
 
 	application, err := FindApplicationDetailByName(conn, applicationName)
@@ -1624,7 +1624,7 @@ func kinesisAnalyticsV2StopApplication(conn *kinesisanalyticsv2.KinesisAnalytics
 	return nil
 }
 
-func expandKinesisAnalyticsV2ApplicationConfiguration(vApplicationConfiguration []interface{}) *kinesisanalyticsv2.ApplicationConfiguration {
+func expandApplicationConfiguration(vApplicationConfiguration []interface{}) *kinesisanalyticsv2.ApplicationConfiguration {
 	if len(vApplicationConfiguration) == 0 || vApplicationConfiguration[0] == nil {
 		return nil
 	}
@@ -1693,7 +1693,7 @@ func expandKinesisAnalyticsV2ApplicationConfiguration(vApplicationConfiguration 
 		mEnvironmentProperties := vEnvironmentProperties[0].(map[string]interface{})
 
 		if vPropertyGroups, ok := mEnvironmentProperties["property_group"].(*schema.Set); ok && vPropertyGroups.Len() > 0 {
-			environmentProperties.PropertyGroups = expandKinesisAnalyticsV2PropertyGroups(vPropertyGroups.List())
+			environmentProperties.PropertyGroups = expandPropertyGroups(vPropertyGroups.List())
 		}
 
 		applicationConfiguration.EnvironmentProperties = environmentProperties
@@ -1782,28 +1782,28 @@ func expandKinesisAnalyticsV2ApplicationConfiguration(vApplicationConfiguration 
 		mSqlApplicationConfiguration := vSqlApplicationConfiguration[0].(map[string]interface{})
 
 		if vInput, ok := mSqlApplicationConfiguration["input"].([]interface{}); ok && len(vInput) > 0 && vInput[0] != nil {
-			sqlApplicationConfiguration.Inputs = []*kinesisanalyticsv2.Input{expandKinesisAnalyticsV2Input(vInput)}
+			sqlApplicationConfiguration.Inputs = []*kinesisanalyticsv2.Input{expandInput(vInput)}
 		}
 
 		if vOutputs, ok := mSqlApplicationConfiguration["output"].(*schema.Set); ok {
-			sqlApplicationConfiguration.Outputs = expandKinesisAnalyticsV2Outputs(vOutputs.List())
+			sqlApplicationConfiguration.Outputs = expandOutputs(vOutputs.List())
 		}
 
 		if vReferenceDataSource, ok := mSqlApplicationConfiguration["reference_data_source"].([]interface{}); ok && len(vReferenceDataSource) > 0 && vReferenceDataSource[0] != nil {
-			sqlApplicationConfiguration.ReferenceDataSources = []*kinesisanalyticsv2.ReferenceDataSource{expandKinesisAnalyticsV2ReferenceDataSource(vReferenceDataSource)}
+			sqlApplicationConfiguration.ReferenceDataSources = []*kinesisanalyticsv2.ReferenceDataSource{expandReferenceDataSource(vReferenceDataSource)}
 		}
 
 		applicationConfiguration.SqlApplicationConfiguration = sqlApplicationConfiguration
 	}
 
 	if vVpcConfiguration, ok := mApplicationConfiguration["vpc_configuration"].([]interface{}); ok && len(vVpcConfiguration) > 0 && vVpcConfiguration[0] != nil {
-		applicationConfiguration.VpcConfigurations = []*kinesisanalyticsv2.VpcConfiguration{expandKinesisAnalyticsV2VpcConfiguration(vVpcConfiguration)}
+		applicationConfiguration.VpcConfigurations = []*kinesisanalyticsv2.VpcConfiguration{expandVPCConfiguration(vVpcConfiguration)}
 	}
 
 	return applicationConfiguration
 }
 
-func expandKinesisAnalyticsV2ApplicationCodeConfigurationUpdate(vApplicationCodeConfiguration []interface{}) *kinesisanalyticsv2.ApplicationCodeConfigurationUpdate {
+func expandApplicationCodeConfigurationUpdate(vApplicationCodeConfiguration []interface{}) *kinesisanalyticsv2.ApplicationCodeConfigurationUpdate {
 	if len(vApplicationCodeConfiguration) == 0 || vApplicationCodeConfiguration[0] == nil {
 		return nil
 	}
@@ -1849,7 +1849,7 @@ func expandKinesisAnalyticsV2ApplicationCodeConfigurationUpdate(vApplicationCode
 	return applicationCodeConfigurationUpdate
 }
 
-func expandKinesisAnalyticsV2ApplicationFlinkApplicationConfigurationUpdate(vFlinkApplicationConfiguration []interface{}) *kinesisanalyticsv2.FlinkApplicationConfigurationUpdate {
+func expandApplicationFlinkApplicationConfigurationUpdate(vFlinkApplicationConfiguration []interface{}) *kinesisanalyticsv2.FlinkApplicationConfigurationUpdate {
 	if len(vFlinkApplicationConfiguration) == 0 || vFlinkApplicationConfiguration[0] == nil {
 		return nil
 	}
@@ -1930,7 +1930,7 @@ func expandKinesisAnalyticsV2ApplicationFlinkApplicationConfigurationUpdate(vFli
 	return flinkApplicationConfigurationUpdate
 }
 
-func expandKinesisAnalyticsV2ApplicationSnapshotConfigurationUpdate(vApplicationSnapshotConfiguration []interface{}) *kinesisanalyticsv2.ApplicationSnapshotConfigurationUpdate {
+func expandApplicationSnapshotConfigurationUpdate(vApplicationSnapshotConfiguration []interface{}) *kinesisanalyticsv2.ApplicationSnapshotConfigurationUpdate {
 	if len(vApplicationSnapshotConfiguration) == 0 || vApplicationSnapshotConfiguration[0] == nil {
 		return nil
 	}
@@ -1946,7 +1946,7 @@ func expandKinesisAnalyticsV2ApplicationSnapshotConfigurationUpdate(vApplication
 	return applicationSnapshotConfigurationUpdate
 }
 
-func expandKinesisAnalyticsV2CloudWatchLoggingOptions(vCloudWatchLoggingOptions []interface{}) []*kinesisanalyticsv2.CloudWatchLoggingOption {
+func expandCloudWatchLoggingOptions(vCloudWatchLoggingOptions []interface{}) []*kinesisanalyticsv2.CloudWatchLoggingOption {
 	if len(vCloudWatchLoggingOptions) == 0 || vCloudWatchLoggingOptions[0] == nil {
 		return nil
 	}
@@ -1962,7 +1962,7 @@ func expandKinesisAnalyticsV2CloudWatchLoggingOptions(vCloudWatchLoggingOptions 
 	return []*kinesisanalyticsv2.CloudWatchLoggingOption{cloudWatchLoggingOption}
 }
 
-func expandKinesisAnalyticsV2EnvironmentPropertyUpdates(vEnvironmentProperties []interface{}) *kinesisanalyticsv2.EnvironmentPropertyUpdates {
+func expandEnvironmentPropertyUpdates(vEnvironmentProperties []interface{}) *kinesisanalyticsv2.EnvironmentPropertyUpdates {
 	if len(vEnvironmentProperties) == 0 || vEnvironmentProperties[0] == nil {
 		// Return empty updates to remove all existing property groups.
 		return &kinesisanalyticsv2.EnvironmentPropertyUpdates{PropertyGroups: []*kinesisanalyticsv2.PropertyGroup{}}
@@ -1973,13 +1973,13 @@ func expandKinesisAnalyticsV2EnvironmentPropertyUpdates(vEnvironmentProperties [
 	mEnvironmentProperties := vEnvironmentProperties[0].(map[string]interface{})
 
 	if vPropertyGroups, ok := mEnvironmentProperties["property_group"].(*schema.Set); ok && vPropertyGroups.Len() > 0 {
-		environmentPropertyUpdates.PropertyGroups = expandKinesisAnalyticsV2PropertyGroups(vPropertyGroups.List())
+		environmentPropertyUpdates.PropertyGroups = expandPropertyGroups(vPropertyGroups.List())
 	}
 
 	return environmentPropertyUpdates
 }
 
-func expandKinesisAnalyticsV2Input(vInput []interface{}) *kinesisanalyticsv2.Input {
+func expandInput(vInput []interface{}) *kinesisanalyticsv2.Input {
 	if len(vInput) == 0 || vInput[0] == nil {
 		return nil
 	}
@@ -2001,11 +2001,11 @@ func expandKinesisAnalyticsV2Input(vInput []interface{}) *kinesisanalyticsv2.Inp
 	}
 
 	if vInputProcessingConfiguration, ok := mInput["input_processing_configuration"].([]interface{}); ok {
-		input.InputProcessingConfiguration = expandKinesisAnalyticsV2InputProcessingConfiguration(vInputProcessingConfiguration)
+		input.InputProcessingConfiguration = expandInputProcessingConfiguration(vInputProcessingConfiguration)
 	}
 
 	if vInputSchema, ok := mInput["input_schema"].([]interface{}); ok {
-		input.InputSchema = expandKinesisAnalyticsV2SourceSchema(vInputSchema)
+		input.InputSchema = expandSourceSchema(vInputSchema)
 	}
 
 	if vKinesisFirehoseInput, ok := mInput["kinesis_firehose_input"].([]interface{}); ok && len(vKinesisFirehoseInput) > 0 && vKinesisFirehoseInput[0] != nil {
@@ -2039,7 +2039,7 @@ func expandKinesisAnalyticsV2Input(vInput []interface{}) *kinesisanalyticsv2.Inp
 	return input
 }
 
-func expandKinesisAnalyticsV2InputProcessingConfiguration(vInputProcessingConfiguration []interface{}) *kinesisanalyticsv2.InputProcessingConfiguration {
+func expandInputProcessingConfiguration(vInputProcessingConfiguration []interface{}) *kinesisanalyticsv2.InputProcessingConfiguration {
 	if len(vInputProcessingConfiguration) == 0 || vInputProcessingConfiguration[0] == nil {
 		return nil
 	}
@@ -2063,7 +2063,7 @@ func expandKinesisAnalyticsV2InputProcessingConfiguration(vInputProcessingConfig
 	return inputProcessingConfiguration
 }
 
-func expandKinesisAnalyticsV2InputUpdate(vInput []interface{}) *kinesisanalyticsv2.InputUpdate {
+func expandInputUpdate(vInput []interface{}) *kinesisanalyticsv2.InputUpdate {
 	if len(vInput) == 0 || vInput[0] == nil {
 		return nil
 	}
@@ -2114,7 +2114,7 @@ func expandKinesisAnalyticsV2InputUpdate(vInput []interface{}) *kinesisanalytics
 		mInputSchema := vInputSchema[0].(map[string]interface{})
 
 		if vRecordColumns, ok := mInputSchema["record_column"].([]interface{}); ok {
-			inputSchemaUpdate.RecordColumnUpdates = expandKinesisAnalyticsV2RecordColumns(vRecordColumns)
+			inputSchemaUpdate.RecordColumnUpdates = expandRecordColumns(vRecordColumns)
 		}
 
 		if vRecordEncoding, ok := mInputSchema["record_encoding"].(string); ok && vRecordEncoding != "" {
@@ -2122,7 +2122,7 @@ func expandKinesisAnalyticsV2InputUpdate(vInput []interface{}) *kinesisanalytics
 		}
 
 		if vRecordFormat, ok := mInputSchema["record_format"].([]interface{}); ok {
-			inputSchemaUpdate.RecordFormatUpdate = expandKinesisAnalyticsV2RecordFormat(vRecordFormat)
+			inputSchemaUpdate.RecordFormatUpdate = expandRecordFormat(vRecordFormat)
 		}
 
 		inputUpdate.InputSchemaUpdate = inputSchemaUpdate
@@ -2159,7 +2159,7 @@ func expandKinesisAnalyticsV2InputUpdate(vInput []interface{}) *kinesisanalytics
 	return inputUpdate
 }
 
-func expandKinesisAnalyticsV2Output(vOutput interface{}) *kinesisanalyticsv2.Output {
+func expandOutput(vOutput interface{}) *kinesisanalyticsv2.Output {
 	if vOutput == nil {
 		return nil
 	}
@@ -2223,7 +2223,7 @@ func expandKinesisAnalyticsV2Output(vOutput interface{}) *kinesisanalyticsv2.Out
 	return output
 }
 
-func expandKinesisAnalyticsV2Outputs(vOutputs []interface{}) []*kinesisanalyticsv2.Output {
+func expandOutputs(vOutputs []interface{}) []*kinesisanalyticsv2.Output {
 	if len(vOutputs) == 0 {
 		return nil
 	}
@@ -2231,17 +2231,17 @@ func expandKinesisAnalyticsV2Outputs(vOutputs []interface{}) []*kinesisanalytics
 	outputs := []*kinesisanalyticsv2.Output{}
 
 	for _, vOutput := range vOutputs {
-		output := expandKinesisAnalyticsV2Output(vOutput)
+		output := expandOutput(vOutput)
 
 		if output != nil {
-			outputs = append(outputs, expandKinesisAnalyticsV2Output(vOutput))
+			outputs = append(outputs, expandOutput(vOutput))
 		}
 	}
 
 	return outputs
 }
 
-func expandKinesisAnalyticsV2PropertyGroups(vPropertyGroups []interface{}) []*kinesisanalyticsv2.PropertyGroup {
+func expandPropertyGroups(vPropertyGroups []interface{}) []*kinesisanalyticsv2.PropertyGroup {
 	propertyGroups := []*kinesisanalyticsv2.PropertyGroup{}
 
 	for _, vPropertyGroup := range vPropertyGroups {
@@ -2266,7 +2266,7 @@ func expandKinesisAnalyticsV2PropertyGroups(vPropertyGroups []interface{}) []*ki
 	return propertyGroups
 }
 
-func expandKinesisAnalyticsV2RecordColumns(vRecordColumns []interface{}) []*kinesisanalyticsv2.RecordColumn {
+func expandRecordColumns(vRecordColumns []interface{}) []*kinesisanalyticsv2.RecordColumn {
 	recordColumns := []*kinesisanalyticsv2.RecordColumn{}
 
 	for _, vRecordColumn := range vRecordColumns {
@@ -2290,7 +2290,7 @@ func expandKinesisAnalyticsV2RecordColumns(vRecordColumns []interface{}) []*kine
 	return recordColumns
 }
 
-func expandKinesisAnalyticsV2RecordFormat(vRecordFormat []interface{}) *kinesisanalyticsv2.RecordFormat {
+func expandRecordFormat(vRecordFormat []interface{}) *kinesisanalyticsv2.RecordFormat {
 	if len(vRecordFormat) == 0 || vRecordFormat[0] == nil {
 		return nil
 	}
@@ -2341,7 +2341,7 @@ func expandKinesisAnalyticsV2RecordFormat(vRecordFormat []interface{}) *kinesisa
 	return recordFormat
 }
 
-func expandKinesisAnalyticsV2ReferenceDataSource(vReferenceDataSource []interface{}) *kinesisanalyticsv2.ReferenceDataSource {
+func expandReferenceDataSource(vReferenceDataSource []interface{}) *kinesisanalyticsv2.ReferenceDataSource {
 	if len(vReferenceDataSource) == 0 || vReferenceDataSource[0] == nil {
 		return nil
 	}
@@ -2351,7 +2351,7 @@ func expandKinesisAnalyticsV2ReferenceDataSource(vReferenceDataSource []interfac
 	mReferenceDataSource := vReferenceDataSource[0].(map[string]interface{})
 
 	if vReferenceSchema, ok := mReferenceDataSource["reference_schema"].([]interface{}); ok {
-		referenceDataSource.ReferenceSchema = expandKinesisAnalyticsV2SourceSchema(vReferenceSchema)
+		referenceDataSource.ReferenceSchema = expandSourceSchema(vReferenceSchema)
 	}
 
 	if vS3ReferenceDataSource, ok := mReferenceDataSource["s3_reference_data_source"].([]interface{}); ok && len(vS3ReferenceDataSource) > 0 && vS3ReferenceDataSource[0] != nil {
@@ -2376,7 +2376,7 @@ func expandKinesisAnalyticsV2ReferenceDataSource(vReferenceDataSource []interfac
 	return referenceDataSource
 }
 
-func expandKinesisAnalyticsV2ReferenceDataSourceUpdate(vReferenceDataSource []interface{}) *kinesisanalyticsv2.ReferenceDataSourceUpdate {
+func expandReferenceDataSourceUpdate(vReferenceDataSource []interface{}) *kinesisanalyticsv2.ReferenceDataSourceUpdate {
 	if len(vReferenceDataSource) == 0 || vReferenceDataSource[0] == nil {
 		return nil
 	}
@@ -2390,7 +2390,7 @@ func expandKinesisAnalyticsV2ReferenceDataSourceUpdate(vReferenceDataSource []in
 	}
 
 	if vReferenceSchema, ok := mReferenceDataSource["reference_schema"].([]interface{}); ok {
-		referenceDataSourceUpdate.ReferenceSchemaUpdate = expandKinesisAnalyticsV2SourceSchema(vReferenceSchema)
+		referenceDataSourceUpdate.ReferenceSchemaUpdate = expandSourceSchema(vReferenceSchema)
 	}
 
 	if vS3ReferenceDataSource, ok := mReferenceDataSource["s3_reference_data_source"].([]interface{}); ok && len(vS3ReferenceDataSource) > 0 && vS3ReferenceDataSource[0] != nil {
@@ -2415,7 +2415,7 @@ func expandKinesisAnalyticsV2ReferenceDataSourceUpdate(vReferenceDataSource []in
 	return referenceDataSourceUpdate
 }
 
-func expandKinesisAnalyticsV2SourceSchema(vSourceSchema []interface{}) *kinesisanalyticsv2.SourceSchema {
+func expandSourceSchema(vSourceSchema []interface{}) *kinesisanalyticsv2.SourceSchema {
 	if len(vSourceSchema) == 0 || vSourceSchema[0] == nil {
 		return nil
 	}
@@ -2425,7 +2425,7 @@ func expandKinesisAnalyticsV2SourceSchema(vSourceSchema []interface{}) *kinesisa
 	mSourceSchema := vSourceSchema[0].(map[string]interface{})
 
 	if vRecordColumns, ok := mSourceSchema["record_column"].([]interface{}); ok {
-		sourceSchema.RecordColumns = expandKinesisAnalyticsV2RecordColumns(vRecordColumns)
+		sourceSchema.RecordColumns = expandRecordColumns(vRecordColumns)
 	}
 
 	if vRecordEncoding, ok := mSourceSchema["record_encoding"].(string); ok && vRecordEncoding != "" {
@@ -2433,13 +2433,13 @@ func expandKinesisAnalyticsV2SourceSchema(vSourceSchema []interface{}) *kinesisa
 	}
 
 	if vRecordFormat, ok := mSourceSchema["record_format"].([]interface{}); ok && len(vRecordFormat) > 0 && vRecordFormat[0] != nil {
-		sourceSchema.RecordFormat = expandKinesisAnalyticsV2RecordFormat(vRecordFormat)
+		sourceSchema.RecordFormat = expandRecordFormat(vRecordFormat)
 	}
 
 	return sourceSchema
 }
 
-func expandKinesisAnalyticsV2VpcConfiguration(vVpcConfiguration []interface{}) *kinesisanalyticsv2.VpcConfiguration {
+func expandVPCConfiguration(vVpcConfiguration []interface{}) *kinesisanalyticsv2.VpcConfiguration {
 	if len(vVpcConfiguration) == 0 || vVpcConfiguration[0] == nil {
 		return nil
 	}
@@ -2459,7 +2459,7 @@ func expandKinesisAnalyticsV2VpcConfiguration(vVpcConfiguration []interface{}) *
 	return vpcConfiguration
 }
 
-func expandKinesisAnalyticsV2VpcConfigurationUpdate(vVpcConfiguration []interface{}) *kinesisanalyticsv2.VpcConfigurationUpdate {
+func expandVPCConfigurationUpdate(vVpcConfiguration []interface{}) *kinesisanalyticsv2.VpcConfigurationUpdate {
 	if len(vVpcConfiguration) == 0 || vVpcConfiguration[0] == nil {
 		return nil
 	}
@@ -2483,7 +2483,7 @@ func expandKinesisAnalyticsV2VpcConfigurationUpdate(vVpcConfiguration []interfac
 	return vpcConfigurationUpdate
 }
 
-func flattenKinesisAnalyticsV2ApplicationConfigurationDescription(applicationConfigurationDescription *kinesisanalyticsv2.ApplicationConfigurationDescription) []interface{} {
+func flattenApplicationConfigurationDescription(applicationConfigurationDescription *kinesisanalyticsv2.ApplicationConfigurationDescription) []interface{} {
 	if applicationConfigurationDescription == nil {
 		return []interface{}{}
 	}
@@ -2627,7 +2627,7 @@ func flattenKinesisAnalyticsV2ApplicationConfigurationDescription(applicationCon
 			}
 
 			if inputSchema := inputDescription.InputSchema; inputSchema != nil {
-				mInput["input_schema"] = flattenKinesisAnalyticsV2SourceSchema(inputSchema)
+				mInput["input_schema"] = flattenSourceSchema(inputSchema)
 			}
 
 			if inputProcessingConfigurationDescription := inputDescription.InputProcessingConfigurationDescription; inputProcessingConfigurationDescription != nil {
@@ -2729,7 +2729,7 @@ func flattenKinesisAnalyticsV2ApplicationConfigurationDescription(applicationCon
 			}
 
 			if referenceSchema := referenceDataSourceDescription.ReferenceSchema; referenceSchema != nil {
-				mReferenceDataSource["reference_schema"] = flattenKinesisAnalyticsV2SourceSchema(referenceSchema)
+				mReferenceDataSource["reference_schema"] = flattenSourceSchema(referenceSchema)
 			}
 
 			if s3ReferenceDataSource := referenceDataSourceDescription.S3ReferenceDataSourceDescription; s3ReferenceDataSource != nil {
@@ -2763,7 +2763,7 @@ func flattenKinesisAnalyticsV2ApplicationConfigurationDescription(applicationCon
 	return []interface{}{mApplicationConfiguration}
 }
 
-func flattenKinesisAnalyticsV2CloudWatchLoggingOptionDescriptions(cloudWatchLoggingOptionDescriptions []*kinesisanalyticsv2.CloudWatchLoggingOptionDescription) []interface{} {
+func flattenCloudWatchLoggingOptionDescriptions(cloudWatchLoggingOptionDescriptions []*kinesisanalyticsv2.CloudWatchLoggingOptionDescription) []interface{} {
 	if len(cloudWatchLoggingOptionDescriptions) == 0 || cloudWatchLoggingOptionDescriptions[0] == nil {
 		return []interface{}{}
 	}
@@ -2778,7 +2778,7 @@ func flattenKinesisAnalyticsV2CloudWatchLoggingOptionDescriptions(cloudWatchLogg
 	return []interface{}{mCloudWatchLoggingOption}
 }
 
-func flattenKinesisAnalyticsV2SourceSchema(sourceSchema *kinesisanalyticsv2.SourceSchema) []interface{} {
+func flattenSourceSchema(sourceSchema *kinesisanalyticsv2.SourceSchema) []interface{} {
 	if sourceSchema == nil {
 		return []interface{}{}
 	}
@@ -2839,7 +2839,7 @@ func flattenKinesisAnalyticsV2SourceSchema(sourceSchema *kinesisanalyticsv2.Sour
 	return []interface{}{mSourceSchema}
 }
 
-func expandKinesisAnalyticsV2StartApplicationInput(d *schema.ResourceData) *kinesisanalyticsv2.StartApplicationInput {
+func expandStartApplicationInput(d *schema.ResourceData) *kinesisanalyticsv2.StartApplicationInput {
 	apiObject := &kinesisanalyticsv2.StartApplicationInput{
 		ApplicationName:  aws.String(d.Get("name").(string)),
 		RunConfiguration: &kinesisanalyticsv2.RunConfiguration{},
@@ -2900,7 +2900,7 @@ func expandKinesisAnalyticsV2StartApplicationInput(d *schema.ResourceData) *kine
 	return apiObject
 }
 
-func expandKinesisAnalyticsV2StopApplicationInput(d *schema.ResourceData) *kinesisanalyticsv2.StopApplicationInput {
+func expandStopApplicationInput(d *schema.ResourceData) *kinesisanalyticsv2.StopApplicationInput {
 	apiObject := &kinesisanalyticsv2.StopApplicationInput{
 		ApplicationName: aws.String(d.Get("name").(string)),
 	}
