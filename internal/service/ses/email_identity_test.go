@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ses"
+	"github.com/aws/aws-sdk-go/service/sesv2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -15,12 +15,13 @@ import (
 )
 
 func TestAccSESEmailIdentity_basic(t *testing.T) {
-	email := acctest.DefaultEmailAddress
+	domain := acctest.RandomDomainName()
+	email := acctest.RandomEmailAddress(domain)
 	resourceName := "aws_ses_email_identity.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, sesv2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckEmailIdentityDestroy,
 		Steps: []resource.TestStep{
@@ -41,12 +42,13 @@ func TestAccSESEmailIdentity_basic(t *testing.T) {
 }
 
 func TestAccSESEmailIdentity_trailingPeriod(t *testing.T) {
-	email := fmt.Sprintf("%s.", acctest.DefaultEmailAddress)
+	domain := acctest.RandomDomainName()
+	email := acctest.RandomEmailAddress(domain)
 	resourceName := "aws_ses_email_identity.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, sesv2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckEmailIdentityDestroy,
 		Steps: []resource.TestStep{
@@ -67,7 +69,7 @@ func TestAccSESEmailIdentity_trailingPeriod(t *testing.T) {
 }
 
 func testAccCheckEmailIdentityDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ses_email_identity" {
@@ -75,19 +77,13 @@ func testAccCheckEmailIdentityDestroy(s *terraform.State) error {
 		}
 
 		email := rs.Primary.ID
-		params := &ses.GetIdentityVerificationAttributesInput{
-			Identities: []*string{
-				aws.String(email),
-			},
+		params := &sesv2.GetEmailIdentityInput{
+			EmailIdentity: aws.String(email),
 		}
 
-		response, err := conn.GetIdentityVerificationAttributes(params)
-		if err != nil {
-			return err
-		}
-
-		if response.VerificationAttributes[email] != nil {
-			return fmt.Errorf("SES Email Identity %s still exists. Failing!", email)
+		_, err := conn.GetEmailIdentity(params)
+		if err == nil {
+			return fmt.Errorf("SES Email Identity %s still exists", email)
 		}
 	}
 
@@ -106,21 +102,15 @@ func testAccCheckEmailIdentityExists(n string) resource.TestCheckFunc {
 		}
 
 		email := rs.Primary.ID
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Conn
 
-		params := &ses.GetIdentityVerificationAttributesInput{
-			Identities: []*string{
-				aws.String(email),
-			},
+		params := &sesv2.GetEmailIdentityInput{
+			EmailIdentity: aws.String(email),
 		}
 
-		response, err := conn.GetIdentityVerificationAttributes(params)
+		_, err := conn.GetEmailIdentity(params)
 		if err != nil {
 			return err
-		}
-
-		if response.VerificationAttributes[email] == nil {
-			return fmt.Errorf("SES Email Identity %s not found in AWS", email)
 		}
 
 		return nil

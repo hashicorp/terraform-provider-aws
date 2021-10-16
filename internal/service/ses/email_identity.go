@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/ses"
+	"github.com/aws/aws-sdk-go/service/sesv2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -39,18 +39,18 @@ func ResourceEmailIdentity() *schema.Resource {
 }
 
 func resourceEmailIdentityCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESV2Conn
 
 	email := d.Get("email").(string)
 	email = strings.TrimSuffix(email, ".")
 
-	createOpts := &ses.VerifyEmailIdentityInput{
-		EmailAddress: aws.String(email),
+	createOpts := &sesv2.CreateEmailIdentityInput{
+		EmailIdentity: aws.String(email),
 	}
 
-	_, err := conn.VerifyEmailIdentity(createOpts)
+	_, err := conn.CreateEmailIdentity(createOpts)
 	if err != nil {
-		return fmt.Errorf("Error requesting SES email identity verification: %s", err)
+		return fmt.Errorf("error creating SES email identity: %w", err)
 	}
 
 	d.SetId(email)
@@ -59,28 +59,19 @@ func resourceEmailIdentityCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceEmailIdentityRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESV2Conn
 
 	email := d.Id()
 	d.Set("email", email)
 
-	readOpts := &ses.GetIdentityVerificationAttributesInput{
-		Identities: []*string{
-			aws.String(email),
-		},
+	readOpts := &sesv2.GetEmailIdentityInput{
+		EmailIdentity: aws.String(email),
 	}
 
-	response, err := conn.GetIdentityVerificationAttributes(readOpts)
+	_, err := conn.GetEmailIdentity(readOpts)
 	if err != nil {
-		log.Printf("[WARN] Error fetching identity verification attributes for %s: %s", d.Id(), err)
+		log.Printf("[WARN] Error reading SES email identity %s: %s", d.Id(), err)
 		return err
-	}
-
-	_, ok := response.VerificationAttributes[email]
-	if !ok {
-		log.Printf("[WARN] Email not listed in response when fetching verification attributes for %s", d.Id())
-		d.SetId("")
-		return nil
 	}
 
 	arn := arn.ARN{
@@ -95,17 +86,17 @@ func resourceEmailIdentityRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceEmailIdentityDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESV2Conn
 
 	email := d.Get("email").(string)
 
-	deleteOpts := &ses.DeleteIdentityInput{
-		Identity: aws.String(email),
+	deleteOpts := &sesv2.DeleteEmailIdentityInput{
+		EmailIdentity: aws.String(email),
 	}
 
-	_, err := conn.DeleteIdentity(deleteOpts)
+	_, err := conn.DeleteEmailIdentity(deleteOpts)
 	if err != nil {
-		return fmt.Errorf("Error deleting SES email identity: %s", err)
+		return fmt.Errorf("error deleting SES email identity: %w", err)
 	}
 
 	return nil
