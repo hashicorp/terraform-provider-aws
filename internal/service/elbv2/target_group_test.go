@@ -870,6 +870,35 @@ func TestAccELBV2TargetGroup_NetworkLB_targetGroup(t *testing.T) {
 	})
 }
 
+func TestAccELBV2TargetGroup_networkLB_TargetGroupWithConnectionTermination(t *testing.T) {
+	var confBefore, confAfter elbv2.TargetGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lb_target_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckTargetGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTargetGroupConfig_typeTCP(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(resourceName, &confBefore),
+					resource.TestCheckResourceAttr(resourceName, "connection_termination", "false"),
+				),
+			},
+			{
+				Config: testAccTargetGroupConfig_typeTCP_withConnectionTermination(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(resourceName, &confAfter),
+					resource.TestCheckResourceAttr(resourceName, "connection_termination", "true"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccELBV2TargetGroup_NetworkLB_targetGroupWithProxy(t *testing.T) {
 	var confBefore, confAfter elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
