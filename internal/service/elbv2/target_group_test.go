@@ -305,7 +305,7 @@ func TestAccAWSLBTargetGroup_networkLB_TargetGroupWithConnectionTermination(t *t
 	})
 }
 
-func TestAccAWSLBTargetGroup_TCP_HTTPHealthCheck(t *testing.T) {
+func TestAccELBV2TargetGroup_TCP_httpHealthCheck(t *testing.T) {
 	var confBefore, confAfter elbv2.TargetGroup
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lb_target_group.test"
