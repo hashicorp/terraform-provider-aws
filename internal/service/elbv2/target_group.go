@@ -442,6 +442,13 @@ func resourceTargetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 			})
 		}
 
+		if v, ok := d.GetOk("connection_termination"); ok {
+			attrs = append(attrs, &elbv2.TargetGroupAttribute{
+				Key:   aws.String("deregistration_delay.connection_termination.enabled"),
+				Value: aws.String(strconv.FormatBool(v.(bool))),
+			})
+		}
+
 		if v, ok := d.GetOk("slow_start"); ok {
 			attrs = append(attrs, &elbv2.TargetGroupAttribute{
 				Key:   aws.String("slow_start.duration_seconds"),
