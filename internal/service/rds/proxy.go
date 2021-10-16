@@ -89,6 +89,7 @@ func ResourceProxy() *schema.Resource {
 						"auth_scheme": {
 							Type:         schema.TypeString,
 							Optional:     true,
+							Default: 	  "SECRETS",
 							ValidateFunc: validation.StringInSlice(rds.AuthScheme_Values(), false),
 						},
 						"description": {
@@ -98,6 +99,7 @@ func ResourceProxy() *schema.Resource {
 						"iam_auth": {
 							Type:         schema.TypeString,
 							Optional:     true,
+							Default:      "DISABLED",
 							ValidateFunc: validation.StringInSlice(rds.IAMAuthMode_Values(), false),
 						},
 						"secret_arn": {
