@@ -4,10 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/aws/aws-sdk-go/service/docdb"
 	"log"
 	"regexp"
 	"testing"
+
+	"github.com/aws/aws-sdk-go/service/docdb"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -275,7 +276,7 @@ func TestAccAWSDocDBGlobalCluster_SourceDbClusterIdentifier(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "source_db_cluster_identifier"},
+				ImportStateVerifyIgnore: []string{"source_db_cluster_identifier"},
 			},
 		},
 	})
@@ -304,7 +305,7 @@ func TestAccAWSDocDBGlobalCluster_SourceDbClusterIdentifier_StorageEncrypted(t *
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "source_db_cluster_identifier"},
+				ImportStateVerifyIgnore: []string{"source_db_cluster_identifier"},
 			},
 		},
 	})
@@ -524,7 +525,6 @@ resource "aws_docdb_cluster" "test" {
 }
 
 resource "aws_docdb_global_cluster" "test" {
-  force_destroy                = true
   global_cluster_identifier    = %[1]q
   source_db_cluster_identifier = aws_docdb_cluster.test.arn
 }
@@ -550,7 +550,6 @@ resource "aws_docdb_cluster" "test" {
 }
 
 resource "aws_docdb_global_cluster" "test" {
-  force_destroy                = true
   global_cluster_identifier    = %[1]q
   source_db_cluster_identifier = aws_docdb_cluster.test.arn
 }
