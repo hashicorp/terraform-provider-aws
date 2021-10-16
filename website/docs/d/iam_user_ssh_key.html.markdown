@@ -24,7 +24,7 @@ data "aws_iam_user_ssh_key" "example" {
 
 * `encoding` - (Required) Specifies the public key encoding format to use in the response. To retrieve the public key in ssh-rsa format, use `SSH`. To retrieve the public key in PEM format, use `PEM`.
 * `ssh_public_key_id` - (Required) The unique identifier for the SSH public key.
-* `username` - (Required) The name of the IAM user assocaited with the SSH public key.
+* `username` - (Required) The name of the IAM user associated with the SSH public key.
 
 ## Attributes Reference
 
