@@ -115,7 +115,7 @@ func TestAccEC2AMIDataSource_instanceStore(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLatestAmazonLinuxHvmInstanceStoreAmiConfig(),
+				Config: acctest.ConfigLatestAmazonLinuxHvmInstanceStoreAmi(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAMIIDDataSource(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "architecture", "x86_64"),

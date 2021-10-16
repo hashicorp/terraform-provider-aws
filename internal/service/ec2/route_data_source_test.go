@@ -194,7 +194,7 @@ func TestAccEC2RouteDataSource_gatewayVPCEndpoint(t *testing.T) {
 
 func testAccRouteBasicDataSourceConfig(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
 		acctest.AvailableEC2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
 		fmt.Sprintf(`

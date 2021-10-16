@@ -24,7 +24,7 @@ func DataSourceEBSSnapshot() *schema.Resource {
 				Computed: true,
 			},
 			//selection criteria
-			"filter": dataSourceFiltersSchema(),
+			"filter": DataSourceFiltersSchema(),
 			"most_recent": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -108,7 +108,7 @@ func dataSourceEBSSnapshotRead(d *schema.ResourceData, meta interface{}) error {
 		params.RestorableByUserIds = flex.ExpandStringList(restorableUsers.([]interface{}))
 	}
 	if filtersOk {
-		params.Filters = buildFiltersDataSource(filters.(*schema.Set))
+		params.Filters = BuildFiltersDataSource(filters.(*schema.Set))
 	}
 	if ownersOk {
 		params.OwnerIds = flex.ExpandStringList(owners.([]interface{}))

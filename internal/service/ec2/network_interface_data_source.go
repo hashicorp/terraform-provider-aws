@@ -20,7 +20,7 @@ func DataSourceNetworkInterface() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"filter": dataSourceFiltersSchema(),
+			"filter": DataSourceFiltersSchema(),
 			"association": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -155,7 +155,7 @@ func dataSourceNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if v, ok := d.GetOk("filter"); ok {
-		input.Filters = buildFiltersDataSource(v.(*schema.Set))
+		input.Filters = BuildFiltersDataSource(v.(*schema.Set))
 	}
 
 	log.Printf("[DEBUG] Reading Network Interface: %s", input)
