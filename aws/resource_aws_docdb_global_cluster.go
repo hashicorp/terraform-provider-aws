@@ -3,17 +3,17 @@ package aws
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 	"log"
 	"time"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/docdb"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 const (
@@ -51,23 +51,18 @@ func resourceAwsDocDBGlobalCluster() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"source_db_cluster_identifier"},
-				ValidateFunc: validation.StringInSlice([]string{
-					"docdb",
-				}, false),
+				ValidateFunc: validateDocDBEngine(),
 			},
 			"engine_version": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"force_destroy": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
 			"global_cluster_identifier": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+				ValidateFunc:  validateDocDBGlobalCusterIdentifier,
 			},
 			"global_cluster_members": {
 				Type:     schema.TypeSet,
@@ -95,7 +90,10 @@ func resourceAwsDocDBGlobalCluster() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"engine"},
-				RequiredWith:  []string{"force_destroy"},
+			},
+			"status": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"storage_encrypted": {
 				Type:     schema.TypeBool,
@@ -239,7 +237,6 @@ func resourceAwsDocDBGlobalClusterUpdate(ctx context.Context, d *schema.Resource
 func resourceAwsDocDBGlobalClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).docdbconn
 
-	if d.Get("force_destroy").(bool) {
 		for _, globalClusterMemberRaw := range d.Get("global_cluster_members").(*schema.Set).List() {
 			globalClusterMember, ok := globalClusterMemberRaw.(map[string]interface{})
 
@@ -272,7 +269,6 @@ func resourceAwsDocDBGlobalClusterDelete(ctx context.Context, d *schema.Resource
 				return diag.FromErr(fmt.Errorf("error waiting for DocDB Cluster (%s) removal from DocDB Global Cluster (%s): %w", dbClusterArn, d.Id(), err))
 			}
 		}
-	}
 
 	input := &docdb.DeleteGlobalClusterInput{
 		GlobalClusterIdentifier: aws.String(d.Id()),

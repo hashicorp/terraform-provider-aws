@@ -4,11 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"log"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/docdb"
@@ -96,6 +97,7 @@ func resourceAwsDocDBCluster() *schema.Resource {
 			"global_cluster_identifier": {
 				Type:     schema.TypeString,
 				Optional: true,
+				ValidateFunc:  validateDocDBGlobalCusterIdentifier,
 			},
 
 			"reader_endpoint": {
