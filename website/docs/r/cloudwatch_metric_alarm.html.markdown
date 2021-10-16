@@ -245,7 +245,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-CloudWatch Metric Alarm can be imported using the `alarm_name`, e.g.
+CloudWatch Metric Alarm can be imported using the `alarm_name`, e.g.,
 
 ```
 $ terraform import aws_cloudwatch_metric_alarm.test alarm-12345

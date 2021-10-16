@@ -93,7 +93,7 @@ configuration options:
 
 ## Import
 
-`aws_neptune_event_subscription` can be imported by using the event subscription name, e.g.
+`aws_neptune_event_subscription` can be imported by using the event subscription name, e.g.,
 
 ```
 $ terraform import aws_neptune_event_subscription.example my-event-subscription

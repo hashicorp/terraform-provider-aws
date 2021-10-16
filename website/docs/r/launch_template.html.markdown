@@ -167,7 +167,7 @@ Each `block_device_mappings` supports the following:
 * `no_device` - Suppresses the specified device included in the AMI's block device mapping.
 * `virtual_name` - The [Instance Store Device
   Name](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/InstanceStorage.html#InstanceStoreDeviceNames)
-  (e.g. `"ephemeral0"`).
+  (e.g., `"ephemeral0"`).
 
 The `ebs` block supports the following:
 
@@ -180,7 +180,7 @@ The `ebs` block supports the following:
 * `kms_key_id` - The ARN of the AWS Key Management Service (AWS KMS) customer master key (CMK) to use when creating the encrypted volume.
  `encrypted` must be set to `true` when this is set.
 * `snapshot_id` - The Snapshot ID to mount.
-* `throughput` - The throughput to provision for a `gp3` volume in MiB/s (specified as an integer, e.g. 500), with a maximum of 1,000 MiB/s.
+* `throughput` - The throughput to provision for a `gp3` volume in MiB/s (specified as an integer, e.g., 500), with a maximum of 1,000 MiB/s.
 * `volume_size` - The size of the volume in gigabytes.
 * `volume_type` - The volume type. Can be `standard`, `gp2`, `gp3`, `io1`, `io2`, `sc1` or `st1` (Default: `gp2`).
 
@@ -357,7 +357,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Launch Templates can be imported using the `id`, e.g.
+Launch Templates can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_launch_template.web lt-12345678

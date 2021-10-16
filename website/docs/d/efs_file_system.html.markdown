@@ -33,7 +33,7 @@ data "aws_efs_file_system" "by_tag" {
 
 The following arguments are supported:
 
-* `file_system_id` - (Optional) The ID that identifies the file system (e.g. fs-ccfc0d65).
+* `file_system_id` - (Optional) The ID that identifies the file system (e.g., fs-ccfc0d65).
 * `creation_token` - (Optional) Restricts the list to the file system with this creation token.
 * `tags` - (Optional) Restricts the list to the file system with these tags.
 

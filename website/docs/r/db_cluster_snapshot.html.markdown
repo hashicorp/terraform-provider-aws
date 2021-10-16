@@ -53,7 +53,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_db_cluster_snapshot` can be imported by using the cluster snapshot identifier, e.g.
+`aws_db_cluster_snapshot` can be imported by using the cluster snapshot identifier, e.g.,
 
 ```
 $ terraform import aws_db_cluster_snapshot.example my-cluster-snapshot

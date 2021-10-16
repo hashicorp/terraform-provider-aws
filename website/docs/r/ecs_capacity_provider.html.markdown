@@ -74,7 +74,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-ECS Capacity Providers can be imported using the `name`, e.g.
+ECS Capacity Providers can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_ecs_capacity_provider.example example

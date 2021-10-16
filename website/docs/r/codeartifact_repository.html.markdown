@@ -95,7 +95,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-CodeArtifact Repository can be imported using the CodeArtifact Repository ARN, e.g.
+CodeArtifact Repository can be imported using the CodeArtifact Repository ARN, e.g.,
 
 ```
 $ terraform import aws_codeartifact_repository.example arn:aws:codeartifact:us-west-2:012345678912:repository/tf-acc-test-6968272603913957763/tf-acc-test-6968272603913957763

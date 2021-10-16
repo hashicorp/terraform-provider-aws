@@ -217,7 +217,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-CodePipelines can be imported using the name, e.g.
+CodePipelines can be imported using the name, e.g.,
 
 ```
 $ terraform import aws_codepipeline.foo example

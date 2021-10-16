@@ -530,7 +530,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-S3 bucket can be imported using the `bucket`, e.g.
+S3 bucket can be imported using the `bucket`, e.g.,
 
 ```
 $ terraform import aws_s3_bucket.bucket bucket-name

@@ -111,7 +111,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Glue Classifiers can be imported using their name, e.g.
+Glue Classifiers can be imported using their name, e.g.,
 
 ```
 $ terraform import aws_glue_classifier.MyClassifier MyClassifier

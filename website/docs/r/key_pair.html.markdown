@@ -49,7 +49,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Key Pairs can be imported using the `key_name`, e.g.
+Key Pairs can be imported using the `key_name`, e.g.,
 
 ```
 $ terraform import aws_key_pair.deployer deployer-key

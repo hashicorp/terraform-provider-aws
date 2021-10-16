@@ -23,7 +23,7 @@ Please note: We take Terraform's security and our users' trust very seriously. I
 ## Quick Starts
 
 - [Using the provider](https://www.terraform.io/docs/providers/aws/index.html)
-- [Provider development](docs/DEVELOPMENT.md)
+- [Provider development](docs/contributing)
 
 ## Documentation
 
@@ -37,10 +37,10 @@ Our roadmap for expanding support in Terraform for AWS resources can be found in
 
 ## Frequently Asked Questions
 
-Responses to our most frequently asked questions can be found in our [FAQ](docs/FAQ.md )
+Responses to our most frequently asked questions can be found in our [FAQ](docs/contributing/faq.md )
 
 ## Contributing
 
 The Terraform AWS Provider is the work of thousands of contributors. We appreciate your help!
 
-To contribute, please read the contribution guidelines: [Contributing to Terraform - AWS Provider](docs/CONTRIBUTING.md)
+To contribute, please read the contribution guidelines: [Contributing to Terraform - AWS Provider](docs/contributing)

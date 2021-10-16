@@ -157,7 +157,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Endpoints can be imported using the `endpoint_id`, e.g.
+Endpoints can be imported using the `endpoint_id`, e.g.,
 
 ```
 $ terraform import aws_dms_endpoint.test test-dms-endpoint-tf
