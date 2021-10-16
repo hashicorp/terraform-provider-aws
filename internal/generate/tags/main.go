@@ -18,11 +18,12 @@ import (
 const filename = `tags_gen.go`
 
 var (
-	getTag           = flag.String("GetTag", "", "whether to generate GetTag")
-	listTags         = flag.String("ListTags", "", "whether to generate ListTags")
-	serviceTagsMap   = flag.String("ServiceTagsMap", "", "whether to generate service tags for map")
-	serviceTagsSlice = flag.String("ServiceTagsSlice", "", "whether to generate service tags for slice")
-	updateTags       = flag.String("UpdateTags", "", "whether to generate UpdateTags")
+	getTag             = flag.Bool("GetTag", false, "whether to generate GetTag")
+	listTags           = flag.Bool("ListTags", false, "whether to generate ListTags")
+	serviceTagsMap     = flag.Bool("ServiceTagsMap", false, "whether to generate service tags for map")
+	serviceTagsSlice   = flag.Bool("ServiceTagsSlice", false, "whether to generate service tags for slice")
+	untagInNeedTagType = flag.Bool("UntagInNeedTagType", false, "UntagInNeedTagType")
+	updateTags         = flag.Bool("UpdateTags", false, "whether to generate UpdateTags")
 
 	listTagsInFiltIDName  = flag.String("ListTagsInFiltIDName", "", "listTagsInFiltIDName")
 	listTagsInIDElem      = flag.String("ListTagsInIDElem", "ResourceArn", "listTagsInIDElem")
@@ -45,7 +46,6 @@ var (
 	tagTypeValElem        = flag.String("TagTypeValElem", "Value", "tagTypeValElem")
 	untagInCustomVal      = flag.String("UntagInCustomVal", "", "untagInCustomVal")
 	untagInNeedTagKeyType = flag.String("UntagInNeedTagKeyType", "", "untagInNeedTagKeyType")
-	untagInNeedTagType    = flag.String("UntagInNeedTagType", "", "untagInNeedTagType")
 	untagInTagsElem       = flag.String("UntagInTagsElem", "TagKeys", "untagInTagsElem")
 	untagOp               = flag.String("UntagOp", "UntagResource", "untagOp")
 
@@ -64,6 +64,11 @@ type TemplateData struct {
 	AWSService     string
 	ClientType     string
 	ServicePackage string
+
+	FmtPkg          bool
+	HelperSchemaPkg bool
+	StrConvPkg      bool
+	TfResourcePkg   bool
 
 	ListTagsInFiltIDName    string
 	ListTagsInIDElem        string
@@ -91,7 +96,7 @@ type TemplateData struct {
 	TagTypeValElem          string
 	UntagInCustomVal        string
 	UntagInNeedTagKeyType   string
-	UntagInNeedTagType      string
+	UntagInNeedTagType      bool
 	UntagInTagsElem         string
 	UntagOp                 string
 }
@@ -127,6 +132,11 @@ func main() {
 		ClientType:     clientType,
 		ServicePackage: servicePackage,
 
+		FmtPkg:          *updateTags,
+		HelperSchemaPkg: awsService == "autoscaling",
+		StrConvPkg:      awsService == "autoscaling",
+		TfResourcePkg:   *getTag,
+
 		ListTagsInFiltIDName:    *listTagsInFiltIDName,
 		ListTagsInIDElem:        *listTagsInIDElem,
 		ListTagsInIDNeedSlice:   *listTagsInIDNeedSlice,
@@ -157,27 +167,32 @@ func main() {
 		UntagOp:                 *untagOp,
 	}
 
-	if *getTag != "" || *listTags != "" || *serviceTagsMap != "" || *serviceTagsSlice != "" || *updateTags != "" {
+	if *getTag || *listTags || *serviceTagsMap || *serviceTagsSlice || *updateTags {
+		// If you intend to only generate Tags and KeyValueTags helper methods,
+		// the corresponding aws-go-sdk service package does not need to be imported
+		if !*getTag && !*listTags && !*serviceTagsSlice && !*updateTags {
+			templateData.AWSService = ""
+		}
 		writeTemplate(headerBody, "header", templateData)
 	}
 
-	if *getTag != "" {
+	if *getTag {
 		writeTemplate(gettagBody, "gettag", templateData)
 	}
 
-	if *listTags != "" {
+	if *listTags {
 		writeTemplate(listtagsBody, "listtags", templateData)
 	}
 
-	if *serviceTagsMap != "" {
+	if *serviceTagsMap {
 		writeTemplate(servicetagsmapBody, "servicetagsmap", templateData)
 	}
 
-	if *serviceTagsSlice != "" {
+	if *serviceTagsSlice {
 		writeTemplate(servicetagssliceBody, "servicetagsslice", templateData)
 	}
 
-	if *updateTags != "" {
+	if *updateTags {
 		writeTemplate(updatetagsBody, "updatetags", templateData)
 	}
 }
@@ -220,16 +235,31 @@ var headerBody = `
 package {{ .ServicePackage }}
 
 import (
+	{{- if .FmtPkg }}
 	"fmt"
+	{{- end }}
+	{{- if .StrConvPkg }}
+	"strconv"
+	{{- end }}
 
 	"github.com/aws/aws-sdk-go/aws"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	{{- if .AWSService }}
 	"github.com/aws/aws-sdk-go/service/{{ .AWSService }}"
+	{{- if ne .AWSService .TagPackage }}
+	"github.com/aws/aws-sdk-go/service/{{ .TagPackage }}"
+	{{- end }}
+	{{- end }}
+	{{- if .HelperSchemaPkg }}
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	{{- end }}
 	{{- if .ParentNotFoundErrCode }}
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	{{- end }}
-	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	{{- if .TfResourcePkg }}
     "github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	{{- end }}
 )
 
 `

@@ -1,5 +1,5 @@
-//go:generate go run -tags generate ../../generate/tagresource/main.go
-//go:generate go run -tags generate ../../generate/tags/main.go -GetTag=yes -ListTags=yes -ListTagsOp=ListTagsOfResource -ServiceTagsSlice=yes -UpdateTags=yes -ParentNotFoundErrCode=ResourceNotFoundException
+//go:generate go run ../../generate/tagresource/main.go
+//go:generate go run ../../generate/tags/main.go -GetTag -ListTags -ListTagsOp=ListTagsOfResource -ServiceTagsSlice -UpdateTags -ParentNotFoundErrCode=ResourceNotFoundException
 // ONLY generate directives and package declaration! Do not add anything else to this file.
 
 package dynamodb
