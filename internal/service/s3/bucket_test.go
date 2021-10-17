@@ -3,6 +3,7 @@ package s3_test
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"log"
 	"reflect"
 	"regexp"
@@ -319,14 +320,15 @@ func TestAccS3Bucket_Basic_namePrefix(t *testing.T) {
 				Config: testAccBucketConfig_namePrefix,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(resourceName),
-					resource.TestMatchResourceAttr(resourceName, "bucket", regexp.MustCompile("^tf-test-")),
+					create.TestCheckResourceAttrNameFromPrefix(resourceName, "bucket", "tf-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, "bucket_prefix", "tf-test-prefix-"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "acl", "bucket_prefix"},
+				ImportStateVerifyIgnore: []string{"force_destroy", "acl"},
 			},
 		},
 	})
@@ -345,13 +347,15 @@ func TestAccS3Bucket_Basic_generatedName(t *testing.T) {
 				Config: testAccBucketConfig_generatedName,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(resourceName),
+					create.TestCheckResourceAttrNameGenerated(resourceName, "bucket"),
+					resource.TestCheckResourceAttr(resourceName, "bucket_prefix", "terraform-"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "acl", "bucket_prefix"},
+				ImportStateVerifyIgnore: []string{"force_destroy", "acl"},
 			},
 		},
 	})
@@ -4724,12 +4728,14 @@ resource "aws_s3_bucket" "test" {
 
 const testAccBucketConfig_namePrefix = `
 resource "aws_s3_bucket" "test" {
-  bucket_prefix = "tf-test-"
+  bucket_prefix = "tf-test-prefix-"
 }
 `
 
 const testAccBucketConfig_generatedName = `
 resource "aws_s3_bucket" "test" {
-  bucket_prefix = "tf-test-"
+  tags = {
+    Name = "tf-test"
+  }
 }
 `

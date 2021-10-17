@@ -631,15 +631,11 @@ func resourceBucketCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3Conn
 
 	// Get the bucket and acl
-	var bucket string
-	if v, ok := d.GetOk("bucket"); ok {
-		bucket = v.(string)
-	} else if v, ok := d.GetOk("bucket_prefix"); ok {
-		bucket = resource.PrefixedUniqueId(v.(string))
-	} else {
-		bucket = resource.UniqueId()
-	}
+	bucket := create.Name(d.Get("bucket").(string), d.Get("bucket_prefix").(string))
 	d.Set("bucket", bucket)
+	if _, ok := d.GetOk("bucket_prefix"); !ok {
+		d.Set("bucket_prefix", create.NamePrefixFromName(bucket))
+	}
 
 	log.Printf("[DEBUG] S3 bucket create: %s", bucket)
 
@@ -846,6 +842,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 	// In the import case, we won't have this
 	if _, ok := d.GetOk("bucket"); !ok {
 		d.Set("bucket", d.Id())
+		d.Set("bucket_prefix", create.NamePrefixFromName(d.Id()))
 	}
 
 	d.Set("bucket_domain_name", meta.(*conns.AWSClient).PartitionHostname(fmt.Sprintf("%s.s3", d.Get("bucket").(string))))
