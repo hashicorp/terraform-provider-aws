@@ -95,9 +95,9 @@ func resourceAwsDocDBCluster() *schema.Resource {
 			},
 
 			"global_cluster_identifier": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc:  validateDocDBGlobalCusterIdentifier,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validateDocDBGlobalCusterIdentifier,
 			},
 
 			"reader_endpoint": {

@@ -289,7 +289,6 @@ func validateDocDBGlobalCusterIdentifier(v interface{}, k string) (ws []string, 
 	return
 }
 
-
 func validateDocDBIdentifier(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if !regexp.MustCompile(`^[0-9a-z-]+$`).MatchString(value) {

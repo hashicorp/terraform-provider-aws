@@ -51,7 +51,7 @@ func resourceAwsDocDBGlobalCluster() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"source_db_cluster_identifier"},
-				ValidateFunc: validateDocDBEngine(),
+				ValidateFunc:  validateDocDBEngine(),
 			},
 			"engine_version": {
 				Type:     schema.TypeString,
@@ -59,10 +59,10 @@ func resourceAwsDocDBGlobalCluster() *schema.Resource {
 				Computed: true,
 			},
 			"global_cluster_identifier": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc:  validateDocDBGlobalCusterIdentifier,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validateDocDBGlobalCusterIdentifier,
 			},
 			"global_cluster_members": {
 				Type:     schema.TypeSet,
@@ -237,38 +237,38 @@ func resourceAwsDocDBGlobalClusterUpdate(ctx context.Context, d *schema.Resource
 func resourceAwsDocDBGlobalClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).docdbconn
 
-		for _, globalClusterMemberRaw := range d.Get("global_cluster_members").(*schema.Set).List() {
-			globalClusterMember, ok := globalClusterMemberRaw.(map[string]interface{})
+	for _, globalClusterMemberRaw := range d.Get("global_cluster_members").(*schema.Set).List() {
+		globalClusterMember, ok := globalClusterMemberRaw.(map[string]interface{})
 
-			if !ok {
-				continue
-			}
-
-			dbClusterArn, ok := globalClusterMember["db_cluster_arn"].(string)
-
-			if !ok {
-				continue
-			}
-
-			input := &docdb.RemoveFromGlobalClusterInput{
-				DbClusterIdentifier:     aws.String(dbClusterArn),
-				GlobalClusterIdentifier: aws.String(d.Id()),
-			}
-
-			_, err := conn.RemoveFromGlobalClusterWithContext(ctx, input)
-
-			if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "is not found in global cluster") {
-				continue
-			}
-
-			if err != nil {
-				return diag.FromErr(fmt.Errorf("error removing DocDB Cluster (%s) from Global Cluster (%s): %w", dbClusterArn, d.Id(), err))
-			}
-
-			if err := waitForDocDBGlobalClusterRemoval(ctx, conn, dbClusterArn); err != nil {
-				return diag.FromErr(fmt.Errorf("error waiting for DocDB Cluster (%s) removal from DocDB Global Cluster (%s): %w", dbClusterArn, d.Id(), err))
-			}
+		if !ok {
+			continue
 		}
+
+		dbClusterArn, ok := globalClusterMember["db_cluster_arn"].(string)
+
+		if !ok {
+			continue
+		}
+
+		input := &docdb.RemoveFromGlobalClusterInput{
+			DbClusterIdentifier:     aws.String(dbClusterArn),
+			GlobalClusterIdentifier: aws.String(d.Id()),
+		}
+
+		_, err := conn.RemoveFromGlobalClusterWithContext(ctx, input)
+
+		if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "is not found in global cluster") {
+			continue
+		}
+
+		if err != nil {
+			return diag.FromErr(fmt.Errorf("error removing DocDB Cluster (%s) from Global Cluster (%s): %w", dbClusterArn, d.Id(), err))
+		}
+
+		if err := waitForDocDBGlobalClusterRemoval(ctx, conn, dbClusterArn); err != nil {
+			return diag.FromErr(fmt.Errorf("error waiting for DocDB Cluster (%s) removal from DocDB Global Cluster (%s): %w", dbClusterArn, d.Id(), err))
+		}
+	}
 
 	input := &docdb.DeleteGlobalClusterInput{
 		GlobalClusterIdentifier: aws.String(d.Id()),
