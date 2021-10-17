@@ -7,7 +7,7 @@ import (
 )
 
 // This list is copied from
-// http://docs.aws.amazon.com/general/latest/gr/rande.html#s3_website_region_endpoints
+// https://docs.aws.amazon.com/general/latest/gr/s3.html#s3_region
 // It currently cannot be generated from the API json.
 // See https://docs.amazonaws.cn/en_us/general/latest/gr/rande.html#s3_website_region_endpoints
 // See https://docs.aws.amazon.com/pt_br/govcloud-us/latest/ug-east/using-govcloud-endpoints.html
@@ -22,6 +22,7 @@ var hostedZoneIDsMap = map[string]string{
 	endpoints.ApSoutheast1RegionID: "Z3O0J2DXBE1FTB",
 	endpoints.ApSoutheast2RegionID: "Z1WCIGYICN2BYD",
 	endpoints.CaCentral1RegionID:   "Z1QDHH18159H29",
+	endpoints.CnNorthwest1RegionID: "Z282HJ1KT0DH03",
 	endpoints.EuCentral1RegionID:   "Z21DNDUVLTQW6Q",
 	endpoints.EuNorth1RegionID:     "Z3BAZG2TWCNX0D",
 	endpoints.EuSouth1RegionID:     "Z3IXVV8C73GIO3",
