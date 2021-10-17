@@ -118,6 +118,38 @@ func TestAccEC2RouteTableDataSource_main(t *testing.T) {
 	})
 }
 
+func TestAccEC2RouteTableDataSource_fsxRouteAndTag(t *testing.T) {
+	datasourceName := "data.aws_route_table.test"
+	snResourceName := "aws_subnet.test"
+	snResource2Name := "aws_subnet.test2"
+	rtResourceName := "aws_route_table.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	destinationCidr := "10.2.0.0/16"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckRouteTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRouteTableFSxRouteAndTagDataSourceConfig(rName, destinationCidr),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(datasourceName, "route_table_id", rtResourceName, "id"),
+					acctest.MatchResourceAttrRegionalARN(datasourceName, "arn", "ec2", regexp.MustCompile(`route-table/.+$`)),
+					acctest.CheckResourceAttrAccountID(datasourceName, "owner_id"),
+					resource.TestCheckResourceAttr(datasourceName, "routes.#", "1"),
+					resource.TestCheckResourceAttr(datasourceName, "associations.#", "2"),
+					acctest.CheckListHasSomeElementAttrPair(datasourceName, "associations", "subnet_id", snResourceName, "id"),
+					acctest.CheckListHasSomeElementAttrPair(datasourceName, "associations", "subnet_id", snResource2Name, "id"),
+					resource.TestCheckResourceAttr(datasourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(datasourceName, "tags.Name", rName),
+				),
+			},
+		},
+	})
+}
+
 func testAccRouteTableBasicDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
@@ -222,4 +254,94 @@ data "aws_route_table" "test" {
   }
 }
 `, rName)
+}
+
+func testAccRouteTableFSxRouteAndTagDataSourceConfig(rName, destinationCidr string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
+		fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  cidr_block = "10.1.1.0/24"
+  vpc_id     = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[0]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test2" {
+  cidr_block = "10.1.2.0/24"
+  vpc_id     = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[1]
+  
+  tags = {
+	  Name = %[1]q
+  }
+}
+
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  route {
+    cidr_block     = %[2]q
+    gateway_id = aws_internet_gateway.test.id
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route_table_association" "a" {
+  subnet_id      = aws_subnet.test.id
+  route_table_id = aws_route_table.test.id
+}
+  
+resource "aws_route_table_association" "b" {
+  subnet_id      = aws_subnet.test2.id
+  route_table_id = aws_route_table.test.id
+}
+
+resource "aws_fsx_ontap_file_system" "test" {
+  storage_capacity    = 1024
+  subnet_ids          = [aws_subnet.test.id, aws_subnet.test2.id,]
+  deployment_type     = "MULTI_AZ_1"
+  throughput_capacity = 512
+  preferred_subnet_id = aws_subnet.test.id
+  route_table_ids = [aws_route_table.test.id]
+  depends_on = [
+    aws_route_table.test,
+    aws_subnet.test,
+    aws_subnet.test2
+    ]
+}
+
+data "aws_route_table" "test" {
+  route_table_id = aws_route_table.test.id
+  
+  depends_on = [
+    aws_route_table.test,
+    aws_route_table_association.a,
+	aws_route_table_association.b,
+	aws_fsx_ontap_file_system.test
+	]
+}
+`, rName, destinationCidr))
 }

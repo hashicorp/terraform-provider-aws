@@ -240,11 +240,16 @@ func resourceRouteTableRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting propagating_vgws: %w", err)
 	}
 
-	if err := d.Set("route", flattenEc2Routes(routeTable.Routes)); err != nil {
+	if err := d.Set("route", flattenEc2Routes(routeTable.Routes, meta)); err != nil {
 		return fmt.Errorf("error setting route: %w", err)
 	}
 
-	tags := KeyValueTags(routeTable.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	//Ignore the FSx service tag
+	mTag := make(map[string]string)
+	mTag["AmazonFSx"] = "ManagedByAmazonFSx"
+	fsxTag := tftags.New(mTag)
+
+	tags := KeyValueTags(routeTable.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Ignore(fsxTag)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -849,7 +854,7 @@ func flattenEc2Route(apiObject *ec2.Route) map[string]interface{} {
 	return tfMap
 }
 
-func flattenEc2Routes(apiObjects []*ec2.Route) []interface{} {
+func flattenEc2Routes(apiObjects []*ec2.Route, meta interface{}) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -873,6 +878,48 @@ func flattenEc2Routes(apiObjects []*ec2.Route) []interface{} {
 			// Skipping because VPC endpoint routes are handled separately
 			// See aws_vpc_endpoint
 			continue
+		}
+
+		if apiObject.NetworkInterfaceId != nil {
+
+			conn := meta.(*conns.AWSClient).EC2Conn
+
+			describe_network_interfaces_request := &ec2.DescribeNetworkInterfacesInput{
+				NetworkInterfaceIds: []*string{apiObject.NetworkInterfaceId},
+			}
+
+			describeResp, err := conn.DescribeNetworkInterfaces(describe_network_interfaces_request)
+
+			if err != nil {
+				if tfawserr.ErrMessageContains(err, "InvalidNetworkInterfaceID.NotFound", "") {
+					log.Printf("Network Interface %s not found", err)
+				} else {
+					log.Printf("Error occurred checking network inteface for route: %s", err)
+				}
+			}
+
+			if len(describeResp.NetworkInterfaces) != 1 {
+				log.Printf("Unable to find ENI: %s", describeResp.NetworkInterfaces)
+			} else {
+
+				eni := describeResp.NetworkInterfaces[0]
+
+				if eni.Attachment != nil {
+
+					owner := aws.StringValue(eni.OwnerId)
+					iowner := aws.StringValue(eni.Attachment.InstanceOwnerId)
+
+					log.Printf("[DEBUG] ENI owner: %s, ENI Instane Owner %s", owner, iowner)
+
+					if iowner != "" && iowner != owner {
+						//Skipping cross account ENI for AWS services
+						log.Printf("Found Cross Account ENI: %s. Skipping", aws.StringValue(describeResp.NetworkInterfaces[0].NetworkInterfaceId))
+						log.Printf("[DEBUG] Cross Account ENI Details: \n %s", describeResp.NetworkInterfaces[0])
+						continue
+					}
+				}
+			}
+
 		}
 
 		tfList = append(tfList, flattenEc2Route(apiObject))
