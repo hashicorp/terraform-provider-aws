@@ -50,6 +50,7 @@ func resourceAwsDocDBGlobalCluster() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
+				AtLeastOneOf:  []string{"engine", "source_db_cluster_identifier"},
 				ConflictsWith: []string{"source_db_cluster_identifier"},
 				ValidateFunc:  validateDocDBEngine(),
 			},
@@ -89,6 +90,7 @@ func resourceAwsDocDBGlobalCluster() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
+				AtLeastOneOf: []string{"engine", "source_db_cluster_identifier"},
 				ConflictsWith: []string{"engine"},
 			},
 			"status": {
@@ -134,13 +136,6 @@ func resourceAwsDocDBGlobalClusterCreate(ctx context.Context, d *schema.Resource
 
 	if v, ok := d.GetOk("storage_encrypted"); ok {
 		input.StorageEncrypted = aws.Bool(v.(bool))
-	}
-
-	// Prevent the following error and keep the previous default,
-	// since we cannot have Engine default after adding SourceDBClusterIdentifier:
-	// InvalidParameterValue: When creating standalone global cluster, value for engineName should be specified
-	if input.Engine == nil && input.SourceDBClusterIdentifier == nil {
-		input.Engine = aws.String("docdb")
 	}
 
 	output, err := conn.CreateGlobalClusterWithContext(ctx, input)
