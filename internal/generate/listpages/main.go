@@ -26,7 +26,7 @@ const (
 var (
 	listOps   = flag.String("ListOps", "", "ListOps")
 	paginator = flag.String("Paginator", "NextToken", "name of the pagination token field")
-	export    = flag.String("Export", "", "whether to export the list functions")
+	export    = flag.Bool("Export", false, "whether to export the list functions")
 )
 
 func usage() {
@@ -87,7 +87,7 @@ func main() {
 	})
 
 	for _, functionName := range functions {
-		g.generateFunction(functionName, *export != "")
+		g.generateFunction(functionName, *export)
 	}
 
 	src := g.format()

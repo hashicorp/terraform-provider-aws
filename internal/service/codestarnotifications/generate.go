@@ -1,4 +1,4 @@
-//go:generate go run -tags generate ../../generate/tags/main.go -ListTags=yes -ListTagsInIDElem=Arn -ServiceTagsMap=yes -TagInIDElem=Arn -UpdateTags=yes
+//go:generate go run ../../generate/tags/main.go -ListTags -ListTagsInIDElem=Arn -ServiceTagsMap -TagInIDElem=Arn -UpdateTags
 // ONLY generate directives and package declaration! Do not add anything else to this file.
 
 package codestarnotifications
