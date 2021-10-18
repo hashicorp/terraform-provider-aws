@@ -131,8 +131,10 @@ func TestRuleParseResourceID(t *testing.T) {
 			ExpectedPart1: "test",
 		},
 		{
-			TestName:      "ARN event bus",
-			InputID:       tfcloudwatchevents.RuleCreateResourceID("arn:aws:events:us-east-2:123456789012:event-bus/default", "TestRule"),
+			TestName: "ARN event bus",
+			//lintignore:AWSAT003
+			InputID: tfcloudwatchevents.RuleCreateResourceID("arn:aws:events:us-east-2:123456789012:event-bus/default", "TestRule"),
+			//lintignore:AWSAT003
 			ExpectedPart0: "arn:aws:events:us-east-2:123456789012:event-bus/default",
 			ExpectedPart1: "TestRule",
 		},
@@ -295,8 +297,8 @@ func TestTargetParseImportID(t *testing.T) {
 		},
 		{
 			TestName:      "ARN event bus",
-			InputID:       "arn:aws:events:us-east-2:123456789012:event-bus/default/TestRule/TestTarget",
-			ExpectedPart0: "arn:aws:events:us-east-2:123456789012:event-bus/default",
+			InputID:       "arn:aws:events:us-east-2:123456789012:event-bus/default/TestRule/TestTarget", //lintignore:AWSAT003
+			ExpectedPart0: "arn:aws:events:us-east-2:123456789012:event-bus/default",                     //lintignore:AWSAT003
 			ExpectedPart1: "TestRule",
 			ExpectedPart2: "TestTarget",
 		},
