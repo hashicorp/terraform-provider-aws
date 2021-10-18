@@ -1388,7 +1388,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 				}
 
 				if actual, expected := aws.StringValue(application.ApplicationStatus), kinesisanalyticsv2.ApplicationStatusRunning; actual == expected {
-					input.RunConfigurationUpdate = expandKinesisAnalyticsV2RunConfigurationUpdate(d.Get("application_configuration.0.run_configuration").([]interface{}))
+					input.RunConfigurationUpdate = expandRunConfigurationUpdate(d.Get("application_configuration.0.run_configuration").([]interface{}))
 
 					updateApplication = true
 				}
@@ -2497,7 +2497,7 @@ func expandKinesisAnalyticsV2VpcConfigurationUpdate(vVpcConfiguration []interfac
 	return vpcConfigurationUpdate
 }
 
-func expandKinesisAnalyticsV2RunConfigurationUpdate(vRunConfigurationUpdate []interface{}) *kinesisanalyticsv2.RunConfigurationUpdate {
+func expandRunConfigurationUpdate(vRunConfigurationUpdate []interface{}) *kinesisanalyticsv2.RunConfigurationUpdate {
 	if len(vRunConfigurationUpdate) == 0 || vRunConfigurationUpdate[0] == nil {
 		return nil
 	}
@@ -2537,7 +2537,7 @@ func expandKinesisAnalyticsV2RunConfigurationUpdate(vRunConfigurationUpdate []in
 	return runConfigurationUpdate
 }
 
-func flattenKinesisAnalyticsV2ApplicationConfigurationDescription(applicationConfigurationDescription *kinesisanalyticsv2.ApplicationConfigurationDescription) []interface{} {
+func flattenApplicationConfigurationDescription(applicationConfigurationDescription *kinesisanalyticsv2.ApplicationConfigurationDescription) []interface{} {
 	if applicationConfigurationDescription == nil {
 		return []interface{}{}
 	}
