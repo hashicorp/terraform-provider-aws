@@ -993,7 +993,7 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("status", application.ApplicationStatus)
 	d.Set("version_id", application.ApplicationVersionId)
 
-	if err := d.Set("application_configuration", flattenKinesisAnalyticsV2ApplicationConfigurationDescription(application.ApplicationConfigurationDescription)); err != nil {
+	if err := d.Set("application_configuration", flattenApplicationConfigurationDescription(application.ApplicationConfigurationDescription)); err != nil {
 		return fmt.Errorf("error setting application_configuration: %w", err)
 	}
 
@@ -1381,7 +1381,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 
 			if d.HasChange("application_configuration.0.run_configuration") {
-				application, err := finder.ApplicationDetailByName(conn, applicationName)
+				application, err := FindApplicationDetailByName(conn, applicationName)
 
 				if err != nil {
 					return fmt.Errorf("error reading Kinesis Analytics v2 Application (%s): %w", applicationName, err)

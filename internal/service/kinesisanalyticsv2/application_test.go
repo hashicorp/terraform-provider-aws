@@ -3921,7 +3921,7 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationVPC_update(t *testing.T)
 	})
 }
 
-func TestAccAWSKinesisAnalyticsV2Application_RunConfiguration_Update(t *testing.T) {
+func TestAccKinesisAnalyticsV2Application_RunConfiguration_Update(t *testing.T) {
 	var v kinesisanalyticsv2.ApplicationDetail
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
@@ -3931,13 +3931,13 @@ func TestAccAWSKinesisAnalyticsV2Application_RunConfiguration_Update(t *testing.
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.testAccPreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, kinesisanalyticsv2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigStartSnapshotableFlinkApplication(rName, "RESTORE_FROM_LATEST_SNAPSHOT", "", false),
+				Config: testAccApplicationConfigStartSnapshotableFlinkApplication(rName, "RESTORE_FROM_LATEST_SNAPSHOT", "", false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
@@ -4000,7 +4000,7 @@ func TestAccAWSKinesisAnalyticsV2Application_RunConfiguration_Update(t *testing.
 				),
 			},
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigStartSnapshotableFlinkApplication(rName, "RESTORE_FROM_CUSTOM_SNAPSHOT", rName, true),
+				Config: testAccApplicationConfigStartSnapshotableFlinkApplication(rName, "RESTORE_FROM_CUSTOM_SNAPSHOT", rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
@@ -4071,14 +4071,6 @@ func TestAccAWSKinesisAnalyticsV2Application_RunConfiguration_Update(t *testing.
 			},
 		},
 	})
-}
-
-func TestAccAWSKinesisAnalyticsV2Application_RunConfiguration_FlinkRunConfiguration_Update(t *testing.T) {
-
-}
-
-func TestAccAWSKinesisAnalyticsV2Application_RunConfiguration_FlinkRunConfiguration_Delete(t *testing.T) {
-
 }
 
 func testAccCheckKinesisAnalyticsV2ApplicationDestroy(s *terraform.State) error {
@@ -4799,7 +4791,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 `, rName))
 }
 
-func testAccKinesisAnalyticsV2ApplicationConfigStartSnapshotableFlinkApplication(rName, applicationRestoreType, snapshotName string, allowNonRestoredState bool) string {
+func testAccApplicationConfigStartSnapshotableFlinkApplication(rName, applicationRestoreType, snapshotName string, allowNonRestoredState bool) string {
 	if snapshotName == "" {
 		snapshotName = "null"
 	} else {
