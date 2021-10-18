@@ -1665,10 +1665,10 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_s3_bucket_object" "object" {
-  bucket       = aws_s3_bucket.test.bucket
-  key          = "test-key"
-  source       = %[2]q
-  source_hash  = filemd5(%[2]q)
+  bucket      = aws_s3_bucket.test.bucket
+  key         = "test-key"
+  source      = %[2]q
+  source_hash = filemd5(%[2]q)
 }
 `, rName, source)
 }
