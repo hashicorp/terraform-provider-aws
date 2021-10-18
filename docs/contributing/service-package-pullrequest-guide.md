@@ -68,7 +68,7 @@ with the pull request author.
 
    ```
      func resourceAws{ResourceName}() =>
-     func Resource{ResourceName}() 
+     func Resource{ResourceName}()
    ```
 
    **Resource Generic Functions**
