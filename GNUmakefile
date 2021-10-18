@@ -85,9 +85,11 @@ docscheck:
 lint: golangci-lint providerlint importlint
 
 golangci-lint:
+	@echo "==> Checking source code with golangci-lint..."
 	@golangci-lint run ./$(PKG_NAME)/...
 
 providerlint:
+	@echo "==> Checking source code with providerlint..."
 	@providerlint \
 		-c 1 \
 		-AT001.ignored-filename-suffixes=_data_source_test.go \
@@ -114,6 +116,7 @@ providerlint:
 		./$(PKG_NAME)/service/... ./$(PKG_NAME)/provider/...
 
 importlint:
+	@echo "==> Checking source code with importlint..."
 	@impi --local . --scheme stdThirdPartyLocal ./$(PKG_NAME)/...
 
 tools:
