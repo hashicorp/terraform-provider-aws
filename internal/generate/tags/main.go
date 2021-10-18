@@ -22,7 +22,7 @@ var (
 	listTags           = flag.Bool("ListTags", false, "whether to generate ListTags")
 	serviceTagsMap     = flag.Bool("ServiceTagsMap", false, "whether to generate service tags for map")
 	serviceTagsSlice   = flag.Bool("ServiceTagsSlice", false, "whether to generate service tags for slice")
-	untagInNeedTagType = flag.Bool("UntagInNeedTagType", false, "UntagInNeedTagType")
+	untagInNeedTagType = flag.Bool("UntagInNeedTagType", false, "whether Untag input needs tag type")
 	updateTags         = flag.Bool("UpdateTags", false, "whether to generate UpdateTags")
 
 	listTagsInFiltIDName  = flag.String("ListTagsInFiltIDName", "", "listTagsInFiltIDName")
@@ -65,11 +65,6 @@ type TemplateData struct {
 	ClientType     string
 	ServicePackage string
 
-	FmtPkg          bool
-	HelperSchemaPkg bool
-	StrConvPkg      bool
-	TfResourcePkg   bool
-
 	ListTagsInFiltIDName    string
 	ListTagsInIDElem        string
 	ListTagsInIDNeedSlice   string
@@ -99,6 +94,13 @@ type TemplateData struct {
 	UntagInNeedTagType      bool
 	UntagInTagsElem         string
 	UntagOp                 string
+
+	// The following are specific to writing import paths in the `headerBody`;
+	// to include the package, set the corresponding field's value to true
+	FmtPkg          bool
+	HelperSchemaPkg bool
+	StrConvPkg      bool
+	TfResourcePkg   bool
 }
 
 func main() {
@@ -169,7 +171,7 @@ func main() {
 
 	if *getTag || *listTags || *serviceTagsMap || *serviceTagsSlice || *updateTags {
 		// If you intend to only generate Tags and KeyValueTags helper methods,
-		// the corresponding aws-go-sdk service package does not need to be imported
+		// the corresponding aws-sdk-go	 service package does not need to be imported
 		if !*getTag && !*listTags && !*serviceTagsSlice && !*updateTags {
 			templateData.AWSService = ""
 		}
