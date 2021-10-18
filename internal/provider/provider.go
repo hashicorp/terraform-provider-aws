@@ -1483,6 +1483,8 @@ func Provider() *schema.Provider {
 			"aws_s3control_bucket":                         s3control.ResourceBucket(),
 			"aws_s3control_bucket_lifecycle_configuration": s3control.ResourceBucketLifecycleConfiguration(),
 			"aws_s3control_bucket_policy":                  s3control.ResourceBucketPolicy(),
+			"aws_s3_multi_region_access_point":             s3control.ResourceMultiRegionAccessPoint(),
+			"aws_s3_multi_region_access_point_policy":      s3control.ResourceMultiRegionAccessPointPolicy(),
 
 			"aws_s3outposts_endpoint": s3outposts.ResourceEndpoint(),
 
