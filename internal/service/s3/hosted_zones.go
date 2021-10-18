@@ -6,12 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 )
 
-// This list is copied from
-// https://docs.aws.amazon.com/general/latest/gr/s3.html#s3_region
-// It currently cannot be generated from the API json.
-// See https://docs.amazonaws.cn/en_us/general/latest/gr/rande.html#s3_website_region_endpoints
-// See https://docs.aws.amazon.com/pt_br/govcloud-us/latest/ug-east/using-govcloud-endpoints.html
-// See https://docs.aws.amazon.com/govcloud-us/latest/UserGuide/using-govcloud-endpoints.html
+// See https://docs.aws.amazon.com/general/latest/gr/s3.html#s3_website_region_endpoints.
 var hostedZoneIDsMap = map[string]string{
 	endpoints.AfSouth1RegionID:     "Z11KHD8FBVPUYU",
 	endpoints.ApEast1RegionID:      "ZNB98KWMFR0R6",
