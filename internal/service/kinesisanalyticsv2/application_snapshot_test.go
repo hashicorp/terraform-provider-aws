@@ -24,12 +24,12 @@ func TestAccKinesisAnalyticsV2ApplicationSnapshot_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationSnapshotDestroy,
+		CheckDestroy: testAccCheckApplicationSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationSnapshotConfig(rName),
+				Config: testAccApplicationSnapshotConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationSnapshotExists(resourceName, &v),
+					testAccCheckApplicationSnapshotExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "application_name", applicationResourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "application_version_id", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "snapshot_creation_timestamp"),
@@ -54,12 +54,12 @@ func TestAccKinesisAnalyticsV2ApplicationSnapshot_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationSnapshotDestroy,
+		CheckDestroy: testAccCheckApplicationSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationSnapshotConfig(rName),
+				Config: testAccApplicationSnapshotConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationSnapshotExists(resourceName, &v),
+					testAccCheckApplicationSnapshotExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfkinesisanalyticsv2.ResourceApplicationSnapshot(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -78,12 +78,12 @@ func TestAccKinesisAnalyticsV2ApplicationSnapshot_Disappears_application(t *test
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationSnapshotDestroy,
+		CheckDestroy: testAccCheckApplicationSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationSnapshotConfig(rName),
+				Config: testAccApplicationSnapshotConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationSnapshotExists(resourceName, &v),
+					testAccCheckApplicationSnapshotExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfkinesisanalyticsv2.ResourceApplication(), applicationResourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -92,7 +92,7 @@ func TestAccKinesisAnalyticsV2ApplicationSnapshot_Disappears_application(t *test
 	})
 }
 
-func testAccCheckKinesisAnalyticsV2ApplicationSnapshotDestroy(s *terraform.State) error {
+func testAccCheckApplicationSnapshotDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisAnalyticsV2Conn
 
 	for _, rs := range s.RootModule().Resources {
@@ -115,7 +115,7 @@ func testAccCheckKinesisAnalyticsV2ApplicationSnapshotDestroy(s *terraform.State
 	return nil
 }
 
-func testAccCheckKinesisAnalyticsV2ApplicationSnapshotExists(n string, v *kinesisanalyticsv2.SnapshotDetails) resource.TestCheckFunc {
+func testAccCheckApplicationSnapshotExists(n string, v *kinesisanalyticsv2.SnapshotDetails) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -140,6 +140,6 @@ func testAccCheckKinesisAnalyticsV2ApplicationSnapshotExists(n string, v *kinesi
 	}
 }
 
-func testAccKinesisAnalyticsV2ApplicationSnapshotConfig(rName string) string {
-	return testAccKinesisAnalyticsV2ApplicationConfigStartSnapshotableFlinkApplication(rName, "SKIP_RESTORE_FROM_SNAPSHOT", "")
+func testAccApplicationSnapshotConfig(rName string) string {
+	return testAccApplicationConfigStartSnapshotableFlinkApplication(rName, "SKIP_RESTORE_FROM_SNAPSHOT", "", false)
 }

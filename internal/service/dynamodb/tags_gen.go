@@ -6,6 +6,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -38,6 +40,13 @@ func ListTags(conn *dynamodb.DynamoDB, identifier string) (tftags.KeyValueTags, 
 	}
 
 	output, err := conn.ListTagsOfResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return tftags.New(nil), err

@@ -83,7 +83,7 @@ func TestAccAutoScalingGroupDataSource_launchTemplate(t *testing.T) {
 // Lookup based on AutoScalingGroupName
 func testAccAutoScalingGroupDataResourceConfig(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		acctest.ConfigAvailableAZsNoOptIn(),
 		acctest.AvailableEC2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
 		fmt.Sprintf(`
@@ -125,7 +125,7 @@ resource "aws_launch_configuration" "data_source_aws_autoscaling_group_test" {
 
 func testAccAutoScalingGroupDataResourceConfig_launchTemplate() string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		acctest.ConfigAvailableAZsNoOptIn(),
 		acctest.AvailableEC2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
 		`

@@ -14,7 +14,7 @@ func DataSourceSubnets() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceSubnetsRead,
 		Schema: map[string]*schema.Schema{
-			"filter": dataSourceFiltersSchema(),
+			"filter": DataSourceFiltersSchema(),
 			"tags":   tftags.TagsSchemaComputed(),
 
 			"ids": {
@@ -39,7 +39,7 @@ func dataSourceSubnetsRead(d *schema.ResourceData, meta interface{}) error {
 
 	if filters, filtersOk := d.GetOk("filter"); filtersOk {
 		input.Filters = append(input.Filters,
-			buildFiltersDataSource(filters.(*schema.Set))...)
+			BuildFiltersDataSource(filters.(*schema.Set))...)
 	}
 
 	if len(input.Filters) == 0 {

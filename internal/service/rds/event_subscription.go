@@ -199,6 +199,7 @@ func resourceEventSubscriptionUpdate(d *schema.ResourceData, meta interface{}) e
 
 		if d.HasChange("event_categories") {
 			input.EventCategories = flex.ExpandStringSet(d.Get("event_categories").(*schema.Set))
+			input.SourceType = aws.String(d.Get("source_type").(string))
 		}
 
 		if d.HasChange("source_type") {

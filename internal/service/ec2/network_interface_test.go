@@ -717,7 +717,7 @@ resource "aws_network_interface" "test" {
 
 func testAccENIAttachmentConfig(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		testAccENIIPV4BaseConfig(rName),
 		fmt.Sprintf(`
@@ -762,7 +762,7 @@ resource "aws_network_interface" "test" {
 
 func testAccENIExternalAttachmentConfig(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		testAccENIIPV4BaseConfig(rName),
 		fmt.Sprintf(`
