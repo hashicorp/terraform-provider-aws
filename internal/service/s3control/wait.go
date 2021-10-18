@@ -1,6 +1,7 @@
 package s3control
 
 import (
+	"log"
 	"strconv"
 	"time"
 
@@ -85,6 +86,25 @@ func waitPublicAccessBlockConfigurationRestrictPublicBucketsUpdated(conn *s3cont
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*s3control.PublicAccessBlockConfiguration); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitS3MultiRegionAccessPointRequestSucceeded(conn *s3control.S3Control, accountId string, requestTokenArn string, timeout time.Duration) (*s3control.AsyncOperation, error) {
+	stateConf := &resource.StateChangeConf{
+		Target:     []string{RequestStatusSucceeded},
+		Timeout:    timeout,
+		Refresh:    statusMultiRegionAccessPointRequest(conn, accountId, requestTokenArn),
+		MinTimeout: 5 * time.Second,
+		Delay:      15 * time.Second, // Wait 15 secs before starting
+	}
+
+	log.Printf("[DEBUG] Waiting for S3 Multi-Region Access Point request (%s) to succeed", requestTokenArn)
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*s3control.AsyncOperation); ok {
 		return output, err
 	}
 
