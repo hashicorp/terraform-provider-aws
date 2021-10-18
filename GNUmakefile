@@ -92,7 +92,6 @@ providerlint:
 	@providerlint \
 		-c 1 \
 		-AT001.ignored-filename-suffixes=_data_source_test.go \
-		-AWSAT005=false \
 		-AWSAT006=false \
 		-AWSR002=false \
 		-AWSV001=false \

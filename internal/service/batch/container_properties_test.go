@@ -185,6 +185,7 @@ func TestEquivalentBatchContainerPropertiesJSON(t *testing.T) {
 		},
 		{
 			Name: "empty environment, mountPoints, ulimits, and volumes",
+			//lintignore:AWSAT005
 			ApiJson: `
 {
 	"image": "example:image",
@@ -199,6 +200,7 @@ func TestEquivalentBatchContainerPropertiesJSON(t *testing.T) {
 	"resourceRequirements": []
 }
 `,
+			//lintignore:AWSAT005
 			ConfigurationJson: `
 {
 	"command": ["start.py", "Ref::S3bucket", "Ref::S3key"],
@@ -212,6 +214,7 @@ func TestEquivalentBatchContainerPropertiesJSON(t *testing.T) {
 		},
 		{
 			Name: "empty command, logConfiguration.secretOptions, mountPoints, resourceRequirements, secrets, ulimits, volumes",
+			//lintignore:AWSAT003,AWSAT005
 			ApiJson: `
 {
 	"image": "123.dkr.ecr.us-east-1.amazonaws.com/my-app",
@@ -230,7 +233,8 @@ func TestEquivalentBatchContainerPropertiesJSON(t *testing.T) {
 	"resourceRequirements": [],
 	"secrets": []
 }
-`, //lintignore:AWSAT003
+`,
+			//lintignore:AWSAT003,AWSAT005
 			ConfigurationJson: `
 {
     "image": "123.dkr.ecr.us-east-1.amazonaws.com/my-app",
@@ -247,11 +251,12 @@ func TestEquivalentBatchContainerPropertiesJSON(t *testing.T) {
 		"logDriver": "awslogs"
 	}
 }
-`, //lintignore:AWSAT003
+`,
 			ExpectEquivalent: true,
 		},
 		{
 			Name: "no fargatePlatformConfiguration",
+			//lintignore:AWSAT003,AWSAT005
 			ApiJson: `
 {
 	"image": "123.dkr.ecr.us-east-1.amazonaws.com/my-app",
@@ -269,7 +274,8 @@ func TestEquivalentBatchContainerPropertiesJSON(t *testing.T) {
 		"platformVersion": "LATEST"
 	}
 }
-`, //lintignore:AWSAT003
+`,
+			//lintignore:AWSAT003,AWSAT005
 			ConfigurationJson: `
 {
 	"image": "123.dkr.ecr.us-east-1.amazonaws.com/my-app",
@@ -284,11 +290,12 @@ func TestEquivalentBatchContainerPropertiesJSON(t *testing.T) {
 	  }
 	]
 }
-`, //lintignore:AWSAT003
+`,
 			ExpectEquivalent: true,
 		},
 		{
 			Name: "empty linuxParameters.devices, linuxParameters.tmpfs, logConfiguration.options",
+			//lintignore:AWSAT003,AWSAT005
 			ApiJson: `
 {
 	"image": "123.dkr.ecr.us-east-1.amazonaws.com/my-app",
@@ -306,7 +313,8 @@ func TestEquivalentBatchContainerPropertiesJSON(t *testing.T) {
 		"options": {}
 	}
 }
-`, //lintignore:AWSAT003
+`,
+			//lintignore:AWSAT003,AWSAT005
 			ConfigurationJson: `
 {
 	"image": "123.dkr.ecr.us-east-1.amazonaws.com/my-app",
@@ -321,11 +329,12 @@ func TestEquivalentBatchContainerPropertiesJSON(t *testing.T) {
 		"logDriver": "awslogs"
 	}
 }
-`, //lintignore:AWSAT003
+`,
 			ExpectEquivalent: true,
 		},
 		{
 			Name: "empty linuxParameters.devices.permissions, linuxParameters.tmpfs.mountOptions",
+			//lintignore:AWSAT003,AWSAT005
 			ApiJson: `
 {
 	"image": "123.dkr.ecr.us-east-1.amazonaws.com/my-app",
@@ -347,7 +356,8 @@ func TestEquivalentBatchContainerPropertiesJSON(t *testing.T) {
 		}]
 	}
 }
-`, //lintignore:AWSAT003
+`,
+			//lintignore:AWSAT003,AWSAT005
 			ConfigurationJson: `
 {
 	"image": "123.dkr.ecr.us-east-1.amazonaws.com/my-app",
@@ -367,7 +377,7 @@ func TestEquivalentBatchContainerPropertiesJSON(t *testing.T) {
 		}]
 	}
 }
-`, //lintignore:AWSAT003
+`,
 			ExpectEquivalent: true,
 		},
 	}

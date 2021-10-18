@@ -50,17 +50,17 @@ func TestSubdirectoryFromLocationURI(t *testing.T) {
 		},
 		{
 			TestName:             "S3 Outposts ARN URI top level",
-			InputURI:             "s3://arn:aws:s3-outposts:eu-west-3:123456789012:outpost/op-YYYYYYYYYY/accesspoint/my-access-point/", //lintignore:AWSAT003
+			InputURI:             "s3://arn:aws:s3-outposts:eu-west-3:123456789012:outpost/op-YYYYYYYYYY/accesspoint/my-access-point/", //lintignore:AWSAT003,AWSAT005
 			ExpectedSubdirectory: "/",
 		},
 		{
 			TestName:             "S3 Outposts ARN URI one level",
-			InputURI:             "s3://arn:aws:s3-outposts:eu-west-3:123456789012:outpost/op-YYYYYYYYYY/accesspoint/my-access-point/my-folder-1/", //lintignore:AWSAT003
+			InputURI:             "s3://arn:aws:s3-outposts:eu-west-3:123456789012:outpost/op-YYYYYYYYYY/accesspoint/my-access-point/my-folder-1/", //lintignore:AWSAT003,AWSAT005
 			ExpectedSubdirectory: "/my-folder-1/",
 		},
 		{
 			TestName:             "S3 Outposts ARN URI two levels",
-			InputURI:             "s3://arn:aws:s3-outposts:eu-west-3:123456789012:outpost/op-YYYYYYYYYY/accesspoint/my-access-point/my-folder-1/my-folder-2", //lintignore:AWSAT003
+			InputURI:             "s3://arn:aws:s3-outposts:eu-west-3:123456789012:outpost/op-YYYYYYYYYY/accesspoint/my-access-point/my-folder-1/my-folder-2", //lintignore:AWSAT003,AWSAT005
 			ExpectedSubdirectory: "/my-folder-1/my-folder-2",
 		},
 		{

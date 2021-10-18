@@ -32,7 +32,7 @@ func validationErrorTest(t *testing.T, token string, expectedErr string) {
 
 func validationSuccessTest(t *testing.T, token string) {
 	t.Helper()
-	arn := "arn:aws:iam::123456789012:user/Alice"
+	arn := "arn:aws:iam::123456789012:user/Alice" //lintignore:AWSAT005
 	account := "123456789012"
 	userID := "Alice"
 	_, err := newVerifier(200, jsonResponse(arn, account, userID), nil).Verify(token)
@@ -211,13 +211,14 @@ func TestVerifyInvalidCanonicalARNError(t *testing.T) {
 }
 
 func TestVerifyInvalidUserIDError(t *testing.T) {
+	//lintignore:AWSAT005
 	_, err := newVerifier(200, jsonResponse("arn:aws:iam::123456789012:user/Alice", "123456789012", "not:vailid:userid"), nil).Verify(validToken)
 	errorContains(t, err, "malformed UserID")
 	assertSTSError(t, err)
 }
 
 func TestVerifyNoSession(t *testing.T) {
-	arn := "arn:aws:iam::123456789012:user/Alice"
+	arn := "arn:aws:iam::123456789012:user/Alice" //lintignore:AWSAT005
 	account := "123456789012"
 	userID := "Alice"
 	accessKeyID := "ASIABCDEFGHIJKLMNOPQ"
@@ -240,7 +241,7 @@ func TestVerifyNoSession(t *testing.T) {
 }
 
 func TestVerifySessionName(t *testing.T) {
-	arn := "arn:aws:iam::123456789012:user/Alice"
+	arn := "arn:aws:iam::123456789012:user/Alice" //lintignore:AWSAT005
 	account := "123456789012"
 	userID := "Alice"
 	session := "session-name"
@@ -257,8 +258,8 @@ func TestVerifySessionName(t *testing.T) {
 }
 
 func TestVerifyCanonicalARN(t *testing.T) {
-	arn := "arn:aws:sts::123456789012:assumed-role/Alice/extra"
-	canonicalARN := "arn:aws:iam::123456789012:role/Alice"
+	arn := "arn:aws:sts::123456789012:assumed-role/Alice/extra" //lintignore:AWSAT005
+	canonicalARN := "arn:aws:iam::123456789012:role/Alice"      //lintignore:AWSAT005
 	account := "123456789012"
 	userID := "Alice"
 	session := "session-name"
