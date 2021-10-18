@@ -91,6 +91,9 @@ golangci-lint:
 providerlint:
 	@providerlint \
 		-c 1 \
+		-AT001=false \
+		-AWSAT003=false \
+		-AWSAT005=false \
 		-AWSAT006=false \
 		-AWSR002=false \
 		-AWSV001=false \
@@ -111,7 +114,7 @@ providerlint:
 		-XR005=false \
 		-XS001=false \
 		-XS002=false \
-		./$(PKG_NAME)
+		./$(PKG_NAME)/service/... ./$(PKG_NAME)/provider/...
 
 importlint:
 	@impi --local . --scheme stdThirdPartyLocal ./$(PKG_NAME)/...
