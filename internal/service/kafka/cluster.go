@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kafka"
@@ -30,9 +29,9 @@ func ResourceCluster() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(120 * time.Minute),
-			Update: schema.DefaultTimeout(120 * time.Minute),
-			Delete: schema.DefaultTimeout(120 * time.Minute),
+			Create: schema.DefaultTimeout(clusterCreateDefaultTimeout),
+			Update: schema.DefaultTimeout(clusterUpdateDefaultTimeout),
+			Delete: schema.DefaultTimeout(clusterDeleteDefaultTimeout),
 		},
 
 		CustomizeDiff: customdiff.Sequence(
