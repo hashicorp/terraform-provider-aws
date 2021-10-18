@@ -48,6 +48,9 @@ var (
 	untagInNeedTagType    = flag.String("UntagInNeedTagType", "", "untagInNeedTagType")
 	untagInTagsElem       = flag.String("UntagInTagsElem", "TagKeys", "untagInTagsElem")
 	untagOp               = flag.String("UntagOp", "UntagResource", "untagOp")
+
+	parentNotFoundErrCode = flag.String("ParentNotFoundErrCode", "", "Parent 'NotFound' Error Code")
+	parentNotFoundErrMsg  = flag.String("ParentNotFoundErrMsg", "", "Parent 'NotFound' Error Message")
 )
 
 func usage() {
@@ -67,7 +70,8 @@ type TemplateData struct {
 	ListTagsInIDNeedSlice   string
 	ListTagsOp              string
 	ListTagsOutTagsElem     string
-	ParentNotFoundError     string
+	ParentNotFoundErrCode   string
+	ParentNotFoundErrMsg    string
 	RetryCreateOnNotFound   string
 	TagInCustomVal          string
 	TagInIDElem             string
@@ -128,6 +132,8 @@ func main() {
 		ListTagsInIDNeedSlice:   *listTagsInIDNeedSlice,
 		ListTagsOp:              *listTagsOp,
 		ListTagsOutTagsElem:     *listTagsOutTagsElem,
+		ParentNotFoundErrCode:   *parentNotFoundErrCode,
+		ParentNotFoundErrMsg:    *parentNotFoundErrMsg,
 		TagInCustomVal:          *tagInCustomVal,
 		TagInIDElem:             *tagInIDElem,
 		TagInIDNeedSlice:        *tagInIDNeedSlice,
@@ -218,6 +224,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/{{ .AWSService }}"
+	{{- if .ParentNotFoundErrCode }}
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	{{- end }}
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
     "github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -303,7 +313,21 @@ func ListTags(conn {{ .ClientType }}, identifier string{{ if .TagResTypeElem }},
 
 	output, err := conn.{{ .ListTagsOp }}(input)
 
-	{{ .ParentNotFoundError }}
+	{{ if and ( .ParentNotFoundErrCode ) ( .ParentNotFoundErrMsg ) }}
+			if tfawserr.ErrMessageContains(err, "{{ .ParentNotFoundErrCode }}", "{{ .ParentNotFoundErrMsg }}") {
+				return nil, &resource.NotFoundError{
+					LastError:   err,
+					LastRequest: input,
+				}
+			}
+	{{- else if ( .ParentNotFoundErrCode ) }}
+			if tfawserr.ErrCodeEquals(err, "{{ .ParentNotFoundErrCode }}") {
+				return nil, &resource.NotFoundError{
+					LastError:   err,
+					LastRequest: input,
+				}
+			}
+	{{- end }}
 
 	if err != nil {
 		return tftags.New(nil), err

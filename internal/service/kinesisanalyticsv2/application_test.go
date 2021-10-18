@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfkinesisanalyticsv2 "github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalyticsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-)
 
 func TestAccKinesisAnalyticsV2Application_basicFlinkApplication(t *testing.T) {
 	var v kinesisanalyticsv2.ApplicationDetail
@@ -25,12 +24,12 @@ func TestAccKinesisAnalyticsV2Application_basicFlinkApplication(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
+		CheckDestroy: testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigBasicFlinkApplication(rName, "FLINK-1_6"),
+				Config: testAccApplicationConfigBasicFlinkApplication(rName, "FLINK-1_6"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_snapshot_configuration.#", "1"),
@@ -70,9 +69,9 @@ func TestAccKinesisAnalyticsV2Application_basicFlinkApplication(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigBasicFlinkApplication(rName, "FLINK-1_8"),
+				Config: testAccApplicationConfigBasicFlinkApplication(rName, "FLINK-1_8"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_snapshot_configuration.#", "1"),
@@ -112,9 +111,9 @@ func TestAccKinesisAnalyticsV2Application_basicFlinkApplication(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigBasicFlinkApplication(rName, "FLINK-1_11"),
+				Config: testAccApplicationConfigBasicFlinkApplication(rName, "FLINK-1_11"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_snapshot_configuration.#", "1"),
@@ -172,12 +171,12 @@ func TestAccKinesisAnalyticsV2Application_basicSQLApplication(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
+		CheckDestroy: testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigBasicSQLApplication(rName),
+				Config: testAccApplicationConfigBasicSQLApplication(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "0"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
@@ -212,12 +211,12 @@ func TestAccKinesisAnalyticsV2Application_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
+		CheckDestroy: testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigBasicSQLApplication(rName),
+				Config: testAccApplicationConfigBasicSQLApplication(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfkinesisanalyticsv2.ResourceApplication(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -235,12 +234,12 @@ func TestAccKinesisAnalyticsV2Application_tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
+		CheckDestroy: testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigTags1(rName, "key1", "value1"),
+				Config: testAccApplicationConfigTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 					resource.TestCheckResourceAttr(resourceName, "version_id", "1"),
@@ -252,9 +251,9 @@ func TestAccKinesisAnalyticsV2Application_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccApplicationConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -262,9 +261,9 @@ func TestAccKinesisAnalyticsV2Application_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigTags1(rName, "key2", "value2"),
+				Config: testAccApplicationConfigTags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 					resource.TestCheckResourceAttr(resourceName, "version_id", "1"),
@@ -284,12 +283,12 @@ func TestAccKinesisAnalyticsV2Application_ApplicationCode_update(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
+		CheckDestroy: testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigApplicationCodeConfiguration(rName, "SELECT 1;\n"),
+				Config: testAccApplicationConfigApplicationCodeConfiguration(rName, "SELECT 1;\n"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
@@ -318,9 +317,9 @@ func TestAccKinesisAnalyticsV2Application_ApplicationCode_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigApplicationCodeConfiguration(rName, "SELECT 2;\n"),
+				Config: testAccApplicationConfigApplicationCodeConfiguration(rName, "SELECT 2;\n"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
@@ -368,12 +367,12 @@ func TestAccKinesisAnalyticsV2Application_CloudWatchLoggingOptions_add(t *testin
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
+		CheckDestroy: testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigBasicSQLApplication(rName),
+				Config: testAccApplicationConfigBasicSQLApplication(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "0"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
@@ -391,9 +390,9 @@ func TestAccKinesisAnalyticsV2Application_CloudWatchLoggingOptions_add(t *testin
 				),
 			},
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigCloudWatchLoggingOptions(rName, 0),
+				Config: testAccApplicationConfigCloudWatchLoggingOptions(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "0"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "1"),
@@ -431,12 +430,12 @@ func TestAccKinesisAnalyticsV2Application_CloudWatchLoggingOptions_delete(t *tes
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
+		CheckDestroy: testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigCloudWatchLoggingOptions(rName, 0),
+				Config: testAccApplicationConfigCloudWatchLoggingOptions(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "0"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "1"),
@@ -455,9 +454,9 @@ func TestAccKinesisAnalyticsV2Application_CloudWatchLoggingOptions_delete(t *tes
 				),
 			},
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigBasicSQLApplication(rName),
+				Config: testAccApplicationConfigBasicSQLApplication(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "0"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
@@ -495,12 +494,12 @@ func TestAccKinesisAnalyticsV2Application_CloudWatchLoggingOptions_update(t *tes
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
+		CheckDestroy: testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigCloudWatchLoggingOptions(rName, 0),
+				Config: testAccApplicationConfigCloudWatchLoggingOptions(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "0"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "1"),
@@ -519,9 +518,9 @@ func TestAccKinesisAnalyticsV2Application_CloudWatchLoggingOptions_update(t *tes
 				),
 			},
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigCloudWatchLoggingOptions(rName, 1),
+				Config: testAccApplicationConfigCloudWatchLoggingOptions(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "0"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "1"),
@@ -560,12 +559,12 @@ func TestAccKinesisAnalyticsV2Application_EnvironmentProperties_update(t *testin
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
+		CheckDestroy: testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigEnvironmentProperties(rName),
+				Config: testAccApplicationConfigEnvironmentProperties(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
@@ -624,9 +623,9 @@ func TestAccKinesisAnalyticsV2Application_EnvironmentProperties_update(t *testin
 				),
 			},
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigEnvironmentPropertiesUpdated(rName),
+				Config: testAccApplicationConfigEnvironmentPropertiesUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
@@ -693,9 +692,9 @@ func TestAccKinesisAnalyticsV2Application_EnvironmentProperties_update(t *testin
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigEnvironmentPropertiesNotSpecified(rName),
+				Config: testAccApplicationConfigEnvironmentPropertiesNotSpecified(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
@@ -757,12 +756,12 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplication_update(t *testing.T) 
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
+		CheckDestroy: testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigFlinkApplicationConfiguration(rName, ""),
+				Config: testAccApplicationConfigFlinkApplicationConfiguration(rName, ""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
@@ -808,9 +807,9 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplication_update(t *testing.T) 
 				),
 			},
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigFlinkApplicationConfigurationUpdated(rName, ""),
+				Config: testAccApplicationConfigFlinkApplicationConfigurationUpdated(rName, ""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
@@ -878,12 +877,12 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplicationEnvironmentProperties_
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
+		CheckDestroy: testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigFlinkApplicationConfigurationEnvironmentProperties(rName),
+				Config: testAccApplicationConfigFlinkApplicationConfigurationEnvironmentProperties(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
@@ -943,9 +942,9 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplicationEnvironmentProperties_
 				),
 			},
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigFlinkApplicationConfigurationEnvironmentPropertiesUpdated(rName),
+				Config: testAccApplicationConfigFlinkApplicationConfigurationEnvironmentPropertiesUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
@@ -1030,12 +1029,12 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplication_restoreFromSnapshot(t
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
+		CheckDestroy: testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfigStartSnapshotableFlinkApplication(rName, "RESTORE_FROM_LATEST_SNAPSHOT", "", false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
@@ -1097,9 +1096,9 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplication_restoreFromSnapshot(t
 				),
 			},
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigStopSnapshotableFlinkApplication(rName, false),
+				Config: testAccApplicationConfigStopSnapshotableFlinkApplication(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
@@ -1164,7 +1163,7 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplication_restoreFromSnapshot(t
 			{
 				Config: testAccApplicationConfigStartSnapshotableFlinkApplication(rName, "RESTORE_FROM_CUSTOM_SNAPSHOT", rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
@@ -1226,9 +1225,9 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplication_restoreFromSnapshot(t
 				),
 			},
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigStopSnapshotableFlinkApplication(rName, true),
+				Config: testAccApplicationConfigStopSnapshotableFlinkApplication(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
@@ -1300,12 +1299,12 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplicationStartApplication_onCre
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
+		CheckDestroy: testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigFlinkApplicationConfiguration(rName, "true"),
+				Config: testAccApplicationConfigFlinkApplicationConfiguration(rName, "true"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
@@ -1376,12 +1375,12 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplicationStartApplication_onUpd
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
+		CheckDestroy: testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigFlinkApplicationConfiguration(rName, "false"),
+				Config: testAccApplicationConfigFlinkApplicationConfiguration(rName, "false"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
@@ -1433,9 +1432,9 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplicationStartApplication_onUpd
 				ImportStateVerifyIgnore: []string{"start_application"},
 			},
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigFlinkApplicationConfiguration(rName, "true"),
+				Config: testAccApplicationConfigFlinkApplicationConfiguration(rName, "true"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
@@ -1485,9 +1484,9 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplicationStartApplication_onUpd
 				),
 			},
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigFlinkApplicationConfiguration(rName, "false"),
+				Config: testAccApplicationConfigFlinkApplicationConfiguration(rName, "false"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
@@ -1549,12 +1548,12 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplication_updateRunning(t *test
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
+		CheckDestroy: testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigFlinkApplicationConfiguration(rName, "true"),
+				Config: testAccApplicationConfigFlinkApplicationConfiguration(rName, "true"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
@@ -1610,9 +1609,9 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplication_updateRunning(t *test
 				ImportStateVerifyIgnore: []string{"start_application"},
 			},
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigFlinkApplicationConfigurationUpdated(rName, "true"),
+				Config: testAccApplicationConfigFlinkApplicationConfigurationUpdated(rName, "true"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
@@ -1676,12 +1675,12 @@ func TestAccKinesisAnalyticsV2Application_ServiceExecutionRole_update(t *testing
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
+		CheckDestroy: testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigBasicSQLApplicationPlusDescription(rName),
+				Config: testAccApplicationConfigBasicSQLApplicationPlusDescription(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "0"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
@@ -1699,9 +1698,9 @@ func TestAccKinesisAnalyticsV2Application_ServiceExecutionRole_update(t *testing
 				),
 			},
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigBasicSQLApplicationServiceExecutionRoleUpdated(rName),
+				Config: testAccApplicationConfigBasicSQLApplicationServiceExecutionRoleUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "0"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
@@ -1738,12 +1737,12 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationInput_add(t *testing.T) 
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
+		CheckDestroy: testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigSQLApplicationConfigurationNotSpecified(rName),
+				Config: testAccApplicationConfigSQLApplicationConfigurationNotSpecified(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
@@ -1772,9 +1771,9 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationInput_add(t *testing.T) 
 				),
 			},
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigSQLApplicationConfigurationInput(rName),
+				Config: testAccApplicationConfigSQLApplicationConfigurationInput(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
@@ -1849,12 +1848,12 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationInput_update(t *testing.
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
+		CheckDestroy: testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigSQLApplicationConfigurationInput(rName),
+				Config: testAccApplicationConfigSQLApplicationConfigurationInput(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
@@ -1909,9 +1908,9 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationInput_update(t *testing.
 				),
 			},
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigSQLApplicationConfigurationInputUpdated(rName),
+				Config: testAccApplicationConfigSQLApplicationConfigurationInputUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
@@ -1989,12 +1988,12 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationInputProcessing_add(t *t
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
+		CheckDestroy: testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigSQLApplicationConfigurationInput(rName),
+				Config: testAccApplicationConfigSQLApplicationConfigurationInput(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
@@ -2049,9 +2048,9 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationInputProcessing_add(t *t
 				),
 			},
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigSQLApplicationConfigurationInputProcessingConfiguration(rName, 0),
+				Config: testAccApplicationConfigSQLApplicationConfigurationInputProcessingConfiguration(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
@@ -2128,12 +2127,12 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationInputProcessing_delete(t
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
+		CheckDestroy: testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigSQLApplicationConfigurationInputProcessingConfiguration(rName, 0),
+				Config: testAccApplicationConfigSQLApplicationConfigurationInputProcessingConfiguration(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
@@ -2190,9 +2189,9 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationInputProcessing_delete(t
 				),
 			},
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigSQLApplicationConfigurationInput(rName),
+				Config: testAccApplicationConfigSQLApplicationConfigurationInput(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
@@ -2268,12 +2267,12 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationInputProcessing_update(t
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
+		CheckDestroy: testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigSQLApplicationConfigurationInputProcessingConfiguration(rName, 0),
+				Config: testAccApplicationConfigSQLApplicationConfigurationInputProcessingConfiguration(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
@@ -2330,9 +2329,9 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationInputProcessing_update(t
 				),
 			},
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigSQLApplicationConfigurationInputProcessingConfiguration(rName, 1),
+				Config: testAccApplicationConfigSQLApplicationConfigurationInputProcessingConfiguration(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
@@ -2413,12 +2412,12 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationMultiple_update(t *testi
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
+		CheckDestroy: testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigSQLApplicationConfigurationMultiple(rName, "", ""),
+				Config: testAccApplicationConfigSQLApplicationConfigurationMultiple(rName, "", ""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
@@ -2486,9 +2485,9 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationMultiple_update(t *testi
 				),
 			},
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigSQLApplicationConfigurationMultipleUpdated(rName, "", ""),
+				Config: testAccApplicationConfigSQLApplicationConfigurationMultipleUpdated(rName, "", ""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
@@ -2604,12 +2603,12 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationOutput_update(t *testing
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
+		CheckDestroy: testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigSQLApplicationConfigurationOutput(rName),
+				Config: testAccApplicationConfigSQLApplicationConfigurationOutput(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
@@ -2650,9 +2649,9 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationOutput_update(t *testing
 				),
 			},
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigSQLApplicationConfigurationOutputUpdated(rName),
+				Config: testAccApplicationConfigSQLApplicationConfigurationOutputUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
@@ -2707,9 +2706,9 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationOutput_update(t *testing
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigSQLApplicationConfigurationNotSpecified(rName),
+				Config: testAccApplicationConfigSQLApplicationConfigurationNotSpecified(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
@@ -2752,12 +2751,12 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationReferenceDataSource_add(
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
+		CheckDestroy: testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigSQLApplicationConfigurationNotSpecified(rName),
+				Config: testAccApplicationConfigSQLApplicationConfigurationNotSpecified(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
@@ -2786,9 +2785,9 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationReferenceDataSource_add(
 				),
 			},
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigSQLApplicationConfigurationReferenceDataSource(rName),
+				Config: testAccApplicationConfigSQLApplicationConfigurationReferenceDataSource(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
@@ -2856,12 +2855,12 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationReferenceDataSource_dele
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
+		CheckDestroy: testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigSQLApplicationConfigurationReferenceDataSource(rName),
+				Config: testAccApplicationConfigSQLApplicationConfigurationReferenceDataSource(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
@@ -2910,9 +2909,9 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationReferenceDataSource_dele
 				),
 			},
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigSQLApplicationConfigurationNotSpecified(rName),
+				Config: testAccApplicationConfigSQLApplicationConfigurationNotSpecified(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
@@ -2960,12 +2959,12 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationReferenceDataSource_upda
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
+		CheckDestroy: testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigSQLApplicationConfigurationReferenceDataSource(rName),
+				Config: testAccApplicationConfigSQLApplicationConfigurationReferenceDataSource(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
@@ -3014,9 +3013,9 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationReferenceDataSource_upda
 				),
 			},
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigSQLApplicationConfigurationReferenceDataSourceUpdated(rName),
+				Config: testAccApplicationConfigSQLApplicationConfigurationReferenceDataSourceUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
@@ -3087,12 +3086,12 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationStartApplication_onCreat
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
+		CheckDestroy: testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigSQLApplicationConfigurationStartApplication(rName, true),
+				Config: testAccApplicationConfigSQLApplicationConfigurationStartApplication(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
@@ -3167,12 +3166,12 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationStartApplication_onUpdat
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
+		CheckDestroy: testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigSQLApplicationConfigurationStartApplication(rName, false),
+				Config: testAccApplicationConfigSQLApplicationConfigurationStartApplication(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
@@ -3233,9 +3232,9 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationStartApplication_onUpdat
 				ImportStateVerifyIgnore: []string{"start_application"},
 			},
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigSQLApplicationConfigurationStartApplication(rName, true),
+				Config: testAccApplicationConfigSQLApplicationConfigurationStartApplication(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
@@ -3290,9 +3289,9 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationStartApplication_onUpdat
 				),
 			},
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigSQLApplicationConfigurationStartApplication(rName, false),
+				Config: testAccApplicationConfigSQLApplicationConfigurationStartApplication(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
@@ -3366,12 +3365,12 @@ func TestAccKinesisAnalyticsV2Application_SQLApplication_updateRunning(t *testin
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
+		CheckDestroy: testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigSQLApplicationConfigurationMultiple(rName, "true", "LAST_STOPPED_POINT"),
+				Config: testAccApplicationConfigSQLApplicationConfigurationMultiple(rName, "true", "LAST_STOPPED_POINT"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
@@ -3439,9 +3438,9 @@ func TestAccKinesisAnalyticsV2Application_SQLApplication_updateRunning(t *testin
 				),
 			},
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigSQLApplicationConfigurationMultipleUpdated(rName, "true", "LAST_STOPPED_POINT"),
+				Config: testAccApplicationConfigSQLApplicationConfigurationMultipleUpdated(rName, "true", "LAST_STOPPED_POINT"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
@@ -3558,12 +3557,12 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationVPC_add(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
+		CheckDestroy: testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigVPCConfigurationNotSpecified(rName),
+				Config: testAccApplicationConfigVPCConfigurationNotSpecified(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
@@ -3609,9 +3608,9 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationVPC_add(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigVPCConfiguration(rName),
+				Config: testAccApplicationConfigVPCConfiguration(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
@@ -3682,12 +3681,12 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationVPC_delete(t *testing.T)
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
+		CheckDestroy: testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigVPCConfiguration(rName),
+				Config: testAccApplicationConfigVPCConfiguration(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
@@ -3737,9 +3736,9 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationVPC_delete(t *testing.T)
 				),
 			},
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigVPCConfigurationNotSpecified(rName),
+				Config: testAccApplicationConfigVPCConfigurationNotSpecified(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
@@ -3806,12 +3805,12 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationVPC_update(t *testing.T)
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
+		CheckDestroy: testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigVPCConfiguration(rName),
+				Config: testAccApplicationConfigVPCConfiguration(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
@@ -3861,9 +3860,9 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationVPC_update(t *testing.T)
 				),
 			},
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigVPCConfigurationUpdated(rName),
+				Config: testAccApplicationConfigVPCConfigurationUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
@@ -4073,7 +4072,7 @@ func TestAccKinesisAnalyticsV2Application_RunConfiguration_Update(t *testing.T) 
 	})
 }
 
-func testAccCheckKinesisAnalyticsV2ApplicationDestroy(s *terraform.State) error {
+func testAccCheckApplicationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisAnalyticsV2Conn
 
 	for _, rs := range s.RootModule().Resources {
@@ -4096,7 +4095,7 @@ func testAccCheckKinesisAnalyticsV2ApplicationDestroy(s *terraform.State) error 
 	return nil
 }
 
-func testAccCheckKinesisAnalyticsV2ApplicationExists(n string, v *kinesisanalyticsv2.ApplicationDetail) resource.TestCheckFunc {
+func testAccCheckApplicationExists(n string, v *kinesisanalyticsv2.ApplicationDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -4137,7 +4136,7 @@ func testAccPreCheck(t *testing.T) {
 	}
 }
 
-func testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName string) string {
+func testAccApplicationConfigBaseServiceExecutionIamRole(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   count = 2
@@ -4212,7 +4211,7 @@ resource "aws_iam_role_policy_attachment" "test" {
 `, rName)
 }
 
-func testAccKinesisAnalyticsV2ApplicationConfigBaseFlinkApplication(rName string) string {
+func testAccApplicationConfigBaseFlinkApplication(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -4228,7 +4227,7 @@ resource "aws_s3_bucket_object" "test" {
 `, rName)
 }
 
-func testAccKinesisAnalyticsV2ApplicationConfigBaseSQLApplication(rName string) string {
+func testAccApplicationConfigBaseSQLApplication(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -4261,7 +4260,7 @@ resource "aws_kinesis_stream" "test" {
 `, rName)
 }
 
-func testAccKinesisAnalyticsV2ApplicationConfigBaseVPC(rName string) string {
+func testAccApplicationConfigBaseVPC(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
@@ -4297,9 +4296,9 @@ resource "aws_security_group" "test" {
 `, rName))
 }
 
-func testAccKinesisAnalyticsV2ApplicationConfigBasicFlinkApplication(rName, runtimeEnvironment string) string {
+func testAccApplicationConfigBasicFlinkApplication(rName, runtimeEnvironment string) string {
 	return acctest.ConfigCompose(
-		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
@@ -4309,9 +4308,9 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 `, rName, runtimeEnvironment))
 }
 
-func testAccKinesisAnalyticsV2ApplicationConfigBasicSQLApplication(rName string) string {
+func testAccApplicationConfigBasicSQLApplication(rName string) string {
 	return acctest.ConfigCompose(
-		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
@@ -4321,9 +4320,9 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 `, rName))
 }
 
-func testAccKinesisAnalyticsV2ApplicationConfigBasicSQLApplicationPlusDescription(rName string) string {
+func testAccApplicationConfigBasicSQLApplicationPlusDescription(rName string) string {
 	return acctest.ConfigCompose(
-		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
@@ -4334,9 +4333,9 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 `, rName))
 }
 
-func testAccKinesisAnalyticsV2ApplicationConfigBasicSQLApplicationServiceExecutionRoleUpdated(rName string) string {
+func testAccApplicationConfigBasicSQLApplicationServiceExecutionRoleUpdated(rName string) string {
 	return acctest.ConfigCompose(
-		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
@@ -4347,9 +4346,9 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 `, rName))
 }
 
-func testAccKinesisAnalyticsV2ApplicationConfigApplicationCodeConfiguration(rName, textContent string) string {
+func testAccApplicationConfigApplicationCodeConfiguration(rName, textContent string) string {
 	return acctest.ConfigCompose(
-		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
@@ -4369,9 +4368,9 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 `, rName, textContent))
 }
 
-func testAccKinesisAnalyticsV2ApplicationConfigCloudWatchLoggingOptions(rName string, streamIndex int) string {
+func testAccApplicationConfigCloudWatchLoggingOptions(rName string, streamIndex int) string {
 	return acctest.ConfigCompose(
-		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
 		fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
   name = %[1]q
@@ -4396,10 +4395,10 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 `, rName, streamIndex))
 }
 
-func testAccKinesisAnalyticsV2ApplicationConfigEnvironmentProperties(rName string) string {
+func testAccApplicationConfigEnvironmentProperties(rName string) string {
 	return acctest.ConfigCompose(
-		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName),
-		testAccKinesisAnalyticsV2ApplicationConfigBaseFlinkApplication(rName),
+		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfigBaseFlinkApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
@@ -4443,10 +4442,10 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 `, rName))
 }
 
-func testAccKinesisAnalyticsV2ApplicationConfigEnvironmentPropertiesUpdated(rName string) string {
+func testAccApplicationConfigEnvironmentPropertiesUpdated(rName string) string {
 	return acctest.ConfigCompose(
-		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName),
-		testAccKinesisAnalyticsV2ApplicationConfigBaseFlinkApplication(rName),
+		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfigBaseFlinkApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
@@ -4496,10 +4495,10 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 `, rName))
 }
 
-func testAccKinesisAnalyticsV2ApplicationConfigEnvironmentPropertiesNotSpecified(rName string) string {
+func testAccApplicationConfigEnvironmentPropertiesNotSpecified(rName string) string {
 	return acctest.ConfigCompose(
-		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName),
-		testAccKinesisAnalyticsV2ApplicationConfigBaseFlinkApplication(rName),
+		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfigBaseFlinkApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
@@ -4522,14 +4521,14 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 `, rName))
 }
 
-func testAccKinesisAnalyticsV2ApplicationConfigFlinkApplicationConfiguration(rName, startApplication string) string {
+func testAccApplicationConfigFlinkApplicationConfiguration(rName, startApplication string) string {
 	if startApplication == "" {
 		startApplication = "null"
 	}
 
 	return acctest.ConfigCompose(
-		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName),
-		testAccKinesisAnalyticsV2ApplicationConfigBaseFlinkApplication(rName),
+		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfigBaseFlinkApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
@@ -4578,14 +4577,14 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 `, rName, startApplication))
 }
 
-func testAccKinesisAnalyticsV2ApplicationConfigFlinkApplicationConfigurationUpdated(rName, startApplication string) string {
+func testAccApplicationConfigFlinkApplicationConfigurationUpdated(rName, startApplication string) string {
 	if startApplication == "" {
 		startApplication = "null"
 	}
 
 	return acctest.ConfigCompose(
-		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName),
-		testAccKinesisAnalyticsV2ApplicationConfigBaseFlinkApplication(rName),
+		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfigBaseFlinkApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
@@ -4634,10 +4633,10 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 `, rName, startApplication))
 }
 
-func testAccKinesisAnalyticsV2ApplicationConfigFlinkApplicationConfigurationEnvironmentProperties(rName string) string {
+func testAccApplicationConfigFlinkApplicationConfigurationEnvironmentProperties(rName string) string {
 	return acctest.ConfigCompose(
-		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName),
-		testAccKinesisAnalyticsV2ApplicationConfigBaseFlinkApplication(rName),
+		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfigBaseFlinkApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
@@ -4709,10 +4708,10 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 `, rName))
 }
 
-func testAccKinesisAnalyticsV2ApplicationConfigFlinkApplicationConfigurationEnvironmentPropertiesUpdated(rName string) string {
+func testAccApplicationConfigFlinkApplicationConfigurationEnvironmentPropertiesUpdated(rName string) string {
 	return acctest.ConfigCompose(
-		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName),
-		testAccKinesisAnalyticsV2ApplicationConfigBaseFlinkApplication(rName),
+		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfigBaseFlinkApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
@@ -4799,7 +4798,7 @@ func testAccApplicationConfigStartSnapshotableFlinkApplication(rName, applicatio
 	}
 
 	return acctest.ConfigCompose(
-		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
 		fmt.Sprintf(`
 data "aws_region" "current" {}
 
@@ -4887,9 +4886,9 @@ resource "aws_kinesisanalyticsv2_application_snapshot" "test" {
 `, rName, applicationRestoreType, snapshotName, allowNonRestoredState))
 }
 
-func testAccKinesisAnalyticsV2ApplicationConfigStopSnapshotableFlinkApplication(rName string, forceStop bool) string {
+func testAccApplicationConfigStopSnapshotableFlinkApplication(rName string, forceStop bool) string {
 	return acctest.ConfigCompose(
-		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
 		fmt.Sprintf(`
 data "aws_region" "current" {}
 
@@ -4968,10 +4967,10 @@ resource "aws_kinesisanalyticsv2_application_snapshot" "test" {
 `, rName, forceStop))
 }
 
-func testAccKinesisAnalyticsV2ApplicationConfigSQLApplicationConfigurationNotSpecified(rName string) string {
+func testAccApplicationConfigSQLApplicationConfigurationNotSpecified(rName string) string {
 	return acctest.ConfigCompose(
-		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName),
-		testAccKinesisAnalyticsV2ApplicationConfigBaseSQLApplication(rName),
+		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfigBaseSQLApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
@@ -4991,10 +4990,10 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 `, rName))
 }
 
-func testAccKinesisAnalyticsV2ApplicationConfigSQLApplicationConfigurationInput(rName string) string {
+func testAccApplicationConfigSQLApplicationConfigurationInput(rName string) string {
 	return acctest.ConfigCompose(
-		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName),
-		testAccKinesisAnalyticsV2ApplicationConfigBaseSQLApplication(rName),
+		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfigBaseSQLApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
@@ -5042,10 +5041,10 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 `, rName))
 }
 
-func testAccKinesisAnalyticsV2ApplicationConfigSQLApplicationConfigurationInputUpdated(rName string) string {
+func testAccApplicationConfigSQLApplicationConfigurationInputUpdated(rName string) string {
 	return acctest.ConfigCompose(
-		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName),
-		testAccKinesisAnalyticsV2ApplicationConfigBaseSQLApplication(rName),
+		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfigBaseSQLApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
@@ -5105,10 +5104,10 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 `, rName))
 }
 
-func testAccKinesisAnalyticsV2ApplicationConfigSQLApplicationConfigurationInputProcessingConfiguration(rName string, lambdaIndex int) string {
+func testAccApplicationConfigSQLApplicationConfigurationInputProcessingConfiguration(rName string, lambdaIndex int) string {
 	return acctest.ConfigCompose(
-		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName),
-		testAccKinesisAnalyticsV2ApplicationConfigBaseSQLApplication(rName),
+		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfigBaseSQLApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
@@ -5162,7 +5161,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 `, rName, lambdaIndex))
 }
 
-func testAccKinesisAnalyticsV2ApplicationConfigSQLApplicationConfigurationMultiple(rName, startApplication, startingPosition string) string {
+func testAccApplicationConfigSQLApplicationConfigurationMultiple(rName, startApplication, startingPosition string) string {
 	if startApplication == "" {
 		startApplication = "null"
 	}
@@ -5173,8 +5172,8 @@ func testAccKinesisAnalyticsV2ApplicationConfigSQLApplicationConfigurationMultip
 	}
 
 	return acctest.ConfigCompose(
-		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName),
-		testAccKinesisAnalyticsV2ApplicationConfigBaseSQLApplication(rName),
+		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfigBaseSQLApplication(rName),
 		fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
   name = %[1]q
@@ -5263,7 +5262,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 `, rName, startApplication, startingPosition))
 }
 
-func testAccKinesisAnalyticsV2ApplicationConfigSQLApplicationConfigurationMultipleUpdated(rName, startApplication, startingPosition string) string {
+func testAccApplicationConfigSQLApplicationConfigurationMultipleUpdated(rName, startApplication, startingPosition string) string {
 	if startApplication == "" {
 		startApplication = "null"
 	}
@@ -5274,8 +5273,8 @@ func testAccKinesisAnalyticsV2ApplicationConfigSQLApplicationConfigurationMultip
 	}
 
 	return acctest.ConfigCompose(
-		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName),
-		testAccKinesisAnalyticsV2ApplicationConfigBaseSQLApplication(rName),
+		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfigBaseSQLApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
@@ -5397,10 +5396,10 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 `, rName, startApplication, startingPosition))
 }
 
-func testAccKinesisAnalyticsV2ApplicationConfigSQLApplicationConfigurationOutput(rName string) string {
+func testAccApplicationConfigSQLApplicationConfigurationOutput(rName string) string {
 	return acctest.ConfigCompose(
-		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName),
-		testAccKinesisAnalyticsV2ApplicationConfigBaseSQLApplication(rName),
+		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfigBaseSQLApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
@@ -5434,10 +5433,10 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 `, rName))
 }
 
-func testAccKinesisAnalyticsV2ApplicationConfigSQLApplicationConfigurationOutputUpdated(rName string) string {
+func testAccApplicationConfigSQLApplicationConfigurationOutputUpdated(rName string) string {
 	return acctest.ConfigCompose(
-		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName),
-		testAccKinesisAnalyticsV2ApplicationConfigBaseSQLApplication(rName),
+		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfigBaseSQLApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
@@ -5483,10 +5482,10 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 `, rName))
 }
 
-func testAccKinesisAnalyticsV2ApplicationConfigSQLApplicationConfigurationReferenceDataSource(rName string) string {
+func testAccApplicationConfigSQLApplicationConfigurationReferenceDataSource(rName string) string {
 	return acctest.ConfigCompose(
-		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName),
-		testAccKinesisAnalyticsV2ApplicationConfigBaseSQLApplication(rName),
+		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfigBaseSQLApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
@@ -5535,10 +5534,10 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 `, rName))
 }
 
-func testAccKinesisAnalyticsV2ApplicationConfigSQLApplicationConfigurationReferenceDataSourceUpdated(rName string) string {
+func testAccApplicationConfigSQLApplicationConfigurationReferenceDataSourceUpdated(rName string) string {
 	return acctest.ConfigCompose(
-		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName),
-		testAccKinesisAnalyticsV2ApplicationConfigBaseSQLApplication(rName),
+		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfigBaseSQLApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
@@ -5595,10 +5594,10 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 `, rName))
 }
 
-func testAccKinesisAnalyticsV2ApplicationConfigSQLApplicationConfigurationStartApplication(rName string, start bool) string {
+func testAccApplicationConfigSQLApplicationConfigurationStartApplication(rName string, start bool) string {
 	return acctest.ConfigCompose(
-		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName),
-		testAccKinesisAnalyticsV2ApplicationConfigBaseSQLApplication(rName),
+		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfigBaseSQLApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
@@ -5652,9 +5651,9 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 `, rName, start))
 }
 
-func testAccKinesisAnalyticsV2ApplicationConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccApplicationConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(
-		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
@@ -5668,9 +5667,9 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 `, rName, tagKey1, tagValue1))
 }
 
-func testAccKinesisAnalyticsV2ApplicationConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccApplicationConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(
-		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
@@ -5685,11 +5684,11 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
-func testAccKinesisAnalyticsV2ApplicationConfigVPCConfiguration(rName string) string {
+func testAccApplicationConfigVPCConfiguration(rName string) string {
 	return acctest.ConfigCompose(
-		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName),
-		testAccKinesisAnalyticsV2ApplicationConfigBaseVPC(rName),
-		testAccKinesisAnalyticsV2ApplicationConfigBaseFlinkApplication(rName),
+		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfigBaseVPC(rName),
+		testAccApplicationConfigBaseFlinkApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
@@ -5717,11 +5716,11 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 `, rName))
 }
 
-func testAccKinesisAnalyticsV2ApplicationConfigVPCConfigurationUpdated(rName string) string {
+func testAccApplicationConfigVPCConfigurationUpdated(rName string) string {
 	return acctest.ConfigCompose(
-		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName),
-		testAccKinesisAnalyticsV2ApplicationConfigBaseVPC(rName),
-		testAccKinesisAnalyticsV2ApplicationConfigBaseFlinkApplication(rName),
+		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfigBaseVPC(rName),
+		testAccApplicationConfigBaseFlinkApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
@@ -5749,11 +5748,11 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 `, rName))
 }
 
-func testAccKinesisAnalyticsV2ApplicationConfigVPCConfigurationNotSpecified(rName string) string {
+func testAccApplicationConfigVPCConfigurationNotSpecified(rName string) string {
 	return acctest.ConfigCompose(
-		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName),
-		testAccKinesisAnalyticsV2ApplicationConfigBaseVPC(rName),
-		testAccKinesisAnalyticsV2ApplicationConfigBaseFlinkApplication(rName),
+		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccApplicationConfigBaseVPC(rName),
+		testAccApplicationConfigBaseFlinkApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q

@@ -18,7 +18,7 @@ func DataSourceCustomerGateway() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceCustomerGatewayRead,
 		Schema: map[string]*schema.Schema{
-			"filter": dataSourceFiltersSchema(),
+			"filter": DataSourceFiltersSchema(),
 			"id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -56,7 +56,7 @@ func dataSourceCustomerGatewayRead(d *schema.ResourceData, meta interface{}) err
 	input := ec2.DescribeCustomerGatewaysInput{}
 
 	if v, ok := d.GetOk("filter"); ok {
-		input.Filters = buildFiltersDataSource(v.(*schema.Set))
+		input.Filters = BuildFiltersDataSource(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("id"); ok {
