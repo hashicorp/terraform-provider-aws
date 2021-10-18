@@ -113,6 +113,27 @@ with the pull request author.
      func wait{FunctionName}()
    ```
 
+1. If you have made any changes to `aws/provider.go`, you will have to manually
+   re-enact those changes on the new `internal/provider/provider.go` file.
+
+   Most commonly, these changes involve the addition of an entry to either the
+   `DataSourcesMap` or `ResourcesMap`. If this is the case for your PR, you will have
+   to adapt your entry to follow our new code conventions.
+
+   **Resources Map Entries**
+
+   ```
+     "{aws_terraform_resource_type}":   resourceAws{ServiceName}{ResourceName}(), =>
+     "{aws_terraform_resource_type}":   {serviceName}.Resource{ResourceName}(),
+   ```
+
+   **Data Source Map Entries**
+
+   ```
+     "{aws_terraform_data_source_type}":   dataSourceAws{ServiceName}{ResourceName}(), =>
+     "{aws_terraform_data_source_type}":   {serviceName}.DataSource{ResourceName}(),
+   ```
+
 1. Use `git status` to report the state of the merge. Review any merge
    conflicts -- being sure to adopt the new naming conventions described in the
    previous step where relevant. Use `git add` to add any new files to the commit.
