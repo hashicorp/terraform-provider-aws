@@ -375,8 +375,11 @@ func TestAccDMSEndpoint_kafka(t *testing.T) {
 }
 
 func TestAccDMSEndpoint_kinesis(t *testing.T) {
-	resourceName := "aws_dms_endpoint.dms_endpoint"
-	randId := sdkacctest.RandString(8) + "-kinesis"
+	resourceName := "aws_dms_endpoint.test"
+	iamRoleResourceName := "aws_iam_role.test"
+	stream1ResourceName := "aws_kinesis_stream.test1"
+	stream2ResourceName := "aws_kinesis_stream.test2"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -385,12 +388,19 @@ func TestAccDMSEndpoint_kinesis(t *testing.T) {
 		CheckDestroy: testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dmsEndpointKinesisConfig(randId),
+				Config: dmsEndpointKinesisConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "kinesis_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kinesis_settings.0.include_control_details", "false"),
+					resource.TestCheckResourceAttr(resourceName, "kinesis_settings.0.include_null_and_empty", "false"),
+					resource.TestCheckResourceAttr(resourceName, "kinesis_settings.0.include_partition_value", "false"),
+					resource.TestCheckResourceAttr(resourceName, "kinesis_settings.0.include_table_alter_operations", "true"),
+					resource.TestCheckResourceAttr(resourceName, "kinesis_settings.0.include_transaction_details", "true"),
 					resource.TestCheckResourceAttr(resourceName, "kinesis_settings.0.message_format", "json"),
-					resource.TestCheckResourceAttrPair(resourceName, "kinesis_settings.0.stream_arn", "aws_kinesis_stream.stream1", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "kinesis_settings.0.partition_include_schema_table", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "kinesis_settings.0.service_access_role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "kinesis_settings.0.stream_arn", stream1ResourceName, "arn"),
 				),
 			},
 			{
@@ -400,12 +410,19 @@ func TestAccDMSEndpoint_kinesis(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"password"},
 			},
 			{
-				Config: dmsEndpointKinesisConfigUpdate(randId),
+				Config: dmsEndpointKinesisConfigUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "kinesis_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kinesis_settings.0.include_control_details", "true"),
+					resource.TestCheckResourceAttr(resourceName, "kinesis_settings.0.include_null_and_empty", "true"),
+					resource.TestCheckResourceAttr(resourceName, "kinesis_settings.0.include_partition_value", "true"),
+					resource.TestCheckResourceAttr(resourceName, "kinesis_settings.0.include_table_alter_operations", "false"),
+					resource.TestCheckResourceAttr(resourceName, "kinesis_settings.0.include_transaction_details", "false"),
 					resource.TestCheckResourceAttr(resourceName, "kinesis_settings.0.message_format", "json"),
-					resource.TestCheckResourceAttrPair(resourceName, "kinesis_settings.0.stream_arn", "aws_kinesis_stream.stream2", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "kinesis_settings.0.partition_include_schema_table", "false"),
+					resource.TestCheckResourceAttrPair(resourceName, "kinesis_settings.0.service_access_role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "kinesis_settings.0.stream_arn", stream2ResourceName, "arn"),
 				),
 			},
 		},
@@ -1201,59 +1218,44 @@ resource "aws_dms_endpoint" "test" {
 `, rName, domainName)
 }
 
-func dmsEndpointKinesisConfig(randId string) string {
+func dmsEndpointKinesisConfigBase(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
-resource "aws_dms_endpoint" "dms_endpoint" {
-  endpoint_id   = "tf-test-dms-endpoint-%[1]s"
-  endpoint_type = "target"
-  engine_name   = "kinesis"
-
-  kinesis_settings {
-    service_access_role_arn = aws_iam_role.iam_role.arn
-    stream_arn              = aws_kinesis_stream.stream1.arn
-  }
-
-  depends_on = [aws_iam_role_policy.dms_kinesis_access]
-}
-
-resource "aws_kinesis_stream" "stream1" {
-  name        = "tf-test-dms-kinesis-1-%[1]s"
+resource "aws_kinesis_stream" "test1" {
+  name        = "%[1]s-1"
   shard_count = 1
 }
 
-resource "aws_kinesis_stream" "stream2" {
-  name        = "tf-test-dms-kinesis-2-%[1]s"
+resource "aws_kinesis_stream" "test2" {
+  name        = "%[1]s-2"
   shard_count = 1
 }
 
-resource "aws_iam_role" "iam_role" {
-  name_prefix = "tf-test-iam-kinesis-role"
+resource "aws_iam_role" "test" {
+  name_prefix = %[1]q
 
   assume_role_policy = <<EOF
 {
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Action": "sts:AssumeRole",
-			"Principal": {
-				"Service": "dms.${data.aws_partition.current.dns_suffix}"
-			},
-			"Effect": "Allow"
-		}
-	]
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Action": "sts:AssumeRole",
+    "Principal": {
+      "Service": "dms.${data.aws_partition.current.dns_suffix}"
+    },
+    "Effect": "Allow"
+  }]
 }
 EOF
 }
 
-resource "aws_iam_role_policy" "dms_kinesis_access" {
-  name_prefix = "tf-test-iam-kinesis-role-policy"
-  role        = aws_iam_role.iam_role.name
-  policy      = data.aws_iam_policy_document.dms_kinesis_access.json
+resource "aws_iam_role_policy" "test" {
+  name   = %[1]q
+  role   = aws_iam_role.test.name
+  policy = data.aws_iam_policy_document.test.json
 }
 
-data "aws_iam_policy_document" "dms_kinesis_access" {
+data "aws_iam_policy_document" "test" {
   statement {
     actions = [
       "kinesis:DescribeStream",
@@ -1261,80 +1263,57 @@ data "aws_iam_policy_document" "dms_kinesis_access" {
       "kinesis:PutRecords",
     ]
     resources = [
-      aws_kinesis_stream.stream1.arn,
-      aws_kinesis_stream.stream2.arn,
+      aws_kinesis_stream.test1.arn,
+      aws_kinesis_stream.test2.arn,
     ]
   }
 }
-`, randId)
+`, rName)
 }
 
-func dmsEndpointKinesisConfigUpdate(randId string) string {
-	return fmt.Sprintf(`
-data "aws_partition" "current" {}
-
-resource "aws_dms_endpoint" "dms_endpoint" {
-  endpoint_id   = "tf-test-dms-endpoint-%[1]s"
+func dmsEndpointKinesisConfig(rName string) string {
+	return acctest.ConfigCompose(dmsEndpointKinesisConfigBase(rName), fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id   = %[1]q
   endpoint_type = "target"
   engine_name   = "kinesis"
 
   kinesis_settings {
-    service_access_role_arn = aws_iam_role.iam_role.arn
-    stream_arn              = aws_kinesis_stream.stream2.arn
+	include_table_alter_operations = true
+	include_transaction_details    = true
+	partition_include_schema_table = true
+
+    service_access_role_arn = aws_iam_role.test.arn
+    stream_arn              = aws_kinesis_stream.test1.arn
   }
 
-  depends_on = [aws_iam_role_policy.dms_kinesis_access]
+  depends_on = [aws_iam_role_policy.test]
+}
+`, rName))
 }
 
-resource "aws_kinesis_stream" "stream1" {
-  name        = "tf-test-dms-kinesis-1-%[1]s"
-  shard_count = 1
-}
+func dmsEndpointKinesisConfigUpdate(rName string) string {
+	return acctest.ConfigCompose(dmsEndpointKinesisConfigBase(rName), fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id   = %[1]q
+  endpoint_type = "target"
+  engine_name   = "kinesis"
 
-resource "aws_kinesis_stream" "stream2" {
-  name        = "tf-test-dms-kinesis-2-%[1]s"
-  shard_count = 1
-}
+  kinesis_settings {
+    include_control_details        = true
+	include_null_and_empty         = true
+	include_partition_value        = true
+	include_table_alter_operations = false
+	include_transaction_details    = false
+	partition_include_schema_table = false
 
-resource "aws_iam_role" "iam_role" {
-  name_prefix = "tf-test-iam-kinesis-role"
-
-  assume_role_policy = <<EOF
-{
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Action": "sts:AssumeRole",
-			"Principal": {
-				"Service": "dms.${data.aws_partition.current.dns_suffix}"
-			},
-			"Effect": "Allow"
-		}
-	]
-}
-EOF
-}
-
-resource "aws_iam_role_policy" "dms_kinesis_access" {
-  name_prefix = "tf-test-iam-kinesis-role-policy"
-  role        = aws_iam_role.iam_role.name
-  policy      = data.aws_iam_policy_document.dms_kinesis_access.json
-}
-
-data "aws_iam_policy_document" "dms_kinesis_access" {
-  statement {
-    actions = [
-      "kinesis:DescribeStream",
-      "kinesis:PutRecord",
-      "kinesis:PutRecords",
-    ]
-    resources = [
-      aws_kinesis_stream.stream1.arn,
-      aws_kinesis_stream.stream2.arn,
-    ]
+    service_access_role_arn = aws_iam_role.test.arn
+    stream_arn              = aws_kinesis_stream.test2.arn
   }
+
+  depends_on = [aws_iam_role_policy.test]
 }
-`, randId)
+`, rName))
 }
 
 func dmsEndpointMongoDbConfig(randId string) string {
