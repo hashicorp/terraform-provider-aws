@@ -634,8 +634,8 @@ tags:
   - 'internal/tags/**/*'
 tests:
   - '**/*_test.go'
+  - 'internal/**/test-fixtures/**/*'
+  - 'internal/**/testdata/**/*'
   - 'internal/acctest/**/*'
-  - 'website/**/test-fixtures/**/*'
-  - 'website/**/testdata/**/*'
 verify:
   - 'internal/verify/**/*'
