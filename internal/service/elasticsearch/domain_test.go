@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -34,6 +35,37 @@ func TestAccElasticSearchDomain_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccESDomainConfig(ri),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists(resourceName, &domain),
+					resource.TestCheckResourceAttr(
+						resourceName, "elasticsearch_version", "1.5"),
+					resource.TestMatchResourceAttr(resourceName, "kibana_endpoint", regexp.MustCompile(`.*es\..*/_plugin/kibana/`)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     resourceId,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSElasticSearchDomain_WithCreateTimeout(t *testing.T) {
+	var domain elasticsearch.ElasticsearchDomainStatus
+	ri := sdkacctest.RandInt()
+	resourceName := "aws_elasticsearch_domain.test"
+	resourceId := fmt.Sprintf("tf-test-%d", ri)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticsearch.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckESDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccESDomainConfigWithCreateTimeout(ri),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckESDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(
@@ -327,7 +359,7 @@ func TestAccElasticSearchDomain_duplicate(t *testing.T) {
 						t.Fatal(err)
 					}
 
-					err = tfelasticsearch.WaitForDomainCreation(conn, resourceId, resourceId)
+					err = tfelasticsearch.WaitForDomainCreation(conn, resourceId, resourceId, 60*time.Minute)
 					if err != nil {
 						t.Fatal(err)
 					}
@@ -1379,6 +1411,21 @@ resource "aws_elasticsearch_domain" "test" {
   ebs_options {
     ebs_enabled = true
     volume_size = 10
+  }
+}
+`, randInt)
+}
+
+func testAccESDomainConfigWithCreateTimeout(randInt int) string {
+	return fmt.Sprintf(`
+resource "aws_elasticsearch_domain" "test" {
+  domain_name = "tf-test-%d"
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+  timeouts {
+    create = "180m"
   }
 }
 `, randInt)

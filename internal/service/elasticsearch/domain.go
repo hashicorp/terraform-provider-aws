@@ -36,6 +36,7 @@ func ResourceDomain() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(60 * time.Minute),
 			Update: schema.DefaultTimeout(60 * time.Minute),
 		},
 
@@ -632,7 +633,7 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Waiting for ElasticSearch domain %q to be created", d.Id())
-	err = WaitForDomainCreation(conn, d.Get("domain_name").(string), d.Id())
+	err = WaitForDomainCreation(conn, d.Get("domain_name").(string), d.Id(), d.Timeout(schema.TimeoutCreate))
 	if err != nil {
 		return err
 	}
@@ -642,12 +643,12 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 	return resourceDomainRead(d, meta)
 }
 
-func WaitForDomainCreation(conn *elasticsearch.ElasticsearchService, domainName, arn string) error {
+func WaitForDomainCreation(conn *elasticsearch.ElasticsearchService, domainName, arn string, createTimeout time.Duration) error {
 	input := &elasticsearch.DescribeElasticsearchDomainInput{
 		DomainName: aws.String(domainName),
 	}
 	var out *elasticsearch.DescribeElasticsearchDomainOutput
-	err := resource.Retry(60*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(createTimeout, func() *resource.RetryError {
 		var err error
 		out, err = conn.DescribeElasticsearchDomain(input)
 		if err != nil {
