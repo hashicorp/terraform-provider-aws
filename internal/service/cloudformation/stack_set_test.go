@@ -451,14 +451,14 @@ func TestAccAWSCloudFormationStackSet_AutoDeployment_Enabled(t *testing.T) {
 	//  * https://github.com/hashicorp/terraform-provider-aws/issues/19015
 
 	var stackSet1 cloudformation.StackSet
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudformation_stack_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCloudFormationStackSet(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudformation.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSCloudFormationStackSetDestroy,
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckStackSet(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudformation.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckStackSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCloudFormationStackSetConfigAutoDeployment(rName, "true", "false"),
@@ -486,14 +486,14 @@ func TestAccAWSCloudFormationStackSet_AutoDeployment_Disabled(t *testing.T) {
 	//  * https://github.com/hashicorp/terraform-provider-aws/issues/19015
 
 	var stackSet1 cloudformation.StackSet
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudformation_stack_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCloudFormationStackSet(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudformation.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSCloudFormationStackSetDestroy,
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckStackSet(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudformation.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckStackSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCloudFormationStackSetConfigAutoDeployment(rName, "false", "false"),
@@ -1502,4 +1502,20 @@ resource "aws_cloudformation_stack_set" "test" {
 TEMPLATE
 }
 `, rName, testAccStackSetTemplateBodyVPC(rName))
+}
+
+func testAccAWSCloudFormationStackSetConfigAutoDeployment(rName, value1, value2 string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudformation_stack_set" "test" {
+  name             = %[1]q
+  permission_model = "SERVICE_MANAGED"
+  auto_deployment {
+    enabled                          = %[3]s
+    retain_stacks_on_account_removal = %[4]s
+  }
+  template_body = <<TEMPLATE
+%[2]s
+TEMPLATE
+}
+`, rName, testAccStackSetTemplateBodyVPC(rName), value1, value2)
 }
