@@ -16,8 +16,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-const DefaultTreatMissingData = "missing"
-
 func ResourceMetricAlarm() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -242,14 +240,14 @@ func ResourceMetricAlarm() *schema.Resource {
 			"treat_missing_data": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      DefaultTreatMissingData,
-				ValidateFunc: validation.StringInSlice([]string{"breaching", "notBreaching", "ignore", "missing"}, true),
+				Default:      missingDataMissing,
+				ValidateFunc: validation.StringInSlice(missingData_Values(), true),
 			},
 			"evaluate_low_sample_count_percentiles": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validation.StringInSlice([]string{"evaluate", "ignore"}, true),
+				ValidateFunc: validation.StringInSlice(lowSampleCountPercentiles_Values(), true),
 			},
 
 			"tags":     tftags.TagsSchema(),
@@ -362,7 +360,7 @@ func resourceMetricAlarmRead(d *schema.ResourceData, meta interface{}) error {
 	if resp.TreatMissingData != nil {
 		d.Set("treat_missing_data", resp.TreatMissingData)
 	} else {
-		d.Set("treat_missing_data", DefaultTreatMissingData)
+		d.Set("treat_missing_data", missingDataMissing)
 	}
 	d.Set("evaluate_low_sample_count_percentiles", resp.EvaluateLowSampleCountPercentile)
 

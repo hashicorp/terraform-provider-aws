@@ -209,7 +209,7 @@ func TestAccCloudWatchMetricAlarm_treatMissingData(t *testing.T) {
 				Config: testAccMetricAlarmTreatMissingDataConfigNoAttr(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchMetricAlarmExists(resourceName, &alarm),
-					resource.TestCheckResourceAttr(resourceName, "treat_missing_data", tfcloudwatch.DefaultTreatMissingData),
+					resource.TestCheckResourceAttr(resourceName, "treat_missing_data", "missing"),
 				),
 			},
 			{
