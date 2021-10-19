@@ -153,38 +153,39 @@ jobs:
   #   - name: providerlint
   #     run: make providerlint
 
-  # go_generate:
-  #   name: go generate
-  #   needs: [go_build]
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #   - uses: actions/checkout@v2
-  #   # See also: https://github.com/actions/setup-go/pull/62
-  #   - run: echo "GO_VERSION=$(cat .go-version)" >> $GITHUB_ENV
-  #   - uses: actions/setup-go@v2
-  #     with:
-  #       go-version: ${{ env.GO_VERSION }}
-  #   # See also: https://github.com/actions/setup-go/issues/54
-  #   - name: go env
-  #     run: |
-  #       echo "GOCACHE=$(go env GOCACHE)" >> $GITHUB_ENV
-  #   - uses: actions/cache@v2
-  #     continue-on-error: true
-  #     timeout-minutes: 2
-  #     with:
-  #       path: ${{ env.GOCACHE }}
-  #       key: ${{ runner.os }}-GOCACHE-${{ hashFiles('go.sum') }}-${{ hashFiles('aws/**') }}
-  #   - uses: actions/cache@v2
-  #     continue-on-error: true
-  #     timeout-minutes: 2
-  #     with:
-  #       path: ~/go/pkg/mod
-  #       key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-  #   - run: make gen
-  #   - name: Check for Git Differences
-  #     run: |
-  #       git diff --compact-summary --exit-code || \
-  #         (echo; echo "Unexpected difference in directories after code generation. Run 'make gen' command and commit."; exit 1)
+  go_generate:
+    name: go generate
+    needs: [go_build]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    # See also: https://github.com/actions/setup-go/pull/62
+    - run: echo "GO_VERSION=$(cat .go-version)" >> $GITHUB_ENV
+    - uses: actions/setup-go@v2
+      with:
+        go-version: ${{ env.GO_VERSION }}
+    # See also: https://github.com/actions/setup-go/issues/54
+    - name: go env
+      run: |
+        echo "GOCACHE=$(go env GOCACHE)" >> $GITHUB_ENV
+    - uses: actions/cache@v2
+      continue-on-error: true
+      timeout-minutes: 2
+      with:
+        path: ${{ env.GOCACHE }}
+        key: ${{ runner.os }}-GOCACHE-${{ hashFiles('go.sum') }}-${{ hashFiles('internal/**') }}
+    - uses: actions/cache@v2
+      continue-on-error: true
+      timeout-minutes: 2
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
+    - run: go install golang.org/x/tools/cmd/goimports
+    - run: make gen
+    - name: Check for Git Differences
+      run: |
+        git diff --compact-summary --exit-code || \
+          (echo; echo "Unexpected difference in directories after code generation. Run 'make gen' command and commit."; exit 1)
 
   go_test:
     name: go test
