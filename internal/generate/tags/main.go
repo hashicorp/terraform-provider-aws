@@ -517,7 +517,7 @@ func KeyValueTags(tags interface{}{{ if .TagTypeIDElem }}, identifier string{{ i
 
 			tagData.AdditionalBoolFields = make(map[string]*bool)
 			{{- if .TagTypeAddBoolElem }}
-			tagData.AdditionalBoolFields["{{ .TagTypeAddBoolElemSnake }}"] = tag.{{ .TagTypeAddBoolElem }}
+			tagData.AdditionalBoolFields["{{ .TagTypeAddBoolElem }}"] = tag.{{ .TagTypeAddBoolElem }}
 			{{- end }}
 
 			{{- if .TagTypeIDElem }}
@@ -550,7 +550,7 @@ func KeyValueTags(tags interface{}{{ if .TagTypeIDElem }}, identifier string{{ i
 
 			{{- if .TagTypeAddBoolElem }}
 			tagData.AdditionalBoolFields = make(map[string]*bool)
-			tagData.AdditionalBoolFields["{{ .TagTypeAddBoolElemSnake }}"] = tag.{{ .TagTypeAddBoolElem }}
+			tagData.AdditionalBoolFields["{{ .TagTypeAddBoolElem }}"] = tag.{{ .TagTypeAddBoolElem }}
 			{{- end }}
 
 			{{- if .TagTypeIDElem }}
