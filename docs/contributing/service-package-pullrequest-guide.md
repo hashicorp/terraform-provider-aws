@@ -106,6 +106,20 @@ with the pull request author.
      func TestAcc{ResourceName}DataSource_{testType}()
    ```
 
+   **Finder Functions**
+
+   ```
+     func finder.{FunctionName}() =>
+     func Find{FunctionName}()
+   ```
+
+   **Status Functions**
+
+   ```
+     func waiter.{FunctionName}Status() =>
+     func status{FunctionName}()
+   ```
+
    **Waiter Functions**
 
    ```
