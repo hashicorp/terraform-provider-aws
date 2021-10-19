@@ -12,7 +12,7 @@ collisions. Issue
 [#20000](https://github.com/hashicorp/terraform-provider-aws/issues/20000)
 contains a more complete description of these changes.
 
-As a result, nearly every pull request opened prior to the refactor has merge
+As a result, nearly every pull request opened prior to the refactoring has merge
 conflicts; they are attempting to apply changes to files that have since been
 relocated. Furthermore, any new files or functions introduced must be brought
 into line with the codebase's new conventions. The following steps are intended
@@ -104,6 +104,20 @@ with the pull request author.
    ```
      func TestAccDataSourceAWS{ServiceName}{ResourceName}_{testType}() =>
      func TestAcc{ResourceName}DataSource_{testType}()
+   ```
+
+   **Finder Functions**
+
+   ```
+     func finder.{FunctionName}() =>
+     func Find{FunctionName}()
+   ```
+
+   **Status Functions**
+
+   ```
+     func waiter.{FunctionName}Status() =>
+     func status{FunctionName}()
    ```
 
    **Waiter Functions**
