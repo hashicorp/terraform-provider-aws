@@ -76,7 +76,7 @@ func getAllCognitoUserPools(conn *cognitoidentityprovider.CognitoIdentityProvide
 	for {
 		input := &cognitoidentityprovider.ListUserPoolsInput{
 			// MaxResults Valid Range: Minimum value of 1. Maximum value of 60
-			MaxResults: aws.Int64(int64(60)),
+			MaxResults: aws.Int64(60),
 		}
 		if nextToken != "" {
 			input.NextToken = aws.String(nextToken)

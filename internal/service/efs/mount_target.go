@@ -17,6 +17,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
+const (
+	mountTargetDeleteTimeout = 10 * time.Minute
+)
+
 func ResourceMountTarget() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceMountTargetCreate,
@@ -270,7 +274,7 @@ func resourceMountTargetDelete(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = WaitForDeleteMountTarget(conn, d.Id(), 10*time.Minute)
+	err = WaitForDeleteMountTarget(conn, d.Id(), mountTargetDeleteTimeout)
 	if err != nil {
 		return fmt.Errorf("Error waiting for EFS mount target (%q) to delete: %s", d.Id(), err.Error())
 	}

@@ -20,6 +20,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+const (
+	securityGroupsCreatedSleepTime = 30 * time.Second
+	securityGroupsDeletedSleepTime = 30 * time.Second
+)
+
 func ResourceStack() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceStackCreate,
@@ -509,7 +514,7 @@ func resourceStackCreate(d *schema.ResourceData, meta interface{}) error {
 		// we can't actually check for them. Instead, we just wait a nominal
 		// amount of time for their creation to complete.
 		log.Print("[INFO] Waiting for OpsWorks built-in security groups to be created")
-		time.Sleep(30 * time.Second)
+		time.Sleep(securityGroupsCreatedSleepTime)
 	}
 
 	return resourceStackUpdate(d, meta)
@@ -632,7 +637,7 @@ func resourceStackDelete(d *schema.ResourceData, meta interface{}) error {
 
 	if inVpc && useOpsworksDefaultSg {
 		log.Print("[INFO] Waiting for Opsworks built-in security groups to be deleted")
-		time.Sleep(30 * time.Second)
+		time.Sleep(securityGroupsDeletedSleepTime)
 	}
 
 	return nil

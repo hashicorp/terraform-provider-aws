@@ -6,7 +6,6 @@ package route53resolver
 import (
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
@@ -177,7 +176,7 @@ func sweepEndpoints(region string) error {
 				continue
 			}
 
-			err = EndpointWaitUntilTargetState(conn, id, 10*time.Minute,
+			err = EndpointWaitUntilTargetState(conn, id, endpointDeletedDefaultTimeout,
 				[]string{route53resolver.ResolverEndpointStatusDeleting},
 				[]string{EndpointStatusDeleted})
 			if err != nil {
@@ -588,7 +587,7 @@ func sweepRuleAssociations(region string) error {
 				continue
 			}
 
-			err = RuleAssociationWaitUntilTargetState(conn, id, 10*time.Minute,
+			err = RuleAssociationWaitUntilTargetState(conn, id, ruleAssociationDeletedDefaultTimeout,
 				[]string{route53resolver.ResolverRuleAssociationStatusDeleting},
 				[]string{RuleAssociationStatusDeleted})
 			if err != nil {
@@ -644,7 +643,7 @@ func sweepRules(region string) error {
 				continue
 			}
 
-			err = RuleWaitUntilTargetState(conn, id, 10*time.Minute,
+			err = RuleWaitUntilTargetState(conn, id, ruleDeletedDefaultTimeout,
 				[]string{route53resolver.ResolverRuleStatusDeleting},
 				[]string{RuleStatusDeleted})
 			if err != nil {

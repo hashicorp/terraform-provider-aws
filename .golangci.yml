@@ -18,7 +18,7 @@ linters:
     - deadcode
     - errcheck
     - gofmt
-    # - gomnd
+    - gomnd
     - gosimple
     - ineffassign
     - makezero
@@ -44,17 +44,25 @@ linters-settings:
         ignored-functions:
           # AWS Go SDK
           - aws.Int64
-          - nullable.*
           - request.ConstantWaiterDelay
           - request.WithWaiterMaxAttempts
+          # AWS Provider
+          - mapMaxItems
+          - wafv2RootStatementSchema
+          - wafv2WebACLRootStatementSchema
+          - nullable.*
+          - sweep.SweepOrchestratorContext
           # Terraform Plugin SDK
+          - resource.Retry
           - schema.DefaultTimeout
+          - validation.*
+          # Go
+          - make
           - strconv.FormatFloat
           - strconv.FormatInt
           - strconv.ParseFloat
           - strconv.ParseInt
           - strings.SplitN
-          - validation.*
   nolintlint:
     allow-leading-space: false
     require-explanation: true
@@ -64,4 +72,4 @@ linters-settings:
       - gomnd
 
 run:
-  timeout: 15m
+  timeout: 20m

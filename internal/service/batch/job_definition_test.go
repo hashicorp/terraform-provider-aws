@@ -200,14 +200,14 @@ func TestAccBatchJobDefinition_ContainerProperties_advanced(t *testing.T) {
 			"param2": aws.String("val2"),
 		},
 		RetryStrategy: &batch.RetryStrategy{
-			Attempts: aws.Int64(int64(1)),
+			Attempts: aws.Int64(1),
 			EvaluateOnExit: []*batch.EvaluateOnExit{
 				{Action: aws.String(strings.ToLower(batch.RetryActionRetry)), OnStatusReason: aws.String("Host EC2*")},
 				{Action: aws.String(strings.ToLower(batch.RetryActionExit)), OnReason: aws.String("*")},
 			},
 		},
 		Timeout: &batch.JobTimeout{
-			AttemptDurationSeconds: aws.Int64(int64(60)),
+			AttemptDurationSeconds: aws.Int64(60),
 		},
 		ContainerProperties: &batch.ContainerProperties{
 			Command: []*string{aws.String("ls"), aws.String("-la")},
@@ -215,16 +215,16 @@ func TestAccBatchJobDefinition_ContainerProperties_advanced(t *testing.T) {
 				{Name: aws.String("VARNAME"), Value: aws.String("VARVAL")},
 			},
 			Image:  aws.String("busybox"),
-			Memory: aws.Int64(int64(512)),
+			Memory: aws.Int64(512),
 			MountPoints: []*batch.MountPoint{
 				{ContainerPath: aws.String("/tmp"), ReadOnly: aws.Bool(false), SourceVolume: aws.String("tmp")},
 			},
 			ResourceRequirements: []*batch.ResourceRequirement{},
 			Secrets:              []*batch.Secret{},
 			Ulimits: []*batch.Ulimit{
-				{HardLimit: aws.Int64(int64(1024)), Name: aws.String("nofile"), SoftLimit: aws.Int64(int64(1024))},
+				{HardLimit: aws.Int64(1024), Name: aws.String("nofile"), SoftLimit: aws.Int64(1024)},
 			},
-			Vcpus: aws.Int64(int64(1)),
+			Vcpus: aws.Int64(1),
 			Volumes: []*batch.Volume{
 				{
 					Host: &batch.Host{SourcePath: aws.String("/tmp")},
