@@ -60,7 +60,7 @@ Additionally, the following attributes are exported:
 
 ## Import
 
-Elastic Network Interfaces can be imported using the `id`, e.g.
+Elastic Network Interfaces can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_network_interface.test eni-12345

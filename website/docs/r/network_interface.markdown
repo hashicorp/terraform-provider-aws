@@ -38,6 +38,10 @@ The following arguments are supported:
 * `security_groups` - (Optional) List of security group IDs to assign to the ENI.
 * `attachment` - (Optional) Block to define the attachment of the ENI. Documented below.
 * `source_dest_check` - (Optional) Whether to enable source destination checking for the ENI. Default true.
+
+-> **NOTE:** Changing `interface_type` will cause the resource to be destroyed and re-created.
+
+* `interface_type` - (Optional) Type of network interface to create. Set to `efa` for Elastic Fabric Adapter.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 The `attachment` block supports:
@@ -56,7 +60,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Network Interfaces can be imported using the `id`, e.g.
+Network Interfaces can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_network_interface.test eni-e5aa89a3

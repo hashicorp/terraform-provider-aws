@@ -62,7 +62,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-IAM Policies can be imported using the `arn`, e.g.
+IAM Policies can be imported using the `arn`, e.g.,
 
 ```
 $ terraform import aws_iam_policy.administrator arn:aws:iam::123456789012:policy/UsersManageOwnCredentials

@@ -14,7 +14,64 @@ More information about Aurora global databases can be found in the [Aurora User 
 
 ## Example Usage
 
-### New Global Cluster
+### New MySQL Global Cluster
+
+```terraform
+resource "aws_rds_global_cluster" "example" {
+  global_cluster_identifier = "global-test"
+  engine                    = "aurora"
+  engine_version            = "5.6.mysql_aurora.1.22.2"
+  database_name             = "example_db"
+}
+
+resource "aws_rds_cluster" "primary" {
+  provider                  = aws.primary
+  engine                    = aws_rds_global_cluster.example.engine
+  engine_version            = aws_rds_global_cluster.example.engine_version
+  cluster_identifier        = "test-primary-cluster"
+  master_username           = "username"
+  master_password           = "somepass123"
+  database_name             = "example_db"
+  global_cluster_identifier = aws_rds_global_cluster.example.id
+  db_subnet_group_name      = "default"
+}
+
+resource "aws_rds_cluster_instance" "primary" {
+  provider             = aws.primary
+  engine               = aws_rds_global_cluster.example.engine
+  engine_version       = aws_rds_global_cluster.example.engine_version
+  identifier           = "test-primary-cluster-instance"
+  cluster_identifier   = aws_rds_cluster.primary.id
+  instance_class       = "db.r4.large"
+  db_subnet_group_name = "default"
+}
+
+resource "aws_rds_cluster" "secondary" {
+  provider                  = aws.secondary
+  engine                    = aws_rds_global_cluster.example.engine
+  engine_version            = aws_rds_global_cluster.example.engine_version
+  cluster_identifier        = "test-secondary-cluster"
+  global_cluster_identifier = aws_rds_global_cluster.example.id
+  db_subnet_group_name      = "default"
+}
+
+resource "aws_rds_cluster_instance" "secondary" {
+  provider             = aws.secondary
+  engine               = aws_rds_global_cluster.example.engine
+  engine_version       = aws_rds_global_cluster.example.engine_version
+  identifier           = "test-secondary-cluster-instance"
+  cluster_identifier   = aws_rds_cluster.secondary.id
+  instance_class       = "db.r4.large"
+  db_subnet_group_name = "default"
+
+  depends_on = [
+    aws_rds_cluster_instance.primary
+  ]
+}
+```
+
+### New PostgreSQL Global Cluster
+
 
 ```terraform
 provider "aws" {
@@ -24,44 +81,63 @@ provider "aws" {
 
 provider "aws" {
   alias  = "secondary"
-  region = "us-west-2"
+  region = "us-east-1"
 }
 
 resource "aws_rds_global_cluster" "example" {
-  provider = aws.primary
-
-  global_cluster_identifier = "example"
+  global_cluster_identifier = "global-test"
+  engine                    = "aurora-postgresql"
+  engine_version            = "11.9"
+  database_name             = "example_db"
 }
 
 resource "aws_rds_cluster" "primary" {
-  provider = aws.primary
-
-  # ... other configuration ...
+  provider                  = aws.primary
+  engine                    = aws_rds_global_cluster.example.engine
+  engine_version            = aws_rds_global_cluster.example.engine_version
+  cluster_identifier        = "test-primary-cluster"
+  master_username           = "username"
+  master_password           = "somepass123"
+  database_name             = "example_db"
   global_cluster_identifier = aws_rds_global_cluster.example.id
+  db_subnet_group_name      = "default"
 }
 
 resource "aws_rds_cluster_instance" "primary" {
-  provider = aws.primary
-
-  # ... other configuration ...
-  cluster_identifier = aws_rds_cluster.primary.id
+  provider             = aws.primary
+  engine               = aws_rds_global_cluster.example.engine
+  engine_version       = aws_rds_global_cluster.example.engine_version
+  identifier           = "test-primary-cluster-instance"
+  cluster_identifier   = aws_rds_cluster.primary.id
+  instance_class       = "db.r4.large"
+  db_subnet_group_name = "default"
 }
 
 resource "aws_rds_cluster" "secondary" {
-  depends_on = [aws_rds_cluster_instance.primary]
-  provider   = aws.secondary
-
-  # ... other configuration ...
+  provider                  = aws.secondary
+  engine                    = aws_rds_global_cluster.example.engine
+  engine_version            = aws_rds_global_cluster.example.engine_version
+  cluster_identifier        = "test-secondary-cluster"
   global_cluster_identifier = aws_rds_global_cluster.example.id
+  skip_final_snapshot       = true
+  db_subnet_group_name      = "default"
+
+  depends_on = [
+    aws_rds_cluster_instance.primary
+  ]
 }
 
 resource "aws_rds_cluster_instance" "secondary" {
-  provider = aws.secondary
-
-  # ... other configuration ...
-  cluster_identifier = aws_rds_cluster.secondary.id
+  provider             = aws.secondary
+  engine               = aws_rds_global_cluster.example.engine
+  engine_version       = aws_rds_global_cluster.example.engine_version
+  identifier           = "test-secondary-cluster-instance"
+  cluster_identifier   = aws_rds_cluster.secondary.id
+  instance_class       = "db.r4.large"
+  db_subnet_group_name = "default"
 }
 ```
+
 
 ### New Global Cluster From Existing DB Cluster
 
@@ -113,7 +189,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_rds_global_cluster` can be imported by using the RDS Global Cluster identifier, e.g.
+`aws_rds_global_cluster` can be imported by using the RDS Global Cluster identifier, e.g.,
 
 ```
 $ terraform import aws_rds_global_cluster.example example
@@ -121,7 +197,7 @@ $ terraform import aws_rds_global_cluster.example example
 
 Certain resource arguments, like `force_destroy`, only exist within Terraform. If the argument is set in the Terraform configuration on an imported resource, Terraform will show a difference on the first plan after import to update the state value. This change is safe to apply immediately so the state matches the desired configuration.
 
-Certain resource arguments, like `source_db_cluster_identifier`, do not have an API method for reading the information after creation. If the argument is set in the Terraform configuration on an imported resource, Terraform will always show a difference. To workaround this behavior, either omit the argument from the Terraform configuration or use [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) to hide the difference, e.g.
+Certain resource arguments, like `source_db_cluster_identifier`, do not have an API method for reading the information after creation. If the argument is set in the Terraform configuration on an imported resource, Terraform will always show a difference. To workaround this behavior, either omit the argument from the Terraform configuration or use [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) to hide the difference, e.g.,
 
 ```terraform
 resource "aws_rds_global_cluster" "example" {

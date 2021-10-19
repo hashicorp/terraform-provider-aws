@@ -77,12 +77,12 @@ or `egress` (outbound).
 
 The following arguments are optional:
 
-* `cidr_blocks` - (Optional) List of CIDR blocks. Cannot be specified with `source_security_group_id`.
+* `cidr_blocks` - (Optional) List of CIDR blocks. Cannot be specified with `source_security_group_id` or `self`.
 * `description` - (Optional) Description of the rule.
-* `ipv6_cidr_blocks` - (Optional) List of IPv6 CIDR blocks.
+* `ipv6_cidr_blocks` - (Optional) List of IPv6 CIDR blocks. Cannot be specified with `source_security_group_id` or `self`.
 * `prefix_list_ids` - (Optional) List of Prefix List IDs.
-* `self` - (Optional) Whether the security group itself will be added as a source to this ingress rule. Cannot be specified with `source_security_group_id`.
-* `source_security_group_id` - (Optional) Security group id to allow access to/from, depending on the `type`. Cannot be specified with `cidr_blocks` and `self`.
+* `self` - (Optional) Whether the security group itself will be added as a source to this ingress rule. Cannot be specified with `cidr_blocks`, `ipv6_cidr_blocks`, or `source_security_group_id`.
+* `source_security_group_id` - (Optional) Security group id to allow access to/from, depending on the `type`. Cannot be specified with `cidr_blocks`, `ipv6_cidr_blocks`, or `self`.
 
 ## Attributes Reference
 
@@ -92,7 +92,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Security Group Rules can be imported using the `security_group_id`, `type`, `protocol`, `from_port`, `to_port`, and source(s)/destination(s) (e.g. `cidr_block`) separated by underscores (`_`). All parts are required.
+Security Group Rules can be imported using the `security_group_id`, `type`, `protocol`, `from_port`, `to_port`, and source(s)/destination(s) (e.g., `cidr_block`) separated by underscores (`_`). All parts are required.
 
 Not all rule permissions (e.g., not all of a rule's CIDR blocks) need to be imported for Terraform to manage rule permissions. However, importing some of a rule's permissions but not others, and then making changes to the rule will result in the creation of an additional rule to capture the updated permissions. Rule permissions that were not imported are left intact in the original rule.
 
@@ -112,6 +112,12 @@ Import a rule, applicable to all ports, with a protocol other than TCP/UDP/ICMP/
 
 ```console
 $ terraform import aws_security_group_rule.ingress sg-6777656e646f6c796e_ingress_92_0_65536_10.0.3.0/24_10.0.4.0/24
+```
+
+Import a default any/any egress rule to 0.0.0.0/0:
+
+```console
+$ terraform import aws_security_group_rule.default_egress sg-6777656e646f6c796e_egress_all_0_0_0.0.0.0/0
 ```
 
 Import an egress rule with a prefix list ID destination:

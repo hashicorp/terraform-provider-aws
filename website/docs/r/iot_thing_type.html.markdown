@@ -35,7 +35,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-IOT Thing Types can be imported using the name, e.g.
+IOT Thing Types can be imported using the name, e.g.,
 
 ```
 $ terraform import aws_iot_thing_type.example example

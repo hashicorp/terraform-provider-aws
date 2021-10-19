@@ -70,7 +70,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Sagemaker Code Repositories can be imported using the `name`, e.g.
+Sagemaker Code Repositories can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_sagemaker_code_repository.test_code_repository my-code-repo

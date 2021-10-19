@@ -95,6 +95,7 @@ The following arguments are supported:
 * `vpc_id` - (Required) The ID of the Amazon Virtual Private Cloud (VPC) that Studio uses for communication.
 * `subnet_ids` - (Required) The VPC subnets that Studio uses for communication.
 * `default_user_settings` - (Required) The default user settings. See [Default User Settings](#default-user-settings) below.
+* `retention_policy` - (Optional) The retention policy for this domain, which specifies whether resources will be retained after the Domain is deleted. By default, all resources are retained. See [Retention Policy](#retention-policy) below.
 * `kms_key_id` - (Optional) The AWS KMS customer managed CMK used to encrypt the EFS volume attached to the domain.
 * `app_network_access_type` - (Optional) Specifies the VPC used for non-EFS traffic. The default value is `PublicInternetOnly`. Valid values are `PublicInternetOnly` and `VpcOnly`.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -122,10 +123,12 @@ The following arguments are supported:
 
 * `default_resource_spec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. see [Default Resource Spec](#default-resource-spec) below.
 * `custom_image` - (Optional) A list of custom SageMaker images that are configured to run as a KernelGateway app. see [Custom Image](#custom-image) below.
+* `lifecycle_config_arns` - (Optional) The Amazon Resource Name (ARN) of the Lifecycle Configurations.
 
 #### Jupyter Server App Settings
 
 * `default_resource_spec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. see [Default Resource Spec](#default-resource-spec) below.
+* `lifecycle_config_arns` - (Optional) The Amazon Resource Name (ARN) of the Lifecycle Configurations.
 
 ##### Default Resource Spec
 
@@ -137,6 +140,10 @@ The following arguments are supported:
 * `app_image_config_name` - (Required) The name of the App Image Config.
 * `image_name` - (Required) The name of the Custom Image.
 * `image_version_number` - (Optional) The version number of the Custom Image.
+
+### Retention Policy
+
+* `home_efs_file_system` - (Optional) The retention policy for data stored on an Amazon Elastic File System (EFS) volume. Default value is `Retain`.
 
 ## Attributes Reference
 
@@ -151,7 +158,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Sagemaker Code Domains can be imported using the `id`, e.g.
+Sagemaker Code Domains can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_sagemaker_domain.test_domain d-8jgsjtilstu8

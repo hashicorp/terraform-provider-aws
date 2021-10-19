@@ -101,7 +101,7 @@ No additional attributes are exported.
 
 ## Import
 
-S3 bucket analytics configurations can be imported using `bucket:analytics`, e.g.
+S3 bucket analytics configurations can be imported using `bucket:analytics`, e.g.,
 
 ```
 $ terraform import aws_s3_bucket_analytics_configuration.my-bucket-entire-bucket my-bucket:EntireBucket
