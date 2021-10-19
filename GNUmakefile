@@ -1,6 +1,6 @@
 SWEEP?=us-east-1,us-east-2,us-west-2
 TEST?=./...
-SWEEP_DIR?=./internal
+SWEEP_DIR?=./internal/sweep
 PKG_NAME=internal
 TEST_COUNT?=1
 ACCTEST_TIMEOUT?=180m
@@ -17,7 +17,7 @@ gen:
 
 sweep:
 	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
-	go test $(SWEEP_DIR) -v -sweep=$(SWEEP) $(SWEEPARGS) -timeout 60m
+	go test $(SWEEP_DIR) -v -tags=sweep -sweep=$(SWEEP) $(SWEEPARGS) -timeout 60m
 
 test: fmtcheck
 	go test $(TEST) $(TESTARGS) -timeout=5m
