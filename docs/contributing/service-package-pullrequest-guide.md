@@ -37,28 +37,28 @@ with the pull request author.
    **Resource Files**
 
    ```
-     mv aws/resource_aws_{service_name}_{resource_name}.go \
+     git mv aws/resource_aws_{service_name}_{resource_name}.go \
      internal/service/{service_name}/{resource_name}.go
    ```
 
    **Resource Test Files**
 
    ```
-     mv aws/resource_aws_{service_name}_{resource_name}_test.go \
+     git mv aws/resource_aws_{service_name}_{resource_name}_test.go \
      internal/service/{service_name}/{resource_name}_test.go
    ```
 
    **Data Source Files**
 
    ```
-     mv aws/data_source_aws_{service_name}_{resource_name}.go \
+     git mv aws/data_source_aws_{service_name}_{resource_name}.go \
      internal/service/{service_name}/{resource_name}_data_source.go
    ```
 
    **Data Source Test Files**
 
    ```
-     mv aws/data_source_aws_{service_name}_{resource_name}_test.go \
+     git mv aws/data_source_aws_{service_name}_{resource_name}_test.go \
      internal/service/{service_name}/{resource_name}_data_source_test.go
    ```
 
