@@ -577,6 +577,7 @@ func ResourceDistribution() *schema.Resource {
 						"origin_path": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Default:  "",
 						},
 						"origin_shield": {
 							Type:     schema.TypeList,
