@@ -22,7 +22,7 @@ The core services we have identified are:
 
 * IAM
 
-* Autoscaling (ASG)
+* AutoScaling (ASG)
 
 * ElastiCache
 

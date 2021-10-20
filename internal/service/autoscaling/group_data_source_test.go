@@ -99,7 +99,7 @@ resource "aws_autoscaling_group" "match" {
   health_check_type         = "ELB"
   desired_capacity          = 0
   force_delete              = true
-  launch_configuration      = aws_launch_configuration.data_source_aws_autoscaling_group_test.name
+  launch_configuration      = aws_autoscaling_launch_configuration.data_source_aws_autoscaling_group_test.name
   availability_zones        = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1]]
 }
 
@@ -111,11 +111,11 @@ resource "aws_autoscaling_group" "no_match" {
   health_check_type         = "ELB"
   desired_capacity          = 0
   force_delete              = true
-  launch_configuration      = aws_launch_configuration.data_source_aws_autoscaling_group_test.name
+  launch_configuration      = aws_autoscaling_launch_configuration.data_source_aws_autoscaling_group_test.name
   availability_zones        = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1]]
 }
 
-resource "aws_launch_configuration" "data_source_aws_autoscaling_group_test" {
+resource "aws_autoscaling_launch_configuration" "data_source_aws_autoscaling_group_test" {
   name          = "%[1]s"
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type

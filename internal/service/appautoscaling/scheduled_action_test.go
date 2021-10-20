@@ -582,7 +582,7 @@ func testAccCheckScheduledActionExists(name string, obj *applicationautoscaling.
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("Application Autoscaling scheduled action (%s) ID not set", name)
+			return fmt.Errorf("Application AutoScaling scheduled action (%s) ID not set", name)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppAutoScalingConn

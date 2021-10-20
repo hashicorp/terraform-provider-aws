@@ -130,7 +130,7 @@ func testAccLifecycleHookImportStateIdFunc(resourceName string) resource.ImportS
 
 func testAccLifecycleHookConfig(name string) string {
 	return acctest.ConfigLatestAmazonLinuxHvmEbsAmi() + fmt.Sprintf(`
-resource "aws_launch_configuration" "foobar" {
+resource "aws_autoscaling_launch_configuration" "foobar" {
   name          = "%s"
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t1.micro"
@@ -199,7 +199,7 @@ resource "aws_autoscaling_group" "foobar" {
   health_check_type         = "ELB"
   force_delete              = true
   termination_policies      = ["OldestInstance"]
-  launch_configuration      = aws_launch_configuration.foobar.name
+  launch_configuration      = aws_autoscaling_launch_configuration.foobar.name
 
   tag {
     key                 = "Foo"
@@ -229,7 +229,7 @@ EOF
 
 func testAccLifecycleHookConfig_omitDefaultResult(name string, rInt int) string {
 	return acctest.ConfigLatestAmazonLinuxHvmEbsAmi() + fmt.Sprintf(`
-resource "aws_launch_configuration" "foobar" {
+resource "aws_autoscaling_launch_configuration" "foobar" {
   name          = "%s"
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t1.micro"
@@ -298,7 +298,7 @@ resource "aws_autoscaling_group" "foobar" {
   health_check_type         = "ELB"
   force_delete              = true
   termination_policies      = ["OldestInstance"]
-  launch_configuration      = aws_launch_configuration.foobar.name
+  launch_configuration      = aws_autoscaling_launch_configuration.foobar.name
 
   tag {
     key                 = "Foo"

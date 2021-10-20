@@ -223,7 +223,7 @@ resource "aws_sns_topic" "topic_example" {
   name = "user-updates-topic-%s"
 }
 
-resource "aws_launch_configuration" "foobar" {
+resource "aws_autoscaling_launch_configuration" "foobar" {
   name          = "foobarautoscaling-terraform-test-%s"
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t2.micro"
@@ -248,7 +248,7 @@ resource "aws_autoscaling_group" "bar" {
   desired_capacity          = 1
   force_delete              = true
   termination_policies      = ["OldestInstance"]
-  launch_configuration      = aws_launch_configuration.foobar.name
+  launch_configuration      = aws_autoscaling_launch_configuration.foobar.name
 }
 
 resource "aws_autoscaling_notification" "example" {
@@ -270,7 +270,7 @@ resource "aws_sns_topic" "topic_example" {
   name = "user-updates-topic-%s"
 }
 
-resource "aws_launch_configuration" "foobar" {
+resource "aws_autoscaling_launch_configuration" "foobar" {
   name          = "foobarautoscaling-terraform-test-%s"
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t2.micro"
@@ -295,7 +295,7 @@ resource "aws_autoscaling_group" "bar" {
   desired_capacity          = 1
   force_delete              = true
   termination_policies      = ["OldestInstance"]
-  launch_configuration      = aws_launch_configuration.foobar.name
+  launch_configuration      = aws_autoscaling_launch_configuration.foobar.name
 }
 
 resource "aws_autoscaling_group" "foo" {
@@ -308,7 +308,7 @@ resource "aws_autoscaling_group" "foo" {
   desired_capacity          = 1
   force_delete              = true
   termination_policies      = ["OldestInstance"]
-  launch_configuration      = aws_launch_configuration.foobar.name
+  launch_configuration      = aws_autoscaling_launch_configuration.foobar.name
 }
 
 resource "aws_autoscaling_notification" "example" {
@@ -334,7 +334,7 @@ resource "aws_sns_topic" "user_updates" {
   name = "user-updates-topic"
 }
 
-resource "aws_launch_configuration" "foobar" {
+resource "aws_autoscaling_launch_configuration" "foobar" {
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t2.micro"
 }
@@ -359,7 +359,7 @@ resource "aws_autoscaling_group" "bar" {
   desired_capacity          = 0
   force_delete              = true
   termination_policies      = ["OldestInstance"]
-  launch_configuration      = aws_launch_configuration.foobar.name
+  launch_configuration      = aws_autoscaling_launch_configuration.foobar.name
 }
 
 resource "aws_autoscaling_notification" "example" {

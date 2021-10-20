@@ -50,7 +50,7 @@ resource "aws_autoscaling_group" "app" {
   min_size             = var.asg_min
   max_size             = var.asg_max
   desired_capacity     = var.asg_desired
-  launch_configuration = aws_launch_configuration.app.name
+  launch_configuration = aws_autoscaling_launch_configuration.app.name
 }
 
 data "template_file" "cloud_config" {
@@ -86,7 +86,7 @@ data "aws_ami" "stable_coreos" {
   owners = ["595879546273"] # CoreOS
 }
 
-resource "aws_launch_configuration" "app" {
+resource "aws_autoscaling_launch_configuration" "app" {
   security_groups = [
     aws_security_group.instance_sg.id,
   ]

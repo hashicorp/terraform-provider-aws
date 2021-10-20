@@ -441,7 +441,7 @@ func testAccAutoScalingPlansScalingPlanConfigBase(rName, tagName string) string 
 		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
-resource "aws_launch_configuration" "test" {
+resource "aws_autoscaling_launch_configuration" "test" {
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
 }
@@ -449,7 +449,7 @@ resource "aws_launch_configuration" "test" {
 resource "aws_autoscaling_group" "test" {
   name = %[1]q
 
-  launch_configuration = aws_launch_configuration.test.name
+  launch_configuration = aws_autoscaling_launch_configuration.test.name
   availability_zones   = [data.aws_availability_zones.available.names[0]]
 
   min_size         = 0

@@ -52,7 +52,7 @@ func DataSourceGroups() *schema.Resource {
 func dataSourceGroupsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AutoScalingConn
 
-	log.Printf("[DEBUG] Reading Autoscaling Groups.")
+	log.Printf("[DEBUG] Reading AutoScaling Groups.")
 
 	var rawName []string
 	var rawArn []string
@@ -100,7 +100,7 @@ func dataSourceGroupsRead(d *schema.ResourceData, meta interface{}) error {
 		})
 	}
 	if err != nil {
-		return fmt.Errorf("Error fetching Autoscaling Groups: %w", err)
+		return fmt.Errorf("Error fetching AutoScaling Groups: %w", err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
@@ -109,11 +109,11 @@ func dataSourceGroupsRead(d *schema.ResourceData, meta interface{}) error {
 	sort.Strings(rawArn)
 
 	if err := d.Set("names", rawName); err != nil {
-		return fmt.Errorf("[WARN] Error setting Autoscaling Group Names: %w", err)
+		return fmt.Errorf("[WARN] Error setting AutoScaling Group Names: %w", err)
 	}
 
 	if err := d.Set("arns", rawArn); err != nil {
-		return fmt.Errorf("[WARN] Error setting Autoscaling Group ARNs: %w", err)
+		return fmt.Errorf("[WARN] Error setting AutoScaling Group ARNs: %w", err)
 	}
 
 	return nil

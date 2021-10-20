@@ -1,12 +1,12 @@
 ---
-subcategory: "Autoscaling"
+subcategory: "AutoScaling"
 layout: "aws"
-page_title: "AWS: aws_launch_configuration"
+page_title: "AWS: aws_autoscaling_launch_configuration"
 description: |-
   Provides a resource to create a new launch configuration, used for autoscaling groups.
 ---
 
-# Resource: aws_launch_configuration
+# Resource: aws_autoscaling_launch_configuration
 
 Provides a resource to create a new launch configuration, used for autoscaling groups.
 
@@ -29,7 +29,7 @@ data "aws_ami" "ubuntu" {
   owners = ["099720109477"] # Canonical
 }
 
-resource "aws_launch_configuration" "as_conf" {
+resource "aws_autoscaling_launch_configuration" "as_conf" {
   name          = "web_config"
   image_id      = data.aws_ami.ubuntu.id
   instance_type = "t2.micro"
@@ -63,7 +63,7 @@ data "aws_ami" "ubuntu" {
   owners = ["099720109477"] # Canonical
 }
 
-resource "aws_launch_configuration" "as_conf" {
+resource "aws_autoscaling_launch_configuration" "as_conf" {
   name_prefix   = "terraform-lc-example-"
   image_id      = data.aws_ami.ubuntu.id
   instance_type = "t2.micro"
@@ -75,7 +75,7 @@ resource "aws_launch_configuration" "as_conf" {
 
 resource "aws_autoscaling_group" "bar" {
   name                 = "terraform-asg-example"
-  launch_configuration = aws_launch_configuration.as_conf.name
+  launch_configuration = aws_autoscaling_launch_configuration.as_conf.name
   min_size             = 1
   max_size             = 2
 
@@ -115,7 +115,7 @@ data "aws_ami" "ubuntu" {
   owners = ["099720109477"] # Canonical
 }
 
-resource "aws_launch_configuration" "as_conf" {
+resource "aws_autoscaling_launch_configuration" "as_conf" {
   image_id      = data.aws_ami.ubuntu.id
   instance_type = "m4.large"
   spot_price    = "0.001"
@@ -127,7 +127,7 @@ resource "aws_launch_configuration" "as_conf" {
 
 resource "aws_autoscaling_group" "bar" {
   name                 = "terraform-asg-example"
-  launch_configuration = aws_launch_configuration.as_conf.name
+  launch_configuration = aws_autoscaling_launch_configuration.as_conf.name
 }
 ```
 
@@ -243,5 +243,5 @@ In addition to all arguments above, the following attributes are exported:
 Launch configurations can be imported using the `name`, e.g.,
 
 ```
-$ terraform import aws_launch_configuration.as_conf terraform-lg-123456
+$ terraform import aws_autoscaling_launch_configuration.as_conf terraform-lg-123456
 ```

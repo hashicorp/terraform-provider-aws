@@ -3,7 +3,7 @@ output "security_group" {
 }
 
 output "launch_configuration" {
-  value = aws_launch_configuration.web-lc.id
+  value = aws_autoscaling_launch_configuration.web-lc.id
 }
 
 output "asg_name" {

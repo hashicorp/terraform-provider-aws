@@ -641,8 +641,8 @@ func resourceLaunchConfigurationDelete(d *schema.ResourceData, meta interface{})
 		LaunchConfigurationName: aws.String(d.Id()),
 	}
 
-	log.Printf("[DEBUG] Deleting Autoscaling Launch Configuration: %s", d.Id())
-	// Retry for Autoscaling eventual consistency
+	log.Printf("[DEBUG] Deleting AutoScaling Launch Configuration: %s", d.Id())
+	// Retry for AutoScaling eventual consistency
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 		_, err := autoscalingconn.DeleteLaunchConfiguration(input)
 
@@ -666,7 +666,7 @@ func resourceLaunchConfigurationDelete(d *schema.ResourceData, meta interface{})
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Autoscaling Launch Configuration (%s): %s", d.Id(), err)
+		return fmt.Errorf("error deleting AutoScaling Launch Configuration (%s): %s", d.Id(), err)
 	}
 
 	return nil

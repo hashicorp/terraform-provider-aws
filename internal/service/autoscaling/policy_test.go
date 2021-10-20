@@ -284,13 +284,13 @@ func testAccCheckScalingPolicyDisappears(conf *autoscaling.ScalingPolicy) resour
 					return nil
 				}
 				return resource.NonRetryableError(
-					fmt.Errorf("Error retrieving Autoscaling Policy: %s", err))
+					fmt.Errorf("Error retrieving AutoScaling Policy: %s", err))
 			}
 			if resp.ScalingPolicies == nil || len(resp.ScalingPolicies) == 0 {
 				return nil
 			}
 			return resource.RetryableError(fmt.Errorf(
-				"Waiting for Autoscaling Policy: %v", conf.PolicyName))
+				"Waiting for AutoScaling Policy: %v", conf.PolicyName))
 		})
 	}
 }
@@ -504,7 +504,7 @@ data "aws_availability_zones" "available" {
   }
 }
 
-resource "aws_launch_configuration" "test" {
+resource "aws_autoscaling_launch_configuration" "test" {
   name          = "%s"
   image_id      = data.aws_ami.amzn.id
   instance_type = "t2.micro"
@@ -516,7 +516,7 @@ resource "aws_autoscaling_group" "test" {
   max_size             = 0
   min_size             = 0
   force_delete         = true
-  launch_configuration = aws_launch_configuration.test.name
+  launch_configuration = aws_autoscaling_launch_configuration.test.name
 }
 `, name, name)
 }

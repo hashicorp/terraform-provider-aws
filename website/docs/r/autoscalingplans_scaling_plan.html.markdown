@@ -1,5 +1,5 @@
 ---
-subcategory: "Autoscaling Plans"
+subcategory: "AutoScaling Plans"
 layout: "aws"
 page_title: "AWS: aws_autoscalingplans_scaling_plan"
 description: |-
@@ -25,7 +25,7 @@ data "aws_availability_zones" "available" {}
 resource "aws_autoscaling_group" "example" {
   name_prefix = "example"
 
-  launch_configuration = aws_launch_configuration.example.name
+  launch_configuration = aws_autoscaling_launch_configuration.example.name
   availability_zones   = [data.aws_availability_zones.available.names[0]]
 
   min_size = 0
@@ -76,7 +76,7 @@ data "aws_availability_zones" "available" {}
 resource "aws_autoscaling_group" "example" {
   name_prefix = "example"
 
-  launch_configuration = aws_launch_configuration.example.name
+  launch_configuration = aws_autoscaling_launch_configuration.example.name
   availability_zones   = [data.aws_availability_zones.available.names[0]]
 
   min_size = 0

@@ -45,7 +45,7 @@ resource "aws_ecs_service" "mongo" {
 
 ### Ignoring Changes to Desired Count
 
-You can utilize the generic Terraform resource [lifecycle configuration block](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html) with `ignore_changes` to create an ECS service with an initial count of running instances, then ignore any changes to that count caused externally (e.g., Application Autoscaling).
+You can utilize the generic Terraform resource [lifecycle configuration block](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html) with `ignore_changes` to create an ECS service with an initial count of running instances, then ignore any changes to that count caused externally (e.g., Application AutoScaling).
 
 ```terraform
 resource "aws_ecs_service" "example" {

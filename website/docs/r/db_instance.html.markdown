@@ -54,7 +54,7 @@ resource "aws_db_instance" "default" {
 }
 ```
 
-### Storage Autoscaling
+### Storage AutoScaling
 
 To enable Storage Autoscaling with instances that support the feature, define the `max_allocated_storage` argument higher than the `allocated_storage` argument. Terraform will automatically hide differences with the `allocated_storage` argument value if autoscaling occurs.
 

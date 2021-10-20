@@ -68,7 +68,7 @@ func init() {
 			"aws_glue_job",
 			"aws_instance",
 			"aws_lambda_function",
-			"aws_launch_configuration",
+			"aws_autoscaling_launch_configuration",
 			"aws_redshift_cluster",
 			"aws_redshift_scheduled_action",
 			"aws_spot_fleet_request",

@@ -134,7 +134,7 @@ func dataSourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 		},
 	}
 
-	log.Printf("[DEBUG] Reading Autoscaling Group: %s", input)
+	log.Printf("[DEBUG] Reading AutoScaling Group: %s", input)
 
 	result, err := conn.DescribeAutoScalingGroups(input)
 
@@ -144,7 +144,7 @@ func dataSourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error describing AutoScaling Groups: %w", err)
 	}
 
-	log.Printf("[DEBUG] Found Autoscaling Group: %s", result)
+	log.Printf("[DEBUG] Found AutoScaling Group: %s", result)
 
 	if len(result.AutoScalingGroups) < 1 {
 		return fmt.Errorf("Your query did not return any results. Please try a different search criteria.")

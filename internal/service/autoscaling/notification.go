@@ -171,7 +171,7 @@ func addNotificationConfigToGroupsWithTopic(conn *autoscaling.AutoScaling, group
 		_, err := conn.PutNotificationConfiguration(opts)
 		if err != nil {
 			if awsErr, ok := err.(awserr.Error); ok {
-				return fmt.Errorf("Error creating Autoscaling Group Notification for Group %s, error: \"%s\", code: \"%s\"", *a, awsErr.Message(), awsErr.Code())
+				return fmt.Errorf("Error creating AutoScaling Group Notification for Group %s, error: \"%s\", code: \"%s\"", *a, awsErr.Message(), awsErr.Code())
 			}
 			return err
 		}

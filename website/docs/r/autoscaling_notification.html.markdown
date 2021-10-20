@@ -1,5 +1,5 @@
 ---
-subcategory: "Autoscaling"
+subcategory: "AutoScaling"
 layout: "aws"
 page_title: "AWS: aws_autoscaling_notification"
 description: |-

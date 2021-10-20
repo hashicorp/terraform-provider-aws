@@ -108,7 +108,7 @@ func resourceLifecycleHookRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 	if p == nil {
-		log.Printf("[WARN] Autoscaling Lifecycle Hook (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] AutoScaling Lifecycle Hook (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -141,7 +141,7 @@ func resourceLifecycleHookDelete(d *schema.ResourceData, meta interface{}) error
 		LifecycleHookName:    aws.String(d.Get("name").(string)),
 	}
 	if _, err := conn.DeleteLifecycleHook(&params); err != nil {
-		return fmt.Errorf("Autoscaling Lifecycle Hook: %s", err)
+		return fmt.Errorf("AutoScaling Lifecycle Hook: %s", err)
 	}
 
 	return nil

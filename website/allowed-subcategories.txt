@@ -10,11 +10,11 @@ AppMesh
 App Runner
 AppSync
 AppStream
-Application Autoscaling
+Application AutoScaling
 Athena
 Audit Manager
-Autoscaling
-Autoscaling Plans
+AutoScaling
+AutoScaling Plans
 Amazon Managed Service for Prometheus (AMP)
 Backup
 Batch

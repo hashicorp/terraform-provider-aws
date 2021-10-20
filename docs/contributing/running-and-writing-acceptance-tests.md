@@ -1371,7 +1371,7 @@ func testAccLaunchConfigurationDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		fmt.Sprintf(`
-resource "aws_launch_configuration" "test" {
+resource "aws_autoscaling_launch_configuration" "test" {
   name          = %[1]q
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "m1.small"

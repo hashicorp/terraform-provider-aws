@@ -3062,7 +3062,7 @@ data "aws_subnet" "test" {
   default_for_az    = "true"
 }
 
-resource "aws_launch_configuration" "test" {
+resource "aws_autoscaling_launch_configuration" "test" {
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t2.micro"
   name_prefix   = "tf-acc-test-codedeploy-deployment-group-"
@@ -3080,7 +3080,7 @@ resource "aws_autoscaling_group" "test" {
 
   vpc_zone_identifier = [data.aws_subnet.test.id]
 
-  launch_configuration = aws_launch_configuration.test.name
+  launch_configuration = aws_autoscaling_launch_configuration.test.name
 
   lifecycle {
     create_before_destroy = true
@@ -3154,7 +3154,7 @@ data "aws_subnet" "test" {
   default_for_az    = "true"
 }
 
-resource "aws_launch_configuration" "test" {
+resource "aws_autoscaling_launch_configuration" "test" {
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t2.micro"
   name_prefix   = "tf-acc-test-codedeploy-deployment-group-"
@@ -3172,7 +3172,7 @@ resource "aws_autoscaling_group" "test" {
 
   vpc_zone_identifier = [data.aws_subnet.test.id]
 
-  launch_configuration = aws_launch_configuration.test.name
+  launch_configuration = aws_autoscaling_launch_configuration.test.name
 
   lifecycle {
     create_before_destroy = true

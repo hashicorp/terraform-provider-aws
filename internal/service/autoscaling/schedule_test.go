@@ -276,7 +276,7 @@ func testAccCheckScalingScheduleHasNoDesiredCapacity(
 
 func testAccScheduleConfig(r, start, end string) string {
 	return acctest.ConfigLatestAmazonLinuxHvmEbsAmi() + fmt.Sprintf(`
-resource "aws_launch_configuration" "foobar" {
+resource "aws_autoscaling_launch_configuration" "foobar" {
   name          = "%s"
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t1.micro"
@@ -300,7 +300,7 @@ resource "aws_autoscaling_group" "foobar" {
   health_check_type         = "ELB"
   force_delete              = true
   termination_policies      = ["OldestInstance"]
-  launch_configuration      = aws_launch_configuration.foobar.name
+  launch_configuration      = aws_autoscaling_launch_configuration.foobar.name
 
   tag {
     key                 = "Foo"
@@ -323,7 +323,7 @@ resource "aws_autoscaling_schedule" "foobar" {
 
 func testAccScheduleConfig_recurrence(r string) string {
 	return acctest.ConfigLatestAmazonLinuxHvmEbsAmi() + fmt.Sprintf(`
-resource "aws_launch_configuration" "foobar" {
+resource "aws_autoscaling_launch_configuration" "foobar" {
   name          = "%s"
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t1.micro"
@@ -347,7 +347,7 @@ resource "aws_autoscaling_group" "foobar" {
   health_check_type         = "ELB"
   force_delete              = true
   termination_policies      = ["OldestInstance"]
-  launch_configuration      = aws_launch_configuration.foobar.name
+  launch_configuration      = aws_autoscaling_launch_configuration.foobar.name
 
   tag {
     key                 = "Foo"
@@ -370,7 +370,7 @@ resource "aws_autoscaling_schedule" "foobar" {
 
 func testAccScheduleConfig_zeroValues(r, start, end string) string {
 	return acctest.ConfigLatestAmazonLinuxHvmEbsAmi() + fmt.Sprintf(`
-resource "aws_launch_configuration" "foobar" {
+resource "aws_autoscaling_launch_configuration" "foobar" {
   name          = "%s"
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t1.micro"
@@ -394,7 +394,7 @@ resource "aws_autoscaling_group" "foobar" {
   health_check_type         = "ELB"
   force_delete              = true
   termination_policies      = ["OldestInstance"]
-  launch_configuration      = aws_launch_configuration.foobar.name
+  launch_configuration      = aws_autoscaling_launch_configuration.foobar.name
 
   tag {
     key                 = "Foo"
@@ -417,7 +417,7 @@ resource "aws_autoscaling_schedule" "foobar" {
 
 func testAccScheduleConfig_negativeOne(r, start, end string) string {
 	return acctest.ConfigLatestAmazonLinuxHvmEbsAmi() + fmt.Sprintf(`
-resource "aws_launch_configuration" "foobar" {
+resource "aws_autoscaling_launch_configuration" "foobar" {
   name          = "%s"
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t1.micro"
@@ -441,7 +441,7 @@ resource "aws_autoscaling_group" "foobar" {
   health_check_type         = "ELB"
   force_delete              = true
   termination_policies      = ["OldestInstance"]
-  launch_configuration      = aws_launch_configuration.foobar.name
+  launch_configuration      = aws_autoscaling_launch_configuration.foobar.name
 
   tag {
     key                 = "Foo"

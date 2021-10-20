@@ -330,7 +330,7 @@ func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 	if p == nil {
-		log.Printf("[WARN] Autoscaling Policy (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] AutoScaling Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -393,9 +393,9 @@ func resourcePolicyDelete(d *schema.ResourceData, meta interface{}) error {
 		AutoScalingGroupName: aws.String(d.Get("autoscaling_group_name").(string)),
 		PolicyName:           aws.String(d.Get("name").(string)),
 	}
-	log.Printf("[DEBUG] Deleting Autoscaling Policy opts: %s", params)
+	log.Printf("[DEBUG] Deleting AutoScaling Policy opts: %s", params)
 	if _, err := conn.DeletePolicy(&params); err != nil {
-		return fmt.Errorf("Autoscaling Scaling Policy: %s ", err)
+		return fmt.Errorf("AutoScaling Scaling Policy: %s ", err)
 	}
 
 	return nil
@@ -521,9 +521,9 @@ func getPolicy(d *schema.ResourceData, meta interface{}) (*autoscaling.ScalingPo
 	log.Printf("[DEBUG] AutoScaling Scaling Policy Describe Params: %#v", params)
 	resp, err := conn.DescribePolicies(&params)
 	if err != nil {
-		//A ValidationError here can mean that either the Policy is missing OR the Autoscaling Group is missing
+		//A ValidationError here can mean that either the Policy is missing OR the AutoScaling Group is missing
 		if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "ValidationError" {
-			log.Printf("[WARN] Autoscaling Policy (%s) not found, removing from state", d.Id())
+			log.Printf("[WARN] AutoScaling Policy (%s) not found, removing from state", d.Id())
 			d.SetId("")
 
 			return nil, nil

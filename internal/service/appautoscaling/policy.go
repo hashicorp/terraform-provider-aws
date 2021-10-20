@@ -304,7 +304,7 @@ func resourcePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 		return inputErr
 	}
 
-	log.Printf("[DEBUG] Application Autoscaling Update Scaling Policy: %#v", params)
+	log.Printf("[DEBUG] Application AutoScaling Update Scaling Policy: %#v", params)
 	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 		_, err := conn.PutScalingPolicy(&params)
 		if err != nil {

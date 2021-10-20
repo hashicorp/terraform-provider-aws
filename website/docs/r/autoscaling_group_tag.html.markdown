@@ -1,14 +1,14 @@
 ---
-subcategory: "Autoscaling"
+subcategory: "AutoScaling"
 layout: "aws"
 page_title: "AWS: aws_autoscaling_group_tag"
 description: |-
-  Manages an individual Autoscaling Group tag
+  Manages an individual AutoScaling Group tag
 ---
 
 # Resource: aws_autoscaling_group_tag
 
-Manages an individual Autoscaling Group (ASG) tag. This resource should only be used in cases where ASGs are created outside Terraform (e.g., ASGs implicitly created by EKS Node Groups).
+Manages an individual AutoScaling Group (ASG) tag. This resource should only be used in cases where ASGs are created outside Terraform (e.g., ASGs implicitly created by EKS Node Groups).
 
 ~> **NOTE:** This tagging resource should not be combined with the Terraform resource for managing the parent resource. For example, using `aws_autoscaling_group` and `aws_autoscaling_group_tag` to manage tags of the same ASG will cause a perpetual difference where the `aws_autoscaling_group` resource will try to remove the tag being added by the `aws_autoscaling_group_tag` resource.
 
@@ -46,7 +46,7 @@ resource "aws_autoscaling_group_tag" "example" {
 
 The following arguments are supported:
 
-* `autoscaling_group_name` - (Required) The name of the Autoscaling Group to apply the tag to.
+* `autoscaling_group_name` - (Required) The name of the AutoScaling Group to apply the tag to.
 * `tag` - (Required) The tag to create. The `tag` block is documented below.
 
 The `tag` block supports the following arguments:

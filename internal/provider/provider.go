@@ -357,9 +357,10 @@ func Provider() *schema.Provider {
 			"aws_appmesh_mesh":            appmesh.DataSourceMesh(),
 			"aws_appmesh_virtual_service": appmesh.DataSourceVirtualService(),
 
-			"aws_autoscaling_group":    autoscaling.DataSourceGroup(),
-			"aws_autoscaling_groups":   autoscaling.DataSourceGroups(),
-			"aws_launch_configuration": autoscaling.DataSourceLaunchConfiguration(),
+			"aws_autoscaling_group":                autoscaling.DataSourceGroup(),
+			"aws_autoscaling_groups":               autoscaling.DataSourceGroups(),
+			"aws_autoscaling_launch_configuration": autoscaling.DataSourceLaunchConfiguration(),
+			"aws_launch_configuration":             autoscaling.DataSourceLaunchConfiguration(), // backward compatible alias
 
 			"aws_backup_plan":      backup.DataSourcePlan(),
 			"aws_backup_selection": backup.DataSourceSelection(),
@@ -829,14 +830,15 @@ func Provider() *schema.Provider {
 			"aws_athena_named_query": athena.ResourceNamedQuery(),
 			"aws_athena_workgroup":   athena.ResourceWorkGroup(),
 
-			"aws_autoscaling_attachment":     autoscaling.ResourceAttachment(),
-			"aws_autoscaling_group":          autoscaling.ResourceGroup(),
-			"aws_autoscaling_group_tag":      autoscaling.ResourceGroupTag(),
-			"aws_autoscaling_lifecycle_hook": autoscaling.ResourceLifecycleHook(),
-			"aws_autoscaling_notification":   autoscaling.ResourceNotification(),
-			"aws_autoscaling_policy":         autoscaling.ResourcePolicy(),
-			"aws_autoscaling_schedule":       autoscaling.ResourceSchedule(),
-			"aws_launch_configuration":       autoscaling.ResourceLaunchConfiguration(),
+			"aws_autoscaling_attachment":           autoscaling.ResourceAttachment(),
+			"aws_autoscaling_group":                autoscaling.ResourceGroup(),
+			"aws_autoscaling_group_tag":            autoscaling.ResourceGroupTag(),
+			"aws_autoscaling_lifecycle_hook":       autoscaling.ResourceLifecycleHook(),
+			"aws_autoscaling_notification":         autoscaling.ResourceNotification(),
+			"aws_autoscaling_policy":               autoscaling.ResourcePolicy(),
+			"aws_autoscaling_schedule":             autoscaling.ResourceSchedule(),
+			"aws_autoscaling_launch_configuration": autoscaling.ResourceLaunchConfiguration(),
+			"aws_launch_configuration":             autoscaling.ResourceLaunchConfiguration(), // backward compatible alias
 
 			"aws_autoscalingplans_scaling_plan": autoscalingplans.ResourceScalingPlan(),
 
