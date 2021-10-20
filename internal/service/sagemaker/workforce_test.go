@@ -33,8 +33,8 @@ func testAccWorkforce_cognitoConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "workforce_name", rName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "sagemaker", regexp.MustCompile(`workforce/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "cognito_config.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "cognito_config.0.client_id", "aws_cognito_user_pool_client.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "cognito_config.0.user_pool", "aws_cognito_user_pool.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "cognito_config.0.client_id", "aws_cognitoidp_user_pool_client.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "cognito_config.0.user_pool", "aws_cognitoidp_user_pool.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "oidc_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "source_ip_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source_ip_config.0.cidrs.#", "0"),
@@ -235,19 +235,19 @@ func testAccCheckWorkforceExists(n string, workforce *sagemaker.Workforce) resou
 
 func testAccWorkforceBaseConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   name = %[1]q
 }
 
-resource "aws_cognito_user_pool_client" "test" {
+resource "aws_cognitoidp_user_pool_client" "test" {
   name            = %[1]q
   generate_secret = true
-  user_pool_id    = aws_cognito_user_pool.test.id
+  user_pool_id    = aws_cognitoidp_user_pool.test.id
 }
 
-resource "aws_cognito_user_pool_domain" "test" {
+resource "aws_cognitoidp_user_pool_domain" "test" {
   domain       = %[1]q
-  user_pool_id = aws_cognito_user_pool.test.id
+  user_pool_id = aws_cognitoidp_user_pool.test.id
 }
 `, rName)
 }
@@ -258,8 +258,8 @@ resource "aws_sagemaker_workforce" "test" {
   workforce_name = %[1]q
 
   cognito_config {
-    client_id = aws_cognito_user_pool_client.test.id
-    user_pool = aws_cognito_user_pool_domain.test.user_pool_id
+    client_id = aws_cognitoidp_user_pool_client.test.id
+    user_pool = aws_cognitoidp_user_pool_domain.test.user_pool_id
   }
 }
 `, rName)
@@ -271,8 +271,8 @@ resource "aws_sagemaker_workforce" "test" {
   workforce_name = %[1]q
 
   cognito_config {
-    client_id = aws_cognito_user_pool_client.test.id
-    user_pool = aws_cognito_user_pool_domain.test.user_pool_id
+    client_id = aws_cognitoidp_user_pool_client.test.id
+    user_pool = aws_cognitoidp_user_pool_domain.test.user_pool_id
   }
 
   source_ip_config {
@@ -288,8 +288,8 @@ resource "aws_sagemaker_workforce" "test" {
   workforce_name = %[1]q
 
   cognito_config {
-    client_id = aws_cognito_user_pool_client.test.id
-    user_pool = aws_cognito_user_pool_domain.test.user_pool_id
+    client_id = aws_cognitoidp_user_pool_client.test.id
+    user_pool = aws_cognitoidp_user_pool_domain.test.user_pool_id
   }
 
   source_ip_config {

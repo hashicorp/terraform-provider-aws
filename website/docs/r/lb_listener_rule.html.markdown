@@ -148,15 +148,15 @@ resource "aws_lb_listener_rule" "health_check" {
 
 # Authenticate-cognito Action
 
-resource "aws_cognito_user_pool" "pool" {
+resource "aws_cognitoidp_user_pool" "pool" {
   # ...
 }
 
-resource "aws_cognito_user_pool_client" "client" {
+resource "aws_cognitoidp_user_pool_client" "client" {
   # ...
 }
 
-resource "aws_cognito_user_pool_domain" "domain" {
+resource "aws_cognitoidp_user_pool_domain" "domain" {
   # ...
 }
 
@@ -167,9 +167,9 @@ resource "aws_lb_listener_rule" "admin" {
     type = "authenticate-cognito"
 
     authenticate_cognito {
-      user_pool_arn       = aws_cognito_user_pool.pool.arn
-      user_pool_client_id = aws_cognito_user_pool_client.client.id
-      user_pool_domain    = aws_cognito_user_pool_domain.domain.domain
+      user_pool_arn       = aws_cognitoidp_user_pool.pool.arn
+      user_pool_client_id = aws_cognitoidp_user_pool_client.client.id
+      user_pool_domain    = aws_cognitoidp_user_pool_domain.domain.domain
     }
   }
 

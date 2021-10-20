@@ -30,17 +30,17 @@ func TestAccCognitoIDPUserPoolDomain_basic(t *testing.T) {
 			{
 				Config: testAccUserPoolDomainConfig_basic(domainName, poolName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserPoolDomainExists("aws_cognito_user_pool_domain.main"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool_domain.main", "domain", domainName),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "name", poolName),
-					resource.TestCheckResourceAttrSet("aws_cognito_user_pool_domain.main", "aws_account_id"),
-					resource.TestCheckResourceAttrSet("aws_cognito_user_pool_domain.main", "cloudfront_distribution_arn"),
-					resource.TestCheckResourceAttrSet("aws_cognito_user_pool_domain.main", "s3_bucket"),
-					resource.TestCheckResourceAttrSet("aws_cognito_user_pool_domain.main", "version"),
+					testAccCheckUserPoolDomainExists("aws_cognitoidp_user_pool_domain.main"),
+					resource.TestCheckResourceAttr("aws_cognitoidp_user_pool_domain.main", "domain", domainName),
+					resource.TestCheckResourceAttr("aws_cognitoidp_user_pool.main", "name", poolName),
+					resource.TestCheckResourceAttrSet("aws_cognitoidp_user_pool_domain.main", "aws_account_id"),
+					resource.TestCheckResourceAttrSet("aws_cognitoidp_user_pool_domain.main", "cloudfront_distribution_arn"),
+					resource.TestCheckResourceAttrSet("aws_cognitoidp_user_pool_domain.main", "s3_bucket"),
+					resource.TestCheckResourceAttrSet("aws_cognitoidp_user_pool_domain.main", "version"),
 				),
 			},
 			{
-				ResourceName:      "aws_cognito_user_pool_domain.main",
+				ResourceName:      "aws_cognitoidp_user_pool_domain.main",
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -54,8 +54,8 @@ func TestAccCognitoIDPUserPoolDomain_custom(t *testing.T) {
 	poolName := fmt.Sprintf("tf-acc-test-pool-%s", sdkacctest.RandString(10))
 
 	acmCertificateResourceName := "aws_acm_certificate.test"
-	cognitoUserPoolResourceName := "aws_cognito_user_pool.test"
-	resourceName := "aws_cognito_user_pool_domain.test"
+	cognitoUserPoolResourceName := "aws_cognitoidp_user_pool.test"
+	resourceName := "aws_cognitoidp_user_pool_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckCognitoUserPoolCustomDomain(t) },
@@ -89,7 +89,7 @@ func TestAccCognitoIDPUserPoolDomain_custom(t *testing.T) {
 func TestAccCognitoIDPUserPoolDomain_disappears(t *testing.T) {
 	domainName := fmt.Sprintf("tf-acc-test-domain-%d", sdkacctest.RandInt())
 	poolName := fmt.Sprintf("tf-acc-test-pool-%s", sdkacctest.RandString(10))
-	resourceName := "aws_cognito_user_pool_domain.main"
+	resourceName := "aws_cognitoidp_user_pool_domain.main"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
@@ -134,7 +134,7 @@ func testAccCheckUserPoolDomainDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_cognito_user_pool_domain" {
+		if rs.Type != "aws_cognitoidp_user_pool_domain" {
 			continue
 		}
 
@@ -155,12 +155,12 @@ func testAccCheckUserPoolDomainDestroy(s *terraform.State) error {
 
 func testAccUserPoolDomainConfig_basic(domainName, poolName string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool_domain" "main" {
+resource "aws_cognitoidp_user_pool_domain" "main" {
   domain       = "%s"
-  user_pool_id = aws_cognito_user_pool.main.id
+  user_pool_id = aws_cognitoidp_user_pool.main.id
 }
 
-resource "aws_cognito_user_pool" "main" {
+resource "aws_cognitoidp_user_pool" "main" {
   name = "%s"
 }
 `, domainName, poolName)
@@ -215,14 +215,14 @@ resource "aws_acm_certificate_validation" "test" {
   validation_record_fqdns = [aws_route53_record.test.fqdn]
 }
 
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   name = %[3]q
 }
 
-resource "aws_cognito_user_pool_domain" "test" {
+resource "aws_cognitoidp_user_pool_domain" "test" {
   certificate_arn = aws_acm_certificate_validation.test.certificate_arn
   domain          = aws_acm_certificate.test.domain_name
-  user_pool_id    = aws_cognito_user_pool.test.id
+  user_pool_id    = aws_cognitoidp_user_pool.test.id
 }
 `, rootDomain, domain, poolName))
 }

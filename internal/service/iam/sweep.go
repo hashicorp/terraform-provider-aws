@@ -53,7 +53,7 @@ func init() {
 		Dependencies: []string{
 			"aws_batch_compute_environment",
 			"aws_cloudformation_stack_set_instance",
-			"aws_cognito_user_pool",
+			"aws_cognitoidp_user_pool",
 			"aws_config_configuration_aggregator",
 			"aws_config_configuration_recorder",
 			"aws_datasync_location_s3",

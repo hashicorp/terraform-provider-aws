@@ -578,9 +578,9 @@ func TestAccELBV2ListenerRule_cognito(t *testing.T) {
 	resourceName := "aws_lb_listener_rule.cognito"
 	frontEndListenerResourceName := "aws_lb_listener.front_end"
 	targetGroupResourceName := "aws_lb_target_group.test"
-	cognitoPoolResourceName := "aws_cognito_user_pool.test"
-	cognitoPoolClientResourceName := "aws_cognito_user_pool_client.test"
-	cognitoPoolDomainResourceName := "aws_cognito_user_pool_domain.test"
+	cognitoPoolResourceName := "aws_cognitoidp_user_pool.test"
+	cognitoPoolClientResourceName := "aws_cognitoidp_user_pool_client.test"
+	cognitoPoolDomainResourceName := "aws_cognitoidp_user_pool_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -2825,9 +2825,9 @@ resource "aws_lb_listener_rule" "cognito" {
     type = "authenticate-cognito"
 
     authenticate_cognito {
-      user_pool_arn       = aws_cognito_user_pool.test.arn
-      user_pool_client_id = aws_cognito_user_pool_client.test.id
-      user_pool_domain    = aws_cognito_user_pool_domain.test.domain
+      user_pool_arn       = aws_cognitoidp_user_pool.test.arn
+      user_pool_client_id = aws_cognitoidp_user_pool_client.test.id
+      user_pool_domain    = aws_cognitoidp_user_pool_domain.test.domain
 
       authentication_request_extra_params = {
         param = "test"
@@ -2956,13 +2956,13 @@ resource "aws_security_group" "alb_test" {
   }
 }
 
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   name = "%[1]s-pool"
 }
 
-resource "aws_cognito_user_pool_client" "test" {
+resource "aws_cognitoidp_user_pool_client" "test" {
   name                                 = "%[1]s-pool-client"
-  user_pool_id                         = aws_cognito_user_pool.test.id
+  user_pool_id                         = aws_cognitoidp_user_pool.test.id
   generate_secret                      = true
   allowed_oauth_flows_user_pool_client = true
   allowed_oauth_flows                  = ["code", "implicit"]
@@ -2972,9 +2972,9 @@ resource "aws_cognito_user_pool_client" "test" {
   logout_urls                          = ["https://www.example.com/login"]
 }
 
-resource "aws_cognito_user_pool_domain" "test" {
+resource "aws_cognitoidp_user_pool_domain" "test" {
   domain       = "%[1]s-pool-domain"
-  user_pool_id = aws_cognito_user_pool.test.id
+  user_pool_id = aws_cognitoidp_user_pool.test.id
 }
 `, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key))
 }

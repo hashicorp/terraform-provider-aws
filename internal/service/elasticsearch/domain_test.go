@@ -2352,7 +2352,7 @@ func testAccESDomainConfig_CognitoOptions(randInt int, includeCognitoOptions boo
 		cognitoOptions = `
 		cognito_options {
 			enabled          = true
-			user_pool_id     = aws_cognito_user_pool.example.id
+			user_pool_id     = aws_cognitoidp_user_pool.example.id
 			identity_pool_id = aws_cognitoidentity_pool.example.id
 			role_arn         = aws_iam_role.example.arn
 		}`
@@ -2364,13 +2364,13 @@ func testAccESDomainConfig_CognitoOptions(randInt int, includeCognitoOptions boo
 data "aws_partition" "current" {
 }
 
-resource "aws_cognito_user_pool" "example" {
+resource "aws_cognitoidp_user_pool" "example" {
   name = "tf-test-%[1]d"
 }
 
-resource "aws_cognito_user_pool_domain" "example" {
+resource "aws_cognitoidp_user_pool_domain" "example" {
   domain       = "tf-test-%[1]d"
-  user_pool_id = aws_cognito_user_pool.example.id
+  user_pool_id = aws_cognitoidp_user_pool.example.id
 }
 
 resource "aws_cognitoidentity_pool" "example" {

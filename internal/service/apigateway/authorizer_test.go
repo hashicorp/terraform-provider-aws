@@ -496,7 +496,7 @@ resource "aws_apigateway_rest_api" "test" {
   name = %[1]q
 }
 
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   count = 2
   name  = "%[1]s-${count.index}"
 }
@@ -505,7 +505,7 @@ resource "aws_apigateway_authorizer" "test" {
   name          = %[1]q
   type          = "COGNITO_USER_POOLS"
   rest_api_id   = aws_apigateway_rest_api.test.id
-  provider_arns = aws_cognito_user_pool.test[*].arn
+  provider_arns = aws_cognitoidp_user_pool.test[*].arn
 }
 `, rName)
 }
@@ -516,7 +516,7 @@ resource "aws_apigateway_rest_api" "test" {
   name = %[1]q
 }
 
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   count = 3
   name  = "%[1]s-${count.index}"
 }
@@ -525,7 +525,7 @@ resource "aws_apigateway_authorizer" "test" {
   name          = %[1]q
   type          = "COGNITO_USER_POOLS"
   rest_api_id   = aws_apigateway_rest_api.test.id
-  provider_arns = aws_cognito_user_pool.test[*].arn
+  provider_arns = aws_cognitoidp_user_pool.test[*].arn
 }
 `, rName)
 }
@@ -558,7 +558,7 @@ resource "aws_apigateway_rest_api" "test" {
   name = %[1]q
 }
 
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   count = 2
   name  = "%[1]s-${count.index}"
 }
@@ -568,7 +568,7 @@ resource "aws_apigateway_authorizer" "test" {
   name                   = %[1]q
   type                   = "COGNITO_USER_POOLS"
   rest_api_id            = aws_apigateway_rest_api.test.id
-  provider_arns          = aws_cognito_user_pool.test[*].arn
+  provider_arns          = aws_cognitoidp_user_pool.test[*].arn
 }
 `, rName)
 }
@@ -600,7 +600,7 @@ resource "aws_apigateway_rest_api" "test" {
   name = %[1]q
 }
 
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   count = 2
   name  = "%[1]s-${count.index}"
 }

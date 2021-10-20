@@ -22,7 +22,7 @@ func TestAccCognitoIDPResourceServer_basic(t *testing.T) {
 	name1 := fmt.Sprintf("tf-acc-test-resource-server-name-%s", sdkacctest.RandString(10))
 	name2 := fmt.Sprintf("tf-acc-test-resource-server-name-%s", sdkacctest.RandString(10))
 	poolName := fmt.Sprintf("tf-acc-test-pool-%s", sdkacctest.RandString(10))
-	resourceName := "aws_cognito_resource_server.main"
+	resourceName := "aws_cognitoidp_resource_server.main"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
@@ -64,7 +64,7 @@ func TestAccCognitoIDPResourceServer_scope(t *testing.T) {
 	identifier := fmt.Sprintf("tf-acc-test-resource-server-id-%s", sdkacctest.RandString(10))
 	name := fmt.Sprintf("tf-acc-test-resource-server-name-%s", sdkacctest.RandString(10))
 	poolName := fmt.Sprintf("tf-acc-test-pool-%s", sdkacctest.RandString(10))
-	resourceName := "aws_cognito_resource_server.main"
+	resourceName := "aws_cognitoidp_resource_server.main"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
@@ -147,7 +147,7 @@ func testAccCheckResourceServerDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_cognito_resource_server" {
+		if rs.Type != "aws_cognitoidp_resource_server" {
 			continue
 		}
 
@@ -174,13 +174,13 @@ func testAccCheckResourceServerDestroy(s *terraform.State) error {
 
 func testAccResourceServerConfig_basic(identifier string, name string, poolName string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_resource_server" "main" {
+resource "aws_cognitoidp_resource_server" "main" {
   identifier   = "%s"
   name         = "%s"
-  user_pool_id = aws_cognito_user_pool.main.id
+  user_pool_id = aws_cognitoidp_user_pool.main.id
 }
 
-resource "aws_cognito_user_pool" "main" {
+resource "aws_cognitoidp_user_pool" "main" {
   name = "%s"
 }
 `, identifier, name, poolName)
@@ -188,7 +188,7 @@ resource "aws_cognito_user_pool" "main" {
 
 func testAccResourceServerConfig_scope(identifier string, name string, poolName string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_resource_server" "main" {
+resource "aws_cognitoidp_resource_server" "main" {
   identifier = "%s"
   name       = "%s"
 
@@ -202,10 +202,10 @@ resource "aws_cognito_resource_server" "main" {
     scope_description = "scope_2_description"
   }
 
-  user_pool_id = aws_cognito_user_pool.main.id
+  user_pool_id = aws_cognitoidp_user_pool.main.id
 }
 
-resource "aws_cognito_user_pool" "main" {
+resource "aws_cognitoidp_user_pool" "main" {
   name = "%s"
 }
 `, identifier, name, poolName)
@@ -213,7 +213,7 @@ resource "aws_cognito_user_pool" "main" {
 
 func testAccResourceServerConfig_scope_update(identifier string, name string, poolName string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_resource_server" "main" {
+resource "aws_cognitoidp_resource_server" "main" {
   identifier = "%s"
   name       = "%s"
 
@@ -222,10 +222,10 @@ resource "aws_cognito_resource_server" "main" {
     scope_description = "scope_1_description"
   }
 
-  user_pool_id = aws_cognito_user_pool.main.id
+  user_pool_id = aws_cognitoidp_user_pool.main.id
 }
 
-resource "aws_cognito_user_pool" "main" {
+resource "aws_cognitoidp_user_pool" "main" {
   name = "%s"
 }
 `, identifier, name, poolName)

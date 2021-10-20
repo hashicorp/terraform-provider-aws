@@ -31,7 +31,7 @@ resource "aws_appsync_graphql_api" "example" {
   user_pool_config {
     aws_region     = data.aws_region.current.name
     default_action = "DENY"
-    user_pool_id   = aws_cognito_user_pool.example.id
+    user_pool_id   = aws_cognitoidp_user_pool.example.id
   }
 }
 ```

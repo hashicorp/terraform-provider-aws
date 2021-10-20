@@ -1,12 +1,12 @@
 ---
 subcategory: "Cognito"
 layout: "aws"
-page_title: "AWS: aws_cognito_user_pool"
+page_title: "AWS: aws_cognitoidp_user_pool"
 description: |-
   Provides a Cognito User Pool resource.
 ---
 
-# Resource: aws_cognito_user_pool
+# Resource: aws_cognitoidp_user_pool
 
 Provides a Cognito User Pool resource.
 
@@ -15,7 +15,7 @@ Provides a Cognito User Pool resource.
 ### Basic configuration
 
 ```terraform
-resource "aws_cognito_user_pool" "pool" {
+resource "aws_cognitoidp_user_pool" "pool" {
   name = "mypool"
 }
 ```
@@ -23,7 +23,7 @@ resource "aws_cognito_user_pool" "pool" {
 ### Enabling SMS and Software Token Multi-Factor Authentication
 
 ```terraform
-resource "aws_cognito_user_pool" "example" {
+resource "aws_cognitoidp_user_pool" "example" {
   # ... other configuration ...
 
   mfa_configuration          = "ON"
@@ -43,7 +43,7 @@ resource "aws_cognito_user_pool" "example" {
 ### Using Account Recovery Setting
 
 ```terraform
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   name = "mypool"
 
   account_recovery_setting {
@@ -172,7 +172,7 @@ The following arguments are optional:
 The [standard attributes](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-attributes.html#cognito-user-pools-standard-attributes) have the following defaults. Note that attributes which match the default values are not stored in Terraform state when importing.
 
 ```terraform
-resource "aws_cognito_user_pool" "example" {
+resource "aws_cognitoidp_user_pool" "example" {
   # ... other configuration ...
 
   schema {
@@ -247,5 +247,5 @@ In addition to all arguments above, the following attributes are exported:
 Cognito User Pools can be imported using the `id`, e.g.,
 
 ```
-$ terraform import aws_cognito_user_pool.pool <id>
+$ terraform import aws_cognitoidp_user_pool.pool <id>
 ```

@@ -17,7 +17,7 @@ import (
 
 func TestAccCognitoIDPIdentityProvider_basic(t *testing.T) {
 	var identityProvider cognitoidentityprovider.IdentityProviderType
-	resourceName := "aws_cognito_identity_provider.test"
+	resourceName := "aws_cognitoidp.test"
 	userPoolName := fmt.Sprintf("tf-acc-cognito-user-pool-%s", sdkacctest.RandString(7))
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -78,7 +78,7 @@ func TestAccCognitoIDPIdentityProvider_basic(t *testing.T) {
 
 func TestAccCognitoIDPIdentityProvider_idpIdentifiers(t *testing.T) {
 	var identityProvider cognitoidentityprovider.IdentityProviderType
-	resourceName := "aws_cognito_identity_provider.test"
+	resourceName := "aws_cognitoidp.test"
 	userPoolName := fmt.Sprintf("tf-acc-cognito-user-pool-%s", sdkacctest.RandString(7))
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -114,7 +114,7 @@ func TestAccCognitoIDPIdentityProvider_idpIdentifiers(t *testing.T) {
 
 func TestAccCognitoIDPIdentityProvider_disappears(t *testing.T) {
 	var identityProvider cognitoidentityprovider.IdentityProviderType
-	resourceName := "aws_cognito_identity_provider.test"
+	resourceName := "aws_cognitoidp.test"
 	userPoolName := fmt.Sprintf("tf-acc-cognito-user-pool-%s", sdkacctest.RandString(7))
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -137,7 +137,7 @@ func TestAccCognitoIDPIdentityProvider_disappears(t *testing.T) {
 
 func TestAccCognitoIDPIdentityProvider_Disappears_userPool(t *testing.T) {
 	var identityProvider cognitoidentityprovider.IdentityProviderType
-	resourceName := "aws_cognito_identity_provider.test"
+	resourceName := "aws_cognitoidp.test"
 	userPoolName := fmt.Sprintf("tf-acc-cognito-user-pool-%s", sdkacctest.RandString(7))
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -150,7 +150,7 @@ func TestAccCognitoIDPIdentityProvider_Disappears_userPool(t *testing.T) {
 				Config: testAccIdentityProviderConfig_basic(userPoolName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIdentityProviderExists(resourceName, &identityProvider),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcognitoidp.ResourceUserPool(), "aws_cognito_user_pool.test"),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcognitoidp.ResourceUserPool(), "aws_cognitoidp_user_pool.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -162,7 +162,7 @@ func testAccCheckIdentityProviderDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_cognito_identity_provider" {
+		if rs.Type != "aws_cognitoidp" {
 			continue
 		}
 
@@ -224,13 +224,13 @@ func testAccCheckIdentityProviderExists(resourceName string, identityProvider *c
 
 func testAccIdentityProviderConfig_basic(userPoolName string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   name                     = "%s"
   auto_verified_attributes = ["email"]
 }
 
-resource "aws_cognito_identity_provider" "test" {
-  user_pool_id  = aws_cognito_user_pool.test.id
+resource "aws_cognitoidp" "test" {
+  user_pool_id  = aws_cognitoidp_user_pool.test.id
   provider_name = "Google"
   provider_type = "Google"
 
@@ -251,13 +251,13 @@ resource "aws_cognito_identity_provider" "test" {
 
 func testAccIdentityProviderConfig_basicUpdated(userPoolName string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   name                     = "%s"
   auto_verified_attributes = ["email"]
 }
 
-resource "aws_cognito_identity_provider" "test" {
-  user_pool_id  = aws_cognito_user_pool.test.id
+resource "aws_cognitoidp" "test" {
+  user_pool_id  = aws_cognitoidp_user_pool.test.id
   provider_name = "Google"
   provider_type = "Google"
 
@@ -283,13 +283,13 @@ resource "aws_cognito_identity_provider" "test" {
 
 func testAccIdentityProviderIDPIdentifierConfig(userPoolName, attribute string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   name                     = %[1]q
   auto_verified_attributes = ["email"]
 }
 
-resource "aws_cognito_identity_provider" "test" {
-  user_pool_id  = aws_cognito_user_pool.test.id
+resource "aws_cognitoidp" "test" {
+  user_pool_id  = aws_cognitoidp_user_pool.test.id
   provider_name = "Google"
   provider_type = "Google"
 

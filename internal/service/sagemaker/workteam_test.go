@@ -35,9 +35,9 @@ func testAccWorkteam_cognitoConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", rName),
 					resource.TestCheckResourceAttr(resourceName, "member_definition.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "member_definition.0.cognito_member_definition.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "member_definition.0.cognito_member_definition.0.client_id", "aws_cognito_user_pool_client.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "member_definition.0.cognito_member_definition.0.user_pool", "aws_cognito_user_pool.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "member_definition.0.cognito_member_definition.0.user_group", "aws_cognito_user_group.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "member_definition.0.cognito_member_definition.0.client_id", "aws_cognitoidp_user_pool_client.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "member_definition.0.cognito_member_definition.0.user_pool", "aws_cognitoidp_user_pool.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "member_definition.0.cognito_member_definition.0.user_group", "aws_cognitoidp_user_group.test", "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "subdomain"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -57,13 +57,13 @@ func testAccWorkteam_cognitoConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", rName),
 					resource.TestCheckResourceAttr(resourceName, "member_definition.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "member_definition.0.cognito_member_definition.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "member_definition.0.cognito_member_definition.0.client_id", "aws_cognito_user_pool_client.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "member_definition.0.cognito_member_definition.0.user_pool", "aws_cognito_user_pool.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "member_definition.0.cognito_member_definition.0.user_group", "aws_cognito_user_group.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "member_definition.0.cognito_member_definition.0.client_id", "aws_cognitoidp_user_pool_client.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "member_definition.0.cognito_member_definition.0.user_pool", "aws_cognitoidp_user_pool.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "member_definition.0.cognito_member_definition.0.user_group", "aws_cognitoidp_user_group.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "member_definition.1.cognito_member_definition.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "member_definition.1.cognito_member_definition.0.client_id", "aws_cognito_user_pool_client.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "member_definition.1.cognito_member_definition.0.user_pool", "aws_cognito_user_pool.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "member_definition.1.cognito_member_definition.0.user_group", "aws_cognito_user_group.test2", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "member_definition.1.cognito_member_definition.0.client_id", "aws_cognitoidp_user_pool_client.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "member_definition.1.cognito_member_definition.0.user_pool", "aws_cognitoidp_user_pool.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "member_definition.1.cognito_member_definition.0.user_group", "aws_cognitoidp_user_group.test2", "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "subdomain"),
 				),
 			},
@@ -76,9 +76,9 @@ func testAccWorkteam_cognitoConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", rName),
 					resource.TestCheckResourceAttr(resourceName, "member_definition.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "member_definition.0.cognito_member_definition.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "member_definition.0.cognito_member_definition.0.client_id", "aws_cognito_user_pool_client.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "member_definition.0.cognito_member_definition.0.user_pool", "aws_cognito_user_pool.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "member_definition.0.cognito_member_definition.0.user_group", "aws_cognito_user_group.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "member_definition.0.cognito_member_definition.0.client_id", "aws_cognitoidp_user_pool_client.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "member_definition.0.cognito_member_definition.0.user_pool", "aws_cognitoidp_user_pool.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "member_definition.0.cognito_member_definition.0.user_group", "aws_cognitoidp_user_group.test", "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "subdomain"),
 				),
 			},
@@ -316,32 +316,32 @@ func testAccCheckWorkteamExists(n string, workteam *sagemaker.Workteam) resource
 
 func testAccWorkteamCognitoBaseConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   name = %[1]q
 }
 
-resource "aws_cognito_user_pool_client" "test" {
+resource "aws_cognitoidp_user_pool_client" "test" {
   name            = %[1]q
   generate_secret = true
-  user_pool_id    = aws_cognito_user_pool.test.id
+  user_pool_id    = aws_cognitoidp_user_pool.test.id
 }
 
-resource "aws_cognito_user_pool_domain" "test" {
+resource "aws_cognitoidp_user_pool_domain" "test" {
   domain       = %[1]q
-  user_pool_id = aws_cognito_user_pool.test.id
+  user_pool_id = aws_cognitoidp_user_pool.test.id
 }
 
-resource "aws_cognito_user_group" "test" {
+resource "aws_cognitoidp_user_group" "test" {
   name         = %[1]q
-  user_pool_id = aws_cognito_user_pool.test.id
+  user_pool_id = aws_cognitoidp_user_pool.test.id
 }
 
 resource "aws_sagemaker_workforce" "test" {
   workforce_name = %[1]q
 
   cognito_config {
-    client_id = aws_cognito_user_pool_client.test.id
-    user_pool = aws_cognito_user_pool_domain.test.user_pool_id
+    client_id = aws_cognitoidp_user_pool_client.test.id
+    user_pool = aws_cognitoidp_user_pool_domain.test.user_pool_id
   }
 }
 `, rName)
@@ -356,9 +356,9 @@ resource "aws_sagemaker_workteam" "test" {
 
   member_definition {
     cognito_member_definition {
-      client_id  = aws_cognito_user_pool_client.test.id
-      user_pool  = aws_cognito_user_pool_domain.test.user_pool_id
-      user_group = aws_cognito_user_group.test.id
+      client_id  = aws_cognitoidp_user_pool_client.test.id
+      user_pool  = aws_cognitoidp_user_pool_domain.test.user_pool_id
+      user_group = aws_cognitoidp_user_group.test.id
     }
   }
 }
@@ -367,9 +367,9 @@ resource "aws_sagemaker_workteam" "test" {
 
 func testAccWorkteamCognitoUpdatedConfig(rName string) string {
 	return acctest.ConfigCompose(testAccWorkteamCognitoBaseConfig(rName), fmt.Sprintf(`
-resource "aws_cognito_user_group" "test2" {
+resource "aws_cognitoidp_user_group" "test2" {
   name         = "%[1]s-2"
-  user_pool_id = aws_cognito_user_pool.test.id
+  user_pool_id = aws_cognitoidp_user_pool.test.id
 }
 
 resource "aws_sagemaker_workteam" "test" {
@@ -379,17 +379,17 @@ resource "aws_sagemaker_workteam" "test" {
 
   member_definition {
     cognito_member_definition {
-      client_id  = aws_cognito_user_pool_client.test.id
-      user_pool  = aws_cognito_user_pool_domain.test.user_pool_id
-      user_group = aws_cognito_user_group.test.id
+      client_id  = aws_cognitoidp_user_pool_client.test.id
+      user_pool  = aws_cognitoidp_user_pool_domain.test.user_pool_id
+      user_group = aws_cognitoidp_user_group.test.id
     }
   }
 
   member_definition {
     cognito_member_definition {
-      client_id  = aws_cognito_user_pool_client.test.id
-      user_pool  = aws_cognito_user_pool_domain.test.user_pool_id
-      user_group = aws_cognito_user_group.test2.id
+      client_id  = aws_cognitoidp_user_pool_client.test.id
+      user_pool  = aws_cognitoidp_user_pool_domain.test.user_pool_id
+      user_group = aws_cognitoidp_user_group.test2.id
     }
   }
 }

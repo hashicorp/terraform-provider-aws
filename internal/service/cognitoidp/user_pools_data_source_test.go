@@ -35,13 +35,13 @@ func TestAccCognitoIDPUserPoolsDataSource_basic(t *testing.T) {
 
 func testAccUserPoolsDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "main" {
+resource "aws_cognitoidp_user_pool" "main" {
   count = 2
   name  = "%s"
 }
 
 data "aws_cognito_user_pools" "selected" {
-  name = aws_cognito_user_pool.main.*.name[0]
+  name = aws_cognitoidp_user_pool.main.*.name[0]
 }
 `, rName)
 }
