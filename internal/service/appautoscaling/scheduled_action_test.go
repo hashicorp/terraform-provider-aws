@@ -13,10 +13,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfapplicationautoscaling "github.com/hashicorp/terraform-provider-aws/internal/service/applicationautoscaling"
+	tfappautoscaling "github.com/hashicorp/terraform-provider-aws/internal/service/appautoscaling"
 )
 
-func TestAccApplicationAutoScalingScheduledAction_dynamoDB(t *testing.T) {
+func TestAccAppAutoScalingScheduledAction_dynamoDB(t *testing.T) {
 	var sa1, sa2 applicationautoscaling.ScheduledAction
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	schedule1 := time.Now().AddDate(0, 0, 1).Format("2006-01-02T15:04:05")
@@ -72,7 +72,7 @@ func TestAccApplicationAutoScalingScheduledAction_dynamoDB(t *testing.T) {
 	})
 }
 
-func TestAccApplicationAutoScalingScheduledAction_ecs(t *testing.T) {
+func TestAccAppAutoScalingScheduledAction_ecs(t *testing.T) {
 	var sa applicationautoscaling.ScheduledAction
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	ts := time.Now().AddDate(0, 0, 1).Format("2006-01-02T15:04:05")
@@ -105,7 +105,7 @@ func TestAccApplicationAutoScalingScheduledAction_ecs(t *testing.T) {
 	})
 }
 
-func TestAccApplicationAutoScalingScheduledAction_emr(t *testing.T) {
+func TestAccAppAutoScalingScheduledAction_emr(t *testing.T) {
 	var sa applicationautoscaling.ScheduledAction
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	ts := time.Now().AddDate(0, 0, 1).Format("2006-01-02T15:04:05")
@@ -138,7 +138,7 @@ func TestAccApplicationAutoScalingScheduledAction_emr(t *testing.T) {
 	})
 }
 
-func TestAccApplicationAutoScalingScheduledAction_Name_duplicate(t *testing.T) {
+func TestAccAppAutoScalingScheduledAction_Name_duplicate(t *testing.T) {
 	var sa1, sa2 applicationautoscaling.ScheduledAction
 	resourceName := "aws_appautoscaling_scheduled_action.test"
 	resourceName2 := "aws_appautoscaling_scheduled_action.test2"
@@ -161,7 +161,7 @@ func TestAccApplicationAutoScalingScheduledAction_Name_duplicate(t *testing.T) {
 	})
 }
 
-func TestAccApplicationAutoScalingScheduledAction_spotFleet(t *testing.T) {
+func TestAccAppAutoScalingScheduledAction_spotFleet(t *testing.T) {
 	var sa applicationautoscaling.ScheduledAction
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	ts := time.Now().AddDate(0, 0, 1).Format("2006-01-02T15:04:05")
@@ -195,7 +195,7 @@ func TestAccApplicationAutoScalingScheduledAction_spotFleet(t *testing.T) {
 	})
 }
 
-func TestAccApplicationAutoScalingScheduledAction_ScheduleAtExpression_timezone(t *testing.T) {
+func TestAccAppAutoScalingScheduledAction_ScheduleAtExpression_timezone(t *testing.T) {
 	var sa applicationautoscaling.ScheduledAction
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	ts := time.Now().AddDate(0, 0, 1).Format("2006-01-02T15:04:05")
@@ -234,7 +234,7 @@ func TestAccApplicationAutoScalingScheduledAction_ScheduleAtExpression_timezone(
 	})
 }
 
-func TestAccApplicationAutoScalingScheduledAction_ScheduleCronExpression_basic(t *testing.T) {
+func TestAccAppAutoScalingScheduledAction_ScheduleCronExpression_basic(t *testing.T) {
 	var sa applicationautoscaling.ScheduledAction
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	cron := "cron(0 17 * * ? *)"
@@ -269,7 +269,7 @@ func TestAccApplicationAutoScalingScheduledAction_ScheduleCronExpression_basic(t
 	})
 }
 
-func TestAccApplicationAutoScalingScheduledAction_ScheduleCronExpression_timezone(t *testing.T) {
+func TestAccAppAutoScalingScheduledAction_ScheduleCronExpression_timezone(t *testing.T) {
 	var sa applicationautoscaling.ScheduledAction
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	cron := "cron(0 17 * * ? *)"
@@ -307,7 +307,7 @@ func TestAccApplicationAutoScalingScheduledAction_ScheduleCronExpression_timezon
 	})
 }
 
-func TestAccApplicationAutoScalingScheduledAction_ScheduleCronExpression_startEndTimeTimezone(t *testing.T) {
+func TestAccAppAutoScalingScheduledAction_ScheduleCronExpression_startEndTimeTimezone(t *testing.T) {
 	var sa applicationautoscaling.ScheduledAction
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	cron := "cron(0 17 * * ? *)"
@@ -367,7 +367,7 @@ func TestAccApplicationAutoScalingScheduledAction_ScheduleCronExpression_startEn
 	})
 }
 
-func TestAccApplicationAutoScalingScheduledAction_ScheduleRateExpression_basic(t *testing.T) {
+func TestAccAppAutoScalingScheduledAction_ScheduleRateExpression_basic(t *testing.T) {
 	var sa applicationautoscaling.ScheduledAction
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rate := "rate(1 day)"
@@ -402,7 +402,7 @@ func TestAccApplicationAutoScalingScheduledAction_ScheduleRateExpression_basic(t
 	})
 }
 
-func TestAccApplicationAutoScalingScheduledAction_ScheduleRateExpression_timezone(t *testing.T) {
+func TestAccAppAutoScalingScheduledAction_ScheduleRateExpression_timezone(t *testing.T) {
 	var sa applicationautoscaling.ScheduledAction
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rate := "rate(1 day)"
@@ -440,7 +440,7 @@ func TestAccApplicationAutoScalingScheduledAction_ScheduleRateExpression_timezon
 	})
 }
 
-func TestAccApplicationAutoScalingScheduledAction_minCapacity(t *testing.T) {
+func TestAccAppAutoScalingScheduledAction_minCapacity(t *testing.T) {
 	var sa1, sa2 applicationautoscaling.ScheduledAction
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	schedule := time.Now().AddDate(0, 0, 1).Format("2006-01-02T15:04:05")
@@ -495,7 +495,7 @@ func TestAccApplicationAutoScalingScheduledAction_minCapacity(t *testing.T) {
 	})
 }
 
-func TestAccApplicationAutoScalingScheduledAction_maxCapacity(t *testing.T) {
+func TestAccAppAutoScalingScheduledAction_maxCapacity(t *testing.T) {
 	var sa1, sa2 applicationautoscaling.ScheduledAction
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	schedule := time.Now().AddDate(0, 0, 1).Format("2006-01-02T15:04:05")
@@ -551,7 +551,7 @@ func TestAccApplicationAutoScalingScheduledAction_maxCapacity(t *testing.T) {
 }
 
 func testAccCheckScheduledActionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ApplicationAutoScalingConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AppAutoScalingConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appautoscaling_scheduled_action" {
@@ -585,9 +585,9 @@ func testAccCheckScheduledActionExists(name string, obj *applicationautoscaling.
 			return fmt.Errorf("Application Autoscaling scheduled action (%s) ID not set", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ApplicationAutoScalingConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppAutoScalingConn
 
-		sa, err := tfapplicationautoscaling.FindScheduledAction(conn, rs.Primary.Attributes["name"], rs.Primary.Attributes["service_namespace"], rs.Primary.Attributes["resource_id"])
+		sa, err := tfappautoscaling.FindScheduledAction(conn, rs.Primary.Attributes["name"], rs.Primary.Attributes["service_namespace"], rs.Primary.Attributes["resource_id"])
 		if err != nil {
 			return err
 		}

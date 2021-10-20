@@ -14,10 +14,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfapplicationautoscaling "github.com/hashicorp/terraform-provider-aws/internal/service/applicationautoscaling"
+	tfappautoscaling "github.com/hashicorp/terraform-provider-aws/internal/service/appautoscaling"
 )
 
-func TestValidateAppautoscalingPolicyImportInput(t *testing.T) {
+func TestValidateAppAutoScalingPolicyImportInput(t *testing.T) {
 	testCases := []struct {
 		input         string
 		errorExpected bool
@@ -65,22 +65,22 @@ func TestValidateAppautoscalingPolicyImportInput(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		idParts, err := tfapplicationautoscaling.ValidPolicyImportInput(tc.input)
+		idParts, err := tfappautoscaling.ValidPolicyImportInput(tc.input)
 		if tc.errorExpected == false && err != nil {
-			t.Errorf("tfapplicationautoscaling.ValidPolicyImportInput(%q): resulted in an unexpected error: %s", tc.input, err)
+			t.Errorf("tfappautoscaling.ValidPolicyImportInput(%q): resulted in an unexpected error: %s", tc.input, err)
 		}
 
 		if tc.errorExpected == true && err == nil {
-			t.Errorf("tfapplicationautoscaling.ValidPolicyImportInput(%q): expected an error, but returned successfully", tc.input)
+			t.Errorf("tfappautoscaling.ValidPolicyImportInput(%q): expected an error, but returned successfully", tc.input)
 		}
 
 		if !reflect.DeepEqual(tc.expected, idParts) {
-			t.Errorf("tfapplicationautoscaling.ValidPolicyImportInput(%q): expected %q, but got %q", tc.input, strings.Join(tc.expected, "/"), strings.Join(idParts, "/"))
+			t.Errorf("tfappautoscaling.ValidPolicyImportInput(%q): expected %q, but got %q", tc.input, strings.Join(tc.expected, "/"), strings.Join(idParts, "/"))
 		}
 	}
 }
 
-func TestAccApplicationAutoScalingPolicy_basic(t *testing.T) {
+func TestAccAppAutoScalingPolicy_basic(t *testing.T) {
 	var policy applicationautoscaling.ScalingPolicy
 	appAutoscalingTargetResourceName := "aws_appautoscaling_target.test"
 	resourceName := "aws_appautoscaling_policy.test"
@@ -121,7 +121,7 @@ func TestAccApplicationAutoScalingPolicy_basic(t *testing.T) {
 	})
 }
 
-func TestAccApplicationAutoScalingPolicy_disappears(t *testing.T) {
+func TestAccAppAutoScalingPolicy_disappears(t *testing.T) {
 	var policy applicationautoscaling.ScalingPolicy
 	resourceName := "aws_appautoscaling_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -144,7 +144,7 @@ func TestAccApplicationAutoScalingPolicy_disappears(t *testing.T) {
 	})
 }
 
-func TestAccApplicationAutoScalingPolicy_scaleOutAndIn(t *testing.T) {
+func TestAccAppAutoScalingPolicy_scaleOutAndIn(t *testing.T) {
 	var policy applicationautoscaling.ScalingPolicy
 
 	randClusterName := fmt.Sprintf("cluster%s", sdkacctest.RandString(10))
@@ -225,7 +225,7 @@ func TestAccApplicationAutoScalingPolicy_scaleOutAndIn(t *testing.T) {
 	})
 }
 
-func TestAccApplicationAutoScalingPolicy_spotFleetRequest(t *testing.T) {
+func TestAccAppAutoScalingPolicy_spotFleetRequest(t *testing.T) {
 	var policy applicationautoscaling.ScalingPolicy
 
 	randPolicyName := fmt.Sprintf("test-appautoscaling-policy-%s", sdkacctest.RandString(5))
@@ -258,7 +258,7 @@ func TestAccApplicationAutoScalingPolicy_spotFleetRequest(t *testing.T) {
 
 // TODO: Add test for CustomizedMetricSpecification
 // The field doesn't seem to be accessible for common AWS customers (yet?)
-func TestAccApplicationAutoScalingPolicy_DynamoDB_table(t *testing.T) {
+func TestAccAppAutoScalingPolicy_DynamoDB_table(t *testing.T) {
 	var policy applicationautoscaling.ScalingPolicy
 
 	randPolicyName := fmt.Sprintf("test-appautoscaling-policy-%s", sdkacctest.RandString(5))
@@ -289,7 +289,7 @@ func TestAccApplicationAutoScalingPolicy_DynamoDB_table(t *testing.T) {
 	})
 }
 
-func TestAccApplicationAutoScalingPolicy_DynamoDB_index(t *testing.T) {
+func TestAccAppAutoScalingPolicy_DynamoDB_index(t *testing.T) {
 	var policy applicationautoscaling.ScalingPolicy
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	appautoscalingTargetResourceName := "aws_appautoscaling_target.test"
@@ -321,7 +321,7 @@ func TestAccApplicationAutoScalingPolicy_DynamoDB_index(t *testing.T) {
 	})
 }
 
-func TestAccApplicationAutoScalingPolicy_multiplePoliciesSameName(t *testing.T) {
+func TestAccAppAutoScalingPolicy_multiplePoliciesSameName(t *testing.T) {
 	var readPolicy1 applicationautoscaling.ScalingPolicy
 	var readPolicy2 applicationautoscaling.ScalingPolicy
 
@@ -355,7 +355,7 @@ func TestAccApplicationAutoScalingPolicy_multiplePoliciesSameName(t *testing.T) 
 	})
 }
 
-func TestAccApplicationAutoScalingPolicy_multiplePoliciesSameResource(t *testing.T) {
+func TestAccAppAutoScalingPolicy_multiplePoliciesSameResource(t *testing.T) {
 	var readPolicy applicationautoscaling.ScalingPolicy
 	var writePolicy applicationautoscaling.ScalingPolicy
 
@@ -401,7 +401,7 @@ func TestAccApplicationAutoScalingPolicy_multiplePoliciesSameResource(t *testing
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/7963
-func TestAccApplicationAutoScalingPolicy_ResourceID_forceNew(t *testing.T) {
+func TestAccAppAutoScalingPolicy_ResourceID_forceNew(t *testing.T) {
 	var policy applicationautoscaling.ScalingPolicy
 	appAutoscalingTargetResourceName := "aws_appautoscaling_target.test"
 	resourceName := "aws_appautoscaling_policy.test"
@@ -442,7 +442,7 @@ func testAccCheckPolicyExists(n string, policy *applicationautoscaling.ScalingPo
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ApplicationAutoScalingConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppAutoScalingConn
 		params := &applicationautoscaling.DescribeScalingPoliciesInput{
 			PolicyNames:       []*string{aws.String(rs.Primary.ID)},
 			ResourceId:        aws.String(rs.Primary.Attributes["resource_id"]),
@@ -464,7 +464,7 @@ func testAccCheckPolicyExists(n string, policy *applicationautoscaling.ScalingPo
 }
 
 func testAccCheckPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ApplicationAutoScalingConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AppAutoScalingConn
 
 	for _, rs := range s.RootModule().Resources {
 		params := applicationautoscaling.DescribeScalingPoliciesInput{
@@ -487,7 +487,7 @@ func testAccCheckPolicyDestroy(s *terraform.State) error {
 
 func testAccCheckPolicyDisappears(policy *applicationautoscaling.ScalingPolicy) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ApplicationAutoScalingConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppAutoScalingConn
 
 		input := &applicationautoscaling.DeleteScalingPolicyInput{
 			PolicyName:        policy.PolicyName,
