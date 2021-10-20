@@ -95,7 +95,7 @@ service/cloudtrail:
 service/cloudwatch:
   - '((\*|-) ?`?|(data|resource) "?)aws_cloudwatch_(?!(event_|log_|query_))'
 service/cloudwatchevents:
-  - '((\*|-) ?`?|(data|resource) "?)aws_cloudwatch_event_'
+  - '((\*|-) ?`?|(data|resource) "?)aws_cloudwatchevents_'
 service/cloudwatchlogs:
   - '((\*|-) ?`?|(data|resource) "?)aws_cloudwatch_(log_|query_)'
 service/codeartifact:
@@ -173,7 +173,7 @@ service/emr:
 service/emrcontainers:
   - '((\*|-) ?`?|(data|resource) "?)aws_emrcontainers_'
 service/eventbridge:
-  - '((\*|-) ?`?|(data|resource) "?)aws_cloudwatch_event_'
+  - '((\*|-) ?`?|(data|resource) "?)aws_cloudwatchevents_'
 service/firehose:
   - '((\*|-) ?`?|(data|resource) "?)aws_kinesis_firehose_'
 service/fms:

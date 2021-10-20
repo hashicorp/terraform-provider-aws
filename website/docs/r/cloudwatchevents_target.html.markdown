@@ -1,12 +1,12 @@
 ---
 subcategory: "EventBridge (CloudWatch Events)"
 layout: "aws"
-page_title: "AWS: aws_cloudwatch_event_target"
+page_title: "AWS: aws_cloudwatchevents_target"
 description: |-
   Provides an EventBridge Target resource.
 ---
 
-# Resource: aws_cloudwatch_event_target
+# Resource: aws_cloudwatchevents_target
 
 Provides an EventBridge Target resource.
 
@@ -15,9 +15,9 @@ Provides an EventBridge Target resource.
 ## Example Usage
 
 ```terraform
-resource "aws_cloudwatch_event_target" "yada" {
+resource "aws_cloudwatchevents_target" "yada" {
   target_id = "Yada"
-  rule      = aws_cloudwatch_event_rule.console.name
+  rule      = aws_cloudwatchevents_rule.console.name
   arn       = aws_kinesis_stream.test_stream.arn
 
   run_command_targets {
@@ -31,7 +31,7 @@ resource "aws_cloudwatch_event_target" "yada" {
   }
 }
 
-resource "aws_cloudwatch_event_rule" "console" {
+resource "aws_cloudwatchevents_rule" "console" {
   name        = "capture-ec2-scaling-events"
   description = "Capture all EC2 scaling events"
 
@@ -125,16 +125,16 @@ resource "aws_ssm_document" "stop_instance" {
 DOC
 }
 
-resource "aws_cloudwatch_event_rule" "stop_instances" {
+resource "aws_cloudwatchevents_rule" "stop_instances" {
   name                = "StopInstance"
   description         = "Stop instances nightly"
   schedule_expression = "cron(0 0 * * ? *)"
 }
 
-resource "aws_cloudwatch_event_target" "stop_instances" {
+resource "aws_cloudwatchevents_target" "stop_instances" {
   target_id = "StopInstance"
   arn       = aws_ssm_document.stop_instance.arn
-  rule      = aws_cloudwatch_event_rule.stop_instances.name
+  rule      = aws_cloudwatchevents_rule.stop_instances.name
   role_arn  = aws_iam_role.ssm_lifecycle.arn
 
   run_command_targets {
@@ -147,17 +147,17 @@ resource "aws_cloudwatch_event_target" "stop_instances" {
 ## Example RunCommand Usage
 
 ```terraform
-resource "aws_cloudwatch_event_rule" "stop_instances" {
+resource "aws_cloudwatchevents_rule" "stop_instances" {
   name                = "StopInstance"
   description         = "Stop instances nightly"
   schedule_expression = "cron(0 0 * * ? *)"
 }
 
-resource "aws_cloudwatch_event_target" "stop_instances" {
+resource "aws_cloudwatchevents_target" "stop_instances" {
   target_id = "StopInstance"
   arn       = "arn:aws:ssm:${var.aws_region}::document/AWS-RunShellScript"
   input     = "{\"commands\":[\"halt\"]}"
-  rule      = aws_cloudwatch_event_rule.stop_instances.name
+  rule      = aws_cloudwatchevents_rule.stop_instances.name
   role_arn  = aws_iam_role.ssm_lifecycle.arn
 
   run_command_targets {
@@ -213,10 +213,10 @@ resource "aws_iam_role_policy" "ecs_events_run_task_with_any_role" {
 DOC
 }
 
-resource "aws_cloudwatch_event_target" "ecs_scheduled_task" {
+resource "aws_cloudwatchevents_target" "ecs_scheduled_task" {
   target_id = "run-scheduled-task-every-hour"
   arn       = aws_ecs_cluster.cluster_name.arn
-  rule      = aws_cloudwatch_event_rule.every_hour.name
+  rule      = aws_cloudwatchevents_rule.every_hour.name
   role_arn  = aws_iam_role.ecs_events.arn
 
   ecs_target {
@@ -240,9 +240,9 @@ DOC
 ## Example API Gateway target
 
 ```terraform
-resource "aws_cloudwatch_event_target" "example" {
+resource "aws_cloudwatchevents_target" "example" {
   arn  = "${aws_apigateway_stage.example.execution_arn}/GET"
-  rule = aws_cloudwatch_event_rule.example.id
+  rule = aws_cloudwatchevents_rule.example.id
 
   http_target {
     query_string_parameters = {
@@ -254,7 +254,7 @@ resource "aws_cloudwatch_event_target" "example" {
   }
 }
 
-resource "aws_cloudwatch_event_rule" "example" {
+resource "aws_cloudwatchevents_rule" "example" {
   # ...
 }
 
@@ -273,9 +273,9 @@ resource "aws_apigateway_stage" "example" {
 ## Example Input Transformer Usage - JSON Object
 
 ```terraform
-resource "aws_cloudwatch_event_target" "example" {
+resource "aws_cloudwatchevents_target" "example" {
   arn  = aws_lambda_function.example.arn
-  rule = aws_cloudwatch_event_rule.example.id
+  rule = aws_cloudwatchevents_rule.example.id
 
   input_transformer {
     input_paths = {
@@ -291,7 +291,7 @@ EOF
   }
 }
 
-resource "aws_cloudwatch_event_rule" "example" {
+resource "aws_cloudwatchevents_rule" "example" {
   # ...
 }
 ```
@@ -299,9 +299,9 @@ resource "aws_cloudwatch_event_rule" "example" {
 ## Example Input Transformer Usage - Simple String
 
 ```terraform
-resource "aws_cloudwatch_event_target" "example" {
+resource "aws_cloudwatchevents_target" "example" {
   arn  = aws_lambda_function.example.arn
-  rule = aws_cloudwatch_event_rule.example.id
+  rule = aws_cloudwatchevents_rule.example.id
 
   input_transformer {
     input_paths = {
@@ -312,7 +312,7 @@ resource "aws_cloudwatch_event_target" "example" {
   }
 }
 
-resource "aws_cloudwatch_event_rule" "example" {
+resource "aws_cloudwatchevents_rule" "example" {
   # ...
 }
 ```
@@ -434,5 +434,5 @@ No additional attributes are exported.
 EventBridge Targets can be imported using `event_bus_name/rule-name/target-id` (if you omit `event_bus_name`, the `default` event bus will be used).
 
  ```
-$ terraform import aws_cloudwatch_event_target.test-event-target rule-name/target-id
+$ terraform import aws_cloudwatchevents_target.test-event-target rule-name/target-id
 ```

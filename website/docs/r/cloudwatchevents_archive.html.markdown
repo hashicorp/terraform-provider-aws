@@ -1,12 +1,12 @@
 ---
 subcategory: "EventBridge (CloudWatch Events)"
 layout: "aws"
-page_title: "AWS: aws_cloudwatch_event_archive"
+page_title: "AWS: aws_cloudwatchevents_archive"
 description: |-
   Provides an EventBridge event archive resource.
 ---
 
-# Resource: aws_cloudwatch_event_archive
+# Resource: aws_cloudwatchevents_archive
 
 Provides an EventBridge event archive resource.
 
@@ -16,27 +16,27 @@ Provides an EventBridge event archive resource.
 ## Example Usage
 
 ```terraform
-resource "aws_cloudwatch_event_bus" "order" {
+resource "aws_cloudwatchevents_bus" "order" {
   name = "orders"
 }
 
-resource "aws_cloudwatch_event_archive" "order" {
+resource "aws_cloudwatchevents_archive" "order" {
   name             = "order-archive"
-  event_source_arn = aws_cloudwatch_event_bus.order.arn
+  event_source_arn = aws_cloudwatchevents_bus.order.arn
 }
 ```
 
 ## Example all optional arguments
 
 ```terraform
-resource "aws_cloudwatch_event_bus" "order" {
+resource "aws_cloudwatchevents_bus" "order" {
   name = "orders"
 }
 
-resource "aws_cloudwatch_event_archive" "order" {
+resource "aws_cloudwatchevents_archive" "order" {
   name             = "order-archive"
   description      = "Archived events from order service"
-  event_source_arn = aws_cloudwatch_event_bus.order.arn
+  event_source_arn = aws_cloudwatchevents_bus.order.arn
   retention_days   = 7
   event_pattern    = <<PATTERN
 {
@@ -67,5 +67,5 @@ In addition to all arguments above, the following attributes are exported:
 Event Archive can be imported using their name, for example
 
 ```bash
-terraform import aws_cloudwatch_event_archive.imported_event_archive order-archive
+terraform import aws_cloudwatchevents_archive.imported_event_archive order-archive
 ```

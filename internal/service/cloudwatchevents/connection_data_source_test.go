@@ -9,8 +9,8 @@ import (
 )
 
 func TestAccCloudWatchEventsConnectionDataSource_Connection_basic(t *testing.T) {
-	dataSourceName := "data.aws_cloudwatch_event_connection.test"
-	resourceName := "aws_cloudwatch_event_connection.api_key"
+	dataSourceName := "data.aws_cloudwatchevents_connection.test"
+	resourceName := "aws_cloudwatchevents_connection.api_key"
 
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	authorizationType := "API_KEY"
@@ -46,8 +46,8 @@ func testAcc_ConnectionDataConfig(name, description, authorizationType, key, val
 	return acctest.ConfigCompose(
 		testAccConnectionConfig_apiKey(name, description, authorizationType, key, value),
 		`
-data "aws_cloudwatch_event_connection" "test" {
-  name = aws_cloudwatch_event_connection.api_key.name
+data "aws_cloudwatchevents_connection" "test" {
+  name = aws_cloudwatchevents_connection.api_key.name
 }
 `)
 }

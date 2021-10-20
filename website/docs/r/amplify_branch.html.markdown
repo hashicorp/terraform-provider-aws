@@ -70,7 +70,7 @@ resource "aws_amplify_branch" "master" {
 
 # CloudWatch Events Rule for Amplify notifications
 
-resource "aws_cloudwatch_event_rule" "amplify_app_master" {
+resource "aws_cloudwatchevents_rule" "amplify_app_master" {
   name        = "amplify-${aws_amplify_app.app.id}-${aws_amplify_branch.master.branch_name}-branch-notification"
   description = "AWS Amplify build notifications for :  App: ${aws_amplify_app.app.id} Branch: ${aws_amplify_branch.master.branch_name}"
 
@@ -97,8 +97,8 @@ resource "aws_cloudwatch_event_rule" "amplify_app_master" {
   })
 }
 
-resource "aws_cloudwatch_event_target" "amplify_app_master" {
-  rule      = aws_cloudwatch_event_rule.amplify_app_master.name
+resource "aws_cloudwatchevents_target" "amplify_app_master" {
+  rule      = aws_cloudwatchevents_rule.amplify_app_master.name
   target_id = aws_amplify_branch.master.branch_name
   arn       = aws_sns_topic.amplify_app_master.arn
 

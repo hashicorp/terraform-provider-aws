@@ -17,52 +17,52 @@ import (
 )
 
 func init() {
-	resource.AddTestSweepers("aws_cloudwatch_event_api_destination", &resource.Sweeper{
-		Name: "aws_cloudwatch_event_api_destination",
+	resource.AddTestSweepers("aws_cloudwatchevents_api_destination", &resource.Sweeper{
+		Name: "aws_cloudwatchevents_api_destination",
 		F:    sweepAPIDestination,
 		Dependencies: []string{
-			"aws_cloudwatch_event_connection",
+			"aws_cloudwatchevents_connection",
 		},
 	})
 
-	resource.AddTestSweepers("aws_cloudwatch_event_archive", &resource.Sweeper{
-		Name: "aws_cloudwatch_event_archive",
+	resource.AddTestSweepers("aws_cloudwatchevents_archive", &resource.Sweeper{
+		Name: "aws_cloudwatchevents_archive",
 		F:    sweepArchives,
 		Dependencies: []string{
-			"aws_cloudwatch_event_bus",
+			"aws_cloudwatchevents_bus",
 		},
 	})
 
-	resource.AddTestSweepers("aws_cloudwatch_event_bus", &resource.Sweeper{
-		Name: "aws_cloudwatch_event_bus",
+	resource.AddTestSweepers("aws_cloudwatchevents_bus", &resource.Sweeper{
+		Name: "aws_cloudwatchevents_bus",
 		F:    sweepBuses,
 		Dependencies: []string{
-			"aws_cloudwatch_event_rule",
-			"aws_cloudwatch_event_target",
+			"aws_cloudwatchevents_rule",
+			"aws_cloudwatchevents_target",
 			"aws_schemas_discoverer",
 		},
 	})
 
-	resource.AddTestSweepers("aws_cloudwatch_event_connection", &resource.Sweeper{
-		Name: "aws_cloudwatch_event_connection",
+	resource.AddTestSweepers("aws_cloudwatchevents_connection", &resource.Sweeper{
+		Name: "aws_cloudwatchevents_connection",
 		F:    sweepConnection,
 	})
 
-	resource.AddTestSweepers("aws_cloudwatch_event_permission", &resource.Sweeper{
-		Name: "aws_cloudwatch_event_permission",
+	resource.AddTestSweepers("aws_cloudwatchevents_permission", &resource.Sweeper{
+		Name: "aws_cloudwatchevents_permission",
 		F:    sweepPermissions,
 	})
 
-	resource.AddTestSweepers("aws_cloudwatch_event_rule", &resource.Sweeper{
-		Name: "aws_cloudwatch_event_rule",
+	resource.AddTestSweepers("aws_cloudwatchevents_rule", &resource.Sweeper{
+		Name: "aws_cloudwatchevents_rule",
 		F:    sweepRules,
 		Dependencies: []string{
-			"aws_cloudwatch_event_target",
+			"aws_cloudwatchevents_target",
 		},
 	})
 
-	resource.AddTestSweepers("aws_cloudwatch_event_target", &resource.Sweeper{
-		Name: "aws_cloudwatch_event_target",
+	resource.AddTestSweepers("aws_cloudwatchevents_target", &resource.Sweeper{
+		Name: "aws_cloudwatchevents_target",
 		F:    sweepTargets,
 	})
 }

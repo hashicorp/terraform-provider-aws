@@ -41,7 +41,7 @@ func TestValidCustomEventBusEventSourceName(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
-		_, errors := validCustomEventBusEventSourceName(tc.Value, "aws_cloudwatch_event_bus_event_source_name")
+		_, errors := validCustomEventBusEventSourceName(tc.Value, "aws_cloudwatchevents_bus_event_source_name")
 		isValid := len(errors) == 0
 		if tc.IsValid && !isValid {
 			t.Errorf("expected %q to return valid, but did not", tc.Value)
@@ -86,7 +86,7 @@ func TestValidCustomEventBusName(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
-		_, errors := validCustomEventBusName(tc.Value, "aws_cloudwatch_event_bus")
+		_, errors := validCustomEventBusName(tc.Value, "aws_cloudwatchevents_bus")
 		isValid := len(errors) == 0
 		if tc.IsValid && !isValid {
 			t.Errorf("expected %q to return valid, but did not", tc.Value)

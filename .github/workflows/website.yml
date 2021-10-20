@@ -116,7 +116,7 @@ jobs:
           # being carried over from test cases.
           shared_rules=(
               "--enable-rule=terraform_comment_syntax"
-              "--disable-rule=aws_cloudwatch_event_target_invalid_arn"
+              "--disable-rule=aws_cloudwatchevents_target_invalid_arn"
               "--disable-rule=aws_db_instance_default_parameter_group"
               "--disable-rule=aws_elasticache_cluster_default_parameter_group"
               "--disable-rule=aws_elasticache_replication_group_default_parameter_group"

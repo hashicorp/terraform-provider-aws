@@ -22,7 +22,7 @@ func TestAccCloudWatchEventsPermission_basic(t *testing.T) {
 	principal1 := "111111111111"
 	principal2 := "*"
 	statementID := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_cloudwatch_event_permission.test"
+	resourceName := "aws_cloudwatchevents_permission.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -94,7 +94,7 @@ func TestAccCloudWatchEventsPermission_eventBusName(t *testing.T) {
 	statementID := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	busName := sdkacctest.RandomWithPrefix("tf-acc-test-bus")
 
-	resourceName := "aws_cloudwatch_event_permission.test"
+	resourceName := "aws_cloudwatchevents_permission.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -125,7 +125,7 @@ func TestAccCloudWatchEventsPermission_eventBusName(t *testing.T) {
 func TestAccCloudWatchEventsPermission_action(t *testing.T) {
 	principal := "111111111111"
 	statementID := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_cloudwatch_event_permission.test"
+	resourceName := "aws_cloudwatchevents_permission.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -167,7 +167,7 @@ func TestAccCloudWatchEventsPermission_action(t *testing.T) {
 
 func TestAccCloudWatchEventsPermission_condition(t *testing.T) {
 	statementID := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_cloudwatch_event_permission.test"
+	resourceName := "aws_cloudwatchevents_permission.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -209,8 +209,8 @@ func TestAccCloudWatchEventsPermission_multiple(t *testing.T) {
 	principal2 := "222222222222"
 	statementID1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	statementID2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName1 := "aws_cloudwatch_event_permission.test"
-	resourceName2 := "aws_cloudwatch_event_permission.test2"
+	resourceName1 := "aws_cloudwatchevents_permission.test"
+	resourceName2 := "aws_cloudwatchevents_permission.test2"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -242,7 +242,7 @@ func TestAccCloudWatchEventsPermission_multiple(t *testing.T) {
 }
 
 func TestAccCloudWatchEventsPermission_disappears(t *testing.T) {
-	resourceName := "aws_cloudwatch_event_permission.test"
+	resourceName := "aws_cloudwatchevents_permission.test"
 	principal := "111111111111"
 	statementID := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -307,7 +307,7 @@ func testAccCheckCloudWatchEventPermissionDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchEventsConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_cloudwatch_event_permission" {
+		if rs.Type != "aws_cloudwatchevents_permission" {
 			continue
 		}
 
@@ -354,7 +354,7 @@ func testAccCheckCloudWatchEventPermissionDestroy(s *terraform.State) error {
 
 func testAccCheckPermissionResourceBasicConfig(principal, statementID string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_event_permission" "test" {
+resource "aws_cloudwatchevents_permission" "test" {
   principal    = "%[1]s"
   statement_id = "%[2]s"
 }
@@ -363,7 +363,7 @@ resource "aws_cloudwatch_event_permission" "test" {
 
 func testAccCheckPermissionResourceDefaultEventBusNameConfig(principal, statementID string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_event_permission" "test" {
+resource "aws_cloudwatchevents_permission" "test" {
   principal      = %[1]q
   statement_id   = %[2]q
   event_bus_name = "default"
@@ -373,13 +373,13 @@ resource "aws_cloudwatch_event_permission" "test" {
 
 func testAccCheckPermissionResourceEventBusNameConfig(principal, busName, statementID string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_event_permission" "test" {
+resource "aws_cloudwatchevents_permission" "test" {
   principal      = %[1]q
   statement_id   = %[2]q
-  event_bus_name = aws_cloudwatch_event_bus.test.name
+  event_bus_name = aws_cloudwatchevents_bus.test.name
 }
 
-resource "aws_cloudwatch_event_bus" "test" {
+resource "aws_cloudwatchevents_bus" "test" {
   name = %[3]q
 }
 `, principal, statementID, busName)
@@ -387,7 +387,7 @@ resource "aws_cloudwatch_event_bus" "test" {
 
 func testAccCheckPermissionResourceActionConfig(action, principal, statementID string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_event_permission" "test" {
+resource "aws_cloudwatchevents_permission" "test" {
   action       = "%[1]s"
   principal    = "%[2]s"
   statement_id = "%[3]s"
@@ -397,7 +397,7 @@ resource "aws_cloudwatch_event_permission" "test" {
 
 func testAccCheckPermissionResourceConditionOrganizationConfig(statementID, value string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_event_permission" "test" {
+resource "aws_cloudwatchevents_permission" "test" {
   principal    = "*"
   statement_id = %q
 
@@ -412,12 +412,12 @@ resource "aws_cloudwatch_event_permission" "test" {
 
 func testAccCheckPermissionResourceMultipleConfig(principal1, statementID1, principal2, statementID2 string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_event_permission" "test" {
+resource "aws_cloudwatchevents_permission" "test" {
   principal    = "%[1]s"
   statement_id = "%[2]s"
 }
 
-resource "aws_cloudwatch_event_permission" "test2" {
+resource "aws_cloudwatchevents_permission" "test2" {
   principal    = "%[3]s"
   statement_id = "%[4]s"
 }

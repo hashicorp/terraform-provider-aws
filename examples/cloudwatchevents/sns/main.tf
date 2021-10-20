@@ -6,7 +6,7 @@ provider "aws" {
   region = var.aws_region
 }
 
-resource "aws_cloudwatch_event_rule" "foo" {
+resource "aws_cloudwatchevents_rule" "foo" {
   name = var.rule_name
 
   event_pattern = <<PATTERN
@@ -23,8 +23,8 @@ resource "aws_cloudwatch_event_rule" "foo" {
 PATTERN
 }
 
-resource "aws_cloudwatch_event_target" "bar" {
-  rule      = aws_cloudwatch_event_rule.foo.name
+resource "aws_cloudwatchevents_target" "bar" {
+  rule      = aws_cloudwatchevents_rule.foo.name
   target_id = var.target_name
   arn       = aws_sns_topic.foo.arn
 }

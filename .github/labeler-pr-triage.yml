@@ -145,7 +145,7 @@ service/cloudwatch:
   - 'website/**/cloudwatch_metric_alarm*'
 service/cloudwatchevents:
   - 'internal/service/cloudwatchevents/**/*'
-  - 'website/**/cloudwatch_event_*'
+  - 'website/**/cloudwatchevents_*'
 service/cloudwatchlogs:
   - 'internal/service/cloudwatchlogs/**/*'
   - 'website/**/cloudwatch_log_*'

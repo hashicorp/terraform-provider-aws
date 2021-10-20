@@ -382,7 +382,8 @@ func Provider() *schema.Provider {
 			"aws_cloudfront_log_delivery_canonical_user_id": cloudfront.DataSourceLogDeliveryCanonicalUserID(),
 			"aws_cloudfront_origin_request_policy":          cloudfront.DataSourceOriginRequestPolicy(),
 
-			"aws_cloudhsm_v2_cluster": cloudhsmv2.DataSourceCluster(),
+			"aws_cloudhsmv2_cluster":  cloudhsmv2.DataSourceCluster(),
+			"aws_cloudhsm_v2_cluster": cloudhsmv2.DataSourceCluster(), // backward compatible alias
 
 			"aws_cloudtrail_service_account": cloudtrail.DataSourceServiceAccount(),
 
@@ -886,8 +887,10 @@ func Provider() *schema.Provider {
 			"aws_cloudfront_public_key":              cloudfront.ResourcePublicKey(),
 			"aws_cloudfront_realtime_log_config":     cloudfront.ResourceRealtimeLogConfig(),
 
-			"aws_cloudhsm_v2_cluster": cloudhsmv2.ResourceCluster(),
-			"aws_cloudhsm_v2_hsm":     cloudhsmv2.ResourceHSM(),
+			"aws_cloudhsmv2_cluster":  cloudhsmv2.ResourceCluster(),
+			"aws_cloudhsmv2_hsm":      cloudhsmv2.ResourceHSM(),
+			"aws_cloudhsm_v2_cluster": cloudhsmv2.ResourceCluster(), // backward compatible alias
+			"aws_cloudhsm_v2_hsm":     cloudhsmv2.ResourceHSM(),     // backward compatible alias
 
 			"aws_cloudtrail": cloudtrail.ResourceCloudTrail(),
 

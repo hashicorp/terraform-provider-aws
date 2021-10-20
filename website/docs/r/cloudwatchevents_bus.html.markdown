@@ -1,12 +1,12 @@
 ---
 subcategory: "EventBridge (CloudWatch Events)"
 layout: "aws"
-page_title: "AWS: aws_cloudwatch_event_bus"
+page_title: "AWS: aws_cloudwatchevents_bus"
 description: |-
   Provides an EventBridge event bus resource.
 ---
 
-# Resource: aws_cloudwatch_event_bus
+# Resource: aws_cloudwatchevents_bus
 
 Provides an EventBridge event bus resource.
 
@@ -16,19 +16,19 @@ Provides an EventBridge event bus resource.
 ## Example Usage
 
 ```terraform
-resource "aws_cloudwatch_event_bus" "messenger" {
+resource "aws_cloudwatchevents_bus" "messenger" {
   name = "chat-messages"
 }
 ```
 
 ```terraform
-data "aws_cloudwatch_event_source" "examplepartner" {
+data "aws_cloudwatchevents_source" "examplepartner" {
   name_prefix = "aws.partner/examplepartner.com"
 }
 
-resource "aws_cloudwatch_event_bus" "examplepartner" {
-  name              = data.aws_cloudwatch_event_source.examplepartner.name
-  event_source_name = data.aws_cloudwatch_event_source.examplepartner.name
+resource "aws_cloudwatchevents_bus" "examplepartner" {
+  name              = data.aws_cloudwatchevents_source.examplepartner.name
+  event_source_name = data.aws_cloudwatchevents_source.examplepartner.name
 }
 ```
 
@@ -52,5 +52,5 @@ In addition to all arguments above, the following attributes are exported:
 EventBridge event buses can be imported using the `name` (which can also be a partner event source name), e.g.,
 
 ```console
-$ terraform import aws_cloudwatch_event_bus.messenger chat-messages
+$ terraform import aws_cloudwatchevents_bus.messenger chat-messages
 ```
