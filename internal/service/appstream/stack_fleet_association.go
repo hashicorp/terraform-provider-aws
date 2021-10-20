@@ -66,7 +66,7 @@ func resourceStackFleetAssociationCreate(ctx context.Context, d *schema.Resource
 		return diag.FromErr(fmt.Errorf("error creating Appstream Stack Fleet Association (%s): %w", d.Id(), err))
 	}
 
-	d.SetId(fmt.Sprintf("%s/%s", d.Get("fleet_name").(string), d.Get("stack_name").(string)))
+	d.SetId(fmt.Sprintf("%s/%s", d.Get("stack_name").(string), d.Get("fleet_name").(string)))
 
 	return resourceStackFleetAssociationRead(ctx, d, meta)
 }
@@ -74,7 +74,7 @@ func resourceStackFleetAssociationCreate(ctx context.Context, d *schema.Resource
 func resourceStackFleetAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppStreamConn
 
-	fleetName, _, err := DecodeStackFleetID(d.Id())
+	stackName, fleetName, err := DecodeStackFleetID(d.Id())
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error decoding id Appstream Stack Fleet Association (%s): %w", d.Id(), err))
 	}
@@ -87,17 +87,24 @@ func resourceStackFleetAssociationRead(ctx context.Context, d *schema.ResourceDa
 		return nil
 	}
 
+	var sName string
+	for _, name := range resp.Names {
+		if aws.StringValue(name) == stackName {
+			sName = aws.StringValue(name)
+		}
+	}
+
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error reading Appstream Stack Fleet Association (%s): %w", d.Id(), err))
 	}
-	if len(resp.Names) == 0 {
+	if len(sName) == 0 {
 		log.Printf("[WARN] Appstream Stack Fleet Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	d.Set("fleet_name", fleetName)
-	d.Set("stack_name", resp.Names[0])
+	d.Set("stack_name", sName)
 
 	return nil
 }
@@ -111,8 +118,8 @@ func resourceStackFleetAssociationDelete(ctx context.Context, d *schema.Resource
 	}
 
 	_, err = conn.DisassociateFleetWithContext(ctx, &appstream.DisassociateFleetInput{
-		FleetName: aws.String(fleetName),
 		StackName: aws.String(stackName),
+		FleetName: aws.String(fleetName),
 	})
 
 	if err != nil {
@@ -127,7 +134,7 @@ func resourceStackFleetAssociationDelete(ctx context.Context, d *schema.Resource
 func DecodeStackFleetID(id string) (string, string, error) {
 	idParts := strings.SplitN(id, "/", 2)
 	if len(idParts) != 2 {
-		return "", "", fmt.Errorf("expected ID in format FleetName-StackName, received: %s", id)
+		return "", "", fmt.Errorf("expected ID in format StackName-FleetName, received: %s", id)
 	}
 	return idParts[0], idParts[1], nil
 }

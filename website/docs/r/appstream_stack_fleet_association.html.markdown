@@ -42,8 +42,8 @@ The following arguments supported:
 
 ## Import
 
-AppStream Stack Fleet Association can be imported by using the `fleet_name` and `stack_name` separated by a comma (`/`), e.g.,
+AppStream Stack Fleet Association can be imported by using the `stack_name` and `fleet_name` separated by a comma (`/`), e.g.,
 
 ```
-$ terraform import aws_appstream_stack_fleet_association.example fleetName/stackName
+$ terraform import aws_appstream_stack_fleet_association.example stackName/fleetName
 ```

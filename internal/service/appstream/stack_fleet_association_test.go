@@ -78,7 +78,7 @@ func testAccCheckStackFleetAssociationExists(resourceName string) resource.TestC
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn
 
-		fleetName, _, err := tfappstream.DecodeStackFleetID(rs.Primary.ID)
+		stackName, fleetName, err := tfappstream.DecodeStackFleetID(rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("error decoding id appstream stack fleet association (%s): %w", rs.Primary.ID, err)
 		}
@@ -89,7 +89,15 @@ func testAccCheckStackFleetAssociationExists(resourceName string) resource.TestC
 			return err
 		}
 
-		if resp == nil && len(resp.Names) == 0 {
+		found := false
+
+		for _, name := range resp.Names {
+			if aws.StringValue(name) == stackName {
+				found = true
+			}
+		}
+
+		if !found {
 			return fmt.Errorf("appstream stack fleet association %q does not exist", rs.Primary.ID)
 		}
 
@@ -105,7 +113,7 @@ func testAccCheckStackFleetAssociationDestroy(s *terraform.State) error {
 			continue
 		}
 
-		fleetName, _, err := tfappstream.DecodeStackFleetID(rs.Primary.ID)
+		stackName, fleetName, err := tfappstream.DecodeStackFleetID(rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("error decoding id appstream stack fleet association (%s): %w", rs.Primary.ID, err)
 		}
@@ -120,7 +128,15 @@ func testAccCheckStackFleetAssociationDestroy(s *terraform.State) error {
 			return err
 		}
 
-		if resp != nil && len(resp.Names) > 0 {
+		found := false
+
+		for _, name := range resp.Names {
+			if aws.StringValue(name) == stackName {
+				found = true
+			}
+		}
+
+		if found {
 			return fmt.Errorf("appstream stack fleet association %q still exists", rs.Primary.ID)
 		}
 	}
