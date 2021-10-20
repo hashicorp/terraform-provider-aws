@@ -1,12 +1,12 @@
 ---
 subcategory: "CloudHSM v2"
 layout: "aws"
-page_title: "AWS: aws_cloudhsm_v2_hsm"
+page_title: "AWS: aws_cloudhsmv2_hsm"
 description: |-
   Provides a CloudHSM v2 HSM module resource.
 ---
 
-# Resource: aws_cloudhsm_v2_hsm
+# Resource: aws_cloudhsmv2_hsm
 
 Creates an HSM module in Amazon CloudHSM v2 cluster.
 
@@ -15,13 +15,13 @@ Creates an HSM module in Amazon CloudHSM v2 cluster.
 The following example below creates an HSM module in CloudHSM cluster.
 
 ```terraform
-data "aws_cloudhsm_v2_cluster" "cluster" {
+data "aws_cloudhsmv2_cluster" "cluster" {
   cluster_id = var.cloudhsm_cluster_id
 }
 
-resource "aws_cloudhsm_v2_hsm" "cloudhsm_v2_hsm" {
-  subnet_id  = data.aws_cloudhsm_v2_cluster.cluster.subnet_ids[0]
-  cluster_id = data.aws_cloudhsm_v2_cluster.cluster.cluster_id
+resource "aws_cloudhsmv2_hsm" "cloudhsmv2_hsm" {
+  subnet_id  = data.aws_cloudhsmv2_cluster.cluster.subnet_ids[0]
+  cluster_id = data.aws_cloudhsmv2_cluster.cluster.cluster_id
 }
 ```
 
@@ -47,5 +47,5 @@ In addition to all arguments above, the following attributes are exported:
 HSM modules can be imported using their HSM ID, e.g.,
 
 ```
-$ terraform import aws_cloudhsm_v2_hsm.bar hsm-quo8dahtaca
+$ terraform import aws_cloudhsmv2_hsm.bar hsm-quo8dahtaca
 ```

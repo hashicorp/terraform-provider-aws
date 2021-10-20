@@ -15,7 +15,7 @@ import (
 )
 
 func testAccHSM_basic(t *testing.T) {
-	resourceName := "aws_cloudhsm_v2_hsm.test"
+	resourceName := "aws_cloudhsmv2_hsm.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -28,7 +28,7 @@ func testAccHSM_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckHSMExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "availability_zone", "aws_subnet.test.0", "availability_zone"),
-					resource.TestCheckResourceAttrPair(resourceName, "cluster_id", "aws_cloudhsm_v2_cluster.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "cluster_id", "aws_cloudhsmv2_cluster.test", "id"),
 					resource.TestMatchResourceAttr(resourceName, "hsm_eni_id", regexp.MustCompile(`^eni-.+`)),
 					resource.TestMatchResourceAttr(resourceName, "hsm_id", regexp.MustCompile(`^hsm-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "hsm_state", cloudhsmv2.HsmStateActive),
@@ -46,7 +46,7 @@ func testAccHSM_basic(t *testing.T) {
 }
 
 func testAccHSM_disappears(t *testing.T) {
-	resourceName := "aws_cloudhsm_v2_hsm.test"
+	resourceName := "aws_cloudhsmv2_hsm.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -69,8 +69,8 @@ func testAccHSM_disappears(t *testing.T) {
 }
 
 func testAccHSM_disappears_Cluster(t *testing.T) {
-	clusterResourceName := "aws_cloudhsm_v2_cluster.test"
-	resourceName := "aws_cloudhsm_v2_hsm.test"
+	clusterResourceName := "aws_cloudhsmv2_cluster.test"
+	resourceName := "aws_cloudhsmv2_hsm.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -92,7 +92,7 @@ func testAccHSM_disappears_Cluster(t *testing.T) {
 }
 
 func testAccHSM_AvailabilityZone(t *testing.T) {
-	resourceName := "aws_cloudhsm_v2_hsm.test"
+	resourceName := "aws_cloudhsmv2_hsm.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -117,7 +117,7 @@ func testAccHSM_AvailabilityZone(t *testing.T) {
 }
 
 func testAccHSM_IPAddress(t *testing.T) {
-	resourceName := "aws_cloudhsm_v2_hsm.test"
+	resourceName := "aws_cloudhsmv2_hsm.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -164,7 +164,7 @@ resource "aws_subnet" "test" {
   vpc_id            = aws_vpc.test.id
 }
 
-resource "aws_cloudhsm_v2_cluster" "test" {
+resource "aws_cloudhsmv2_cluster" "test" {
   hsm_type   = "hsm1.medium"
   subnet_ids = aws_subnet.test[*].id
 }
@@ -175,9 +175,9 @@ func testAccHSMAvailabilityZoneConfig() string {
 	return acctest.ConfigCompose(
 		testAccHSMBaseConfig(),
 		`
-resource "aws_cloudhsm_v2_hsm" "test" {
+resource "aws_cloudhsmv2_hsm" "test" {
   availability_zone = aws_subnet.test[0].availability_zone
-  cluster_id        = aws_cloudhsm_v2_cluster.test.cluster_id
+  cluster_id        = aws_cloudhsmv2_cluster.test.cluster_id
 }
 `)
 }
@@ -186,8 +186,8 @@ func testAccHSMIPAddressConfig() string {
 	return acctest.ConfigCompose(
 		testAccHSMBaseConfig(),
 		`
-resource "aws_cloudhsm_v2_hsm" "test" {
-  cluster_id = aws_cloudhsm_v2_cluster.test.cluster_id
+resource "aws_cloudhsmv2_hsm" "test" {
+  cluster_id = aws_cloudhsmv2_cluster.test.cluster_id
   ip_address = cidrhost(aws_subnet.test[0].cidr_block, 5)
   subnet_id  = aws_subnet.test[0].id
 }
@@ -198,8 +198,8 @@ func testAccHSMSubnetIDConfig() string {
 	return acctest.ConfigCompose(
 		testAccHSMBaseConfig(),
 		`
-resource "aws_cloudhsm_v2_hsm" "test" {
-  cluster_id = aws_cloudhsm_v2_cluster.test.cluster_id
+resource "aws_cloudhsmv2_hsm" "test" {
+  cluster_id = aws_cloudhsmv2_cluster.test.cluster_id
   subnet_id  = aws_subnet.test[0].id
 }
 `)
@@ -209,7 +209,7 @@ func testAccCheckHSMDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudHSMV2Conn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_cloudhsm_v2_hsm" {
+		if rs.Type != "aws_cloudhsmv2_hsm" {
 			continue
 		}
 

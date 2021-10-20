@@ -87,7 +87,7 @@ service/cloudformation:
 service/cloudfront:
   - '((\*|-) ?`?|(data|resource) "?)aws_cloudfront_'
 service/cloudhsmv2:
-  - '((\*|-) ?`?|(data|resource) "?)aws_cloudhsm_v2_'
+  - '((\*|-) ?`?|(data|resource) "?)aws_cloudhsmv2_'
 service/cloudsearch:
   - '((\*|-) ?`?|(data|resource) "?)aws_cloudsearch_'
 service/cloudtrail:

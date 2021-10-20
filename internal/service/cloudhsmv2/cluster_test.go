@@ -15,7 +15,7 @@ import (
 )
 
 func testAccCluster_basic(t *testing.T) {
-	resourceName := "aws_cloudhsm_v2_cluster.test"
+	resourceName := "aws_cloudhsmv2_cluster.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -50,7 +50,7 @@ func testAccCluster_basic(t *testing.T) {
 }
 
 func testAccCluster_disappears(t *testing.T) {
-	resourceName := "aws_cloudhsm_v2_cluster.test"
+	resourceName := "aws_cloudhsmv2_cluster.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -73,7 +73,7 @@ func testAccCluster_disappears(t *testing.T) {
 }
 
 func testAccCluster_Tags(t *testing.T) {
-	resourceName := "aws_cloudhsm_v2_cluster.test"
+	resourceName := "aws_cloudhsmv2_cluster.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -144,7 +144,7 @@ resource "aws_subnet" "test" {
 
 func testAccClusterConfig() string {
 	return acctest.ConfigCompose(testAccClusterBaseConfig(), `
-resource "aws_cloudhsm_v2_cluster" "test" {
+resource "aws_cloudhsmv2_cluster" "test" {
   hsm_type   = "hsm1.medium"
   subnet_ids = aws_subnet.test[*].id
 }
@@ -153,7 +153,7 @@ resource "aws_cloudhsm_v2_cluster" "test" {
 
 func testAccClusterTags1Config(tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccClusterBaseConfig(), fmt.Sprintf(`
-resource "aws_cloudhsm_v2_cluster" "test" {
+resource "aws_cloudhsmv2_cluster" "test" {
   hsm_type   = "hsm1.medium"
   subnet_ids = aws_subnet.test[*].id
 
@@ -166,7 +166,7 @@ resource "aws_cloudhsm_v2_cluster" "test" {
 
 func testAccClusterTags2Config(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(testAccClusterBaseConfig(), fmt.Sprintf(`
-resource "aws_cloudhsm_v2_cluster" "test" {
+resource "aws_cloudhsmv2_cluster" "test" {
   hsm_type   = "hsm1.medium"
   subnet_ids = aws_subnet.test[*].id
 
@@ -182,7 +182,7 @@ func testAccCheckClusterDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudHSMV2Conn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_cloudhsm_v2_cluster" {
+		if rs.Type != "aws_cloudhsmv2_cluster" {
 			continue
 		}
 		cluster, err := tfcloudhsmv2.FindCluster(conn, rs.Primary.ID)

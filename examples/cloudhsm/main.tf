@@ -8,41 +8,41 @@ provider "aws" {
 
 data "aws_availability_zones" "available" {}
 
-resource "aws_vpc" "cloudhsm_v2_vpc" {
+resource "aws_vpc" "cloudhsmv2_vpc" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "example-aws_cloudhsm_v2_cluster"
+    Name = "example-aws_cloudhsmv2_cluster"
   }
 }
 
-resource "aws_subnet" "cloudhsm_v2_subnets" {
+resource "aws_subnet" "cloudhsmv2_subnets" {
   count                   = 2
-  vpc_id                  = aws_vpc.cloudhsm_v2_vpc.id
+  vpc_id                  = aws_vpc.cloudhsmv2_vpc.id
   cidr_block              = element(var.subnets, count.index)
   map_public_ip_on_launch = false
   availability_zone       = element(data.aws_availability_zones.available.names, count.index)
 
   tags = {
-    Name = "example-aws_cloudhsm_v2_cluster"
+    Name = "example-aws_cloudhsmv2_cluster"
   }
 }
 
-resource "aws_cloudhsm_v2_cluster" "cloudhsm_v2_cluster" {
+resource "aws_cloudhsmv2_cluster" "cloudhsmv2_cluster" {
   hsm_type   = "hsm1.medium"
-  subnet_ids = aws_subnet.cloudhsm_v2_subnets.*.id
+  subnet_ids = aws_subnet.cloudhsmv2_subnets.*.id
 
   tags = {
-    Name = "example-aws_cloudhsm_v2_cluster"
+    Name = "example-aws_cloudhsmv2_cluster"
   }
 }
 
-resource "aws_cloudhsm_v2_hsm" "cloudhsm_v2_hsm" {
-  subnet_id  = aws_subnet.cloudhsm_v2_subnets[0].id
-  cluster_id = aws_cloudhsm_v2_cluster.cloudhsm_v2_cluster.cluster_id
+resource "aws_cloudhsmv2_hsm" "cloudhsmv2_hsm" {
+  subnet_id  = aws_subnet.cloudhsmv2_subnets[0].id
+  cluster_id = aws_cloudhsmv2_cluster.cloudhsmv2_cluster.cluster_id
 }
 
-data "aws_cloudhsm_v2_cluster" "cluster" {
-  cluster_id = aws_cloudhsm_v2_cluster.cloudhsm_v2_cluster.cluster_id
-  depends_on = [aws_cloudhsm_v2_hsm.cloudhsm_v2_hsm]
+data "aws_cloudhsmv2_cluster" "cluster" {
+  cluster_id = aws_cloudhsmv2_cluster.cloudhsmv2_cluster.cluster_id
+  depends_on = [aws_cloudhsmv2_hsm.cloudhsmv2_hsm]
 }
