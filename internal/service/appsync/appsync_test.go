@@ -11,6 +11,12 @@ func TestAccAppSync_serial(t *testing.T) {
 			"description": testAccAppSyncAPIKey_description,
 			"expires":     testAccAppSyncAPIKey_expires,
 		},
+		"Function": {
+			"basic":                   testAccAppSyncFunction_basic,
+			"disappears":              testAccAppSyncFunction_disappears,
+			"description":             testAccAppSyncFunction_description,
+			"responseMappingTemplate": testAccAppSyncFunction_responseMappingTemplate,
+		},
 		"Resolver": {
 			"basic":             testAccAppSyncResolver_basic,
 			"disappears":        testAccAppSyncResolver_disappears,
