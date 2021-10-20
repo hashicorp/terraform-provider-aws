@@ -4,7 +4,7 @@ rules:
     message: Prefer naming acceptance tests with _disappears_Parent suffix
     paths:
       include:
-        - 'aws/*_test.go'
+        - 'internal/**/*_test.go'
     patterns:
       - pattern: func $FUNCNAME(t *testing.T) { ... }
       - metavariable-regex:
