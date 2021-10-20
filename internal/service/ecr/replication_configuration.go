@@ -55,6 +55,24 @@ func ResourceReplicationConfiguration() *schema.Resource {
 											},
 										},
 									},
+									"repository_filter": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MinItems: 1,
+										MaxItems: 100,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"filter": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												"filter_type": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+											},
+										},
+									},
 								},
 							},
 						},
@@ -153,7 +171,8 @@ func expandEcrReplicationConfigurationReplicationConfigurationRules(data []inter
 	for _, rule := range data {
 		ec := rule.(map[string]interface{})
 		config := &ecr.ReplicationRule{
-			Destinations: expandEcrReplicationConfigurationReplicationConfigurationRulesDestinations(ec["destination"].([]interface{})),
+			Destinations:      expandEcrReplicationConfigurationReplicationConfigurationRulesDestinations(ec["destination"].([]interface{})),
+			RepositoryFilters: expandEcrReplicationConfigurationReplicationConfigurationRulesRepositoryFilters(ec["repository_filter"].([]interface{})),
 		}
 
 		rules = append(rules, config)
@@ -171,7 +190,8 @@ func flattenEcrReplicationConfigurationReplicationConfigurationRules(ec []*ecr.R
 
 	for _, apiObject := range ec {
 		tfMap := map[string]interface{}{
-			"destination": flattenEcrReplicationConfigurationReplicationConfigurationRulesDestinations(apiObject.Destinations),
+			"destination":       flattenEcrReplicationConfigurationReplicationConfigurationRulesDestinations(apiObject.Destinations),
+			"repository_filter": flattenEcrReplicationConfigurationReplicationConfigurationRulesRepositoryFilters(apiObject.RepositoryFilters),
 		}
 
 		tfList = append(tfList, tfMap)
@@ -210,6 +230,44 @@ func flattenEcrReplicationConfigurationReplicationConfigurationRulesDestinations
 		tfMap := map[string]interface{}{
 			"region":      aws.StringValue(apiObject.Region),
 			"registry_id": aws.StringValue(apiObject.RegistryId),
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func expandEcrReplicationConfigurationReplicationConfigurationRulesRepositoryFilters(data []interface{}) []*ecr.RepositoryFilter {
+	if len(data) == 0 || data[0] == nil {
+		return nil
+	}
+
+	var filters []*ecr.RepositoryFilter
+
+	for _, filter := range data {
+		ec := filter.(map[string]interface{})
+		config := &ecr.RepositoryFilter{
+			Filter:     aws.String(ec["filter"].(string)),
+			FilterType: aws.String(ec["filter_type"].(string)),
+		}
+
+		filters = append(filters, config)
+	}
+	return filters
+}
+
+func flattenEcrReplicationConfigurationReplicationConfigurationRulesRepositoryFilters(ec []*ecr.RepositoryFilter) []interface{} {
+	if len(ec) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range ec {
+		tfMap := map[string]interface{}{
+			"filter":      aws.StringValue(apiObject.Filter),
+			"filter_type": aws.StringValue(apiObject.FilterType),
 		}
 
 		tfList = append(tfList, tfMap)

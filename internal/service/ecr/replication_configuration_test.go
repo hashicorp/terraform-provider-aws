@@ -52,7 +52,7 @@ func TestAccECRReplicationConfiguration_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccReplicationConfiguration(acctest.AlternateRegion()),
+				Config: testAccReplicationConfigurationRepositoryFilter(acctest.AlternateRegion(), "custom-filter1", "custom-filter2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationConfigurationExists(resourceName),
 					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
@@ -60,6 +60,8 @@ func TestAccECRReplicationConfiguration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.0.destination.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.0.destination.0.region", acctest.AlternateRegion()),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.0.repository_filter.0.filter", "custom-filter1"),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.0.repository_filter.1.filter", "custom-filter2"),
 					acctest.CheckResourceAttrAccountID(resourceName, "replication_configuration.0.rule.0.destination.0.registry_id"),
 				),
 			},
@@ -147,4 +149,29 @@ resource "aws_ecr_replication_configuration" "test" {
   }
 }
 `, region1, region2)
+}
+
+func testAccReplicationConfigurationRepositoryFilter(region string, filter1Name string, filter2Name string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+resource "aws_ecr_replication_configuration" "test" {
+  replication_configuration {
+    rule {
+      destination {
+        region      = %[1]q
+        registry_id = data.aws_caller_identity.current.account_id
+      }
+      repository_filter {
+        filter = %[2]q
+        filter_type = "PREFIX_MATCH"
+      }
+      repository_filter {
+        filter = %[3]q
+        filter_type = "PREFIX_MATCH"
+      }
+    }
+  }
+}
+`, region, filter1Name, filter2Name)
 }
