@@ -1,19 +1,19 @@
 ---
 subcategory: "CloudWatch"
 layout: "aws"
-page_title: "AWS: aws_cloudwatch_log_group"
+page_title: "AWS: aws_cloudwatchlogs_group"
 description: |-
   Get information on a Cloudwatch Log Group.
 ---
 
-# Data Source: aws_cloudwatch_log_group
+# Data Source: aws_cloudwatchlogs_group
 
 Use this data source to get information about an AWS Cloudwatch Log Group
 
 ## Example Usage
 
 ```terraform
-data "aws_cloudwatch_log_group" "example" {
+data "aws_cloudwatchlogs_group" "example" {
   name = "MyImportantLogs"
 }
 ```

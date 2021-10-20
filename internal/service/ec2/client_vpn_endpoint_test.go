@@ -232,8 +232,8 @@ func testAccClientVPNEndpoint_withLogGroup(t *testing.T) {
 	var v1, v2 ec2.ClientVpnEndpoint
 	rStr := sdkacctest.RandString(5)
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
-	logGroupResourceName := "aws_cloudwatch_log_group.lg"
-	logStreamResourceName := "aws_cloudwatch_log_stream.ls"
+	logGroupResourceName := "aws_cloudwatchlogs_group.lg"
+	logStreamResourceName := "aws_cloudwatchlogs_stream.ls"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
@@ -525,13 +525,13 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
 
 func testAccEc2ClientVpnEndpointConfigWithLogGroup(rName string) string {
 	return testAccEc2ClientVpnEndpointConfigAcmCertificateBase() + fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "lg" {
+resource "aws_cloudwatchlogs_group" "lg" {
   name = "terraform-testacc-clientvpn-loggroup-%s"
 }
 
-resource "aws_cloudwatch_log_stream" "ls" {
-  name           = "${aws_cloudwatch_log_group.lg.name}-stream"
-  log_group_name = aws_cloudwatch_log_group.lg.name
+resource "aws_cloudwatchlogs_stream" "ls" {
+  name           = "${aws_cloudwatchlogs_group.lg.name}-stream"
+  log_group_name = aws_cloudwatchlogs_group.lg.name
 }
 
 resource "aws_ec2_client_vpn_endpoint" "test" {
@@ -546,8 +546,8 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
 
   connection_log_options {
     enabled               = true
-    cloudwatch_log_group  = aws_cloudwatch_log_group.lg.name
-    cloudwatch_log_stream = aws_cloudwatch_log_stream.ls.name
+    cloudwatch_log_group  = aws_cloudwatchlogs_group.lg.name
+    cloudwatch_log_stream = aws_cloudwatchlogs_stream.ls.name
   }
 }
 `, rName, rName)

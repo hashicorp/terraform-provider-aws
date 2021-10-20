@@ -1,25 +1,25 @@
 ---
 subcategory: "CloudWatch"
 layout: "aws"
-page_title: "AWS: aws_cloudwatch_log_stream"
+page_title: "AWS: aws_cloudwatchlogs_stream"
 description: |-
   Provides a CloudWatch Log Stream resource.
 ---
 
-# Resource: aws_cloudwatch_log_stream
+# Resource: aws_cloudwatchlogs_stream
 
 Provides a CloudWatch Log Stream resource.
 
 ## Example Usage
 
 ```terraform
-resource "aws_cloudwatch_log_group" "yada" {
+resource "aws_cloudwatchlogs_group" "yada" {
   name = "Yada"
 }
 
-resource "aws_cloudwatch_log_stream" "foo" {
+resource "aws_cloudwatchlogs_stream" "foo" {
   name           = "SampleLogStream1234"
-  log_group_name = aws_cloudwatch_log_group.yada.name
+  log_group_name = aws_cloudwatchlogs_group.yada.name
 }
 ```
 
@@ -41,5 +41,5 @@ In addition to all arguments above, the following attributes are exported:
 Cloudwatch Log Stream can be imported using the stream's `log_group_name` and `name`, e.g.,
 
 ```
-$ terraform import aws_cloudwatch_log_stream.foo Yada:SampleLogStream1234
+$ terraform import aws_cloudwatchlogs_stream.foo Yada:SampleLogStream1234
 ```

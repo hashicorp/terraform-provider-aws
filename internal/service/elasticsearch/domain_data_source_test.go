@@ -156,11 +156,11 @@ locals {
   random_name = "test-es-%d"
 }
 
-resource "aws_cloudwatch_log_group" "test" {
+resource "aws_cloudwatchlogs_group" "test" {
   name = local.random_name
 }
 
-resource "aws_cloudwatch_log_resource_policy" "test" {
+resource "aws_cloudwatchlogs_resource_policy" "test" {
   policy_name = local.random_name
 
   policy_document = <<CONFIG
@@ -256,7 +256,7 @@ POLICY
   }
 
   log_publishing_options {
-    cloudwatch_log_group_arn = aws_cloudwatch_log_group.test.arn
+    cloudwatch_log_group_arn = aws_cloudwatchlogs_group.test.arn
     log_type                 = "INDEX_SLOW_LOGS"
   }
 

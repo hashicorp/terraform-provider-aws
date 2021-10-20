@@ -15,7 +15,7 @@ import (
 
 func TestAccCloudWatchLogsResourcePolicy_basic(t *testing.T) {
 	name := sdkacctest.RandString(5)
-	resourceName := "aws_cloudwatch_log_resource_policy.test"
+	resourceName := "aws_cloudwatchlogs_resource_policy.test"
 	var resourcePolicy cloudwatchlogs.ResourcePolicy
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -79,7 +79,7 @@ func testAccCheckCloudWatchLogResourcePolicyDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchLogsConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_cloudwatch_log_resource_policy" {
+		if rs.Type != "aws_cloudwatchlogs_resource_policy" {
 			continue
 		}
 
@@ -117,7 +117,7 @@ data "aws_iam_policy_document" "test" {
   }
 }
 
-resource "aws_cloudwatch_log_resource_policy" "test" {
+resource "aws_cloudwatchlogs_resource_policy" "test" {
   policy_name     = "%s"
   policy_document = data.aws_iam_policy_document.test.json
 }
@@ -144,7 +144,7 @@ data "aws_iam_policy_document" "test" {
   }
 }
 
-resource "aws_cloudwatch_log_resource_policy" "test" {
+resource "aws_cloudwatchlogs_resource_policy" "test" {
   policy_name     = "%s"
   policy_document = data.aws_iam_policy_document.test.json
 }

@@ -16,7 +16,7 @@ import (
 
 func TestAccCloudWatchLogsStream_basic(t *testing.T) {
 	var ls cloudwatchlogs.LogStream
-	resourceName := "aws_cloudwatch_log_stream.test"
+	resourceName := "aws_cloudwatchlogs_stream.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -43,7 +43,7 @@ func TestAccCloudWatchLogsStream_basic(t *testing.T) {
 
 func TestAccCloudWatchLogsStream_disappears(t *testing.T) {
 	var ls cloudwatchlogs.LogStream
-	resourceName := "aws_cloudwatch_log_stream.test"
+	resourceName := "aws_cloudwatchlogs_stream.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -67,8 +67,8 @@ func TestAccCloudWatchLogsStream_disappears(t *testing.T) {
 func TestAccCloudWatchLogsStream_Disappears_logGroup(t *testing.T) {
 	var ls cloudwatchlogs.LogStream
 	var lg cloudwatchlogs.LogGroup
-	resourceName := "aws_cloudwatch_log_stream.test"
-	logGroupResourceName := "aws_cloudwatch_log_group.test"
+	resourceName := "aws_cloudwatchlogs_stream.test"
+	logGroupResourceName := "aws_cloudwatchlogs_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -117,7 +117,7 @@ func testAccCheckStreamDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchLogsConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_cloudwatch_log_stream" {
+		if rs.Type != "aws_cloudwatchlogs_stream" {
 			continue
 		}
 
@@ -181,13 +181,13 @@ func TestValidateCloudWatchLogStreamName(t *testing.T) {
 
 func testAccStreamConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test" {
+resource "aws_cloudwatchlogs_group" "test" {
   name = %[1]q
 }
 
-resource "aws_cloudwatch_log_stream" "test" {
+resource "aws_cloudwatchlogs_stream" "test" {
   name           = %[1]q
-  log_group_name = aws_cloudwatch_log_group.test.id
+  log_group_name = aws_cloudwatchlogs_group.test.id
 }
 `, rName)
 }

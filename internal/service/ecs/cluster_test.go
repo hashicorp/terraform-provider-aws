@@ -311,7 +311,7 @@ func TestAccECSCluster_configuration(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.execute_command_configuration.0.logging", "OVERRIDE"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.execute_command_configuration.0.log_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.execute_command_configuration.0.log_configuration.0.cloud_watch_encryption_enabled", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.execute_command_configuration.0.log_configuration.0.cloud_watch_log_group_name", "aws_cloudwatch_log_group.test", "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.execute_command_configuration.0.log_configuration.0.cloud_watch_log_group_name", "aws_cloudwatchlogs_group.test", "name"),
 				),
 			},
 			{
@@ -330,7 +330,7 @@ func TestAccECSCluster_configuration(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.execute_command_configuration.0.logging", "OVERRIDE"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.execute_command_configuration.0.log_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.execute_command_configuration.0.log_configuration.0.cloud_watch_encryption_enabled", "false"),
-					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.execute_command_configuration.0.log_configuration.0.cloud_watch_log_group_name", "aws_cloudwatch_log_group.test", "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.execute_command_configuration.0.log_configuration.0.cloud_watch_log_group_name", "aws_cloudwatchlogs_group.test", "name"),
 				),
 			},
 		},
@@ -576,7 +576,7 @@ resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
 }
 
-resource "aws_cloudwatch_log_group" "test" {
+resource "aws_cloudwatchlogs_group" "test" {
   name = %[1]q
 }
 
@@ -590,7 +590,7 @@ resource "aws_ecs_cluster" "test" {
 
       log_configuration {
         cloud_watch_encryption_enabled = %[2]t
-        cloud_watch_log_group_name     = aws_cloudwatch_log_group.test.name
+        cloud_watch_log_group_name     = aws_cloudwatchlogs_group.test.name
       }
     }
   }

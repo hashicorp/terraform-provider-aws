@@ -1960,13 +1960,13 @@ resource "aws_s3_bucket" "bucket" {
   acl    = "private"
 }
 
-resource "aws_cloudwatch_log_group" "test" {
+resource "aws_cloudwatchlogs_group" "test" {
   name = "tf-acc-test-%[1]d"
 }
 
-resource "aws_cloudwatch_log_stream" "test" {
+resource "aws_cloudwatchlogs_stream" "test" {
   name           = "tf-acc-test-%[1]d"
-  log_group_name = aws_cloudwatch_log_group.test.name
+  log_group_name = aws_cloudwatchlogs_group.test.name
 }
 
 resource "aws_kinesis_firehose_delivery_stream" "test" {
@@ -1980,8 +1980,8 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 
     cloudwatch_logging_options {
       enabled         = true
-      log_group_name  = aws_cloudwatch_log_group.test.name
-      log_stream_name = aws_cloudwatch_log_stream.test.name
+      log_group_name  = aws_cloudwatchlogs_group.test.name
+      log_stream_name = aws_cloudwatchlogs_stream.test.name
     }
   }
 }

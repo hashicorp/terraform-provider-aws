@@ -47,7 +47,7 @@ resource "aws_glue_job" "example" {
 ### Enabling CloudWatch Logs and Metrics
 
 ```terraform
-resource "aws_cloudwatch_log_group" "example" {
+resource "aws_cloudwatchlogs_group" "example" {
   name              = "example"
   retention_in_days = 14
 }
@@ -57,7 +57,7 @@ resource "aws_glue_job" "example" {
 
   default_arguments = {
     # ... potentially other arguments ...
-    "--continuous-log-logGroup"          = aws_cloudwatch_log_group.example.name
+    "--continuous-log-logGroup"          = aws_cloudwatchlogs_group.example.name
     "--enable-continuous-cloudwatch-log" = "true"
     "--enable-continuous-log-filter"     = "true"
     "--enable-metrics"                   = ""

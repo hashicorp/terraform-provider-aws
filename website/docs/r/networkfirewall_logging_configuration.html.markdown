@@ -38,7 +38,7 @@ resource "aws_networkfirewall_logging_configuration" "example" {
   logging_configuration {
     log_destination_config {
       log_destination = {
-        logGroup = aws_cloudwatch_log_group.example.name
+        logGroup = aws_cloudwatchlogs_group.example.name
       }
       log_destination_type = "CloudWatchLogs"
       log_type             = "ALERT"

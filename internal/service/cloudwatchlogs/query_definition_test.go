@@ -144,7 +144,7 @@ func TestAccCloudWatchLogsQueryDefinition_logGroups(t *testing.T) {
 					testAccCheckQueryDefinitionExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "name", queryName),
 					resource.TestCheckResourceAttr(resourceName, "log_group_names.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "log_group_names.0", "aws_cloudwatch_log_group.test.0", "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "log_group_names.0", "aws_cloudwatchlogs_group.test.0", "name"),
 				),
 			},
 			{
@@ -153,8 +153,8 @@ func TestAccCloudWatchLogsQueryDefinition_logGroups(t *testing.T) {
 					testAccCheckQueryDefinitionExists(resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "name", queryName),
 					resource.TestCheckResourceAttr(resourceName, "log_group_names.#", "5"),
-					resource.TestCheckResourceAttrPair(resourceName, "log_group_names.0", "aws_cloudwatch_log_group.test.0", "name"),
-					resource.TestCheckResourceAttrPair(resourceName, "log_group_names.1", "aws_cloudwatch_log_group.test.1", "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "log_group_names.0", "aws_cloudwatchlogs_group.test.0", "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "log_group_names.1", "aws_cloudwatchlogs_group.test.1", "name"),
 				),
 			},
 			{
@@ -231,7 +231,7 @@ func testAccQueryDefinitionConfig_LogGroups(rName string, count int) string {
 resource "aws_cloudwatch_query_definition" "test" {
   name = %[1]q
 
-  log_group_names = aws_cloudwatch_log_group.test[*].name
+  log_group_names = aws_cloudwatchlogs_group.test[*].name
 
   query_string = <<EOF
 fields @timestamp, @message
@@ -240,7 +240,7 @@ fields @timestamp, @message
 EOF
 }
 
-resource "aws_cloudwatch_log_group" "test" {
+resource "aws_cloudwatchlogs_group" "test" {
   count = %[2]d
 
   name = "%[1]s-${count.index}"

@@ -1256,7 +1256,7 @@ resource "aws_fsx_windows_file_system" "test" {
 
 func testAccWindowsFileSystemAuditConfig(rName, status string) string {
 	return testAccWindowsFileSystemBaseConfig() + fmt.Sprintf(`
-resource aws_cloudwatch_log_group "test" {
+resource aws_cloudwatchlogs_group "test" {
   name = "/aws/fsx/%[1]s"
 }
 
@@ -1268,7 +1268,7 @@ resource "aws_fsx_windows_file_system" "test" {
   throughput_capacity = 32
 
   audit_log_configuration {
-    audit_log_destination             = aws_cloudwatch_log_group.test.arn
+    audit_log_destination             = aws_cloudwatchlogs_group.test.arn
     file_access_audit_log_level       = %[2]q
     file_share_access_audit_log_level = %[2]q
   }

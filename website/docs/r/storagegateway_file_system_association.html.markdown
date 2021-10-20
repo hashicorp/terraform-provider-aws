@@ -74,7 +74,7 @@ resource "aws_storagegateway_file_system_association" "fsx" {
   cache_attributes {
     cache_stale_timeout_in_seconds = 400
   }
-  audit_destination_arn = aws_cloudwatch_log_group.test.arn
+  audit_destination_arn = aws_cloudwatchlogs_group.test.arn
 }
 ```
 

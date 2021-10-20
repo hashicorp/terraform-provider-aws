@@ -64,13 +64,13 @@ resource "aws_kinesis_analytics_application" "test_application" {
 ### Starting An Application
 
 ```terraform
-resource "aws_cloudwatch_log_group" "example" {
+resource "aws_cloudwatchlogs_group" "example" {
   name = "analytics"
 }
 
-resource "aws_cloudwatch_log_stream" "example" {
+resource "aws_cloudwatchlogs_stream" "example" {
   name           = "example-kinesis-application"
-  log_group_name = aws_cloudwatch_log_group.example.name
+  log_group_name = aws_cloudwatchlogs_group.example.name
 }
 
 resource "aws_kinesis_stream" "example" {
@@ -92,7 +92,7 @@ resource "aws_kinesis_analytics_application" "test" {
   name = "example-application"
 
   cloudwatch_logging_options {
-    log_stream_arn = aws_cloudwatch_log_stream.example.arn
+    log_stream_arn = aws_cloudwatchlogs_stream.example.arn
     role_arn       = aws_iam_role.example.arn
   }
 

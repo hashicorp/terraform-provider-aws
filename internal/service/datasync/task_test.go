@@ -141,7 +141,7 @@ func TestAccDataSyncTask_cloudWatchLogGroupARN(t *testing.T) {
 				Config: testAccTaskCloudWatchLogGroupARNConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(resourceName, &task1),
-					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_log_group_arn", "aws_cloudwatch_log_group.test1", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_log_group_arn", "aws_cloudwatchlogs_group.test1", "arn"),
 				),
 			},
 			{
@@ -153,7 +153,7 @@ func TestAccDataSyncTask_cloudWatchLogGroupARN(t *testing.T) {
 				Config: testAccTaskCloudWatchLogGroupARN2Config(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(resourceName, &task1),
-					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_log_group_arn", "aws_cloudwatch_log_group.test2", "arn")),
+					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_log_group_arn", "aws_cloudwatchlogs_group.test2", "arn")),
 			},
 		},
 	})
@@ -983,12 +983,12 @@ func testAccTaskCloudWatchLogGroupARNConfig(rName string) string {
 		testAccTaskDestinationLocationS3BaseConfig(rName),
 		testAccTaskSourceLocationNFSBaseConfig(rName),
 		fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test1" {
+resource "aws_cloudwatchlogs_group" "test1" {
   name = "%[1]s-1"
 }
 
 resource "aws_datasync_task" "test" {
-  cloudwatch_log_group_arn = aws_cloudwatch_log_group.test1.arn
+  cloudwatch_log_group_arn = aws_cloudwatchlogs_group.test1.arn
   destination_location_arn = aws_datasync_location_s3.destination.arn
   name                     = %[1]q
   source_location_arn      = aws_datasync_location_nfs.source.arn
@@ -1001,16 +1001,16 @@ func testAccTaskCloudWatchLogGroupARN2Config(rName string) string {
 		testAccTaskDestinationLocationS3BaseConfig(rName),
 		testAccTaskSourceLocationNFSBaseConfig(rName),
 		fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test1" {
+resource "aws_cloudwatchlogs_group" "test1" {
   name = "%[1]s-1"
 }
 
-resource "aws_cloudwatch_log_group" "test2" {
+resource "aws_cloudwatchlogs_group" "test2" {
   name = "%[1]s-2"
 }
 
 resource "aws_datasync_task" "test" {
-  cloudwatch_log_group_arn = aws_cloudwatch_log_group.test2.arn
+  cloudwatch_log_group_arn = aws_cloudwatchlogs_group.test2.arn
   destination_location_arn = aws_datasync_location_s3.destination.arn
   name                     = %[1]q
   source_location_arn      = aws_datasync_location_nfs.source.arn
@@ -1093,12 +1093,12 @@ func testAccTaskDefaultSyncOptionsLogLevelConfig(rName, logLevel string) string 
 		testAccTaskDestinationLocationS3BaseConfig(rName),
 		testAccTaskSourceLocationNFSBaseConfig(rName),
 		fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test" {
+resource "aws_cloudwatchlogs_group" "test" {
   name = %[1]q
 }
 
 resource "aws_datasync_task" "test" {
-  cloudwatch_log_group_arn = aws_cloudwatch_log_group.test.arn
+  cloudwatch_log_group_arn = aws_cloudwatchlogs_group.test.arn
   destination_location_arn = aws_datasync_location_s3.destination.arn
   name                     = %[1]q
   source_location_arn      = aws_datasync_location_nfs.source.arn

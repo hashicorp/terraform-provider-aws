@@ -1,19 +1,19 @@
 ---
 subcategory: "CloudWatch"
 layout: "aws"
-page_title: "AWS: aws_cloudwatch_log_subscription_filter"
+page_title: "AWS: aws_cloudwatchlogs_subscription_filter"
 description: |-
   Provides a CloudWatch Logs subscription filter.
 ---
 
-# Resource: aws_cloudwatch_log_subscription_filter
+# Resource: aws_cloudwatchlogs_subscription_filter
 
 Provides a CloudWatch Logs subscription filter resource.
 
 ## Example Usage
 
 ```terraform
-resource "aws_cloudwatch_log_subscription_filter" "test_lambdafunction_logfilter" {
+resource "aws_cloudwatchlogs_subscription_filter" "test_lambdafunction_logfilter" {
   name            = "test_lambdafunction_logfilter"
   role_arn        = aws_iam_role.iam_for_lambda.arn
   log_group_name  = "/aws/lambda/example_lambda_name"
@@ -43,5 +43,5 @@ No additional attributes are exported.
 CloudWatch Logs subscription filter can be imported using the log group name and subscription filter name separated by `|`.
 
 ```
-$ terraform import aws_cloudwatch_log_subscription_filter.test_lambdafunction_logfilter /aws/lambda/example_lambda_name|test_lambdafunction_logfilter
+$ terraform import aws_cloudwatchlogs_subscription_filter.test_lambdafunction_logfilter /aws/lambda/example_lambda_name|test_lambdafunction_logfilter
 ```

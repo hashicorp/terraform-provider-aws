@@ -1,22 +1,22 @@
 ---
 subcategory: "CloudWatch"
 layout: "aws"
-page_title: "AWS: aws_cloudwatch_log_metric_filter"
+page_title: "AWS: aws_cloudwatchlogs_metric_filter"
 description: |-
   Provides a CloudWatch Log Metric Filter resource.
 ---
 
-# Resource: aws_cloudwatch_log_metric_filter
+# Resource: aws_cloudwatchlogs_metric_filter
 
 Provides a CloudWatch Log Metric Filter resource.
 
 ## Example Usage
 
 ```terraform
-resource "aws_cloudwatch_log_metric_filter" "yada" {
+resource "aws_cloudwatchlogs_metric_filter" "yada" {
   name           = "MyAppAccessCount"
   pattern        = ""
-  log_group_name = aws_cloudwatch_log_group.dada.name
+  log_group_name = aws_cloudwatchlogs_group.dada.name
 
   metric_transformation {
     name      = "EventCount"
@@ -25,7 +25,7 @@ resource "aws_cloudwatch_log_metric_filter" "yada" {
   }
 }
 
-resource "aws_cloudwatch_log_group" "dada" {
+resource "aws_cloudwatchlogs_group" "dada" {
   name = "MyApp/access.log"
 }
 ```
@@ -60,5 +60,5 @@ In addition to all arguments above, the following attributes are exported:
 CloudWatch Log Metric Filter can be imported using the `log_group_name:name`, e.g.,
 
 ```
-$ terraform import aws_cloudwatch_log_metric_filter.test /aws/lambda/function:test
+$ terraform import aws_cloudwatchlogs_metric_filter.test /aws/lambda/function:test
 ```

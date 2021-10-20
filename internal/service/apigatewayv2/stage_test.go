@@ -255,7 +255,7 @@ func TestAccAPIGatewayV2Stage_accessLogSettings(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetStageOutput
 	resourceName := "aws_apigatewayv2_stage.test"
-	cloudWatchResourceName := "aws_cloudwatch_log_group.test"
+	cloudWatchResourceName := "aws_cloudwatchlogs_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1230,7 +1230,7 @@ func testAccStageConfig_accessLogSettings(rName, format string) string {
 	return acctest.ConfigCompose(
 		testAccStageConfig_apiWebSocket(rName),
 		fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test" {
+resource "aws_cloudwatchlogs_group" "test" {
   name = %[1]q
 }
 
@@ -1239,7 +1239,7 @@ resource "aws_apigatewayv2_stage" "test" {
   name   = %[1]q
 
   access_log_settings {
-    destination_arn = aws_cloudwatch_log_group.test.arn
+    destination_arn = aws_cloudwatchlogs_group.test.arn
     format          = %[2]q
   }
 }

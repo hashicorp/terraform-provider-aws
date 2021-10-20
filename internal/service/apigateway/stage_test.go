@@ -135,7 +135,7 @@ func TestAccAPIGatewayStage_disappears(t *testing.T) {
 func TestAccAPIGatewayStage_accessLogSettings(t *testing.T) {
 	var conf apigateway.Stage
 	rName := sdkacctest.RandString(5)
-	cloudwatchLogGroupResourceName := "aws_cloudwatch_log_group.test"
+	cloudwatchLogGroupResourceName := "aws_cloudwatchlogs_group.test"
 	resourceName := "aws_apigateway_stage.test"
 	clf := `$context.identity.sourceIp $context.identity.caller $context.identity.user [$context.requestTime] "$context.httpMethod $context.resourcePath $context.protocol" $context.status $context.responseLength $context.requestId`
 	json := `{ "requestId":"$context.requestId", "ip": "$context.identity.sourceIp", "caller":"$context.identity.caller", "user":"$context.identity.user", "requestTime":"$context.requestTime", "httpMethod":"$context.httpMethod", "resourcePath":"$context.resourcePath", "status":"$context.status", "protocol":"$context.protocol", "responseLength":"$context.responseLength" }`
@@ -514,7 +514,7 @@ resource "aws_apigateway_stage" "test" {
 
 func testAccStageConfig_accessLogSettings(rName string, format string) string {
 	return testAccStageConfig_base(rName) + fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test" {
+resource "aws_cloudwatchlogs_group" "test" {
   name = "foo-bar-%s"
 }
 
@@ -532,7 +532,7 @@ resource "aws_apigateway_stage" "test" {
     Name = "tf-test"
   }
   access_log_settings {
-    destination_arn = aws_cloudwatch_log_group.test.arn
+    destination_arn = aws_cloudwatchlogs_group.test.arn
     format          = %q
   }
 }

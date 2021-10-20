@@ -160,13 +160,13 @@ resource "aws_lambda_function" "test_lambda" {
   # ... other configuration ...
   depends_on = [
     aws_iam_role_policy_attachment.lambda_logs,
-    aws_cloudwatch_log_group.example,
+    aws_cloudwatchlogs_group.example,
   ]
 }
 
 # This is to optionally manage the CloudWatch Log Group for the Lambda Function.
 # If skipping this resource configuration, also add "logs:CreateLogGroup" to the IAM policy below.
-resource "aws_cloudwatch_log_group" "example" {
+resource "aws_cloudwatchlogs_group" "example" {
   name              = "/aws/lambda/${var.lambda_function_name}"
   retention_in_days = 14
 }

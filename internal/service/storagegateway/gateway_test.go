@@ -306,7 +306,7 @@ func TestAccStorageGatewayGateway_cloudWatchLogs(t *testing.T) {
 	var gateway storagegateway.DescribeGatewayInformationOutput
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_gateway.test"
-	resourceName2 := "aws_cloudwatch_log_group.test"
+	resourceName2 := "aws_cloudwatchlogs_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -992,7 +992,7 @@ resource "aws_storagegateway_gateway" "test" {
 
 func testAccGatewayConfig_Log_Group(rName string) string {
 	return testAcc_FileGatewayBase(rName) + fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test" {
+resource "aws_cloudwatchlogs_group" "test" {
   name = %[1]q
 }
 
@@ -1001,7 +1001,7 @@ resource "aws_storagegateway_gateway" "test" {
   gateway_name             = %[1]q
   gateway_timezone         = "GMT"
   gateway_type             = "FILE_S3"
-  cloudwatch_log_group_arn = aws_cloudwatch_log_group.test.arn
+  cloudwatch_log_group_arn = aws_cloudwatchlogs_group.test.arn
 }
 `, rName)
 }
