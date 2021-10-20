@@ -12,7 +12,7 @@ Provides a resource to designate the active SES receipt rule set
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_ses_active_receipt_rule_set" "main" {
   rule_set_name = "primary-rules"
 }
@@ -26,7 +26,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-In addition to the arguments, which are exported, the following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The SES receipt rule set name.
 * `arn` - The SES receipt rule set ARN.

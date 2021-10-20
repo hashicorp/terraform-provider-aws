@@ -14,7 +14,7 @@ Provides a Sagemaker Code Repository resource.
 
 ### Basic usage
 
-```hcl
+```terraform
 resource "aws_sagemaker_code_repository" "example" {
   code_repository_name = "example"
 
@@ -26,7 +26,7 @@ resource "aws_sagemaker_code_repository" "example" {
 
 ### Example with Secret
 
-```hcl
+```terraform
 resource "aws_secretsmanager_secret" "example" {
   name = "example"
 }
@@ -70,7 +70,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Sagemaker Code Repositories can be imported using the `name`, e.g.
+Sagemaker Code Repositories can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_sagemaker_code_repository.test_code_repository my-code-repo

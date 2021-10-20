@@ -13,12 +13,12 @@ in the current region.
 
 This can be used both to validate a prefix list given in a variable
 and to obtain the CIDR blocks (IP address ranges) for the associated
-AWS service. The latter may be useful e.g. for adding network ACL
+AWS service. The latter may be useful e.g., for adding network ACL
 rules.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_vpc_endpoint" "private_s3" {
   vpc_id       = aws_vpc.foo.id
   service_name = "com.amazonaws.us-west-2.s3"
@@ -46,7 +46,7 @@ resource "aws_network_acl_rule" "private_s3" {
 
 ### Filter
 
-```hcl
+```terraform
 data "aws_prefix_list" "test" {
   filter {
     name   = "prefix-list-id"
