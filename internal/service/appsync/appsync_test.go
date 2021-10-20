@@ -11,6 +11,17 @@ func TestAccAppSync_serial(t *testing.T) {
 			"description": testAccAppSyncAPIKey_description,
 			"expires":     testAccAppSyncAPIKey_expires,
 		},
+		"Resolver": {
+			"basic":             testAccAppSyncResolver_basic,
+			"disappears":        testAccAppSyncResolver_disappears,
+			"dataSource":        testAccAppSyncResolver_dataSource,
+			"DataSource_lambda": testAccAppSyncResolver_DataSource_lambda,
+			"requestTemplate":   testAccAppSyncResolver_requestTemplate,
+			"responseTemplate":  testAccAppSyncResolver_responseTemplate,
+			"multipleResolvers": testAccAppSyncResolver_multipleResolvers,
+			"pipeline":          testAccAppSyncResolver_pipeline,
+			"caching":           testAccAppSyncResolver_caching,
+		},
 	}
 
 	for group, m := range testCases {
