@@ -1279,9 +1279,9 @@ resource "aws_dms_endpoint" "test" {
   engine_name   = "kinesis"
 
   kinesis_settings {
-	include_table_alter_operations = true
-	include_transaction_details    = true
-	partition_include_schema_table = true
+    include_table_alter_operations = true
+    include_transaction_details    = true
+    partition_include_schema_table = true
 
     service_access_role_arn = aws_iam_role.test.arn
     stream_arn              = aws_kinesis_stream.test1.arn
@@ -1301,11 +1301,11 @@ resource "aws_dms_endpoint" "test" {
 
   kinesis_settings {
     include_control_details        = true
-	include_null_and_empty         = true
-	include_partition_value        = true
-	include_table_alter_operations = false
-	include_transaction_details    = false
-	partition_include_schema_table = false
+    include_null_and_empty         = true
+    include_partition_value        = true
+    include_table_alter_operations = false
+    include_transaction_details    = false
+    partition_include_schema_table = false
 
     service_access_role_arn = aws_iam_role.test.arn
     stream_arn              = aws_kinesis_stream.test2.arn
