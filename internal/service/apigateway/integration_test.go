@@ -19,7 +19,7 @@ import (
 func TestAccAPIGatewayIntegration_basic(t *testing.T) {
 	var conf apigateway.Integration
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(7))
-	resourceName := "aws_api_gateway_integration.test"
+	resourceName := "aws_apigateway_integration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -135,7 +135,7 @@ func TestAccAPIGatewayIntegration_basic(t *testing.T) {
 func TestAccAPIGatewayIntegration_contentHandling(t *testing.T) {
 	var conf apigateway.Integration
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(7))
-	resourceName := "aws_api_gateway_integration.test"
+	resourceName := "aws_apigateway_integration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -211,7 +211,7 @@ func TestAccAPIGatewayIntegration_contentHandling(t *testing.T) {
 func TestAccAPIGatewayIntegration_CacheKey_parameters(t *testing.T) {
 	var conf apigateway.Integration
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(7))
-	resourceName := "aws_api_gateway_integration.test"
+	resourceName := "aws_apigateway_integration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -254,7 +254,7 @@ func TestAccAPIGatewayIntegration_CacheKey_parameters(t *testing.T) {
 func TestAccAPIGatewayIntegration_integrationType(t *testing.T) {
 	var conf apigateway.Integration
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(7))
-	resourceName := "aws_api_gateway_integration.test"
+	resourceName := "aws_apigateway_integration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -299,7 +299,7 @@ func TestAccAPIGatewayIntegration_integrationType(t *testing.T) {
 func TestAccAPIGatewayIntegration_TLS_insecureSkipVerification(t *testing.T) {
 	var conf apigateway.Integration
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(7))
-	resourceName := "aws_api_gateway_integration.test"
+	resourceName := "aws_apigateway_integration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -336,7 +336,7 @@ func TestAccAPIGatewayIntegration_TLS_insecureSkipVerification(t *testing.T) {
 func TestAccAPIGatewayIntegration_disappears(t *testing.T) {
 	var conf apigateway.Integration
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(7))
-	resourceName := "aws_api_gateway_integration.test"
+	resourceName := "aws_apigateway_integration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -371,8 +371,8 @@ func testAccCheckIntegrationExists(n string, res *apigateway.Integration) resour
 
 		req := &apigateway.GetIntegrationInput{
 			HttpMethod: aws.String("GET"),
-			ResourceId: aws.String(s.RootModule().Resources["aws_api_gateway_resource.test"].Primary.ID),
-			RestApiId:  aws.String(s.RootModule().Resources["aws_api_gateway_rest_api.test"].Primary.ID),
+			ResourceId: aws.String(s.RootModule().Resources["aws_apigateway_resource.test"].Primary.ID),
+			RestApiId:  aws.String(s.RootModule().Resources["aws_apigateway_rest_api.test"].Primary.ID),
 		}
 		describe, err := conn.GetIntegration(req)
 		if err != nil {
@@ -389,14 +389,14 @@ func testAccCheckIntegrationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_api_gateway_integration" {
+		if rs.Type != "aws_apigateway_integration" {
 			continue
 		}
 
 		req := &apigateway.GetIntegrationInput{
 			HttpMethod: aws.String("GET"),
-			ResourceId: aws.String(s.RootModule().Resources["aws_api_gateway_resource.test"].Primary.ID),
-			RestApiId:  aws.String(s.RootModule().Resources["aws_api_gateway_rest_api.test"].Primary.ID),
+			ResourceId: aws.String(s.RootModule().Resources["aws_apigateway_resource.test"].Primary.ID),
+			RestApiId:  aws.String(s.RootModule().Resources["aws_apigateway_rest_api.test"].Primary.ID),
 		}
 		_, err := conn.GetIntegration(req)
 
@@ -431,19 +431,19 @@ func testAccIntegrationImportStateIdFunc(resourceName string) resource.ImportSta
 
 func testAccIntegrationConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name = "%s"
 }
 
-resource "aws_api_gateway_resource" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
+resource "aws_apigateway_resource" "test" {
+  rest_api_id = aws_apigateway_rest_api.test.id
+  parent_id   = aws_apigateway_rest_api.test.root_resource_id
   path_part   = "test"
 }
 
-resource "aws_api_gateway_method" "test" {
-  rest_api_id   = aws_api_gateway_rest_api.test.id
-  resource_id   = aws_api_gateway_resource.test.id
+resource "aws_apigateway_method" "test" {
+  rest_api_id   = aws_apigateway_rest_api.test.id
+  resource_id   = aws_apigateway_resource.test.id
   http_method   = "GET"
   authorization = "NONE"
 
@@ -452,10 +452,10 @@ resource "aws_api_gateway_method" "test" {
   }
 }
 
-resource "aws_api_gateway_integration" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  resource_id = aws_api_gateway_resource.test.id
-  http_method = aws_api_gateway_method.test.http_method
+resource "aws_apigateway_integration" "test" {
+  rest_api_id = aws_apigateway_rest_api.test.id
+  resource_id = aws_apigateway_resource.test.id
+  http_method = aws_apigateway_method.test.http_method
 
   request_templates = {
     "application/json" = ""
@@ -478,19 +478,19 @@ resource "aws_api_gateway_integration" "test" {
 
 func testAccIntegrationUpdateConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name = "%s"
 }
 
-resource "aws_api_gateway_resource" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
+resource "aws_apigateway_resource" "test" {
+  rest_api_id = aws_apigateway_rest_api.test.id
+  parent_id   = aws_apigateway_rest_api.test.root_resource_id
   path_part   = "test"
 }
 
-resource "aws_api_gateway_method" "test" {
-  rest_api_id   = aws_api_gateway_rest_api.test.id
-  resource_id   = aws_api_gateway_resource.test.id
+resource "aws_apigateway_method" "test" {
+  rest_api_id   = aws_apigateway_rest_api.test.id
+  resource_id   = aws_apigateway_resource.test.id
   http_method   = "GET"
   authorization = "NONE"
 
@@ -499,10 +499,10 @@ resource "aws_api_gateway_method" "test" {
   }
 }
 
-resource "aws_api_gateway_integration" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  resource_id = aws_api_gateway_resource.test.id
-  http_method = aws_api_gateway_method.test.http_method
+resource "aws_apigateway_integration" "test" {
+  rest_api_id = aws_apigateway_rest_api.test.id
+  resource_id = aws_apigateway_resource.test.id
+  http_method = aws_apigateway_method.test.http_method
 
   request_templates = {
     "application/json" = "{'foobar': 'bar}"
@@ -526,19 +526,19 @@ resource "aws_api_gateway_integration" "test" {
 
 func testAccIntegrationUpdateURIConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name = "%s"
 }
 
-resource "aws_api_gateway_resource" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
+resource "aws_apigateway_resource" "test" {
+  rest_api_id = aws_apigateway_rest_api.test.id
+  parent_id   = aws_apigateway_rest_api.test.root_resource_id
   path_part   = "test"
 }
 
-resource "aws_api_gateway_method" "test" {
-  rest_api_id   = aws_api_gateway_rest_api.test.id
-  resource_id   = aws_api_gateway_resource.test.id
+resource "aws_apigateway_method" "test" {
+  rest_api_id   = aws_apigateway_rest_api.test.id
+  resource_id   = aws_apigateway_resource.test.id
   http_method   = "GET"
   authorization = "NONE"
 
@@ -547,10 +547,10 @@ resource "aws_api_gateway_method" "test" {
   }
 }
 
-resource "aws_api_gateway_integration" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  resource_id = aws_api_gateway_resource.test.id
-  http_method = aws_api_gateway_method.test.http_method
+resource "aws_apigateway_integration" "test" {
+  rest_api_id = aws_apigateway_rest_api.test.id
+  resource_id = aws_apigateway_resource.test.id
+  http_method = aws_apigateway_method.test.http_method
 
   request_templates = {
     "application/json" = ""
@@ -574,19 +574,19 @@ resource "aws_api_gateway_integration" "test" {
 
 func testAccIntegrationUpdateContentHandlingConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name = "%s"
 }
 
-resource "aws_api_gateway_resource" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
+resource "aws_apigateway_resource" "test" {
+  rest_api_id = aws_apigateway_rest_api.test.id
+  parent_id   = aws_apigateway_rest_api.test.root_resource_id
   path_part   = "test"
 }
 
-resource "aws_api_gateway_method" "test" {
-  rest_api_id   = aws_api_gateway_rest_api.test.id
-  resource_id   = aws_api_gateway_resource.test.id
+resource "aws_apigateway_method" "test" {
+  rest_api_id   = aws_apigateway_rest_api.test.id
+  resource_id   = aws_apigateway_resource.test.id
   http_method   = "GET"
   authorization = "NONE"
 
@@ -595,10 +595,10 @@ resource "aws_api_gateway_method" "test" {
   }
 }
 
-resource "aws_api_gateway_integration" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  resource_id = aws_api_gateway_resource.test.id
-  http_method = aws_api_gateway_method.test.http_method
+resource "aws_apigateway_integration" "test" {
+  rest_api_id = aws_apigateway_rest_api.test.id
+  resource_id = aws_apigateway_resource.test.id
+  http_method = aws_apigateway_method.test.http_method
 
   request_templates = {
     "application/json" = ""
@@ -622,19 +622,19 @@ resource "aws_api_gateway_integration" "test" {
 
 func testAccIntegrationRemoveContentHandlingConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name = "%s"
 }
 
-resource "aws_api_gateway_resource" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
+resource "aws_apigateway_resource" "test" {
+  rest_api_id = aws_apigateway_rest_api.test.id
+  parent_id   = aws_apigateway_rest_api.test.root_resource_id
   path_part   = "test"
 }
 
-resource "aws_api_gateway_method" "test" {
-  rest_api_id   = aws_api_gateway_rest_api.test.id
-  resource_id   = aws_api_gateway_resource.test.id
+resource "aws_apigateway_method" "test" {
+  rest_api_id   = aws_apigateway_rest_api.test.id
+  resource_id   = aws_apigateway_resource.test.id
   http_method   = "GET"
   authorization = "NONE"
 
@@ -643,10 +643,10 @@ resource "aws_api_gateway_method" "test" {
   }
 }
 
-resource "aws_api_gateway_integration" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  resource_id = aws_api_gateway_resource.test.id
-  http_method = aws_api_gateway_method.test.http_method
+resource "aws_apigateway_integration" "test" {
+  rest_api_id = aws_apigateway_rest_api.test.id
+  resource_id = aws_apigateway_resource.test.id
+  http_method = aws_apigateway_method.test.http_method
 
   request_templates = {
     "application/json" = ""
@@ -669,19 +669,19 @@ resource "aws_api_gateway_integration" "test" {
 
 func testAccIntegrationUpdateNoTemplatesConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name = "%s"
 }
 
-resource "aws_api_gateway_resource" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
+resource "aws_apigateway_resource" "test" {
+  rest_api_id = aws_apigateway_rest_api.test.id
+  parent_id   = aws_apigateway_rest_api.test.root_resource_id
   path_part   = "test"
 }
 
-resource "aws_api_gateway_method" "test" {
-  rest_api_id   = aws_api_gateway_rest_api.test.id
-  resource_id   = aws_api_gateway_resource.test.id
+resource "aws_apigateway_method" "test" {
+  rest_api_id   = aws_apigateway_rest_api.test.id
+  resource_id   = aws_apigateway_resource.test.id
   http_method   = "GET"
   authorization = "NONE"
 
@@ -690,10 +690,10 @@ resource "aws_api_gateway_method" "test" {
   }
 }
 
-resource "aws_api_gateway_integration" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  resource_id = aws_api_gateway_resource.test.id
-  http_method = aws_api_gateway_method.test.http_method
+resource "aws_apigateway_integration" "test" {
+  rest_api_id = aws_apigateway_rest_api.test.id
+  resource_id = aws_apigateway_resource.test.id
+  http_method = aws_apigateway_method.test.http_method
 
   type                    = "HTTP"
   uri                     = "https://www.google.de"
@@ -707,19 +707,19 @@ resource "aws_api_gateway_integration" "test" {
 
 func testAccIntegrationCacheKeyParametersConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name = "%s"
 }
 
-resource "aws_api_gateway_resource" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
+resource "aws_apigateway_resource" "test" {
+  rest_api_id = aws_apigateway_rest_api.test.id
+  parent_id   = aws_apigateway_rest_api.test.root_resource_id
   path_part   = "{param}"
 }
 
-resource "aws_api_gateway_method" "test" {
-  rest_api_id   = aws_api_gateway_rest_api.test.id
-  resource_id   = aws_api_gateway_resource.test.id
+resource "aws_apigateway_method" "test" {
+  rest_api_id   = aws_apigateway_rest_api.test.id
+  resource_id   = aws_apigateway_resource.test.id
   http_method   = "GET"
   authorization = "NONE"
 
@@ -732,10 +732,10 @@ resource "aws_api_gateway_method" "test" {
   }
 }
 
-resource "aws_api_gateway_integration" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  resource_id = aws_api_gateway_resource.test.id
-  http_method = aws_api_gateway_method.test.http_method
+resource "aws_apigateway_integration" "test" {
+  rest_api_id = aws_apigateway_rest_api.test.id
+  resource_id = aws_apigateway_resource.test.id
+  http_method = aws_apigateway_method.test.http_method
 
   request_templates = {
     "application/json" = ""
@@ -790,19 +790,19 @@ resource "aws_subnet" "test" {
   availability_zone = data.aws_availability_zones.test.names[0]
 }
 
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name = var.name
 }
 
-resource "aws_api_gateway_resource" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
+resource "aws_apigateway_resource" "test" {
+  rest_api_id = aws_apigateway_rest_api.test.id
+  parent_id   = aws_apigateway_rest_api.test.root_resource_id
   path_part   = "test"
 }
 
-resource "aws_api_gateway_method" "test" {
-  rest_api_id   = aws_api_gateway_rest_api.test.id
-  resource_id   = aws_api_gateway_resource.test.id
+resource "aws_apigateway_method" "test" {
+  rest_api_id   = aws_apigateway_rest_api.test.id
+  resource_id   = aws_apigateway_resource.test.id
   http_method   = "GET"
   authorization = "NONE"
 
@@ -818,7 +818,7 @@ resource "aws_lb" "test" {
   subnets            = [aws_subnet.test.id]
 }
 
-resource "aws_api_gateway_vpc_link" "test" {
+resource "aws_apigateway_vpc_link" "test" {
   name        = var.name
   target_arns = [aws_lb.test.arn]
 }
@@ -827,10 +827,10 @@ resource "aws_api_gateway_vpc_link" "test" {
 
 func testAccIntegrationConfig_IntegrationTypeVPCLink(rName string) string {
 	return testAccIntegrationConfig_IntegrationTypeBase(rName) + `
-resource "aws_api_gateway_integration" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  resource_id = aws_api_gateway_resource.test.id
-  http_method = aws_api_gateway_method.test.http_method
+resource "aws_apigateway_integration" "test" {
+  rest_api_id = aws_apigateway_rest_api.test.id
+  resource_id = aws_apigateway_resource.test.id
+  http_method = aws_apigateway_method.test.http_method
 
   type                    = "HTTP"
   uri                     = "https://www.google.de"
@@ -839,17 +839,17 @@ resource "aws_api_gateway_integration" "test" {
   content_handling        = "CONVERT_TO_TEXT"
 
   connection_type = "VPC_LINK"
-  connection_id   = aws_api_gateway_vpc_link.test.id
+  connection_id   = aws_apigateway_vpc_link.test.id
 }
 `
 }
 
 func testAccIntegrationConfig_IntegrationTypeInternet(rName string) string {
 	return testAccIntegrationConfig_IntegrationTypeBase(rName) + `
-resource "aws_api_gateway_integration" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  resource_id = aws_api_gateway_resource.test.id
-  http_method = aws_api_gateway_method.test.http_method
+resource "aws_apigateway_integration" "test" {
+  rest_api_id = aws_apigateway_rest_api.test.id
+  resource_id = aws_apigateway_resource.test.id
+  http_method = aws_apigateway_method.test.http_method
 
   type                    = "HTTP"
   uri                     = "https://www.google.de"
@@ -862,19 +862,19 @@ resource "aws_api_gateway_integration" "test" {
 
 func testAccIntegrationConfig_TLSConfig_InsecureSkipVerification(rName string, insecureSkipVerification bool) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name = %[1]q
 }
 
-resource "aws_api_gateway_resource" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
+resource "aws_apigateway_resource" "test" {
+  rest_api_id = aws_apigateway_rest_api.test.id
+  parent_id   = aws_apigateway_rest_api.test.root_resource_id
   path_part   = "test"
 }
 
-resource "aws_api_gateway_method" "test" {
-  rest_api_id   = aws_api_gateway_rest_api.test.id
-  resource_id   = aws_api_gateway_resource.test.id
+resource "aws_apigateway_method" "test" {
+  rest_api_id   = aws_apigateway_rest_api.test.id
+  resource_id   = aws_apigateway_resource.test.id
   http_method   = "GET"
   authorization = "NONE"
 
@@ -887,10 +887,10 @@ resource "aws_api_gateway_method" "test" {
   }
 }
 
-resource "aws_api_gateway_integration" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  resource_id = aws_api_gateway_resource.test.id
-  http_method = aws_api_gateway_method.test.http_method
+resource "aws_apigateway_integration" "test" {
+  rest_api_id = aws_apigateway_rest_api.test.id
+  resource_id = aws_apigateway_resource.test.id
+  http_method = aws_apigateway_method.test.http_method
 
   type                    = "HTTP"
   uri                     = "https://www.google.de"

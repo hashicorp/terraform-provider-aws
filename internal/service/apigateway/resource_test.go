@@ -18,7 +18,7 @@ import (
 func TestAccAPIGatewayResource_basic(t *testing.T) {
 	var conf apigateway.Resource
 	rName := fmt.Sprintf("tf-test-acc-%s", sdkacctest.RandString(8))
-	resourceName := "aws_api_gateway_resource.test"
+	resourceName := "aws_apigateway_resource.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -50,7 +50,7 @@ func TestAccAPIGatewayResource_basic(t *testing.T) {
 func TestAccAPIGatewayResource_update(t *testing.T) {
 	var conf apigateway.Resource
 	rName := fmt.Sprintf("tf-test-acc-%s", sdkacctest.RandString(8))
-	resourceName := "aws_api_gateway_resource.test"
+	resourceName := "aws_apigateway_resource.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -94,7 +94,7 @@ func TestAccAPIGatewayResource_update(t *testing.T) {
 func TestAccAPIGatewayResource_disappears(t *testing.T) {
 	var conf apigateway.Resource
 	rName := fmt.Sprintf("tf-test-acc-%s", sdkacctest.RandString(8))
-	resourceName := "aws_api_gateway_resource.test"
+	resourceName := "aws_apigateway_resource.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -139,7 +139,7 @@ func testAccCheckResourceExists(n string, res *apigateway.Resource) resource.Tes
 
 		req := &apigateway.GetResourceInput{
 			ResourceId: aws.String(rs.Primary.ID),
-			RestApiId:  aws.String(s.RootModule().Resources["aws_api_gateway_rest_api.test"].Primary.ID),
+			RestApiId:  aws.String(s.RootModule().Resources["aws_apigateway_rest_api.test"].Primary.ID),
 		}
 		describe, err := conn.GetResource(req)
 		if err != nil {
@@ -160,12 +160,12 @@ func testAccCheckResourceDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_api_gateway_resource" {
+		if rs.Type != "aws_apigateway_resource" {
 			continue
 		}
 
 		req := &apigateway.GetResourcesInput{
-			RestApiId: aws.String(s.RootModule().Resources["aws_api_gateway_rest_api.test"].Primary.ID),
+			RestApiId: aws.String(s.RootModule().Resources["aws_apigateway_rest_api.test"].Primary.ID),
 		}
 		describe, err := conn.GetResources(req)
 
@@ -203,13 +203,13 @@ func testAccResourceImportStateIdFunc(resourceName string) resource.ImportStateI
 
 func testAccResourceConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name = "%s"
 }
 
-resource "aws_api_gateway_resource" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
+resource "aws_apigateway_resource" "test" {
+  rest_api_id = aws_apigateway_rest_api.test.id
+  parent_id   = aws_apigateway_rest_api.test.root_resource_id
   path_part   = "test"
 }
 `, rName)
@@ -217,13 +217,13 @@ resource "aws_api_gateway_resource" "test" {
 
 func testAccResourceConfig_updatePathPart(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name = "%s"
 }
 
-resource "aws_api_gateway_resource" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
+resource "aws_apigateway_resource" "test" {
+  rest_api_id = aws_apigateway_rest_api.test.id
+  parent_id   = aws_apigateway_rest_api.test.root_resource_id
   path_part   = "test_changed"
 }
 `, rName)

@@ -1,12 +1,12 @@
 ---
 subcategory: "API Gateway (REST APIs)"
 layout: "aws"
-page_title: "AWS: aws_api_gateway_vpc_link"
+page_title: "AWS: aws_apigateway_vpc_link"
 description: |-
   Provides an API Gateway VPC Link.
 ---
 
-# Resource: aws_api_gateway_vpc_link
+# Resource: aws_apigateway_vpc_link
 
 Provides an API Gateway VPC Link.
 
@@ -26,7 +26,7 @@ resource "aws_lb" "example" {
   }
 }
 
-resource "aws_api_gateway_vpc_link" "example" {
+resource "aws_apigateway_vpc_link" "example" {
   name        = "example"
   description = "example description"
   target_arns = [aws_lb.example.arn]
@@ -54,5 +54,5 @@ In addition to all arguments above, the following attributes are exported:
 API Gateway VPC Link can be imported using the `id`, e.g.,
 
 ```
-$ terraform import aws_api_gateway_vpc_link.example <vpc_link_id>
+$ terraform import aws_apigateway_vpc_link.example <vpc_link_id>
 ```

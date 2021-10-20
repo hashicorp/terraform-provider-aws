@@ -327,7 +327,7 @@ func TestAccAPIGatewayV2Stage_clientCertificateIdAndDescription(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetStageOutput
 	resourceName := "aws_apigatewayv2_stage.test"
-	certificateResourceName := "aws_api_gateway_client_certificate.test"
+	certificateResourceName := "aws_apigateway_client_certificate.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1250,7 +1250,7 @@ func testAccStageConfig_clientCertificateIdAndDescription(rName string) string {
 	return acctest.ConfigCompose(
 		testAccStageConfig_apiWebSocket(rName),
 		fmt.Sprintf(`
-resource "aws_api_gateway_client_certificate" "test" {
+resource "aws_apigateway_client_certificate" "test" {
   description = %[1]q
 }
 
@@ -1258,7 +1258,7 @@ resource "aws_apigatewayv2_stage" "test" {
   api_id = aws_apigatewayv2_api.test.id
   name   = %[1]q
 
-  client_certificate_id = aws_api_gateway_client_certificate.test.id
+  client_certificate_id = aws_apigateway_client_certificate.test.id
   description           = "Test stage"
 }
 `, rName))
@@ -1268,7 +1268,7 @@ func testAccStageConfig_clientCertificateIdAndDescriptionUpdated(rName string) s
 	return acctest.ConfigCompose(
 		testAccStageConfig_apiWebSocket(rName),
 		fmt.Sprintf(`
-resource "aws_api_gateway_client_certificate" "test" {
+resource "aws_apigateway_client_certificate" "test" {
   description = %[1]q
 }
 

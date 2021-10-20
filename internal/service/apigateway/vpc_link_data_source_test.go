@@ -12,8 +12,8 @@ import (
 
 func TestAccAPIGatewayVPCLinkDataSource_basic(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
-	resourceName := "aws_api_gateway_vpc_link.vpc_link"
-	dataSourceName := "data.aws_api_gateway_vpc_link.vpc_link"
+	resourceName := "aws_apigateway_vpc_link.vpc_link"
+	dataSourceName := "data.aws_apigateway_vpc_link.vpc_link"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, apigateway.EndpointsID),
@@ -90,18 +90,18 @@ resource "aws_subnet" "apigateway_vpclink_test_subnet1" {
   }
 }
 
-resource "aws_api_gateway_vpc_link" "vpc_link" {
+resource "aws_apigateway_vpc_link" "vpc_link" {
   name        = "%s"
   target_arns = [aws_lb.apigateway_vpclink_test.arn]
 }
 
-resource "aws_api_gateway_vpc_link" "vpc_link2" {
+resource "aws_apigateway_vpc_link" "vpc_link2" {
   name        = "%s-wrong"
   target_arns = [aws_lb.apigateway_vpclink_test2.arn]
 }
 
-data "aws_api_gateway_vpc_link" "vpc_link" {
-  name = aws_api_gateway_vpc_link.vpc_link.name
+data "aws_apigateway_vpc_link" "vpc_link" {
+  name = aws_apigateway_vpc_link.vpc_link.name
 }
 `, r, r, r, r)
 }

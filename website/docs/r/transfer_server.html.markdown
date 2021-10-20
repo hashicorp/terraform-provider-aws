@@ -61,7 +61,7 @@ resource "aws_transfer_server" "example" {
   certificate = aws_acm_certificate.example.arn
 
   identity_provider_type = "API_GATEWAY"
-  url                    = "${aws_api_gateway_deployment.example.invoke_url}${aws_api_gateway_resource.example.path}"
+  url                    = "${aws_apigateway_deployment.example.invoke_url}${aws_apigateway_resource.example.path}"
 }
 ```
 

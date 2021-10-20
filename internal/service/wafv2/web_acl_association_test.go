@@ -75,7 +75,7 @@ func TestAccWAFV2WebACLAssociation_disappears(t *testing.T) {
 				Config: testAccWebACLAssociationConfig(testName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLAssociationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, apigateway.ResourceStage(), "aws_api_gateway_stage.test"),
+					acctest.CheckResourceDisappears(acctest.Provider, apigateway.ResourceStage(), "aws_apigateway_stage.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -129,37 +129,37 @@ func testAccCheckWebACLAssociationExists(name string) resource.TestCheckFunc {
 
 func testAccWebACLAssociationConfig(name string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_stage" "test" {
+resource "aws_apigateway_stage" "test" {
   stage_name    = "%s"
-  rest_api_id   = aws_api_gateway_rest_api.test.id
-  deployment_id = aws_api_gateway_deployment.test.id
+  rest_api_id   = aws_apigateway_rest_api.test.id
+  deployment_id = aws_apigateway_deployment.test.id
 }
 
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name = "%s"
 }
 
-resource "aws_api_gateway_deployment" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  depends_on  = [aws_api_gateway_integration.test]
+resource "aws_apigateway_deployment" "test" {
+  rest_api_id = aws_apigateway_rest_api.test.id
+  depends_on  = [aws_apigateway_integration.test]
 }
 
-resource "aws_api_gateway_integration" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  resource_id = aws_api_gateway_resource.test.id
-  http_method = aws_api_gateway_method.test.http_method
+resource "aws_apigateway_integration" "test" {
+  rest_api_id = aws_apigateway_rest_api.test.id
+  resource_id = aws_apigateway_resource.test.id
+  http_method = aws_apigateway_method.test.http_method
   type        = "MOCK"
 }
 
-resource "aws_api_gateway_resource" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
+resource "aws_apigateway_resource" "test" {
+  rest_api_id = aws_apigateway_rest_api.test.id
+  parent_id   = aws_apigateway_rest_api.test.root_resource_id
   path_part   = "mytestresource"
 }
 
-resource "aws_api_gateway_method" "test" {
-  rest_api_id   = aws_api_gateway_rest_api.test.id
-  resource_id   = aws_api_gateway_resource.test.id
+resource "aws_apigateway_method" "test" {
+  rest_api_id   = aws_apigateway_rest_api.test.id
+  resource_id   = aws_apigateway_resource.test.id
   http_method   = "GET"
   authorization = "NONE"
 }
@@ -180,7 +180,7 @@ resource "aws_wafv2_web_acl" "test" {
 }
 
 resource "aws_wafv2_web_acl_association" "test" {
-  resource_arn = aws_api_gateway_stage.test.arn
+  resource_arn = aws_apigateway_stage.test.arn
   web_acl_arn  = aws_wafv2_web_acl.test.arn
 }
 `, name, name, name)

@@ -20,7 +20,7 @@ func init() {
 		Name: "aws_lb",
 		F:    sweepLoadBalancers,
 		Dependencies: []string{
-			"aws_api_gateway_vpc_link",
+			"aws_apigateway_vpc_link",
 			"aws_vpc_endpoint_service",
 		},
 	})

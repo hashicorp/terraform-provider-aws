@@ -1,12 +1,12 @@
 ---
 subcategory: "API Gateway (REST APIs)"
 layout: "aws"
-page_title: "AWS: aws_api_gateway_domain_name"
+page_title: "AWS: aws_apigateway_domain_name"
 description: |-
   Registers a custom domain name for use with AWS API Gateway.
 ---
 
-# Resource: aws_api_gateway_domain_name
+# Resource: aws_apigateway_domain_name
 
 Registers a custom domain name for use with AWS API Gateway. Additional information about this functionality
 can be found in the [API Gateway Developer Guide](https://docs.aws.amazon.com/apigateway/latest/developerguide/how-to-custom-domains.html).
@@ -14,7 +14,7 @@ can be found in the [API Gateway Developer Guide](https://docs.aws.amazon.com/ap
 This resource just establishes ownership of and the TLS settings for
 a particular domain name. An API can be attached to a particular path
 under the registered domain name using
-[the `aws_api_gateway_base_path_mapping` resource](api_gateway_base_path_mapping.html).
+[the `aws_apigateway_base_path_mapping` resource](api_gateway_base_path_mapping.html).
 
 API Gateway domains can be defined as either 'edge-optimized' or 'regional'.  In an edge-optimized configuration,
 API Gateway internally creates and manages a CloudFront distribution to route requests on the given hostname. In
@@ -29,7 +29,7 @@ the `regional_domain_name` attribute.
 
 ~> **Note:** API Gateway requires the use of AWS Certificate Manager (ACM) certificates instead of Identity and Access Management (IAM) certificates in regions that support ACM. Regions that support ACM can be found in the [Regions and Endpoints Documentation](https://docs.aws.amazon.com/general/latest/gr/rande.html#acm_region). To import an existing private key and certificate into ACM or request an ACM certificate, see the [`aws_acm_certificate` resource](/docs/providers/aws/r/acm_certificate.html).
 
-~> **Note:** The `aws_api_gateway_domain_name` resource expects dependency on the `aws_acm_certificate_validation` as
+~> **Note:** The `aws_apigateway_domain_name` resource expects dependency on the `aws_acm_certificate_validation` as
 only verified certificates can be used. This can be made either explicitly by adding the
 `depends_on = [aws_acm_certificate_validation.cert]` attribute. Or implicitly by referring certificate ARN
 from the validation resource where it will be available after the resource creation:
@@ -45,7 +45,7 @@ An end-to-end example of a REST API configured with OpenAPI can be found in the 
 ### Edge Optimized (ACM Certificate)
 
 ```terraform
-resource "aws_api_gateway_domain_name" "example" {
+resource "aws_apigateway_domain_name" "example" {
   certificate_arn = aws_acm_certificate_validation.example.certificate_arn
   domain_name     = "api.example.com"
 }
@@ -53,14 +53,14 @@ resource "aws_api_gateway_domain_name" "example" {
 # Example DNS record using Route53.
 # Route53 is not specifically required; any DNS host can be used.
 resource "aws_route53_record" "example" {
-  name    = aws_api_gateway_domain_name.example.domain_name
+  name    = aws_apigateway_domain_name.example.domain_name
   type    = "A"
   zone_id = aws_route53_zone.example.id
 
   alias {
     evaluate_target_health = true
-    name                   = aws_api_gateway_domain_name.example.cloudfront_domain_name
-    zone_id                = aws_api_gateway_domain_name.example.cloudfront_zone_id
+    name                   = aws_apigateway_domain_name.example.cloudfront_domain_name
+    zone_id                = aws_apigateway_domain_name.example.cloudfront_zone_id
   }
 }
 ```
@@ -68,7 +68,7 @@ resource "aws_route53_record" "example" {
 ### Edge Optimized (IAM Certificate)
 
 ```terraform
-resource "aws_api_gateway_domain_name" "example" {
+resource "aws_apigateway_domain_name" "example" {
   domain_name = "api.example.com"
 
   certificate_name        = "example-api"
@@ -82,12 +82,12 @@ resource "aws_api_gateway_domain_name" "example" {
 resource "aws_route53_record" "example" {
   zone_id = aws_route53_zone.example.id # See aws_route53_zone for how to create this
 
-  name = aws_api_gateway_domain_name.example.domain_name
+  name = aws_apigateway_domain_name.example.domain_name
   type = "A"
 
   alias {
-    name                   = aws_api_gateway_domain_name.example.cloudfront_domain_name
-    zone_id                = aws_api_gateway_domain_name.example.cloudfront_zone_id
+    name                   = aws_apigateway_domain_name.example.cloudfront_domain_name
+    zone_id                = aws_apigateway_domain_name.example.cloudfront_zone_id
     evaluate_target_health = true
   }
 }
@@ -96,7 +96,7 @@ resource "aws_route53_record" "example" {
 ### Regional (ACM Certificate)
 
 ```terraform
-resource "aws_api_gateway_domain_name" "example" {
+resource "aws_apigateway_domain_name" "example" {
   domain_name              = "api.example.com"
   regional_certificate_arn = aws_acm_certificate_validation.example.certificate_arn
 
@@ -108,14 +108,14 @@ resource "aws_api_gateway_domain_name" "example" {
 # Example DNS record using Route53.
 # Route53 is not specifically required; any DNS host can be used.
 resource "aws_route53_record" "example" {
-  name    = aws_api_gateway_domain_name.example.domain_name
+  name    = aws_apigateway_domain_name.example.domain_name
   type    = "A"
   zone_id = aws_route53_zone.example.id
 
   alias {
     evaluate_target_health = true
-    name                   = aws_api_gateway_domain_name.example.regional_domain_name
-    zone_id                = aws_api_gateway_domain_name.example.regional_zone_id
+    name                   = aws_apigateway_domain_name.example.regional_domain_name
+    zone_id                = aws_apigateway_domain_name.example.regional_zone_id
   }
 }
 ```
@@ -123,7 +123,7 @@ resource "aws_route53_record" "example" {
 ### Regional (IAM Certificate)
 
 ```terraform
-resource "aws_api_gateway_domain_name" "example" {
+resource "aws_apigateway_domain_name" "example" {
   certificate_body          = file("${path.module}/example.com/example.crt")
   certificate_chain         = file("${path.module}/example.com/ca.crt")
   certificate_private_key   = file("${path.module}/example.com/example.key")
@@ -138,14 +138,14 @@ resource "aws_api_gateway_domain_name" "example" {
 # Example DNS record using Route53.
 # Route53 is not specifically required; any DNS host can be used.
 resource "aws_route53_record" "example" {
-  name    = aws_api_gateway_domain_name.example.domain_name
+  name    = aws_apigateway_domain_name.example.domain_name
   type    = "A"
   zone_id = aws_route53_zone.example.id
 
   alias {
     evaluate_target_health = true
-    name                   = aws_api_gateway_domain_name.example.regional_domain_name
-    zone_id                = aws_api_gateway_domain_name.example.regional_zone_id
+    name                   = aws_apigateway_domain_name.example.regional_domain_name
+    zone_id                = aws_apigateway_domain_name.example.regional_zone_id
   }
 }
 ```
@@ -212,5 +212,5 @@ In addition to all arguments above, the following attributes are exported:
 API Gateway domain names can be imported using their `name`, e.g.,
 
 ```
-$ terraform import aws_api_gateway_domain_name.example dev.example.com
+$ terraform import aws_apigateway_domain_name.example dev.example.com
 ```

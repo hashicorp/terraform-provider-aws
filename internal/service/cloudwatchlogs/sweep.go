@@ -20,7 +20,7 @@ func init() {
 		Name: "aws_cloudwatch_log_group",
 		F:    sweepGroups,
 		Dependencies: []string{
-			"aws_api_gateway_rest_api",
+			"aws_apigateway_rest_api",
 			"aws_cloudhsm_v2_cluster",
 			"aws_cloudtrail",
 			"aws_datasync_task",

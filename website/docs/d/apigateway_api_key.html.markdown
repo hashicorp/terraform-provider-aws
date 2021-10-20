@@ -1,12 +1,12 @@
 ---
 subcategory: "API Gateway (REST APIs)"
 layout: "aws"
-page_title: "AWS: aws_api_gateway_api_key"
+page_title: "AWS: aws_apigateway_api_key"
 description: |-
   Get information on an API Gateway REST API Key
 ---
 
-# Data Source: aws_api_gateway_api_key
+# Data Source: aws_apigateway_api_key
 
 Use this data source to get the name and value of a pre-existing API Key, for
 example to supply credentials for a dependency microservice.
@@ -14,7 +14,7 @@ example to supply credentials for a dependency microservice.
 ## Example Usage
 
 ```terraform
-data "aws_api_gateway_api_key" "my_api_key" {
+data "aws_apigateway_api_key" "my_api_key" {
   id = "ru3mpjgse6"
 }
 ```

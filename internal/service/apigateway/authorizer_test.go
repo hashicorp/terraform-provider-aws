@@ -20,7 +20,7 @@ import (
 func TestAccAPIGatewayAuthorizer_basic(t *testing.T) {
 	var conf apigateway.Authorizer
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_api_gateway_authorizer.test"
+	resourceName := "aws_apigateway_authorizer.test"
 	lambdaResourceName := "aws_lambda_function.test"
 	roleResourceName := "aws_iam_role.test"
 
@@ -68,7 +68,7 @@ func TestAccAPIGatewayAuthorizer_basic(t *testing.T) {
 
 func TestAccAPIGatewayAuthorizer_cognito(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_api_gateway_authorizer.test"
+	resourceName := "aws_apigateway_authorizer.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -105,7 +105,7 @@ func TestAccAPIGatewayAuthorizer_cognito(t *testing.T) {
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/16613
 func TestAccAPIGatewayAuthorizer_Cognito_authorizerCredentials(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_api_gateway_authorizer.test"
+	resourceName := "aws_apigateway_authorizer.test"
 	iamRoleResourceName := "aws_iam_role.lambda"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -135,7 +135,7 @@ func TestAccAPIGatewayAuthorizer_Cognito_authorizerCredentials(t *testing.T) {
 
 func TestAccAPIGatewayAuthorizer_switchAuthType(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_api_gateway_authorizer.test"
+	resourceName := "aws_apigateway_authorizer.test"
 	lambdaResourceName := "aws_lambda_function.test"
 	roleResourceName := "aws_iam_role.test"
 
@@ -184,7 +184,7 @@ func TestAccAPIGatewayAuthorizer_switchAuthType(t *testing.T) {
 func TestAccAPIGatewayAuthorizer_switchAuthorizerTTL(t *testing.T) {
 	var conf apigateway.Authorizer
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_api_gateway_authorizer.test"
+	resourceName := "aws_apigateway_authorizer.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -258,7 +258,7 @@ func TestAccAPIGatewayAuthorizer_authTypeValidation(t *testing.T) {
 func TestAccAPIGatewayAuthorizer_Zero_ttl(t *testing.T) {
 	var conf apigateway.Authorizer
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_api_gateway_authorizer.test"
+	resourceName := "aws_apigateway_authorizer.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -286,7 +286,7 @@ func TestAccAPIGatewayAuthorizer_Zero_ttl(t *testing.T) {
 func TestAccAPIGatewayAuthorizer_disappears(t *testing.T) {
 	var conf apigateway.Authorizer
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_api_gateway_authorizer.test"
+	resourceName := "aws_apigateway_authorizer.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -338,7 +338,7 @@ func testAccCheckAuthorizerDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_api_gateway_authorizer" {
+		if rs.Type != "aws_apigateway_authorizer" {
 			continue
 		}
 
@@ -379,7 +379,7 @@ func testAccAuthorizerImportStateIdFunc(resourceName string) resource.ImportStat
 
 func testAccAuthorizerBaseConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name = %[1]q
 }
 
@@ -455,9 +455,9 @@ resource "aws_lambda_function" "test" {
 
 func testAccAuthorizerConfig_lambda(rName string) string {
 	return testAccAuthorizerBaseConfig(rName) + fmt.Sprintf(`
-resource "aws_api_gateway_authorizer" "test" {
+resource "aws_apigateway_authorizer" "test" {
   name                   = %[1]q
-  rest_api_id            = aws_api_gateway_rest_api.test.id
+  rest_api_id            = aws_apigateway_rest_api.test.id
   authorizer_uri         = aws_lambda_function.test.invoke_arn
   authorizer_credentials = aws_iam_role.test.arn
 }
@@ -466,9 +466,9 @@ resource "aws_api_gateway_authorizer" "test" {
 
 func testAccAuthorizerConfig_lambdaUpdate(rName string) string {
 	return testAccAuthorizerBaseConfig(rName) + fmt.Sprintf(`
-resource "aws_api_gateway_authorizer" "test" {
+resource "aws_apigateway_authorizer" "test" {
   name                             = "%[1]s_modified"
-  rest_api_id                      = aws_api_gateway_rest_api.test.id
+  rest_api_id                      = aws_apigateway_rest_api.test.id
   authorizer_uri                   = aws_lambda_function.test.invoke_arn
   authorizer_credentials           = aws_iam_role.test.arn
   authorizer_result_ttl_in_seconds = 360
@@ -479,9 +479,9 @@ resource "aws_api_gateway_authorizer" "test" {
 
 func testAccAuthorizerConfig_lambdaNoCache(rName string) string {
 	return testAccAuthorizerBaseConfig(rName) + fmt.Sprintf(`
-resource "aws_api_gateway_authorizer" "test" {
+resource "aws_apigateway_authorizer" "test" {
   name                             = "%[1]s_modified"
-  rest_api_id                      = aws_api_gateway_rest_api.test.id
+  rest_api_id                      = aws_apigateway_rest_api.test.id
   authorizer_uri                   = aws_lambda_function.test.invoke_arn
   authorizer_credentials           = aws_iam_role.test.arn
   authorizer_result_ttl_in_seconds = 0
@@ -492,7 +492,7 @@ resource "aws_api_gateway_authorizer" "test" {
 
 func testAccAuthorizerConfig_cognito(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name = %[1]q
 }
 
@@ -501,10 +501,10 @@ resource "aws_cognito_user_pool" "test" {
   name  = "%[1]s-${count.index}"
 }
 
-resource "aws_api_gateway_authorizer" "test" {
+resource "aws_apigateway_authorizer" "test" {
   name          = %[1]q
   type          = "COGNITO_USER_POOLS"
-  rest_api_id   = aws_api_gateway_rest_api.test.id
+  rest_api_id   = aws_apigateway_rest_api.test.id
   provider_arns = aws_cognito_user_pool.test[*].arn
 }
 `, rName)
@@ -512,7 +512,7 @@ resource "aws_api_gateway_authorizer" "test" {
 
 func testAccAuthorizerConfig_cognitoUpdate(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name = %[1]q
 }
 
@@ -521,10 +521,10 @@ resource "aws_cognito_user_pool" "test" {
   name  = "%[1]s-${count.index}"
 }
 
-resource "aws_api_gateway_authorizer" "test" {
+resource "aws_apigateway_authorizer" "test" {
   name          = %[1]q
   type          = "COGNITO_USER_POOLS"
-  rest_api_id   = aws_api_gateway_rest_api.test.id
+  rest_api_id   = aws_apigateway_rest_api.test.id
   provider_arns = aws_cognito_user_pool.test[*].arn
 }
 `, rName)
@@ -554,7 +554,7 @@ resource "aws_iam_role" "lambda" {
 EOF
 }
 
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name = %[1]q
 }
 
@@ -563,11 +563,11 @@ resource "aws_cognito_user_pool" "test" {
   name  = "%[1]s-${count.index}"
 }
 
-resource "aws_api_gateway_authorizer" "test" {
+resource "aws_apigateway_authorizer" "test" {
   authorizer_credentials = aws_iam_role.lambda.arn
   name                   = %[1]q
   type                   = "COGNITO_USER_POOLS"
-  rest_api_id            = aws_api_gateway_rest_api.test.id
+  rest_api_id            = aws_apigateway_rest_api.test.id
   provider_arns          = aws_cognito_user_pool.test[*].arn
 }
 `, rName)
@@ -575,9 +575,9 @@ resource "aws_api_gateway_authorizer" "test" {
 
 func testAccAuthorizerConfig_authTypeValidationDefaultToken(rName string) string {
 	return testAccAuthorizerBaseConfig(rName) + fmt.Sprintf(`
-resource "aws_api_gateway_authorizer" "test" {
+resource "aws_apigateway_authorizer" "test" {
   name                   = "%s"
-  rest_api_id            = aws_api_gateway_rest_api.test.id
+  rest_api_id            = aws_apigateway_rest_api.test.id
   authorizer_credentials = aws_iam_role.test.arn
 }
 `, rName)
@@ -585,10 +585,10 @@ resource "aws_api_gateway_authorizer" "test" {
 
 func testAccAuthorizerConfig_authTypeValidationRequest(rName string) string {
 	return testAccAuthorizerBaseConfig(rName) + fmt.Sprintf(`
-resource "aws_api_gateway_authorizer" "test" {
+resource "aws_apigateway_authorizer" "test" {
   name                   = "%s"
   type                   = "REQUEST"
-  rest_api_id            = aws_api_gateway_rest_api.test.id
+  rest_api_id            = aws_apigateway_rest_api.test.id
   authorizer_credentials = aws_iam_role.test.arn
 }
 `, rName)
@@ -596,7 +596,7 @@ resource "aws_api_gateway_authorizer" "test" {
 
 func testAccAuthorizerConfig_authTypeValidationCognito(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name = %[1]q
 }
 
@@ -605,10 +605,10 @@ resource "aws_cognito_user_pool" "test" {
   name  = "%[1]s-${count.index}"
 }
 
-resource "aws_api_gateway_authorizer" "test" {
+resource "aws_apigateway_authorizer" "test" {
   name        = %[1]q
   type        = "COGNITO_USER_POOLS"
-  rest_api_id = aws_api_gateway_rest_api.test.id
+  rest_api_id = aws_apigateway_rest_api.test.id
 }
 `, rName)
 }

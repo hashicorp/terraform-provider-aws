@@ -33,4 +33,4 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - The Amazon Resource Name (ARN) identifying the Lambda function alias.
 * `description` - Description of alias.
 * `function_version` - Lambda function version which the alias uses.
-* `invoke_arn` - The ARN to be used for invoking Lambda Function from API Gateway - to be used in aws_api_gateway_integration's `uri`.
+* `invoke_arn` - The ARN to be used for invoking Lambda Function from API Gateway - to be used in aws_apigateway_integration's `uri`.

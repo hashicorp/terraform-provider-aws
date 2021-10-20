@@ -340,11 +340,16 @@ func Provider() *schema.Provider {
 			"aws_acmpca_certificate_authority": acmpca.DataSourceCertificateAuthority(),
 			"aws_acmpca_certificate":           acmpca.DataSourceCertificate(),
 
-			"aws_api_gateway_api_key":     apigateway.DataSourceAPIKey(),
-			"aws_api_gateway_domain_name": apigateway.DataSourceDomainName(),
-			"aws_api_gateway_resource":    apigateway.DataSourceResource(),
-			"aws_api_gateway_rest_api":    apigateway.DataSourceRestAPI(),
-			"aws_api_gateway_vpc_link":    apigateway.DataSourceVPCLink(),
+			"aws_apigateway_api_key":      apigateway.DataSourceAPIKey(),
+			"aws_apigateway_domain_name":  apigateway.DataSourceDomainName(),
+			"aws_apigateway_resource":     apigateway.DataSourceResource(),
+			"aws_apigateway_rest_api":     apigateway.DataSourceRestAPI(),
+			"aws_apigateway_vpc_link":     apigateway.DataSourceVPCLink(),
+			"aws_api_gateway_api_key":     apigateway.DataSourceAPIKey(),     // backward compatible alias
+			"aws_api_gateway_domain_name": apigateway.DataSourceDomainName(), // backward compatible alias
+			"aws_api_gateway_resource":    apigateway.DataSourceResource(),   // backward compatible alias
+			"aws_api_gateway_rest_api":    apigateway.DataSourceRestAPI(),    // backward compatible alias
+			"aws_api_gateway_vpc_link":    apigateway.DataSourceVPCLink(),    // backward compatible alias
 
 			"aws_apigatewayv2_api":  apigatewayv2.DataSourceAPI(),
 			"aws_apigatewayv2_apis": apigatewayv2.DataSourceAPIs(),
@@ -724,30 +729,54 @@ func Provider() *schema.Provider {
 			"aws_amplify_domain_association":  amplify.ResourceDomainAssociation(),
 			"aws_amplify_webhook":             amplify.ResourceWebhook(),
 
-			"aws_api_gateway_account":               apigateway.ResourceAccount(),
-			"aws_api_gateway_api_key":               apigateway.ResourceAPIKey(),
-			"aws_api_gateway_authorizer":            apigateway.ResourceAuthorizer(),
-			"aws_api_gateway_base_path_mapping":     apigateway.ResourceBasePathMapping(),
-			"aws_api_gateway_client_certificate":    apigateway.ResourceClientCertificate(),
-			"aws_api_gateway_deployment":            apigateway.ResourceDeployment(),
-			"aws_api_gateway_documentation_part":    apigateway.ResourceDocumentationPart(),
-			"aws_api_gateway_documentation_version": apigateway.ResourceDocumentationVersion(),
-			"aws_api_gateway_domain_name":           apigateway.ResourceDomainName(),
-			"aws_api_gateway_gateway_response":      apigateway.ResourceGatewayResponse(),
-			"aws_api_gateway_integration":           apigateway.ResourceIntegration(),
-			"aws_api_gateway_integration_response":  apigateway.ResourceIntegrationResponse(),
-			"aws_api_gateway_method":                apigateway.ResourceMethod(),
-			"aws_api_gateway_method_response":       apigateway.ResourceMethodResponse(),
-			"aws_api_gateway_method_settings":       apigateway.ResourceMethodSettings(),
-			"aws_api_gateway_model":                 apigateway.ResourceModel(),
-			"aws_api_gateway_request_validator":     apigateway.ResourceRequestValidator(),
-			"aws_api_gateway_resource":              apigateway.ResourceResource(),
-			"aws_api_gateway_rest_api":              apigateway.ResourceRestAPI(),
-			"aws_api_gateway_rest_api_policy":       apigateway.ResourceRestAPIPolicy(),
-			"aws_api_gateway_stage":                 apigateway.ResourceStage(),
-			"aws_api_gateway_usage_plan":            apigateway.ResourceUsagePlan(),
-			"aws_api_gateway_usage_plan_key":        apigateway.ResourceUsagePlanKey(),
-			"aws_api_gateway_vpc_link":              apigateway.ResourceVPCLink(),
+			"aws_apigateway_account":                apigateway.ResourceAccount(),
+			"aws_apigateway_api_key":                apigateway.ResourceAPIKey(),
+			"aws_apigateway_authorizer":             apigateway.ResourceAuthorizer(),
+			"aws_apigateway_base_path_mapping":      apigateway.ResourceBasePathMapping(),
+			"aws_apigateway_client_certificate":     apigateway.ResourceClientCertificate(),
+			"aws_apigateway_deployment":             apigateway.ResourceDeployment(),
+			"aws_apigateway_documentation_part":     apigateway.ResourceDocumentationPart(),
+			"aws_apigateway_documentation_version":  apigateway.ResourceDocumentationVersion(),
+			"aws_apigateway_domain_name":            apigateway.ResourceDomainName(),
+			"aws_apigateway_gateway_response":       apigateway.ResourceGatewayResponse(),
+			"aws_apigateway_integration":            apigateway.ResourceIntegration(),
+			"aws_apigateway_integration_response":   apigateway.ResourceIntegrationResponse(),
+			"aws_apigateway_method":                 apigateway.ResourceMethod(),
+			"aws_apigateway_method_response":        apigateway.ResourceMethodResponse(),
+			"aws_apigateway_method_settings":        apigateway.ResourceMethodSettings(),
+			"aws_apigateway_model":                  apigateway.ResourceModel(),
+			"aws_apigateway_request_validator":      apigateway.ResourceRequestValidator(),
+			"aws_apigateway_resource":               apigateway.ResourceResource(),
+			"aws_apigateway_rest_api":               apigateway.ResourceRestAPI(),
+			"aws_apigateway_rest_api_policy":        apigateway.ResourceRestAPIPolicy(),
+			"aws_apigateway_stage":                  apigateway.ResourceStage(),
+			"aws_apigateway_usage_plan":             apigateway.ResourceUsagePlan(),
+			"aws_apigateway_usage_plan_key":         apigateway.ResourceUsagePlanKey(),
+			"aws_apigateway_vpc_link":               apigateway.ResourceVPCLink(),
+			"aws_api_gateway_account":               apigateway.ResourceAccount(),              // backwards compatible alias
+			"aws_api_gateway_api_key":               apigateway.ResourceAPIKey(),               // backwards compatible alias
+			"aws_api_gateway_authorizer":            apigateway.ResourceAuthorizer(),           // backwards compatible alias
+			"aws_api_gateway_base_path_mapping":     apigateway.ResourceBasePathMapping(),      // backwards compatible alias
+			"aws_api_gateway_client_certificate":    apigateway.ResourceClientCertificate(),    // backwards compatible alias
+			"aws_api_gateway_deployment":            apigateway.ResourceDeployment(),           // backwards compatible alias
+			"aws_api_gateway_documentation_part":    apigateway.ResourceDocumentationPart(),    // backwards compatible alias
+			"aws_api_gateway_documentation_version": apigateway.ResourceDocumentationVersion(), // backwards compatible alias
+			"aws_api_gateway_domain_name":           apigateway.ResourceDomainName(),           // backwards compatible alias
+			"aws_api_gateway_gateway_response":      apigateway.ResourceGatewayResponse(),      // backwards compatible alias
+			"aws_api_gateway_integration":           apigateway.ResourceIntegration(),          // backwards compatible alias
+			"aws_api_gateway_integration_response":  apigateway.ResourceIntegrationResponse(),  // backwards compatible alias
+			"aws_api_gateway_method":                apigateway.ResourceMethod(),               // backwards compatible alias
+			"aws_api_gateway_method_response":       apigateway.ResourceMethodResponse(),       // backwards compatible alias
+			"aws_api_gateway_method_settings":       apigateway.ResourceMethodSettings(),       // backwards compatible alias
+			"aws_api_gateway_model":                 apigateway.ResourceModel(),                // backwards compatible alias
+			"aws_api_gateway_request_validator":     apigateway.ResourceRequestValidator(),     // backwards compatible alias
+			"aws_api_gateway_resource":              apigateway.ResourceResource(),             // backwards compatible alias
+			"aws_api_gateway_rest_api":              apigateway.ResourceRestAPI(),              // backwards compatible alias
+			"aws_api_gateway_rest_api_policy":       apigateway.ResourceRestAPIPolicy(),        // backwards compatible alias
+			"aws_api_gateway_stage":                 apigateway.ResourceStage(),                // backwards compatible alias
+			"aws_api_gateway_usage_plan":            apigateway.ResourceUsagePlan(),            // backwards compatible alias
+			"aws_api_gateway_usage_plan_key":        apigateway.ResourceUsagePlanKey(),         // backwards compatible alias
+			"aws_api_gateway_vpc_link":              apigateway.ResourceVPCLink(),              // backwards compatible alias
 
 			"aws_apigatewayv2_api":                  apigatewayv2.ResourceAPI(),
 			"aws_apigatewayv2_api_mapping":          apigatewayv2.ResourceAPIMapping(),

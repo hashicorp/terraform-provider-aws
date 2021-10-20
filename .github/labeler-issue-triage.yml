@@ -41,7 +41,7 @@ service/alexaforbusiness:
 service/amplify:
   - '((\*|-) ?`?|(data|resource) "?)aws_amplify_'
 service/apigateway:
-  - '((\*|-) ?`?|(data|resource) "?)aws_api_gateway_'
+  - '((\*|-) ?`?|(data|resource) "?)aws_apigateway_'
 service/apigatewayv2:
   - '((\*|-) ?`?|(data|resource) "?)aws_apigatewayv2_'
 service/appconfig:

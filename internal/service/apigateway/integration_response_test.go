@@ -18,7 +18,7 @@ import (
 func TestAccAPIGatewayIntegrationResponse_basic(t *testing.T) {
 	var conf apigateway.IntegrationResponse
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(10))
-	resourceName := "aws_api_gateway_integration_response.test"
+	resourceName := "aws_apigateway_integration_response.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -66,7 +66,7 @@ func TestAccAPIGatewayIntegrationResponse_basic(t *testing.T) {
 func TestAccAPIGatewayIntegrationResponse_disappears(t *testing.T) {
 	var conf apigateway.IntegrationResponse
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(10))
-	resourceName := "aws_api_gateway_integration_response.test"
+	resourceName := "aws_apigateway_integration_response.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -144,8 +144,8 @@ func testAccCheckIntegrationResponseExists(n string, res *apigateway.Integration
 
 		req := &apigateway.GetIntegrationResponseInput{
 			HttpMethod: aws.String("GET"),
-			ResourceId: aws.String(s.RootModule().Resources["aws_api_gateway_resource.test"].Primary.ID),
-			RestApiId:  aws.String(s.RootModule().Resources["aws_api_gateway_rest_api.test"].Primary.ID),
+			ResourceId: aws.String(s.RootModule().Resources["aws_apigateway_resource.test"].Primary.ID),
+			RestApiId:  aws.String(s.RootModule().Resources["aws_apigateway_rest_api.test"].Primary.ID),
 			StatusCode: aws.String(rs.Primary.Attributes["status_code"]),
 		}
 		describe, err := conn.GetIntegrationResponse(req)
@@ -163,14 +163,14 @@ func testAccCheckIntegrationResponseDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_api_gateway_integration_response" {
+		if rs.Type != "aws_apigateway_integration_response" {
 			continue
 		}
 
 		req := &apigateway.GetIntegrationResponseInput{
 			HttpMethod: aws.String("GET"),
-			ResourceId: aws.String(s.RootModule().Resources["aws_api_gateway_resource.test"].Primary.ID),
-			RestApiId:  aws.String(s.RootModule().Resources["aws_api_gateway_rest_api.test"].Primary.ID),
+			ResourceId: aws.String(s.RootModule().Resources["aws_apigateway_resource.test"].Primary.ID),
+			RestApiId:  aws.String(s.RootModule().Resources["aws_apigateway_rest_api.test"].Primary.ID),
 			StatusCode: aws.String(rs.Primary.Attributes["status_code"]),
 		}
 		_, err := conn.GetIntegrationResponse(req)
@@ -206,19 +206,19 @@ func testAccIntegrationResponseImportStateIdFunc(resourceName string) resource.I
 
 func testAccIntegrationResponseConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name = "%s"
 }
 
-resource "aws_api_gateway_resource" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
+resource "aws_apigateway_resource" "test" {
+  rest_api_id = aws_apigateway_rest_api.test.id
+  parent_id   = aws_apigateway_rest_api.test.root_resource_id
   path_part   = "test"
 }
 
-resource "aws_api_gateway_method" "test" {
-  rest_api_id   = aws_api_gateway_rest_api.test.id
-  resource_id   = aws_api_gateway_resource.test.id
+resource "aws_apigateway_method" "test" {
+  rest_api_id   = aws_apigateway_rest_api.test.id
+  resource_id   = aws_apigateway_resource.test.id
   http_method   = "GET"
   authorization = "NONE"
 
@@ -227,10 +227,10 @@ resource "aws_api_gateway_method" "test" {
   }
 }
 
-resource "aws_api_gateway_method_response" "error" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  resource_id = aws_api_gateway_resource.test.id
-  http_method = aws_api_gateway_method.test.http_method
+resource "aws_apigateway_method_response" "error" {
+  rest_api_id = aws_apigateway_rest_api.test.id
+  resource_id = aws_apigateway_resource.test.id
+  http_method = aws_apigateway_method.test.http_method
   status_code = "400"
 
   response_models = {
@@ -242,10 +242,10 @@ resource "aws_api_gateway_method_response" "error" {
   }
 }
 
-resource "aws_api_gateway_integration" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  resource_id = aws_api_gateway_resource.test.id
-  http_method = aws_api_gateway_method.test.http_method
+resource "aws_apigateway_integration" "test" {
+  rest_api_id = aws_apigateway_rest_api.test.id
+  resource_id = aws_apigateway_resource.test.id
+  http_method = aws_apigateway_method.test.http_method
 
   request_templates = {
     "application/json" = ""
@@ -255,11 +255,11 @@ resource "aws_api_gateway_integration" "test" {
   type = "MOCK"
 }
 
-resource "aws_api_gateway_integration_response" "test" {
-  rest_api_id       = aws_api_gateway_rest_api.test.id
-  resource_id       = aws_api_gateway_resource.test.id
-  http_method       = aws_api_gateway_method.test.http_method
-  status_code       = aws_api_gateway_method_response.error.status_code
+resource "aws_apigateway_integration_response" "test" {
+  rest_api_id       = aws_apigateway_rest_api.test.id
+  resource_id       = aws_apigateway_resource.test.id
+  http_method       = aws_apigateway_method.test.http_method
+  status_code       = aws_apigateway_method_response.error.status_code
   selection_pattern = ".*"
 
   response_templates = {
@@ -276,19 +276,19 @@ resource "aws_api_gateway_integration_response" "test" {
 
 func testAccIntegrationResponseUpdateConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name = "%s"
 }
 
-resource "aws_api_gateway_resource" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
+resource "aws_apigateway_resource" "test" {
+  rest_api_id = aws_apigateway_rest_api.test.id
+  parent_id   = aws_apigateway_rest_api.test.root_resource_id
   path_part   = "test"
 }
 
-resource "aws_api_gateway_method" "test" {
-  rest_api_id   = aws_api_gateway_rest_api.test.id
-  resource_id   = aws_api_gateway_resource.test.id
+resource "aws_apigateway_method" "test" {
+  rest_api_id   = aws_apigateway_rest_api.test.id
+  resource_id   = aws_apigateway_resource.test.id
   http_method   = "GET"
   authorization = "NONE"
 
@@ -297,10 +297,10 @@ resource "aws_api_gateway_method" "test" {
   }
 }
 
-resource "aws_api_gateway_method_response" "error" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  resource_id = aws_api_gateway_resource.test.id
-  http_method = aws_api_gateway_method.test.http_method
+resource "aws_apigateway_method_response" "error" {
+  rest_api_id = aws_apigateway_rest_api.test.id
+  resource_id = aws_apigateway_resource.test.id
+  http_method = aws_apigateway_method.test.http_method
   status_code = "400"
 
   response_models = {
@@ -312,10 +312,10 @@ resource "aws_api_gateway_method_response" "error" {
   }
 }
 
-resource "aws_api_gateway_integration" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  resource_id = aws_api_gateway_resource.test.id
-  http_method = aws_api_gateway_method.test.http_method
+resource "aws_apigateway_integration" "test" {
+  rest_api_id = aws_apigateway_rest_api.test.id
+  resource_id = aws_apigateway_resource.test.id
+  http_method = aws_apigateway_method.test.http_method
 
   request_templates = {
     "application/json" = ""
@@ -325,11 +325,11 @@ resource "aws_api_gateway_integration" "test" {
   type = "MOCK"
 }
 
-resource "aws_api_gateway_integration_response" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  resource_id = aws_api_gateway_resource.test.id
-  http_method = aws_api_gateway_method.test.http_method
-  status_code = aws_api_gateway_method_response.error.status_code
+resource "aws_apigateway_integration_response" "test" {
+  rest_api_id = aws_apigateway_rest_api.test.id
+  resource_id = aws_apigateway_resource.test.id
+  http_method = aws_apigateway_method.test.http_method
+  status_code = aws_apigateway_method_response.error.status_code
 
   response_templates = {
     "application/json" = "$input.path('$')"

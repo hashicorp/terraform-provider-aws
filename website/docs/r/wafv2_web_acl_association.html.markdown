@@ -18,7 +18,7 @@ Creates a WAFv2 Web ACL Association.
 ## Example Usage
 
 ```terraform
-resource "aws_api_gateway_rest_api" "example" {
+resource "aws_apigateway_rest_api" "example" {
   body = jsonencode({
     openapi = "3.0.1"
     info = {
@@ -42,11 +42,11 @@ resource "aws_api_gateway_rest_api" "example" {
   name = "example"
 }
 
-resource "aws_api_gateway_deployment" "example" {
-  rest_api_id = aws_api_gateway_rest_api.example.id
+resource "aws_apigateway_deployment" "example" {
+  rest_api_id = aws_apigateway_rest_api.example.id
 
   triggers = {
-    redeployment = sha1(jsonencode(aws_api_gateway_rest_api.example.body))
+    redeployment = sha1(jsonencode(aws_apigateway_rest_api.example.body))
   }
 
   lifecycle {
@@ -54,9 +54,9 @@ resource "aws_api_gateway_deployment" "example" {
   }
 }
 
-resource "aws_api_gateway_stage" "example" {
-  deployment_id = aws_api_gateway_deployment.example.id
-  rest_api_id   = aws_api_gateway_rest_api.example.id
+resource "aws_apigateway_stage" "example" {
+  deployment_id = aws_apigateway_deployment.example.id
+  rest_api_id   = aws_apigateway_rest_api.example.id
   stage_name    = "example"
 }
 
@@ -76,7 +76,7 @@ resource "aws_wafv2_web_acl" "example" {
 }
 
 resource "aws_wafv2_web_acl_association" "example" {
-  resource_arn = aws_api_gateway_stage.example.arn
+  resource_arn = aws_apigateway_stage.example.arn
   web_acl_arn  = aws_wafv2_web_acl.example.arn
 }
 ```

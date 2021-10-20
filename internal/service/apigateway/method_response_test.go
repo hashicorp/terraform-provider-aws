@@ -18,7 +18,7 @@ import (
 func TestAccAPIGatewayMethodResponse_basic(t *testing.T) {
 	var conf apigateway.MethodResponse
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(10))
-	resourceName := "aws_api_gateway_method_response.error"
+	resourceName := "aws_apigateway_method_response.error"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -62,7 +62,7 @@ func TestAccAPIGatewayMethodResponse_basic(t *testing.T) {
 func TestAccAPIGatewayMethodResponse_disappears(t *testing.T) {
 	var conf apigateway.MethodResponse
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(10))
-	resourceName := "aws_api_gateway_method_response.error"
+	resourceName := "aws_apigateway_method_response.error"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -139,8 +139,8 @@ func testAccCheckMethodResponseExists(n string, res *apigateway.MethodResponse) 
 
 		req := &apigateway.GetMethodResponseInput{
 			HttpMethod: aws.String("GET"),
-			ResourceId: aws.String(s.RootModule().Resources["aws_api_gateway_resource.test"].Primary.ID),
-			RestApiId:  aws.String(s.RootModule().Resources["aws_api_gateway_rest_api.test"].Primary.ID),
+			ResourceId: aws.String(s.RootModule().Resources["aws_apigateway_resource.test"].Primary.ID),
+			RestApiId:  aws.String(s.RootModule().Resources["aws_apigateway_rest_api.test"].Primary.ID),
 			StatusCode: aws.String(rs.Primary.Attributes["status_code"]),
 		}
 		describe, err := conn.GetMethodResponse(req)
@@ -158,14 +158,14 @@ func testAccCheckMethodResponseDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_api_gateway_method_response" {
+		if rs.Type != "aws_apigateway_method_response" {
 			continue
 		}
 
 		req := &apigateway.GetMethodResponseInput{
 			HttpMethod: aws.String("GET"),
-			ResourceId: aws.String(s.RootModule().Resources["aws_api_gateway_resource.test"].Primary.ID),
-			RestApiId:  aws.String(s.RootModule().Resources["aws_api_gateway_rest_api.test"].Primary.ID),
+			ResourceId: aws.String(s.RootModule().Resources["aws_apigateway_resource.test"].Primary.ID),
+			RestApiId:  aws.String(s.RootModule().Resources["aws_apigateway_rest_api.test"].Primary.ID),
 			StatusCode: aws.String(rs.Primary.Attributes["status_code"]),
 		}
 		_, err := conn.GetMethodResponse(req)
@@ -201,19 +201,19 @@ func testAccMethodResponseImportStateIdFunc(resourceName string) resource.Import
 
 func testAccMethodResponseConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name = "%s"
 }
 
-resource "aws_api_gateway_resource" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
+resource "aws_apigateway_resource" "test" {
+  rest_api_id = aws_apigateway_rest_api.test.id
+  parent_id   = aws_apigateway_rest_api.test.root_resource_id
   path_part   = "test"
 }
 
-resource "aws_api_gateway_method" "test" {
-  rest_api_id   = aws_api_gateway_rest_api.test.id
-  resource_id   = aws_api_gateway_resource.test.id
+resource "aws_apigateway_method" "test" {
+  rest_api_id   = aws_apigateway_rest_api.test.id
+  resource_id   = aws_apigateway_resource.test.id
   http_method   = "GET"
   authorization = "NONE"
 
@@ -222,10 +222,10 @@ resource "aws_api_gateway_method" "test" {
   }
 }
 
-resource "aws_api_gateway_method_response" "error" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  resource_id = aws_api_gateway_resource.test.id
-  http_method = aws_api_gateway_method.test.http_method
+resource "aws_apigateway_method_response" "error" {
+  rest_api_id = aws_apigateway_rest_api.test.id
+  resource_id = aws_apigateway_resource.test.id
+  http_method = aws_apigateway_method.test.http_method
   status_code = "400"
 
   response_models = {
@@ -241,19 +241,19 @@ resource "aws_api_gateway_method_response" "error" {
 
 func testAccMethodResponseUpdateConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name = "%s"
 }
 
-resource "aws_api_gateway_resource" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
+resource "aws_apigateway_resource" "test" {
+  rest_api_id = aws_apigateway_rest_api.test.id
+  parent_id   = aws_apigateway_rest_api.test.root_resource_id
   path_part   = "test"
 }
 
-resource "aws_api_gateway_method" "test" {
-  rest_api_id   = aws_api_gateway_rest_api.test.id
-  resource_id   = aws_api_gateway_resource.test.id
+resource "aws_apigateway_method" "test" {
+  rest_api_id   = aws_apigateway_rest_api.test.id
+  resource_id   = aws_apigateway_resource.test.id
   http_method   = "GET"
   authorization = "NONE"
 
@@ -262,10 +262,10 @@ resource "aws_api_gateway_method" "test" {
   }
 }
 
-resource "aws_api_gateway_method_response" "error" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  resource_id = aws_api_gateway_resource.test.id
-  http_method = aws_api_gateway_method.test.http_method
+resource "aws_apigateway_method_response" "error" {
+  rest_api_id = aws_apigateway_rest_api.test.id
+  resource_id = aws_apigateway_resource.test.id
+  http_method = aws_apigateway_method.test.http_method
   status_code = "400"
 
   response_models = {

@@ -241,7 +241,7 @@ DOC
 
 ```terraform
 resource "aws_cloudwatch_event_target" "example" {
-  arn  = "${aws_api_gateway_stage.example.execution_arn}/GET"
+  arn  = "${aws_apigateway_stage.example.execution_arn}/GET"
   rule = aws_cloudwatch_event_rule.example.id
 
   http_target {
@@ -258,14 +258,14 @@ resource "aws_cloudwatch_event_rule" "example" {
   # ...
 }
 
-resource "aws_api_gateway_deployment" "example" {
-  rest_api_id = aws_api_gateway_rest_api.example.id
+resource "aws_apigateway_deployment" "example" {
+  rest_api_id = aws_apigateway_rest_api.example.id
   # ...
 }
 
-resource "aws_api_gateway_stage" "example" {
-  rest_api_id   = aws_api_gateway_rest_api.example.id
-  deployment_id = aws_api_gateway_deployment.example.id
+resource "aws_apigateway_stage" "example" {
+  rest_api_id   = aws_apigateway_rest_api.example.id
+  deployment_id = aws_apigateway_deployment.example.id
   # ...
 }
 ```

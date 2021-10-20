@@ -1,12 +1,12 @@
 ---
 subcategory: "API Gateway (REST APIs)"
 layout: "aws"
-page_title: "AWS: aws_api_gateway_resource"
+page_title: "AWS: aws_apigateway_resource"
 description: |-
   Get information on a API Gateway Resource
 ---
 
-# Data Source: aws_api_gateway_resource
+# Data Source: aws_apigateway_resource
 
 Use this data source to get the id of a Resource in API Gateway.
 To fetch the Resource, you must provide the REST API id as well as the full path.  
@@ -14,12 +14,12 @@ To fetch the Resource, you must provide the REST API id as well as the full path
 ## Example Usage
 
 ```terraform
-data "aws_api_gateway_rest_api" "my_rest_api" {
+data "aws_apigateway_rest_api" "my_rest_api" {
   name = "my-rest-api"
 }
 
-data "aws_api_gateway_resource" "my_resource" {
-  rest_api_id = data.aws_api_gateway_rest_api.my_rest_api.id
+data "aws_apigateway_resource" "my_resource" {
+  rest_api_id = data.aws_apigateway_rest_api.my_rest_api.id
   path        = "/endpoint/path"
 }
 ```

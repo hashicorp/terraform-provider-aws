@@ -10,8 +10,8 @@ import (
 )
 
 func TestAccAPIGatewayDomainNameDataSource_basic(t *testing.T) {
-	resourceName := "aws_api_gateway_domain_name.test"
-	dataSourceName := "data.aws_api_gateway_domain_name.test"
+	resourceName := "aws_apigateway_domain_name.test"
+	dataSourceName := "data.aws_apigateway_domain_name.test"
 	rName := acctest.RandomSubdomain()
 
 	key := acctest.TLSRSAPrivateKeyPEM(2048)
@@ -53,7 +53,7 @@ resource "aws_acm_certificate" "test" {
   private_key      = "%[3]s"
 }
 
-resource "aws_api_gateway_domain_name" "test" {
+resource "aws_apigateway_domain_name" "test" {
   domain_name              = %[1]q
   regional_certificate_arn = aws_acm_certificate.test.arn
 
@@ -62,8 +62,8 @@ resource "aws_api_gateway_domain_name" "test" {
   }
 }
 
-data "aws_api_gateway_domain_name" "test" {
-  domain_name = aws_api_gateway_domain_name.test.domain_name
+data "aws_apigateway_domain_name" "test" {
+  domain_name = aws_apigateway_domain_name.test.domain_name
 }
 `, domainName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key))
 }

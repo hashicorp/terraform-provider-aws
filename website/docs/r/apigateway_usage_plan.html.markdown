@@ -1,19 +1,19 @@
 ---
 subcategory: "API Gateway (REST APIs)"
 layout: "aws"
-page_title: "AWS: aws_api_gateway_usage_plan"
+page_title: "AWS: aws_apigateway_usage_plan"
 description: |-
   Provides an API Gateway Usage Plan.
 ---
 
-# Resource: aws_api_gateway_usage_plan
+# Resource: aws_apigateway_usage_plan
 
 Provides an API Gateway Usage Plan.
 
 ## Example Usage
 
 ```terraform
-resource "aws_api_gateway_rest_api" "example" {
+resource "aws_apigateway_rest_api" "example" {
   body = jsonencode({
     openapi = "3.0.1"
     info = {
@@ -37,11 +37,11 @@ resource "aws_api_gateway_rest_api" "example" {
   name = "example"
 }
 
-resource "aws_api_gateway_deployment" "example" {
-  rest_api_id = aws_api_gateway_rest_api.example.id
+resource "aws_apigateway_deployment" "example" {
+  rest_api_id = aws_apigateway_rest_api.example.id
 
   triggers = {
-    redeployment = sha1(jsonencode(aws_api_gateway_rest_api.example.body))
+    redeployment = sha1(jsonencode(aws_apigateway_rest_api.example.body))
   }
 
   lifecycle {
@@ -49,31 +49,31 @@ resource "aws_api_gateway_deployment" "example" {
   }
 }
 
-resource "aws_api_gateway_stage" "development" {
-  deployment_id = aws_api_gateway_deployment.example.id
-  rest_api_id   = aws_api_gateway_rest_api.example.id
+resource "aws_apigateway_stage" "development" {
+  deployment_id = aws_apigateway_deployment.example.id
+  rest_api_id   = aws_apigateway_rest_api.example.id
   stage_name    = "development"
 }
 
-resource "aws_api_gateway_stage" "production" {
-  deployment_id = aws_api_gateway_deployment.example.id
-  rest_api_id   = aws_api_gateway_rest_api.example.id
+resource "aws_apigateway_stage" "production" {
+  deployment_id = aws_apigateway_deployment.example.id
+  rest_api_id   = aws_apigateway_rest_api.example.id
   stage_name    = "production"
 }
 
-resource "aws_api_gateway_usage_plan" "example" {
+resource "aws_apigateway_usage_plan" "example" {
   name         = "my-usage-plan"
   description  = "my description"
   product_code = "MYCODE"
 
   api_stages {
-    api_id = aws_api_gateway_rest_api.example.id
-    stage  = aws_api_gateway_stage.development.stage_name
+    api_id = aws_apigateway_rest_api.example.id
+    stage  = aws_apigateway_stage.development.stage_name
   }
 
   api_stages {
-    api_id = aws_api_gateway_rest_api.example.id
-    stage  = aws_api_gateway_stage.production.stage_name
+    api_id = aws_apigateway_rest_api.example.id
+    stage  = aws_apigateway_stage.production.stage_name
   }
 
   quota_settings {
@@ -138,5 +138,5 @@ In addition to all arguments above, the following attributes are exported:
 AWS API Gateway Usage Plan can be imported using the `id`, e.g.,
 
 ```sh
-$ terraform import aws_api_gateway_usage_plan.myusageplan <usage_plan_id>
+$ terraform import aws_apigateway_usage_plan.myusageplan <usage_plan_id>
 ```

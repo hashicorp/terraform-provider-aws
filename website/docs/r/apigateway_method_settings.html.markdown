@@ -1,23 +1,23 @@
 ---
 subcategory: "API Gateway (REST APIs)"
 layout: "aws"
-page_title: "AWS: aws_api_gateway_method_settings"
+page_title: "AWS: aws_apigateway_method_settings"
 description: |-
   Manages API Gateway Stage Method Settings
 ---
 
-# Resource: aws_api_gateway_method_settings
+# Resource: aws_apigateway_method_settings
 
 Manages API Gateway Stage Method Settings. For example, CloudWatch logging and metrics.
 
-~> **NOTE:** It is recommended to use this resource in conjunction with the [`aws_api_gateway_stage` resource](api_gateway_stage.html) instead of a stage managed by the [`aws_api_gateway_deployment` resource](api_gateway_deployment.html) optional `stage_name` argument. Stages managed by the `aws_api_gateway_deployment` resource are recreated on redeployment and this resource will require a second apply to recreate the method settings.
+~> **NOTE:** It is recommended to use this resource in conjunction with the [`aws_apigateway_stage` resource](api_gateway_stage.html) instead of a stage managed by the [`aws_apigateway_deployment` resource](api_gateway_deployment.html) optional `stage_name` argument. Stages managed by the `aws_apigateway_deployment` resource are recreated on redeployment and this resource will require a second apply to recreate the method settings.
 
 ## Example Usage
 
 An end-to-end example of a REST API configured with OpenAPI can be found in the [`/examples/api-gateway-rest-api-openapi` directory within the GitHub repository](https://github.com/hashicorp/terraform-provider-aws/tree/main/examples/api-gateway-rest-api-openapi).
 
 ```terraform
-resource "aws_api_gateway_rest_api" "example" {
+resource "aws_apigateway_rest_api" "example" {
   body = jsonencode({
     openapi = "3.0.1"
     info = {
@@ -41,11 +41,11 @@ resource "aws_api_gateway_rest_api" "example" {
   name = "example"
 }
 
-resource "aws_api_gateway_deployment" "example" {
-  rest_api_id = aws_api_gateway_rest_api.example.id
+resource "aws_apigateway_deployment" "example" {
+  rest_api_id = aws_apigateway_rest_api.example.id
 
   triggers = {
-    redeployment = sha1(jsonencode(aws_api_gateway_rest_api.example.body))
+    redeployment = sha1(jsonencode(aws_apigateway_rest_api.example.body))
   }
 
   lifecycle {
@@ -53,15 +53,15 @@ resource "aws_api_gateway_deployment" "example" {
   }
 }
 
-resource "aws_api_gateway_stage" "example" {
-  deployment_id = aws_api_gateway_deployment.example.id
-  rest_api_id   = aws_api_gateway_rest_api.example.id
+resource "aws_apigateway_stage" "example" {
+  deployment_id = aws_apigateway_deployment.example.id
+  rest_api_id   = aws_apigateway_rest_api.example.id
   stage_name    = "example"
 }
 
-resource "aws_api_gateway_method_settings" "all" {
-  rest_api_id = aws_api_gateway_rest_api.example.id
-  stage_name  = aws_api_gateway_stage.example.stage_name
+resource "aws_apigateway_method_settings" "all" {
+  rest_api_id = aws_apigateway_rest_api.example.id
+  stage_name  = aws_apigateway_stage.example.stage_name
   method_path = "*/*"
 
   settings {
@@ -70,9 +70,9 @@ resource "aws_api_gateway_method_settings" "all" {
   }
 }
 
-resource "aws_api_gateway_method_settings" "path_specific" {
-  rest_api_id = aws_api_gateway_rest_api.example.id
-  stage_name  = aws_api_gateway_stage.example.stage_name
+resource "aws_apigateway_method_settings" "path_specific" {
+  rest_api_id = aws_apigateway_rest_api.example.id
+  stage_name  = aws_apigateway_stage.example.stage_name
   method_path = "path1/GET"
 
   settings {
@@ -88,7 +88,7 @@ The following arguments are supported:
 
 * `rest_api_id` - (Required) The ID of the REST API
 * `stage_name` - (Required) The name of the stage
-* `method_path` - (Required) Method path defined as `{resource_path}/{http_method}` for an individual method override, or `*/*` for overriding all methods in the stage. Ensure to trim any leading forward slashes in the path (e.g., `trimprefix(aws_api_gateway_resource.example.path, "/")`).
+* `method_path` - (Required) Method path defined as `{resource_path}/{http_method}` for an individual method override, or `*/*` for overriding all methods in the stage. Ensure to trim any leading forward slashes in the path (e.g., `trimprefix(aws_apigateway_resource.example.path, "/")`).
 * `settings` - (Required) The settings block, see below.
 
 ### `settings`
@@ -110,8 +110,8 @@ No additional attributes are exported.
 
 ## Import
 
-`aws_api_gateway_method_settings` can be imported using `REST-API-ID/STAGE-NAME/METHOD-PATH`, e.g.,
+`aws_apigateway_method_settings` can be imported using `REST-API-ID/STAGE-NAME/METHOD-PATH`, e.g.,
 
 ```
-$ terraform import aws_api_gateway_method_settings.example 12345abcde/example/test/GET
+$ terraform import aws_apigateway_method_settings.example 12345abcde/example/test/GET
 ```

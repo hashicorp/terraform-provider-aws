@@ -19,7 +19,7 @@ import (
 func TestAccAPIGatewayStage_basic(t *testing.T) {
 	var conf apigateway.Stage
 	rName := sdkacctest.RandString(5)
-	resourceName := "aws_api_gateway_stage.test"
+	resourceName := "aws_apigateway_stage.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -85,7 +85,7 @@ func TestAccAPIGatewayStage_basic(t *testing.T) {
 func TestAccAPIGatewayStage_Disappears_referencingDeployment(t *testing.T) {
 	var stage apigateway.Stage
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_api_gateway_stage.test"
+	resourceName := "aws_apigateway_stage.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -112,7 +112,7 @@ func TestAccAPIGatewayStage_Disappears_referencingDeployment(t *testing.T) {
 func TestAccAPIGatewayStage_disappears(t *testing.T) {
 	var stage apigateway.Stage
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_api_gateway_stage.test"
+	resourceName := "aws_apigateway_stage.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -136,7 +136,7 @@ func TestAccAPIGatewayStage_accessLogSettings(t *testing.T) {
 	var conf apigateway.Stage
 	rName := sdkacctest.RandString(5)
 	cloudwatchLogGroupResourceName := "aws_cloudwatch_log_group.test"
-	resourceName := "aws_api_gateway_stage.test"
+	resourceName := "aws_apigateway_stage.test"
 	clf := `$context.identity.sourceIp $context.identity.caller $context.identity.user [$context.requestTime] "$context.httpMethod $context.resourcePath $context.protocol" $context.status $context.responseLength $context.requestId`
 	json := `{ "requestId":"$context.requestId", "ip": "$context.identity.sourceIp", "caller":"$context.identity.caller", "user":"$context.identity.user", "requestTime":"$context.requestTime", "httpMethod":"$context.httpMethod", "resourcePath":"$context.resourcePath", "status":"$context.status", "protocol":"$context.protocol", "responseLength":"$context.responseLength" }`
 	xml := `<request id="$context.requestId"> <ip>$context.identity.sourceIp</ip> <caller>$context.identity.caller</caller> <user>$context.identity.user</user> <requestTime>$context.requestTime</requestTime> <httpMethod>$context.httpMethod</httpMethod> <resourcePath>$context.resourcePath</resourcePath> <status>$context.status</status> <protocol>$context.protocol</protocol> <responseLength>$context.responseLength</responseLength> </request>`
@@ -204,7 +204,7 @@ func TestAccAPIGatewayStage_accessLogSettings(t *testing.T) {
 func TestAccAPIGatewayStage_AccessLogSettings_kinesis(t *testing.T) {
 	var conf apigateway.Stage
 	rName := sdkacctest.RandString(5)
-	resourceName := "aws_api_gateway_stage.test"
+	resourceName := "aws_apigateway_stage.test"
 	clf := `$context.identity.sourceIp $context.identity.caller $context.identity.user [$context.requestTime] "$context.httpMethod $context.resourcePath $context.protocol" $context.status $context.responseLength $context.requestId`
 	json := `{ "requestId":"$context.requestId", "ip": "$context.identity.sourceIp", "caller":"$context.identity.caller", "user":"$context.identity.user", "requestTime":"$context.requestTime", "httpMethod":"$context.httpMethod", "resourcePath":"$context.resourcePath", "status":"$context.status", "protocol":"$context.protocol", "responseLength":"$context.responseLength" }`
 	xml := `<request id="$context.requestId"> <ip>$context.identity.sourceIp</ip> <caller>$context.identity.caller</caller> <user>$context.identity.user</user> <requestTime>$context.requestTime</requestTime> <httpMethod>$context.httpMethod</httpMethod> <resourcePath>$context.resourcePath</resourcePath> <status>$context.status</status> <protocol>$context.protocol</protocol> <responseLength>$context.responseLength</responseLength> </request>`
@@ -282,7 +282,7 @@ func testAccCheckStageExists(n string, res *apigateway.Stage) resource.TestCheck
 		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
 
 		req := &apigateway.GetStageInput{
-			RestApiId: aws.String(s.RootModule().Resources["aws_api_gateway_rest_api.test"].Primary.ID),
+			RestApiId: aws.String(s.RootModule().Resources["aws_apigateway_rest_api.test"].Primary.ID),
 			StageName: aws.String(rs.Primary.Attributes["stage_name"]),
 		}
 		out, err := conn.GetStage(req)
@@ -300,12 +300,12 @@ func testAccCheckStageDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_api_gateway_stage" {
+		if rs.Type != "aws_apigateway_stage" {
 			continue
 		}
 
 		req := &apigateway.GetStageInput{
-			RestApiId: aws.String(s.RootModule().Resources["aws_api_gateway_rest_api.test"].Primary.ID),
+			RestApiId: aws.String(s.RootModule().Resources["aws_apigateway_rest_api.test"].Primary.ID),
 			StageName: aws.String(rs.Primary.Attributes["stage_name"]),
 		}
 		out, err := conn.GetStage(req)
@@ -340,51 +340,51 @@ func testAccStageImportStateIdFunc(resourceName string) resource.ImportStateIdFu
 
 func testAccStageConfig_base(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name = "tf-acc-test-%s"
 }
 
-resource "aws_api_gateway_resource" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
+resource "aws_apigateway_resource" "test" {
+  rest_api_id = aws_apigateway_rest_api.test.id
+  parent_id   = aws_apigateway_rest_api.test.root_resource_id
   path_part   = "test"
 }
 
-resource "aws_api_gateway_method" "test" {
-  rest_api_id   = aws_api_gateway_rest_api.test.id
-  resource_id   = aws_api_gateway_resource.test.id
+resource "aws_apigateway_method" "test" {
+  rest_api_id   = aws_apigateway_rest_api.test.id
+  resource_id   = aws_apigateway_resource.test.id
   http_method   = "GET"
   authorization = "NONE"
 }
 
-resource "aws_api_gateway_method_response" "error" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  resource_id = aws_api_gateway_resource.test.id
-  http_method = aws_api_gateway_method.test.http_method
+resource "aws_apigateway_method_response" "error" {
+  rest_api_id = aws_apigateway_rest_api.test.id
+  resource_id = aws_apigateway_resource.test.id
+  http_method = aws_apigateway_method.test.http_method
   status_code = "400"
 }
 
-resource "aws_api_gateway_integration" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  resource_id = aws_api_gateway_resource.test.id
-  http_method = aws_api_gateway_method.test.http_method
+resource "aws_apigateway_integration" "test" {
+  rest_api_id = aws_apigateway_rest_api.test.id
+  resource_id = aws_apigateway_resource.test.id
+  http_method = aws_apigateway_method.test.http_method
 
   type                    = "HTTP"
   uri                     = "https://www.google.co.uk"
   integration_http_method = "GET"
 }
 
-resource "aws_api_gateway_integration_response" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  resource_id = aws_api_gateway_resource.test.id
-  http_method = aws_api_gateway_integration.test.http_method
-  status_code = aws_api_gateway_method_response.error.status_code
+resource "aws_apigateway_integration_response" "test" {
+  rest_api_id = aws_apigateway_rest_api.test.id
+  resource_id = aws_apigateway_resource.test.id
+  http_method = aws_apigateway_integration.test.http_method
+  status_code = aws_apigateway_method_response.error.status_code
 }
 
-resource "aws_api_gateway_deployment" "dev" {
-  depends_on = [aws_api_gateway_integration.test]
+resource "aws_apigateway_deployment" "dev" {
+  depends_on = [aws_apigateway_integration.test]
 
-  rest_api_id = aws_api_gateway_rest_api.test.id
+  rest_api_id = aws_apigateway_rest_api.test.id
   stage_name  = "dev"
   description = "This is a dev env"
 
@@ -397,50 +397,50 @@ resource "aws_api_gateway_deployment" "dev" {
 
 func testAccStageBaseDeploymentStageNameConfig(rName string, stageName string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name = %[1]q
 }
 
-resource "aws_api_gateway_resource" "test" {
-  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
+resource "aws_apigateway_resource" "test" {
+  parent_id   = aws_apigateway_rest_api.test.root_resource_id
   path_part   = "test"
-  rest_api_id = aws_api_gateway_rest_api.test.id
+  rest_api_id = aws_apigateway_rest_api.test.id
 }
 
-resource "aws_api_gateway_method" "test" {
+resource "aws_apigateway_method" "test" {
   authorization = "NONE"
   http_method   = "GET"
-  resource_id   = aws_api_gateway_resource.test.id
-  rest_api_id   = aws_api_gateway_rest_api.test.id
+  resource_id   = aws_apigateway_resource.test.id
+  rest_api_id   = aws_apigateway_rest_api.test.id
 }
 
-resource "aws_api_gateway_method_response" "error" {
-  http_method = aws_api_gateway_method.test.http_method
-  resource_id = aws_api_gateway_resource.test.id
-  rest_api_id = aws_api_gateway_rest_api.test.id
+resource "aws_apigateway_method_response" "error" {
+  http_method = aws_apigateway_method.test.http_method
+  resource_id = aws_apigateway_resource.test.id
+  rest_api_id = aws_apigateway_rest_api.test.id
   status_code = "400"
 }
 
-resource "aws_api_gateway_integration" "test" {
-  http_method             = aws_api_gateway_method.test.http_method
+resource "aws_apigateway_integration" "test" {
+  http_method             = aws_apigateway_method.test.http_method
   integration_http_method = "GET"
-  resource_id             = aws_api_gateway_resource.test.id
-  rest_api_id             = aws_api_gateway_rest_api.test.id
+  resource_id             = aws_apigateway_resource.test.id
+  rest_api_id             = aws_apigateway_rest_api.test.id
   type                    = "HTTP"
   uri                     = "https://www.google.co.uk"
 }
 
-resource "aws_api_gateway_integration_response" "test" {
-  http_method = aws_api_gateway_integration.test.http_method
-  resource_id = aws_api_gateway_resource.test.id
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  status_code = aws_api_gateway_method_response.error.status_code
+resource "aws_apigateway_integration_response" "test" {
+  http_method = aws_apigateway_integration.test.http_method
+  resource_id = aws_apigateway_resource.test.id
+  rest_api_id = aws_apigateway_rest_api.test.id
+  status_code = aws_apigateway_method_response.error.status_code
 }
 
-resource "aws_api_gateway_deployment" "test" {
-  depends_on = [aws_api_gateway_integration.test]
+resource "aws_apigateway_deployment" "test" {
+  depends_on = [aws_apigateway_integration.test]
 
-  rest_api_id = aws_api_gateway_rest_api.test.id
+  rest_api_id = aws_apigateway_rest_api.test.id
   stage_name  = %[2]q
 }
 `, rName, stageName)
@@ -452,9 +452,9 @@ func testAccStageReferencingDeploymentConfig(rName string) string {
 		`
 # Due to oddities with API Gateway, certain environments utilize
 # a double deployment configuration. This can cause destroy errors.
-resource "aws_api_gateway_stage" "test" {
-  deployment_id = aws_api_gateway_deployment.test.id
-  rest_api_id   = aws_api_gateway_rest_api.test.id
+resource "aws_apigateway_stage" "test" {
+  deployment_id = aws_apigateway_deployment.test.id
+  rest_api_id   = aws_apigateway_rest_api.test.id
   stage_name    = "test"
 
   lifecycle {
@@ -462,21 +462,21 @@ resource "aws_api_gateway_stage" "test" {
   }
 }
 
-resource "aws_api_gateway_deployment" "test2" {
-  depends_on = [aws_api_gateway_integration.test]
+resource "aws_apigateway_deployment" "test2" {
+  depends_on = [aws_apigateway_integration.test]
 
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  stage_name  = aws_api_gateway_stage.test.stage_name
+  rest_api_id = aws_apigateway_rest_api.test.id
+  stage_name  = aws_apigateway_stage.test.stage_name
 }
 `)
 }
 
 func testAccStageConfig_basic(rName string) string {
 	return testAccStageConfig_base(rName) + `
-resource "aws_api_gateway_stage" "test" {
-  rest_api_id           = aws_api_gateway_rest_api.test.id
+resource "aws_apigateway_stage" "test" {
+  rest_api_id           = aws_apigateway_rest_api.test.id
   stage_name            = "prod"
-  deployment_id         = aws_api_gateway_deployment.dev.id
+  deployment_id         = aws_apigateway_deployment.dev.id
   cache_cluster_enabled = true
   cache_cluster_size    = "0.5"
   xray_tracing_enabled  = true
@@ -493,10 +493,10 @@ resource "aws_api_gateway_stage" "test" {
 
 func testAccStageConfig_updated(rName string) string {
 	return testAccStageConfig_base(rName) + `
-resource "aws_api_gateway_stage" "test" {
-  rest_api_id           = aws_api_gateway_rest_api.test.id
+resource "aws_apigateway_stage" "test" {
+  rest_api_id           = aws_apigateway_rest_api.test.id
   stage_name            = "prod"
-  deployment_id         = aws_api_gateway_deployment.dev.id
+  deployment_id         = aws_apigateway_deployment.dev.id
   cache_cluster_enabled = false
   description           = "Hello world"
   xray_tracing_enabled  = false
@@ -518,10 +518,10 @@ resource "aws_cloudwatch_log_group" "test" {
   name = "foo-bar-%s"
 }
 
-resource "aws_api_gateway_stage" "test" {
-  rest_api_id           = aws_api_gateway_rest_api.test.id
+resource "aws_apigateway_stage" "test" {
+  rest_api_id           = aws_apigateway_rest_api.test.id
   stage_name            = "prod"
-  deployment_id         = aws_api_gateway_deployment.dev.id
+  deployment_id         = aws_apigateway_deployment.dev.id
   cache_cluster_enabled = true
   cache_cluster_size    = "0.5"
   variables = {
@@ -576,10 +576,10 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   }
 }
 
-resource "aws_api_gateway_stage" "test" {
-  rest_api_id           = aws_api_gateway_rest_api.test.id
+resource "aws_apigateway_stage" "test" {
+  rest_api_id           = aws_apigateway_rest_api.test.id
   stage_name            = "prod"
-  deployment_id         = aws_api_gateway_deployment.dev.id
+  deployment_id         = aws_apigateway_deployment.dev.id
   cache_cluster_enabled = true
   cache_cluster_size    = "0.5"
   variables = {

@@ -1,26 +1,26 @@
 ---
 subcategory: "API Gateway (REST APIs)"
 layout: "aws"
-page_title: "AWS: aws_api_gateway_authorizer"
+page_title: "AWS: aws_apigateway_authorizer"
 description: |-
   Provides an API Gateway Authorizer.
 ---
 
-# Resource: aws_api_gateway_authorizer
+# Resource: aws_apigateway_authorizer
 
 Provides an API Gateway Authorizer.
 
 ## Example Usage
 
 ```terraform
-resource "aws_api_gateway_authorizer" "demo" {
+resource "aws_apigateway_authorizer" "demo" {
   name                   = "demo"
-  rest_api_id            = aws_api_gateway_rest_api.demo.id
+  rest_api_id            = aws_apigateway_rest_api.demo.id
   authorizer_uri         = aws_lambda_function.authorizer.invoke_arn
   authorizer_credentials = aws_iam_role.invocation_role.arn
 }
 
-resource "aws_api_gateway_rest_api" "demo" {
+resource "aws_apigateway_rest_api" "demo" {
   name = "auth-demo"
 }
 
@@ -119,5 +119,5 @@ In addition to all arguments above, the following attributes are exported:
 AWS API Gateway Authorizer can be imported using the `REST-API-ID/AUTHORIZER-ID`, e.g.,
 
 ```sh
-$ terraform import aws_api_gateway_authorizer.authorizer 12345abcde/example
+$ terraform import aws_apigateway_authorizer.authorizer 12345abcde/example
 ```

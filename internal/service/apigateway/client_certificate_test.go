@@ -17,7 +17,7 @@ import (
 
 func TestAccAPIGatewayClientCertificate_basic(t *testing.T) {
 	var conf apigateway.ClientCertificate
-	resourceName := "aws_api_gateway_client_certificate.test"
+	resourceName := "aws_apigateway_client_certificate.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -52,7 +52,7 @@ func TestAccAPIGatewayClientCertificate_basic(t *testing.T) {
 
 func TestAccAPIGatewayClientCertificate_tags(t *testing.T) {
 	var conf apigateway.ClientCertificate
-	resourceName := "aws_api_gateway_client_certificate.test"
+	resourceName := "aws_apigateway_client_certificate.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -96,7 +96,7 @@ func TestAccAPIGatewayClientCertificate_tags(t *testing.T) {
 
 func TestAccAPIGatewayClientCertificate_disappears(t *testing.T) {
 	var conf apigateway.ClientCertificate
-	resourceName := "aws_api_gateway_client_certificate.test"
+	resourceName := "aws_apigateway_client_certificate.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -147,7 +147,7 @@ func testAccCheckClientCertificateDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_api_gateway_client_certificate" {
+		if rs.Type != "aws_apigateway_client_certificate" {
 			continue
 		}
 
@@ -174,20 +174,20 @@ func testAccCheckClientCertificateDestroy(s *terraform.State) error {
 }
 
 const testAccClientCertificateConfig_basic = `
-resource "aws_api_gateway_client_certificate" "test" {
+resource "aws_apigateway_client_certificate" "test" {
   description = "Hello from TF acceptance test"
 }
 `
 
 const testAccClientCertificateConfig_basic_updated = `
-resource "aws_api_gateway_client_certificate" "test" {
+resource "aws_apigateway_client_certificate" "test" {
   description = "Hello from TF acceptance test - updated"
 }
 `
 
 func testAccClientCertificateTags1Config(tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_client_certificate" "test" {
+resource "aws_apigateway_client_certificate" "test" {
   description = "Hello from TF acceptance test"
 
   tags = {
@@ -199,7 +199,7 @@ resource "aws_api_gateway_client_certificate" "test" {
 
 func testAccClientCertificateTags2Config(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_client_certificate" "test" {
+resource "aws_apigateway_client_certificate" "test" {
   description = "Hello from TF acceptance test"
 
   tags = {

@@ -24,7 +24,7 @@ func TestAccAPIGatewayDocumentationPart_basic(t *testing.T) {
 	properties := `{"description":"Terraform Acceptance Test"}`
 	uProperties := `{"description":"Terraform Acceptance Test Updated"}`
 
-	resourceName := "aws_api_gateway_documentation_part.test"
+	resourceName := "aws_apigateway_documentation_part.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -69,7 +69,7 @@ func TestAccAPIGatewayDocumentationPart_method(t *testing.T) {
 	properties := `{"description":"Terraform Acceptance Test"}`
 	uProperties := `{"description":"Terraform Acceptance Test Updated"}`
 
-	resourceName := "aws_api_gateway_documentation_part.test"
+	resourceName := "aws_apigateway_documentation_part.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -118,7 +118,7 @@ func TestAccAPIGatewayDocumentationPart_responseHeader(t *testing.T) {
 	properties := `{"description":"Terraform Acceptance Test"}`
 	uProperties := `{"description":"Terraform Acceptance Test Updated"}`
 
-	resourceName := "aws_api_gateway_documentation_part.test"
+	resourceName := "aws_apigateway_documentation_part.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -170,7 +170,7 @@ func TestAccAPIGatewayDocumentationPart_disappears(t *testing.T) {
 	apiName := fmt.Sprintf("tf-acc-test_api_doc_part_basic_%s", rString)
 	properties := `{"description":"Terraform Acceptance Test"}`
 
-	resourceName := "aws_api_gateway_documentation_part.test"
+	resourceName := "aws_apigateway_documentation_part.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -227,7 +227,7 @@ func testAccCheckDocumentationPartDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_api_gateway_documentation_part" {
+		if rs.Type != "aws_apigateway_documentation_part" {
 			continue
 		}
 
@@ -255,15 +255,15 @@ func testAccCheckDocumentationPartDestroy(s *terraform.State) error {
 
 func testAccDocumentationPartConfig(apiName, properties string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_documentation_part" "test" {
+resource "aws_apigateway_documentation_part" "test" {
   location {
     type = "API"
   }
   properties  = %s
-  rest_api_id = aws_api_gateway_rest_api.test.id
+  rest_api_id = aws_apigateway_rest_api.test.id
 }
 
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name = "%s"
 }
 `, properties, apiName)
@@ -271,17 +271,17 @@ resource "aws_api_gateway_rest_api" "test" {
 
 func testAccDocumentationPartMethodConfig(apiName, properties string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_documentation_part" "test" {
+resource "aws_apigateway_documentation_part" "test" {
   location {
     type   = "METHOD"
     method = "GET"
     path   = "/terraform-acc-test"
   }
   properties  = %s
-  rest_api_id = aws_api_gateway_rest_api.test.id
+  rest_api_id = aws_apigateway_rest_api.test.id
 }
 
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name = "%s"
 }
 `, properties, apiName)
@@ -289,7 +289,7 @@ resource "aws_api_gateway_rest_api" "test" {
 
 func testAccDocumentationPartResponseHeaderConfig(apiName, properties string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_documentation_part" "test" {
+resource "aws_apigateway_documentation_part" "test" {
   location {
     type        = "RESPONSE_HEADER"
     method      = "GET"
@@ -298,10 +298,10 @@ resource "aws_api_gateway_documentation_part" "test" {
     status_code = "200"
   }
   properties  = %s
-  rest_api_id = aws_api_gateway_rest_api.test.id
+  rest_api_id = aws_apigateway_rest_api.test.id
 }
 
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name = "%s"
 }
 `, properties, apiName)

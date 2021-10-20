@@ -150,51 +150,51 @@ data "aws_transfer_server" "test" {
 
 func testAccServerDataSourceConfig_apigateway(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name = "test"
 }
 
-resource "aws_api_gateway_resource" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
+resource "aws_apigateway_resource" "test" {
+  rest_api_id = aws_apigateway_rest_api.test.id
+  parent_id   = aws_apigateway_rest_api.test.root_resource_id
   path_part   = "test"
 }
 
-resource "aws_api_gateway_method" "test" {
-  rest_api_id   = aws_api_gateway_rest_api.test.id
-  resource_id   = aws_api_gateway_resource.test.id
+resource "aws_apigateway_method" "test" {
+  rest_api_id   = aws_apigateway_rest_api.test.id
+  resource_id   = aws_apigateway_resource.test.id
   http_method   = "GET"
   authorization = "NONE"
 }
 
-resource "aws_api_gateway_method_response" "error" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  resource_id = aws_api_gateway_resource.test.id
-  http_method = aws_api_gateway_method.test.http_method
+resource "aws_apigateway_method_response" "error" {
+  rest_api_id = aws_apigateway_rest_api.test.id
+  resource_id = aws_apigateway_resource.test.id
+  http_method = aws_apigateway_method.test.http_method
   status_code = "400"
 }
 
-resource "aws_api_gateway_integration" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  resource_id = aws_api_gateway_resource.test.id
-  http_method = aws_api_gateway_method.test.http_method
+resource "aws_apigateway_integration" "test" {
+  rest_api_id = aws_apigateway_rest_api.test.id
+  resource_id = aws_apigateway_resource.test.id
+  http_method = aws_apigateway_method.test.http_method
 
   type                    = "HTTP"
   uri                     = "https://www.google.de"
   integration_http_method = "GET"
 }
 
-resource "aws_api_gateway_integration_response" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  resource_id = aws_api_gateway_resource.test.id
-  http_method = aws_api_gateway_integration.test.http_method
-  status_code = aws_api_gateway_method_response.error.status_code
+resource "aws_apigateway_integration_response" "test" {
+  rest_api_id = aws_apigateway_rest_api.test.id
+  resource_id = aws_apigateway_resource.test.id
+  http_method = aws_apigateway_integration.test.http_method
+  status_code = aws_apigateway_method_response.error.status_code
 }
 
-resource "aws_api_gateway_deployment" "test" {
-  depends_on = [aws_api_gateway_integration.test]
+resource "aws_apigateway_deployment" "test" {
+  depends_on = [aws_apigateway_integration.test]
 
-  rest_api_id       = aws_api_gateway_rest_api.test.id
+  rest_api_id       = aws_apigateway_rest_api.test.id
   stage_name        = "test"
   description       = "%[1]s"
   stage_description = "%[1]s"
@@ -248,7 +248,7 @@ data "aws_region" "current" {}
 
 resource "aws_transfer_server" "test" {
   identity_provider_type = "API_GATEWAY"
-  url                    = "https://${aws_api_gateway_rest_api.test.id}.execute-api.${data.aws_region.current.name}.amazonaws.com${aws_api_gateway_resource.test.path}"
+  url                    = "https://${aws_apigateway_rest_api.test.id}.execute-api.${data.aws_region.current.name}.amazonaws.com${aws_apigateway_resource.test.path}"
   invocation_role        = aws_iam_role.test.arn
   logging_role           = aws_iam_role.test.arn
 }

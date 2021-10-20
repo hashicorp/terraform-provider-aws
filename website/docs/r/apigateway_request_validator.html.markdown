@@ -1,21 +1,21 @@
 ---
 subcategory: "API Gateway (REST APIs)"
 layout: "aws"
-page_title: "AWS: aws_api_gateway_request_validator"
+page_title: "AWS: aws_apigateway_request_validator"
 description: |-
   Manages an API Gateway Request Validator.
 ---
 
-# Resource: aws_api_gateway_request_validator
+# Resource: aws_apigateway_request_validator
 
 Manages an API Gateway Request Validator.
 
 ## Example Usage
 
 ```terraform
-resource "aws_api_gateway_request_validator" "example" {
+resource "aws_apigateway_request_validator" "example" {
   name                        = "example"
-  rest_api_id                 = aws_api_gateway_rest_api.example.id
+  rest_api_id                 = aws_apigateway_rest_api.example.id
   validate_request_body       = true
   validate_request_parameters = true
 }
@@ -38,8 +38,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_api_gateway_request_validator` can be imported using `REST-API-ID/REQUEST-VALIDATOR-ID`, e.g.,
+`aws_apigateway_request_validator` can be imported using `REST-API-ID/REQUEST-VALIDATOR-ID`, e.g.,
 
 ```
-$ terraform import aws_api_gateway_request_validator.example 12345abcde/67890fghij
+$ terraform import aws_apigateway_request_validator.example 12345abcde/67890fghij
 ```
