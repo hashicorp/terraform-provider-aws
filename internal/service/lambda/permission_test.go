@@ -811,7 +811,7 @@ func testAccPermissionConfig_basic(rName string) string {
 resource "aws_lambda_permission" "test" {
   statement_id       = "AllowExecutionFromCloudWatch"
   action             = "lambda:InvokeFunction"
-  function_name      = aws_lambda_function.test.arn
+  function_name      = aws_lambda_function.test.function_name
   principal          = "events.amazonaws.com"
   event_source_token = "test-event-source-token"
 }
@@ -823,7 +823,7 @@ func testAccPermissionConfig_statementIDDuplicate(rName string) string {
 resource "aws_lambda_permission" "test1" {
   action             = "lambda:InvokeFunction"
   event_source_token = "test-event-source-token"
-  function_name      = aws_lambda_function.test.arn
+  function_name      = aws_lambda_function.test.function_name
   principal          = "events.amazonaws.com"
   statement_id       = "AllowExecutionFromCloudWatch"
 }
@@ -831,7 +831,7 @@ resource "aws_lambda_permission" "test1" {
 resource "aws_lambda_permission" "test2" {
   action             = "lambda:InvokeFunction"
   event_source_token = "test-event-source-token"
-  function_name      = aws_lambda_function.test.arn
+  function_name      = aws_lambda_function.test.function_name
   principal          = "events.amazonaws.com"
   statement_id       = "AllowExecutionFromCloudWatch"
 }
@@ -843,7 +843,7 @@ func testAccPermissionConfig_rawFunctionName(rName string) string {
 resource "aws_lambda_permission" "test" {
   statement_id  = "AllowExecutionWithRawFuncName"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.test.arn
+  function_name = aws_lambda_function.test.function_name
   principal     = "events.amazonaws.com"
 }
 `)
@@ -854,7 +854,7 @@ func testAccPermissionConfig_statementIDPrefix(rName, prefix string) string {
 resource "aws_lambda_permission" "test" {
   statement_id_prefix = %[1]q
   action              = "lambda:InvokeFunction"
-  function_name       = aws_lambda_function.test.arn
+  function_name       = aws_lambda_function.test.function_name
   principal           = "events.amazonaws.com"
 }
 `, prefix))
@@ -866,7 +866,7 @@ func testAccPermissionConfig_qualifier(rName string) string {
 resource "aws_lambda_permission" "test" {
   statement_id   = "AllowExecutionWithQualifier"
   action         = "lambda:InvokeFunction"
-  function_name  = aws_lambda_function.test.arn
+  function_name  = aws_lambda_function.test.function_name
   principal      = "events.amazonaws.com"
   source_account = "111122223333"
   source_arn     = "arn:aws:events:eu-west-1:111122223333:rule/RunDaily"
@@ -876,7 +876,7 @@ resource "aws_lambda_permission" "test" {
 resource "aws_lambda_alias" "test" {
   name             = %[1]q
   description      = "a sample description"
-  function_name    = aws_lambda_function.test.arn
+  function_name    = aws_lambda_function.test.function_name
   function_version = "$LATEST"
 }
 `, rName))
@@ -886,14 +886,14 @@ var testAccPermissionConfig_multiplePerms_tpl = `
 resource "aws_lambda_permission" "first" {
   statement_id  = "AllowExecutionFirst"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.test.arn
+  function_name = aws_lambda_function.test.function_name
   principal     = "events.amazonaws.com"
 }
 
 resource "aws_lambda_permission" "%s" {
   statement_id  = "%s"
   action        = "lambda:*"
-  function_name = aws_lambda_function.test.arn
+  function_name = aws_lambda_function.test.function_name
   principal     = "events.amazonaws.com"
 }
 %s
@@ -938,7 +938,7 @@ func testAccPermissionConfig_multiplePermsModified(funcName, roleName string) st
 resource "aws_lambda_permission" "third" {
   statement_id  = "AllowExecutionThird"
   action        = "lambda:*"
-  function_name = aws_lambda_function.test.arn
+  function_name = aws_lambda_function.test.function_name
   principal     = "events.amazonaws.com"
 }
 `, funcName, roleName)
@@ -949,7 +949,7 @@ func testAccPermissionConfig_s3(rName string) string {
 resource "aws_lambda_permission" "test" {
   statement_id  = "AllowExecutionFromS3"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.test.arn
+  function_name = aws_lambda_function.test.function_name
   principal     = "s3.amazonaws.com"
   source_arn    = aws_s3_bucket.test.arn
 }
@@ -965,7 +965,7 @@ func testAccPermissionConfig_sns(rName string) string {
 resource "aws_lambda_permission" "test" {
   statement_id  = "AllowExecutionFromSNS"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.test.arn
+  function_name = aws_lambda_function.test.function_name
   principal     = "sns.amazonaws.com"
   source_arn    = aws_sns_topic.test.arn
 }
@@ -987,7 +987,7 @@ func testAccPermissionConfig_iamRole(rName string) string {
 resource "aws_lambda_permission" "test" {
   statement_id  = "AllowExecutionFromIAMRole"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.test.arn
+  function_name = aws_lambda_function.test.function_name
   principal     = aws_iam_role.test.arn
 }
 `)
@@ -1000,7 +1000,7 @@ data "aws_organizations_organization" "test" {}
 resource "aws_lambda_permission" "test" {
   statement_id       = "AllowExecutionFromCloudWatch"
   action             = "lambda:InvokeFunction"
-  function_name      = aws_lambda_function.test.arn
+  function_name      = aws_lambda_function.test.function_name
   principal          = "*"
   principal_org_id   = data.aws_organizations_organization.test.id
   event_source_token = "test-event-source-token"
@@ -1059,7 +1059,7 @@ func testAccPermissionConfig_functionURLsIAM(rName string) string {
 resource "aws_lambda_permission" "test" {
   statement_id           = "AllowExecutionWithIAM"
   action                 = "lambda:InvokeFunctionUrl"
-  function_name          = aws_lambda_function.test.arn
+  function_name          = aws_lambda_function.test.function_name
   principal              = "*"
   function_url_auth_type = "AWS_IAM"
 }
@@ -1071,7 +1071,7 @@ func testAccPermissionConfig_functionURLsNone(rName string) string {
 resource "aws_lambda_permission" "test" {
   statement_id           = "AllowExecutionFromWithoutAuth"
   action                 = "lambda:InvokeFunctionUrl"
-  function_name          = aws_lambda_function.test.arn
+  function_name          = aws_lambda_function.test.function_name
   principal              = "*"
   function_url_auth_type = "NONE"
 }
