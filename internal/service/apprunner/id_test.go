@@ -27,9 +27,9 @@ func TestCustomDomainAssociationParseID(t *testing.T) {
 		},
 		{
 			TestName:      "two parts",
-			InputID:       fmt.Sprintf("%s,%s", "example.com", "arn:aws:apprunner:us-east-1:1234567890:service/example/0a03292a89764e5882c41d8f991c82fe"), //lintignore:AWSAT005
+			InputID:       fmt.Sprintf("%s,%s", "example.com", "arn:aws:apprunner:us-east-1:1234567890:service/example/0a03292a89764e5882c41d8f991c82fe"), //lintignore:AWSAT003,AWSAT005
 			ExpectedPart0: "example.com",
-			ExpectedPart1: "arn:aws:apprunner:us-east-1:1234567890:service/example/0a03292a89764e5882c41d8f991c82fe", //lintignore:AWSAT005
+			ExpectedPart1: "arn:aws:apprunner:us-east-1:1234567890:service/example/0a03292a89764e5882c41d8f991c82fe", //lintignore:AWSAT003,AWSAT005
 		},
 
 		{
@@ -39,7 +39,7 @@ func TestCustomDomainAssociationParseID(t *testing.T) {
 		},
 		{
 			TestName:      "empty first part",
-			InputID:       ",arn:aws:apprunner:us-east-1:1234567890:service/example/0a03292a89764e5882c41d8f991c82fe", //lintignore:AWSAT005
+			InputID:       ",arn:aws:apprunner:us-east-1:1234567890:service/example/0a03292a89764e5882c41d8f991c82fe", //lintignore:AWSAT003,AWSAT005
 			ExpectedError: true,
 		},
 		{
@@ -49,7 +49,7 @@ func TestCustomDomainAssociationParseID(t *testing.T) {
 		},
 		{
 			TestName:      "three parts",
-			InputID:       "example.com,arn:aws:apprunner:us-east-1:1234567890:service/example/0a03292a89764e5882c41d8f991c82fe,example", //lintignore:AWSAT005
+			InputID:       "example.com,arn:aws:apprunner:us-east-1:1234567890:service/example/0a03292a89764e5882c41d8f991c82fe,example", //lintignore:AWSAT003,AWSAT005
 			ExpectedError: true,
 		},
 	}
