@@ -11,7 +11,7 @@ const (
 	actionAvailableTimeout = 2 * time.Minute
 )
 
-func waitActionAvailable(conn *budgets.Budgets, accountID, actionID, budgetName string) (*budgets.Action, error) {
+func waitActionAvailable(conn *budgets.Budgets, accountID, actionID, budgetName string) (*budgets.Action, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			budgets.ActionStatusExecutionInProgress,
