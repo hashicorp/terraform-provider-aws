@@ -93,7 +93,7 @@ func resourceAwsCognitoUser() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"user_status": {
+			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -240,7 +240,7 @@ func resourceAwsCognitoUserRead(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("failed setting user_attributes: %w", err)
 	}
 
-	if err := d.Set("user_status", user.UserStatus); err != nil {
+	if err := d.Set("status", user.UserStatus); err != nil {
 		return fmt.Errorf("failed setting user_status: %w", err)
 	}
 
