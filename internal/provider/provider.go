@@ -472,6 +472,7 @@ func Provider() *schema.Provider {
 			"aws_iam_server_certificate":                     iam.DataSourceServerCertificate(),
 			"aws_iam_session_context":                        iam.DataSourceSessionContext(),
 			"aws_iam_user":                                   iam.DataSourceUser(),
+			"aws_iam_user_ssh_key":                           iam.DataSourceUserSSHKey(),
 			"aws_iam_users":                                  iam.DataSourceUsers(),
 			"aws_identitystore_group":                        identitystore.DataSourceGroup(),
 			"aws_identitystore_user":                         identitystore.DataSourceUser(),
