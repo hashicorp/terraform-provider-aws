@@ -83,7 +83,7 @@ func testAccCheckStackFleetAssociationExists(resourceName string) resource.TestC
 			return fmt.Errorf("error decoding id appstream stack fleet association (%s): %w", rs.Primary.ID, err)
 		}
 
-		resp, err := conn.ListAssociatedStacksWithContext(context.TODO(), &appstream.ListAssociatedStacksInput{FleetName: aws.String(fleetName)})
+		resp, err := conn.ListAssociatedStacksWithContext(context.Background(), &appstream.ListAssociatedStacksInput{FleetName: aws.String(fleetName)})
 
 		if err != nil {
 			return err
@@ -118,7 +118,7 @@ func testAccCheckStackFleetAssociationDestroy(s *terraform.State) error {
 			return fmt.Errorf("error decoding id appstream stack fleet association (%s): %w", rs.Primary.ID, err)
 		}
 
-		resp, err := conn.ListAssociatedStacksWithContext(context.TODO(), &appstream.ListAssociatedStacksInput{FleetName: aws.String(fleetName)})
+		resp, err := conn.ListAssociatedStacksWithContext(context.Background(), &appstream.ListAssociatedStacksInput{FleetName: aws.String(fleetName)})
 
 		if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
 			continue
