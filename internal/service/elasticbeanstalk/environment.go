@@ -1,6 +1,6 @@
 package elasticbeanstalk
 
-import (
+import ( // nosemgrep: aws-sdk-go-multiple-service-imports
 	"fmt"
 	"log"
 	"regexp"

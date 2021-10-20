@@ -1,6 +1,6 @@
 package elbv2
 
-import (
+import ( // nosemgrep: aws-sdk-go-multiple-service-imports
 	"bytes"
 	"context"
 	"fmt"
@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
@@ -359,7 +358,7 @@ func resourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error {
 
 	lb, err := FindLoadBalancerByARN(conn, d.Id())
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, elb.ErrCodeAccessPointNotFoundException) {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, elbv2.ErrCodeLoadBalancerNotFoundException) {
 		// The ALB is gone now, so just remove it from the state
 		log.Printf("[WARN] ALB %s not found in AWS, removing from state", d.Id())
 		d.SetId("")
