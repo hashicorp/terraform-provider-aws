@@ -30,6 +30,10 @@ func resourceAwsCognitoUser() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 			},
+			"creation_date": {
+				Type: schema.TypeString,
+				Computed: true,
+			},
 			"desired_delivery_mediums": {
 				Type: schema.TypeSet,
 				Elem: &schema.Schema{
@@ -49,6 +53,10 @@ func resourceAwsCognitoUser() *schema.Resource {
 			"force_alias_creation": {
 				Type:     schema.TypeBool,
 				Optional: true,
+			},
+			"last_modified_date": {
+				Type: schema.TypeString,
+				Computed: true,
 			},
 			"message_action": {
 				Type:     schema.TypeString,
@@ -234,6 +242,13 @@ func resourceAwsCognitoUserRead(d *schema.ResourceData, meta interface{}) error 
 
 	if err := d.Set("user_status", user.UserStatus); err != nil {
 		return fmt.Errorf("failed setting user_status: %w", err)
+	}
+
+	if err := d.Set("creation_date", user.UserCreateDate.Format(time.RFC3339)); err != nil {
+		return fmt.Errorf("failed setting user's creation_date: %w", err)
+	}
+	if err := d.Set("last_modified_date", user.UserLastModifiedDate.Format(time.RFC3339)); err != nil {
+		return fmt.Errorf("failed setting user's last_modified_date: %w", err)
 	}
 
 	return nil
