@@ -1,19 +1,19 @@
 ---
 subcategory: "Lex"
 layout: "aws"
-page_title: "AWS: aws_lex_slot_type"
+page_title: "AWS: aws_lexmodelbuilding_slot_type"
 description: |-
   Provides details about a specific Amazon Lex Slot Type
 ---
 
-# Data Source: aws_lex_slot_type
+# Data Source: aws_lexmodelbuilding_slot_type
 
 Provides details about a specific Amazon Lex Slot Type.
 
 ## Example Usage
 
 ```terraform
-data "aws_lex_slot_type" "flower_types" {
+data "aws_lexmodelbuilding_slot_type" "flower_types" {
   name    = "FlowerTypes"
   version = "1"
 }

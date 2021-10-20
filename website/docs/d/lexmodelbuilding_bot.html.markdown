@@ -1,19 +1,19 @@
 ---
 subcategory: "Lex"
 layout: "aws"
-page_title: "AWS: aws_lex_bot"
+page_title: "AWS: aws_lexmodelbuilding_bot"
 description: |-
   Provides details about a specific Lex Bot
 ---
 
-# Data Source: aws_lex_bot
+# Data Source: aws_lexmodelbuilding_bot
 
 Provides details about a specific Amazon Lex Bot.
 
 ## Example Usage
 
 ```terraform
-data "aws_lex_bot" "order_flowers_bot" {
+data "aws_lexmodelbuilding_bot" "order_flowers_bot" {
   name    = "OrderFlowers"
   version = "$LATEST"
 }

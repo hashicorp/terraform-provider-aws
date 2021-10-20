@@ -1,19 +1,19 @@
 ---
 subcategory: "Lex"
 layout: "aws"
-page_title: "AWS: aws_lex_bot_alias"
+page_title: "AWS: aws_lexmodelbuilding_bot_alias"
 description: |-
   Provides details about a specific Lex Bot Alias
 ---
 
-# Data Source: aws_lex_bot_alias
+# Data Source: aws_lexmodelbuilding_bot_alias
 
 Provides details about a specific Amazon Lex Bot Alias.
 
 ## Example Usage
 
 ```terraform
-data "aws_lex_bot_alias" "order_flowers_prod" {
+data "aws_lexmodelbuilding_bot_alias" "order_flowers_prod" {
   bot_name = "OrderFlowers"
   name     = "OrderFlowersProd"
 }

@@ -11,8 +11,8 @@ import (
 
 func TestAccLexModelBuildingSlotTypeDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
-	dataSourceName := "data.aws_lex_slot_type.test"
-	resourceName := "aws_lex_slot_type.test"
+	dataSourceName := "data.aws_lexmodelbuilding_slot_type.test"
+	resourceName := "aws_lexmodelbuilding_slot_type.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -44,8 +44,8 @@ func TestAccLexModelBuildingSlotTypeDataSource_basic(t *testing.T) {
 
 func TestAccLexModelBuildingSlotTypeDataSource_withVersion(t *testing.T) {
 	rName := sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
-	dataSourceName := "data.aws_lex_slot_type.test"
-	resourceName := "aws_lex_slot_type.test"
+	dataSourceName := "data.aws_lexmodelbuilding_slot_type.test"
+	resourceName := "aws_lexmodelbuilding_slot_type.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -76,16 +76,16 @@ func TestAccLexModelBuildingSlotTypeDataSource_withVersion(t *testing.T) {
 
 func testAccSlotTypeDataSourceConfig_basic() string {
 	return `
-data "aws_lex_slot_type" "test" {
-  name = aws_lex_slot_type.test.name
+data "aws_lexmodelbuilding_slot_type" "test" {
+  name = aws_lexmodelbuilding_slot_type.test.name
 }
 `
 }
 
 func testAccSlotTypeDataSourceConfig_withVersion() string {
 	return `
-data "aws_lex_slot_type" "test" {
-  name    = aws_lex_slot_type.test.name
+data "aws_lexmodelbuilding_slot_type" "test" {
+  name    = aws_lexmodelbuilding_slot_type.test.name
   version = "1"
 }
 `

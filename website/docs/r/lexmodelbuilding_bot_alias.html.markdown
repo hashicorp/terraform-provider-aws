@@ -1,12 +1,12 @@
 ---
 subcategory: "Lex"
 layout: "aws"
-page_title: "AWS: aws_lex_bot_alias"
+page_title: "AWS: aws_lexmodelbuilding_bot_alias"
 description: |-
   Provides an Amazon Lex Bot Alias resource.
 ---
 
-# Resource: aws_lex_bot_alias
+# Resource: aws_lexmodelbuilding_bot_alias
 
 Provides an Amazon Lex Bot Alias resource. For more information see
 [Amazon Lex: How It Works](https://docs.aws.amazon.com/lex/latest/dg/how-it-works.html)
@@ -14,7 +14,7 @@ Provides an Amazon Lex Bot Alias resource. For more information see
 ## Example Usage
 
 ```terraform
-resource "aws_lex_bot_alias" "order_flowers_prod" {
+resource "aws_lexmodelbuilding_bot_alias" "order_flowers_prod" {
   bot_name    = "OrderFlowers"
   bot_version = "1"
   description = "Production Version of the OrderFlowers Bot."
@@ -71,5 +71,5 @@ In addition to all arguments above, the following attributes are exported:
 Bot aliases can be imported using an ID with the format `bot_name:bot_alias_name`.
 
 ```
-$ terraform import aws_lex_bot_alias.order_flowers_prod OrderFlowers:OrderFlowersProd
+$ terraform import aws_lexmodelbuilding_bot_alias.order_flowers_prod OrderFlowers:OrderFlowersProd
 ```

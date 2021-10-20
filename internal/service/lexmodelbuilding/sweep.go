@@ -16,27 +16,27 @@ import (
 )
 
 func init() {
-	resource.AddTestSweepers("aws_lex_bot_alias", &resource.Sweeper{
-		Name: "aws_lex_bot_alias",
+	resource.AddTestSweepers("aws_lexmodelbuilding_bot_alias", &resource.Sweeper{
+		Name: "aws_lexmodelbuilding_bot_alias",
 		F:    sweepBotAliases,
 	})
 
-	resource.AddTestSweepers("aws_lex_bot", &resource.Sweeper{
-		Name:         "aws_lex_bot",
+	resource.AddTestSweepers("aws_lexmodelbuilding_bot", &resource.Sweeper{
+		Name:         "aws_lexmodelbuilding_bot",
 		F:            sweepBots,
-		Dependencies: []string{"aws_lex_bot_alias"},
+		Dependencies: []string{"aws_lexmodelbuilding_bot_alias"},
 	})
 
-	resource.AddTestSweepers("aws_lex_intent", &resource.Sweeper{
-		Name:         "aws_lex_intent",
+	resource.AddTestSweepers("aws_lexmodelbuilding_intent", &resource.Sweeper{
+		Name:         "aws_lexmodelbuilding_intent",
 		F:            sweepIntents,
-		Dependencies: []string{"aws_lex_bot"},
+		Dependencies: []string{"aws_lexmodelbuilding_bot"},
 	})
 
-	resource.AddTestSweepers("aws_lex_slot_type", &resource.Sweeper{
-		Name:         "aws_lex_slot_type",
+	resource.AddTestSweepers("aws_lexmodelbuilding_slot_type", &resource.Sweeper{
+		Name:         "aws_lexmodelbuilding_slot_type",
 		F:            sweepSlotTypes,
-		Dependencies: []string{"aws_lex_intent"},
+		Dependencies: []string{"aws_lexmodelbuilding_intent"},
 	})
 }
 
