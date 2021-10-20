@@ -47,7 +47,7 @@ func waitDynamoDBKinesisStreamingDestinationDisabled(ctx context.Context, conn *
 	return err
 }
 
-func waitDynamoDBTableActive(conn *dynamodb.DynamoDB, tableName string) (*dynamodb.TableDescription, error) { //nolint:unparam
+func waitDynamoDBTableActive(conn *dynamodb.DynamoDB, tableName string, timeout time.Duration) (*dynamodb.TableDescription, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			dynamodb.TableStatusCreating,
@@ -56,7 +56,7 @@ func waitDynamoDBTableActive(conn *dynamodb.DynamoDB, tableName string) (*dynamo
 		Target: []string{
 			dynamodb.TableStatusActive,
 		},
-		Timeout: createTableTimeout,
+		Timeout: timeout,
 		Refresh: statusDynamoDBTable(conn, tableName),
 	}
 
@@ -69,14 +69,14 @@ func waitDynamoDBTableActive(conn *dynamodb.DynamoDB, tableName string) (*dynamo
 	return nil, err
 }
 
-func waitDynamoDBTableDeleted(conn *dynamodb.DynamoDB, tableName string) (*dynamodb.TableDescription, error) {
+func waitDynamoDBTableDeleted(conn *dynamodb.DynamoDB, tableName string, timeout time.Duration) (*dynamodb.TableDescription, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			dynamodb.TableStatusActive,
 			dynamodb.TableStatusDeleting,
 		},
 		Target:  []string{},
-		Timeout: deleteTableTimeout,
+		Timeout: timeout,
 		Refresh: statusDynamoDBTable(conn, tableName),
 	}
 

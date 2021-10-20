@@ -7,6 +7,7 @@ import (
 	"log"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
@@ -394,7 +395,7 @@ func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 
 	var output *dynamodb.CreateTableOutput
 	var requiresTagging bool
-	err := resource.Retry(createTableTimeout, func() *resource.RetryError {
+	err := resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		var err error
 		output, err = conn.CreateTable(req)
 		if err != nil {
@@ -441,7 +442,7 @@ func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(aws.StringValue(output.TableDescription.TableName))
 	d.Set("arn", output.TableDescription.TableArn)
 
-	if _, err := waitDynamoDBTableActive(conn, d.Id()); err != nil {
+	if _, err := waitDynamoDBTableActive(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for creation of DynamoDB table (%s): %w", d.Id(), err)
 	}
 
@@ -703,7 +704,7 @@ func resourceTableUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error updating DynamoDB Table (%s): %w", d.Id(), err)
 		}
 
-		if _, err := waitDynamoDBTableActive(conn, d.Id()); err != nil {
+		if _, err := waitDynamoDBTableActive(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("error waiting for DynamoDB Table (%s) update: %w", d.Id(), err)
 		}
 
@@ -797,7 +798,7 @@ func resourceTableDelete(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	err := deleteDynamoDbTable(d.Id(), conn)
+	err := deleteDynamoDbTable(d.Id(), conn, d.Timeout(schema.TimeoutDelete))
 	if err != nil {
 		if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeResourceNotFoundException, "Requested resource not found: Table: ") {
 			return nil
@@ -805,7 +806,7 @@ func resourceTableDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting DynamoDB Table (%s): %w", d.Id(), err)
 	}
 
-	if _, err := waitDynamoDBTableDeleted(conn, d.Id()); err != nil {
+	if _, err := waitDynamoDBTableDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return fmt.Errorf("error waiting for DynamoDB Table (%s) deletion: %w", d.Id(), err)
 	}
 
@@ -1079,12 +1080,12 @@ func UpdateDiffGSI(oldGsi, newGsi []interface{}, billingMode string) (ops []*dyn
 	return ops, nil
 }
 
-func deleteDynamoDbTable(tableName string, conn *dynamodb.DynamoDB) error {
+func deleteDynamoDbTable(tableName string, conn *dynamodb.DynamoDB, timeout time.Duration) error {
 	input := &dynamodb.DeleteTableInput{
 		TableName: aws.String(tableName),
 	}
 
-	err := resource.Retry(deleteTableTimeout, func() *resource.RetryError {
+	err := resource.Retry(timeout, func() *resource.RetryError {
 		_, err := conn.DeleteTable(input)
 		if err != nil {
 			// Subscriber limit exceeded: Only 10 tables can be created, updated, or deleted simultaneously
