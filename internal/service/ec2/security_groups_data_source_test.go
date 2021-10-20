@@ -50,6 +50,26 @@ func TestAccEC2SecurityGroupsDataSource_filter(t *testing.T) {
 	})
 }
 
+func TestAccDataSourceAwsSecurityGroups_empty(t *testing.T) {
+	rInt := acctest.RandInt()
+	dataSourceName := "data.aws_security_groups.empty"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:  testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceAwsSecurityGroupsConfig_empty(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "vpc_ids.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "arns.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func testAccSecurityGroupsDataSourceConfig_tag(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test_tag" {
@@ -107,6 +127,16 @@ data "aws_security_groups" "by_filter" {
   filter {
     name   = "group-name"
     values = ["tf-${aws_security_group.test[0].tags["Seed"]}-*"]
+  }
+}
+`, rInt)
+}
+
+func testAccDataSourceAwsSecurityGroupsConfig_empty(rInt int) string {
+	return fmt.Sprintf(`
+data "aws_security_groups" "empty" {
+  tags = {
+    Random = "%[1]d"
   }
 }
 `, rInt)

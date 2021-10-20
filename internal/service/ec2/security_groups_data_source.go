@@ -90,10 +90,6 @@ func dataSourceSecurityGroupsRead(d *schema.ResourceData, meta interface{}) erro
 		req.NextToken = resp.NextToken
 	}
 
-	if len(ids) < 1 {
-		return fmt.Errorf("Your query returned no results. Please change your search criteria and try again.")
-	}
-
 	log.Printf("[DEBUG] Found %d security groups via given filter: %s", len(ids), req)
 
 	d.SetId(meta.(*conns.AWSClient).Region)
