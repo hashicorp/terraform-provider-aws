@@ -197,6 +197,44 @@ func TestAccDataSyncTask_excludes(t *testing.T) {
 	})
 }
 
+func TestAccDataSyncTask_includes(t *testing.T) {
+	var task1 datasync.DescribeTaskOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_datasync_task.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, datasync.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckTaskDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTaskIncludesConfig(rName, "/folder1|/folder2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTaskExists(resourceName, &task1),
+					resource.TestCheckResourceAttr(resourceName, "includes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "includes.0.filter_type", "SIMPLE_PATTERN"),
+					resource.TestCheckResourceAttr(resourceName, "includes.0.value", "/folder1|/folder2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccTaskIncludesConfig(rName, "/test"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTaskExists(resourceName, &task1),
+					resource.TestCheckResourceAttr(resourceName, "includes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "includes.0.filter_type", "SIMPLE_PATTERN"),
+					resource.TestCheckResourceAttr(resourceName, "includes.0.value", "/test"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccDataSyncTask_DefaultSyncOptions_atimeMtime(t *testing.T) {
 	var task1, task2 datasync.DescribeTaskOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1029,6 +1067,24 @@ resource "aws_datasync_task" "test" {
   source_location_arn      = aws_datasync_location_nfs.source.arn
 
   excludes {
+    filter_type = "SIMPLE_PATTERN"
+    value       = %[2]q
+  }
+}
+`, rName, value))
+}
+
+func testAccTaskIncludesConfig(rName, value string) string {
+	return acctest.ConfigCompose(
+		testAccTaskDestinationLocationS3BaseConfig(rName),
+		testAccTaskSourceLocationNFSBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_datasync_task" "test" {
+  destination_location_arn = aws_datasync_location_s3.destination.arn
+  name                     = %[1]q
+  source_location_arn      = aws_datasync_location_nfs.source.arn
+
+  includes {
     filter_type = "SIMPLE_PATTERN"
     value       = %[2]q
   }

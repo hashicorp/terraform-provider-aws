@@ -50,6 +50,11 @@ resource "aws_datasync_task" "example" {
     filter_type = "SIMPLE_PATTERN"
     value       = "/folder1|/folder2"
   }
+
+  includes {
+    filter_type = "SIMPLE_PATTERN"
+    value       = "/folder1|/folder2"
+  }
 }
 ```
 
@@ -61,6 +66,7 @@ The following arguments are supported:
 * `source_location_arn` - (Required) Amazon Resource Name (ARN) of source DataSync Location.
 * `cloudwatch_log_group_arn` - (Optional) Amazon Resource Name (ARN) of the CloudWatch Log Group that is used to monitor and log events in the sync task.
 * `excludes` - (Optional) Filter rules that determines which files to exclude from a task.
+* `includes` - (Optional) Filter rules that determines which files to include in a task.
 * `name` - (Optional) Name of the DataSync Task.
 * `options` - (Optional) Configuration block containing option that controls the default behavior when you start an execution of this DataSync Task. For each individual task execution, you can override these options by specifying an overriding configuration in those executions.
 * `schedule` - (Optional) Specifies a schedule used to periodically transfer files from a source to a destination location.
