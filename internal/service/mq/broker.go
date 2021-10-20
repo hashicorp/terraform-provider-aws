@@ -1,3 +1,4 @@
+<<<<<<< HEAD:internal/service/mq/broker.go
 package mq
 
 import (
@@ -1087,3 +1088,6 @@ func expandMQLDAPServerMetadata(tfList []interface{}) *mq.LdapServerMetadataInpu
 
 	return apiObject
 }
+=======
+
+>>>>>>> ceb21bc040 (Update resource_aws_mq_broker.go):aws/resource_aws_mq_broker.go
