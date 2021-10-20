@@ -152,11 +152,12 @@ func testAccAppSyncDataSource_DynamoDB_useCallerCredentials(t *testing.T) {
 	})
 }
 
-func testAccAppSyncDataSource_ElasticSearch_region(t *testing.T) {
+func TestAccAppSyncDataSource_ElasticSearch_region(t *testing.T) {
 	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	resourceName := "aws_appsync_datasource.test"
 
-	resource.Test(t, resource.TestCase{
+	// Keep this test Parallel as it takes considerably longer to run than any non-Elasticsearch tests.
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
 		Providers:    acctest.Providers,
@@ -284,12 +285,13 @@ func testAccAppSyncDataSource_Type_dynamoDB(t *testing.T) {
 	})
 }
 
-func testAccAppSyncDataSource_Type_elasticSearch(t *testing.T) {
+func TestAccAppSyncDataSource_Type_elasticSearch(t *testing.T) {
 	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	iamRoleResourceName := "aws_iam_role.test"
 	resourceName := "aws_appsync_datasource.test"
 
-	resource.Test(t, resource.TestCase{
+	// Keep this test Parallel as it takes considerably longer to run than any non-Elasticsearch tests.
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
 		Providers:    acctest.Providers,
