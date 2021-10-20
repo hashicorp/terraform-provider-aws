@@ -57,3 +57,20 @@ func statusImageBuilderState(ctx context.Context, conn *appstream.AppStream, nam
 		return imageBuilder, aws.StringValue(imageBuilder.State), nil
 	}
 }
+
+//statusUserAvailable fetches the user available
+func statusUserAvailable(ctx context.Context, conn *appstream.AppStream, username, authType string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		user, err := FindUserByUserNameAndAuthType(ctx, conn, username, authType)
+
+		if err != nil {
+			return nil, "Unknown", err
+		}
+
+		if user == nil {
+			return user, "NotFound", nil
+		}
+
+		return user, "AVAILABLE", nil
+	}
+}

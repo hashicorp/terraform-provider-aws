@@ -92,3 +92,25 @@ func FindImageBuilderByName(ctx context.Context, conn *appstream.AppStream, name
 
 	return result, nil
 }
+
+// FindUserByUserNameAndAuthType Retrieve a appstream fleet by Username and authentication type
+func FindUserByUserNameAndAuthType(ctx context.Context, conn *appstream.AppStream, username, authType string) (*appstream.User, error) {
+	input := &appstream.DescribeUsersInput{
+		AuthenticationType: aws.String(authType),
+	}
+
+	var user *appstream.User
+	resp, err := conn.DescribeUsersWithContext(ctx, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, userResp := range resp.Users {
+		if aws.StringValue(userResp.UserName) == username {
+			user = userResp
+		}
+	}
+
+	return user, nil
+}
