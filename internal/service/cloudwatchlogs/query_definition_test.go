@@ -20,7 +20,7 @@ import (
 
 func TestAccCloudWatchLogsQueryDefinition_basic(t *testing.T) {
 	var v cloudwatchlogs.QueryDefinition
-	resourceName := "aws_cloudwatch_query_definition.test"
+	resourceName := "aws_cloudwatchlogs_query_definition.test"
 	queryName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	expectedQueryString := `fields @timestamp, @message
@@ -70,7 +70,7 @@ func testAccQueryDefinitionImportStateID(v *cloudwatchlogs.QueryDefinition) reso
 
 func TestAccCloudWatchLogsQueryDefinition_disappears(t *testing.T) {
 	var v cloudwatchlogs.QueryDefinition
-	resourceName := "aws_cloudwatch_query_definition.test"
+	resourceName := "aws_cloudwatchlogs_query_definition.test"
 	queryName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -93,7 +93,7 @@ func TestAccCloudWatchLogsQueryDefinition_disappears(t *testing.T) {
 
 func TestAccCloudWatchLogsQueryDefinition_rename(t *testing.T) {
 	var v1, v2 cloudwatchlogs.QueryDefinition
-	resourceName := "aws_cloudwatch_query_definition.test"
+	resourceName := "aws_cloudwatchlogs_query_definition.test"
 	queryName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	updatedQueryName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -129,7 +129,7 @@ func TestAccCloudWatchLogsQueryDefinition_rename(t *testing.T) {
 
 func TestAccCloudWatchLogsQueryDefinition_logGroups(t *testing.T) {
 	var v1, v2 cloudwatchlogs.QueryDefinition
-	resourceName := "aws_cloudwatch_query_definition.test"
+	resourceName := "aws_cloudwatchlogs_query_definition.test"
 	queryName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -195,7 +195,7 @@ func testAccCheckQueryDefinitionDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchLogsConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_cloudwatch_query_definition" {
+		if rs.Type != "aws_cloudwatchlogs_query_definition" {
 			continue
 		}
 
@@ -214,7 +214,7 @@ func testAccCheckQueryDefinitionDestroy(s *terraform.State) error {
 
 func testAccQueryDefinitionConfig_Basic(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_query_definition" "test" {
+resource "aws_cloudwatchlogs_query_definition" "test" {
   name = %[1]q
 
   query_string = <<EOF
@@ -228,7 +228,7 @@ EOF
 
 func testAccQueryDefinitionConfig_LogGroups(rName string, count int) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_query_definition" "test" {
+resource "aws_cloudwatchlogs_query_definition" "test" {
   name = %[1]q
 
   log_group_names = aws_cloudwatchlogs_group.test[*].name

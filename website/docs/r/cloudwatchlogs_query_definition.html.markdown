@@ -1,19 +1,19 @@
 ---
 subcategory: "CloudWatch"
 layout: "aws"
-page_title: "AWS: aws_cloudwatch_query_definition"
+page_title: "AWS: aws_cloudwatchlogs_query_definition"
 description: |-
   Provides a CloudWatch Logs query definition resource.
 ---
 
-# Resource: aws_cloudwatch_query_definition
+# Resource: aws_cloudwatchlogs_query_definition
 
 Provides a CloudWatch Logs query definition resource.
 
 ## Example Usage
 
 ```terraform
-resource "aws_cloudwatch_query_definition" "example" {
+resource "aws_cloudwatchlogs_query_definition" "example" {
   name = "custom_query"
 
   log_group_names = [
@@ -48,5 +48,5 @@ In addition to all arguments above, the following attributes are exported:
 CloudWatch query definitions can be imported using the query definition ARN. The ARN can be found on the "Edit Query" page for the query in the AWS Console.
 
 ```
-$ terraform import aws_cloudwatch_query_definition.example arn:aws:logs:us-west-2:123456789012:query-definition:269951d7-6f75-496d-9d7b-6b7a5486bdbd
+$ terraform import aws_cloudwatchlogs_query_definition.example arn:aws:logs:us-west-2:123456789012:query-definition:269951d7-6f75-496d-9d7b-6b7a5486bdbd
 ```

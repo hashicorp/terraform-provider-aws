@@ -43,8 +43,8 @@ func init() {
 		},
 	})
 
-	resource.AddTestSweepers("aws_cloudwatch_query_definition", &resource.Sweeper{
-		Name: "aws_cloudwatch_query_definition",
+	resource.AddTestSweepers("aws_cloudwatchlogs_query_definition", &resource.Sweeper{
+		Name: "aws_cloudwatchlogs_query_definition",
 		F:    sweeplogQueryDefinitions,
 	})
 
