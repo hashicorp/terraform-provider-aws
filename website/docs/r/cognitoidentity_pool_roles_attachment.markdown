@@ -1,19 +1,19 @@
 ---
 subcategory: "Cognito"
 layout: "aws"
-page_title: "AWS: aws_cognito_identity_pool_roles_attachment"
+page_title: "AWS: aws_cognitoidentity_pool_roles_attachment"
 description: |-
   Provides an AWS Cognito Identity Pool Roles Attachment.
 ---
 
-# Resource: aws_cognito_identity_pool_roles_attachment
+# Resource: aws_cognitoidentity_pool_roles_attachment
 
 Provides an AWS Cognito Identity Pool Roles Attachment.
 
 ## Example Usage
 
 ```terraform
-resource "aws_cognito_identity_pool" "main" {
+resource "aws_cognitoidentity_pool" "main" {
   identity_pool_name               = "identity pool"
   allow_unauthenticated_identities = false
 
@@ -37,7 +37,7 @@ resource "aws_iam_role" "authenticated" {
       "Action": "sts:AssumeRoleWithWebIdentity",
       "Condition": {
         "StringEquals": {
-          "cognito-identity.amazonaws.com:aud": "${aws_cognito_identity_pool.main.id}"
+          "cognito-identity.amazonaws.com:aud": "${aws_cognitoidentity_pool.main.id}"
         },
         "ForAnyValue:StringLike": {
           "cognito-identity.amazonaws.com:amr": "authenticated"
@@ -73,8 +73,8 @@ resource "aws_iam_role_policy" "authenticated" {
 EOF
 }
 
-resource "aws_cognito_identity_pool_roles_attachment" "main" {
-  identity_pool_id = aws_cognito_identity_pool.main.id
+resource "aws_cognitoidentity_pool_roles_attachment" "main" {
+  identity_pool_id = aws_cognitoidentity_pool.main.id
 
   role_mapping {
     identity_provider         = "graph.facebook.com"
@@ -105,7 +105,7 @@ The Cognito Identity Pool Roles Attachment argument layout is a structure compos
 
 #### Role Mappings
 
-* `identity_provider` (Required) - A string identifying the identity provider, for example, "graph.facebook.com" or "cognito-idp.us-east-1.amazonaws.com/us-east-1_abcdefghi:app_client_id". Depends on `cognito_identity_providers` set on `aws_cognito_identity_pool` resource or a `aws_cognito_identity_provider` resource.
+* `identity_provider` (Required) - A string identifying the identity provider, for example, "graph.facebook.com" or "cognito-idp.us-east-1.amazonaws.com/us-east-1_abcdefghi:app_client_id". Depends on `cognito_identity_providers` set on `aws_cognitoidentity_pool` resource or a `aws_cognito_identity_provider` resource.
 * `ambiguous_role_resolution` (Optional) - Specifies the action to be taken if either no rules match the claim value for the Rules type, or there is no cognito:preferred_role claim and there are multiple cognito:roles matches for the Token type. `Required` if you specify Token or Rules as the Type.
 * `mapping_rule` (Optional) - The [Rules Configuration](#rules-configuration) to be used for mapping users to roles. You can specify up to 25 rules per identity provider. Rules are evaluated in order. The first one to match specifies the role.
 * `type` (Required) - The role mapping type.
@@ -131,5 +131,5 @@ In addition to all arguments above, the following attributes are exported:
 Cognito Identity Pool Roles Attachment can be imported using the Identity Pool id, e.g.,
 
 ```
-$ terraform import aws_cognito_identity_pool_roles_attachment.example <identity-pool-id>
+$ terraform import aws_cognitoidentity_pool_roles_attachment.example <identity-pool-id>
 ```
