@@ -18,7 +18,7 @@ func TestAccPrometheusAlertManagerDefinition_basic(t *testing.T) {
 	resourceName := "aws_prometheus_alert_manager_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(prometheusservice.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, prometheusservice.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAMPAlertManagerDefinitionDestroy,
@@ -56,7 +56,7 @@ func TestAccPrometheusAlertManagerDefinition_basic(t *testing.T) {
 func TestAccPrometheusAlertManagerDefinition_disappears(t *testing.T) {
 	resourceName := "aws_prometheus_alert_manager_definition.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(prometheusservice.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, prometheusservice.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAMPAlertManagerDefinitionDestroy,
