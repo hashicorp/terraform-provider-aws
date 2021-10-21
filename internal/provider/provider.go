@@ -12,8 +12,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/appautoscaling"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appconfig"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/applicationautoscaling"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appmesh"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
@@ -765,9 +765,9 @@ func Provider() *schema.Provider {
 			"aws_appconfig_environment":                  appconfig.ResourceEnvironment(),
 			"aws_appconfig_hosted_configuration_version": appconfig.ResourceHostedConfigurationVersion(),
 
-			"aws_appautoscaling_policy":           applicationautoscaling.ResourcePolicy(),
-			"aws_appautoscaling_scheduled_action": applicationautoscaling.ResourceScheduledAction(),
-			"aws_appautoscaling_target":           applicationautoscaling.ResourceTarget(),
+			"aws_appautoscaling_policy":           appautoscaling.ResourcePolicy(),
+			"aws_appautoscaling_scheduled_action": appautoscaling.ResourceScheduledAction(),
+			"aws_appautoscaling_target":           appautoscaling.ResourceTarget(),
 
 			"aws_appmesh_gateway_route":   appmesh.ResourceGatewayRoute(),
 			"aws_appmesh_mesh":            appmesh.ResourceMesh(),

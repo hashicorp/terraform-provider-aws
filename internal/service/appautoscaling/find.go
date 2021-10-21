@@ -1,4 +1,4 @@
-package applicationautoscaling
+package appautoscaling
 
 import (
 	"github.com/aws/aws-sdk-go/aws"

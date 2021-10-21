@@ -815,6 +815,8 @@ func awsServiceNameUpper(s string) (string, error) {
 	}
 
 	switch s {
+	case "appautoscaling":
+		return awsServiceNames["applicationautoscaling"], nil
 	case "cloudcontrol":
 		return awsServiceNames["cloudcontrolapi"], nil
 	case "cognitoidp":
