@@ -18,6 +18,7 @@ func TestFilterPermissions(t *testing.T) {
 	tableName := "Ladocmoc"
 
 	principal := &lakeformation.DataLakePrincipal{
+		//lintignore:AWSAT005
 		DataLakePrincipalIdentifier: aws.String(fmt.Sprintf("arn:aws-us-gov:iam::%s:role/Zepotiz-Bulgaria", accountID)),
 	}
 

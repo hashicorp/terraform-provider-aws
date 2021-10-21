@@ -7,29 +7,28 @@ For example, the EC2 API defines both [`DescribeInstancesPages`](https://docs.aw
 The `listpages` executable is called as follows:
 
 ```console
-$ go run main.go -function <function-name>[,<function-name>] <source-package>
+$ go run main.go -ListOps <function-name>[,<function-name>]
 ```
 
-* `<source-package>`: The full Go package name of the AWS Go SDK package to be extended, e.g. `github.com/aws/aws-sdk-go/service/cloudwatchevents`
 * `<function-name>`: Name of a function to wrap
 
 Optional Flags:
 
-* `-paginator`: Name of the pagination token field (default `NextToken`)
-* `-package`: Override the package name for the generated code (By default, uses the environment variable `$GOPACKAGE` set by `go generate`)
+* `-Paginator`: Name of the pagination token field (default `NextToken`)
+* `-Export`: Whether to export the generated functions
 
 To use with `go generate`, add the following directive to a Go file
 
 ```go
-//go:generate go run <relative-path-to-generators>/generators/listpages/main.go -function=<comma-separated-list-of-functions> <aws-sdk-package>
+//go:generate go run <relative-path-to-generators>/generate/listpages/main.go -ListOps=<comma-separated-list-of-functions>
 ```
 
-For example, in the file `aws/internal/service/cloudwatchevents/lister/list.go`
+For example, in the file `internal/service/cloudwatchevents/generate.go`
 
 ```go
-//go:generate go run ../../../generators/listpages/main.go -function=ListEventBuses,ListRules,ListTargetsByRule github.com/aws/aws-sdk-go/service/cloudwatchevents
+//go:generate go run -tags generate ../../generate/listpages/main.go -ListOps=ListEventBuses,ListRules,ListTargetsByRule
 
-package lister
+package cloudwatchevents
 ```
 
-Generates the file `aws/internal/service/cloudwatchevents/lister/list_pages_gen.go` with the functions `ListEventBusesPages`, `ListRulesPages`, and `ListTargetsByRulePages`.
+generates the file `internal/service/cloudwatchevents/list_pages_gen.go` with the functions `listEventBusesPages`, `listRulesPages`, and `listTargetsByRulePages` as well as their `...WithContext` equivalents.

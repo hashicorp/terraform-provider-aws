@@ -1397,7 +1397,7 @@ func testAccTargetRedshiftConfig(rName string) string {
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
 resource "aws_cloudwatch_event_target" "test" {
-  arn      = aws_redshift_cluster.default.arn
+  arn      = aws_redshift_cluster.test.arn
   rule     = aws_cloudwatch_event_rule.test.id
   role_arn = aws_iam_role.test.arn
 
@@ -1408,12 +1408,12 @@ resource "aws_cloudwatch_event_target" "test" {
     db_user        = "someUser"
   }
 }
-resource "aws_redshift_cluster" "default" {
+resource "aws_redshift_cluster" "test" {
   cluster_identifier                  = "tf-redshift-cluster-%d"
   database_name                       = "mydb"
   master_username                     = "foo_test"
   master_password                     = "Mustbe8characters"
-  node_type                           = "dc1.large"
+  node_type                           = "dc2.large"
   automated_snapshot_retention_period = 0
   allow_version_upgrade               = false
   skip_final_snapshot                 = true

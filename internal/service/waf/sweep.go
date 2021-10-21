@@ -144,7 +144,7 @@ func sweepByteMatchSet(region string) error {
 
 	input := &waf.ListByteMatchSetsInput{}
 
-	err = ListByteMatchSetsPages(conn, input, func(page *waf.ListByteMatchSetsOutput, lastPage bool) bool {
+	err = listByteMatchSetsPages(conn, input, func(page *waf.ListByteMatchSetsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -218,7 +218,7 @@ func sweepGeoMatchSet(region string) error {
 
 	input := &waf.ListGeoMatchSetsInput{}
 
-	err = ListGeoMatchSetsPages(conn, input, func(page *waf.ListGeoMatchSetsOutput, lastPage bool) bool {
+	err = listGeoMatchSetsPages(conn, input, func(page *waf.ListGeoMatchSetsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -292,7 +292,7 @@ func sweepIPSet(region string) error {
 
 	input := &waf.ListIPSetsInput{}
 
-	err = ListIPSetsPages(conn, input, func(page *waf.ListIPSetsOutput, lastPage bool) bool {
+	err = listIPSetsPages(conn, input, func(page *waf.ListIPSetsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -366,7 +366,7 @@ func sweepRateBasedRules(region string) error {
 
 	input := &waf.ListRateBasedRulesInput{}
 
-	err = ListRateBasedRulesPages(conn, input, func(page *waf.ListRateBasedRulesOutput, lastPage bool) bool {
+	err = listRateBasedRulesPages(conn, input, func(page *waf.ListRateBasedRulesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -440,7 +440,7 @@ func sweepRegexMatchSet(region string) error {
 
 	input := &waf.ListRegexMatchSetsInput{}
 
-	err = ListRegexMatchSetsPages(conn, input, func(page *waf.ListRegexMatchSetsOutput, lastPage bool) bool {
+	err = listRegexMatchSetsPages(conn, input, func(page *waf.ListRegexMatchSetsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -514,7 +514,7 @@ func sweepRegexPatternSet(region string) error {
 
 	input := &waf.ListRegexPatternSetsInput{}
 
-	err = ListRegexPatternSetsPages(conn, input, func(page *waf.ListRegexPatternSetsOutput, lastPage bool) bool {
+	err = listRegexPatternSetsPages(conn, input, func(page *waf.ListRegexPatternSetsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -588,7 +588,7 @@ func sweepRuleGroups(region string) error {
 
 	input := &waf.ListRuleGroupsInput{}
 
-	err = ListRuleGroupsPages(conn, input, func(page *waf.ListRuleGroupsOutput, lastPage bool) bool {
+	err = listRuleGroupsPages(conn, input, func(page *waf.ListRuleGroupsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -662,7 +662,7 @@ func sweepRules(region string) error {
 
 	input := &waf.ListRulesInput{}
 
-	err = ListRulesPages(conn, input, func(page *waf.ListRulesOutput, lastPage bool) bool {
+	err = listRulesPages(conn, input, func(page *waf.ListRulesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -740,7 +740,7 @@ func sweepSizeConstraintSet(region string) error {
 
 	input := &waf.ListSizeConstraintSetsInput{}
 
-	err = ListSizeConstraintSetsPages(conn, input, func(page *waf.ListSizeConstraintSetsOutput, lastPage bool) bool {
+	err = listSizeConstraintSetsPages(conn, input, func(page *waf.ListSizeConstraintSetsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -814,7 +814,7 @@ func sweepSQLInjectionMatchSet(region string) error {
 
 	input := &waf.ListSqlInjectionMatchSetsInput{}
 
-	err = ListSQLInjectionMatchSetsPages(conn, input, func(page *waf.ListSqlInjectionMatchSetsOutput, lastPage bool) bool {
+	err = listSQLInjectionMatchSetsPages(conn, input, func(page *waf.ListSqlInjectionMatchSetsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -888,7 +888,7 @@ func sweepWebACLs(region string) error {
 
 	input := &waf.ListWebACLsInput{}
 
-	err = ListWebACLsPages(conn, input, func(page *waf.ListWebACLsOutput, lastPage bool) bool {
+	err = listWebACLsPages(conn, input, func(page *waf.ListWebACLsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -966,7 +966,7 @@ func sweepXSSMatchSet(region string) error {
 
 	input := &waf.ListXssMatchSetsInput{}
 
-	err = ListXSSMatchSetsPages(conn, input, func(page *waf.ListXssMatchSetsOutput, lastPage bool) bool {
+	err = listXSSMatchSetsPages(conn, input, func(page *waf.ListXssMatchSetsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}

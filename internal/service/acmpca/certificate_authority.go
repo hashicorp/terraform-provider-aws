@@ -17,6 +17,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+const (
+	certificateAuthorityPermanentDeletionTimeInDaysMin     = 7
+	certificateAuthorityPermanentDeletionTimeInDaysMax     = 30
+	certificateAuthorityPermanentDeletionTimeInDaysDefault = certificateAuthorityPermanentDeletionTimeInDaysMax
+)
+
 func ResourceCertificateAuthority() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -26,7 +32,10 @@ func ResourceCertificateAuthority() *schema.Resource {
 		Delete: resourceCertificateAuthorityDelete,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				d.Set("permanent_deletion_time_in_days", 30)
+				d.Set(
+					"permanent_deletion_time_in_days",
+					certificateAuthorityPermanentDeletionTimeInDaysDefault,
+				)
 
 				return []*schema.ResourceData{d}, nil
 			},
@@ -258,10 +267,13 @@ func ResourceCertificateAuthority() *schema.Resource {
 				Computed: true,
 			},
 			"permanent_deletion_time_in_days": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      30,
-				ValidateFunc: validation.IntBetween(7, 30),
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  certificateAuthorityPermanentDeletionTimeInDaysDefault,
+				ValidateFunc: validation.IntBetween(
+					certificateAuthorityPermanentDeletionTimeInDaysMin,
+					certificateAuthorityPermanentDeletionTimeInDaysMax,
+				),
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),

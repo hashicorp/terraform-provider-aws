@@ -38,7 +38,7 @@ func waitCanaryReady(conn *synthetics.Synthetics, name string) (*synthetics.Cana
 	return nil, err
 }
 
-func waitCanaryStopped(conn *synthetics.Synthetics, name string) (*synthetics.Canary, error) {
+func waitCanaryStopped(conn *synthetics.Synthetics, name string) (*synthetics.Canary, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			synthetics.CanaryStateStopping,

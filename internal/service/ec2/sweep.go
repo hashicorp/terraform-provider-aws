@@ -1877,7 +1877,7 @@ func sweepVPCPeeringConnections(region string) error {
 				continue
 			}
 
-			if err := WaitForVPCPeeringConnectionDeletion(conn, id, 5*time.Minute); err != nil {
+			if err := WaitForVPCPeeringConnectionDeletion(conn, id, 5*time.Minute); err != nil { //nolint:gomnd
 				log.Printf("[ERROR] Error waiting for EC2 VPC Peering Connection (%s) to be deleted: %s", id, err)
 			}
 		}

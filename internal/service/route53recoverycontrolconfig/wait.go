@@ -123,7 +123,7 @@ func waitRoute53RecoveryControlConfigControlPanelDeleted(conn *r53rcc.Route53Rec
 	return nil, err
 }
 
-func waitRoute53RecoveryControlConfigSafetyRuleCreated(conn *r53rcc.Route53RecoveryControlConfig, safetyRuleArn string) (*r53rcc.DescribeSafetyRuleOutput, error) {
+func waitRoute53RecoveryControlConfigSafetyRuleCreated(conn *r53rcc.Route53RecoveryControlConfig, safetyRuleArn string) (*r53rcc.DescribeSafetyRuleOutput, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{r53rcc.StatusPending},
 		Target:     []string{r53rcc.StatusDeployed},

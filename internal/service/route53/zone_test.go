@@ -480,7 +480,7 @@ func testAccCreateRandomRoute53RecordsInZoneIdWithProvider(providerF func() *sch
 					ResourceRecords: []*route53.ResourceRecord{
 						{Value: aws.String(fmt.Sprintf("random.%s", *zone.HostedZone.Name))},
 					},
-					TTL: aws.Int64(int64(30)),
+					TTL: aws.Int64(30),
 				},
 			})
 		}

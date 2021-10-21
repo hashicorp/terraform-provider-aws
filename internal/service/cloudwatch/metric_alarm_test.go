@@ -205,6 +205,18 @@ func TestAccCloudWatchMetricAlarm_treatMissingData(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "treat_missing_data", "breaching"),
 				),
 			},
+			{
+				Config: testAccMetricAlarmTreatMissingDataConfigNoAttr(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchMetricAlarmExists(resourceName, &alarm),
+					resource.TestCheckResourceAttr(resourceName, "treat_missing_data", "missing"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -528,6 +540,27 @@ resource "aws_cloudwatch_metric_alarm" "test" {
   threshold                 = "80"
   alarm_description         = "This metric monitors ec2 cpu utilization"
   treat_missing_data        = "breaching"
+  insufficient_data_actions = []
+
+  dimensions = {
+    InstanceId = "i-abc123"
+  }
+}
+`, rName)
+}
+
+func testAccMetricAlarmTreatMissingDataConfigNoAttr(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_metric_alarm" "test" {
+  alarm_name                = "%s"
+  comparison_operator       = "GreaterThanOrEqualToThreshold"
+  evaluation_periods        = "2"
+  metric_name               = "CPUUtilization"
+  namespace                 = "AWS/EC2"
+  period                    = "120"
+  statistic                 = "Average"
+  threshold                 = "80"
+  alarm_description         = "This metric monitors ec2 cpu utilization"
   insufficient_data_actions = []
 
   dimensions = {

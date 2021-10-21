@@ -25,7 +25,7 @@ resource "aws_route53_record" "www" {
 ```
 
 ### Weighted routing policy
-Other routing policies are configured similarly. See [AWS Route53 Developer Guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-policy.html) for details.
+Other routing policies are configured similarly. See [Amazon Route 53 Developer Guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-policy.html) for details.
 
 ```terraform
 resource "aws_route53_record" "www-dev" {
@@ -58,7 +58,7 @@ resource "aws_route53_record" "www-live" {
 ```
 
 ### Alias record
-See [related part of AWS Route53 Developer Guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/resource-record-sets-choosing-alias-non-alias.html)
+See [related part of Amazon Route 53 Developer Guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/resource-record-sets-choosing-alias-non-alias.html)
 to understand differences between alias and non-alias records.
 
 TTL for all alias records is [60 seconds](https://aws.amazon.com/route53/faqs/#dns_failover_do_i_need_to_adjust),

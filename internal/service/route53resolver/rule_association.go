@@ -18,6 +18,11 @@ const (
 	RuleAssociationStatusDeleted = "DELETED"
 )
 
+const (
+	ruleAssociationCreatedDefaultTimeout = 10 * time.Minute
+	ruleAssociationDeletedDefaultTimeout = 10 * time.Minute
+)
+
 func ResourceRuleAssociation() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceRuleAssociationCreate,
@@ -28,8 +33,8 @@ func ResourceRuleAssociation() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(10 * time.Minute),
-			Delete: schema.DefaultTimeout(10 * time.Minute),
+			Create: schema.DefaultTimeout(ruleAssociationCreatedDefaultTimeout),
+			Delete: schema.DefaultTimeout(ruleAssociationDeletedDefaultTimeout),
 		},
 
 		Schema: map[string]*schema.Schema{

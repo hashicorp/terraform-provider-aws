@@ -20,6 +20,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+const (
+	fleetCreatedDefaultTimeout = 70 * time.Minute
+	FleetDeletedDefaultTimeout = 20 * time.Minute
+)
+
 func ResourceFleet() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceFleetCreate,
@@ -28,8 +33,8 @@ func ResourceFleet() *schema.Resource {
 		Delete: resourceFleetDelete,
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(70 * time.Minute),
-			Delete: schema.DefaultTimeout(20 * time.Minute),
+			Create: schema.DefaultTimeout(fleetCreatedDefaultTimeout),
+			Delete: schema.DefaultTimeout(FleetDeletedDefaultTimeout),
 		},
 
 		Schema: map[string]*schema.Schema{
