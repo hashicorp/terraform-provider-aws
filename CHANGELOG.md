@@ -18,6 +18,7 @@ BUG FIXES:
 * resource/aws_cloudwatch_metric_alarm: Fix imported 'treat_missing_data' diff ([#21363](https://github.com/hashicorp/terraform-provider-aws/issues/21363))
 * resource/aws_codedeploy_deployment_group: Correctly update `deployment_group_name` argument ([#21362](https://github.com/hashicorp/terraform-provider-aws/issues/21362))
 * resource/aws_db_event_subscription: Fix adding new `event_categories` to existing resource ([#21338](https://github.com/hashicorp/terraform-provider-aws/issues/21338))
+* resource/aws_flow_log: parameters of destination_options block now properly force resource rebuild ([#21434](https://github.com/hashicorp/terraform-provider-aws/issues/21434))
 * resource/aws_kinesisanalyticsv2_application: Correctly update `run_configuration` argument ([#21303](https://github.com/hashicorp/terraform-provider-aws/issues/21303))
 
 ## 3.63.0 (October 14, 2021)
