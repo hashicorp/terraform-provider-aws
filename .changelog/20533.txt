@@ -3,5 +3,5 @@ resource/aws_kms_key: Add `multi_region` argument
 ```
 
 ```release-note:enhancement
-data-source/aws_kms_key: Add `multi_region` attribute
+data-source/aws_kms_key: Add `multi_region` and `multi_region_configuration` attributes
 ```

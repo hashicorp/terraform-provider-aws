@@ -73,6 +73,50 @@ func DataSourceKey() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
+			"multi_region_configuration": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"multi_region_key_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"primary_key": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"arn": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"region": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"replica_keys": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"arn": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"region": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"origin": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -103,25 +147,91 @@ func dataSourceKeyRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error reading KMS Key (%s): %w", keyID, err)
 	}
 
-	d.SetId(aws.StringValue(output.KeyMetadata.KeyId))
-	d.Set("arn", output.KeyMetadata.Arn)
-	d.Set("aws_account_id", output.KeyMetadata.AWSAccountId)
-	d.Set("creation_date", aws.TimeValue(output.KeyMetadata.CreationDate).Format(time.RFC3339))
-	d.Set("customer_master_key_spec", output.KeyMetadata.CustomerMasterKeySpec)
-	if output.KeyMetadata.DeletionDate != nil {
-		d.Set("deletion_date", aws.TimeValue(output.KeyMetadata.DeletionDate).Format(time.RFC3339))
+	keyMetadata := output.KeyMetadata
+	d.SetId(aws.StringValue(keyMetadata.KeyId))
+	d.Set("arn", keyMetadata.Arn)
+	d.Set("aws_account_id", keyMetadata.AWSAccountId)
+	d.Set("creation_date", aws.TimeValue(keyMetadata.CreationDate).Format(time.RFC3339))
+	d.Set("customer_master_key_spec", keyMetadata.CustomerMasterKeySpec)
+	if keyMetadata.DeletionDate != nil {
+		d.Set("deletion_date", aws.TimeValue(keyMetadata.DeletionDate).Format(time.RFC3339))
 	}
-	d.Set("description", output.KeyMetadata.Description)
-	d.Set("enabled", output.KeyMetadata.Enabled)
-	d.Set("expiration_model", output.KeyMetadata.ExpirationModel)
-	d.Set("key_manager", output.KeyMetadata.KeyManager)
-	d.Set("key_state", output.KeyMetadata.KeyState)
-	d.Set("key_usage", output.KeyMetadata.KeyUsage)
-	d.Set("multi_region", output.KeyMetadata.MultiRegion)
-	d.Set("origin", output.KeyMetadata.Origin)
-	if output.KeyMetadata.ValidTo != nil {
-		d.Set("valid_to", aws.TimeValue(output.KeyMetadata.ValidTo).Format(time.RFC3339))
+	d.Set("description", keyMetadata.Description)
+	d.Set("enabled", keyMetadata.Enabled)
+	d.Set("expiration_model", keyMetadata.ExpirationModel)
+	d.Set("key_manager", keyMetadata.KeyManager)
+	d.Set("key_state", keyMetadata.KeyState)
+	d.Set("key_usage", keyMetadata.KeyUsage)
+	d.Set("multi_region", keyMetadata.MultiRegion)
+	if keyMetadata.MultiRegionConfiguration != nil {
+		if err := d.Set("multi_region_configuration", []interface{}{flattenMultiRegionConfiguration(keyMetadata.MultiRegionConfiguration)}); err != nil {
+			return fmt.Errorf("error setting multi_region_configuration: %w", err)
+		}
+	} else {
+		d.Set("multi_region_configuration", nil)
+	}
+	d.Set("origin", keyMetadata.Origin)
+	if keyMetadata.ValidTo != nil {
+		d.Set("valid_to", aws.TimeValue(keyMetadata.ValidTo).Format(time.RFC3339))
 	}
 
 	return nil
+}
+
+func flattenMultiRegionConfiguration(apiObject *kms.MultiRegionConfiguration) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.MultiRegionKeyType; v != nil {
+		tfMap["multi_region_key_type"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.PrimaryKey; v != nil {
+		tfMap["primary_key"] = []interface{}{flattenMultiRegionKey(v)}
+	}
+
+	if v := apiObject.ReplicaKeys; v != nil {
+		tfMap["replica_keys"] = flattenMultiRegionKeys(v)
+	}
+
+	return tfMap
+}
+
+func flattenMultiRegionKey(apiObject *kms.MultiRegionKey) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Arn; v != nil {
+		tfMap["arn"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Region; v != nil {
+		tfMap["region"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenMultiRegionKeys(apiObjects []*kms.MultiRegionKey) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenMultiRegionKey(apiObject))
+	}
+
+	return tfList
 }
