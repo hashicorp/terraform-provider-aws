@@ -82,9 +82,16 @@ func sweepAPIDestination(region string) error {
 	var apiDestinations []*events.ApiDestination
 	for {
 		output, err := conn.ListApiDestinations(input)
-		if err != nil {
-			return err
+
+		if sweep.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping CloudWatch Events Api Destination sweep for %s: %s", region, err)
+			return nil
 		}
+
+		if err != nil {
+			return fmt.Errorf("Error retrieving CloudWatch Events Api Destinations: %w", err)
+		}
+
 		apiDestinations = append(apiDestinations, output.ApiDestinations...)
 
 		if aws.StringValue(output.NextToken) == "" {
@@ -121,11 +128,13 @@ func sweepArchives(region string) error {
 
 	for {
 		output, err := conn.ListArchives(input)
+
+		if sweep.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping CloudWatch Events archive sweep for %s: %s", region, err)
+			return nil
+		}
+
 		if err != nil {
-			if sweep.SkipSweepError(err) {
-				log.Printf("[WARN] Skipping CloudWatch Events archive sweep for %s: %s", region, err)
-				return nil
-			}
 			return fmt.Errorf("Error retrieving CloudWatch Events archive: %w", err)
 		}
 
@@ -220,8 +229,14 @@ func sweepConnection(region string) error {
 	var connections []*events.Connection
 	for {
 		output, err := conn.ListConnections(input)
+
+		if sweep.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping CloudWatch Events Connection sweep for %s: %s", region, err)
+			return nil
+		}
+
 		if err != nil {
-			return err
+			return fmt.Errorf("Error retrieving CloudWatch Events Connections: %w", err)
 		}
 
 		if aws.StringValue(output.NextToken) == "" {
