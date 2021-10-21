@@ -1,17 +1,17 @@
 package prometheus_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/prometheusservice"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfprometheus "github.com/hashicorp/terraform-provider-aws/internal/service/prometheus"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccPrometheusAlertManagerDefinition_basic(t *testing.T) {
@@ -73,6 +73,29 @@ func TestAccPrometheusAlertManagerDefinition_disappears(t *testing.T) {
 	})
 }
 
+func testAccCheckAlertManagerDefinitionExists(n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No Prometheus Alert Manager Definition ID is set")
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).PrometheusConn
+
+		_, err := tfprometheus.FindAlertManagerDefinitionByID(context.TODO(), conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}
+}
+
 func testAccCheckAMPAlertManagerDefinitionDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).PrometheusConn
 
@@ -81,16 +104,17 @@ func testAccCheckAMPAlertManagerDefinitionDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := conn.DescribeAlertManagerDefinition(&prometheusservice.DescribeAlertManagerDefinitionInput{
-			WorkspaceId: aws.String(rs.Primary.ID),
-		})
-		if tfawserr.ErrMessageContains(err, prometheusservice.ErrCodeResourceNotFoundException, "") {
+		_, err := tfprometheus.FindAlertManagerDefinitionByID(context.TODO(), conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
 			continue
 		}
 
 		if err != nil {
-			return fmt.Errorf("error reading Prometheus Alert manager definition (%s): %w", rs.Primary.ID, err)
+			return err
 		}
+
+		return fmt.Errorf("Prometheus Alert Manager Definition %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -123,35 +147,7 @@ resource "aws_prometheus_workspace" "test" {
 resource "aws_prometheus_alert_manager_definition" "test" {
   workspace_id = aws_prometheus_workspace.test.id
   definition   = <<EOF
-%sEOF
+%[1]sEOF
 }
 `, definition)
-}
-
-func testAccCheckAlertManagerDefinitionExists(n string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No AMP alert manager definition id is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).PrometheusConn
-
-		req := &prometheusservice.DescribeAlertManagerDefinitionInput{
-			WorkspaceId: aws.String(rs.Primary.ID),
-		}
-		describe, err := conn.DescribeAlertManagerDefinition(req)
-		if err != nil {
-			return err
-		}
-		if describe == nil {
-			return fmt.Errorf("Got nil account ?!")
-		}
-
-		return nil
-	}
 }
