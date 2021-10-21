@@ -1396,15 +1396,9 @@ func testAccTargetRedshiftConfig(rName string) string {
 	return acctest.ConfigCompose(testAccTargetECSBaseConfig(rName),
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
-<<<<<<< HEAD
-resource "aws_cloudwatch_event_target" "test" {
-  arn      = aws_redshift_cluster.test.arn
-  rule     = aws_cloudwatch_event_rule.test.id
-=======
 resource "aws_cloudwatchevents_target" "test" {
   arn      = aws_redshift_cluster.default.arn
   rule     = aws_cloudwatchevents_rule.test.id
->>>>>>> 08e787f07b (cloudwatchevents: Align resource names with service package)
   role_arn = aws_iam_role.test.arn
 
   redshift_target {
