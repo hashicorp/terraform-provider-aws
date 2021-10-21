@@ -1374,7 +1374,8 @@ func Provider() *schema.Provider {
 			"aws_pinpoint_gcm_channel":               pinpoint.ResourceGCMChannel(),
 			"aws_pinpoint_sms_channel":               pinpoint.ResourceSMSChannel(),
 
-			"aws_prometheus_workspace": prometheus.ResourceWorkspace(),
+			"aws_prometheus_workspace":                prometheus.ResourceWorkspace(),
+			"aws_prometheus_alert_manager_definition": prometheus.ResourceAlertManagerDefinition(),
 
 			"aws_qldb_ledger": qldb.ResourceLedger(),
 
