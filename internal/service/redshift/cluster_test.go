@@ -1095,8 +1095,8 @@ resource "aws_subnet" "test3" {
 }
 
 resource "aws_redshift_subnet_group" "test" {
-  name        = %[1]q
-  subnet_ids  = [aws_subnet.test1.id, aws_subnet.test2.id, aws_subnet.test3.id]
+  name       = %[1]q
+  subnet_ids = [aws_subnet.test1.id, aws_subnet.test2.id, aws_subnet.test3.id]
 }
 
 resource "aws_redshift_cluster" "test" {
