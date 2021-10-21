@@ -36,7 +36,7 @@ func statusAlertManager(ctx context.Context, conn *prometheusservice.PrometheusS
 	}
 }
 
-// statusAlertManagerDeleted fetches the Workspace and its Status
+// statusAlertManagerDeleted fetches the AlertManager and its Status
 func statusAlertManagerDeleted(ctx context.Context, conn *prometheusservice.PrometheusService, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &prometheusservice.DescribeAlertManagerDefinitionInput{

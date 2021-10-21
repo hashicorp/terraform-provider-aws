@@ -38,18 +38,17 @@ func waitAlertManagerActive(ctx context.Context, conn *prometheusservice.Prometh
 }
 
 // waitAlertManagerDeleted waits for a AlertManager to return "Deleted"
-func waitAlertManagerDeleted(ctx context.Context, conn *prometheusservice.PrometheusService, arn string) (*prometheusservice.WorkspaceSummary, error) {
+func waitAlertManagerDeleted(ctx context.Context, conn *prometheusservice.PrometheusService, arn string) (*prometheusservice.AlertManagerDefinitionDescription, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{prometheusservice.AlertManagerDefinitionStatusCodeDeleting},
 		Target:  []string{resourceStatusDeleted},
 		Refresh: statusAlertManagerDeleted(ctx, conn, arn),
-		Timeout: workspaceTimeout,
+		Timeout: alertManagerTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
 
-	// TODO
-	if v, ok := outputRaw.(*prometheusservice.WorkspaceSummary); ok {
+	if v, ok := outputRaw.(*prometheusservice.AlertManagerDefinitionDescription); ok {
 		return v, err
 	}
 
