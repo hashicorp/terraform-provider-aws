@@ -1,4 +1,4 @@
-package applicationautoscaling
+package appautoscaling
 
 import (
 	"fmt"

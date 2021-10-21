@@ -1,4 +1,4 @@
-package applicationautoscaling_test
+package appautoscaling_test
 
 import (
 	"fmt"
