@@ -82,8 +82,7 @@ func ResourceKey() *schema.Resource {
 			"multi_region": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				ForceNew: true,
-				Default:  false,
+				Computed: true,
 			},
 			"policy": {
 				Type:             schema.TypeString,
@@ -107,11 +106,14 @@ func resourceKeyCreate(d *schema.ResourceData, meta interface{}) error {
 		BypassPolicyLockoutSafetyCheck: aws.Bool(d.Get("bypass_policy_lockout_safety_check").(bool)),
 		CustomerMasterKeySpec:          aws.String(d.Get("customer_master_key_spec").(string)),
 		KeyUsage:                       aws.String(d.Get("key_usage").(string)),
-		MultiRegion:                    aws.Bool(d.Get("multi_region").(bool)),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("multi_region"); ok {
+		input.MultiRegion = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("policy"); ok {

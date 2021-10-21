@@ -62,8 +62,6 @@ func TestAccKMSKey_multiRegion(t *testing.T) {
 				Config: testAccKey_multiRegion(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(resourceName, &key),
-					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
-					resource.TestCheckResourceAttr("aws_kms_key.test", "enable_key_rotation", "false"),
 					resource.TestCheckResourceAttr(resourceName, "multi_region", "true"),
 				),
 			},
@@ -290,8 +288,7 @@ func TestAccKMSKey_isEnabled(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(resourceName, &key1),
 					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
-					testAccCheckKeyIsEnabled(&key1, true),
-					resource.TestCheckResourceAttr("aws_kms_key.test", "enable_key_rotation", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_key_rotation", "true"),
 				),
 			},
 			{
@@ -305,7 +302,6 @@ func TestAccKMSKey_isEnabled(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(resourceName, &key2),
 					resource.TestCheckResourceAttr(resourceName, "is_enabled", "false"),
-					testAccCheckKeyIsEnabled(&key2, false),
 					resource.TestCheckResourceAttr(resourceName, "enable_key_rotation", "false"),
 				),
 			},
@@ -314,7 +310,6 @@ func TestAccKMSKey_isEnabled(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(resourceName, &key3),
 					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
-					testAccCheckKeyIsEnabled(&key3, true),
 					resource.TestCheckResourceAttr(resourceName, "enable_key_rotation", "true"),
 				),
 			},
@@ -450,16 +445,6 @@ func testAccCheckKeyExists(name string, key *kms.KeyMetadata) resource.TestCheck
 		}
 
 		*key = *(outputRaw.(*kms.KeyMetadata))
-
-		return nil
-	}
-}
-
-func testAccCheckKeyIsEnabled(key *kms.KeyMetadata, isEnabled bool) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if got, want := aws.BoolValue(key.Enabled), isEnabled; got != want {
-			return fmt.Errorf("Expected key %q to have is_enabled=%t, given %t", aws.StringValue(key.Arn), want, got)
-		}
 
 		return nil
 	}
