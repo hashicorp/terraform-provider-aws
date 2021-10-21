@@ -52,7 +52,6 @@ func ResourceKey() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(7, 30),
 			},
-
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,

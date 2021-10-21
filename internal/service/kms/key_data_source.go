@@ -8,26 +8,13 @@ import (
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
 func DataSourceKey() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceKeyRead,
 		Schema: map[string]*schema.Schema{
-			"key_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validKey,
-			},
-			"multi_region": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"grant_tokens": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -37,6 +24,10 @@ func DataSourceKey() *schema.Resource {
 				Computed: true,
 			},
 			"creation_date": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"customer_master_key_spec": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -56,6 +47,16 @@ func DataSourceKey() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"grant_tokens": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"key_id": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validKey,
+			},
 			"key_manager": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -68,8 +69,8 @@ func DataSourceKey() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"customer_master_key_spec": {
-				Type:     schema.TypeString,
+			"multi_region": {
+				Type:     schema.TypeBool,
 				Computed: true,
 			},
 			"origin": {
@@ -86,23 +87,27 @@ func DataSourceKey() *schema.Resource {
 
 func dataSourceKeyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KMSConn
-	keyId := d.Get("key_id")
-	var grantTokens []*string
-	if v, ok := d.GetOk("grant_tokens"); ok {
-		grantTokens = aws.StringSlice(v.([]string))
-	}
+
+	keyID := d.Get("key_id").(string)
 	input := &kms.DescribeKeyInput{
-		KeyId:       aws.String(keyId.(string)),
-		GrantTokens: grantTokens,
+		KeyId: aws.String(keyID),
 	}
+
+	if v, ok := d.GetOk("grant_tokens"); ok && len(v.([]interface{})) > 0 {
+		input.GrantTokens = flex.ExpandStringList(v.([]interface{}))
+	}
+
 	output, err := conn.DescribeKey(input)
+
 	if err != nil {
-		return fmt.Errorf("error while describing key [%s]: %w", keyId, err)
+		return fmt.Errorf("error reading KMS Key (%s): %w", keyID, err)
 	}
+
 	d.SetId(aws.StringValue(output.KeyMetadata.KeyId))
 	d.Set("arn", output.KeyMetadata.Arn)
 	d.Set("aws_account_id", output.KeyMetadata.AWSAccountId)
 	d.Set("creation_date", aws.TimeValue(output.KeyMetadata.CreationDate).Format(time.RFC3339))
+	d.Set("customer_master_key_spec", output.KeyMetadata.CustomerMasterKeySpec)
 	if output.KeyMetadata.DeletionDate != nil {
 		d.Set("deletion_date", aws.TimeValue(output.KeyMetadata.DeletionDate).Format(time.RFC3339))
 	}
@@ -113,10 +118,10 @@ func dataSourceKeyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("key_state", output.KeyMetadata.KeyState)
 	d.Set("key_usage", output.KeyMetadata.KeyUsage)
 	d.Set("multi_region", output.KeyMetadata.MultiRegion)
-	d.Set("customer_master_key_spec", output.KeyMetadata.CustomerMasterKeySpec)
 	d.Set("origin", output.KeyMetadata.Origin)
 	if output.KeyMetadata.ValidTo != nil {
 		d.Set("valid_to", aws.TimeValue(output.KeyMetadata.ValidTo).Format(time.RFC3339))
 	}
+
 	return nil
 }
