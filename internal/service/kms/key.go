@@ -35,13 +35,11 @@ func ResourceKey() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"bypass_policy_lockout_safety_check": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
-
 			"customer_master_key_spec": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -49,7 +47,6 @@ func ResourceKey() *schema.Resource {
 				Default:      kms.CustomerMasterKeySpecSymmetricDefault,
 				ValidateFunc: validation.StringInSlice(kms.CustomerMasterKeySpec_Values(), false),
 			},
-
 			"deletion_window_in_days": {
 				Type:         schema.TypeInt,
 				Optional:     true,
@@ -62,24 +59,20 @@ func ResourceKey() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.StringLenBetween(0, 8192),
 			},
-
 			"enable_key_rotation": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
-
 			"is_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
 			},
-
 			"key_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"key_usage": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -87,7 +80,12 @@ func ResourceKey() *schema.Resource {
 				Default:      kms.KeyUsageTypeEncryptDecrypt,
 				ValidateFunc: validation.StringInSlice(kms.KeyUsageType_Values(), false),
 			},
-
+			"multi_region": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
+				Default:  false,
+			},
 			"policy": {
 				Type:             schema.TypeString,
 				Optional:         true,
@@ -95,7 +93,6 @@ func ResourceKey() *schema.Resource {
 				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
 				ValidateFunc:     validation.StringIsJSON,
 			},
-
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
@@ -111,6 +108,7 @@ func resourceKeyCreate(d *schema.ResourceData, meta interface{}) error {
 		BypassPolicyLockoutSafetyCheck: aws.Bool(d.Get("bypass_policy_lockout_safety_check").(bool)),
 		CustomerMasterKeySpec:          aws.String(d.Get("customer_master_key_spec").(string)),
 		KeyUsage:                       aws.String(d.Get("key_usage").(string)),
+		MultiRegion:                    aws.Bool(d.Get("multi_region").(bool)),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -194,6 +192,7 @@ func resourceKeyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("is_enabled", key.metadata.Enabled)
 	d.Set("key_id", key.metadata.KeyId)
 	d.Set("key_usage", key.metadata.KeyUsage)
+	d.Set("multi_region", key.metadata.MultiRegion)
 	d.Set("policy", key.policy)
 
 	tags := key.tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)

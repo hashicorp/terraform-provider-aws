@@ -19,6 +19,10 @@ func DataSourceKey() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validKey,
 			},
+			"multi_region": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			"grant_tokens": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -108,6 +112,7 @@ func dataSourceKeyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("key_manager", output.KeyMetadata.KeyManager)
 	d.Set("key_state", output.KeyMetadata.KeyState)
 	d.Set("key_usage", output.KeyMetadata.KeyUsage)
+	d.Set("multi_region", output.KeyMetadata.MultiRegion)
 	d.Set("customer_master_key_spec", output.KeyMetadata.CustomerMasterKeySpec)
 	d.Set("origin", output.KeyMetadata.Origin)
 	if output.KeyMetadata.ValidTo != nil {
