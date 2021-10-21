@@ -56,5 +56,6 @@ data "aws_kms_key" "by_key_arn" {
 * `key_state`: The state of the key
 * `key_usage`: Specifies the intended use of the key
 * `customer_master_key_spec`: Specifies whether the key contains a symmetric key or an asymmetric key pair and the encryption algorithms or signing algorithms that the key supports
+* `multi_region`: Indicates whether the KMS key is a multi-Region (`true`) or regional (`false`) key.
 * `origin`: When this value is `AWS_KMS`, AWS KMS created the key material. When this value is `EXTERNAL`, the key material was imported from your existing key management infrastructure or the CMK lacks key material
 * `valid_to`: The time at which the imported key material expires. This value is present only when `origin` is `EXTERNAL` and whose `expiration_model` is `KEY_MATERIAL_EXPIRES`, otherwise this value is 0

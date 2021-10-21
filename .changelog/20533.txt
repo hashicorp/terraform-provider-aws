@@ -1,3 +1,7 @@
 ```release-note:enhancement
-resource/aws_kms_key: Add multi-region argument
+resource/aws_kms_key: Add `multi_region` argument
+```
+
+```release-note:enhancement
+data-source/aws_kms_key: Add `multi_region` attribute
 ```
