@@ -146,8 +146,7 @@ resource "aws_prometheus_workspace" "test" {
 }
 resource "aws_prometheus_alert_manager_definition" "test" {
   workspace_id = aws_prometheus_workspace.test.id
-  definition   = <<EOF
-%[1]sEOF
+  definition   = %[1]q
 }
 `, definition)
 }
