@@ -415,10 +415,14 @@ func Provider() *schema.Provider {
 			"aws_docdb_engine_version":        docdb.DataSourceEngineVersion(),
 			"aws_docdb_orderable_db_instance": docdb.DataSourceOrderableDBInstance(),
 
-			"aws_dx_connection": directconnect.DataSourceConnection(),
-			"aws_dx_gateway":    directconnect.DataSourceGateway(),
-			"aws_dx_location":   directconnect.DataSourceLocation(),
-			"aws_dx_locations":  directconnect.DataSourceLocations(),
+			"aws_directconnect_connection": directconnect.DataSourceConnection(),
+			"aws_directconnect_gateway":    directconnect.DataSourceGateway(),
+			"aws_directconnect_location":   directconnect.DataSourceLocation(),
+			"aws_directconnect_locations":  directconnect.DataSourceLocations(),
+			"aws_dx_connection":            directconnect.DataSourceConnection(), // backward compatible alias
+			"aws_dx_gateway":               directconnect.DataSourceGateway(),    // backward compatible alias
+			"aws_dx_location":              directconnect.DataSourceLocation(),   // backward compatible alias
+			"aws_dx_locations":             directconnect.DataSourceLocations(),  // backward compatible alias
 
 			"aws_directory_service_directory": ds.DataSourceDirectory(),
 
@@ -1016,24 +1020,42 @@ func Provider() *schema.Provider {
 
 			"aws_devicefarm_project": devicefarm.ResourceProject(),
 
-			"aws_dx_bgp_peer":                                  directconnect.ResourceBGPPeer(),
-			"aws_dx_connection":                                directconnect.ResourceConnection(),
-			"aws_dx_connection_association":                    directconnect.ResourceConnectionAssociation(),
-			"aws_dx_connection_confirmation":                   directconnect.ResourceConnectionConfirmation(),
-			"aws_dx_gateway":                                   directconnect.ResourceGateway(),
-			"aws_dx_gateway_association":                       directconnect.ResourceGatewayAssociation(),
-			"aws_dx_gateway_association_proposal":              directconnect.ResourceGatewayAssociationProposal(),
-			"aws_dx_hosted_connection":                         directconnect.ResourceHostedConnection(),
-			"aws_dx_hosted_private_virtual_interface":          directconnect.ResourceHostedPrivateVirtualInterface(),
-			"aws_dx_hosted_private_virtual_interface_accepter": directconnect.ResourceHostedPrivateVirtualInterfaceAccepter(),
-			"aws_dx_hosted_public_virtual_interface":           directconnect.ResourceHostedPublicVirtualInterface(),
-			"aws_dx_hosted_public_virtual_interface_accepter":  directconnect.ResourceHostedPublicVirtualInterfaceAccepter(),
-			"aws_dx_hosted_transit_virtual_interface":          directconnect.ResourceHostedTransitVirtualInterface(),
-			"aws_dx_hosted_transit_virtual_interface_accepter": directconnect.ResourceHostedTransitVirtualInterfaceAccepter(),
-			"aws_dx_lag":                       directconnect.ResourceLag(),
-			"aws_dx_private_virtual_interface": directconnect.ResourcePrivateVirtualInterface(),
-			"aws_dx_public_virtual_interface":  directconnect.ResourcePublicVirtualInterface(),
-			"aws_dx_transit_virtual_interface": directconnect.ResourceTransitVirtualInterface(),
+			"aws_directconnect_bgp_peer":                                  directconnect.ResourceBGPPeer(),
+			"aws_directconnect_connection":                                directconnect.ResourceConnection(),
+			"aws_directconnect_connection_association":                    directconnect.ResourceConnectionAssociation(),
+			"aws_directconnect_connection_confirmation":                   directconnect.ResourceConnectionConfirmation(),
+			"aws_directconnect_gateway":                                   directconnect.ResourceGateway(),
+			"aws_directconnect_gateway_association":                       directconnect.ResourceGatewayAssociation(),
+			"aws_directconnect_gateway_association_proposal":              directconnect.ResourceGatewayAssociationProposal(),
+			"aws_directconnect_hosted_connection":                         directconnect.ResourceHostedConnection(),
+			"aws_directconnect_hosted_private_virtual_interface":          directconnect.ResourceHostedPrivateVirtualInterface(),
+			"aws_directconnect_hosted_private_virtual_interface_accepter": directconnect.ResourceHostedPrivateVirtualInterfaceAccepter(),
+			"aws_directconnect_hosted_public_virtual_interface":           directconnect.ResourceHostedPublicVirtualInterface(),
+			"aws_directconnect_hosted_public_virtual_interface_accepter":  directconnect.ResourceHostedPublicVirtualInterfaceAccepter(),
+			"aws_directconnect_hosted_transit_virtual_interface":          directconnect.ResourceHostedTransitVirtualInterface(),
+			"aws_directconnect_hosted_transit_virtual_interface_accepter": directconnect.ResourceHostedTransitVirtualInterfaceAccepter(),
+			"aws_directconnect_lag":                                       directconnect.ResourceLag(),
+			"aws_directconnect_private_virtual_interface":                 directconnect.ResourcePrivateVirtualInterface(),
+			"aws_directconnect_public_virtual_interface":                  directconnect.ResourcePublicVirtualInterface(),
+			"aws_directconnect_transit_virtual_interface":                 directconnect.ResourceTransitVirtualInterface(),
+			"aws_dx_bgp_peer":                                             directconnect.ResourceBGPPeer(),                               // backward compatible alias
+			"aws_dx_connection":                                           directconnect.ResourceConnection(),                            // backward compatible alias
+			"aws_dx_connection_association":                               directconnect.ResourceConnectionAssociation(),                 // backward compatible alias
+			"aws_dx_connection_confirmation":                              directconnect.ResourceConnectionConfirmation(),                // backward compatible alias
+			"aws_dx_gateway":                                              directconnect.ResourceGateway(),                               // backward compatible alias
+			"aws_dx_gateway_association":                                  directconnect.ResourceGatewayAssociation(),                    // backward compatible alias
+			"aws_dx_gateway_association_proposal":                         directconnect.ResourceGatewayAssociationProposal(),            // backward compatible alias
+			"aws_dx_hosted_connection":                                    directconnect.ResourceHostedConnection(),                      // backward compatible alias
+			"aws_dx_hosted_private_virtual_interface":                     directconnect.ResourceHostedPrivateVirtualInterface(),         // backward compatible alias
+			"aws_dx_hosted_private_virtual_interface_accepter":            directconnect.ResourceHostedPrivateVirtualInterfaceAccepter(), // backward compatible alias
+			"aws_dx_hosted_public_virtual_interface":                      directconnect.ResourceHostedPublicVirtualInterface(),          // backward compatible alias
+			"aws_dx_hosted_public_virtual_interface_accepter":             directconnect.ResourceHostedPublicVirtualInterfaceAccepter(),  // backward compatible alias
+			"aws_dx_hosted_transit_virtual_interface":                     directconnect.ResourceHostedTransitVirtualInterface(),         // backward compatible alias
+			"aws_dx_hosted_transit_virtual_interface_accepter":            directconnect.ResourceHostedTransitVirtualInterfaceAccepter(), // backward compatible alias
+			"aws_dx_lag":                       directconnect.ResourceLag(),                     // backward compatible alias
+			"aws_dx_private_virtual_interface": directconnect.ResourcePrivateVirtualInterface(), // backward compatible alias
+			"aws_dx_public_virtual_interface":  directconnect.ResourcePublicVirtualInterface(),  // backward compatible alias
+			"aws_dx_transit_virtual_interface": directconnect.ResourceTransitVirtualInterface(), // backward compatible alias
 
 			"aws_dlm_lifecycle_policy": dlm.ResourceLifecyclePolicy(),
 

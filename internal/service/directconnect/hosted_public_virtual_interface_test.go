@@ -25,8 +25,8 @@ func TestAccDirectConnectHostedPublicVirtualInterface_basic(t *testing.T) {
 
 	var providers []*schema.Provider
 	var vif directconnect.VirtualInterface
-	resourceName := "aws_dx_hosted_public_virtual_interface.test"
-	accepterResourceName := "aws_dx_hosted_public_virtual_interface_accepter.test"
+	resourceName := "aws_directconnect_hosted_public_virtual_interface.test"
+	accepterResourceName := "aws_directconnect_hosted_public_virtual_interface_accepter.test"
 	rName := fmt.Sprintf("tf-testacc-public-vif-%s", sdkacctest.RandString(10))
 	amazonAddress := "175.45.176.5/28"
 	customerAddress := "175.45.176.6/28"
@@ -86,8 +86,8 @@ func TestAccDirectConnectHostedPublicVirtualInterface_accepterTags(t *testing.T)
 
 	var providers []*schema.Provider
 	var vif directconnect.VirtualInterface
-	resourceName := "aws_dx_hosted_public_virtual_interface.test"
-	accepterResourceName := "aws_dx_hosted_public_virtual_interface_accepter.test"
+	resourceName := "aws_directconnect_hosted_public_virtual_interface.test"
+	accepterResourceName := "aws_directconnect_hosted_public_virtual_interface_accepter.test"
 	rName := fmt.Sprintf("tf-testacc-public-vif-%s", sdkacctest.RandString(10))
 	amazonAddress := "175.45.176.7/28"
 	customerAddress := "175.45.176.8/28"
@@ -162,7 +162,7 @@ func TestAccDirectConnectHostedPublicVirtualInterface_accepterTags(t *testing.T)
 }
 
 func testAccCheckHostedPublicVirtualInterfaceDestroy(s *terraform.State) error {
-	return testAccCheckDxVirtualInterfaceDestroy(s, "aws_dx_hosted_public_virtual_interface")
+	return testAccCheckDxVirtualInterfaceDestroy(s, "aws_directconnect_hosted_public_virtual_interface")
 }
 
 func testAccCheckHostedPublicVirtualInterfaceExists(name string, vif *directconnect.VirtualInterface) resource.TestCheckFunc {
@@ -172,7 +172,7 @@ func testAccCheckHostedPublicVirtualInterfaceExists(name string, vif *directconn
 func testAccDxHostedPublicVirtualInterfaceConfig_base(cid, rName, amzAddr, custAddr string, bgpAsn, vlan int) string {
 	return acctest.ConfigAlternateAccountProvider() + fmt.Sprintf(`
 # Creator
-resource "aws_dx_hosted_public_virtual_interface" "test" {
+resource "aws_directconnect_hosted_public_virtual_interface" "test" {
   address_family   = "ipv4"
   amazon_address   = %[3]q
   bgp_asn          = %[5]d
@@ -197,20 +197,20 @@ data "aws_caller_identity" "accepter" {
 
 func testAccDxHostedPublicVirtualInterfaceConfig_basic(cid, rName, amzAddr, custAddr string, bgpAsn, vlan int) string {
 	return testAccDxHostedPublicVirtualInterfaceConfig_base(cid, rName, amzAddr, custAddr, bgpAsn, vlan) + `
-resource "aws_dx_hosted_public_virtual_interface_accepter" "test" {
+resource "aws_directconnect_hosted_public_virtual_interface_accepter" "test" {
   provider = "awsalternate"
 
-  virtual_interface_id = aws_dx_hosted_public_virtual_interface.test.id
+  virtual_interface_id = aws_directconnect_hosted_public_virtual_interface.test.id
 }
 `
 }
 
 func testAccDxHostedPublicVirtualInterfaceConfig_accepterTags(cid, rName, amzAddr, custAddr string, bgpAsn, vlan int) string {
 	return testAccDxHostedPublicVirtualInterfaceConfig_base(cid, rName, amzAddr, custAddr, bgpAsn, vlan) + fmt.Sprintf(`
-resource "aws_dx_hosted_public_virtual_interface_accepter" "test" {
+resource "aws_directconnect_hosted_public_virtual_interface_accepter" "test" {
   provider = "awsalternate"
 
-  virtual_interface_id = aws_dx_hosted_public_virtual_interface.test.id
+  virtual_interface_id = aws_directconnect_hosted_public_virtual_interface.test.id
 
   tags = {
     Name = %[1]q
@@ -223,10 +223,10 @@ resource "aws_dx_hosted_public_virtual_interface_accepter" "test" {
 
 func testAccDxHostedPublicVirtualInterfaceConfig_accepterTagsUpdated(cid, rName, amzAddr, custAddr string, bgpAsn, vlan int) string {
 	return testAccDxHostedPublicVirtualInterfaceConfig_base(cid, rName, amzAddr, custAddr, bgpAsn, vlan) + fmt.Sprintf(`
-resource "aws_dx_hosted_public_virtual_interface_accepter" "test" {
+resource "aws_directconnect_hosted_public_virtual_interface_accepter" "test" {
   provider = "awsalternate"
 
-  virtual_interface_id = aws_dx_hosted_public_virtual_interface.test.id
+  virtual_interface_id = aws_directconnect_hosted_public_virtual_interface.test.id
 
   tags = {
     Name = %[1]q

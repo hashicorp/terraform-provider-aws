@@ -1,22 +1,22 @@
 ---
 subcategory: "Direct Connect"
 layout: "aws"
-page_title: "AWS: aws_dx_location"
+page_title: "AWS: aws_directconnect_location"
 description: |-
   Retrieve information about a specific AWS Direct Connect location in the current AWS Region.
 ---
 
-# Data Source: aws_dx_location
+# Data Source: aws_directconnect_location
 
 Retrieve information about a specific AWS Direct Connect location in the current AWS Region.
-These are the locations that can be specified when configuring [`aws_dx_connection`](/docs/providers/aws/r/dx_connection.html) or [`aws_dx_lag`](/docs/providers/aws/r/dx_lag.html) resources.
+These are the locations that can be specified when configuring [`aws_directconnect_connection`](/docs/providers/aws/r/dx_connection.html) or [`aws_directconnect_lag`](/docs/providers/aws/r/dx_lag.html) resources.
 
-~> **Note:** This data source is different from the [`aws_dx_locations`](/docs/providers/aws/d/dx_locations.html) data source which retrieves information about all the AWS Direct Connect locations in the current AWS Region.
+~> **Note:** This data source is different from the [`aws_directconnect_locations`](/docs/providers/aws/d/dx_locations.html) data source which retrieves information about all the AWS Direct Connect locations in the current AWS Region.
 
 ## Example Usage
 
 ```hcl
-data "aws_dx_location" "example" {
+data "aws_directconnect_location" "example" {
   location_code = "CS32A-24FL"
 }
 ```

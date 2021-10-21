@@ -12,8 +12,8 @@ import (
 
 func TestAccDirectConnectConnectionDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_dx_connection.test"
-	datasourceName := "data.aws_dx_connection.test"
+	resourceName := "aws_directconnect_connection.test"
+	datasourceName := "data.aws_directconnect_connection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
@@ -39,16 +39,16 @@ func TestAccDirectConnectConnectionDataSource_basic(t *testing.T) {
 
 func testAccConnectionDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
-data "aws_dx_locations" "test" {}
+data "aws_directconnect_locations" "test" {}
 
-resource "aws_dx_connection" "test" {
+resource "aws_directconnect_connection" "test" {
   name      = %[1]q
   bandwidth = "1Gbps"
-  location  = tolist(data.aws_dx_locations.test.location_codes)[0]
+  location  = tolist(data.aws_directconnect_locations.test.location_codes)[0]
 }
 
-data "aws_dx_connection" "test" {
-  name = aws_dx_connection.test.name
+data "aws_directconnect_connection" "test" {
+  name = aws_directconnect_connection.test.name
 }
 `, rName)
 }

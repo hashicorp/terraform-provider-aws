@@ -29,7 +29,7 @@ func TestAccDirectConnectHostedConnection_basic(t *testing.T) {
 	}
 
 	connectionName := fmt.Sprintf("tf-dx-%s", sdkacctest.RandString(5))
-	resourceName := "aws_dx_hosted_connection.test"
+	resourceName := "aws_directconnect_hosted_connection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -71,7 +71,7 @@ func testAccCheckHostedConnectionDestroy(providerFunc func() *schema.Provider) r
 		conn := provider.Meta().(*conns.AWSClient).DirectConnectConn
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_dx_hosted_connection" {
+			if rs.Type != "aws_directconnect_hosted_connection" {
 				continue
 			}
 
@@ -117,7 +117,7 @@ func testAccCheckHostedConnectionExists(name string) resource.TestCheckFunc {
 
 func testAccDxHostedConnectionConfig(name, connectionId, ownerAccountId string) string {
 	return fmt.Sprintf(`
-resource "aws_dx_hosted_connection" "test" {
+resource "aws_directconnect_hosted_connection" "test" {
   name             = "%s"
   connection_id    = "%s"
   owner_account_id = "%s"

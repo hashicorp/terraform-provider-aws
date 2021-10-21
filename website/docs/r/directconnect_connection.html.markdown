@@ -1,19 +1,19 @@
 ---
 subcategory: "Direct Connect"
 layout: "aws"
-page_title: "AWS: aws_dx_connection"
+page_title: "AWS: aws_directconnect_connection"
 description: |-
   Provides a Connection of Direct Connect.
 ---
 
-# Resource: aws_dx_connection
+# Resource: aws_directconnect_connection
 
 Provides a Connection of Direct Connect.
 
 ## Example Usage
 
 ```terraform
-resource "aws_dx_connection" "hoge" {
+resource "aws_directconnect_connection" "hoge" {
   name      = "tf-dx-connection"
   bandwidth = "1Gbps"
   location  = "EqDC2"
@@ -47,5 +47,5 @@ In addition to all arguments above, the following attributes are exported:
 Direct Connect connections can be imported using the `connection id`, e.g.,
 
 ```
-$ terraform import aws_dx_connection.test_connection dxcon-ffre0ec3
+$ terraform import aws_directconnect_connection.test_connection dxcon-ffre0ec3
 ```

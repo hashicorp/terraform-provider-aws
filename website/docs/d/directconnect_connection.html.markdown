@@ -1,19 +1,19 @@
 ---
 subcategory: "Direct Connect"
 layout: "aws"
-page_title: "AWS: aws_dx_connection"
+page_title: "AWS: aws_directconnect_connection"
 description: |-
   Retrieve information about a Direct Connect Connection.
 ---
 
-# Data Source: aws_dx_connection
+# Data Source: aws_directconnect_connection
 
 Retrieve information about a Direct Connect Connection.
 
 ## Example Usage
 
 ```hcl
-data "aws_dx_connection" "example" {
+data "aws_directconnect_connection" "example" {
   name = "tf-dx-connection"
 }
 ```

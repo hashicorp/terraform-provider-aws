@@ -1,20 +1,20 @@
 ---
 subcategory: "Direct Connect"
 layout: "aws"
-page_title: "AWS: aws_dx_bgp_peer"
+page_title: "AWS: aws_directconnect_bgp_peer"
 description: |-
   Provides a Direct Connect BGP peer resource.
 ---
 
-# Resource: aws_dx_bgp_peer
+# Resource: aws_directconnect_bgp_peer
 
 Provides a Direct Connect BGP peer resource.
 
 ## Example Usage
 
 ```terraform
-resource "aws_dx_bgp_peer" "peer" {
-  virtual_interface_id = aws_dx_private_virtual_interface.foo.id
+resource "aws_directconnect_bgp_peer" "peer" {
+  virtual_interface_id = aws_directconnect_private_virtual_interface.foo.id
   address_family       = "ipv6"
   bgp_asn              = 65351
 }
@@ -44,7 +44,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_dx_bgp_peer` provides the following
+`aws_directconnect_bgp_peer` provides the following
 [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
 
 - `create` - (Default `10 minutes`) Used for creating BGP peer

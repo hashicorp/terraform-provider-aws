@@ -17,7 +17,7 @@ import (
 
 func TestAccDirectConnectLag_basic(t *testing.T) {
 	var lag directconnect.Lag
-	resourceName := "aws_dx_lag.test"
+	resourceName := "aws_directconnect_lag.test"
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -73,7 +73,7 @@ func TestAccDirectConnectLag_basic(t *testing.T) {
 
 func TestAccDirectConnectLag_disappears(t *testing.T) {
 	var lag directconnect.Lag
-	resourceName := "aws_dx_lag.test"
+	resourceName := "aws_directconnect_lag.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -96,8 +96,8 @@ func TestAccDirectConnectLag_disappears(t *testing.T) {
 
 func TestAccDirectConnectLag_connectionID(t *testing.T) {
 	var lag directconnect.Lag
-	resourceName := "aws_dx_lag.test"
-	connectionResourceName := "aws_dx_connection.test"
+	resourceName := "aws_directconnect_lag.test"
+	connectionResourceName := "aws_directconnect_connection.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -135,7 +135,7 @@ func TestAccDirectConnectLag_connectionID(t *testing.T) {
 
 func TestAccDirectConnectLag_providerName(t *testing.T) {
 	var lag directconnect.Lag
-	resourceName := "aws_dx_lag.test"
+	resourceName := "aws_directconnect_lag.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -173,7 +173,7 @@ func TestAccDirectConnectLag_providerName(t *testing.T) {
 
 func TestAccDirectConnectLag_tags(t *testing.T) {
 	var lag directconnect.Lag
-	resourceName := "aws_dx_lag.test"
+	resourceName := "aws_directconnect_lag.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -224,7 +224,7 @@ func testAccCheckLagDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_dx_lag" {
+		if rs.Type != "aws_directconnect_lag" {
 			continue
 		}
 
@@ -271,61 +271,61 @@ func testAccCheckLagExists(name string, v *directconnect.Lag) resource.TestCheck
 
 func testAccDxLagConfigBasic(rName string) string {
 	return fmt.Sprintf(`
-data "aws_dx_locations" "test" {}
+data "aws_directconnect_locations" "test" {}
 
-resource "aws_dx_lag" "test" {
+resource "aws_directconnect_lag" "test" {
   name                  = %[1]q
   connections_bandwidth = "1Gbps"
-  location              = tolist(data.aws_dx_locations.test.location_codes)[0]
+  location              = tolist(data.aws_directconnect_locations.test.location_codes)[0]
 }
 `, rName)
 }
 
 func testAccDxLagConfigConnectionID(rName string) string {
 	return fmt.Sprintf(`
-data "aws_dx_locations" "test" {}
+data "aws_directconnect_locations" "test" {}
 
-resource "aws_dx_lag" "test" {
+resource "aws_directconnect_lag" "test" {
   name                  = %[1]q
-  connection_id         = aws_dx_connection.test.id
-  connections_bandwidth = aws_dx_connection.test.bandwidth
-  location              = tolist(data.aws_dx_locations.test.location_codes)[0]
+  connection_id         = aws_directconnect_connection.test.id
+  connections_bandwidth = aws_directconnect_connection.test.bandwidth
+  location              = tolist(data.aws_directconnect_locations.test.location_codes)[0]
 }
 
-resource "aws_dx_connection" "test" {
+resource "aws_directconnect_connection" "test" {
   name      = %[1]q
   bandwidth = "1Gbps"
-  location  = tolist(data.aws_dx_locations.test.location_codes)[0]
+  location  = tolist(data.aws_directconnect_locations.test.location_codes)[0]
 }
 `, rName)
 }
 
 func testAccDxLagConfigProviderName(rName string) string {
 	return fmt.Sprintf(`
-data "aws_dx_locations" "test" {}
+data "aws_directconnect_locations" "test" {}
 
-data "aws_dx_location" "test" {
-  location_code = tolist(data.aws_dx_locations.test.location_codes)[0]
+data "aws_directconnect_location" "test" {
+  location_code = tolist(data.aws_directconnect_locations.test.location_codes)[0]
 }
 
-resource "aws_dx_lag" "test" {
+resource "aws_directconnect_lag" "test" {
   name                  = %[1]q
   connections_bandwidth = "1Gbps"
-  location              = data.aws_dx_location.test.location_code
+  location              = data.aws_directconnect_location.test.location_code
 
-  provider_name = data.aws_dx_location.test.available_providers[0]
+  provider_name = data.aws_directconnect_location.test.available_providers[0]
 }
 `, rName)
 }
 
 func testAccDxLagConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
-data "aws_dx_locations" "test" {}
+data "aws_directconnect_locations" "test" {}
 
-resource "aws_dx_lag" "test" {
+resource "aws_directconnect_lag" "test" {
   name                  = %[1]q
   connections_bandwidth = "1Gbps"
-  location              = tolist(data.aws_dx_locations.test.location_codes)[0]
+  location              = tolist(data.aws_directconnect_locations.test.location_codes)[0]
   force_destroy         = true
 
   tags = {
@@ -337,12 +337,12 @@ resource "aws_dx_lag" "test" {
 
 func testAccDxLagConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
-data "aws_dx_locations" "test" {}
+data "aws_directconnect_locations" "test" {}
 
-resource "aws_dx_lag" "test" {
+resource "aws_directconnect_lag" "test" {
   name                  = %[1]q
   connections_bandwidth = "1Gbps"
-  location              = tolist(data.aws_dx_locations.test.location_codes)[0]
+  location              = tolist(data.aws_directconnect_locations.test.location_codes)[0]
   force_destroy         = true
 
   tags = {

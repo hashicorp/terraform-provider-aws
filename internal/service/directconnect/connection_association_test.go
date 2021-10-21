@@ -15,7 +15,7 @@ import (
 )
 
 func TestAccDirectConnectConnectionAssociation_basic(t *testing.T) {
-	resourceName := "aws_dx_connection_association.test"
+	resourceName := "aws_directconnect_connection_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -35,7 +35,7 @@ func TestAccDirectConnectConnectionAssociation_basic(t *testing.T) {
 }
 
 func TestAccDirectConnectConnectionAssociation_lAGOnConnection(t *testing.T) {
-	resourceName := "aws_dx_connection_association.test"
+	resourceName := "aws_directconnect_connection_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -55,8 +55,8 @@ func TestAccDirectConnectConnectionAssociation_lAGOnConnection(t *testing.T) {
 }
 
 func TestAccDirectConnectConnectionAssociation_multiple(t *testing.T) {
-	resourceName1 := "aws_dx_connection_association.test1"
-	resourceName2 := "aws_dx_connection_association.test2"
+	resourceName1 := "aws_directconnect_connection_association.test1"
+	resourceName2 := "aws_directconnect_connection_association.test2"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -80,7 +80,7 @@ func testAccCheckConnectionAssociationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_dx_connection_association" {
+		if rs.Type != "aws_directconnect_connection_association" {
 			continue
 		}
 
@@ -125,89 +125,89 @@ func testAccCheckConnectionAssociationExists(name string) resource.TestCheckFunc
 
 func testAccDxConnectionAssociationConfigBasic(rName string) string {
 	return fmt.Sprintf(`
-data "aws_dx_locations" "test" {}
+data "aws_directconnect_locations" "test" {}
 
-resource "aws_dx_connection" "test" {
+resource "aws_directconnect_connection" "test" {
   name      = %[1]q
   bandwidth = "1Gbps"
-  location  = tolist(data.aws_dx_locations.test.location_codes)[0]
+  location  = tolist(data.aws_directconnect_locations.test.location_codes)[0]
 }
 
-resource "aws_dx_lag" "test" {
+resource "aws_directconnect_lag" "test" {
   name                  = %[1]q
   connections_bandwidth = "1Gbps"
-  location              = tolist(data.aws_dx_locations.test.location_codes)[0]
+  location              = tolist(data.aws_directconnect_locations.test.location_codes)[0]
   force_destroy         = true
 }
 
-resource "aws_dx_connection_association" "test" {
-  connection_id = aws_dx_connection.test.id
-  lag_id        = aws_dx_lag.test.id
+resource "aws_directconnect_connection_association" "test" {
+  connection_id = aws_directconnect_connection.test.id
+  lag_id        = aws_directconnect_lag.test.id
 }
 `, rName)
 }
 
 func testAccDxConnectionAssociationConfigLAGOnConnection(rName string) string {
 	return fmt.Sprintf(`
-data "aws_dx_locations" "test" {}
+data "aws_directconnect_locations" "test" {}
 
-resource "aws_dx_connection" "test1" {
+resource "aws_directconnect_connection" "test1" {
   name      = "%[1]s-1"
   bandwidth = "1Gbps"
-  location  = tolist(data.aws_dx_locations.test.location_codes)[0]
+  location  = tolist(data.aws_directconnect_locations.test.location_codes)[0]
 }
 
-resource "aws_dx_connection" "test2" {
+resource "aws_directconnect_connection" "test2" {
   name      = "%[1]s-2"
   bandwidth = "1Gbps"
-  location  = tolist(data.aws_dx_locations.test.location_codes)[0]
+  location  = tolist(data.aws_directconnect_locations.test.location_codes)[0]
 }
 
-resource "aws_dx_lag" "test" {
+resource "aws_directconnect_lag" "test" {
   name                  = %[1]q
-  connection_id         = aws_dx_connection.test1.id
+  connection_id         = aws_directconnect_connection.test1.id
   connections_bandwidth = "1Gbps"
-  location              = tolist(data.aws_dx_locations.test.location_codes)[0]
+  location              = tolist(data.aws_directconnect_locations.test.location_codes)[0]
 }
 
-resource "aws_dx_connection_association" "test" {
-  connection_id = aws_dx_connection.test2.id
-  lag_id        = aws_dx_lag.test.id
+resource "aws_directconnect_connection_association" "test" {
+  connection_id = aws_directconnect_connection.test2.id
+  lag_id        = aws_directconnect_lag.test.id
 }
 `, rName)
 }
 
 func testAccDxConnectionAssociationConfigMultiple(rName string) string {
 	return fmt.Sprintf(`
-data "aws_dx_locations" "test" {}
+data "aws_directconnect_locations" "test" {}
 
-resource "aws_dx_connection" "test1" {
+resource "aws_directconnect_connection" "test1" {
   name      = "%[1]s-1"
   bandwidth = "1Gbps"
-  location  = tolist(data.aws_dx_locations.test.location_codes)[0]
+  location  = tolist(data.aws_directconnect_locations.test.location_codes)[0]
 }
 
-resource "aws_dx_connection" "test2" {
+resource "aws_directconnect_connection" "test2" {
   name      = "%[1]s-2"
   bandwidth = "1Gbps"
-  location  = tolist(data.aws_dx_locations.test.location_codes)[0]
+  location  = tolist(data.aws_directconnect_locations.test.location_codes)[0]
 }
 
-resource "aws_dx_lag" "test" {
+resource "aws_directconnect_lag" "test" {
   name                  = %[1]q
   connections_bandwidth = "1Gbps"
-  location              = tolist(data.aws_dx_locations.test.location_codes)[0]
+  location              = tolist(data.aws_directconnect_locations.test.location_codes)[0]
   force_destroy         = true
 }
 
-resource "aws_dx_connection_association" "test1" {
-  connection_id = aws_dx_connection.test1.id
-  lag_id        = aws_dx_lag.test.id
+resource "aws_directconnect_connection_association" "test1" {
+  connection_id = aws_directconnect_connection.test1.id
+  lag_id        = aws_directconnect_lag.test.id
 }
 
-resource "aws_dx_connection_association" "test2" {
-  connection_id = aws_dx_connection.test2.id
-  lag_id        = aws_dx_lag.test.id
+resource "aws_directconnect_connection_association" "test2" {
+  connection_id = aws_directconnect_connection.test2.id
+  lag_id        = aws_directconnect_lag.test.id
 }
 `, rName)
 }

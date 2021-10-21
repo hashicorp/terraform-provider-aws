@@ -25,7 +25,7 @@ func TestAccDirectConnectConnectionConfirmation_basic(t *testing.T) {
 	var providers []*schema.Provider
 
 	connectionName := fmt.Sprintf("tf-dx-%s", sdkacctest.RandString(5))
-	resourceName := "aws_dx_connection_confirmation.test"
+	resourceName := "aws_directconnect_connection_confirmation.test"
 	providerFunc := testAccDxConnectionConfirmationProvider(&providers, 0)
 	altProviderFunc := testAccDxConnectionConfirmationProvider(&providers, 1)
 
@@ -78,7 +78,7 @@ func testAccDxConnectionConfirmationConfig(name, connectionId, ownerAccountId st
 	return acctest.ConfigCompose(
 		acctest.ConfigAlternateAccountProvider(),
 		fmt.Sprintf(`
-resource "aws_dx_hosted_connection" "connection" {
+resource "aws_directconnect_hosted_connection" "connection" {
   provider = "awsalternate"
 
   name             = "%s"
@@ -88,8 +88,8 @@ resource "aws_dx_hosted_connection" "connection" {
   vlan             = 4092
 }
 
-resource "aws_dx_connection_confirmation" "test" {
-  connection_id = aws_dx_hosted_connection.connection.id
+resource "aws_directconnect_connection_confirmation" "test" {
+  connection_id = aws_directconnect_hosted_connection.connection.id
 }
 `, name, connectionId, ownerAccountId))
 }

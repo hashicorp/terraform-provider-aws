@@ -1,17 +1,17 @@
 ---
 subcategory: "Direct Connect"
 layout: "aws"
-page_title: "AWS: aws_dx_hosted_transit_virtual_interface_accepter"
+page_title: "AWS: aws_directconnect_hosted_transit_virtual_interface_accepter"
 description: |-
   Provides a resource to manage the accepter's side of a Direct Connect hosted transit virtual interface.
 ---
 
-# Resource: aws_dx_hosted_transit_virtual_interface_accepter
+# Resource: aws_directconnect_hosted_transit_virtual_interface_accepter
 
 Provides a resource to manage the accepter's side of a Direct Connect hosted transit virtual interface.
 This resource accepts ownership of a transit virtual interface created by another AWS account.
 
--> **NOTE:** AWS allows a Direct Connect hosted transit virtual interface to be deleted from either the allocator's or accepter's side. However, Terraform only allows the Direct Connect hosted transit virtual interface to be deleted from the allocator's side by removing the corresponding `aws_dx_hosted_transit_virtual_interface` resource from your configuration. Removing a `aws_dx_hosted_transit_virtual_interface_accepter` resource from your configuration will remove it from your statefile and management, **but will not delete the Direct Connect virtual interface.**
+-> **NOTE:** AWS allows a Direct Connect hosted transit virtual interface to be deleted from either the allocator's or accepter's side. However, Terraform only allows the Direct Connect hosted transit virtual interface to be deleted from the allocator's side by removing the corresponding `aws_directconnect_hosted_transit_virtual_interface` resource from your configuration. Removing a `aws_directconnect_hosted_transit_virtual_interface_accepter` resource from your configuration will remove it from your statefile and management, **but will not delete the Direct Connect virtual interface.**
 
 ## Example Usage
 
@@ -31,7 +31,7 @@ data "aws_caller_identity" "accepter" {
 }
 
 # Creator's side of the VIF
-resource "aws_dx_hosted_transit_virtual_interface" "creator" {
+resource "aws_directconnect_hosted_transit_virtual_interface" "creator" {
   connection_id    = "dxcon-zzzzzzzz"
   owner_account_id = data.aws_caller_identity.accepter.account_id
 
@@ -40,23 +40,23 @@ resource "aws_dx_hosted_transit_virtual_interface" "creator" {
   address_family = "ipv4"
   bgp_asn        = 65352
 
-  # The aws_dx_hosted_transit_virtual_interface
-  # must be destroyed before the aws_dx_gateway.
-  depends_on = [aws_dx_gateway.example]
+  # The aws_directconnect_hosted_transit_virtual_interface
+  # must be destroyed before the aws_directconnect_gateway.
+  depends_on = [aws_directconnect_gateway.example]
 }
 
 # Accepter's side of the VIF.
-resource "aws_dx_gateway" "example" {
+resource "aws_directconnect_gateway" "example" {
   provider = aws.accepter
 
   name            = "tf-dxg-example"
   amazon_side_asn = 64512
 }
 
-resource "aws_dx_hosted_transit_virtual_interface_accepter" "accepter" {
+resource "aws_directconnect_hosted_transit_virtual_interface_accepter" "accepter" {
   provider             = aws.accepter
-  virtual_interface_id = aws_dx_hosted_transit_virtual_interface.creator.id
-  dx_gateway_id        = aws_dx_gateway.example.id
+  virtual_interface_id = aws_directconnect_hosted_transit_virtual_interface.creator.id
+  dx_gateway_id        = aws_directconnect_gateway.example.id
 
   tags = {
     Side = "Accepter"
@@ -82,7 +82,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_dx_hosted_transit_virtual_interface_accepter` provides the following
+`aws_directconnect_hosted_transit_virtual_interface_accepter` provides the following
 [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
 
 - `create` - (Default `10 minutes`) Used for creating virtual interface
@@ -93,5 +93,5 @@ In addition to all arguments above, the following attributes are exported:
 Direct Connect hosted transit virtual interfaces can be imported using the `vif id`, e.g.,
 
 ```
-$ terraform import aws_dx_hosted_transit_virtual_interface_accepter.test dxvif-33cc44dd
+$ terraform import aws_directconnect_hosted_transit_virtual_interface_accepter.test dxvif-33cc44dd
 ```

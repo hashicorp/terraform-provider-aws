@@ -1431,17 +1431,17 @@ resource "aws_db_instance" "bar" {
 
 #### Hardcoded Direct Connect Locations
 
-- [ ] __Uses aws_dx_locations Data Source__: Hardcoded AWS Direct Connect locations, e.g., `EqSe2`, should be replaced with the [`aws_dx_locations` data source](https://www.terraform.io/docs/providers/aws/d/dx_locations.html).
+- [ ] __Uses aws_directconnect_locations Data Source__: Hardcoded AWS Direct Connect locations, e.g., `EqSe2`, should be replaced with the [`aws_directconnect_locations` data source](https://www.terraform.io/docs/providers/aws/d/dx_locations.html).
 
-Here's an example using `data.aws_dx_locations.test.location_codes`:
+Here's an example using `data.aws_directconnect_locations.test.location_codes`:
 
 ```terraform
-data "aws_dx_locations" "test" {}
+data "aws_directconnect_locations" "test" {}
 
-resource "aws_dx_lag" "test" {
+resource "aws_directconnect_lag" "test" {
   name                  = "Test LAG"
   connections_bandwidth = "1Gbps"
-  location              = tolist(data.aws_dx_locations.test.location_codes)[0]
+  location              = tolist(data.aws_directconnect_locations.test.location_codes)[0]
   force_destroy         = true
 }
 ```

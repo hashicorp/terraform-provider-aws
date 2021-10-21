@@ -277,7 +277,7 @@ A breaking-change entry should use the `release-note:note` header and have a pre
 
 ``````markdown
 ```release-note:note
-resource/aws_dx_gateway_association: The vpn_gateway_id attribute is being deprecated in favor of the new associated_gateway_id attribute to support transit gateway associations
+resource/aws_directconnect_gateway_association: The vpn_gateway_id attribute is being deprecated in favor of the new associated_gateway_id attribute to support transit gateway associations
 ```
 ``````
 

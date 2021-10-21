@@ -17,36 +17,36 @@ import (
 )
 
 func init() {
-	resource.AddTestSweepers("aws_dx_connection", &resource.Sweeper{
-		Name: "aws_dx_connection",
+	resource.AddTestSweepers("aws_directconnect_connection", &resource.Sweeper{
+		Name: "aws_directconnect_connection",
 		F:    sweepConnections,
 	})
 
-	resource.AddTestSweepers("aws_dx_gateway_association_proposal", &resource.Sweeper{
-		Name: "aws_dx_gateway_association_proposal",
+	resource.AddTestSweepers("aws_directconnect_gateway_association_proposal", &resource.Sweeper{
+		Name: "aws_directconnect_gateway_association_proposal",
 		F:    sweepGatewayAssociationProposals,
 	})
 
-	resource.AddTestSweepers("aws_dx_gateway_association", &resource.Sweeper{
-		Name: "aws_dx_gateway_association",
+	resource.AddTestSweepers("aws_directconnect_gateway_association", &resource.Sweeper{
+		Name: "aws_directconnect_gateway_association",
 		F:    sweepGatewayAssociations,
 		Dependencies: []string{
-			"aws_dx_gateway_association_proposal",
+			"aws_directconnect_gateway_association_proposal",
 		},
 	})
 
-	resource.AddTestSweepers("aws_dx_gateway", &resource.Sweeper{
-		Name: "aws_dx_gateway",
+	resource.AddTestSweepers("aws_directconnect_gateway", &resource.Sweeper{
+		Name: "aws_directconnect_gateway",
 		F:    sweepGateways,
 		Dependencies: []string{
-			"aws_dx_gateway_association",
+			"aws_directconnect_gateway_association",
 		},
 	})
 
-	resource.AddTestSweepers("aws_dx_lag", &resource.Sweeper{
-		Name:         "aws_dx_lag",
+	resource.AddTestSweepers("aws_directconnect_lag", &resource.Sweeper{
+		Name:         "aws_directconnect_lag",
 		F:            sweepLags,
-		Dependencies: []string{"aws_dx_connection"},
+		Dependencies: []string{"aws_directconnect_connection"},
 	})
 }
 

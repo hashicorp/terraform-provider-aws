@@ -15,7 +15,7 @@ func testAccTransitGatewayDxGatewayAttachmentDataSource_TransitGatewayIdAndDxGat
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	dataSourceName := "data.aws_ec2_transit_gateway_dx_gateway_attachment.test"
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
-	dxGatewayResourceName := "aws_dx_gateway.test"
+	dxGatewayResourceName := "aws_directconnect_gateway.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -43,7 +43,7 @@ func testAccTransitGatewayDxGatewayAttachmentDataSource_filter(t *testing.T) {
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	dataSourceName := "data.aws_ec2_transit_gateway_dx_gateway_attachment.test"
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
-	dxGatewayResourceName := "aws_dx_gateway.test"
+	dxGatewayResourceName := "aws_directconnect_gateway.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -68,7 +68,7 @@ func testAccTransitGatewayDxGatewayAttachmentDataSource_filter(t *testing.T) {
 
 func testAccTransitGatewayDxAttachmentDataSourceConfig(rName string, rBgpAsn int) string {
 	return fmt.Sprintf(`
-resource "aws_dx_gateway" "test" {
+resource "aws_directconnect_gateway" "test" {
   name            = %[1]q
   amazon_side_asn = "%[2]d"
 }
@@ -79,8 +79,8 @@ resource "aws_ec2_transit_gateway" "test" {
   }
 }
 
-resource "aws_dx_gateway_association" "test" {
-  dx_gateway_id         = aws_dx_gateway.test.id
+resource "aws_directconnect_gateway_association" "test" {
+  dx_gateway_id         = aws_directconnect_gateway.test.id
   associated_gateway_id = aws_ec2_transit_gateway.test.id
 
   allowed_prefixes = [
@@ -90,15 +90,15 @@ resource "aws_dx_gateway_association" "test" {
 }
 
 data "aws_ec2_transit_gateway_dx_gateway_attachment" "test" {
-  transit_gateway_id = aws_dx_gateway_association.test.associated_gateway_id
-  dx_gateway_id      = aws_dx_gateway_association.test.dx_gateway_id
+  transit_gateway_id = aws_directconnect_gateway_association.test.associated_gateway_id
+  dx_gateway_id      = aws_directconnect_gateway_association.test.dx_gateway_id
 }
 `, rName, rBgpAsn)
 }
 
 func testAccTransitGatewayDxAttachmentFilterDataSourceConfig(rName string, rBgpAsn int) string {
 	return fmt.Sprintf(`
-resource "aws_dx_gateway" "test" {
+resource "aws_directconnect_gateway" "test" {
   name            = %[1]q
   amazon_side_asn = "%[2]d"
 }
@@ -109,8 +109,8 @@ resource "aws_ec2_transit_gateway" "test" {
   }
 }
 
-resource "aws_dx_gateway_association" "test" {
-  dx_gateway_id         = aws_dx_gateway.test.id
+resource "aws_directconnect_gateway_association" "test" {
+  dx_gateway_id         = aws_directconnect_gateway.test.id
   associated_gateway_id = aws_ec2_transit_gateway.test.id
 
   allowed_prefixes = [
@@ -122,7 +122,7 @@ resource "aws_dx_gateway_association" "test" {
 data "aws_ec2_transit_gateway_dx_gateway_attachment" "test" {
   filter {
     name   = "resource-id"
-    values = [aws_dx_gateway_association.test.dx_gateway_id]
+    values = [aws_directconnect_gateway_association.test.dx_gateway_id]
   }
 }
 `, rName, rBgpAsn)

@@ -13,8 +13,8 @@ import (
 
 func TestAccDirectConnectGatewayDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_dx_gateway.test"
-	datasourceName := "data.aws_dx_gateway.test"
+	resourceName := "aws_directconnect_gateway.test"
+	datasourceName := "data.aws_directconnect_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
@@ -40,24 +40,24 @@ func TestAccDirectConnectGatewayDataSource_basic(t *testing.T) {
 
 func testAccGatewayDataSourceConfig_Name(rName string, rBgpAsn int) string {
 	return fmt.Sprintf(`
-resource "aws_dx_gateway" "wrong" {
+resource "aws_directconnect_gateway" "wrong" {
   amazon_side_asn = "%d"
   name            = "%s-wrong"
 }
 
-resource "aws_dx_gateway" "test" {
+resource "aws_directconnect_gateway" "test" {
   amazon_side_asn = "%d"
   name            = "%s"
 }
 
-data "aws_dx_gateway" "test" {
-  name = aws_dx_gateway.test.name
+data "aws_directconnect_gateway" "test" {
+  name = aws_directconnect_gateway.test.name
 }
 `, rBgpAsn+1, rName, rBgpAsn, rName)
 }
 
 const testAccGatewayDataSourceConfig_NonExistent = `
-data "aws_dx_gateway" "test" {
+data "aws_directconnect_gateway" "test" {
   name = "tf-acc-test-does-not-exist"
 }
 `

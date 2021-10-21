@@ -1,27 +1,33 @@
 ---
 subcategory: "Direct Connect"
 layout: "aws"
-page_title: "AWS: aws_dx_hosted_transit_virtual_interface"
+page_title: "AWS: aws_directconnect_public_virtual_interface"
 description: |-
-  Provides a Direct Connect hosted transit virtual interface resource.
+  Provides a Direct Connect public virtual interface resource.
 ---
 
-# Resource: aws_dx_hosted_transit_virtual_interface
+# Resource: aws_directconnect_public_virtual_interface
 
-Provides a Direct Connect hosted transit virtual interface resource.
-This resource represents the allocator's side of the hosted virtual interface.
-A hosted virtual interface is a virtual interface that is owned by another AWS account.
+Provides a Direct Connect public virtual interface resource.
 
 ## Example Usage
 
 ```terraform
-resource "aws_dx_hosted_transit_virtual_interface" "example" {
-  connection_id = aws_dx_connection.example.id
+resource "aws_directconnect_public_virtual_interface" "foo" {
+  connection_id = "dxcon-zzzzzzzz"
 
-  name           = "tf-transit-vif-example"
+  name           = "vif-foo"
   vlan           = 4094
   address_family = "ipv4"
   bgp_asn        = 65352
+
+  customer_address = "175.45.176.1/30"
+  amazon_address   = "175.45.176.2/30"
+
+  route_filter_prefixes = [
+    "210.52.109.0/24",
+    "175.45.176.0/22",
+  ]
 }
 ```
 
@@ -33,12 +39,12 @@ The following arguments are supported:
 * `bgp_asn` - (Required) The autonomous system (AS) number for Border Gateway Protocol (BGP) configuration.
 * `connection_id` - (Required) The ID of the Direct Connect connection (or LAG) on which to create the virtual interface.
 * `name` - (Required) The name for the virtual interface.
-* `owner_account_id` - (Required) The AWS account that will own the new virtual interface.
 * `vlan` - (Required) The VLAN ID.
 * `amazon_address` - (Optional) The IPv4 CIDR address to use to send traffic to Amazon. Required for IPv4 BGP peers.
 * `bgp_auth_key` - (Optional) The authentication key for BGP configuration.
 * `customer_address` - (Optional) The IPv4 CIDR destination address to which Amazon should send traffic. Required for IPv4 BGP peers.
-* `mtu` - (Optional) The maximum transmission unit (MTU) is the size, in bytes, of the largest permissible packet that can be passed over the connection. The MTU of a virtual transit interface can be either `1500` or `8500` (jumbo frames). Default is `1500`.
+* `route_filter_prefixes` - (Required) A list of routes to be advertised to the AWS network in this region.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference
 
@@ -47,21 +53,20 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - The ID of the virtual interface.
 * `arn` - The ARN of the virtual interface.
 * `aws_device` - The Direct Connect endpoint on which the virtual interface terminates.
-* `jumbo_frame_capable` - Indicates whether jumbo frames (8500 MTU) are supported.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Timeouts
 
-`aws_dx_hosted_transit_virtual_interface` provides the following
+`aws_directconnect_public_virtual_interface` provides the following
 [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
 
 - `create` - (Default `10 minutes`) Used for creating virtual interface
-- `update` - (Default `10 minutes`) Used for virtual interface modifications
 - `delete` - (Default `10 minutes`) Used for destroying virtual interface
 
 ## Import
 
-Direct Connect hosted transit virtual interfaces can be imported using the `vif id`, e.g.,
+Direct Connect public virtual interfaces can be imported using the `vif id`, e.g.,
 
 ```
-$ terraform import aws_dx_hosted_transit_virtual_interface.test dxvif-33cc44dd
+$ terraform import aws_directconnect_public_virtual_interface.test dxvif-33cc44dd
 ```

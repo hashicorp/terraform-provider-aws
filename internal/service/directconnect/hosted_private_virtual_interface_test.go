@@ -25,8 +25,8 @@ func TestAccDirectConnectHostedPrivateVirtualInterface_basic(t *testing.T) {
 
 	var providers []*schema.Provider
 	var vif directconnect.VirtualInterface
-	resourceName := "aws_dx_hosted_private_virtual_interface.test"
-	accepterResourceName := "aws_dx_hosted_private_virtual_interface_accepter.test"
+	resourceName := "aws_directconnect_hosted_private_virtual_interface.test"
+	accepterResourceName := "aws_directconnect_hosted_private_virtual_interface_accepter.test"
 	vpnGatewayResourceName := "aws_vpn_gateway.test"
 	rName := fmt.Sprintf("tf-testacc-private-vif-%s", sdkacctest.RandString(9))
 	bgpAsn := sdkacctest.RandIntRange(64512, 65534)
@@ -84,8 +84,8 @@ func TestAccDirectConnectHostedPrivateVirtualInterface_accepterTags(t *testing.T
 
 	var providers []*schema.Provider
 	var vif directconnect.VirtualInterface
-	resourceName := "aws_dx_hosted_private_virtual_interface.test"
-	accepterResourceName := "aws_dx_hosted_private_virtual_interface_accepter.test"
+	resourceName := "aws_directconnect_hosted_private_virtual_interface.test"
+	accepterResourceName := "aws_directconnect_hosted_private_virtual_interface_accepter.test"
 	vpnGatewayResourceName := "aws_vpn_gateway.test"
 	rName := fmt.Sprintf("tf-testacc-private-vif-%s", sdkacctest.RandString(9))
 	bgpAsn := sdkacctest.RandIntRange(64512, 65534)
@@ -157,7 +157,7 @@ func TestAccDirectConnectHostedPrivateVirtualInterface_accepterTags(t *testing.T
 }
 
 func testAccCheckHostedPrivateVirtualInterfaceDestroy(s *terraform.State) error {
-	return testAccCheckDxVirtualInterfaceDestroy(s, "aws_dx_hosted_private_virtual_interface")
+	return testAccCheckDxVirtualInterfaceDestroy(s, "aws_directconnect_hosted_private_virtual_interface")
 }
 
 func testAccCheckHostedPrivateVirtualInterfaceExists(name string, vif *directconnect.VirtualInterface) resource.TestCheckFunc {
@@ -167,7 +167,7 @@ func testAccCheckHostedPrivateVirtualInterfaceExists(name string, vif *directcon
 func testAccDxHostedPrivateVirtualInterfaceConfig_base(cid, rName string, bgpAsn, vlan int) string {
 	return acctest.ConfigAlternateAccountProvider() + fmt.Sprintf(`
 # Creator
-resource "aws_dx_hosted_private_virtual_interface" "test" {
+resource "aws_directconnect_hosted_private_virtual_interface" "test" {
   address_family   = "ipv4"
   bgp_asn          = %[3]d
   connection_id    = %[1]q
@@ -175,7 +175,7 @@ resource "aws_dx_hosted_private_virtual_interface" "test" {
   owner_account_id = data.aws_caller_identity.accepter.account_id
   vlan             = %[4]d
 
-  # The aws_dx_hosted_private_virtual_interface
+  # The aws_directconnect_hosted_private_virtual_interface
   # must be destroyed before the aws_vpn_gateway.
   depends_on = [aws_vpn_gateway.test]
 }
@@ -197,10 +197,10 @@ resource "aws_vpn_gateway" "test" {
 
 func testAccDxHostedPrivateVirtualInterfaceConfig_basic(cid, rName string, bgpAsn, vlan int) string {
 	return testAccDxHostedPrivateVirtualInterfaceConfig_base(cid, rName, bgpAsn, vlan) + `
-resource "aws_dx_hosted_private_virtual_interface_accepter" "test" {
+resource "aws_directconnect_hosted_private_virtual_interface_accepter" "test" {
   provider = "awsalternate"
 
-  virtual_interface_id = aws_dx_hosted_private_virtual_interface.test.id
+  virtual_interface_id = aws_directconnect_hosted_private_virtual_interface.test.id
   vpn_gateway_id       = aws_vpn_gateway.test.id
 }
 `
@@ -208,10 +208,10 @@ resource "aws_dx_hosted_private_virtual_interface_accepter" "test" {
 
 func testAccDxHostedPrivateVirtualInterfaceConfig_accepterTags(cid, rName string, bgpAsn, vlan int) string {
 	return testAccDxHostedPrivateVirtualInterfaceConfig_base(cid, rName, bgpAsn, vlan) + fmt.Sprintf(`
-resource "aws_dx_hosted_private_virtual_interface_accepter" "test" {
+resource "aws_directconnect_hosted_private_virtual_interface_accepter" "test" {
   provider = "awsalternate"
 
-  virtual_interface_id = aws_dx_hosted_private_virtual_interface.test.id
+  virtual_interface_id = aws_directconnect_hosted_private_virtual_interface.test.id
   vpn_gateway_id       = aws_vpn_gateway.test.id
 
   tags = {
@@ -225,10 +225,10 @@ resource "aws_dx_hosted_private_virtual_interface_accepter" "test" {
 
 func testAccDxHostedPrivateVirtualInterfaceConfig_accepterTagsUpdated(cid, rName string, bgpAsn, vlan int) string {
 	return testAccDxHostedPrivateVirtualInterfaceConfig_base(cid, rName, bgpAsn, vlan) + fmt.Sprintf(`
-resource "aws_dx_hosted_private_virtual_interface_accepter" "test" {
+resource "aws_directconnect_hosted_private_virtual_interface_accepter" "test" {
   provider = "awsalternate"
 
-  virtual_interface_id = aws_dx_hosted_private_virtual_interface.test.id
+  virtual_interface_id = aws_directconnect_hosted_private_virtual_interface.test.id
   vpn_gateway_id       = aws_vpn_gateway.test.id
 
   tags = {

@@ -18,7 +18,7 @@ func TestAccDirectConnectGateway_basic(t *testing.T) {
 	var v directconnect.Gateway
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
-	resourceName := "aws_dx_gateway.test"
+	resourceName := "aws_directconnect_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -46,7 +46,7 @@ func TestAccDirectConnectGateway_disappears(t *testing.T) {
 	var v directconnect.Gateway
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
-	resourceName := "aws_dx_gateway.test"
+	resourceName := "aws_directconnect_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -70,7 +70,7 @@ func TestAccDirectConnectGateway_complex(t *testing.T) {
 	var v directconnect.Gateway
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
-	resourceName := "aws_dx_gateway.test"
+	resourceName := "aws_directconnect_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -98,7 +98,7 @@ func testAccCheckGatewayDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_dx_gateway" {
+		if rs.Type != "aws_directconnect_gateway" {
 			continue
 		}
 
@@ -144,7 +144,7 @@ func testAccCheckGatewayExists(name string, v *directconnect.Gateway) resource.T
 
 func testAccDxGatewayConfig(rName string, rBgpAsn int) string {
 	return fmt.Sprintf(`
-resource "aws_dx_gateway" "test" {
+resource "aws_directconnect_gateway" "test" {
   name            = %[1]q
   amazon_side_asn = "%[2]d"
 }

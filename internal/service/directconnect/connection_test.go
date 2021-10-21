@@ -17,7 +17,7 @@ import (
 
 func TestAccDirectConnectConnection_basic(t *testing.T) {
 	var connection directconnect.Connection
-	resourceName := "aws_dx_connection.test"
+	resourceName := "aws_directconnect_connection.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -51,7 +51,7 @@ func TestAccDirectConnectConnection_basic(t *testing.T) {
 
 func TestAccDirectConnectConnection_disappears(t *testing.T) {
 	var connection directconnect.Connection
-	resourceName := "aws_dx_connection.test"
+	resourceName := "aws_directconnect_connection.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -74,7 +74,7 @@ func TestAccDirectConnectConnection_disappears(t *testing.T) {
 
 func TestAccDirectConnectConnection_providerName(t *testing.T) {
 	var connection directconnect.Connection
-	resourceName := "aws_dx_connection.test"
+	resourceName := "aws_directconnect_connection.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -108,7 +108,7 @@ func TestAccDirectConnectConnection_providerName(t *testing.T) {
 
 func TestAccDirectConnectConnection_tags(t *testing.T) {
 	var connection directconnect.Connection
-	resourceName := "aws_dx_connection.test"
+	resourceName := "aws_directconnect_connection.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -159,7 +159,7 @@ func testAccCheckConnectionDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_dx_connection" {
+		if rs.Type != "aws_directconnect_connection" {
 			continue
 		}
 
@@ -206,42 +206,42 @@ func testAccCheckConnectionExists(name string, v *directconnect.Connection) reso
 
 func testAccDxConnectionConfigBasic(rName string) string {
 	return fmt.Sprintf(`
-data "aws_dx_locations" "test" {}
+data "aws_directconnect_locations" "test" {}
 
-resource "aws_dx_connection" "test" {
+resource "aws_directconnect_connection" "test" {
   name      = %[1]q
   bandwidth = "1Gbps"
-  location  = tolist(data.aws_dx_locations.test.location_codes)[0]
+  location  = tolist(data.aws_directconnect_locations.test.location_codes)[0]
 }
 `, rName)
 }
 
 func testAccDxConnectionConfigProviderName(rName string) string {
 	return fmt.Sprintf(`
-data "aws_dx_locations" "test" {}
+data "aws_directconnect_locations" "test" {}
 
-data "aws_dx_location" "test" {
-  location_code = tolist(data.aws_dx_locations.test.location_codes)[0]
+data "aws_directconnect_location" "test" {
+  location_code = tolist(data.aws_directconnect_locations.test.location_codes)[0]
 }
 
-resource "aws_dx_connection" "test" {
+resource "aws_directconnect_connection" "test" {
   name      = %[1]q
   bandwidth = "1Gbps"
-  location  = data.aws_dx_location.test.location_code
+  location  = data.aws_directconnect_location.test.location_code
 
-  provider_name = data.aws_dx_location.test.available_providers[0]
+  provider_name = data.aws_directconnect_location.test.available_providers[0]
 }
 `, rName)
 }
 
 func testAccDxConnectionConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
-data "aws_dx_locations" "test" {}
+data "aws_directconnect_locations" "test" {}
 
-resource "aws_dx_connection" "test" {
+resource "aws_directconnect_connection" "test" {
   name      = %[1]q
   bandwidth = "1Gbps"
-  location  = tolist(data.aws_dx_locations.test.location_codes)[0]
+  location  = tolist(data.aws_directconnect_locations.test.location_codes)[0]
 
   tags = {
     %[2]q = %[3]q
@@ -252,12 +252,12 @@ resource "aws_dx_connection" "test" {
 
 func testAccDxConnectionConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
-data "aws_dx_locations" "test" {}
+data "aws_directconnect_locations" "test" {}
 
-resource "aws_dx_connection" "test" {
+resource "aws_directconnect_connection" "test" {
   name      = %[1]q
   bandwidth = "1Gbps"
-  location  = tolist(data.aws_dx_locations.test.location_codes)[0]
+  location  = tolist(data.aws_directconnect_locations.test.location_codes)[0]
 
   tags = {
     %[2]q = %[3]q
