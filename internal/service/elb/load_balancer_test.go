@@ -503,7 +503,7 @@ func TestAccELBLoadBalancer_listener(t *testing.T) {
 					conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
 					input := &elb.DeleteLoadBalancerListenersInput{
 						LoadBalancerName:  conf.LoadBalancerName,
-						LoadBalancerPorts: []*int64{aws.Int64(int64(80))},
+						LoadBalancerPorts: []*int64{aws.Int64(80)},
 					}
 					if _, err := conn.DeleteLoadBalancerListeners(input); err != nil {
 						t.Fatalf("Error deleting listener: %s", err)
@@ -529,9 +529,9 @@ func TestAccELBLoadBalancer_listener(t *testing.T) {
 						LoadBalancerName: conf.LoadBalancerName,
 						Listeners: []*elb.Listener{
 							{
-								InstancePort:     aws.Int64(int64(22)),
+								InstancePort:     aws.Int64(22),
 								InstanceProtocol: aws.String("tcp"),
-								LoadBalancerPort: aws.Int64(int64(22)),
+								LoadBalancerPort: aws.Int64(22),
 								Protocol:         aws.String("tcp"),
 							},
 						},
@@ -921,9 +921,9 @@ func testAccCheckLoadBalancerDisappears(loadBalancer *elb.LoadBalancerDescriptio
 func testAccCheckLoadBalancerAttributes(conf *elb.LoadBalancerDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		l := elb.Listener{
-			InstancePort:     aws.Int64(int64(8000)),
+			InstancePort:     aws.Int64(8000),
 			InstanceProtocol: aws.String("HTTP"),
-			LoadBalancerPort: aws.Int64(int64(80)),
+			LoadBalancerPort: aws.Int64(80),
 			Protocol:         aws.String("HTTP"),
 		}
 

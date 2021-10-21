@@ -1473,7 +1473,7 @@ func testAccPreCheckIdentityProvider(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
 
 	input := &cognitoidentityprovider.ListUserPoolsInput{
-		MaxResults: aws.Int64(int64(1)),
+		MaxResults: aws.Int64(1),
 	}
 
 	_, err := conn.ListUserPools(input)

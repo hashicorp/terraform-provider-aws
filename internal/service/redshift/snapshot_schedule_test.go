@@ -194,10 +194,9 @@ func TestAccRedshiftSnapshotSchedule_withTags(t *testing.T) {
 func TestAccRedshiftSnapshotSchedule_withForceDestroy(t *testing.T) {
 	var snapshotSchedule redshift.SnapshotSchedule
 	var cluster redshift.Cluster
-	rInt := sdkacctest.RandInt()
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_redshift_snapshot_schedule.default"
-	clusterResourceName := "aws_redshift_cluster.default"
+	clusterResourceName := "aws_redshift_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -206,7 +205,7 @@ func TestAccRedshiftSnapshotSchedule_withForceDestroy(t *testing.T) {
 		CheckDestroy: testAccCheckSnapshotScheduleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSnapshotScheduleWithForceDestroyConfig(rInt, rName),
+				Config: testAccSnapshotScheduleWithForceDestroyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotScheduleExists(resourceName, &snapshotSchedule),
 					testAccCheckClusterExists(clusterResourceName, &cluster),
@@ -379,17 +378,15 @@ resource "aws_redshift_snapshot_schedule" "default" {
 `, rName)
 }
 
-func testAccSnapshotScheduleWithForceDestroyConfig(rInt int, rName string) string {
-	return fmt.Sprintf(`
-%s
-
+func testAccSnapshotScheduleWithForceDestroyConfig(rName string) string {
+	return acctest.ConfigCompose(testAccClusterConfig_basic(rName), fmt.Sprintf(`
 resource "aws_redshift_snapshot_schedule" "default" {
-  identifier  = %[2]q
+  identifier  = %[1]q
   description = "Test Schedule"
   definitions = [
     "rate(12 hours)",
   ]
   force_destroy = true
 }
-`, testAccClusterConfig_basic(rInt), rName)
+`, rName))
 }

@@ -240,14 +240,14 @@ func ResourceMetricAlarm() *schema.Resource {
 			"treat_missing_data": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      "missing",
-				ValidateFunc: validation.StringInSlice([]string{"breaching", "notBreaching", "ignore", "missing"}, true),
+				Default:      missingDataMissing,
+				ValidateFunc: validation.StringInSlice(missingData_Values(), true),
 			},
 			"evaluate_low_sample_count_percentiles": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validation.StringInSlice([]string{"evaluate", "ignore"}, true),
+				ValidateFunc: validation.StringInSlice(lowSampleCountPercentiles_Values(), true),
 			},
 
 			"tags":     tftags.TagsSchema(),
@@ -357,7 +357,11 @@ func resourceMetricAlarmRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("threshold_metric_id", resp.ThresholdMetricId)
 	d.Set("unit", resp.Unit)
 	d.Set("extended_statistic", resp.ExtendedStatistic)
-	d.Set("treat_missing_data", resp.TreatMissingData)
+	if resp.TreatMissingData != nil {
+		d.Set("treat_missing_data", resp.TreatMissingData)
+	} else {
+		d.Set("treat_missing_data", missingDataMissing)
+	}
 	d.Set("evaluate_low_sample_count_percentiles", resp.EvaluateLowSampleCountPercentile)
 
 	tags, err := ListTags(conn, arn)

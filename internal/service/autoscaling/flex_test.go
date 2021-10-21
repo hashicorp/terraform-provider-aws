@@ -45,7 +45,7 @@ func TestExpandStepAdjustments(t *testing.T) {
 	expected := &autoscaling.StepAdjustment{
 		MetricIntervalLowerBound: aws.Float64(1.0),
 		MetricIntervalUpperBound: aws.Float64(2.0),
-		ScalingAdjustment:        aws.Int64(int64(1)),
+		ScalingAdjustment:        aws.Int64(1),
 	}
 
 	if !reflect.DeepEqual(parameters[0], expected) {
@@ -61,7 +61,7 @@ func TestFlattenStepAdjustments(t *testing.T) {
 		{
 			MetricIntervalLowerBound: aws.Float64(1.0),
 			MetricIntervalUpperBound: aws.Float64(2.5),
-			ScalingAdjustment:        aws.Int64(int64(1)),
+			ScalingAdjustment:        aws.Int64(1),
 		},
 	}
 

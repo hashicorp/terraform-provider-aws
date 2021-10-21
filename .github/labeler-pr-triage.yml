@@ -5,26 +5,46 @@ create:
 dependencies:
   - '.github/dependabot.yml'
 documentation:
+  - '**/*.md'
   - 'docs/**/*'
   - 'website/**/*'
-  - '*.md'
 examples:
   - 'examples/**/*'
 flex:
   - 'internal/flex/**/*'
 generators:
+  - 'internal/**/*_gen.go'
+  - 'internal/**/*_gen_test.go'
+  - 'internal/**/generate.go'
   - 'internal/generate/**/*'
+linter:
+  - '.github/workflows/acctest-terraform-lint.yml'
+  - '.github/workflows/terraform_provider.yml'
+  - '.github/workflows/website.yml'
+  - '.golangci.yml'
+  - '.markdownlinkcheck.json'
+  - '.markdownlint.yml'
+  - '.semgrep.yml'
+  - '.tflint.hcl'
+  - 'providerlint/**/*'
+  - 'staticcheck.conf'
+pre-service-packages:
+  - '**/data_source_aws_*'
+  - '**/resource_aws_*'
+  - 'aws/**/*'
+  - 'awsproviderlint/**/*'
 provider:
-  - '*.md'
-  - '.github/**/*'
   - '.gitignore'
   - '.go-version'
-  - 'internal/provider/**/*'
+  - '*.md'
   - 'docs/contributing/**/*'
-  - 'GNUmakefile'
-  - 'infrastructure/**/*'
+  - 'internal/provider/**/*'
   - 'main.go'
   - 'website/docs/index.html.markdown'
+repository:
+  - '.github/**/*'
+  - 'GNUmakefile'
+  - 'infrastructure/**/*'
 service/accessanalyzer:
   - 'internal/service/accessanalyzer/**/*'
   - 'website/**/accessanalyzer_*'
@@ -52,7 +72,7 @@ service/appconfig:
   - 'internal/service/appconfig/**/*'
   - 'website/**/appconfig_*'
 service/applicationautoscaling:
-  - 'internal/service/applicationautoscaling/**/*'
+  - 'internal/service/appautoscaling/**/*'
   - 'website/**/appautoscaling_*'
 service/applicationinsights:
   - 'internal/service/applicationinsights/**/*'
@@ -606,15 +626,16 @@ service/xray:
 sweeper:
   - 'internal/sweep/**/*'
   - 'internal/service/**/sweep.go'
+tags:
+  - 'internal/**/tag_gen.go'
+  - 'internal/**/tag_gen_test.go'
+  - 'internal/**/tag_test.go'
+  - 'internal/**/tags_gen.go'
+  - 'internal/tags/**/*'
 tests:
-  - 'internal/acctest/**/*'
   - '**/*_test.go'
-  - 'website/**/testdata/**/*'
-  - 'website/**/test-fixtures/**/*'
-  - '.github/workflows/*'
-  - '.golangci.yml'
-  - '.markdownlinkcheck.json'
-  - '.markdownlint.yml'
-  - 'staticcheck.conf'
+  - 'internal/**/test-fixtures/**/*'
+  - 'internal/**/testdata/**/*'
+  - 'internal/acctest/**/*'
 verify:
   - 'internal/verify/**/*'

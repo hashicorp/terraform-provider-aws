@@ -1910,7 +1910,7 @@ func (d domainName) Subdomain(name string) domainName {
 }
 
 func (d domainName) RandomSubdomain() domainName {
-	return d.Subdomain(sdkacctest.RandString(8))
+	return d.Subdomain(sdkacctest.RandString(8)) //nolint:gomnd
 }
 
 func (d domainName) FQDN() domainName {
@@ -1956,6 +1956,20 @@ func PreCheckOutpostsOutposts(t *testing.T) {
 	}
 }
 
+const (
+	// ACM domain names cannot be longer than 64 characters
+	// Other resources, e.g. Cognito User Pool Domains, limit this to 63
+	acmCertificateDomainMaxLen = 63
+
+	acmRandomSubDomainPrefix    = "tf-acc-"
+	acmRandomSubDomainPrefixLen = len(acmRandomSubDomainPrefix)
+
+	// Max length (63)
+	// Subtract "tf-acc-" prefix (7)
+	// Subtract "." between prefix and root domain (1)
+	acmRandomSubDomainRemainderLen = acmCertificateDomainMaxLen - acmRandomSubDomainPrefixLen - 1
+)
+
 func ACMCertificateDomainFromEnv(t *testing.T) string {
 	rootDomain := os.Getenv("ACM_CERTIFICATE_ROOT_DOMAIN")
 
@@ -1970,11 +1984,11 @@ func ACMCertificateDomainFromEnv(t *testing.T) string {
 				"contact addresses.")
 	}
 
-	if len(rootDomain) >= 56 {
-		t.Skip(
-			"Environment variable ACM_CERTIFICATE_ROOT_DOMAIN is too long. " +
-				"The domain must be shorter than 56 characters to allow for " +
-				"subdomain randomization in the testing.")
+	if len(rootDomain) > acmRandomSubDomainRemainderLen {
+		t.Skipf(
+			"Environment variable ACM_CERTIFICATE_ROOT_DOMAIN is too long. "+
+				"The domain must be %d characters or shorter to allow for "+
+				"subdomain randomization in the testing.", acmRandomSubDomainRemainderLen)
 	}
 
 	return rootDomain
@@ -1983,11 +1997,10 @@ func ACMCertificateDomainFromEnv(t *testing.T) string {
 // ACM domain names cannot be longer than 64 characters
 // Other resources, e.g. Cognito User Pool Domains, limit this to 63
 func ACMCertificateRandomSubDomain(rootDomain string) string {
-	// Max length (63)
-	// Subtract "tf-acc-" prefix (7)
-	// Subtract "." between prefix and root domain (1)
-	// Subtract length of root domain
-	return fmt.Sprintf("tf-acc-%s.%s", sdkacctest.RandString(55-len(rootDomain)), rootDomain)
+	return fmt.Sprintf(
+		acmRandomSubDomainPrefix+"%s.%s",
+		sdkacctest.RandString(acmRandomSubDomainRemainderLen-len(rootDomain)),
+		rootDomain)
 }
 
 func CheckACMPCACertificateAuthorityActivateCA(certificateAuthority *acmpca.CertificateAuthority) resource.TestCheckFunc {

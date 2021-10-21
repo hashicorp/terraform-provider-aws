@@ -24,6 +24,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+const (
+	zoneChangeSyncMinDelay        = 10
+	zoneChangeSyncMaxDelay        = 30
+	zoneChangeSyncMinPollInterval = 15
+	zoneChangeSyncMaxPollInterval = 30
+)
+
 func ResourceZone() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceZoneCreate,
@@ -688,9 +695,9 @@ func route53WaitForChangeSynchronization(conn *route53.Route53, changeID string)
 	conf := resource.StateChangeConf{
 		Pending:      []string{route53.ChangeStatusPending},
 		Target:       []string{route53.ChangeStatusInsync},
-		Delay:        time.Duration(rand.Int63n(20)+10) * time.Second,
+		Delay:        time.Duration(rand.Int63n(zoneChangeSyncMaxDelay-zoneChangeSyncMinDelay)+zoneChangeSyncMinDelay) * time.Second,
 		MinTimeout:   5 * time.Second,
-		PollInterval: time.Duration(rand.Int63n(15)+15) * time.Second,
+		PollInterval: time.Duration(rand.Int63n(zoneChangeSyncMaxPollInterval-zoneChangeSyncMinPollInterval)+zoneChangeSyncMinPollInterval) * time.Second,
 		Timeout:      15 * time.Minute,
 		Refresh: func() (result interface{}, state string, err error) {
 			input := &route53.GetChangeInput{

@@ -16,7 +16,7 @@ const (
 	lexSlotTypeDeletedTimeout = 5 * time.Minute
 )
 
-func waitBotVersionCreated(conn *lexmodelbuildingservice.LexModelBuildingService, name, version string, timeout time.Duration) (*lexmodelbuildingservice.GetBotOutput, error) {
+func waitBotVersionCreated(conn *lexmodelbuildingservice.LexModelBuildingService, name, version string, timeout time.Duration) (*lexmodelbuildingservice.GetBotOutput, error) { //nolint:unparam
 	stateChangeConf := &resource.StateChangeConf{
 		Pending: []string{lexmodelbuildingservice.StatusBuilding},
 		Target: []string{

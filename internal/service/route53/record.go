@@ -22,9 +22,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-var r53NoRecordsFound = errors.New("No matching records found")
-var r53NoHostedZoneFound = errors.New("No matching Hosted Zone found")
-var r53ValidRecordTypes = regexp.MustCompile("^(A|AAAA|CAA|CNAME|MX|NAPTR|NS|PTR|SOA|SPF|SRV|TXT|DS)$")
+const (
+	recordSetSyncMinDelay = 10
+	recordSetSyncMaxDelay = 30
+)
+
+var (
+	r53NoRecordsFound    = errors.New("No matching records found")
+	r53NoHostedZoneFound = errors.New("No matching Hosted Zone found")
+	r53ValidRecordTypes  = regexp.MustCompile("^(A|AAAA|CAA|CNAME|MX|NAPTR|NS|PTR|SOA|SPF|SRV|TXT|DS)$")
+)
 
 func ResourceRecord() *schema.Resource {
 	//lintignore:R011
@@ -497,7 +504,7 @@ func WaitForRecordSetToSync(conn *route53.Route53, requestId string) error {
 	wait := resource.StateChangeConf{
 		Pending:      []string{route53.ChangeStatusPending},
 		Target:       []string{route53.ChangeStatusInsync},
-		Delay:        time.Duration(rand.Int63n(20)+10) * time.Second,
+		Delay:        time.Duration(rand.Int63n(recordSetSyncMaxDelay-recordSetSyncMinDelay)+recordSetSyncMinDelay) * time.Second,
 		MinTimeout:   5 * time.Second,
 		PollInterval: 20 * time.Second,
 		Timeout:      30 * time.Minute,

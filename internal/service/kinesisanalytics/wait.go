@@ -72,7 +72,7 @@ func waitApplicationStopped(conn *kinesisanalytics.KinesisAnalytics, name string
 }
 
 // waitApplicationUpdated waits for an Application to update
-func waitApplicationUpdated(conn *kinesisanalytics.KinesisAnalytics, name string) (*kinesisanalytics.ApplicationDetail, error) {
+func waitApplicationUpdated(conn *kinesisanalytics.KinesisAnalytics, name string) (*kinesisanalytics.ApplicationDetail, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{kinesisanalytics.ApplicationStatusUpdating},
 		Target:  []string{kinesisanalytics.ApplicationStatusReady, kinesisanalytics.ApplicationStatusRunning},

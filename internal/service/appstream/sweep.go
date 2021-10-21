@@ -54,7 +54,7 @@ func sweepFleet(region string) error {
 
 	input := &appstream.DescribeFleetsInput{}
 
-	err = DescribeFleetsPagesWithContext(context.TODO(), conn, input, func(page *appstream.DescribeFleetsOutput, lastPage bool) bool {
+	err = describeFleetsPagesWithContext(context.TODO(), conn, input, func(page *appstream.DescribeFleetsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -75,6 +75,11 @@ func sweepFleet(region string) error {
 
 		return !lastPage
 	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping Appstream Fleets sweep for %s: %s", region, err)
+		return nil
+	}
 
 	if err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error listing AppStream Fleets: %w", err))
@@ -104,7 +109,7 @@ func sweepImageBuilder(region string) error {
 
 	input := &appstream.DescribeImageBuildersInput{}
 
-	err = DescribeImageBuildersPagesWithContext(context.TODO(), conn, input, func(page *appstream.DescribeImageBuildersOutput, lastPage bool) bool {
+	err = describeImageBuildersPagesWithContext(context.TODO(), conn, input, func(page *appstream.DescribeImageBuildersOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -125,6 +130,11 @@ func sweepImageBuilder(region string) error {
 
 		return !lastPage
 	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping Appstream Image Builders sweep for %s: %s", region, err)
+		return nil
+	}
 
 	if err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error listing AppStream Image Builders: %w", err))
@@ -155,7 +165,7 @@ func sweepStack(region string) error {
 
 	input := &appstream.DescribeStacksInput{}
 
-	err = DescribeStacksPagesWithContext(context.TODO(), conn, input, func(page *appstream.DescribeStacksOutput, lastPage bool) bool {
+	err = describeStacksPagesWithContext(context.TODO(), conn, input, func(page *appstream.DescribeStacksOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -176,6 +186,11 @@ func sweepStack(region string) error {
 
 		return !lastPage
 	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping Appstream Stacks sweep for %s: %s", region, err)
+		return nil
+	}
 
 	if err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error listing AppStream Stacks: %w", err))

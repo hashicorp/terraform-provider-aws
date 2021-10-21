@@ -31,7 +31,7 @@ func sweepApps(region string) error {
 	input := &amplify.ListAppsInput{}
 	var sweeperErrs *multierror.Error
 
-	err = ListAppsPages(conn, input, func(page *amplify.ListAppsOutput, lastPage bool) bool {
+	err = listAppsPages(conn, input, func(page *amplify.ListAppsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
