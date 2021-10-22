@@ -8,11 +8,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccGlueDataCatalogEncryptionSettingsDataSource_basic(t *testing.T) {
+func testAccGlueDataCatalogEncryptionSettingsDataSource_basic(t *testing.T) {
 	resourceName := "aws_glue_data_catalog_encryption_settings.test"
 	dataSourceName := "data.aws_glue_data_catalog_encryption_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, glue.EndpointsID),
 		Providers:  acctest.Providers,

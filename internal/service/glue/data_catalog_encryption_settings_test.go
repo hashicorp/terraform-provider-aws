@@ -13,14 +13,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccGlueDataCatalogEncryptionSettings_basic(t *testing.T) {
+func testAccGlueDataCatalogEncryptionSettings_basic(t *testing.T) {
 	var settings glue.DataCatalogEncryptionSettings
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_data_catalog_encryption_settings.test"
 	keyResourceName := "aws_kms_key.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
 		Providers:    acctest.Providers,
