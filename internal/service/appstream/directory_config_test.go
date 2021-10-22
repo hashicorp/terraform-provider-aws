@@ -86,6 +86,7 @@ func TestAccAppStreamDirectoryConfig_disappears(t *testing.T) {
 		},
 	})
 }
+
 func testAccCheckDirectoryConfigExists(resourceName string, appStreamDirectoryConfig *appstream.DirectoryConfig) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -147,6 +148,7 @@ data "aws_organizations_organizational_units" "test" {
 resource "aws_appstream_directory_config" "test" {
   directory_name                          = %[1]q
   organizational_unit_distinguished_names = data.aws_organizations_organizational_units.test.children.*.id
+  
   service_account_credentials{
     account_name     = %[2]q
     account_password = %[3]q
