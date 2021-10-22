@@ -17,7 +17,7 @@ func ResourceDataCatalogEncryptionSettings() *schema.Resource {
 		Create: resourceDataCatalogEncryptionSettingsPut,
 		Read:   resourceDataCatalogEncryptionSettingsRead,
 		Update: resourceDataCatalogEncryptionSettingsPut,
-		Delete: schema.Noop,
+		Delete: resourceDataCatalogEncryptionSettingsDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -121,6 +121,24 @@ func resourceDataCatalogEncryptionSettingsRead(d *schema.ResourceData, meta inte
 		}
 	} else {
 		d.Set("data_catalog_encryption_settings", nil)
+	}
+
+	return nil
+}
+
+func resourceDataCatalogEncryptionSettingsDelete(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).GlueConn
+
+	input := &glue.PutDataCatalogEncryptionSettingsInput{
+		CatalogId:                     aws.String(d.Id()),
+		DataCatalogEncryptionSettings: &glue.DataCatalogEncryptionSettings{},
+	}
+
+	log.Printf("[DEBUG] Deleting Glue Data Catalog Encryption Settings: %s", input)
+	_, err := conn.PutDataCatalogEncryptionSettings(input)
+
+	if err != nil {
+		return fmt.Errorf("error putting Glue Data Catalog Encryption Settings (%s): %w", d.Id(), err)
 	}
 
 	return nil
