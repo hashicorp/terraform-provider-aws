@@ -74,7 +74,7 @@ func TestAccGlueDataCatalogEncryptionSettings_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckDataCatalogEncryptionSettingsExists(resourceName string, settings *glue.DataCatalogEncryptionSettings) resource.TestCheckFunc {
+func testAccCheckDataCatalogEncryptionSettingsExists(resourceName string, v *glue.DataCatalogEncryptionSettings) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -90,11 +90,12 @@ func testAccCheckDataCatalogEncryptionSettingsExists(resourceName string, settin
 		output, err := conn.GetDataCatalogEncryptionSettings(&glue.GetDataCatalogEncryptionSettingsInput{
 			CatalogId: aws.String(rs.Primary.ID),
 		})
+
 		if err != nil {
 			return err
 		}
 
-		*settings = *output.DataCatalogEncryptionSettings
+		*v = *output.DataCatalogEncryptionSettings
 
 		return nil
 	}
