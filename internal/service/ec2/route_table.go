@@ -244,12 +244,8 @@ func resourceRouteTableRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting route: %w", err)
 	}
 
-	//Ignore the FSx service tag
-	mTag := make(map[string]string)
-	mTag["AmazonFSx"] = "ManagedByAmazonFSx"
-	fsxTag := tftags.New(mTag)
-
-	tags := KeyValueTags(routeTable.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Ignore(fsxTag)
+	//Ignore the AmazonFSx service tag in addition to standard ignores
+	tags := KeyValueTags(routeTable.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Ignore(tftags.New([]string{"AmazonFSx"}))
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
