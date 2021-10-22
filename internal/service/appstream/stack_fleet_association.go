@@ -112,7 +112,7 @@ func resourceStackFleetAssociationRead(ctx context.Context, d *schema.ResourceDa
 func resourceStackFleetAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppStreamConn
 
-	fleetName, stackName, err := DecodeStackFleetID(d.Id())
+	stackName, fleetName, err := DecodeStackFleetID(d.Id())
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error decoding id Appstream Stack Fleet Association (%s): %w", d.Id(), err))
 	}

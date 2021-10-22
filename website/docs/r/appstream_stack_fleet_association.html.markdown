@@ -35,7 +35,7 @@ resource "aws_appstream_stack_fleet_association" "example" {
 
 ## Argument Reference
 
-The following arguments supported:
+The following arguments are required:
 
 * `fleet_name` - (Required) Name of the fleet.
 * `stack_name` (Optional) Name of the stack.
