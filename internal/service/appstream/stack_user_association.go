@@ -1,0 +1,177 @@
+package appstream
+
+import (
+	"context"
+	"fmt"
+	"log"
+	"strings"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/appstream"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+)
+
+func ResourceStackUserAssociation() *schema.Resource {
+	return &schema.Resource{
+		CreateWithoutTimeout: resourceStackUserAssociationCreate,
+		ReadWithoutTimeout:   resourceStackUserAssociationRead,
+		DeleteWithoutTimeout: resourceStackUserAssociationDelete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+		Schema: map[string]*schema.Schema{
+			"authentication_type": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(appstream.AuthenticationType_Values(), false),
+			},
+			"send_email_notification": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
+			},
+			"stack_name": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 128),
+			},
+			"user_name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+		},
+	}
+}
+
+func resourceStackUserAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).AppStreamConn
+
+	input := &appstream.UserStackAssociation{
+		AuthenticationType: aws.String(d.Get("authentication_type").(string)),
+		StackName:          aws.String(d.Get("stack_name").(string)),
+		UserName:           aws.String(d.Get("user_name").(string)),
+	}
+
+	if v, ok := d.GetOk("send_email_notification"); ok {
+		input.SendEmailNotification = aws.Bool(v.(bool))
+	}
+
+	var err error
+	var output *appstream.BatchAssociateUserStackOutput
+	err = resource.RetryContext(ctx, fleetOperationTimeout, func() *resource.RetryError {
+		output, err = conn.BatchAssociateUserStackWithContext(ctx, &appstream.BatchAssociateUserStackInput{
+			UserStackAssociations: []*appstream.UserStackAssociation{input},
+		})
+		if err != nil {
+			if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
+				return resource.RetryableError(err)
+			}
+
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
+	if tfresource.TimedOut(err) {
+		output, err = conn.BatchAssociateUserStackWithContext(ctx, &appstream.BatchAssociateUserStackInput{
+			UserStackAssociations: []*appstream.UserStackAssociation{input},
+		})
+	}
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error creating Appstream Stack User Association (%s): %w", d.Id(), err))
+	}
+	if len(output.Errors) > 0 {
+		var errs *multierror.Error
+
+		for _, err := range output.Errors {
+			errs = multierror.Append(errs, fmt.Errorf("%s: %s", aws.StringValue(err.ErrorCode), aws.StringValue(err.ErrorMessage)))
+		}
+	}
+
+	d.SetId(fmt.Sprintf("%s/%s/%s", d.Get("stack_name").(string), d.Get("user_name").(string), d.Get("authentication_type").(string)))
+
+	return resourceStackUserAssociationRead(ctx, d, meta)
+}
+
+func resourceStackUserAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).AppStreamConn
+
+	stackName, userName, authType, err := DecodeStackUserID(d.Id())
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error decoding id Appstream Stack User Association (%s): %w", d.Id(), err))
+	}
+
+	resp, err := conn.DescribeUserStackAssociationsWithContext(ctx,
+		&appstream.DescribeUserStackAssociationsInput{
+			AuthenticationType: aws.String(authType),
+			StackName:          aws.String(stackName),
+			UserName:           aws.String(userName),
+		})
+
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
+		log.Printf("[WARN] Appstream Stack User Association (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	if len(resp.UserStackAssociations) == 0 {
+		log.Printf("[WARN] Appstream User (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	association := resp.UserStackAssociations[0]
+
+	d.Set("authentication_type", association.AuthenticationType)
+	d.Set("send_email_notification", association.SendEmailNotification)
+	d.Set("stack_name", association.StackName)
+	d.Set("user_name", association.UserName)
+
+	return nil
+}
+
+func resourceStackUserAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).AppStreamConn
+
+	stackName, userName, authType, err := DecodeStackUserID(d.Id())
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error decoding id Appstream Stack User Association (%s): %w", d.Id(), err))
+	}
+
+	input := &appstream.UserStackAssociation{
+		AuthenticationType: aws.String(authType),
+		StackName:          aws.String(stackName),
+		UserName:           aws.String(userName),
+	}
+
+	_, err = conn.BatchDisassociateUserStackWithContext(ctx, &appstream.BatchDisassociateUserStackInput{
+		UserStackAssociations: []*appstream.UserStackAssociation{input},
+	})
+
+	if err != nil {
+		if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
+			return nil
+		}
+		return diag.FromErr(fmt.Errorf("error deleting Appstream Stack User Association (%s): %w", d.Id(), err))
+	}
+	return nil
+}
+
+func DecodeStackUserID(id string) (string, string, string, error) {
+	idParts := strings.SplitN(id, "/", 3)
+	if len(idParts) != 3 {
+		return "", "", "", fmt.Errorf("expected ID in format StackName-UserName-AuthenticationType, received: %s", id)
+	}
+	return idParts[0], idParts[1], idParts[2], nil
+}
