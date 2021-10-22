@@ -208,10 +208,15 @@ func testAccDxConnectionConfigBasic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_dx_locations" "test" {}
 
+locals {
+  location_codes = tolist(data.aws_dx_locations.test.location_codes)
+  idx            = min(2, length(local.location_codes) - 1)
+}
+
 resource "aws_dx_connection" "test" {
   name      = %[1]q
   bandwidth = "1Gbps"
-  location  = tolist(data.aws_dx_locations.test.location_codes)[0]
+  location  = local.location_codes[local.idx]
 }
 `, rName)
 }
@@ -220,8 +225,13 @@ func testAccDxConnectionConfigProviderName(rName string) string {
 	return fmt.Sprintf(`
 data "aws_dx_locations" "test" {}
 
+locals {
+  location_codes = tolist(data.aws_dx_locations.test.location_codes)
+  idx            = min(2, length(local.location_codes) - 1)
+}
+
 data "aws_dx_location" "test" {
-  location_code = tolist(data.aws_dx_locations.test.location_codes)[0]
+  location_code = local.location_codes[local.idx]
 }
 
 resource "aws_dx_connection" "test" {
@@ -238,10 +248,15 @@ func testAccDxConnectionConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 data "aws_dx_locations" "test" {}
 
+locals {
+  location_codes = tolist(data.aws_dx_locations.test.location_codes)
+  idx            = min(2, length(local.location_codes) - 1)
+}
+
 resource "aws_dx_connection" "test" {
   name      = %[1]q
   bandwidth = "1Gbps"
-  location  = tolist(data.aws_dx_locations.test.location_codes)[0]
+  location  = local.location_codes[local.idx]
 
   tags = {
     %[2]q = %[3]q
@@ -254,10 +269,15 @@ func testAccDxConnectionConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue
 	return fmt.Sprintf(`
 data "aws_dx_locations" "test" {}
 
+locals {
+  location_codes = tolist(data.aws_dx_locations.test.location_codes)
+  idx            = min(2, length(local.location_codes) - 1)
+}
+
 resource "aws_dx_connection" "test" {
   name      = %[1]q
   bandwidth = "1Gbps"
-  location  = tolist(data.aws_dx_locations.test.location_codes)[0]
+  location  = local.location_codes[local.idx]
 
   tags = {
     %[2]q = %[3]q
