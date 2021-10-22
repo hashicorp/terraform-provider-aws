@@ -39,54 +39,45 @@ func ResourceExternalKey() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"bypass_policy_lockout_safety_check": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
-
 			"deletion_window_in_days": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      30,
 				ValidateFunc: validation.IntBetween(7, 30),
 			},
-
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 8192),
 			},
-
 			"enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-
 			"expiration_model": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"key_material_base64": {
 				Type:      schema.TypeString,
 				Optional:  true,
 				ForceNew:  true,
 				Sensitive: true,
 			},
-
 			"key_state": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"key_usage": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"policy": {
 				Type:             schema.TypeString,
 				Optional:         true,
@@ -97,10 +88,8 @@ func ResourceExternalKey() *schema.Resource {
 					validation.StringIsJSON,
 				),
 			},
-
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
-
 			"valid_to": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -192,6 +181,14 @@ func resourceExternalKeyRead(d *schema.ResourceData, meta interface{}) error {
 
 	if err != nil {
 		return err
+	}
+
+	if keyManager := aws.StringValue(key.metadata.KeyManager); keyManager != kms.KeyManagerTypeCustomer {
+		return fmt.Errorf("KMS Key (%s) has invalid KeyManager: %s", d.Id(), keyManager)
+	}
+
+	if origin := aws.StringValue(key.metadata.Origin); origin != kms.OriginTypeExternal {
+		return fmt.Errorf("KMS Key (%s) has invalid Origin: %s", d.Id(), origin)
 	}
 
 	d.Set("arn", key.metadata.Arn)

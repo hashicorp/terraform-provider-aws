@@ -6,7 +6,7 @@ description: |-
   Manages a KMS multi-Region replica key.
 ---
 
-# Resource: aws_kms_key
+# Resource: aws_kms_replica_key
 
 Manages a KMS multi-Region replica key.
 

@@ -186,6 +186,11 @@ func resourceKeyRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
+	if aws.BoolValue(key.metadata.MultiRegion) &&
+		aws.StringValue(key.metadata.MultiRegionConfiguration.MultiRegionKeyType) != kms.MultiRegionKeyTypePrimary {
+		return fmt.Errorf("KMS Key (%s) is not a multi-Region primary key", d.Id())
+	}
+
 	d.Set("arn", key.metadata.Arn)
 	d.Set("customer_master_key_spec", key.metadata.CustomerMasterKeySpec)
 	d.Set("description", key.metadata.Description)

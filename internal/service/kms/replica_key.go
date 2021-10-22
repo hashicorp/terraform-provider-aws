@@ -134,7 +134,6 @@ func resourceReplicaKeyCreate(d *schema.ResourceData, meta interface{}) error {
 	replicateConn := kms.New(session)
 
 	log.Printf("[DEBUG] Creating KMS Replica Key: %s", input)
-
 	outputRaw, err := WaitIAMPropagation(func() (interface{}, error) {
 		return replicateConn.ReplicateKey(input)
 	})
@@ -190,6 +189,19 @@ func resourceReplicaKeyRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
+	if keyManager := aws.StringValue(key.metadata.KeyManager); keyManager != kms.KeyManagerTypeCustomer {
+		return fmt.Errorf("KMS Key (%s) has invalid KeyManager: %s", d.Id(), keyManager)
+	}
+
+	if origin := aws.StringValue(key.metadata.Origin); origin != kms.OriginTypeAwsKms {
+		return fmt.Errorf("KMS Key (%s) has invalid Origin: %s", d.Id(), origin)
+	}
+
+	if !aws.BoolValue(key.metadata.MultiRegion) ||
+		aws.StringValue(key.metadata.MultiRegionConfiguration.MultiRegionKeyType) != kms.MultiRegionKeyTypeReplica {
+		return fmt.Errorf("KMS Key (%s) is not a multi-Region replica key", d.Id())
+	}
+
 	d.Set("arn", key.metadata.Arn)
 	d.Set("description", key.metadata.Description)
 	d.Set("enabled", key.metadata.Enabled)
@@ -198,10 +210,7 @@ func resourceReplicaKeyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("key_spec", key.metadata.KeySpec)
 	d.Set("key_usage", key.metadata.KeyUsage)
 	d.Set("policy", key.policy)
-
-	if key.metadata.MultiRegionConfiguration != nil && key.metadata.MultiRegionConfiguration.PrimaryKey != nil {
-		d.Set("primary_key_arn", key.metadata.MultiRegionConfiguration.PrimaryKey.Arn)
-	}
+	d.Set("primary_key_arn", key.metadata.MultiRegionConfiguration.PrimaryKey.Arn)
 
 	tags := key.tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
