@@ -1271,6 +1271,7 @@ func Provider() *schema.Provider {
 			"aws_kms_external_key": kms.ResourceExternalKey(),
 			"aws_kms_grant":        kms.ResourceGrant(),
 			"aws_kms_key":          kms.ResourceKey(),
+			"aws_kms_replica_key":  kms.ResourceReplicaKey(),
 
 			"aws_lakeformation_data_lake_settings": lakeformation.ResourceDataLakeSettings(),
 			"aws_lakeformation_permissions":        lakeformation.ResourcePermissions(),
