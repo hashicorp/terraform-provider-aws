@@ -11,7 +11,7 @@ require (
 	github.com/hashicorp/terraform-exec v0.14.0 // indirect
 	github.com/katbyte/terrafmt v0.3.0
 	github.com/pavius/impi v0.0.3
-	github.com/terraform-linters/tflint v0.32.1
+	github.com/terraform-linters/tflint v0.33.0
 	golang.org/x/term v0.0.0-20201210144234-2321bbc49cbf // indirect
 )
 
@@ -21,3 +21,5 @@ replace github.com/hashicorp/go-changelog => github.com/breathingdust/go-changel
 
 // v1.5.1 was incorrectly built
 exclude github.com/hashicorp/go-getter v1.5.1
+
+replace github.com/tommy-muehle/go-mnd/v2 => github.com/gdavison/go-mnd/v2 v2.4.1-0.20211001004251-d5db99f5fd61

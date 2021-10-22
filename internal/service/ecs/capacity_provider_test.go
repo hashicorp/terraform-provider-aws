@@ -321,7 +321,7 @@ resource "aws_ecs_capacity_provider" "test" {
   name = %[1]q
 
   auto_scaling_group_provider {
-    auto_scaling_group_arn         = aws_autoscaling_group.test.arn
+    auto_scaling_group_arn = aws_autoscaling_group.test.arn
 
     managed_scaling {
       instance_warmup_period    = %[2]d

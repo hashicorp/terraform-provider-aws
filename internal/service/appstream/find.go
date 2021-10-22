@@ -64,7 +64,7 @@ func FindImageBuilderByName(ctx context.Context, conn *appstream.AppStream, name
 
 	var result *appstream.ImageBuilder
 
-	err := DescribeImageBuildersPagesWithContext(ctx, conn, input, func(page *appstream.DescribeImageBuildersOutput, lastPage bool) bool {
+	err := describeImageBuildersPagesWithContext(ctx, conn, input, func(page *appstream.DescribeImageBuildersOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}

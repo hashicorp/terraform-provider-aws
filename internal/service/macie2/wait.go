@@ -14,7 +14,7 @@ const (
 )
 
 // waitMemberInvited waits for an AdminAccount to return Invited, Enabled and Paused
-func waitMemberInvited(ctx context.Context, conn *macie2.Macie2, adminAccountID string) (*macie2.Member, error) {
+func waitMemberInvited(ctx context.Context, conn *macie2.Macie2, adminAccountID string) (*macie2.Member, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{macie2.RelationshipStatusCreated, macie2.RelationshipStatusEmailVerificationInProgress},
 		Target:  []string{macie2.RelationshipStatusInvited, macie2.RelationshipStatusEnabled, macie2.RelationshipStatusPaused},

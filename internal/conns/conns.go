@@ -226,7 +226,7 @@ type AWSClient struct {
 	AmplifyConn                      *amplify.Amplify
 	APIGatewayConn                   *apigateway.APIGateway
 	APIGatewayV2Conn                 *apigatewayv2.ApiGatewayV2
-	ApplicationAutoScalingConn       *applicationautoscaling.ApplicationAutoScaling
+	AppAutoScalingConn               *applicationautoscaling.ApplicationAutoScaling
 	AppConfigConn                    *appconfig.AppConfig
 	ApplicationInsightsConn          *applicationinsights.ApplicationInsights
 	AppMeshConn                      *appmesh.AppMesh
@@ -482,7 +482,7 @@ func (c *Config) Client() (interface{}, error) {
 		AmplifyConn:                      amplify.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["amplify"])})),
 		APIGatewayConn:                   apigateway.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["apigateway"])})),
 		APIGatewayV2Conn:                 apigatewayv2.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["apigateway"])})),
-		ApplicationAutoScalingConn:       applicationautoscaling.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["applicationautoscaling"])})),
+		AppAutoScalingConn:               applicationautoscaling.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["applicationautoscaling"])})),
 		AppConfigConn:                    appconfig.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["appconfig"])})),
 		ApplicationInsightsConn:          applicationinsights.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["applicationinsights"])})),
 		AppMeshConn:                      appmesh.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["appmesh"])})),
@@ -710,7 +710,7 @@ func (c *Config) Client() (interface{}, error) {
 	})
 
 	// Workaround for https://github.com/aws/aws-sdk-go/issues/1472
-	client.ApplicationAutoScalingConn.Handlers.Retry.PushBack(func(r *request.Request) {
+	client.AppAutoScalingConn.Handlers.Retry.PushBack(func(r *request.Request) {
 		if !strings.HasPrefix(r.Operation.Name, "Describe") && !strings.HasPrefix(r.Operation.Name, "List") {
 			return
 		}

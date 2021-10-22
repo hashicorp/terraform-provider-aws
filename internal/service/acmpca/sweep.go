@@ -68,7 +68,7 @@ func sweepCertificateAuthorities(region string) error {
 		log.Printf("[INFO] Deleting ACM PCA Certificate Authority: %s", arn)
 		_, err := conn.DeleteCertificateAuthority(&acmpca.DeleteCertificateAuthorityInput{
 			CertificateAuthorityArn:     aws.String(arn),
-			PermanentDeletionTimeInDays: aws.Int64(int64(7)),
+			PermanentDeletionTimeInDays: aws.Int64(7),
 		})
 		if tfawserr.ErrMessageContains(err, acmpca.ErrCodeResourceNotFoundException, "") {
 			continue

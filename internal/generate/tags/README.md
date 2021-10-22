@@ -7,9 +7,9 @@ This generator (`main.go`) generates files named `tags_gen`, such as `internal/s
 Control the code generated using flags of the directives that you include in a `generate.go` file for an individual service. For example, a file such as `internal/service/ecs/generate.go` may contain three directives (and a package declaration). This generator corresponds to the `../../generate/tags/main.go` directive. (The other directives are documented in their respective packages.)
 
 ```go
-//go:generate go run -tags generate ../../generate/listpages/main.go -ListOps=DescribeCapacityProviders -Export=yes
-//go:generate go run -tags generate ../../generate/tagresource/main.go
-//go:generate go run -tags generate ../../generate/tags/main.go -GetTag=yes -ListTags=yes -ServiceTagsSlice=yes -UpdateTags=yes
+//go:generate go run ../../generate/listpages/main.go -ListOps=DescribeCapacityProviders
+//go:generate go run ../../generate/tagresource/main.go
+//go:generate go run ../../generate/tags/main.go -GetTag -ListTags -ServiceTagsSlice -UpdateTags
 
 package ecs
 ```
@@ -22,11 +22,11 @@ Some flags control generation a certain section of code, such as whether the gen
 
 | Flag | Default | Description | Example Use | 
 | --- | --- | --- | --- |
-| `GetTag` |  | Whether to generate GetTag | `-GetTag=yes` |
-| `ListTags` |  | Whether to generate ListTags | `-ListTags=yes` |
-| `ServiceTagsMap` |  | Whether to generate map service tags (use this or `ServiceTagsSlice`, not both) | `-ServiceTagsMap=yes` |
-| `ServiceTagsSlice` |  | Whether to generate slice service tags (use this or `ServiceTagsMap`, not both) | `-ServiceTagsSlice=yes` |
-| `UpdateTags` |  | Whether to generate UpdateTags | `-UpdateTags=yes` |
+| `GetTag` |  | Whether to generate GetTag | `-GetTag` |
+| `ListTags` |  | Whether to generate ListTags | `-ListTags` |
+| `ServiceTagsMap` |  | Whether to generate map service tags (use this or `ServiceTagsSlice`, not both) | `-ServiceTagsMap` |
+| `ServiceTagsSlice` |  | Whether to generate slice service tags (use this or `ServiceTagsMap`, not both) | `-ServiceTagsSlice` |
+| `UpdateTags` |  | Whether to generate UpdateTags | `-UpdateTags` |
 | `ListTagsInFiltIDName` |  | List tags input filter identifier name | `-ListTagsInFiltIDName=resource-id` |
 | `ListTagsInIDElem` | `ResourceArn` | List tags input identifier element | `-ListTagsInEDElem=ResourceARN` |
 | `ListTagsInIDNeedSlice` |  | Whether list tags input identifier needs a slice | `-ListTagsInIDNeedSlice=yes` |
@@ -48,7 +48,7 @@ Some flags control generation a certain section of code, such as whether the gen
 | `TagTypeValElem` | `Value` | Tag type value element | `-TagTypeValElem=TagValue` |
 | `UntagInCustomVal` |  | Untag input custom value | `-UntagInCustomVal="&cloudfront.TagKeys{Items: aws.StringSlice(removedTags.IgnoreAWS().Keys())}"` |
 | `UntagInNeedTagKeyType` |  | Untag input needs tag key type | `-UntagInNeedTagKeyType=yes` |
-| `UntagInNeedTagType` |  | Untag input needs tag type | `-UntagInNeedTagType=yes` |
+| `UntagInNeedTagType` |  | Untag input needs tag type | `-UntagInNeedTagType` |
 | `UntagInTagsElem` | `TagKeys` | Untag input tags element | `-UntagInTagsElem=Tags` |
 | `UntagOp` | `UntagResource` | Untag operation | `-UntagOp=DeleteTags` |
 

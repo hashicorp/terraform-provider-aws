@@ -23,8 +23,8 @@ import (
 func TestIpPermissionIDHash(t *testing.T) {
 	simple := &ec2.IpPermission{
 		IpProtocol: aws.String("tcp"),
-		FromPort:   aws.Int64(int64(80)),
-		ToPort:     aws.Int64(int64(8000)),
+		FromPort:   aws.Int64(80),
+		ToPort:     aws.Int64(8000),
 		IpRanges: []*ec2.IpRange{
 			{
 				CidrIp: aws.String("10.0.0.0/8"),
@@ -34,8 +34,8 @@ func TestIpPermissionIDHash(t *testing.T) {
 
 	egress := &ec2.IpPermission{
 		IpProtocol: aws.String("tcp"),
-		FromPort:   aws.Int64(int64(80)),
-		ToPort:     aws.Int64(int64(8000)),
+		FromPort:   aws.Int64(80),
+		ToPort:     aws.Int64(8000),
 		IpRanges: []*ec2.IpRange{
 			{
 				CidrIp: aws.String("10.0.0.0/8"),
@@ -54,8 +54,8 @@ func TestIpPermissionIDHash(t *testing.T) {
 
 	vpc_security_group_source := &ec2.IpPermission{
 		IpProtocol: aws.String("tcp"),
-		FromPort:   aws.Int64(int64(80)),
-		ToPort:     aws.Int64(int64(8000)),
+		FromPort:   aws.Int64(80),
+		ToPort:     aws.Int64(8000),
 		UserIdGroupPairs: []*ec2.UserIdGroupPair{
 			{
 				UserId:  aws.String("987654321"),
@@ -74,8 +74,8 @@ func TestIpPermissionIDHash(t *testing.T) {
 
 	security_group_source := &ec2.IpPermission{
 		IpProtocol: aws.String("tcp"),
-		FromPort:   aws.Int64(int64(80)),
-		ToPort:     aws.Int64(int64(8000)),
+		FromPort:   aws.Int64(80),
+		ToPort:     aws.Int64(8000),
 		UserIdGroupPairs: []*ec2.UserIdGroupPair{
 			{
 				UserId:    aws.String("987654321"),

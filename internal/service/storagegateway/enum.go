@@ -44,6 +44,7 @@ const (
 	fileSystemAssociationDeleteTimeout = 3 * time.Minute
 )
 
+//nolint:deadcode,varcheck // These constants are missing from the AWS SDK
 const (
 	fileSystemAssociationStatusAvailable     = "AVAILABLE"
 	fileSystemAssociationStatusCreating      = "CREATING"

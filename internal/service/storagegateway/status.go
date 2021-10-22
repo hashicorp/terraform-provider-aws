@@ -14,13 +14,8 @@ import (
 const (
 	storageGatewayGatewayStatusConnected = "GatewayConnected"
 	storediSCSIVolumeStatusNotFound      = "NotFound"
-	storediSCSIVolumeStatusUnknown       = "Unknown"
 	nfsFileShareStatusNotFound           = "NotFound"
-	nfsFileShareStatusUnknown            = "Unknown"
-	smbFileShareStatusNotFound           = "NotFound"
-	smbFileShareStatusUnknown            = "Unknown"
 	fileSystemAssociationStatusNotFound  = "NotFound"
-	fileSystemAssociationStatusUnknown   = "Unknown"
 )
 
 func statusStorageGatewayGateway(conn *storagegateway.StorageGateway, gatewayARN string) resource.StateRefreshFunc {
@@ -78,7 +73,7 @@ func statusStorediSCSIVolume(conn *storagegateway.StorageGateway, volumeARN stri
 		}
 
 		if err != nil {
-			return nil, storediSCSIVolumeStatusUnknown, err
+			return nil, "", err
 		}
 
 		if output == nil || len(output.StorediSCSIVolumes) == 0 {
@@ -101,7 +96,7 @@ func statusNFSFileShare(conn *storagegateway.StorageGateway, fileShareArn string
 			if tfawserr.ErrMessageContains(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified file share was not found.") {
 				return nil, nfsFileShareStatusNotFound, nil
 			}
-			return nil, nfsFileShareStatusUnknown, fmt.Errorf("error reading Storage Gateway NFS File Share: %w", err)
+			return nil, "", fmt.Errorf("error reading Storage Gateway NFS File Share: %w", err)
 		}
 
 		if output == nil || len(output.NFSFileShareInfoList) == 0 || output.NFSFileShareInfoList[0] == nil {

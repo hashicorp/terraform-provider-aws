@@ -638,3 +638,17 @@ rules:
     patterns:
       - pattern: 'if d.HasChangeExcept("tags_all") {...}'
     severity: WARNING
+
+  - id: unnecessary-literal-type-conversion
+    languages: [go]
+    message: Literal numbers do not need type conversions
+    paths:
+      include:
+        - internal/
+    patterns:
+      - pattern: "aws.Int64(int64($X))"
+      - metavariable-regex:
+          metavariable: $X
+          regex: (\d+)
+    severity: ERROR
+    fix: "aws.Int64($X)"

@@ -29,6 +29,10 @@ const (
 	elasticacheDefaultMemcachedPort = "11211"
 )
 
+const (
+	cacheClusterCreatedTimeout = 40 * time.Minute
+)
+
 func ResourceCluster() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceClusterCreate,
@@ -366,7 +370,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(id)
 
-	_, err = WaitCacheClusterAvailable(conn, d.Id(), 40*time.Minute)
+	_, err = waitCacheClusterAvailable(conn, d.Id(), cacheClusterCreatedTimeout)
 	if err != nil {
 		return fmt.Errorf("error waiting for ElastiCache Cache Cluster (%s) to be created: %w", d.Id(), err)
 	}
@@ -597,7 +601,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("Error updating ElastiCache cluster (%s), error: %w", d.Id(), err)
 		}
 
-		_, err = WaitCacheClusterAvailable(conn, d.Id(), CacheClusterUpdatedTimeout)
+		_, err = waitCacheClusterAvailable(conn, d.Id(), CacheClusterUpdatedTimeout)
 		if err != nil {
 			return fmt.Errorf("error waiting for ElastiCache Cache Cluster (%s) to update: %w", d.Id(), err)
 		}

@@ -1207,7 +1207,7 @@ func resourceServiceDelete(d *schema.ResourceData, meta interface{}) error {
 		_, err = conn.UpdateService(&ecs.UpdateServiceInput{
 			Service:      aws.String(d.Id()),
 			Cluster:      aws.String(d.Get("cluster").(string)),
-			DesiredCount: aws.Int64(int64(0)),
+			DesiredCount: aws.Int64(0),
 		})
 		if err != nil {
 			return err

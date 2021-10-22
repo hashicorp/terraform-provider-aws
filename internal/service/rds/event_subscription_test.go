@@ -225,6 +225,24 @@ func TestAccRDSEventSubscription_categories(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "sns_topic", snsTopicResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "source_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source_type", "db-instance"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				Config: testAccEventSubscriptionCategoriesAndSourceTypeUpdatedConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEventSubscriptionExists(resourceName, &v),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "rds", fmt.Sprintf("es:%s", rName)),
+					acctest.CheckResourceAttrAccountID(resourceName, "customer_aws_id"),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "event_categories.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "event_categories.*", "creation"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "event_categories.*", "deletion"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "sns_topic", snsTopicResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "source_ids.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "source_type", "db-cluster"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -428,10 +446,30 @@ resource "aws_db_event_subscription" "test" {
   name        = %[1]q
   sns_topic   = aws_sns_topic.test.arn
   enabled     = true
+  source_type = "db-instance"
+
+  event_categories = [
+    "creation",
+  ]
+}
+`, rName)
+}
+
+func testAccEventSubscriptionCategoriesAndSourceTypeUpdatedConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_sns_topic" "test" {
+  name = %[1]q
+}
+
+resource "aws_db_event_subscription" "test" {
+  name        = %[1]q
+  sns_topic   = aws_sns_topic.test.arn
+  enabled     = true
   source_type = "db-cluster"
 
   event_categories = [
     "creation",
+    "deletion",
   ]
 }
 `, rName)

@@ -661,8 +661,8 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	maxSize := aws.Int64(int64(d.Get("max_size").(int)))
 
 	if twoPhases {
-		createOpts.MinSize = aws.Int64(int64(0))
-		createOpts.MaxSize = aws.Int64(int64(0))
+		createOpts.MinSize = aws.Int64(0)
+		createOpts.MaxSize = aws.Int64(0)
 
 		updateOpts.MinSize = minSize
 		updateOpts.MaxSize = maxSize

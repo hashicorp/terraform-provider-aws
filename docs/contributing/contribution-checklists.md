@@ -269,17 +269,17 @@ More details about this code generation, including fixes for potential error mes
 - Open the AWS Go SDK documentation for the service, e.g., for [`service/eks`](https://docs.aws.amazon.com/sdk-for-go/api/service/eks/). Note: there can be a delay between the AWS announcement and the updated AWS Go SDK documentation.
 - Use the AWS Go SDK to determine which types of tagging code to generate. There are three main types of tagging code you can generate: service tags, list tags, and update tags. These are not mutually exclusive and some services use more than one.
 - Determine if a service already has a `generate.go` file (e.g., `internal/service/eks/generate.go`). If none exists, follow the example of other `generate.go` files in many other services. This is a very simple file, perhaps 3-5 lines long, and must _only_ contain generate directives at the very top of the file and a package declaration (e.g., `package eks`) -- _nothing else_.
-- Check for a tagging code directive: `//go:generate go run -tags generate ../../generate/tags/main.go`. If one does not exist, add it. Note that without flags, the directive itself will not do anything useful. **WARNING:** You must never have more than one `generate/tags/main.go` directive in a `generate.go` file. Even if you want to generate all three types of tag code, you will use multiple flags but only one `generate/tags/main.go` directive! Including more than one directive will cause the generator to overwrite one set of generated code with whatever is specified in the next directive.
+- Check for a tagging code directive: `//go:generate go run ../../generate/tags/main.go`. If one does not exist, add it. Note that without flags, the directive itself will not do anything useful. **WARNING:** You must never have more than one `generate/tags/main.go` directive in a `generate.go` file. Even if you want to generate all three types of tag code, you will use multiple flags but only one `generate/tags/main.go` directive! Including more than one directive will cause the generator to overwrite one set of generated code with whatever is specified in the next directive.
 - If the service supports service tags, determine the service's "type" of tagging implementation. Some services will use a simple map style (`map[string]*string` in Go) while others will have a separate structure (`[]service.Tag` `struct` with `Key` and `Value` fields).
 
-    - If the type is a map, add a new flag to the tagging directive (see above): `-ServiceTagsMap=yes`. If the type is `struct`, add a  `-ServiceTagsSlice=yes` flag.
-    - If you use the `-ServiceTagsSlice=yes` flag and if the `struct` name is not exactly `Tag`, you must include the `-TagType` flag with the name of the `struct` (e.g., `-TagType=S3Tag`). If the key and value elements of the `struct` are not exactly `Key` and `Value` respectively, you must include the `-TagTypeKeyElem` and/or `-TagTypeValElem` flags with the correct names.
+    - If the type is a map, add a new flag to the tagging directive (see above): `-ServiceTagsMap`. If the type is `struct`, add a  `-ServiceTagsSlice` flag.
+    - If you use the `-ServiceTagsSlice` flag and if the `struct` name is not exactly `Tag`, you must include the `-TagType` flag with the name of the `struct` (e.g., `-TagType=S3Tag`). If the key and value elements of the `struct` are not exactly `Key` and `Value` respectively, you must include the `-TagTypeKeyElem` and/or `-TagTypeValElem` flags with the correct names.
     - In summary, you may need to include one or more of the following flags with `-ServiceTagsSlice` in order to properly customize the generated code: `-TagKeyType`, `TagPackage`, `TagResTypeElem`, `TagType`, `TagType2`, `TagTypeAddBoolElem`, `TagTypeAddBoolElemSnake`, `TagTypeIDElem`, `TagTypeKeyElem`, and `TagTypeValElem`.
 
 
 - If the service supports listing tags (usually a `ListTags` or `ListTagsForResource` API call), follow these guidelines.
 
-    - Add a new flag to the tagging directive (see above): `-ListTags=yes`.
+    - Add a new flag to the tagging directive (see above): `-ListTags`.
     - If the API list operation is not exactly `ListTagsForResource`, include the `-ListTagsOp` flag with the name of the operation (e.g., `-ListTagsOp=DescribeTags`).
     - If the API list tags operation identifying element is not exactly `ResourceArn`, include the `-ListTagsInIDElem` flag with the name of the element (e.g., `-ListTagsInIDElem=ResourceARN`).
     - If the API list tags operation identifying element needs a slice, include the `-ListTagsInIDNeedSlice` flag with a `yes` value (e.g., `-ListTagsInIDNeedSlice=yes`).
@@ -288,7 +288,7 @@ More details about this code generation, including fixes for potential error mes
 
 - If the service API supports updating tags (usually `TagResource` and `UntagResource` API calls), follow these guidelines.
 
-    - Add a new flag to the tagging directive (see above): `-UpdateTags=yes`.
+    - Add a new flag to the tagging directive (see above): `-UpdateTags`.
     - If the API tag operation is not exactly `TagResource`, include the `-TagOp` flag with the name of the operation (e.g., `-TagOp=AddTags`).
     - If the API untag operation is not exactly `UntagResource`, include the `-UntagOp` flag with the name of the operation (e.g., `-UntagOp=RemoveTags`).
     - If the API operation identifying element is not exactly `ResourceArn`, include the `-TagInIDElem` flag with the name of the element (e.g., `-TagInIDElem=ResourceARN`).

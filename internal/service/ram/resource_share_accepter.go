@@ -165,7 +165,7 @@ func resourceResourceShareAccepterRead(d *schema.ResourceData, meta interface{})
 	d.Set("share_name", resourceShare.Name)
 
 	listInput := &ram.ListResourcesInput{
-		MaxResults:        aws.Int64(int64(500)),
+		MaxResults:        aws.Int64(500),
 		ResourceOwner:     aws.String(ram.ResourceOwnerOtherAccounts),
 		ResourceShareArns: aws.StringSlice([]string{d.Id()}),
 	}

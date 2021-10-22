@@ -1,4 +1,4 @@
-package applicationautoscaling
+package appautoscaling
 
 import (
 	"fmt"
@@ -60,7 +60,7 @@ func ResourceTarget() *schema.Resource {
 }
 
 func resourceTargetPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ApplicationAutoScalingConn
+	conn := meta.(*conns.AWSClient).AppAutoScalingConn
 
 	var targetOpts applicationautoscaling.RegisterScalableTargetInput
 
@@ -108,7 +108,7 @@ func resourceTargetPut(d *schema.ResourceData, meta interface{}) error {
 func resourceTargetRead(d *schema.ResourceData, meta interface{}) error {
 	var t *applicationautoscaling.ScalableTarget
 
-	conn := meta.(*conns.AWSClient).ApplicationAutoScalingConn
+	conn := meta.(*conns.AWSClient).AppAutoScalingConn
 
 	namespace := d.Get("service_namespace").(string)
 	dimension := d.Get("scalable_dimension").(string)
@@ -148,7 +148,7 @@ func resourceTargetRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceTargetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ApplicationAutoScalingConn
+	conn := meta.(*conns.AWSClient).AppAutoScalingConn
 
 	input := &applicationautoscaling.DeregisterScalableTargetInput{
 		ResourceId:        aws.String(d.Get("resource_id").(string)),

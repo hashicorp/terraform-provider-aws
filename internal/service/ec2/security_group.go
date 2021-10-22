@@ -291,8 +291,8 @@ func resourceSecurityGroupCreate(d *schema.ResourceData, meta interface{}) error
 			GroupId: createResp.GroupId,
 			IpPermissions: []*ec2.IpPermission{
 				{
-					FromPort: aws.Int64(int64(0)),
-					ToPort:   aws.Int64(int64(0)),
+					FromPort: aws.Int64(0),
+					ToPort:   aws.Int64(0),
 					IpRanges: []*ec2.IpRange{
 						{
 							CidrIp: aws.String("0.0.0.0/0"),
@@ -312,8 +312,8 @@ func resourceSecurityGroupCreate(d *schema.ResourceData, meta interface{}) error
 			GroupId: createResp.GroupId,
 			IpPermissions: []*ec2.IpPermission{
 				{
-					FromPort: aws.Int64(int64(0)),
-					ToPort:   aws.Int64(int64(0)),
+					FromPort: aws.Int64(0),
+					ToPort:   aws.Int64(0),
 					Ipv6Ranges: []*ec2.Ipv6Range{
 						{
 							CidrIpv6: aws.String("::/0"),

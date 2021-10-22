@@ -24,6 +24,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+const (
+	listenerRulePriorityMin     = 1
+	listenerRulePriorityMax     = 50_000
+	listenerRulePriorityDefault = 99_999
+
+	listenerActionOrderMin = 1
+	listenerActionOrderMax = 50_000
+)
+
 func ResourceListenerRule() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceListenerRuleCreate,
@@ -66,7 +75,7 @@ func ResourceListenerRule() *schema.Resource {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Computed:     true,
-							ValidateFunc: validation.IntBetween(1, 50000),
+							ValidateFunc: validation.IntBetween(listenerActionOrderMin, listenerActionOrderMax),
 						},
 
 						"target_group_arn": {
@@ -613,7 +622,7 @@ func resourceListenerRuleRead(d *schema.ResourceData, meta interface{}) error {
 
 	// Rules are evaluated in priority order, from the lowest value to the highest value. The default rule has the lowest priority.
 	if aws.StringValue(rule.Priority) == "default" {
-		d.Set("priority", 99999)
+		d.Set("priority", listenerRulePriorityDefault)
 	} else {
 		if priority, err := strconv.Atoi(aws.StringValue(rule.Priority)); err != nil {
 			return fmt.Errorf("Cannot convert rule priority %q to int: %w", aws.StringValue(rule.Priority), err)
@@ -887,8 +896,8 @@ func resourceListenerRuleDelete(d *schema.ResourceData, meta interface{}) error 
 
 func validListenerRulePriority(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(int)
-	if value < 1 || (value > 50000 && value != 99999) {
-		errors = append(errors, fmt.Errorf("%q must be in the range 1-50000 for normal rule or 99999 for default rule", k))
+	if value < listenerRulePriorityMin || (value > listenerRulePriorityMax && value != listenerRulePriorityDefault) {
+		errors = append(errors, fmt.Errorf("%q must be in the range %d-%d for normal rule or %d for the default rule", k, listenerRulePriorityMin, listenerRulePriorityMax, listenerRulePriorityDefault))
 	}
 	return
 }

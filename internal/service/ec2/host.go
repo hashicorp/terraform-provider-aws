@@ -80,7 +80,7 @@ func resourceHostCreate(d *schema.ResourceData, meta interface{}) error {
 		AutoPlacement:    aws.String(d.Get("auto_placement").(string)),
 		AvailabilityZone: aws.String(d.Get("availability_zone").(string)),
 		HostRecovery:     aws.String(d.Get("host_recovery").(string)),
-		Quantity:         aws.Int64(int64(1)),
+		Quantity:         aws.Int64(1),
 	}
 
 	if v, ok := d.GetOk("instance_family"); ok {

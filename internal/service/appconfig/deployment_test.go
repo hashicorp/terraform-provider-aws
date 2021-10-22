@@ -81,6 +81,11 @@ func TestAccAppConfigDeployment_predefinedStrategy(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				// Since AppConfig Deployments can vary in completion times
+				// depending on the predefined deployment strategy,
+				// a waiter is not implemented for the resource;
+				// thus, we cannot guarantee the "state" value during import.
+				ImportStateVerifyIgnore: []string{"state"},
 			},
 		},
 	})

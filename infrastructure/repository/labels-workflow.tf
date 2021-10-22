@@ -76,8 +76,12 @@ variable "workflow_labels" {
     },
     "new-resource" = {
       color       = "8040c9", # color:terraform (link on white)
-      description = "Introduces a new resource"
+      description = "Introduces a new resource."
     },
+    "pre-service-packages" = {
+      color       = "ffec6e", # color:vault
+      description = "Includes pre-Service Packages aspects."
+    },    
     "prerelease-tf-testing" = {
       color       = "60dea9", # color:nomad
       description = "Pertains to testing Terraform releases prior to release."

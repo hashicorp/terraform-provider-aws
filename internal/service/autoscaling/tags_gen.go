@@ -152,7 +152,7 @@ func KeyValueTags(tags interface{}, identifier string, resourceType string) tfta
 			}
 
 			tagData.AdditionalBoolFields = make(map[string]*bool)
-			tagData.AdditionalBoolFields["propagate_at_launch"] = tag.PropagateAtLaunch
+			tagData.AdditionalBoolFields["PropagateAtLaunch"] = tag.PropagateAtLaunch
 			tagData.AdditionalStringFields = make(map[string]*string)
 			tagData.AdditionalStringFields["ResourceId"] = &identifier
 			tagData.AdditionalStringFields["ResourceType"] = &resourceType
@@ -169,7 +169,7 @@ func KeyValueTags(tags interface{}, identifier string, resourceType string) tfta
 				Value: tag.Value,
 			}
 			tagData.AdditionalBoolFields = make(map[string]*bool)
-			tagData.AdditionalBoolFields["propagate_at_launch"] = tag.PropagateAtLaunch
+			tagData.AdditionalBoolFields["PropagateAtLaunch"] = tag.PropagateAtLaunch
 			tagData.AdditionalStringFields = make(map[string]*string)
 			tagData.AdditionalStringFields["ResourceId"] = &identifier
 			tagData.AdditionalStringFields["ResourceType"] = &resourceType

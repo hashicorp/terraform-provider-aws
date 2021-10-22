@@ -9,13 +9,6 @@ import (
 )
 
 const (
-	//Lex Bot Statuses
-	lexModeBuildingServicesStatusBuilding          = "BUILDING"
-	lexModeBuildingServicesStatusFailed            = "FAILED"
-	lexModeBuildingServicesStatusNotBuilt          = "NOT_BUILT"
-	lexModeBuildingServicesStatusReady             = "READY"
-	lexModeBuildingServicesStatusReadyBasicTesting = "READY_BASIC_TESTING"
-
 	lexModelBuildingServiceStatusCreated  = "CREATED"
 	lexModelBuildingServiceStatusNotFound = "NOTFOUND"
 	lexModelBuildingServiceStatusUnknown  = "UNKNOWN"
