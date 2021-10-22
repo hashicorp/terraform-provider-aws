@@ -305,8 +305,8 @@ func TestAccS3BucketObject_nonVersioned(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"acl", "source"},
-				ImportStateId:           fmt.Sprintf("s3://%s/test-key", rName),
+				ImportStateVerifyIgnore: []string{"acl", "source", "force_destroy"},
+				ImportStateId:           fmt.Sprintf("s3://%s/updateable-key", rName),
 			},
 		},
 	})
