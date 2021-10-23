@@ -18,6 +18,10 @@ const (
 
 	// Maximum amount of time to wait for S3control changes to propagate
 	propagationTimeout = 1 * time.Minute
+
+	multiRegionAccessPointRequestSucceededMinTimeout = 5 * time.Second
+
+	multiRegionAccessPointRequestSucceededDelay = 15 * time.Second
 )
 
 func waitPublicAccessBlockConfigurationBlockPublicACLsUpdated(conn *s3control.S3Control, accountID string, expectedValue bool) (*s3control.PublicAccessBlockConfiguration, error) {
@@ -92,13 +96,13 @@ func waitPublicAccessBlockConfigurationRestrictPublicBucketsUpdated(conn *s3cont
 	return nil, err
 }
 
-func waitS3MultiRegionAccessPointRequestSucceeded(conn *s3control.S3Control, accountId string, requestTokenArn string, timeout time.Duration) (*s3control.AsyncOperation, error) {
+func waitMultiRegionAccessPointRequestSucceeded(conn *s3control.S3Control, accountId string, requestTokenArn string, timeout time.Duration) (*s3control.AsyncOperation, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Target:     []string{RequestStatusSucceeded},
 		Timeout:    timeout,
 		Refresh:    statusMultiRegionAccessPointRequest(conn, accountId, requestTokenArn),
-		MinTimeout: 5 * time.Second,
-		Delay:      15 * time.Second, // Wait 15 secs before starting
+		MinTimeout: multiRegionAccessPointRequestSucceededMinTimeout,
+		Delay:      multiRegionAccessPointRequestSucceededDelay, // Wait 15 secs before starting
 	}
 
 	log.Printf("[DEBUG] Waiting for S3 Multi-Region Access Point request (%s) to succeed", requestTokenArn)

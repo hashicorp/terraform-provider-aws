@@ -97,7 +97,7 @@ func resourceMultiRegionAccessPointPolicyCreate(d *schema.ResourceData, meta int
 	}
 
 	requestTokenARN := aws.StringValue(output.RequestTokenARN)
-	_, err = waitS3MultiRegionAccessPointRequestSucceeded(conn, accountId, requestTokenARN, d.Timeout(schema.TimeoutCreate))
+	_, err = waitMultiRegionAccessPointRequestSucceeded(conn, accountId, requestTokenARN, d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
 		return fmt.Errorf("error waiting for S3 Multi-Region Access Point Policy (%s) to be created: %s", d.Id(), err)
@@ -167,7 +167,7 @@ func resourceMultiRegionAccessPointPolicyUpdate(d *schema.ResourceData, meta int
 		}
 
 		requestTokenARN := *output.RequestTokenARN
-		_, err = waitS3MultiRegionAccessPointRequestSucceeded(conn, accountId, requestTokenARN, d.Timeout(schema.TimeoutUpdate))
+		_, err = waitMultiRegionAccessPointRequestSucceeded(conn, accountId, requestTokenARN, d.Timeout(schema.TimeoutUpdate))
 
 		if err != nil {
 			return fmt.Errorf("error waiting for S3 Multi-Region Access Point Policy (%s) to update: %s", d.Id(), err)

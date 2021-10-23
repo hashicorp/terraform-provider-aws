@@ -161,7 +161,7 @@ func resourceMultiRegionAccessPointCreate(d *schema.ResourceData, meta interface
 	}
 
 	requestTokenARN := aws.StringValue(output.RequestTokenARN)
-	_, err = waitS3MultiRegionAccessPointRequestSucceeded(conn, accountId, requestTokenARN, d.Timeout(schema.TimeoutCreate))
+	_, err = waitMultiRegionAccessPointRequestSucceeded(conn, accountId, requestTokenARN, d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
 		return fmt.Errorf("error waiting for S3 Multi-Region Access Point (%s) to create: %s", d.Id(), err)
@@ -252,7 +252,7 @@ func resourceMultiRegionAccessPointDelete(d *schema.ResourceData, meta interface
 	}
 
 	requestTokenARN := aws.StringValue(output.RequestTokenARN)
-	_, err = waitS3MultiRegionAccessPointRequestSucceeded(conn, accountId, requestTokenARN, d.Timeout(schema.TimeoutDelete))
+	_, err = waitMultiRegionAccessPointRequestSucceeded(conn, accountId, requestTokenARN, d.Timeout(schema.TimeoutDelete))
 
 	if err != nil {
 		return fmt.Errorf("error waiting for S3 Multi-Region Access Point (%s) to delete: %w", d.Id(), err)
