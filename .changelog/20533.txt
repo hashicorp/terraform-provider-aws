@@ -13,3 +13,7 @@ aws_kms_replica_key
 ```release-note:enhancement
 resource/aws_kms_external_key: Add `multi_region` argument
 ```
+
+```release-note:new-resource
+aws_kms_replica_external_key
+```

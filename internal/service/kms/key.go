@@ -140,7 +140,6 @@ func resourceKeyCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(aws.StringValue(outputRaw.(*kms.CreateKeyOutput).KeyMetadata.KeyId))
-	d.Set("key_id", d.Id())
 
 	if enableKeyRotation := d.Get("enable_key_rotation").(bool); enableKeyRotation {
 		if err := updateKmsKeyRotationEnabled(conn, d.Id(), enableKeyRotation); err != nil {

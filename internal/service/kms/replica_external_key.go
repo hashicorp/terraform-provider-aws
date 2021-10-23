@@ -1,16 +1,13 @@
 package kms
 
 import (
-	"crypto/rand"
-	"crypto/rsa"
-	"crypto/sha256"
-	"crypto/x509"
-	"encoding/base64"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -21,12 +18,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ResourceExternalKey() *schema.Resource {
+func ResourceReplicaExternalKey() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceExternalKeyCreate,
-		Read:   resourceExternalKeyRead,
-		Update: resourceExternalKeyUpdate,
-		Delete: resourceExternalKeyDelete,
+		Create: resourceReplicaExternalKeyCreate,
+		Read:   resourceReplicaExternalKeyRead,
+		Update: resourceReplicaExternalKeyUpdate,
+		Delete: resourceReplicaExternalKeyDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -64,6 +61,10 @@ func ResourceExternalKey() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"key_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"key_material_base64": {
 				Type:      schema.TypeString,
 				Optional:  true,
@@ -78,21 +79,18 @@ func ResourceExternalKey() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"multi_region": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
 			"policy": {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
 				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(0, 32768),
-					validation.StringIsJSON,
-				),
+				ValidateFunc:     validation.StringIsJSON,
+			},
+			"primary_key_arn": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
@@ -105,23 +103,29 @@ func ResourceExternalKey() *schema.Resource {
 	}
 }
 
-func resourceExternalKeyCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceReplicaExternalKeyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KMSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	input := &kms.CreateKeyInput{
-		BypassPolicyLockoutSafetyCheck: aws.Bool(d.Get("bypass_policy_lockout_safety_check").(bool)),
-		KeyUsage:                       aws.String(kms.KeyUsageTypeEncryptDecrypt),
-		Origin:                         aws.String(kms.OriginTypeExternal),
+	// e.g. arn:aws:kms:us-east-2:111122223333:key/mrk-1234abcd12ab34cd56ef1234567890ab
+	primaryKeyARN, err := arn.Parse(d.Get("primary_key_arn").(string))
+
+	if err != nil {
+		return fmt.Errorf("error parsing primary key ARN: %w", err)
+	}
+
+	input := &kms.ReplicateKeyInput{
+		KeyId:         aws.String(strings.TrimPrefix(primaryKeyARN.Resource, "key/")),
+		ReplicaRegion: aws.String(meta.(*conns.AWSClient).Region),
+	}
+
+	if v, ok := d.GetOk("bypass_policy_lockout_safety_check"); ok {
+		input.BypassPolicyLockoutSafetyCheck = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("multi_region"); ok {
-		input.MultiRegion = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("policy"); ok {
@@ -132,36 +136,43 @@ func resourceExternalKeyCreate(d *schema.ResourceData, meta interface{}) error {
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	// AWS requires any principal in the policy to exist before the key is created.
-	// The KMS service's awareness of principals is limited by "eventual consistency".
-	// KMS will report this error until it can validate the policy itself.
-	// They acknowledge this here:
-	// http://docs.aws.amazon.com/kms/latest/APIReference/API_CreateKey.html
-	log.Printf("[DEBUG] Creating KMS External Key: %s", input)
+	// Replication is initiated in the primary key's region.
+	session, err := conns.NewSessionForRegion(&conn.Config, primaryKeyARN.Region, meta.(*conns.AWSClient).TerraformVersion)
 
+	if err != nil {
+		return fmt.Errorf("error creating AWS session: %w", err)
+	}
+
+	replicateConn := kms.New(session)
+
+	log.Printf("[DEBUG] Creating KMS Replica External Key: %s", input)
 	outputRaw, err := WaitIAMPropagation(func() (interface{}, error) {
-		return conn.CreateKey(input)
+		return replicateConn.ReplicateKey(input)
 	})
 
 	if err != nil {
-		return fmt.Errorf("error creating KMS External Key: %w", err)
+		return fmt.Errorf("error creating KMS Replica External Key: %w", err)
 	}
 
-	d.SetId(aws.StringValue(outputRaw.(*kms.CreateKeyOutput).KeyMetadata.KeyId))
+	d.SetId(aws.StringValue(outputRaw.(*kms.ReplicateKeyOutput).ReplicaKeyMetadata.KeyId))
+
+	if _, err := WaitReplicaExternalKeyCreated(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for KMS Replica External Key (%s) create: %w", d.Id(), err)
+	}
 
 	if v, ok := d.GetOk("key_material_base64"); ok {
 		validTo := d.Get("valid_to").(string)
 
 		if err := importKmsExternalKeyMaterial(conn, d.Id(), v.(string), validTo); err != nil {
-			return fmt.Errorf("error importing KMS External Key (%s) material: %w", d.Id(), err)
+			return fmt.Errorf("error importing KMS Replica External Key (%s) material: %w", d.Id(), err)
 		}
 
 		if _, err := WaitKeyMaterialImported(conn, d.Id()); err != nil {
-			return fmt.Errorf("error waiting for KMS External Key (%s) material import: %w", d.Id(), err)
+			return fmt.Errorf("error waiting for KMS Replica External Key (%s) material import: %w", d.Id(), err)
 		}
 
 		if err := WaitKeyValidToPropagated(conn, d.Id(), validTo); err != nil {
-			return fmt.Errorf("error waiting for KMS External Key (%s) valid_to propagation: %w", d.Id(), err)
+			return fmt.Errorf("error waiting for KMS Replica External Key (%s) valid_to propagation: %w", d.Id(), err)
 		}
 
 		// The key can only be disabled if key material has been imported, else:
@@ -176,20 +187,20 @@ func resourceExternalKeyCreate(d *schema.ResourceData, meta interface{}) error {
 	// Wait for propagation since KMS is eventually consistent.
 	if v, ok := d.GetOk("policy"); ok {
 		if err := WaitKeyPolicyPropagated(conn, d.Id(), v.(string)); err != nil {
-			return fmt.Errorf("error waiting for KMS External Key (%s) policy propagation: %w", d.Id(), err)
+			return fmt.Errorf("error waiting for KMS Replica External Key (%s) policy propagation: %w", d.Id(), err)
 		}
 	}
 
 	if len(tags) > 0 {
 		if err := WaitTagsPropagated(conn, d.Id(), tags); err != nil {
-			return fmt.Errorf("error waiting for KMS External Key (%s) tag propagation: %w", d.Id(), err)
+			return fmt.Errorf("error waiting for KMS Replica External Key (%s) tag propagation: %w", d.Id(), err)
 		}
 	}
 
-	return resourceExternalKeyRead(d, meta)
+	return resourceReplicaExternalKeyRead(d, meta)
 }
 
-func resourceExternalKeyRead(d *schema.ResourceData, meta interface{}) error {
+func resourceReplicaExternalKeyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KMSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -197,7 +208,7 @@ func resourceExternalKeyRead(d *schema.ResourceData, meta interface{}) error {
 	key, err := findKmsKey(conn, d.Id(), d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] KMS External Key (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] KMS External Replica Key (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -207,26 +218,27 @@ func resourceExternalKeyRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if keyManager := aws.StringValue(key.metadata.KeyManager); keyManager != kms.KeyManagerTypeCustomer {
-		return fmt.Errorf("KMS External Key (%s) has invalid KeyManager: %s", d.Id(), keyManager)
+		return fmt.Errorf("KMS External Replica Key (%s) has invalid KeyManager: %s", d.Id(), keyManager)
 	}
 
 	if origin := aws.StringValue(key.metadata.Origin); origin != kms.OriginTypeExternal {
-		return fmt.Errorf("KMS External Key (%s) has invalid Origin: %s", d.Id(), origin)
+		return fmt.Errorf("KMS External Replica Key (%s) has invalid Origin: %s", d.Id(), origin)
 	}
 
-	if aws.BoolValue(key.metadata.MultiRegion) &&
-		aws.StringValue(key.metadata.MultiRegionConfiguration.MultiRegionKeyType) != kms.MultiRegionKeyTypePrimary {
-		return fmt.Errorf("KMS External Key (%s) is not a multi-Region primary key", d.Id())
+	if !aws.BoolValue(key.metadata.MultiRegion) ||
+		aws.StringValue(key.metadata.MultiRegionConfiguration.MultiRegionKeyType) != kms.MultiRegionKeyTypeReplica {
+		return fmt.Errorf("KMS External Replica Key (%s) is not a multi-Region replica key", d.Id())
 	}
 
 	d.Set("arn", key.metadata.Arn)
 	d.Set("description", key.metadata.Description)
 	d.Set("enabled", key.metadata.Enabled)
 	d.Set("expiration_model", key.metadata.ExpirationModel)
+	d.Set("key_id", key.metadata.KeyId)
 	d.Set("key_state", key.metadata.KeyState)
 	d.Set("key_usage", key.metadata.KeyUsage)
-	d.Set("multi_region", key.metadata.MultiRegion)
 	d.Set("policy", key.policy)
+	d.Set("primary_key_arn", key.metadata.MultiRegionConfiguration.PrimaryKey.Arn)
 	if key.metadata.ValidTo != nil {
 		d.Set("valid_to", aws.TimeValue(key.metadata.ValidTo).Format(time.RFC3339))
 	} else {
@@ -247,7 +259,7 @@ func resourceExternalKeyRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceExternalKeyUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceReplicaExternalKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KMSConn
 
 	if hasChange, enabled, state := d.HasChange("enabled"), d.Get("enabled").(bool), d.Get("key_state").(string); hasChange && enabled && state != kms.KeyStatePendingImport {
@@ -273,15 +285,15 @@ func resourceExternalKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 		validTo := d.Get("valid_to").(string)
 
 		if err := importKmsExternalKeyMaterial(conn, d.Id(), d.Get("key_material_base64").(string), validTo); err != nil {
-			return fmt.Errorf("error importing KMS External Key (%s) material: %s", d.Id(), err)
+			return fmt.Errorf("error importing KMS External Replica Key (%s) material: %s", d.Id(), err)
 		}
 
 		if _, err := WaitKeyMaterialImported(conn, d.Id()); err != nil {
-			return fmt.Errorf("error waiting for KMS External Key (%s) material import: %w", d.Id(), err)
+			return fmt.Errorf("error waiting for KMS External Replica Key (%s) material import: %w", d.Id(), err)
 		}
 
 		if err := WaitKeyValidToPropagated(conn, d.Id(), validTo); err != nil {
-			return fmt.Errorf("error waiting for KMS External Key (%s) valid_to propagation: %w", d.Id(), err)
+			return fmt.Errorf("error waiting for KMS External Replica Key (%s) valid_to propagation: %w", d.Id(), err)
 		}
 	}
 
@@ -296,18 +308,18 @@ func resourceExternalKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating KMS External Key (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("error updating KMS Replica External Key (%s) tags: %w", d.Id(), err)
 		}
 
 		if err := WaitTagsPropagated(conn, d.Id(), tftags.New(n)); err != nil {
-			return fmt.Errorf("error waiting for KMS External Key (%s) tag propagation: %w", d.Id(), err)
+			return fmt.Errorf("error waiting for KMS Replica External Key (%s) tag propagation: %w", d.Id(), err)
 		}
 	}
 
-	return resourceExternalKeyRead(d, meta)
+	return resourceReplicaExternalKeyRead(d, meta)
 }
 
-func resourceExternalKeyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceReplicaExternalKeyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KMSConn
 
 	input := &kms.ScheduleKeyDeletionInput{
@@ -318,7 +330,7 @@ func resourceExternalKeyDelete(d *schema.ResourceData, meta interface{}) error {
 		input.PendingWindowInDays = aws.Int64(int64(v.(int)))
 	}
 
-	log.Printf("[DEBUG] Deleting KMS External Key: (%s)", d.Id())
+	log.Printf("[DEBUG] Deleting KMS Replica External Key: (%s)", d.Id())
 	_, err := conn.ScheduleKeyDeletion(input)
 
 	if tfawserr.ErrCodeEquals(err, kms.ErrCodeNotFoundException) {
@@ -330,75 +342,11 @@ func resourceExternalKeyDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting KMS External Key (%s): %w", d.Id(), err)
+		return fmt.Errorf("error deleting KMS Replica External Key (%s): %w", d.Id(), err)
 	}
 
 	if _, err := WaitKeyDeleted(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for KMS External Key (%s) to delete: %w", d.Id(), err)
-	}
-
-	return nil
-}
-
-func importKmsExternalKeyMaterial(conn *kms.KMS, keyID, keyMaterialBase64, validTo string) error {
-	// Wait for propagation since KMS is eventually consistent.
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(PropagationTimeout, func() (interface{}, error) {
-		return conn.GetParametersForImport(&kms.GetParametersForImportInput{
-			KeyId:             aws.String(keyID),
-			WrappingAlgorithm: aws.String(kms.AlgorithmSpecRsaesOaepSha256),
-			WrappingKeySpec:   aws.String(kms.WrappingKeySpecRsa2048),
-		})
-	}, kms.ErrCodeNotFoundException)
-
-	if err != nil {
-		return fmt.Errorf("error getting parameters for import: %w", err)
-	}
-
-	output := outputRaw.(*kms.GetParametersForImportOutput)
-
-	keyMaterial, err := base64.StdEncoding.DecodeString(keyMaterialBase64)
-
-	if err != nil {
-		return fmt.Errorf("error Base64 decoding key material: %w", err)
-	}
-
-	publicKey, err := x509.ParsePKIXPublicKey(output.PublicKey)
-
-	if err != nil {
-		return fmt.Errorf("error parsing public key: %w", err)
-	}
-
-	encryptedKeyMaterial, err := rsa.EncryptOAEP(sha256.New(), rand.Reader, publicKey.(*rsa.PublicKey), keyMaterial, []byte{})
-
-	if err != nil {
-		return fmt.Errorf("error encrypting key material: %w", err)
-	}
-
-	input := &kms.ImportKeyMaterialInput{
-		EncryptedKeyMaterial: encryptedKeyMaterial,
-		ExpirationModel:      aws.String(kms.ExpirationModelTypeKeyMaterialDoesNotExpire),
-		ImportToken:          output.ImportToken,
-		KeyId:                aws.String(keyID),
-	}
-
-	if validTo != "" {
-		t, err := time.Parse(time.RFC3339, validTo)
-
-		if err != nil {
-			return fmt.Errorf("error parsing valid_to timestamp: %w", err)
-		}
-
-		input.ExpirationModel = aws.String(kms.ExpirationModelTypeKeyMaterialExpires)
-		input.ValidTo = aws.Time(t)
-	}
-
-	// Wait for propagation since KMS is eventually consistent.
-	_, err = tfresource.RetryWhenAWSErrCodeEquals(PropagationTimeout, func() (interface{}, error) {
-		return conn.ImportKeyMaterial(input)
-	}, kms.ErrCodeNotFoundException)
-
-	if err != nil {
-		return fmt.Errorf("error importing key material: %w", err)
+		return fmt.Errorf("error waiting for KMS Replica External Key (%s) delete: %w", d.Id(), err)
 	}
 
 	return nil
