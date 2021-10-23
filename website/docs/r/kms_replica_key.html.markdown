@@ -30,7 +30,7 @@ resource "aws_kms_key" "primary" {
   multi_region            = true
 }
 
-resource "aws_replica_kms_key" "replica" {
+resource "aws_kms_replica_key" "replica" {
   provider = aws.primary
 
   description             = "Multi-Region replica key"
