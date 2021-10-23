@@ -23,7 +23,7 @@ provider "aws" {
   region = "us-west-2"
 }
 
-resource "aws_kms_external key" "primary" {
+resource "aws_kms_external_key" "primary" {
   provider = aws.primary
 
   description             = "Multi-Region primary key"
@@ -79,5 +79,5 @@ In addition to all arguments above, the following attributes are exported:
 KMS multi-Region replica keys can be imported using the `id`, e.g.,
 
 ```
-$ terraform import aws_kms_replica_key.example 1234abcd-12ab-34cd-56ef-1234567890ab
+$ terraform import aws_kms_replica_external_key.example 1234abcd-12ab-34cd-56ef-1234567890ab
 ```
