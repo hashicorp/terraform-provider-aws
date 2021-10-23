@@ -311,6 +311,7 @@ func resourceEIPRead(d *schema.ResourceData, meta interface{}) error {
 	if *address.Domain == ec2.DomainTypeVpc && net.ParseIP(id) != nil {
 		log.Printf("[DEBUG] Re-assigning EIP ID (%s) to it's Allocation ID (%s)", d.Id(), *address.AllocationId)
 		d.SetId(aws.StringValue(address.AllocationId))
+		d.Set("allocation_id", address.AllocationId)
 	}
 
 	tags := KeyValueTags(address.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
