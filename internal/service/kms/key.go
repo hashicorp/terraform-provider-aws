@@ -83,6 +83,7 @@ func ResourceKey() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"policy": {
 				Type:             schema.TypeString,

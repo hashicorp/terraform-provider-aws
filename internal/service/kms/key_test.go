@@ -47,6 +47,29 @@ func TestAccKMSKey_basic(t *testing.T) {
 	})
 }
 
+func TestAccKMSKey_disappears(t *testing.T) {
+	var key kms.KeyMetadata
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_kms_key.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckKeyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKeyNameConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKeyExists(resourceName, &key),
+					acctest.CheckResourceDisappears(acctest.Provider, tfkms.ResourceKey(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccKMSKey_multiRegion(t *testing.T) {
 	var key kms.KeyMetadata
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -93,29 +116,6 @@ func TestAccKMSKey_asymmetricKey(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "customer_master_key_spec", "ECC_NIST_P384"),
 					resource.TestCheckResourceAttr(resourceName, "key_usage", "SIGN_VERIFY"),
 				),
-			},
-		},
-	})
-}
-
-func TestAccKMSKey_disappears(t *testing.T) {
-	var key kms.KeyMetadata
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_kms_key.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckKeyDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccKeyNameConfig(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(resourceName, &key),
-					acctest.CheckResourceDisappears(acctest.Provider, tfkms.ResourceKey(), resourceName),
-				),
-				ExpectNonEmptyPlan: true,
 			},
 		},
 	})

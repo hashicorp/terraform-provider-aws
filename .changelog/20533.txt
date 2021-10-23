@@ -9,3 +9,7 @@ data-source/aws_kms_key: Add `multi_region` and `multi_region_configuration` att
 ```release-note:new-resource
 aws_kms_replica_key
 ```
+
+```release-note:enhancement
+resource/aws_kms_external_key: Add `multi_region` argument
+```

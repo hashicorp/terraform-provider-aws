@@ -78,6 +78,12 @@ func ResourceExternalKey() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"multi_region": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
 			"policy": {
 				Type:             schema.TypeString,
 				Optional:         true,
@@ -112,6 +118,10 @@ func resourceExternalKeyCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("multi_region"); ok {
+		input.MultiRegion = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("policy"); ok {
@@ -184,11 +194,16 @@ func resourceExternalKeyRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if keyManager := aws.StringValue(key.metadata.KeyManager); keyManager != kms.KeyManagerTypeCustomer {
-		return fmt.Errorf("KMS Key (%s) has invalid KeyManager: %s", d.Id(), keyManager)
+		return fmt.Errorf("KMS External Key (%s) has invalid KeyManager: %s", d.Id(), keyManager)
 	}
 
 	if origin := aws.StringValue(key.metadata.Origin); origin != kms.OriginTypeExternal {
-		return fmt.Errorf("KMS Key (%s) has invalid Origin: %s", d.Id(), origin)
+		return fmt.Errorf("KMS External Key (%s) has invalid Origin: %s", d.Id(), origin)
+	}
+
+	if aws.BoolValue(key.metadata.MultiRegion) &&
+		aws.StringValue(key.metadata.MultiRegionConfiguration.MultiRegionKeyType) != kms.MultiRegionKeyTypePrimary {
+		return fmt.Errorf("KMS External Key (%s) is not a multi-Region primary key", d.Id())
 	}
 
 	d.Set("arn", key.metadata.Arn)
@@ -197,6 +212,7 @@ func resourceExternalKeyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("expiration_model", key.metadata.ExpirationModel)
 	d.Set("key_state", key.metadata.KeyState)
 	d.Set("key_usage", key.metadata.KeyUsage)
+	d.Set("multi_region", key.metadata.MultiRegion)
 	d.Set("policy", key.policy)
 	if key.metadata.ValidTo != nil {
 		d.Set("valid_to", aws.TimeValue(key.metadata.ValidTo).Format(time.RFC3339))
