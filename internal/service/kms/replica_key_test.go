@@ -328,6 +328,7 @@ POLICY
 func testAccReplicaKeyPolicy2Config(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAlternateRegionProvider(), fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
 
 resource "aws_kms_key" "test" {
   provider = awsalternate
@@ -355,7 +356,7 @@ resource "aws_kms_replica_key" "test" {
       "Sid": "Terraform2",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        "AWS": "${data.aws_partition.current.partition}:aws:iam::${data.aws_caller_identity.current.account_id}:root"
       },
       "Action": "kms:*",
       "Resource": "*"
