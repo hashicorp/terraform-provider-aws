@@ -42,7 +42,7 @@ func ResourceRule() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc:  validateCloudWatchEventRuleName,
+				ValidateFunc:  validCloudWatchEventRuleName,
 			},
 			"name_prefix": {
 				Type:          schema.TypeString,
@@ -50,7 +50,7 @@ func ResourceRule() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
-				ValidateFunc:  validateCloudWatchEventRuleName,
+				ValidateFunc:  validCloudWatchEventRuleName,
 			},
 			"schedule_expression": {
 				Type:         schema.TypeString,

@@ -9,42 +9,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func validateCloudWatchEventRuleName(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if len(value) > 64 {
-		errors = append(errors, fmt.Errorf(
-			"%q cannot be longer than 64 characters: %q", k, value))
-	}
-
-	// http://docs.aws.amazon.com/AmazonCloudWatchEvents/latest/APIReference/API_PutRule.html
-	pattern := `^[\.\-_A-Za-z0-9]+$`
-	if !regexp.MustCompile(pattern).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"%q doesn't comply with restrictions (%q): %q",
-			k, pattern, value))
-	}
-
-	return
-}
-
-func validateCloudWatchEventTargetId(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if len(value) > 64 {
-		errors = append(errors, fmt.Errorf(
-			"%q cannot be longer than 64 characters: %q", k, value))
-	}
-
-	// http://docs.aws.amazon.com/AmazonCloudWatchEvents/latest/APIReference/API_Target.html
-	pattern := `^[\.\-_A-Za-z0-9]+$`
-	if !regexp.MustCompile(pattern).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"%q doesn't comply with restrictions (%q): %q",
-			k, pattern, value))
-	}
-
-	return
-}
-
 func mapKeysDoNotMatch(r *regexp.Regexp, message string) schema.SchemaValidateFunc {
 	return func(i interface{}, k string) (warnings []string, errors []error) {
 		m, ok := i.(map[string]interface{})
@@ -90,6 +54,16 @@ var validBusNameOrARN = validation.Any(
 		validation.StringLenBetween(1, 256),
 		validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9._\-/]+$`), ""),
 	),
+)
+
+var validCloudWatchEventTargetId = validation.All(
+	validation.StringLenBetween(1, 64),
+	validation.StringMatch(regexp.MustCompile(`^[\.\-_A-Za-z0-9]+$`), "must contain only alphanumeric characters, underscores, periods and hyphens"),
+)
+
+var validCloudWatchEventRuleName = validation.All(
+	validation.StringLenBetween(1, 64),
+	validation.StringMatch(regexp.MustCompile(`^[\.\-_A-Za-z0-9]+$`), "must contain only alphanumeric characters, underscores, periods and hyphens"),
 )
 
 var validCustomEventBusEventSourceName = validation.All(

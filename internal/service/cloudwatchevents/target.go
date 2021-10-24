@@ -51,7 +51,7 @@ func ResourceTarget() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateCloudWatchEventRuleName,
+				ValidateFunc: validCloudWatchEventRuleName,
 			},
 
 			"target_id": {
@@ -59,7 +59,7 @@ func ResourceTarget() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ValidateFunc: validateCloudWatchEventTargetId,
+				ValidateFunc: validCloudWatchEventTargetId,
 			},
 
 			"arn": {

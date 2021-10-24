@@ -130,7 +130,7 @@ func TestValidRuleName(t *testing.T) {
 		"hello.World0125",
 	}
 	for _, v := range validNames {
-		_, errors := validateCloudWatchEventRuleName(v, "name")
+		_, errors := validCloudWatchEventRuleName(v, "name")
 		if len(errors) != 0 {
 			t.Fatalf("%q should be a valid CW event rule name: %q", v, errors)
 		}
@@ -143,7 +143,7 @@ func TestValidRuleName(t *testing.T) {
 		"TooLooooooooooooooooooooooooooooooooooooooooooooooooooooooongName",
 	}
 	for _, v := range invalidNames {
-		_, errors := validateCloudWatchEventRuleName(v, "name")
+		_, errors := validCloudWatchEventRuleName(v, "name")
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid CW event rule name", v)
 		}

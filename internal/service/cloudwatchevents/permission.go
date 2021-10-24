@@ -259,39 +259,19 @@ func resourcePermissionDelete(d *schema.ResourceData, meta interface{}) error {
 }
 
 // https://docs.aws.amazon.com/AmazonCloudWatchEvents/latest/APIReference/API_PutPermission.html#API_PutPermission_RequestParameters
-func validateCloudWatchEventPermissionAction(v interface{}, k string) (ws []string, es []error) {
-	value := v.(string)
-	if (len(value) < 1) || (len(value) > 64) {
-		es = append(es, fmt.Errorf("%q must be between 1 and 64 characters", k))
-	}
-
-	if !regexp.MustCompile(`^events:[a-zA-Z]+$`).MatchString(value) {
-		es = append(es, fmt.Errorf("%q must be: events: followed by one or more alphabetic characters", k))
-	}
-	return
-}
+var validateCloudWatchEventPermissionAction = validation.All(
+	validation.StringLenBetween(1, 64),
+	validation.StringMatch(regexp.MustCompile(`^events:[a-zA-Z]+$`), "must be events: followed by one or more alphanumeric, hyphen, or underscore characters"),
+)
 
 // https://docs.aws.amazon.com/AmazonCloudWatchEvents/latest/APIReference/API_PutPermission.html#API_PutPermission_RequestParameters
-func validateCloudWatchEventPermissionPrincipal(v interface{}, k string) (ws []string, es []error) {
-	value := v.(string)
-	if !regexp.MustCompile(`^(\d{12}|\*)$`).MatchString(value) {
-		es = append(es, fmt.Errorf("%q must be * or a 12 digit AWS account ID", k))
-	}
-	return
-}
+var validateCloudWatchEventPermissionPrincipal = validation.StringMatch(regexp.MustCompile(`^(\d{12}|\*)$`), "must be * or a 12 digit AWS account ID")
 
 // https://docs.aws.amazon.com/AmazonCloudWatchEvents/latest/APIReference/API_PutPermission.html#API_PutPermission_RequestParameters
-func validateCloudWatchEventPermissionStatementID(v interface{}, k string) (ws []string, es []error) {
-	value := v.(string)
-	if (len(value) < 1) || (len(value) > 64) {
-		es = append(es, fmt.Errorf("%q must be between 1 and 64 characters", k))
-	}
-
-	if !regexp.MustCompile(`^[a-zA-Z0-9-_]+$`).MatchString(value) {
-		es = append(es, fmt.Errorf("%q must be one or more alphanumeric, hyphen, or underscore characters", k))
-	}
-	return
-}
+var validateCloudWatchEventPermissionStatementID = validation.All(
+	validation.StringLenBetween(1, 64),
+	validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9-_]+$`), "must be one or more alphanumeric, hyphen, or underscore characters"),
+)
 
 // PermissionPolicyDoc represents the Policy attribute of DescribeEventBus
 // See also: https://docs.aws.amazon.com/AmazonCloudWatchEvents/latest/APIReference/API_DescribeEventBus.html
