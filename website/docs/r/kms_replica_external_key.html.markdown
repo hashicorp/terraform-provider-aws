@@ -29,6 +29,7 @@ resource "aws_kms_external_key" "primary" {
   description             = "Multi-Region primary key"
   deletion_window_in_days = 30
   multi_region            = true
+  enabled                 = true
 
   key_material_base64 = "..."
 }
