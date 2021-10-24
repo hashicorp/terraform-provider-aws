@@ -10,7 +10,7 @@ description: |-
 
 Creates a WAFv2 Web ACL Logging Configuration resource.
 
--> **Note:** To start logging from a WAFv2 Web ACL, an Amazon Kinesis Data Firehose (e.g. [`aws_kinesis_firehose_delivery_stream` resource](/docs/providers/aws/r/kinesis_firehose_delivery_stream.html) must also be created with a PUT source (not a stream) and in the region that you are operating.
+-> **Note:** To start logging from a WAFv2 Web ACL, an Amazon Kinesis Data Firehose (e.g., [`aws_kinesis_firehose_delivery_stream` resource](/docs/providers/aws/r/kinesis_firehose_delivery_stream.html) must also be created with a PUT source (not a stream) and in the region that you are operating.
 If you are capturing logs for Amazon CloudFront, always create the firehose in US East (N. Virginia).
 Be sure to give the data firehose a name that starts with the prefix `aws-waf-logs-`.
 
@@ -156,7 +156,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-WAFv2 Web ACL Logging Configurations can be imported using the WAFv2 Web ACL ARN e.g.
+WAFv2 Web ACL Logging Configurations can be imported using the WAFv2 Web ACL ARN e.g.,
 
 ```
 $ terraform import aws_wafv2_web_acl_logging_configuration.example arn:aws:wafv2:us-west-2:123456789012:regional/webacl/test-logs/a1b2c3d4-5678-90ab-cdef

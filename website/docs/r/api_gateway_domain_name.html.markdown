@@ -209,7 +209,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-API Gateway domain names can be imported using their `name`, e.g.
+API Gateway domain names can be imported using their `name`, e.g.,
 
 ```
 $ terraform import aws_api_gateway_domain_name.example dev.example.com

@@ -51,12 +51,12 @@ several valid keys, for a full reference, check out
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - Amazon Resource Name (ARN) of the EBS Snapshot.
-* `id` - The snapshot ID (e.g. snap-59fcb34e).
-* `snapshot_id` - The snapshot ID (e.g. snap-59fcb34e).
+* `id` - The snapshot ID (e.g., snap-59fcb34e).
+* `snapshot_id` - The snapshot ID (e.g., snap-59fcb34e).
 * `description` - A description for the snapshot
 * `owner_id` - The AWS account ID of the EBS snapshot owner.
 * `owner_alias` - Value from an Amazon-maintained list (`amazon`, `aws-marketplace`, `microsoft`) of snapshot owners.
-* `volume_id` - The volume ID (e.g. vol-59fcb34e).
+* `volume_id` - The volume ID (e.g., vol-59fcb34e).
 * `encrypted` - Whether the snapshot is encrypted.
 * `volume_size` - The size of the drive in GiBs.
 * `kms_key_id` - The ARN for the KMS encryption key.

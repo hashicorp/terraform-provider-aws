@@ -49,7 +49,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-S3 Bucket Ownership Controls can be imported using S3 Bucket name, e.g.
+S3 Bucket Ownership Controls can be imported using S3 Bucket name, e.g.,
 
 ```
 $ terraform import aws_s3_bucket_ownership_controls.example my-bucket

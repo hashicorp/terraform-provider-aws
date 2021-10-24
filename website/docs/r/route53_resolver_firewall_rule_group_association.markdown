@@ -46,7 +46,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Route 53 Resolver DNS Firewall rule group associations can be imported using the Route 53 Resolver DNS Firewall rule group association ID, e.g.
+Route 53 Resolver DNS Firewall rule group associations can be imported using the Route 53 Resolver DNS Firewall rule group association ID, e.g.,
 
 ```
 $ terraform import aws_route53_resolver_firewall_rule_group_association.example rslvr-frgassoc-0123456789abcdef
