@@ -17,10 +17,13 @@ import (
 
 func ResourceGroupMembership() *schema.Resource {
 	return &schema.Resource{
-		Create:        resourceGroupMembershipCreate,
-		Read:          resourceGroupMembershipRead,
-		Update:        resourceGroupMembershipUpdate,
-		Delete:        resourceGroupMembershipDelete,
+		Create: resourceGroupMembershipCreate,
+		Read:   resourceGroupMembershipRead,
+		Update: resourceGroupMembershipUpdate,
+		Delete: resourceGroupMembershipDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		SchemaVersion: 1,
 		StateUpgraders: []schema.StateUpgrader{
 			{
