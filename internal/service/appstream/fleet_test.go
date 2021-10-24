@@ -331,7 +331,7 @@ resource "aws_subnet" "test" {
 
 resource "aws_appstream_fleet" "test" {
   name       = %[1]q
-  image_name = "Amazon-AppStream2-Sample-Image-02-04-2019"
+  image_arn = "arn:aws:appstream:us-west-2::image/Amazon-AppStream2-Sample-Image-02-04-2019"
 
   compute_capacity {
     desired_instances = 1
