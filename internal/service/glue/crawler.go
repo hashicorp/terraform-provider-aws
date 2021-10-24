@@ -133,6 +133,16 @@ func ResourceCrawler() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.IntBetween(1, 249),
 						},
+						"event_queue_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						"dlq_event_queue_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidARN,
+						},
 					},
 				},
 			},
@@ -301,6 +311,11 @@ func resourceCrawlerCreate(d *schema.ResourceData, meta interface{}) error {
 
 			// InvalidInputException: Unable to retrieve connection tf-acc-test-8656357591012534997: User: arn:aws:sts::*******:assumed-role/tf-acc-test-8656357591012534997/AWS-Crawler is not authorized to perform: glue:GetConnection on resource: * (Service: AmazonDataCatalog; Status Code: 400; Error Code: AccessDeniedException; Request ID: 4d72b66f-9c75-11e8-9faf-5b526c7be968)
 			if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "is not authorized") {
+				return resource.RetryableError(err)
+			}
+
+			// InvalidInputException: SQS queue arn:aws:sqs:us-west-2:*******:tf-acc-test-4317277351691904203 does not exist or the role provided does not have access to it.
+			if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "SQS queue") && tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "does not exist or the role provided does not have access to it") {
 				return resource.RetryableError(err)
 			}
 
@@ -524,6 +539,14 @@ func expandGlueS3Target(cfg map[string]interface{}) *glue.S3Target {
 		target.SampleSize = aws.Int64(int64(v.(int)))
 	}
 
+	if v, ok := cfg["event_queue_arn"]; ok {
+		target.EventQueueArn = aws.String(v.(string))
+	}
+
+	if v, ok := cfg["dlq_event_queue_arn"]; ok {
+		target.DlqEventQueueArn = aws.String(v.(string))
+	}
+
 	return target
 }
 
@@ -622,6 +645,11 @@ func resourceCrawlerUpdate(d *schema.ResourceData, meta interface{}) error {
 
 				// InvalidInputException: Unable to retrieve connection tf-acc-test-8656357591012534997: User: arn:aws:sts::*******:assumed-role/tf-acc-test-8656357591012534997/AWS-Crawler is not authorized to perform: glue:GetConnection on resource: * (Service: AmazonDataCatalog; Status Code: 400; Error Code: AccessDeniedException; Request ID: 4d72b66f-9c75-11e8-9faf-5b526c7be968)
 				if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "is not authorized") {
+					return resource.RetryableError(err)
+				}
+
+				// InvalidInputException: SQS queue arn:aws:sqs:us-west-2:*******:tf-acc-test-4317277351691904203 does not exist or the role provided does not have access to it.
+				if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "SQS queue") && tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "does not exist or the role provided does not have access to it") {
 					return resource.RetryableError(err)
 				}
 
@@ -767,6 +795,9 @@ func flattenGlueS3Targets(s3Targets []*glue.S3Target) []map[string]interface{} {
 		if s3Target.SampleSize != nil {
 			attrs["sample_size"] = aws.Int64Value(s3Target.SampleSize)
 		}
+
+		attrs["event_queue_arn"] = aws.StringValue(s3Target.EventQueueArn)
+		attrs["dlq_event_queue_arn"] = aws.StringValue(s3Target.DlqEventQueueArn)
 
 		result = append(result, attrs)
 	}
