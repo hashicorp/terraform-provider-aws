@@ -191,6 +191,10 @@ func DataSourceFunction() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"image_uri": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
