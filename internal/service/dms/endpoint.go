@@ -373,10 +373,11 @@ func ResourceEndpoint() *schema.Resource {
 							Default:      s3SettingsCompressionTypeNone,
 							ValidateFunc: validation.StringInSlice(s3SettingsCompressionType_Values(), false),
 						},
-						"date_partition_enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
+						"encryption_mode": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      s3SettingsEncryptionModeSseS3,
+							ValidateFunc: validation.StringInSlice(s3SettingsEncryptionMode_Values(), false),
 						},
 						"server_side_encryption_kms_key_id": {
 							Type:     schema.TypeString,
@@ -411,6 +412,12 @@ func ResourceEndpoint() *schema.Resource {
 							Default:      1048576,
 							ValidateFunc: validation.IntAtLeast(0),
 						},
+						"parquet_version": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      dms.ParquetVersionValueParquet10,
+							ValidateFunc: validation.StringInSlice(dms.ParquetVersionValue_Values(), false),
+						},
 						"enable_statistics": {
 							Type:     schema.TypeBool,
 							Optional: true,
@@ -435,19 +442,12 @@ func ResourceEndpoint() *schema.Resource {
 							Optional: true,
 							Default:  false,
 						},
-						"parquet_version": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      dms.ParquetVersionValueParquet10,
-							ValidateFunc: validation.StringInSlice(dms.ParquetVersionValue_Values(), false),
-						},
-						"encryption_mode": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      s3SettingsEncryptionModeSseS3,
-							ValidateFunc: validation.StringInSlice(s3SettingsEncryptionMode_Values(), false),
-						},
 						"cdc_inserts_and_updates": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"date_partition_enabled": {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  false,
@@ -671,44 +671,7 @@ func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 			request.DatabaseName = aws.String(d.Get("database_name").(string))
 		}
 	case engineNameS3:
-		request.S3Settings = &dms.S3Settings{
-			AddColumnName:                 aws.Bool(d.Get("s3_settings.0.add_column_name").(bool)),
-			BucketFolder:                  aws.String(d.Get("s3_settings.0.bucket_folder").(string)),
-			BucketName:                    aws.String(d.Get("s3_settings.0.bucket_name").(string)),
-			CannedAclForObjects:           aws.String(d.Get("s3_settings.0.canned_acl_for_objects").(string)),
-			CdcInsertsAndUpdates:          aws.Bool(d.Get("s3_settings.0.cdc_inserts_and_updates").(bool)),
-			CdcInsertsOnly:                aws.Bool(d.Get("s3_settings.0.cdc_inserts_only").(bool)),
-			CdcMaxBatchInterval:           aws.Int64(int64(d.Get("s3_settings.0.cdc_max_batch_interval").(int))),
-			CdcMinFileSize:                aws.Int64(int64(d.Get("s3_settings.0.cdc_min_file_size").(int))),
-			CdcPath:                       aws.String(d.Get("s3_settings.0.cdc_path").(string)),
-			CompressionType:               aws.String(d.Get("s3_settings.0.compression_type").(string)),
-			CsvDelimiter:                  aws.String(d.Get("s3_settings.0.csv_delimiter").(string)),
-			CsvNoSupValue:                 aws.String(d.Get("s3_settings.0.csv_no_sup_value").(string)),
-			CsvNullValue:                  aws.String(d.Get("s3_settings.0.csv_null_value").(string)),
-			CsvRowDelimiter:               aws.String(d.Get("s3_settings.0.csv_row_delimiter").(string)),
-			DataFormat:                    aws.String(d.Get("s3_settings.0.data_format").(string)),
-			DataPageSize:                  aws.Int64(int64(d.Get("s3_settings.0.data_page_size").(int))),
-			DatePartitionDelimiter:        aws.String(d.Get("s3_settings.0.date_partition_delimiter").(string)),
-			DatePartitionEnabled:          aws.Bool(d.Get("s3_settings.0.date_partition_enabled").(bool)),
-			DatePartitionSequence:         aws.String(d.Get("s3_settings.0.date_partition_sequence").(string)),
-			DictPageSizeLimit:             aws.Int64(int64(d.Get("s3_settings.0.dict_page_size_limit").(int))),
-			EnableStatistics:              aws.Bool(d.Get("s3_settings.0.enable_statistics").(bool)),
-			EncodingType:                  aws.String(d.Get("s3_settings.0.encoding_type").(string)),
-			EncryptionMode:                aws.String(d.Get("s3_settings.0.encryption_mode").(string)),
-			ExternalTableDefinition:       aws.String(d.Get("s3_settings.0.external_table_definition").(string)),
-			IgnoreHeaderRows:              aws.Int64(int64(d.Get("s3_settings.0.ignore_header_rows").(int))),
-			IncludeOpForFullLoad:          aws.Bool(d.Get("s3_settings.0.include_op_for_full_load").(bool)),
-			MaxFileSize:                   aws.Int64(int64(d.Get("s3_settings.0.max_file_size").(int))),
-			ParquetTimestampInMillisecond: aws.Bool(d.Get("s3_settings.0.parquet_timestamp_in_millisecond").(bool)),
-			ParquetVersion:                aws.String(d.Get("s3_settings.0.parquet_version").(string)),
-			PreserveTransactions:          aws.Bool(d.Get("s3_settings.0.preserve_transactions").(bool)),
-			Rfc4180:                       aws.Bool(d.Get("s3_settings.0.rfc_4180").(bool)),
-			RowGroupLength:                aws.Int64(int64(d.Get("s3_settings.0.row_group_length").(int))),
-			ServerSideEncryptionKmsKeyId:  aws.String(d.Get("s3_settings.0.server_side_encryption_kms_key_id").(string)),
-			ServiceAccessRoleArn:          aws.String(d.Get("s3_settings.0.service_access_role_arn").(string)),
-			TimestampColumnName:           aws.String(d.Get("s3_settings.0.timestamp_column_name").(string)),
-			UseCsvNoSupValue:              aws.Bool(d.Get("s3_settings.0.use_csv_no_sup_value").(bool)),
-		}
+		request.S3Settings = expandDmsS3Settings(d.Get("s3_settings").([]interface{})[0].(map[string]interface{}))
 	default:
 		request.Password = aws.String(d.Get("password").(string))
 		request.Port = aws.Int64(int64(d.Get("port").(int)))
@@ -1544,50 +1507,239 @@ func flattenDmsMongoDbSettings(settings *dms.MongoDbSettings) []map[string]inter
 	return []map[string]interface{}{m}
 }
 
-func flattenDmsS3Settings(settings *dms.S3Settings) []map[string]interface{} {
-	if settings == nil {
-		return []map[string]interface{}{}
+func expandDmsS3Settings(tfMap map[string]interface{}) *dms.S3Settings {
+	if tfMap == nil {
+		return nil
 	}
 
-	m := map[string]interface{}{
-		"add_column_name":                   aws.BoolValue(settings.AddColumnName),
-		"bucket_folder":                     aws.StringValue(settings.BucketFolder),
-		"bucket_name":                       aws.StringValue(settings.BucketName),
-		"canned_acl_for_objects":            aws.StringValue(settings.CannedAclForObjects),
-		"cdc_inserts_and_updates":           aws.BoolValue(settings.CdcInsertsAndUpdates),
-		"cdc_inserts_only":                  aws.BoolValue(settings.CdcInsertsOnly),
-		"cdc_max_batch_interval":            aws.Int64Value(settings.CdcMaxBatchInterval),
-		"cdc_min_file_size":                 aws.Int64Value(settings.CdcMinFileSize),
-		"cdc_path":                          aws.StringValue(settings.CdcPath),
-		"compression_type":                  aws.StringValue(settings.CompressionType),
-		"csv_delimiter":                     aws.StringValue(settings.CsvDelimiter),
-		"csv_no_sup_value":                  aws.StringValue(settings.CsvNoSupValue),
-		"csv_null_value":                    aws.StringValue(settings.CsvNullValue),
-		"csv_row_delimiter":                 aws.StringValue(settings.CsvRowDelimiter),
-		"data_format":                       aws.StringValue(settings.DataFormat),
-		"data_page_size":                    aws.Int64Value(settings.DataPageSize),
-		"date_partition_delimiter":          aws.StringValue(settings.DatePartitionDelimiter),
-		"date_partition_enabled":            aws.BoolValue(settings.DatePartitionEnabled),
-		"date_partition_sequence":           aws.StringValue(settings.DatePartitionSequence),
-		"dict_page_size_limit":              aws.Int64Value(settings.DictPageSizeLimit),
-		"enable_statistics":                 aws.BoolValue(settings.EnableStatistics),
-		"encoding_type":                     aws.StringValue(settings.EncodingType),
-		"encryption_mode":                   aws.StringValue(settings.EncryptionMode),
-		"external_table_definition":         aws.StringValue(settings.ExternalTableDefinition),
-		"ignore_header_rows":                aws.Int64Value(settings.IgnoreHeaderRows),
-		"include_op_for_full_load":          aws.BoolValue(settings.IncludeOpForFullLoad),
-		"max_file_size":                     aws.Int64Value(settings.MaxFileSize),
-		"parquet_timestamp_in_millisecond":  aws.BoolValue(settings.ParquetTimestampInMillisecond),
-		"parquet_version":                   aws.StringValue(settings.ParquetVersion),
-		"rfc_4180":                          aws.BoolValue(settings.Rfc4180),
-		"row_group_length":                  aws.Int64Value(settings.RowGroupLength),
-		"server_side_encryption_kms_key_id": aws.StringValue(settings.ServerSideEncryptionKmsKeyId),
-		"service_access_role_arn":           aws.StringValue(settings.ServiceAccessRoleArn),
-		"timestamp_column_name":             aws.StringValue(settings.TimestampColumnName),
-		"use_csv_no_sup_value":              aws.BoolValue(settings.UseCsvNoSupValue),
+	apiObject := &dms.S3Settings{}
+
+	if v, ok := tfMap["add_column_name"].(bool); ok {
+		apiObject.AddColumnName = aws.Bool(v)
+	}
+	if v, ok := tfMap["bucket_folder"].(string); ok && v != "" {
+		apiObject.BucketFolder = aws.String(v)
+	}
+	if v, ok := tfMap["bucket_name"].(string); ok && v != "" {
+		apiObject.BucketName = aws.String(v)
+	}
+	if v, ok := tfMap["canned_acl_for_objects"].(string); ok && v != "" {
+		apiObject.CannedAclForObjects = aws.String(v)
+	}
+	if v, ok := tfMap["cdc_inserts_and_updates"].(bool); ok {
+		apiObject.CdcInsertsAndUpdates = aws.Bool(v)
+	}
+	if v, ok := tfMap["cdc_inserts_only"].(bool); ok {
+		apiObject.CdcInsertsOnly = aws.Bool(v)
+	}
+	if v, ok := tfMap["cdc_max_batch_interval"].(int); ok {
+		apiObject.CdcMaxBatchInterval = aws.Int64(int64(v))
+	}
+	if v, ok := tfMap["cdc_min_file_size"].(int); ok {
+		apiObject.CdcMinFileSize = aws.Int64(int64(v))
+	}
+	if v, ok := tfMap["cdc_path"].(string); ok && v != "" {
+		apiObject.CdcPath = aws.String(v)
+	}
+	if v, ok := tfMap["compression_type"].(string); ok && v != "" {
+		apiObject.CompressionType = aws.String(v)
+	}
+	if v, ok := tfMap["csv_delimiter"].(string); ok && v != "" {
+		apiObject.CsvDelimiter = aws.String(v)
+	}
+	if v, ok := tfMap["csv_no_sup_value"].(string); ok && v != "" {
+		apiObject.CsvNoSupValue = aws.String(v)
+	}
+	if v, ok := tfMap["csv_null_value"].(string); ok && v != "" {
+		apiObject.CsvNullValue = aws.String(v)
+	}
+	if v, ok := tfMap["csv_row_delimiter"].(string); ok && v != "" {
+		apiObject.CsvRowDelimiter = aws.String(v)
+	}
+	if v, ok := tfMap["data_format"].(string); ok && v != "" {
+		apiObject.DataFormat = aws.String(v)
+	}
+	if v, ok := tfMap["data_page_size"].(int); ok {
+		apiObject.DataPageSize = aws.Int64(int64(v))
+	}
+	if v, ok := tfMap["date_partition_delimiter"].(string); ok && v != "" {
+		apiObject.DatePartitionDelimiter = aws.String(v)
+	}
+	if v, ok := tfMap["date_partition_enabled"].(bool); ok {
+		apiObject.DatePartitionEnabled = aws.Bool(v)
+	}
+	if v, ok := tfMap["date_partition_sequence"].(string); ok && v != "" {
+		apiObject.DatePartitionSequence = aws.String(v)
+	}
+	if v, ok := tfMap["dict_page_size_limit"].(int); ok {
+		apiObject.DictPageSizeLimit = aws.Int64(int64(v))
+	}
+	if v, ok := tfMap["enable_statistics"].(bool); ok {
+		apiObject.EnableStatistics = aws.Bool(v)
+	}
+	if v, ok := tfMap["encoding_type"].(string); ok && v != "" {
+		apiObject.EncodingType = aws.String(v)
+	}
+	if v, ok := tfMap["encryption_mode"].(string); ok && v != "" {
+		apiObject.EncryptionMode = aws.String(v)
+	}
+	if v, ok := tfMap["external_table_definition"].(string); ok && v != "" {
+		apiObject.ExternalTableDefinition = aws.String(v)
+	}
+	if v, ok := tfMap["ignore_header_rows"].(int); ok {
+		apiObject.IgnoreHeaderRows = aws.Int64(int64(v))
+	}
+	if v, ok := tfMap["include_op_for_full_load"].(bool); ok {
+		apiObject.IncludeOpForFullLoad = aws.Bool(v)
+	}
+	if v, ok := tfMap["max_file_size"].(int); ok {
+		apiObject.MaxFileSize = aws.Int64(int64(v))
+	}
+	if v, ok := tfMap["parquet_timestamp_in_millisecond"].(bool); ok {
+		apiObject.ParquetTimestampInMillisecond = aws.Bool(v)
+	}
+	if v, ok := tfMap["parquet_version"].(string); ok && v != "" {
+		apiObject.ParquetVersion = aws.String(v)
+	}
+	if v, ok := tfMap["preserve_transactions"].(bool); ok {
+		apiObject.PreserveTransactions = aws.Bool(v)
+	}
+	if v, ok := tfMap["rfc_4180"].(bool); ok {
+		apiObject.Rfc4180 = aws.Bool(v)
+	}
+	if v, ok := tfMap["row_group_length"].(int); ok {
+		apiObject.RowGroupLength = aws.Int64(int64(v))
+	}
+	if v, ok := tfMap["server_side_encryption_kms_key_id"].(string); ok && v != "" {
+		apiObject.ServerSideEncryptionKmsKeyId = aws.String(v)
+	}
+	if v, ok := tfMap["service_access_role_arn"].(string); ok && v != "" {
+		apiObject.ServiceAccessRoleArn = aws.String(v)
+	}
+	if v, ok := tfMap["timestamp_column_name"].(string); ok && v != "" {
+		apiObject.TimestampColumnName = aws.String(v)
+	}
+	if v, ok := tfMap["use_csv_no_sup_value"].(bool); ok {
+		apiObject.UseCsvNoSupValue = aws.Bool(v)
 	}
 
-	return []map[string]interface{}{m}
+	return apiObject
+}
+
+func flattenDmsS3Settings(apiObject *dms.S3Settings) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.AddColumnName; v != nil {
+		tfMap["add_column_name"] = aws.BoolValue(v)
+	}
+	if v := apiObject.BucketFolder; v != nil {
+		tfMap["bucket_folder"] = aws.StringValue(v)
+	}
+	if v := apiObject.BucketName; v != nil {
+		tfMap["bucket_name"] = aws.StringValue(v)
+	}
+	if v := apiObject.CannedAclForObjects; v != nil {
+		tfMap["canned_acl_for_objects"] = aws.StringValue(v)
+	}
+	if v := apiObject.CdcInsertsAndUpdates; v != nil {
+		tfMap["cdc_inserts_and_updates"] = aws.BoolValue(v)
+	}
+	if v := apiObject.CdcInsertsOnly; v != nil {
+		tfMap["cdc_inserts_only"] = aws.BoolValue(v)
+	}
+	if v := apiObject.CdcMaxBatchInterval; v != nil {
+		tfMap["cdc_max_batch_interval"] = aws.Int64Value(v)
+	}
+	if v := apiObject.CdcMinFileSize; v != nil {
+		tfMap["cdc_min_file_size"] = aws.Int64Value(v)
+	}
+	if v := apiObject.CdcPath; v != nil {
+		tfMap["cdc_path"] = aws.StringValue(v)
+	}
+	if v := apiObject.CompressionType; v != nil {
+		tfMap["compression_type"] = aws.StringValue(v)
+	}
+	if v := apiObject.CsvDelimiter; v != nil {
+		tfMap["csv_delimiter"] = aws.StringValue(v)
+	}
+	if v := apiObject.CsvNoSupValue; v != nil {
+		tfMap["csv_no_sup_value"] = aws.StringValue(v)
+	}
+	if v := apiObject.CsvNullValue; v != nil {
+		tfMap["csv_null_value"] = aws.StringValue(v)
+	}
+	if v := apiObject.CsvRowDelimiter; v != nil {
+		tfMap["csv_row_delimiter"] = aws.StringValue(v)
+	}
+	if v := apiObject.DataFormat; v != nil {
+		tfMap["data_format"] = aws.StringValue(v)
+	}
+	if v := apiObject.DataPageSize; v != nil {
+		tfMap["data_page_size"] = aws.Int64Value(v)
+	}
+	if v := apiObject.DatePartitionDelimiter; v != nil {
+		tfMap["date_partition_delimiter"] = aws.StringValue(v)
+	}
+	if v := apiObject.DatePartitionEnabled; v != nil {
+		tfMap["date_partition_enabled"] = aws.BoolValue(v)
+	}
+	if v := apiObject.DatePartitionSequence; v != nil {
+		tfMap["date_partition_sequence"] = aws.StringValue(v)
+	}
+	if v := apiObject.DictPageSizeLimit; v != nil {
+		tfMap["dict_page_size_limit"] = aws.Int64Value(v)
+	}
+	if v := apiObject.EnableStatistics; v != nil {
+		tfMap["enable_statistics"] = aws.BoolValue(v)
+	}
+	if v := apiObject.EncodingType; v != nil {
+		tfMap["encoding_type"] = aws.StringValue(v)
+	}
+	if v := apiObject.EncryptionMode; v != nil {
+		tfMap["encryption_mode"] = aws.StringValue(v)
+	}
+	if v := apiObject.ExternalTableDefinition; v != nil {
+		tfMap["external_table_definition"] = aws.StringValue(v)
+	}
+	if v := apiObject.IgnoreHeaderRows; v != nil {
+		tfMap["ignore_header_rows"] = aws.Int64Value(v)
+	}
+	if v := apiObject.IncludeOpForFullLoad; v != nil {
+		tfMap["include_op_for_full_load"] = aws.BoolValue(v)
+	}
+	if v := apiObject.MaxFileSize; v != nil {
+		tfMap["max_file_size"] = aws.Int64Value(v)
+	}
+	if v := apiObject.ParquetTimestampInMillisecond; v != nil {
+		tfMap["parquet_timestamp_in_millisecond"] = aws.BoolValue(v)
+	}
+	if v := apiObject.ParquetVersion; v != nil {
+		tfMap["parquet_version"] = aws.StringValue(v)
+	}
+	if v := apiObject.Rfc4180; v != nil {
+		tfMap["rfc_4180"] = aws.BoolValue(v)
+	}
+	if v := apiObject.RowGroupLength; v != nil {
+		tfMap["row_group_length"] = aws.Int64Value(v)
+	}
+	if v := apiObject.ServerSideEncryptionKmsKeyId; v != nil {
+		tfMap["server_side_encryption_kms_key_id"] = aws.StringValue(v)
+	}
+	if v := apiObject.ServiceAccessRoleArn; v != nil {
+		tfMap["service_access_role_arn"] = aws.StringValue(v)
+	}
+	if v := apiObject.TimestampColumnName; v != nil {
+		tfMap["timestamp_column_name"] = aws.StringValue(v)
+	}
+	if v := apiObject.UseCsvNoSupValue; v != nil {
+		tfMap["use_csv_no_sup_value"] = aws.BoolValue(v)
+	}
+
+	return tfMap
 }
 
 func suppressExtraConnectionAttributesDiffs(_, old, new string, d *schema.ResourceData) bool {
