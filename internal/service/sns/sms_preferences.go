@@ -14,7 +14,7 @@ import (
 )
 
 func validateMonthlySpend(v interface{}, k string) (ws []string, errors []error) {
-	vInt, _ := strconv.Atoi(v.(string))
+	vInt := v.(int)
 	if vInt < 0 {
 		errors = append(errors, fmt.Errorf("error setting SMS preferences: monthly spend limit value [%d] must be >= 0", vInt))
 	}
@@ -34,34 +34,83 @@ var (
 		"default_sender_id": {
 			Type:     schema.TypeString,
 			Optional: true,
+			AtLeastOneOf: []string{
+				"default_sender_id",
+				"default_sms_type",
+				"delivery_status_iam_role_arn",
+				"delivery_status_success_sampling_rate",
+				"monthly_spend_limit",
+				"usage_report_s3_bucket",
+			},
 		},
 
 		"default_sms_type": {
 			Type:         schema.TypeString,
 			Optional:     true,
 			ValidateFunc: validation.StringInSlice([]string{"Promotional", "Transactional"}, false),
+			AtLeastOneOf: []string{
+				"default_sender_id",
+				"default_sms_type",
+				"delivery_status_iam_role_arn",
+				"delivery_status_success_sampling_rate",
+				"monthly_spend_limit",
+				"usage_report_s3_bucket",
+			},
 		},
 
 		"delivery_status_iam_role_arn": {
 			Type:     schema.TypeString,
 			Optional: true,
+			AtLeastOneOf: []string{
+				"default_sender_id",
+				"default_sms_type",
+				"delivery_status_iam_role_arn",
+				"delivery_status_success_sampling_rate",
+				"monthly_spend_limit",
+				"usage_report_s3_bucket",
+			},
 		},
 
 		"delivery_status_success_sampling_rate": {
 			Type:         schema.TypeString,
 			Optional:     true,
 			ValidateFunc: validateDeliverySamplingRate,
+			AtLeastOneOf: []string{
+				"default_sender_id",
+				"default_sms_type",
+				"delivery_status_iam_role_arn",
+				"delivery_status_success_sampling_rate",
+				"monthly_spend_limit",
+				"usage_report_s3_bucket",
+			},
 		},
 
 		"monthly_spend_limit": {
-			Type:         schema.TypeString,
+			Type:         schema.TypeInt,
 			Optional:     true,
+			Computed:     true,
 			ValidateFunc: validateMonthlySpend,
+			AtLeastOneOf: []string{
+				"default_sender_id",
+				"default_sms_type",
+				"delivery_status_iam_role_arn",
+				"delivery_status_success_sampling_rate",
+				"monthly_spend_limit",
+				"usage_report_s3_bucket",
+			},
 		},
 
 		"usage_report_s3_bucket": {
 			Type:     schema.TypeString,
 			Optional: true,
+			AtLeastOneOf: []string{
+				"default_sender_id",
+				"default_sms_type",
+				"delivery_status_iam_role_arn",
+				"delivery_status_success_sampling_rate",
+				"monthly_spend_limit",
+				"usage_report_s3_bucket",
+			},
 		},
 	}
 
