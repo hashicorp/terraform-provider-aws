@@ -8,9 +8,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/aws/aws-sdk-go/base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceNetworkAclAssociation() *schema.Resource {
@@ -71,7 +72,7 @@ func ResourceNetworkAclAssociationRead(d *schema.ResourceData, meta interface{})
 	subnetId := d.Get("subnet_id").(string)
 	association, err := findNetworkAclAssociation(subnetId, conn)
 	if err != nil {
-		if tfawserr.ErrCodeContains(err, "InvalidNetworkAclID.NotFound") {
+		if tfresource.NotFound(err) {
 			log.Printf("[WARN] Unable to find association for subnet %s", subnetId)
 			d.SetId("")
 			//nolint:nilerr // subnet likely doesn't exist so there is nothing more that we can do
@@ -149,7 +150,7 @@ func ResourceNetworkAclAssociationDelete(d *schema.ResourceData, meta interface{
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.ReplaceNetworkAclAssociation(&associationOpts)
 	}
 	if err != nil {
@@ -158,9 +159,4 @@ func ResourceNetworkAclAssociationDelete(d *schema.ResourceData, meta interface{
 
 	d.SetId("")
 	return nil
-}
-
-func isResourceTimeoutError(err error) bool {
-	timeoutErr, ok := err.(*resource.TimeoutError)
-	return ok && timeoutErr.LastError == nil
 }
