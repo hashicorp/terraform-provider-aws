@@ -75,12 +75,14 @@ func ResourceNetworkAclAssociationRead(d *schema.ResourceData, meta interface{})
 		if tfresource.NotFound(err) {
 			log.Printf("[WARN] Unable to find association for subnet %s", subnetId)
 			d.SetId("")
+			//nolint:ignore,nolintlint nilerr // subnet likely doesn't exist so there is nothing more that we can do
 			return nil
 		}
 		if awsErr, ok := err.(awserr.Error); ok {
 			if awsErr != nil {
 				log.Printf("[WARN] Unable to find association for subnet %s", subnetId)
 				d.SetId("")
+				//nolint:ignore,nolintlint nilerr // subnet likely doesn't exist so there is nothing more that we can do
 				return nil
 			}
 		}
