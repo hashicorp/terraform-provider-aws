@@ -66,6 +66,42 @@ func TestAccStorageGatewayNFSFileShare_basic(t *testing.T) {
 	})
 }
 
+func TestAccStorageGatewayNFSFileShare_audit(t *testing.T) {
+	var nfsFileShare storagegateway.NFSFileShareInfo
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_storagegateway_nfs_file_share.test"
+	logResourceName := "aws_cloudwatch_log_group.test"
+	logResourceNameSecond := "aws_cloudwatch_log_group.test2"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckNFSFileShareDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNFSFileShareAuditConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNFSFileShareExists(resourceName, &nfsFileShare),
+					resource.TestCheckResourceAttrPair(resourceName, "audit_destination_arn", logResourceName, "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccNFSFileShareAuditUpdatedConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNFSFileShareExists(resourceName, &nfsFileShare),
+					resource.TestCheckResourceAttrPair(resourceName, "audit_destination_arn", logResourceNameSecond, "arn"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccStorageGatewayNFSFileShare_tags(t *testing.T) {
 	var nfsFileShare storagegateway.NFSFileShareInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -616,6 +652,7 @@ func TestAccStorageGatewayNFSFileShare_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNFSFileShareExists(resourceName, &nfsFileShare),
 					acctest.CheckResourceDisappears(acctest.Provider, tfstoragegateway.ResourceNFSFileShare(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfstoragegateway.ResourceNFSFileShare(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -993,4 +1030,40 @@ resource "aws_storagegateway_nfs_file_share" "test" {
   notification_policy = "{\"Upload\": {\"SettlingTimeInSeconds\": 60}}"
 }
 `
+}
+
+func testAccNFSFileShareAuditConfig(rName string) string {
+	return testAcc_S3FileShareBase(rName) + fmt.Sprintf(`
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
+
+resource "aws_storagegateway_nfs_file_share" "test" {
+  client_list           = ["0.0.0.0/0"]
+  gateway_arn           = aws_storagegateway_gateway.test.arn
+  location_arn          = aws_s3_bucket.test.arn
+  role_arn              = aws_iam_role.test.arn
+  audit_destination_arn = aws_cloudwatch_log_group.test.arn
+}
+`, rName)
+}
+
+func testAccNFSFileShareAuditUpdatedConfig(rName string) string {
+	return testAcc_S3FileShareBase(rName) + fmt.Sprintf(`
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
+
+resource "aws_cloudwatch_log_group" "test2" {
+  name = "%[1]s-updated"
+}
+
+resource "aws_storagegateway_nfs_file_share" "test" {
+  client_list           = ["0.0.0.0/0"]
+  gateway_arn           = aws_storagegateway_gateway.test.arn
+  location_arn          = aws_s3_bucket.test.arn
+  role_arn              = aws_iam_role.test.arn
+  audit_destination_arn = aws_cloudwatch_log_group.test2.arn
+}
+`, rName)
 }
