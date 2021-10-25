@@ -139,3 +139,14 @@ func (m AttributeMap) ResourceDataToApiAttributesUpdate(d *schema.ResourceData) 
 
 	return apiAttributes, nil
 }
+
+// ApiAttributeNames returns the AWS API attribute names.
+func (m AttributeMap) ApiAttributeNames() []string {
+	apiAttributeNames := []string{}
+
+	for _, attributeInfo := range m {
+		apiAttributeNames = append(apiAttributeNames, attributeInfo.apiAttributeName)
+	}
+
+	return apiAttributeNames
+}
