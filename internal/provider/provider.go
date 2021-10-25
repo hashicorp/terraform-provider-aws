@@ -807,13 +807,14 @@ func Provider() *schema.Provider {
 
 			"aws_autoscalingplans_scaling_plan": autoscalingplans.ResourceScalingPlan(),
 
-			"aws_backup_global_settings":     backup.ResourceGlobalSettings(),
-			"aws_backup_plan":                backup.ResourcePlan(),
-			"aws_backup_region_settings":     backup.ResourceRegionSettings(),
-			"aws_backup_selection":           backup.ResourceSelection(),
-			"aws_backup_vault":               backup.ResourceVault(),
-			"aws_backup_vault_notifications": backup.ResourceVaultNotifications(),
-			"aws_backup_vault_policy":        backup.ResourceVaultPolicy(),
+			"aws_backup_global_settings":          backup.ResourceGlobalSettings(),
+			"aws_backup_plan":                     backup.ResourcePlan(),
+			"aws_backup_region_settings":          backup.ResourceRegionSettings(),
+			"aws_backup_selection":                backup.ResourceSelection(),
+			"aws_backup_vault":                    backup.ResourceVault(),
+			"aws_backup_vault_lock_configuration": backup.ResourceVaultLockConfiguration(),
+			"aws_backup_vault_notifications":      backup.ResourceVaultNotifications(),
+			"aws_backup_vault_policy":             backup.ResourceVaultPolicy(),
 
 			"aws_batch_compute_environment": batch.ResourceComputeEnvironment(),
 			"aws_batch_job_definition":      batch.ResourceJobDefinition(),
