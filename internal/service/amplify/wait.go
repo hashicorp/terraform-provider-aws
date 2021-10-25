@@ -36,7 +36,7 @@ func waitDomainAssociationCreated(conn *amplify.Amplify, appID, domainName strin
 	return nil, err
 }
 
-func waitDomainAssociationVerified(conn *amplify.Amplify, appID, domainName string) (*amplify.DomainAssociation, error) {
+func waitDomainAssociationVerified(conn *amplify.Amplify, appID, domainName string) (*amplify.DomainAssociation, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{amplify.DomainStatusUpdating, amplify.DomainStatusInProgress, amplify.DomainStatusPendingVerification},
 		Target:  []string{amplify.DomainStatusPendingDeployment, amplify.DomainStatusAvailable},

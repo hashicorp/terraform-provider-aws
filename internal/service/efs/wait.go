@@ -58,7 +58,7 @@ func waitAccessPointDeleted(conn *efs.EFS, accessPointId string) (*efs.AccessPoi
 	return nil, err
 }
 
-func waitFileSystemAvailable(conn *efs.EFS, fileSystemID string) (*efs.FileSystemDescription, error) {
+func waitFileSystemAvailable(conn *efs.EFS, fileSystemID string) (*efs.FileSystemDescription, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{efs.LifeCycleStateCreating, efs.LifeCycleStateUpdating},
 		Target:     []string{efs.LifeCycleStateAvailable},

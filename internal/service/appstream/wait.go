@@ -53,7 +53,7 @@ func waitStackStateDeleted(ctx context.Context, conn *appstream.AppStream, name 
 }
 
 // waitFleetStateRunning waits for a fleet running
-func waitFleetStateRunning(ctx context.Context, conn *appstream.AppStream, name string) (*appstream.Fleet, error) {
+func waitFleetStateRunning(ctx context.Context, conn *appstream.AppStream, name string) (*appstream.Fleet, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{appstream.FleetStateStarting},
 		Target:  []string{appstream.FleetStateRunning},
@@ -81,7 +81,7 @@ func waitFleetStateRunning(ctx context.Context, conn *appstream.AppStream, name 
 }
 
 // waitFleetStateStopped waits for a fleet stopped
-func waitFleetStateStopped(ctx context.Context, conn *appstream.AppStream, name string) (*appstream.Fleet, error) {
+func waitFleetStateStopped(ctx context.Context, conn *appstream.AppStream, name string) (*appstream.Fleet, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{appstream.FleetStateStopping},
 		Target:  []string{appstream.FleetStateStopped},

@@ -27,23 +27,23 @@ func TestTypeVersionARNToTypeARNAndVersionID(t *testing.T) {
 		},
 		{
 			TestName:      "invalid ARN service",
-			InputARN:      "arn:aws:ec2:us-west-2:123456789012:instance/i-12345678",
+			InputARN:      "arn:aws:ec2:us-west-2:123456789012:instance/i-12345678", //lintignore:AWSAT003,AWSAT005
 			ExpectedError: regexp.MustCompile(`expected service cloudformation`),
 		},
 		{
 			TestName:      "invalid ARN resource parts",
-			InputARN:      "arn:aws:cloudformation:us-west-2:123456789012:type/resource/HashiCorp-TerraformAwsProvider-TfAccTestzwv6r2i7",
+			InputARN:      "arn:aws:cloudformation:us-west-2:123456789012:type/resource/HashiCorp-TerraformAwsProvider-TfAccTestzwv6r2i7", //lintignore:AWSAT003,AWSAT005
 			ExpectedError: regexp.MustCompile(`expected 4 resource parts`),
 		},
 		{
 			TestName:      "invalid ARN resource prefix",
-			InputARN:      "arn:aws:cloudformation:us-west-2:123456789012:stack/name/1/2",
+			InputARN:      "arn:aws:cloudformation:us-west-2:123456789012:stack/name/1/2", //lintignore:AWSAT003,AWSAT005
 			ExpectedError: regexp.MustCompile(`expected resource prefix type`),
 		},
 		{
 			TestName:          "valid ARN",
-			InputARN:          "arn:aws:cloudformation:us-west-2:123456789012:type/resource/HashiCorp-TerraformAwsProvider-TfAccTestzwv6r2i7/00000001",
-			ExpectedTypeARN:   "arn:aws:cloudformation:us-west-2:123456789012:type/resource/HashiCorp-TerraformAwsProvider-TfAccTestzwv6r2i7",
+			InputARN:          "arn:aws:cloudformation:us-west-2:123456789012:type/resource/HashiCorp-TerraformAwsProvider-TfAccTestzwv6r2i7/00000001", //lintignore:AWSAT003,AWSAT005
+			ExpectedTypeARN:   "arn:aws:cloudformation:us-west-2:123456789012:type/resource/HashiCorp-TerraformAwsProvider-TfAccTestzwv6r2i7",          //lintignore:AWSAT003,AWSAT005
 			ExpectedVersionID: "00000001",
 		},
 	}

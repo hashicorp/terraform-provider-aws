@@ -929,7 +929,7 @@ func TestAccGlueCrawler_classifiers(t *testing.T) {
 	})
 }
 
-func TestAccGlueCrawler(t *testing.T) {
+func TestAccGlueCrawler_Configuration(t *testing.T) {
 	var crawler glue.Crawler
 	configuration1 := `{"Version": 1.0, "CrawlerOutput": {"Tables": { "AddOrUpdateBehavior": "MergeNewColumns" }}}`
 	configuration2 := `{"Version": 1.0, "CrawlerOutput": {"Partitions": { "AddOrUpdateBehavior": "InheritFromTable" }}}`

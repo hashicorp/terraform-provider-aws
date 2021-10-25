@@ -314,7 +314,7 @@ func TestAccNetworkFirewallLoggingConfiguration_S3LogDestination_prefix(t *testi
 	})
 }
 
-func TestAccLoggingConfiguration_updateFirewallARN(t *testing.T) {
+func TestAccNetworkFirewallLoggingConfiguration_updateFirewallARN(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_logging_configuration.test"
