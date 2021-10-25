@@ -1,4 +1,4 @@
-package aws
+package ec2
 
 import (
 	"fmt"
@@ -14,9 +14,9 @@ import (
 
 func ResourceNetworkAclAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsNetworkAclAssociationCreate,
-		Read:   resourceAwsNetworkAclAssociationRead,
-		Delete: resourceAwsNetworkAclAssociationDelete,
+		Create: ResourceNetworkAclAssociationCreate,
+		Read:   ResourceNetworkAclAssociationRead,
+		Delete: ResourceNetworkAclAssociationDelete,
 
 		Schema: map[string]*schema.Schema{
 			"subnet_id": {
