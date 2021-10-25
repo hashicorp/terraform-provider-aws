@@ -15,10 +15,9 @@ func TestAccNetworkAclAssociation_basic(t *testing.T) {
 
 	//lintignore:XAT001
 	resource.Test(t, resource.TestCase{
-		PreCheck:      func() { acctest.PreCheck(t) },
-		IDRefreshName: resourceName,
-		Providers:     acctest.Providers,
-		CheckDestroy:  testAccCheckNetworkACLDestroy,
+		PreCheck:     func() { acctest.PreCheck(t) },
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckNetworkACLDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNetworkAclAssoc,
@@ -26,6 +25,11 @@ func TestAccNetworkAclAssociation_basic(t *testing.T) {
 					testAccCheckNetworkACLExists(resourceName, &networkAcl),
 					testAccCheckSubnetIsAssociatedWithAcl(resourceName, "aws_subnet.subnet_a"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
