@@ -90,35 +90,44 @@ is especially important for testing AWS GovCloud (US), which requires:
 export AWS_DEFAULT_REGION=us-gov-west-1
 ```
 
-Tests can then be run by specifying a regular expression defining the tests to run:
+Tests can then be run by specifying a regular expression defining the tests to
+run and the package in which the tests are defined:
 
 ```sh
-$ make testacc TESTARGS='-run=TestAccCloudWatchDashboard_update'
+$ make testacc TESTARGS='-run=TestAccCloudWatchDashboard_updateName' PKG_NAME=internal/service/cloudwatch
 ==> Checking that code complies with gofmt requirements...
-TF_ACC=1 go test ./aws -v -run=TestAccCloudWatchDashboard_update -timeout 120m
-=== RUN   TestAccCloudWatchDashboard_update
---- PASS: TestAccCloudWatchDashboard_update (26.56s)
+TF_ACC=1 go test ./internal/service/cloudwatch/... -v -count 1 -parallel 20 -run=TestAccCloudWatchDashboard_updateName -timeout 180m
+=== RUN   TestAccCloudWatchDashboard_updateName
+=== PAUSE TestAccCloudWatchDashboard_updateName
+=== CONT  TestAccCloudWatchDashboard_updateName
+--- PASS: TestAccCloudWatchDashboard_updateName (25.33s)
 PASS
-ok  	github.com/hashicorp/terraform-provider-aws/aws	26.607s
+ok  	github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatch	25.387s
 ```
 
 Entire resource test suites can be targeted by using the naming convention to
 write the regular expression. For example, to run all tests of the
-`aws_cloudwatch_dashboard` resource rather than just the update test, you can start
-testing like this:
+`aws_cloudwatch_dashboard` resource rather than just the updateName test, you
+can start testing like this:
 
 ```sh
-$ make testacc TESTARGS='-run=TestAccCloudWatchDashboard'
+$ make testacc TESTARGS='-run=TestAccCloudWatchDashboard' PKG_NAME=internal/service/cloudwatch
 ==> Checking that code complies with gofmt requirements...
-TF_ACC=1 go test ./aws -v -run=TestAccCloudWatchDashboard -timeout 120m
-=== RUN   TestAccCloudWatchDashboard_importBasic
---- PASS: TestAccCloudWatchDashboard_importBasic (15.06s)
+TF_ACC=1 go test ./internal/service/cloudwatch/... -v -count 1 -parallel 20 -run=TestAccCloudWatchDashboard -timeout 180m
 === RUN   TestAccCloudWatchDashboard_basic
---- PASS: TestAccCloudWatchDashboard_basic (12.70s)
+=== PAUSE TestAccCloudWatchDashboard_basic
 === RUN   TestAccCloudWatchDashboard_update
---- PASS: TestAccCloudWatchDashboard_update (27.81s)
+=== PAUSE TestAccCloudWatchDashboard_update
+=== RUN   TestAccCloudWatchDashboard_updateName
+=== PAUSE TestAccCloudWatchDashboard_updateName
+=== CONT  TestAccCloudWatchDashboard_basic
+=== CONT  TestAccCloudWatchDashboard_updateName
+=== CONT  TestAccCloudWatchDashboard_update
+--- PASS: TestAccCloudWatchDashboard_basic (15.83s)
+--- PASS: TestAccCloudWatchDashboard_updateName (26.69s)
+--- PASS: TestAccCloudWatchDashboard_update (27.72s)
 PASS
-ok  	github.com/hashicorp/terraform-provider-aws/aws	55.619s
+ok  	github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatch	27.783s
 ```
 
 Running acceptance tests requires version 0.12.26 or higher of the Terraform CLI to be installed.
