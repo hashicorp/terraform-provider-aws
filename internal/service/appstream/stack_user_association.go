@@ -171,7 +171,7 @@ func resourceStackUserAssociationDelete(ctx context.Context, d *schema.ResourceD
 func DecodeStackUserID(id string) (string, string, string, error) {
 	idParts := strings.SplitN(id, "/", 3)
 	if len(idParts) != 3 {
-		return "", "", "", fmt.Errorf("expected ID in format StackName-UserName-AuthenticationType, received: %s", id)
+		return "", "", "", fmt.Errorf("expected ID in format StackName/UserName/AuthenticationType, received: %s", id)
 	}
 	return idParts[0], idParts[1], idParts[2], nil
 }
