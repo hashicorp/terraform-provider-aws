@@ -14,7 +14,7 @@ func init() {
 	})
 }
 
-func TestAccAWSNetworkAclAssociation_basic(t *testing.T) {
+func TestAccNetworkAclAssociation_basic(t *testing.T) {
 
 	var networkAcl ec2.NetworkAcl
 	resourceName := "aws_network_acl.acl_a"
@@ -27,7 +27,7 @@ func TestAccAWSNetworkAclAssociation_basic(t *testing.T) {
 		CheckDestroy:  testAccCheckAWSNetworkAclDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSNetworkAclAssoc,
+				Config: testAccNetworkAclAssoc,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSNetworkAclExists(resourceName, &networkAcl),
 					testAccCheckSubnetIsAssociatedWithAcl(resourceName, "aws_subnet.subnet_a"),
@@ -37,7 +37,7 @@ func TestAccAWSNetworkAclAssociation_basic(t *testing.T) {
 	})
 }
 
-const testAccAWSNetworkAclAssoc = `
+const testAccNetworkAclAssoc = `
 resource "aws_vpc" "test_vpc" {
   cidr_block = "10.1.0.0/16"
   tags = {

@@ -1115,6 +1115,7 @@ func Provider() *schema.Provider {
 			"aws_neptune_event_subscription":                          neptune.ResourceEventSubscription(),
 			"aws_neptune_parameter_group":                             neptune.ResourceParameterGroup(),
 			"aws_neptune_subnet_group":                                neptune.ResourceSubnetGroup(),
+			"aws_network_acl_association":							   ec2.ResourceNetworkAclAssociation(),
 			"aws_network_acl_rule":                                    ec2.ResourceNetworkACLRule(),
 			"aws_network_interface":                                   ec2.ResourceNetworkInterface(),
 			"aws_network_interface_attachment":                        ec2.ResourceNetworkInterfaceAttachment(),

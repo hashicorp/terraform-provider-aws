@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func resourceAwsNetworkAclAssociation() *schema.Resource {
+func ResourceNetworkAclAssociation() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsNetworkAclAssociationCreate,
 		Read:   resourceAwsNetworkAclAssociationRead,
@@ -34,7 +34,7 @@ func resourceAwsNetworkAclAssociation() *schema.Resource {
 	}
 }
 
-func resourceAwsNetworkAclAssociationCreate(d *schema.ResourceData, meta interface{}) error {
+func ResourceNetworkAclAssociationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
 	naclId := d.Get("network_acl_id").(string)
@@ -60,10 +60,10 @@ func resourceAwsNetworkAclAssociationCreate(d *schema.ResourceData, meta interfa
 	d.SetId(aws.StringValue(associationId))
 	log.Printf("[INFO] New Association ID: %s", d.Id())
 
-	return resourceAwsNetworkAclAssociationRead(d, meta)
+	return ResourceNetworkAclAssociationRead(d, meta)
 }
 
-func resourceAwsNetworkAclAssociationRead(d *schema.ResourceData, meta interface{}) error {
+func ResourceNetworkAclAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
 	// Inspect that the association exists
@@ -92,7 +92,7 @@ func resourceAwsNetworkAclAssociationRead(d *schema.ResourceData, meta interface
 	return nil
 }
 
-func resourceAwsNetworkAclAssociationDelete(d *schema.ResourceData, meta interface{}) error {
+func ResourceNetworkAclAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 
 	conn := meta.(*AWSClient).ec2conn
 
