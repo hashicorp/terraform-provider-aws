@@ -134,7 +134,7 @@ func resourceStackFleetAssociationDelete(ctx context.Context, d *schema.Resource
 func DecodeStackFleetID(id string) (string, string, error) {
 	idParts := strings.SplitN(id, "/", 2)
 	if len(idParts) != 2 {
-		return "", "", fmt.Errorf("expected ID in format StackName-FleetName, received: %s", id)
+		return "", "", fmt.Errorf("expected ID in format StackName/FleetName, received: %s", id)
 	}
 	return idParts[0], idParts[1], nil
 }
