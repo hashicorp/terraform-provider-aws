@@ -203,7 +203,7 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interf
 func DecodeUserID(id string) (string, string, error) {
 	idParts := strings.SplitN(id, "/", 2)
 	if len(idParts) != 2 {
-		return "", "", fmt.Errorf("expected ID in format UserName-AuthenticationType, received: %s", id)
+		return "", "", fmt.Errorf("expected ID in format UserName/AuthenticationType, received: %s", id)
 	}
 	return idParts[0], idParts[1], nil
 }
