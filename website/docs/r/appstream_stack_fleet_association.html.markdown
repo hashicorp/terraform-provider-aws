@@ -40,6 +40,13 @@ The following arguments are required:
 * `fleet_name` - (Required) Name of the fleet.
 * `stack_name` (Required) Name of the stack.
 
+## Attributes Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `id` - Unique ID of the appstream stack fleet association.
+
+
 ## Import
 
 AppStream Stack Fleet Association can be imported by using the `stack_name` and `fleet_name` separated by a slash (`/`), e.g.,
