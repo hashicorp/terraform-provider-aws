@@ -3,7 +3,7 @@ subcategory: "AppStream"
 layout: "aws"
 page_title: "AWS: aws_appstream_stack_user_association"
 description: |-
-Manages an AppStream Stack User association.
+  Manages an AppStream Stack User association.
 ---
 
 # Resource: aws_appstream_stack_user_association
