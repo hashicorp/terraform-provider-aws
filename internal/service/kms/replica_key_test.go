@@ -139,7 +139,8 @@ func TestAccKMSReplicaKey_Policy(t *testing.T) {
 	var key kms.KeyMetadata
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kms_replica_key.test"
-	expectedPolicy1Text := `{"Version":"2012-10-17","Id":"kms-tf-1","Statement":[{"Sid":"Terraform1","Effect":"Allow","Principal":{"AWS":"*"},"Action":"kms:*","Resource":"*"}]}`
+	policy1 := `{"Version":"2012-10-17","Id":"kms-tf-1","Statement":[{"Sid":"Enable IAM User Permissions 1","Effect":"Allow","Principal":{"AWS":"*"},"Action":"kms:*","Resource":"*"}]}`
+	policy2 := `{"Version":"2012-10-17","Id":"kms-tf-1","Statement":[{"Sid":"Enable IAM User Permissions 2","Effect":"Allow","Principal":{"AWS":"*"},"Action":"kms:*","Resource":"*"}]}`
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -151,11 +152,11 @@ func TestAccKMSReplicaKey_Policy(t *testing.T) {
 		CheckDestroy:      testAccCheckKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicaKeyPolicy1Config(rName),
+				Config: testAccReplicaKeyPolicyConfig(rName, policy1, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(resourceName, &key),
 					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", "false"),
-					testAccCheckKeyHasPolicy(resourceName, expectedPolicy1Text),
+					testAccCheckKeyHasPolicy(resourceName, policy1),
 				),
 			},
 			{
@@ -165,11 +166,11 @@ func TestAccKMSReplicaKey_Policy(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"deletion_window_in_days", "bypass_policy_lockout_safety_check"},
 			},
 			{
-				Config: testAccReplicaKeyPolicy2Config(rName),
+				Config: testAccReplicaKeyPolicyConfig(rName, policy2, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(resourceName, &key),
 					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", "true"),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`kms-tf-2`)),
+					testAccCheckExternalKeyHasPolicy(resourceName, policy2),
 				),
 			},
 		},
@@ -287,7 +288,7 @@ resource "aws_kms_replica_key" "test" {
 `, rName, description, enabled))
 }
 
-func testAccReplicaKeyPolicy1Config(rName string) string {
+func testAccReplicaKeyPolicyConfig(rName, policy string, bypassLockoutCheck bool) string {
 	return acctest.ConfigCompose(acctest.ConfigAlternateRegionProvider(), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   provider = awsalternate
@@ -304,68 +305,13 @@ resource "aws_kms_replica_key" "test" {
 
   deletion_window_in_days = 7
 
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Id": "kms-tf-1",
-  "Statement": [
-    {
-      "Sid": "Terraform1",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "*"
-      },
-      "Action": "kms:*",
-      "Resource": "*"
-    }
-  ]
-}
-POLICY
-}
-`, rName))
-}
-
-func testAccReplicaKeyPolicy2Config(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAlternateRegionProvider(), fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
-data "aws_partition" "current" {}
-
-resource "aws_kms_key" "test" {
-  provider = awsalternate
-
-  description  = %[1]q
-  multi_region = true
-
-  deletion_window_in_days = 7
-}
-
-resource "aws_kms_replica_key" "test" {
-  description     = %[1]q
-  primary_key_arn = aws_kms_key.test.arn
-
-  bypass_policy_lockout_safety_check = true
-
-  deletion_window_in_days = 7
+  bypass_policy_lockout_safety_check = %[3]t
 
   policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Id": "kms-tf-2",
-  "Statement": [
-    {
-      "Sid": "Terraform2",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "${data.aws_partition.current.partition}:aws:iam::${data.aws_caller_identity.current.account_id}:root"
-      },
-      "Action": "kms:*",
-      "Resource": "*"
-    }
-  ]
-}
+%[2]s
 POLICY
 }
-`, rName))
+`, rName, policy, bypassLockoutCheck))
 }
 
 func testAccReplicaKeyTags1Config(rName, tagKey1, tagValue1 string) string {
