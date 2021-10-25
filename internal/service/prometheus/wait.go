@@ -110,3 +110,54 @@ func waitWorkspaceDeleted(ctx context.Context, conn *prometheusservice.Prometheu
 
 	return nil, err
 }
+
+func waitRuleGroupNamespaceDeleted(ctx context.Context, conn *prometheusservice.PrometheusService, id string) (*prometheusservice.RuleGroupsNamespaceDescription, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{prometheusservice.RuleGroupsNamespaceStatusCodeDeleting},
+		Target:  []string{},
+		Refresh: statusRuleGroupNamespace(ctx, conn, id),
+		Timeout: workspaceTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*prometheusservice.RuleGroupsNamespaceDescription); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitRuleGroupNamespaceCreated(ctx context.Context, conn *prometheusservice.PrometheusService, id string) (*prometheusservice.RuleGroupsNamespaceDescription, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{prometheusservice.RuleGroupsNamespaceStatusCodeCreating},
+		Target:  []string{prometheusservice.RuleGroupsNamespaceStatusCodeActive},
+		Refresh: statusRuleGroupNamespace(ctx, conn, id),
+		Timeout: workspaceTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*prometheusservice.RuleGroupsNamespaceDescription); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitRuleGroupNamespaceUpdated(ctx context.Context, conn *prometheusservice.PrometheusService, id string) (*prometheusservice.RuleGroupsNamespaceDescription, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{prometheusservice.RuleGroupsNamespaceStatusCodeUpdating},
+		Target:  []string{prometheusservice.RuleGroupsNamespaceStatusCodeActive},
+		Refresh: statusRuleGroupNamespace(ctx, conn, id),
+		Timeout: workspaceTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*prometheusservice.RuleGroupsNamespaceDescription); ok {
+		return output, err
+	}
+
+	return nil, err
+}
