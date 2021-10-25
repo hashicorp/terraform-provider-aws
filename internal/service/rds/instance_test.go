@@ -57,8 +57,8 @@ func TestAccRDSInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window"),
 					resource.TestCheckResourceAttr(resourceName, "max_allocated_storage", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", "baz"),
-					resource.TestCheckResourceAttr(resourceName, "option_group_name", "default:mysql-5-6"),
-					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.mysql5.6"),
+					resource.TestCheckResourceAttr(resourceName, "option_group_name", "default:mysql-8-0"),
+					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.mysql8.0"),
 					resource.TestCheckResourceAttr(resourceName, "port", "3306"),
 					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "resource_id"),
@@ -88,7 +88,7 @@ func TestAccRDSInstance_onlyMajorVersion(t *testing.T) {
 	var dbInstance1 rds.DBInstance
 	resourceName := "aws_db_instance.test"
 	engine := "mysql"
-	engineVersion1 := "5.6"
+	engineVersion1 := "8.0"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -2375,8 +2375,8 @@ func TestAccRDSInstance_MySQL_snapshotRestoreWithEngineVersion(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists("aws_db_instance.mysql_restore", &vRestoredInstance),
 					testAccCheckInstanceExists("aws_db_instance.mysql", &v),
-					resource.TestCheckResourceAttr("aws_db_instance.mysql", "engine_version", "5.6.35"),
-					resource.TestCheckResourceAttr("aws_db_instance.mysql_restore", "engine_version", "5.6.41"),
+					resource.TestCheckResourceAttr("aws_db_instance.mysql", "engine_version", "8.0.23"),
+					resource.TestCheckResourceAttr("aws_db_instance.mysql_restore", "engine_version", "8.0.25"),
 				),
 			},
 		},
@@ -3579,8 +3579,21 @@ data "aws_rds_orderable_db_instance" "test" {
 `, engine, version, license)
 }
 
+func testAccInstanceConfig_orderableClass_SQLServerEx(engine, version, license string) string {
+	return fmt.Sprintf(`
+data "aws_rds_orderable_db_instance" "test" {
+  engine         = %q
+  engine_version = %q
+  license_model  = %q
+  storage_type   = "standard"
+
+  preferred_instance_classes = ["db.t2.small", "db.t3.small"]
+}
+`, engine, version, license)
+}
+
 func testAccInstanceConfig_orderableClassMySQL() string {
-	return testAccInstanceConfig_orderableClass("mysql", "8.0.25", "general-public-license")
+	return testAccInstanceConfig_orderableClass("mysql", "8.0.23", "general-public-license")
 }
 
 func testAccInstanceConfig_orderableClassMariadb() string {
@@ -3588,7 +3601,7 @@ func testAccInstanceConfig_orderableClassMariadb() string {
 }
 
 func testAccInstanceConfig_orderableClassSQLServerEx() string {
-	return testAccInstanceConfig_orderableClass("sqlserver-ex", "15.00.4073.23.v1", "license-included")
+	return testAccInstanceConfig_orderableClass_SQLServerEx("sqlserver-ex", "15.00.4073.23.v1", "license-included")
 }
 
 const testAccInstanceConfig_orderableClassSQLServerSe = `
@@ -3625,19 +3638,17 @@ resource "aws_db_instance" "bar" {
 }
 
 func testAccInstanceConfig_MajorVersionOnly(engine, engineVersion string) string {
-	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMySQL(), fmt.Sprintf(`
-locals {
-  engine = %[1]q
-}
-
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassMySQL(),
+		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
   allocated_storage       = 10
   backup_retention_period = 0
-  engine                  = local.engine
+  engine                  = %[1]q
   engine_version          = %[2]q
-  instance_class          = "db.r4.large"
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
   name                    = "baz"
-  parameter_group_name    = "default.mysql5.6"
+  parameter_group_name    = "default.%[1]s%[2]s"
   password                = "barbarbarbar"
   skip_final_snapshot     = true
   username                = "foo"
@@ -4268,7 +4279,7 @@ resource "aws_db_instance" "bar" {
   name                 = "mydb"
   username             = "foo"
   password             = "barbarbar"
-  parameter_group_name = "default.mysql5.6"
+  parameter_group_name = "default.mysql8.0"
   port                 = 3306
   allocated_storage    = 10
   skip_final_snapshot  = true
@@ -4288,7 +4299,7 @@ resource "aws_db_instance" "bar" {
   name                 = "mydb"
   username             = "foo"
   password             = "barbarbar"
-  parameter_group_name = "default.mysql5.6"
+  parameter_group_name = "default.mysql8.0"
   port                 = 3305
   allocated_storage    = 10
   skip_final_snapshot  = true
@@ -4878,7 +4889,7 @@ resource "aws_db_instance" "mysql_restore" {
   username                = "root"
   password                = "password"
   engine                  = data.aws_rds_orderable_db_instance.test.engine
-  engine_version          = "5.6.41"
+  engine_version          = "8.0.25"
   backup_retention_period = 0
   skip_final_snapshot     = true
   snapshot_identifier     = aws_db_snapshot.mysql-snap.id
@@ -6578,9 +6589,16 @@ resource "aws_db_instance" "test" {
 }
 
 func testAccInstanceConfig_SnapshotIdentifier_Io1Storage(rName string, iops int) string {
-	return acctest.ConfigCompose(
-		testAccInstanceConfig_orderableClassMariadb(),
-		fmt.Sprintf(`
+	return fmt.Sprintf(`
+data "aws_rds_orderable_db_instance" "test" {
+  engine         = "mariadb"
+  engine_version = "10.5.12"
+  license_model  = "general-public-license"
+  storage_type   = "io1"
+
+  preferred_instance_classes = ["db.t3.micro", "db.t2.micro", "db.t2.medium"]
+}
+
 resource "aws_db_instance" "source" {
   allocated_storage   = 200
   engine              = data.aws_rds_orderable_db_instance.test.engine
@@ -6605,7 +6623,7 @@ resource "aws_db_instance" "test" {
   iops                = %[2]d
   storage_type        = data.aws_rds_orderable_db_instance.test.storage_type
 }
-`, rName, iops))
+`, rName, iops)
 }
 
 func testAccInstanceConfig_SnapshotIdentifier_AllowMajorVersionUpgrade(rName string, allowMajorVersionUpgrade bool) string {
