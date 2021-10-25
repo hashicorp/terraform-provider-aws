@@ -252,6 +252,7 @@ func TestAccEC2EIP_networkInterface(t *testing.T) {
 					testAccCheckEIPAttributes(&conf),
 					testAccCheckEIPAssociated(&conf),
 					testAccCheckEIPPrivateDNS(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "allocation_id"),
 					resource.TestCheckResourceAttr(resourceName, "domain", ec2.DomainTypeVpc),
 				),
 			},
