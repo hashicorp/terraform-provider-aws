@@ -101,8 +101,6 @@ func TestAccDMSEndpoint_s3(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.bucket_folder", "new-bucket_folder"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.bucket_name", "new-bucket_name"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.compression_type", "GZIP"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.date_partition_sequence", "yyyymmdd"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.date_partition_delimiter", "slash"),
 				),
 			},
 		},

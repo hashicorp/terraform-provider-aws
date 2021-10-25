@@ -106,3 +106,37 @@ func s3SettingsEncryptionMode_Values() []string {
 		s3SettingsEncryptionModeSseS3,
 	}
 }
+
+const (
+	DatePartitionDelimiterValueSlash      = "slash"
+	DatePartitionDelimiterValueUnderscore = "underscore"
+	DatePartitionDelimiterValueDash       = "dash"
+	DatePartitionDelimiterValueNone       = "none"
+)
+
+func DatePartitionDelimiterValue_Values() []string {
+	return []string{
+		DatePartitionDelimiterValueSlash,
+		DatePartitionDelimiterValueUnderscore,
+		DatePartitionDelimiterValueDash,
+		DatePartitionDelimiterValueNone,
+	}
+}
+
+const (
+	DatePartitionSequenceValueYyyymmdd   = "yyyymmdd"
+	DatePartitionSequenceValueYyyymmddhh = "yyyymmddhh"
+	DatePartitionSequenceValueYyyymm     = "yyyymm"
+	DatePartitionSequenceValueMmyyyydd   = "mmyyyydd"
+	DatePartitionSequenceValueDdmmyyyy   = "ddmmyyyy"
+)
+
+func DatePartitionSequenceValue_Values() []string {
+	return []string{
+		DatePartitionSequenceValueYyyymmdd,
+		DatePartitionSequenceValueYyyymmddhh,
+		DatePartitionSequenceValueYyyymm,
+		DatePartitionSequenceValueMmyyyydd,
+		DatePartitionSequenceValueDdmmyyyy,
+	}
+}
