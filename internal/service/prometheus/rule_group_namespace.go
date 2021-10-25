@@ -25,14 +25,14 @@ func ResourceRuleGroupNamespace() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"data": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-			},
-			"data": {
-				Type:     schema.TypeString,
-				Required: true,
 			},
 			"workspace_id": {
 				Type:     schema.TypeString,
@@ -61,7 +61,7 @@ func resourceRuleGroupNamespaceCreate(ctx context.Context, d *schema.ResourceDat
 		return diag.FromErr(fmt.Errorf("error creating Prometheus Rule Group Namespace (%s) for workspace (%s): %w", name, workspaceID, err))
 	}
 
-	d.SetId(*output.Arn)
+	d.SetId(aws.StringValue(output.Arn))
 
 	if _, err := waitRuleGroupNamespaceCreated(ctx, conn, d.Id()); err != nil {
 		return diag.FromErr(fmt.Errorf("error waiting for Prometheus Rule Group Namespace (%s) create: %w", d.Id(), err))
@@ -110,11 +110,11 @@ func resourceRuleGroupNamespaceRead(ctx context.Context, d *schema.ResourceData,
 
 	d.Set("data", string(rgn.Data))
 	d.Set("name", rgn.Name)
-	_, workspaceId, err := nameAndWorkspaceIdFromRuleGroupNamespaceArn(d.Id())
+	_, workspaceID, err := nameAndWorkspaceIdFromRuleGroupNamespaceArn(d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	d.Set("workspace_id", workspaceId)
+	d.Set("workspace_id", workspaceID)
 
 	return nil
 }
