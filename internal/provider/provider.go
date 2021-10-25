@@ -1378,6 +1378,7 @@ func Provider() *schema.Provider {
 
 			"aws_prometheus_workspace":                prometheus.ResourceWorkspace(),
 			"aws_prometheus_alert_manager_definition": prometheus.ResourceAlertManagerDefinition(),
+			"aws_prometheus_rule_group_namespace":     prometheus.ResourceRuleGroupNamespace(),
 
 			"aws_qldb_ledger": qldb.ResourceLedger(),
 
