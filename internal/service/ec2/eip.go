@@ -292,11 +292,12 @@ func resourceEIPRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("public_dns", meta.(*conns.AWSClient).PartitionHostname(fmt.Sprintf("ec2-%s.%s", ConvertIPToDashIP(*address.PublicIp), RegionalPublicDNSSuffix(region))))
 	}
 
-	d.Set("public_ipv4_pool", address.PublicIpv4Pool)
+	d.Set("allocation_id", address.AllocationId)
 	d.Set("carrier_ip", address.CarrierIp)
 	d.Set("customer_owned_ipv4_pool", address.CustomerOwnedIpv4Pool)
 	d.Set("customer_owned_ip", address.CustomerOwnedIp)
 	d.Set("network_border_group", address.NetworkBorderGroup)
+	d.Set("public_ipv4_pool", address.PublicIpv4Pool)
 
 	// On import (domain never set, which it must've been if we created),
 	// set the 'vpc' attribute depending on if we're in a VPC.
@@ -311,7 +312,6 @@ func resourceEIPRead(d *schema.ResourceData, meta interface{}) error {
 	if *address.Domain == ec2.DomainTypeVpc && net.ParseIP(id) != nil {
 		log.Printf("[DEBUG] Re-assigning EIP ID (%s) to it's Allocation ID (%s)", d.Id(), *address.AllocationId)
 		d.SetId(aws.StringValue(address.AllocationId))
-		d.Set("allocation_id", address.AllocationId)
 	}
 
 	tags := KeyValueTags(address.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
