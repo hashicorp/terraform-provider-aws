@@ -117,6 +117,53 @@ func TestAccKMSReplicaExternalKey_DescriptionAndEnabled(t *testing.T) {
 	})
 }
 
+func TestAccKMSReplicaExternalKey_Policy(t *testing.T) {
+	var providers []*schema.Provider
+	var key kms.KeyMetadata
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_kms_replica_external_key.test"
+	policy1 := `{"Version":"2012-10-17","Id":"kms-tf-1","Statement":[{"Sid":"Enable IAM User Permissions 1","Effect":"Allow","Principal":{"AWS":"*"},"Action":"kms:*","Resource":"*"}]}`
+	policy2 := `{"Version":"2012-10-17","Id":"kms-tf-1","Statement":[{"Sid":"Enable IAM User Permissions 2","Effect":"Allow","Principal":{"AWS":"*"},"Action":"kms:*","Resource":"*"}]}`
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
+		ErrorCheck:        acctest.ErrorCheck(t, kms.EndpointsID),
+		ProviderFactories: acctest.FactoriesAlternate(&providers),
+		CheckDestroy:      testAccCheckKeyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicaExternalKeyPolicyConfig(rName, policy1, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKeyExists(resourceName, &key),
+					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", "false"),
+					testAccCheckKeyHasPolicy(resourceName, policy1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"bypass_policy_lockout_safety_check",
+					"deletion_window_in_days",
+					"key_material_base64",
+				},
+			},
+			{
+				Config: testAccReplicaExternalKeyPolicyConfig(rName, policy2, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKeyExists(resourceName, &key),
+					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", "true"),
+					testAccCheckExternalKeyHasPolicy(resourceName, policy2),
+				),
+			},
+		},
+	})
+}
+
 func TestAccKMSReplicaExternalKey_Tags(t *testing.T) {
 	var providers []*schema.Provider
 	var key kms.KeyMetadata
@@ -215,6 +262,39 @@ resource "aws_kms_replica_external_key" "test" {
   deletion_window_in_days = 7
 }
 `, rName, description, enabled))
+}
+
+func testAccReplicaExternalKeyPolicyConfig(rName, policy string, bypassLockoutCheck bool) string {
+	return acctest.ConfigCompose(acctest.ConfigAlternateRegionProvider(), fmt.Sprintf(`
+# ACCEPTANCE TESTING ONLY -- NEVER EXPOSE YOUR KEY MATERIAL
+resource "aws_kms_external_key" "test" {
+  provider = awsalternate
+
+  description  = %[1]q
+  multi_region = true
+  enabled      = true
+
+  key_material_base64 = "Wblj06fduthWggmsT0cLVoIMOkeLbc2kVfMud77i/JY="
+
+  deletion_window_in_days = 7
+}
+
+resource "aws_kms_replica_external_key" "test" {
+  description     = %[2]q
+  enabled         = true
+  primary_key_arn = aws_kms_external_key.test.arn
+
+  key_material_base64 = "Wblj06fduthWggmsT0cLVoIMOkeLbc2kVfMud77i/JY="
+
+  deletion_window_in_days = 7
+
+  bypass_policy_lockout_safety_check = %[3]t
+
+  policy = <<POLICY
+%[2]s
+POLICY
+}
+`, rName, policy, bypassLockoutCheck))
 }
 
 func testAccReplicaExternalKeyTags1Config(rName, tagKey1, tagValue1 string) string {
