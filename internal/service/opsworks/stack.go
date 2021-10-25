@@ -8,8 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/aws/request"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -423,19 +421,13 @@ func opsworksConnForRegion(region string, meta interface{}) (*opsworks.OpsWorks,
 		return originalConn, nil
 	}
 
-	// Set up base session
-	sess, err := session.NewSession(&originalConn.Config)
+	sess, err := conns.NewSessionForRegion(&originalConn.Config, region, meta.(*conns.AWSClient).TerraformVersion)
+
 	if err != nil {
-		return nil, fmt.Errorf("Error creating AWS session: %s", err)
+		return nil, fmt.Errorf("error creating AWS session: %w", err)
 	}
 
-	sess.Handlers.Build.PushBack(request.MakeAddToUserAgentHandler("APN/1.0 HashiCorp/1.0 Terraform", meta.(*conns.AWSClient).TerraformVersion))
-
-	newSession := sess.Copy(&aws.Config{Region: aws.String(region)})
-	conn := opsworks.New(newSession)
-
-	log.Printf("[DEBUG] Returning new OpsWorks client")
-	return conn, nil
+	return opsworks.New(sess), nil
 }
 
 func resourceStackCreate(d *schema.ResourceData, meta interface{}) error {

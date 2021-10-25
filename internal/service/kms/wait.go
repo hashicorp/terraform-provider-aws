@@ -27,6 +27,9 @@ const (
 	KeyValidToPropagationTimeout     = 5 * time.Minute
 
 	PropagationTimeout = 2 * time.Minute
+
+	ReplicaExternalKeyCreatedTimeout = 2 * time.Minute
+	ReplicaKeyCreatedTimeout         = 2 * time.Minute
 )
 
 // WaitIAMPropagation retries the specified function if the returned error indicates an IAM eventual consistency issue.
@@ -209,4 +212,38 @@ func WaitTagsPropagated(conn *kms.KMS, id string, tags tftags.KeyValueTags) erro
 	}
 
 	return tfresource.WaitUntil(KeyTagsPropagationTimeout, checkFunc, opts)
+}
+
+func WaitReplicaExternalKeyCreated(conn *kms.KMS, id string) (*kms.KeyMetadata, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{kms.KeyStateCreating},
+		Target:  []string{kms.KeyStatePendingImport},
+		Refresh: StatusKeyState(conn, id),
+		Timeout: ReplicaExternalKeyCreatedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*kms.KeyMetadata); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitReplicaKeyCreated(conn *kms.KMS, id string) (*kms.KeyMetadata, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{kms.KeyStateCreating},
+		Target:  []string{kms.KeyStateEnabled},
+		Refresh: StatusKeyState(conn, id),
+		Timeout: ReplicaKeyCreatedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*kms.KeyMetadata); ok {
+		return output, err
+	}
+
+	return nil, err
 }
