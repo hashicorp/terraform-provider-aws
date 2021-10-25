@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/backup"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -12,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfbackup "github.com/hashicorp/terraform-provider-aws/internal/service/backup"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccBackupVaultLockConfiguration_basic(t *testing.T) {
@@ -75,20 +75,17 @@ func testAccCheckVaultLockConfigurationDestroy(s *terraform.State) error {
 			continue
 		}
 
-		input := &backup.DescribeBackupVaultInput{
-			BackupVaultName: aws.String(rs.Primary.ID),
+		_, err := tfbackup.FindBackupVaultByName(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
 		}
 
-		// note: BackupVaultLockConfiguration currently does not have a GetBackupVaultLockConfiguration
-		// Reference: https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/service/backup
-		// Instead use DescribeBackupVault since it returns BackupVaultName
-		resp, err := conn.DescribeBackupVault(input)
-
-		if err == nil {
-			if aws.StringValue(resp.BackupVaultName) == rs.Primary.ID {
-				return fmt.Errorf("Backup lock configuration of vault '%s' was not deleted properly", rs.Primary.ID)
-			}
+		if err != nil {
+			return err
 		}
+
+		return fmt.Errorf("Backup Vault Lock Configuration %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -101,19 +98,19 @@ func testAccCheckVaultLockConfigurationExists(name string, vault *backup.Describ
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn
-		params := &backup.DescribeBackupVaultInput{
-			BackupVaultName: aws.String(rs.Primary.ID),
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No Backup Vault Lock Configuration ID is set")
 		}
-		// note: BackupVaultLockConfiguration currently does not have a GetBackupVaultLockConfiguration
-		// Reference: https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/service/backup
-		// Instead use DescribeBackupVault since it returns BackupVaultArn, MaxRetentionDays, MinRetentionDays
-		resp, err := conn.DescribeBackupVault(params)
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn
+
+		output, err := tfbackup.FindBackupVaultByName(conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		*vault = *resp
+		*vault = *output
 
 		return nil
 	}
