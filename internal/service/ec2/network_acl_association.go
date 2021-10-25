@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go/base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -35,7 +36,7 @@ func ResourceNetworkAclAssociation() *schema.Resource {
 }
 
 func ResourceNetworkAclAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	naclId := d.Get("network_acl_id").(string)
 	subnetId := d.Get("subnet_id").(string)
@@ -64,13 +65,13 @@ func ResourceNetworkAclAssociationCreate(d *schema.ResourceData, meta interface{
 }
 
 func ResourceNetworkAclAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	// Inspect that the association exists
 	subnetId := d.Get("subnet_id").(string)
 	association, err := findNetworkAclAssociation(subnetId, conn)
 	if err != nil {
-		if isResourceNotFoundError(err) {
+		if tfawserr.ErrCodeContains(err, "InvalidNetworkAclID.NotFound") {
 			log.Printf("[WARN] Unable to find association for subnet %s", subnetId)
 			d.SetId("")
 			//nolint:nilerr // subnet likely doesn't exist so there is nothing more that we can do
@@ -93,8 +94,7 @@ func ResourceNetworkAclAssociationRead(d *schema.ResourceData, meta interface{})
 }
 
 func ResourceNetworkAclAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	subnetId := d.Get("subnet_id").(string)
 
@@ -124,7 +124,7 @@ func ResourceNetworkAclAssociationDelete(d *schema.ResourceData, meta interface{
 		}
 	}
 
-	defaultAcl, err := getDefaultNetworkAcl(*nacl.VpcId, conn)
+	defaultAcl, err := GetDefaultNetworkACL(*nacl.VpcId, conn)
 
 	if err != nil {
 		return fmt.Errorf("Failed to get default Network Acl : %s", err)
@@ -158,4 +158,9 @@ func ResourceNetworkAclAssociationDelete(d *schema.ResourceData, meta interface{
 
 	d.SetId("")
 	return nil
+}
+
+func isResourceTimeoutError(err error) bool {
+	timeoutErr, ok := err.(*resource.TimeoutError)
+	return ok && timeoutErr.LastError == nil
 }

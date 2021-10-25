@@ -24,12 +24,12 @@ func TestAccNetworkAclAssociation_basic(t *testing.T) {
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSNetworkAclDestroy,
+		CheckDestroy:  testAccCheckNetworkACLDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNetworkAclAssoc,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSNetworkAclExists(resourceName, &networkAcl),
+					testAccCheckNetworkACLExists(resourceName, &networkAcl),
 					testAccCheckSubnetIsAssociatedWithAcl(resourceName, "aws_subnet.subnet_a"),
 				),
 			},
