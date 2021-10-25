@@ -1,4 +1,4 @@
-package applicationautoscaling_test
+package appautoscaling_test
 
 import (
 	"fmt"
@@ -13,10 +13,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfapplicationautoscaling "github.com/hashicorp/terraform-provider-aws/internal/service/applicationautoscaling"
+	tfappautoscaling "github.com/hashicorp/terraform-provider-aws/internal/service/appautoscaling"
 )
 
-func TestAccApplicationAutoScalingTarget_basic(t *testing.T) {
+func TestAccAppAutoScalingTarget_basic(t *testing.T) {
 	var target applicationautoscaling.ScalableTarget
 
 	randClusterName := fmt.Sprintf("cluster-%s", sdkacctest.RandString(10))
@@ -56,7 +56,7 @@ func TestAccApplicationAutoScalingTarget_basic(t *testing.T) {
 	})
 }
 
-func TestAccApplicationAutoScalingTarget_disappears(t *testing.T) {
+func TestAccAppAutoScalingTarget_disappears(t *testing.T) {
 	var target applicationautoscaling.ScalableTarget
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appautoscaling_target.bar"
@@ -71,7 +71,7 @@ func TestAccApplicationAutoScalingTarget_disappears(t *testing.T) {
 				Config: testAccTargetConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(resourceName, &target),
-					acctest.CheckResourceDisappears(acctest.Provider, tfapplicationautoscaling.ResourceTarget(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfappautoscaling.ResourceTarget(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -79,7 +79,7 @@ func TestAccApplicationAutoScalingTarget_disappears(t *testing.T) {
 	})
 }
 
-func TestAccApplicationAutoScalingTarget_spotFleetRequest(t *testing.T) {
+func TestAccAppAutoScalingTarget_spotFleetRequest(t *testing.T) {
 	var target applicationautoscaling.ScalableTarget
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 
@@ -107,7 +107,7 @@ func TestAccApplicationAutoScalingTarget_spotFleetRequest(t *testing.T) {
 	})
 }
 
-func TestAccApplicationAutoScalingTarget_emrCluster(t *testing.T) {
+func TestAccAppAutoScalingTarget_emrCluster(t *testing.T) {
 	var target applicationautoscaling.ScalableTarget
 	rInt := sdkacctest.RandInt()
 
@@ -135,7 +135,7 @@ func TestAccApplicationAutoScalingTarget_emrCluster(t *testing.T) {
 	})
 }
 
-func TestAccApplicationAutoScalingTarget_multipleTargets(t *testing.T) {
+func TestAccAppAutoScalingTarget_multipleTargets(t *testing.T) {
 	var writeTarget applicationautoscaling.ScalableTarget
 	var readTarget applicationautoscaling.ScalableTarget
 
@@ -170,7 +170,7 @@ func TestAccApplicationAutoScalingTarget_multipleTargets(t *testing.T) {
 	})
 }
 
-func TestAccApplicationAutoScalingTarget_optionalRoleARN(t *testing.T) {
+func TestAccAppAutoScalingTarget_optionalRoleARN(t *testing.T) {
 	var readTarget applicationautoscaling.ScalableTarget
 
 	rInt := sdkacctest.RandInt()
@@ -195,7 +195,7 @@ func TestAccApplicationAutoScalingTarget_optionalRoleARN(t *testing.T) {
 }
 
 func testAccCheckTargetDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ApplicationAutoScalingConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AppAutoScalingConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appautoscaling_target" {
@@ -241,12 +241,12 @@ func testAccCheckTargetExists(n string, target *applicationautoscaling.ScalableT
 			return fmt.Errorf("No Application AutoScaling Target ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ApplicationAutoScalingConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppAutoScalingConn
 
 		namespace := rs.Primary.Attributes["service_namespace"]
 		dimension := rs.Primary.Attributes["scalable_dimension"]
 
-		tgt, err := tfapplicationautoscaling.GetTarget(rs.Primary.ID, namespace, dimension, conn)
+		tgt, err := tfappautoscaling.GetTarget(rs.Primary.ID, namespace, dimension, conn)
 		if err != nil {
 			return err
 		}

@@ -15,11 +15,10 @@ import (
 )
 
 func TestAccRedshiftSnapshotScheduleAssociation_basic(t *testing.T) {
-	rInt := sdkacctest.RandInt()
 	rName := sdkacctest.RandString(8)
 	resourceName := "aws_redshift_snapshot_schedule_association.default"
 	snapshotScheduleResourceName := "aws_redshift_snapshot_schedule.default"
-	clusterResourceName := "aws_redshift_cluster.default"
+	clusterResourceName := "aws_redshift_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -28,7 +27,7 @@ func TestAccRedshiftSnapshotScheduleAssociation_basic(t *testing.T) {
 		CheckDestroy: testAccCheckSnapshotScheduleAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSnapshotScheduleAssociationConfig(rInt, rName, "rate(12 hours)"),
+				Config: testAccSnapshotScheduleAssociationConfig(rName, "rate(12 hours)"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotScheduleAssociationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "schedule_identifier", snapshotScheduleResourceName, "id"),
@@ -109,14 +108,11 @@ func testAccCheckSnapshotScheduleAssociationExists(n string) resource.TestCheckF
 	}
 }
 
-func testAccSnapshotScheduleAssociationConfig(rInt int, rName, definition string) string {
-	return fmt.Sprintf(`
-%s
-%s
-
+func testAccSnapshotScheduleAssociationConfig(rName, definition string) string {
+	return acctest.ConfigCompose(testAccClusterConfig_basic(rName), testAccSnapshotScheduleConfig(rName, definition), `
 resource "aws_redshift_snapshot_schedule_association" "default" {
   schedule_identifier = aws_redshift_snapshot_schedule.default.id
-  cluster_identifier  = aws_redshift_cluster.default.id
+  cluster_identifier  = aws_redshift_cluster.test.id
 }
-`, testAccClusterConfig_basic(rInt), testAccSnapshotScheduleConfig(rName, definition))
+`)
 }

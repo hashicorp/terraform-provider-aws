@@ -62,7 +62,7 @@ func waitClusterDeleted(conn *kafka.Kafka, arn string, timeout time.Duration) (*
 	return nil, err
 }
 
-func waitClusterOperationCompleted(conn *kafka.Kafka, arn string, timeout time.Duration) (*kafka.ClusterOperationInfo, error) {
+func waitClusterOperationCompleted(conn *kafka.Kafka, arn string, timeout time.Duration) (*kafka.ClusterOperationInfo, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ClusterOperationStatePending, ClusterOperationStateUpdateInProgress},
 		Target:  []string{ClusterOperationStateUpdateComplete},
