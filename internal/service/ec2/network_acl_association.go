@@ -100,7 +100,7 @@ func ResourceNetworkAclAssociationDelete(d *schema.ResourceData, meta interface{
 	subnetId := d.Get("subnet_id").(string)
 
 	req := &ec2.DescribeNetworkAclsInput{}
-	req.Filters = buildEC2AttributeFilterList(
+	req.Filters = BuildAttributeFilterList(
 		map[string]string{
 			"association.subnet-id": subnetId,
 		},

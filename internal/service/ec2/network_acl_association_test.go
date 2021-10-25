@@ -5,12 +5,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
 	resource.AddTestSweepers("aws_network_acl_association", &resource.Sweeper{
 		Name: "aws_network_acl_association",
-		F:    testSweepNetworkAcls,
+		F:    sweepNetworkAcls,
 	})
 }
 
@@ -21,9 +22,9 @@ func TestAccNetworkAclAssociation_basic(t *testing.T) {
 
 	//lintignore:XAT001
 	resource.Test(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
+		PreCheck:      func() { acctest.PreCheck(t) },
 		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
+		Providers:     acctest.Providers,
 		CheckDestroy:  testAccCheckNetworkACLDestroy,
 		Steps: []resource.TestStep{
 			{
