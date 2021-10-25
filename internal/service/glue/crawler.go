@@ -119,29 +119,29 @@ func ResourceCrawler() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"path": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"exclusions": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"sample_size": {
-							Type:         schema.TypeInt,
+						"dlq_event_queue_arn": {
+							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.IntBetween(1, 249),
+							ValidateFunc: verify.ValidARN,
 						},
 						"event_queue_arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-						"dlq_event_queue_arn": {
-							Type:         schema.TypeString,
+						"exclusions": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"path": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"sample_size": {
+							Type:         schema.TypeInt,
 							Optional:     true,
-							ValidateFunc: verify.ValidARN,
+							ValidateFunc: validation.IntBetween(1, 249),
 						},
 					},
 				},
