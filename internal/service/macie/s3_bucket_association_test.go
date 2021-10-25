@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/macie"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -153,6 +154,10 @@ func testAccPreCheck(t *testing.T) {
 	_, err := conn.ListS3Resources(input)
 
 	if acctest.PreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if tfawserr.ErrMessageContains(err, macie.ErrCodeInvalidInputException, "Macie is not enabled for this AWS account") {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
