@@ -8,13 +8,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_network_acl_association", &resource.Sweeper{
-		Name: "aws_network_acl_association",
-		F:    sweepNetworkAcls,
-	})
-}
-
 func TestAccNetworkAclAssociation_basic(t *testing.T) {
 
 	var networkAcl ec2.NetworkAcl
