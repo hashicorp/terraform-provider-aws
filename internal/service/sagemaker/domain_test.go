@@ -312,6 +312,7 @@ func testAccDomain_kernelGatewayAppSettings_lifecycleConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.kernel_gateway_app_settings.0.lifecycle_config_arns.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.kernel_gateway_app_settings.0.default_resource_spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.kernel_gateway_app_settings.0.default_resource_spec.0.instance_type", "ml.t3.micro"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.kernel_gateway_app_settings.0.default_resource_spec.0.lifecycle_config_arn", "aws_sagemaker_studio_lifecycle_config.test", "arn"),
 				),
 			},
 			{
@@ -822,6 +823,7 @@ resource "aws_sagemaker_domain" "test" {
     kernel_gateway_app_settings {
       default_resource_spec {
         instance_type = "ml.t3.micro"
+        lifecycle_config_arn = aws_sagemaker_studio_lifecycle_config.test.arn
       }
 
       lifecycle_config_arns = [aws_sagemaker_studio_lifecycle_config.test.arn]
