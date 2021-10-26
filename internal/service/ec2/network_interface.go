@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -31,6 +32,10 @@ func ResourceNetworkInterface() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"attachment": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -84,6 +89,10 @@ func ResourceNetworkInterface() *schema.Resource {
 				Computed: true,
 			},
 			"outpost_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -247,6 +256,17 @@ func resourceNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) erro
 	if err := d.Set("attachment", attachment); err != nil {
 		return fmt.Errorf("error setting attachment: %s", err)
 	}
+
+	ownerID := aws.StringValue(eni.OwnerId)
+	arn := arn.ARN{
+		Partition: meta.(*conns.AWSClient).Partition,
+		Service:   ec2.ServiceName,
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: ownerID,
+		Resource:  fmt.Sprintf("network-interface/%s", d.Id()),
+	}.String()
+	d.Set("arn", arn)
+	d.Set("owner_id", ownerID)
 
 	d.Set("interface_type", eni.InterfaceType)
 	d.Set("description", eni.Description)
@@ -568,33 +588,25 @@ func resourceNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) er
 func resourceNetworkInterfaceDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	log.Printf("[INFO] Deleting ENI: %s", d.Id())
-
 	if err := resourceNetworkInterfaceDetach(d.Get("attachment").(*schema.Set), meta, d.Id()); err != nil {
 		return err
 	}
 
-	deleteEniOpts := ec2.DeleteNetworkInterfaceInput{
-		NetworkInterfaceId: aws.String(d.Id()),
-	}
-	if _, err := conn.DeleteNetworkInterface(&deleteEniOpts); err != nil {
-		return fmt.Errorf("Error deleting ENI: %s", err)
-	}
-
-	return nil
+	return deleteNetworkInterface(conn, d.Id())
 }
 
-func deleteNetworkInterface(conn *ec2.EC2, eniId string) error {
+func deleteNetworkInterface(conn *ec2.EC2, networkInterfaceID string) error {
+	log.Printf("[INFO] Deleting EC2 Network Interface: %s", networkInterfaceID)
 	_, err := conn.DeleteNetworkInterface(&ec2.DeleteNetworkInterfaceInput{
-		NetworkInterfaceId: aws.String(eniId),
+		NetworkInterfaceId: aws.String(networkInterfaceID),
 	})
 
-	if tfawserr.ErrMessageContains(err, "InvalidNetworkInterfaceID.NotFound", "") {
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidNetworkInterfaceIDNotFound) {
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting ENI (%s): %s", eniId, err)
+		return fmt.Errorf("error deleting EC2 Network Interface (%s): %w", networkInterfaceID, err)
 	}
 
 	return nil

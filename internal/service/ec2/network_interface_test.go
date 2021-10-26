@@ -2,6 +2,7 @@ package ec2_test
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -31,6 +32,7 @@ func TestAccEC2NetworkInterface_ENI_basic(t *testing.T) {
 				Config: testAccENIConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckENIExists(resourceName, &conf),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`network-interface/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "attachment.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "interface_type", "interface"),
@@ -38,6 +40,7 @@ func TestAccEC2NetworkInterface_ENI_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ipv6_addresses.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "mac_address"),
 					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
 					acctest.CheckResourceAttrPrivateDNSName(resourceName, "private_dns_name", &conf.PrivateIpAddress),
 					resource.TestCheckResourceAttrSet(resourceName, "private_ip"),
 					resource.TestCheckResourceAttr(resourceName, "private_ips.#", "1"),

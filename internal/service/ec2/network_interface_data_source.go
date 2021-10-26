@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -15,6 +16,10 @@ func DataSourceNetworkInterface() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceNetworkInterfaceRead,
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -175,6 +180,16 @@ func dataSourceNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) er
 	eni := resp.NetworkInterfaces[0]
 
 	d.SetId(aws.StringValue(eni.NetworkInterfaceId))
+	ownerID := aws.StringValue(eni.OwnerId)
+	arn := arn.ARN{
+		Partition: meta.(*conns.AWSClient).Partition,
+		Service:   ec2.ServiceName,
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: ownerID,
+		Resource:  fmt.Sprintf("network-interface/%s", d.Id()),
+	}.String()
+	d.Set("arn", arn)
+	d.Set("owner_id", ownerID)
 	if eni.Association != nil {
 		d.Set("association", flattenNetworkInterfaceAssociation(eni.Association))
 	}
@@ -188,7 +203,6 @@ func dataSourceNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("interface_type", eni.InterfaceType)
 	d.Set("ipv6_addresses", flattenNetworkInterfaceIPv6Address(eni.Ipv6Addresses))
 	d.Set("mac_address", eni.MacAddress)
-	d.Set("owner_id", eni.OwnerId)
 	d.Set("private_dns_name", eni.PrivateDnsName)
 	d.Set("private_ip", eni.PrivateIpAddress)
 	d.Set("private_ips", FlattenNetworkInterfacesPrivateIPAddresses(eni.PrivateIpAddresses))

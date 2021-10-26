@@ -33,6 +33,8 @@ func TestAccEC2NetworkInterfaceDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "subnet_id", resourceName, "subnet_id"),
 					resource.TestCheckResourceAttr(datasourceName, "outpost_arn", ""),
 					resource.TestCheckResourceAttrSet(datasourceName, "vpc_id"),
+					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, "owner_id", resourceName, "owner_id"),
 				),
 			},
 		},

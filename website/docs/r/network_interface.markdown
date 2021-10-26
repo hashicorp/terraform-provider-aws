@@ -53,8 +53,10 @@ The `attachment` block supports:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `arn` - The ARN of the network interface.
 * `id` - The ID of the network interface.
 * `mac_address` - The MAC address of the network interface.
+* `owner_id` - The AWS account ID of the owner of the network interface.
 * `private_dns_name` - The private DNS name of the network interface (IPv4).
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
