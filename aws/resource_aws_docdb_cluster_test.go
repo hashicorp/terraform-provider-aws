@@ -750,7 +750,7 @@ func testAccAWSDocDBClusterConfigGlobalClusterIdentifier_Update(rName, globalClu
 	return fmt.Sprintf(`
 resource "aws_docdb_global_cluster" "test" {
   count = 2
-
+  engine                    = "docdb"
   engine_version            = "4.0.0" # version compatible with global
   global_cluster_identifier = "%[1]s-${count.index}"
 }
@@ -778,14 +778,12 @@ resource "aws_docdb_cluster" "test" {
 `, rName)
 }
 
-//  engine_version            = "4.0.0" # version compatible
-//  force_destroy             = true      # Partial configuration removal ordering fix for after Terraform 0.12
 func testAccAWSDocDBClusterConfigGlobalClusterIdentifier(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_docdb_global_cluster" "test" {
   engine_version            = "4.0.0" # version compatible
+  engine                    = "docdb"
   global_cluster_identifier = %[1]q
-  force_destroy             = true      # Partial configuration removal ordering fix for after Terraform 0.12
 }
 
 resource "aws_docdb_cluster" "test" {

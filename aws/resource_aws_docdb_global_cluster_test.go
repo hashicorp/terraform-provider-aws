@@ -465,6 +465,7 @@ func testAccPreCheckAWSDocDBGlobalCluster(t *testing.T) {
 func testAccAWSDocDBGlobalClusterConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_docdb_global_cluster" "test" {
+  engine                    = "docdb"
   global_cluster_identifier = %q
 }
 `, rName)
@@ -473,6 +474,7 @@ resource "aws_docdb_global_cluster" "test" {
 func testAccAWSDocDBGlobalClusterConfigDatabaseName(rName, databaseName string) string {
 	return fmt.Sprintf(`
 resource "aws_docdb_global_cluster" "test" {
+  engine                    = "docdb"
   database_name             = %q
   global_cluster_identifier = %q
 }
@@ -482,6 +484,7 @@ resource "aws_docdb_global_cluster" "test" {
 func testAccAWSDocDBGlobalClusterConfigDeletionProtection(rName string, deletionProtection bool) string {
 	return fmt.Sprintf(`
 resource "aws_docdb_global_cluster" "test" {
+  engine                    = "docdb"
   deletion_protection       = %t
   global_cluster_identifier = %q
 }

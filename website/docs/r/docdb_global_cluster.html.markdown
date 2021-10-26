@@ -95,7 +95,6 @@ resource "aws_docdb_cluster" "example" {
 }
 
 resource "aws_docdb_global_cluster" "example" {
-  force_destroy                = true
   global_cluster_identifier    = "example"
   source_db_cluster_identifier = aws_docdb_cluster.example.arn
 }
@@ -106,12 +105,12 @@ resource "aws_docdb_global_cluster" "example" {
 The following arguments are supported:
 
 * `global_cluster_identifier` - (Required, Forces new resources) The global cluster identifier.
+* `database_name` - (Optional, Forces new resources) Name for an automatically created database on cluster creation.
 * `deletion_protection` - (Optional) If the Global Cluster should have deletion protection enabled. The database can't be deleted when this value is set to `true`. The default is `false`.
-* `engine` - (Optional, Forces new resources) Name of the database engine to be used for this DB cluster. Terraform will only perform drift detection if a configuration value is provided. Current Valid values: `docdb`. Defaults to `docdb`. Conflicts with `source_db_cluster_identifier`.
+* `engine` - (Optional, Forces new resources) Name of the database engine to be used for this DB cluster. Current Valid values: `docdb`. Conflicts with `source_db_cluster_identifier`.
 * `engine_version` - (Optional) Engine version of the global database. Upgrading the engine version will result in all cluster members being immediately updated.
     * **NOTE:** Upgrading major versions is not supported.
-* `force_destroy` - (Optional) Enable to remove DB Cluster members from Global Cluster on destroy. Required with `source_db_cluster_identifier`.
-* `source_db_cluster_identifier` - (Optional) Amazon Resource Name (ARN) to use as the primary DB Cluster of the Global Cluster on creation. Terraform cannot perform drift detection of this value.
+* `source_db_cluster_identifier` - (Optional, Forces new resources) Amazon Resource Name (ARN) to use as the primary DB Cluster of the Global Cluster on creation. Terraform cannot perform drift detection of this value.
 * `storage_encrypted` - (Optional, Forces new resources) Specifies whether the DB cluster is encrypted. The default is `false` unless `source_db_cluster_identifier` is specified and encrypted. Terraform will only perform drift detection if a configuration value is provided.
 
 ## Attributes Reference
@@ -122,7 +121,7 @@ In addition to all arguments above, the following attributes are exported:
 * `global_cluster_members` - Set of objects containing Global Cluster members.
     * `db_cluster_arn` - Amazon Resource Name (ARN) of member DB Cluster
     * `is_writer` - Whether the member is the primary DB Cluster
-* `global_cluster_resource_id` - AWS Region-unique, immutable identifier for the global database cluster. This identifier is found in AWS CloudTrail log entries whenever the AWS KMS key for the DB cluster is accessed
+* `global_cluster_resource_id` - AWS Region-unique, immutable identifier for the globalq database cluster. This identifier is found in AWS CloudTrail log entries whenever the AWS KMS key for the DB cluster is accessed
 * `id` - DocDB Global Cluster identifier
 
 ## Import
@@ -133,7 +132,6 @@ In addition to all arguments above, the following attributes are exported:
 $ terraform import aws_docdb_global_cluster.example example
 ```
 
-Certain resource arguments, like `force_destroy`, only exist within Terraform. If the argument is set in the Terraform configuration on an imported resource, Terraform will show a difference on the first plan after import to update the state value. This change is safe to apply immediately so the state matches the desired configuration.
 Certain resource arguments, like `source_db_cluster_identifier`, do not have an API method for reading the information after creation. If the argument is set in the Terraform configuration on an imported resource, Terraform will always show a difference. To workaround this behavior, either omit the argument from the Terraform configuration or use [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) to hide the difference, e.g.
 
 ```terraform
