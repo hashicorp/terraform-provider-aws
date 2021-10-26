@@ -1,4 +1,4 @@
-package waiter
+package lightsail
 
 import (
 	"strconv"
@@ -41,12 +41,12 @@ const (
 	DatabaseMinTimeout = 3 * time.Second
 )
 
-// OperationCreated waits for an Operation to return Succeeded or Compleated
-func OperationCreated(conn *lightsail.Lightsail, oid *string) (*lightsail.GetOperationOutput, error) {
+// waitLightsailOperation waits for an Operation to return Succeeded or Compleated
+func waitLightsailOperation(conn *lightsail.Lightsail, oid *string) (*lightsail.GetOperationOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{OperationStatusStarted},
 		Target:     []string{OperationStatusCompleted, OperationStatusSucceeded},
-		Refresh:    LightsailOperationStatus(conn, oid),
+		Refresh:    statusLightsailOperation(conn, oid),
 		Timeout:    OperationTimeout,
 		Delay:      OperationDelay,
 		MinTimeout: OperationMinTimeout,
@@ -61,11 +61,12 @@ func OperationCreated(conn *lightsail.Lightsail, oid *string) (*lightsail.GetOpe
 	return nil, err
 }
 
-func DatabaseModified(conn *lightsail.Lightsail, db *string) (*lightsail.GetRelationalDatabaseOutput, error) {
+// waitDatabaseModified waits for a Modified Database return available
+func waitDatabaseModified(conn *lightsail.Lightsail, db *string) (*lightsail.GetRelationalDatabaseOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{DatabaseStateModifying},
 		Target:     []string{DatabaseStateAvailable},
-		Refresh:    LightsailDatabaseStatus(conn, db),
+		Refresh:    statusLightsailDatabase(conn, db),
 		Timeout:    DatabaseTimeout,
 		Delay:      DatabaseDelay,
 		MinTimeout: DatabaseMinTimeout,
@@ -80,11 +81,13 @@ func DatabaseModified(conn *lightsail.Lightsail, db *string) (*lightsail.GetRela
 	return nil, err
 }
 
-func DatabaseBackupRetentionModified(conn *lightsail.Lightsail, db *string, status *bool) (*lightsail.GetRelationalDatabaseOutput, error) {
+// waitDatabaseBackupRetentionModified waits for a Modified  BackupRetention on Database return available
+
+func waitDatabaseBackupRetentionModified(conn *lightsail.Lightsail, db *string, status *bool) (*lightsail.GetRelationalDatabaseOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{strconv.FormatBool(!aws.BoolValue(status))},
 		Target:     []string{strconv.FormatBool(aws.BoolValue(status))},
-		Refresh:    LightsailDatabaseBackupRetentionStatus(conn, db, status),
+		Refresh:    statusLightsailDatabaseBackupRetention(conn, db, status),
 		Timeout:    DatabaseTimeout,
 		Delay:      DatabaseDelay,
 		MinTimeout: DatabaseMinTimeout,

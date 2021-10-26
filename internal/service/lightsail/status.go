@@ -1,4 +1,4 @@
-package waiter
+package lightsail
 
 import (
 	"fmt"
@@ -10,8 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-// LightsailOperationStatus is a method to check the status of a Lightsail Operation
-func LightsailOperationStatus(conn *lightsail.Lightsail, oid *string) resource.StateRefreshFunc {
+// statusLightsailOperation is a method to check the status of a Lightsail Operation
+func statusLightsailOperation(conn *lightsail.Lightsail, oid *string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &lightsail.GetOperationInput{
 			OperationId: oid,
@@ -35,8 +35,8 @@ func LightsailOperationStatus(conn *lightsail.Lightsail, oid *string) resource.S
 	}
 }
 
-// LightsailDatabaseStatus is a method to check the status of a Lightsail Relational Database
-func LightsailDatabaseStatus(conn *lightsail.Lightsail, db *string) resource.StateRefreshFunc {
+// statusLightsailDatabase is a method to check the status of a Lightsail Relational Database
+func statusLightsailDatabase(conn *lightsail.Lightsail, db *string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &lightsail.GetRelationalDatabaseInput{
 			RelationalDatabaseName: db,
@@ -60,8 +60,8 @@ func LightsailDatabaseStatus(conn *lightsail.Lightsail, db *string) resource.Sta
 	}
 }
 
-// LightsailDatabaseStatus is a method to check the status of a Lightsail Relational Database
-func LightsailDatabaseBackupRetentionStatus(conn *lightsail.Lightsail, db *string, status *bool) resource.StateRefreshFunc {
+// statusLightsailDatabase is a method to check the status of a Lightsail Relational Database Backup Retention
+func statusLightsailDatabaseBackupRetention(conn *lightsail.Lightsail, db *string, status *bool) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &lightsail.GetRelationalDatabaseInput{
 			RelationalDatabaseName: db,
