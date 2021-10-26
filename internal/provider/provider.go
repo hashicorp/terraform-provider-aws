@@ -69,6 +69,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/elb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/emr"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/emrcontainers"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/firehose"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/fms"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
@@ -505,6 +506,8 @@ func Provider() *schema.Provider {
 			"aws_elb":                 elb.DataSourceLoadBalancer(),
 			"aws_elb_hosted_zone_id":  elb.DataSourceHostedZoneID(),
 			"aws_elb_service_account": elb.DataSourceServiceAccount(),
+
+			"aws_emrcontainers_virtual_cluster": emrcontainers.DataSourceVirtualCluster(),
 
 			// Adding the Aliases for the ALB -> LB Rename
 			"aws_alb_listener":     elbv2.DataSourceListener(),
@@ -1157,6 +1160,8 @@ func Provider() *schema.Provider {
 			"aws_emr_instance_group":         emr.ResourceInstanceGroup(),
 			"aws_emr_managed_scaling_policy": emr.ResourceManagedScalingPolicy(),
 			"aws_emr_security_configuration": emr.ResourceSecurityConfiguration(),
+
+			"aws_emrcontainers_virtual_cluster": emrcontainers.ResourceVirtualCluster(),
 
 			"aws_kinesis_firehose_delivery_stream": firehose.ResourceDeliveryStream(),
 

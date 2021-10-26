@@ -1,65 +1,24 @@
-package aws
+package emrcontainers_test
 
 import (
 	"fmt"
-	"log"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/emrcontainers"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfemrcontainers "github.com/hashicorp/terraform-provider-aws/internal/service/emrcontainers"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_emrcontainers_virtual_cluster", &resource.Sweeper{
-		Name: "aws_emrcontainers_virtual_cluster",
-		F:    testSweepEMRContainersVirtualCluster,
-	})
-}
-
-func testSweepEMRContainersVirtualCluster(region string) error {
-	client, err := sharedClientForRegion(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*AWSClient).emrcontainersconn
-
-	input := &emrcontainers.ListVirtualClustersInput{}
-	err = conn.ListVirtualClustersPages(input, func(page *emrcontainers.ListVirtualClustersOutput, isLast bool) bool {
-		if page == nil {
-			return !isLast
-		}
-
-		for _, vc := range page.VirtualClusters {
-			log.Printf("[INFO] EMR containers virtual cluster: %s", aws.StringValue(vc.Id))
-			_, err = conn.DeleteVirtualCluster(&emrcontainers.DeleteVirtualClusterInput{
-				Id: vc.Id,
-			})
-
-			if err != nil {
-				log.Printf("[ERROR] Error deleting containers virtual cluster (%s): %s", aws.StringValue(vc.Id), err)
-			}
-		}
-
-		return !isLast
-	})
-	if err != nil {
-		if testSweepSkipSweepError(err) {
-			log.Printf("[WARN] Skipping EMR containers virtual cluster sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("error retrieving EMR containers virtual cluster: %s", err)
-	}
-
-	return nil
-}
-
-func TestAccAwsEMRContainersVirtualCluster_basic(t *testing.T) {
+func TestAccEMRContainersVirtualCluster_basic(t *testing.T) {
 	var vc emrcontainers.DescribeVirtualClusterOutput
 
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_emrcontainers_virtual_cluster.test"
 
 	testExternalProviders := map[string]resource.ExternalProvider{
@@ -69,15 +28,16 @@ func TestAccAwsEMRContainersVirtualCluster_basic(t *testing.T) {
 		},
 	}
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
-		Providers:         testAccProviders,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, emrcontainers.EndpointsID),
+		Providers:         acctest.Providers,
 		ExternalProviders: testExternalProviders,
-		CheckDestroy:      testAccCheckAwsEMRContainersVirtualClusterDestroy,
+		CheckDestroy:      testAccCheckVirtualClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsEMRContainersVirtualClusterBasicConfig(rName),
+				Config: testAccVirtualClusterBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsEMRContainersVirtualClusterExists(resourceName, &vc),
+					testAccCheckVirtualClusterExists(resourceName, &vc),
 					resource.TestCheckResourceAttr(resourceName, "container_provider.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "container_provider.0.id", rName),
 					resource.TestCheckResourceAttr(resourceName, "container_provider.0.info.#", "1"),
@@ -98,29 +58,30 @@ func TestAccAwsEMRContainersVirtualCluster_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsEMRContainersVirtualCluster_disappears(t *testing.T) {
+func TestAccEMRContainersVirtualCluster_disappears(t *testing.T) {
 	var vc emrcontainers.DescribeVirtualClusterOutput
 
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_emrcontainers_virtual_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsEMRContainersVirtualClusterDestroy,
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, emrcontainers.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckVirtualClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsEMRContainersVirtualClusterBasicConfig(rName),
+				Config: testAccVirtualClusterBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsEMRContainersVirtualClusterExists(resourceName, &vc),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsEMRContainersVirtualCluster(), resourceName),
+					testAccCheckVirtualClusterExists(resourceName, &vc),
+					acctest.CheckResourceDisappears(acctest.Provider, tfemrcontainers.ResourceVirtualCluster(), resourceName),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckAwsEMRContainersVirtualClusterExists(resourceName string, vc *emrcontainers.DescribeVirtualClusterOutput) resource.TestCheckFunc {
+func testAccCheckVirtualClusterExists(resourceName string, vc *emrcontainers.DescribeVirtualClusterOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -131,7 +92,7 @@ func testAccCheckAwsEMRContainersVirtualClusterExists(resourceName string, vc *e
 			return fmt.Errorf("No EMR containers virtual cluster ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).emrcontainersconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRContainersConn
 		resp, err := conn.DescribeVirtualCluster(&emrcontainers.DescribeVirtualClusterInput{
 			Id: aws.String(rs.Primary.ID),
 		})
@@ -146,8 +107,8 @@ func testAccCheckAwsEMRContainersVirtualClusterExists(resourceName string, vc *e
 	}
 }
 
-func testAccCheckAwsEMRContainersVirtualClusterDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).emrcontainersconn
+func testAccCheckVirtualClusterDestroy(s *terraform.State) error {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EMRContainersConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_emrcontainers_virtual_cluster" {
@@ -159,7 +120,7 @@ func testAccCheckAwsEMRContainersVirtualClusterDestroy(s *terraform.State) error
 		})
 
 		if err != nil {
-			if isAWSErr(err, emrcontainers.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, emrcontainers.ErrCodeResourceNotFoundException, "") {
 				return nil
 			}
 			return err
@@ -174,7 +135,7 @@ func testAccCheckAwsEMRContainersVirtualClusterDestroy(s *terraform.State) error
 	return nil
 }
 
-func testAcctestAccAwsEMRContainersVirtualClusterBase(rName string) string {
+func testAccVirtualClusterBase(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -444,8 +405,8 @@ EOF
 `, rName)
 }
 
-func testAccAwsEMRContainersVirtualClusterBasicConfig(rName string) string {
-	return testAcctestAccAwsEMRContainersVirtualClusterBase(rName) + fmt.Sprintf(`
+func testAccVirtualClusterBasicConfig(rName string) string {
+	return testAccVirtualClusterBase(rName) + fmt.Sprintf(`
 resource "aws_emrcontainers_virtual_cluster" "test" {
   container_provider {
     id   = aws_eks_cluster.test.name

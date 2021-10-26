@@ -1,14 +1,14 @@
-package aws
+package emrcontainers
 
 import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/emrcontainers/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsEMRContainersVirtualCluster() *schema.Resource {
+func DataSourceVirtualCluster() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceAwsEMRContainersVirtualClusterRead,
 
@@ -76,14 +76,14 @@ func dataSourceAwsEMRContainersVirtualCluster() *schema.Resource {
 }
 
 func dataSourceAwsEMRContainersVirtualClusterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).emrcontainersconn
+	conn := meta.(*conns.AWSClient).EMRContainersConn
 
 	var id string
 	if cid, ok := d.GetOk("id"); ok {
 		id = cid.(string)
 	}
 
-	vc, err := finder.VirtualClusterById(conn, id)
+	vc, err := findVirtualClusterById(conn, id)
 
 	if err != nil {
 		return fmt.Errorf("error reading EMR containers virtual cluster (%s): %w", d.Id(), err)

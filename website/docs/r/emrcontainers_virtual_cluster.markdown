@@ -1,5 +1,5 @@
 ---
-subcategory: "EMR Containers"
+subcategory: "Elastic Map Reduce Containers"
 layout: "aws"
 page_title: "AWS: aws_emrcontainers_virtual_cluster"
 description: |-
@@ -43,8 +43,8 @@ The following arguments are required:
 
 * `id` - The name of the container provider that is running your EMR Containers cluster
 * `info` - Nested list containing information about the configuration of the container provider
-  * `eks_info` - Nested list containing EKS-specific information about the cluster where the EMR Containers cluster is running
-    * `namespace` - The namespace where the EMR Containers cluster is running
+    * `eks_info` - Nested list containing EKS-specific information about the cluster where the EMR Containers cluster is running
+        * `namespace` - The namespace where the EMR Containers cluster is running
 * `type` - The type of the container provider
 
 ## Attributes Reference

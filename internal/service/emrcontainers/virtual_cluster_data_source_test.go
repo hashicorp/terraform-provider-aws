@@ -1,15 +1,16 @@
-package aws
+package emrcontainers_test
 
 import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/eks"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSEMRContainersVirtualClusterDataSource_basic(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+func TestAccEMRContainersVirtualClusterDataSource_basic(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dataSourceResourceName := "data.aws_emrcontainers_virtual_cluster.test"
 	resourceName := "aws_emrcontainers_virtual_cluster.test"
 
@@ -21,14 +22,14 @@ func TestAccAWSEMRContainersVirtualClusterDataSource_basic(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
-		ErrorCheck:        testAccErrorCheck(t, eks.EndpointsID),
-		Providers:         testAccProviders,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
+		Providers:         acctest.Providers,
 		ExternalProviders: testExternalProviders,
-		CheckDestroy:      testAccCheckAWSEksClusterDestroy,
+		CheckDestroy:      testAccCheckVirtualClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEMRContainersVirtualClusterDataSourceConfig_Basic(rName),
+				Config: testAccVirtualClusterDataSourceConfig_Basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceResourceName, "id"),
@@ -47,8 +48,8 @@ func TestAccAWSEMRContainersVirtualClusterDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccAWSEMRContainersVirtualClusterDataSourceConfig_Basic(rName string) string {
-	return composeConfig(testAccAwsEMRContainersVirtualClusterBasicConfig(rName), `
+func testAccVirtualClusterDataSourceConfig_Basic(rName string) string {
+	return acctest.ConfigCompose(testAccVirtualClusterBasicConfig(rName), `
 data "aws_emrcontainers_virtual_cluster" "test" {
   id = aws_emrcontainers_virtual_cluster.test.id
 }

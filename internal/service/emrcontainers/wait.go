@@ -1,4 +1,4 @@
-package waiter
+package emrcontainers
 
 import (
 	"time"
@@ -19,12 +19,12 @@ const (
 	VirtualClusterDeletedDelay = 1 * time.Minute
 )
 
-// VirtualClusterCreated waits for a virtual cluster to return running
-func VirtualClusterCreated(conn *emrcontainers.EMRContainers, id string) (*emrcontainers.VirtualCluster, error) {
+// waitVirtualClusterCreated waits for a virtual cluster to return running
+func waitVirtualClusterCreated(conn *emrcontainers.EMRContainers, id string) (*emrcontainers.VirtualCluster, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{},
 		Target:  []string{emrcontainers.VirtualClusterStateRunning},
-		Refresh: VirtualClusterStatus(conn, id),
+		Refresh: statusVirtualCluster(conn, id),
 		Timeout: VirtualClusterCreatedTimeout,
 		Delay:   VirtualClusterCreatedDelay,
 	}
@@ -38,12 +38,12 @@ func VirtualClusterCreated(conn *emrcontainers.EMRContainers, id string) (*emrco
 	return nil, err
 }
 
-// VirtualClusterDeleted waits for a virtual cluster to be deleted
-func VirtualClusterDeleted(conn *emrcontainers.EMRContainers, id string) (*emrcontainers.VirtualCluster, error) {
+// waitVirtualClusterDeleted waits for a virtual cluster to be deleted
+func waitVirtualClusterDeleted(conn *emrcontainers.EMRContainers, id string) (*emrcontainers.VirtualCluster, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{emrcontainers.VirtualClusterStateTerminating},
 		Target:  []string{emrcontainers.VirtualClusterStateTerminated},
-		Refresh: VirtualClusterStatus(conn, id),
+		Refresh: statusVirtualCluster(conn, id),
 		Timeout: VirtualClusterDeletedTimeout,
 		Delay:   VirtualClusterDeletedDelay,
 	}

@@ -1,4 +1,4 @@
-package aws
+package emrcontainers
 
 import (
 	"fmt"
@@ -7,17 +7,17 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/emrcontainers"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/emrcontainers/finder"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/emrcontainers/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsEMRContainersVirtualCluster() *schema.Resource {
+func ResourceVirtualCluster() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEMRContainersVirtualClusterCreate,
-		Read:   resourceAwsEMRContainersVirtualClusterRead,
-		Delete: resourceAwsEMRContainersVirtualClusterDelete,
+		Create: resourceVirtualClusterCreate,
+		Read:   resourceVirtualClusterRead,
+		Delete: resourceVirtualClusterDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -97,8 +97,8 @@ func resourceAwsEMRContainersVirtualCluster() *schema.Resource {
 	}
 }
 
-func resourceAwsEMRContainersVirtualClusterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).emrcontainersconn
+func resourceVirtualClusterCreate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).EMRContainersConn
 
 	input := emrcontainers.CreateVirtualClusterInput{
 		ContainerProvider: expandEMRContainersContainerProvider(d.Get("container_provider").([]interface{})),
@@ -113,20 +113,20 @@ func resourceAwsEMRContainersVirtualClusterCreate(d *schema.ResourceData, meta i
 
 	d.SetId(aws.StringValue(out.Id))
 
-	if _, err := waiter.VirtualClusterCreated(conn, d.Id()); err != nil {
+	if _, err := waitVirtualClusterCreated(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for EMR containers virtual cluster (%s) creation: %w", d.Id(), err)
 	}
 
-	return resourceAwsEMRContainersVirtualClusterRead(d, meta)
+	return resourceVirtualClusterRead(d, meta)
 }
 
-func resourceAwsEMRContainersVirtualClusterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).emrcontainersconn
+func resourceVirtualClusterRead(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).EMRContainersConn
 
-	vc, err := finder.VirtualClusterById(conn, d.Id())
+	vc, err := findVirtualClusterById(conn, d.Id())
 
 	if err != nil {
-		if isAWSErr(err, emrcontainers.ErrCodeResourceNotFoundException, "") && !d.IsNewResource() {
+		if tfawserr.ErrMessageContains(err, emrcontainers.ErrCodeResourceNotFoundException, "") && !d.IsNewResource() {
 			log.Printf("[WARN] EMR containers virtual cluster (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -152,22 +152,22 @@ func resourceAwsEMRContainersVirtualClusterRead(d *schema.ResourceData, meta int
 	return nil
 }
 
-func resourceAwsEMRContainersVirtualClusterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).emrcontainersconn
+func resourceVirtualClusterDelete(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).EMRContainersConn
 
 	log.Printf("[INFO] EMR containers virtual cluster: %s", d.Id())
 	_, err := conn.DeleteVirtualCluster(&emrcontainers.DeleteVirtualClusterInput{
 		Id: aws.String(d.Id()),
 	})
 	if err != nil {
-		if isAWSErr(err, emrcontainers.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, emrcontainers.ErrCodeResourceNotFoundException, "") {
 			return nil
 		}
 
 		return fmt.Errorf("error deleting EMR containers virtual cluster (%s): %w", d.Id(), err)
 	}
 
-	_, err = waiter.VirtualClusterDeleted(conn, d.Id())
+	_, err = waitVirtualClusterDeleted(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error waiting for EMR containers virtual cluster (%s) deletion: %w", d.Id(), err)
