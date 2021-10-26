@@ -205,6 +205,10 @@ func resourceAwsFsxStorageVirtualMachineRead(d *schema.ResourceData, meta interf
 	d.Set("root_volume_security_style", svm.RootVolumeSecurityStyle)
 	d.Set("svm_admin_password", aws.String(d.Get("svm_admin_password").(string)))
 
+	if err := d.Set("endpoints", flattenFsxSvmEndpoints(svm.Endpoints)); err != nil {
+		return fmt.Errorf("error setting endpoints: %w", err)
+	}
+
 	tags := KeyValueTags(svm.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
