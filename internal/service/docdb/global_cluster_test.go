@@ -36,7 +36,7 @@ func TestAccDocDBGlobalCluster_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocDBGlobalClusterExists(resourceName, &globalCluster1),
 					//This is a rds arn
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "rds", fmt.Sprintf("global-cluster:%s", rName)),
+					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "rds", fmt.Sprintf("global-cluster:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "database_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "engine"),
@@ -512,6 +512,7 @@ func testAccDocDBGlobalClusterConfigStorageEncrypted(rName string, storageEncryp
 	return fmt.Sprintf(`
 resource "aws_docdb_global_cluster" "test" {
   global_cluster_identifier = %q
+  engine                    = "docdb"
   storage_encrypted         = %t
 }
 `, rName, storageEncrypted)
