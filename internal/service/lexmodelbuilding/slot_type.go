@@ -202,47 +202,15 @@ func resourceSlotTypeRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("enumeration_value", flattenLexEnumerationValues(resp.EnumerationValues))
 	}
 
-	version, err := getLatestLexSlotTypeVersion(conn, &lexmodelbuildingservice.GetSlotTypeVersionsInput{
-		Name: aws.String(d.Id()),
-	})
+	version, err := FindLatestSlotTypeVersionByName(conn, d.Id())
+
 	if err != nil {
-		return err
+		return fmt.Errorf("error reading Lex Slot Type (%s) latest version: %w", d.Id(), err)
 	}
+
 	d.Set("version", version)
 
 	return nil
-}
-
-func getLatestLexSlotTypeVersion(conn *lexmodelbuildingservice.LexModelBuildingService, input *lexmodelbuildingservice.GetSlotTypeVersionsInput) (string, error) {
-	version := SlotTypeVersionLatest
-
-	for {
-		page, err := conn.GetSlotTypeVersions(input)
-		if err != nil {
-			return "", err
-		}
-
-		// At least 1 version will always be returned.
-		if len(page.SlotTypes) == 1 {
-			break
-		}
-
-		for _, slotType := range page.SlotTypes {
-			if *slotType.Version == SlotTypeVersionLatest {
-				continue
-			}
-			if *slotType.Version > version {
-				version = *slotType.Version
-			}
-		}
-
-		if page.NextToken == nil {
-			break
-		}
-		input.NextToken = page.NextToken
-	}
-
-	return version, nil
 }
 
 func resourceSlotTypeUpdate(d *schema.ResourceData, meta interface{}) error {

@@ -117,3 +117,44 @@ func FindLatestIntentVersionByName(conn *lexmodelbuildingservice.LexModelBuildin
 
 	return strconv.Itoa(latestVersion), nil
 }
+
+// FindLatestSlotTypeVersionByName returns the latest published version of a slot or $LATEST if the slot has never been published.
+// See https://docs.aws.amazon.com/lex/latest/dg/versioning-aliases.html.
+func FindLatestSlotTypeVersionByName(conn *lexmodelbuildingservice.LexModelBuildingService, name string) (string, error) {
+	input := &lexmodelbuildingservice.GetSlotTypeVersionsInput{
+		Name: aws.String(name),
+	}
+	var latestVersion int
+
+	err := conn.GetSlotTypeVersionsPages(input, func(page *lexmodelbuildingservice.GetSlotTypeVersionsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, slot := range page.SlotTypes {
+			version := aws.StringValue(slot.Version)
+
+			if version == SlotTypeVersionLatest {
+				continue
+			}
+
+			if version, err := strconv.Atoi(version); err != nil {
+				continue
+			} else if version > latestVersion {
+				latestVersion = version
+			}
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return "", err
+	}
+
+	if latestVersion == 0 {
+		return SlotTypeVersionLatest, nil
+	}
+
+	return strconv.Itoa(latestVersion), nil
+}
