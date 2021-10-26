@@ -135,8 +135,16 @@ func ResourceStorageVirtualMachine() *schema.Resource {
 				Sensitive:    true,
 				ValidateFunc: validation.StringLenBetween(8, 50),
 			},
+			"subtype": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
+			"uuid": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -204,6 +212,8 @@ func resourceAwsFsxStorageVirtualMachineRead(d *schema.ResourceData, meta interf
 	d.Set("name", svm.Name)
 	d.Set("root_volume_security_style", svm.RootVolumeSecurityStyle)
 	d.Set("svm_admin_password", aws.String(d.Get("svm_admin_password").(string)))
+	d.Set("subtype", svm.Subtype)
+	d.Set("uuid", svm.UUID)
 
 	if err := d.Set("endpoints", flattenFsxSvmEndpoints(svm.Endpoints)); err != nil {
 		return fmt.Errorf("error setting endpoints: %w", err)

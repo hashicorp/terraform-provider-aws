@@ -3,7 +3,7 @@ subcategory: "File System (FSx)"
 layout: "aws"
 page_title: "AWS: aws_fsx_storage_virtual_machine"
 description: |-
-  Manages an Amazon FSx for NetApp ONTAP file system.
+  Manages a storage virtual machine (SVM) for an Amazon FSx for ONTAP file system.
 ---
 
 # Resource: aws_fsx_storage_virtual_machine
@@ -36,7 +36,9 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - Amazon Resource Name of the file system.
 * `endpoints` - The endpoints that are used to access data or to manage the file system using the NetApp ONTAP CLI, REST API, or NetApp SnapMirror. See [Endpoints](#endpoints) below.
-* `id` - Identifier of the file system, e.g., `fs-12345678`
+* `id` - Identifier of the file system, e.g., `svm-12345678`.
+* `uuid` - The SVM's UUID (universally unique identifier).
+* `subtype` - Describes the SVM's subtype.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ### Endpoints
@@ -62,8 +64,8 @@ configuration options:
 
 ## Import
 
-FSx File Systems can be imported using the `id`, e.g.,
+FSx Storage Virtual Machines can be imported using the `id`, e.g.,
 
 ```
-$ terraform import aws_fsx_storage_virtual_machine.example fs-543ab12b1ca672f33
+$ terraform import aws_fsx_storage_virtual_machine.example svm-543ab12b1ca672f33
 ```

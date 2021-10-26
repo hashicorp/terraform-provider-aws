@@ -40,6 +40,8 @@ func TestAccAWSFsxStorageVirtualMachine_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "endpoints.0.management.0.dns_name"),
 					resource.TestCheckResourceAttr(resourceName, "endpoints.0.nfs.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoints.0.nfs.0.dns_name"),
+					resource.TestCheckResourceAttr(resourceName, "subtype", "DEFAULT"),
+					resource.TestCheckResourceAttrSet(resourceName, "uuid"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
