@@ -64,7 +64,7 @@ The Terraform AWS Provider's requests to AWS service APIs happen on top of Hyper
     - Triggering automatic request retries based on default and custom logic.
 - The Terraform resource receives the response, including any output and errors, from the AWS Go SDK.
 
-The Terraform AWS Provider specific configuration for AWS Go SDK operation handling can be found in `aws/config.go` in this codebase and the [`hashicorp/aws-sdk-go-base` codebase](https://github.com/hashicorp/aws-sdk-go-base).
+The Terraform AWS Provider specific configuration for AWS Go SDK operation handling can be found in `aws/conns/conns.go` in this codebase and the [`hashicorp/aws-sdk-go-base` codebase](https://github.com/hashicorp/aws-sdk-go-base).
 
 _NOTE: The section descibes the current handling with version 1 of the AWS Go SDK. In the future, this codebase will be migrated to version 2 of the AWS Go SDK. The newer version implements a very similar request flow but uses a simpler credential and request handling configuration. As such, the `aws-sdk-go-base` dependency will likely not receive further updates and will be removed after that migration._
 
@@ -113,7 +113,7 @@ Even given a properly ordered Terraform configuration, eventual consistency can 
 Do not use this type of logic to overcome improperly ordered Terraform configurations. The approach may not work in larger environments.
 
 ```go
-// aws/internal/service/example/waiter/waiter.go (created if does not exist)
+// internal/service/example/waiter/waiter.go (created if does not exist)
 
 const (
 	// Maximum amount of time to wait for Thing operation eventual consistency
@@ -126,7 +126,7 @@ const (
 
 import (
 	// ... other imports ...
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/example/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/example/waiter"
 )
 
 // ... Create, Read, Update, or Delete function ...
@@ -175,7 +175,7 @@ The last operation can receive varied API errors ranging from:
 - IAM Role being reported as not having permissions for the other service to use it (assume role permissions)
 - IAM Role being reported as not having sufficient permissions (inline or attached role permissions)
 
-Each AWS service API (and sometimes even operations within the same API) varies in the implementation of these errors. To handle them, it is recommended to use the [Operation Specific Error Retries](#operation-specific-error-retries) pattern. The Terraform AWS Provider implements a standard timeout constant of two minutes in the `aws/internal/service/iam/waiter` package which should be used for all retry timeouts associated with IAM errors. This timeout was derived from years of Terraform operational experience with all AWS APIs.
+Each AWS service API (and sometimes even operations within the same API) varies in the implementation of these errors. To handle them, it is recommended to use the [Operation Specific Error Retries](#operation-specific-error-retries) pattern. The Terraform AWS Provider implements a standard timeout constant of two minutes in the `internal/service/iam/waiter` package which should be used for all retry timeouts associated with IAM errors. This timeout was derived from years of Terraform operational experience with all AWS APIs.
 
 ```go
 // internal/service/{service}/{thing}.go
@@ -183,7 +183,7 @@ Each AWS service API (and sometimes even operations within the same API) varies 
 import (
 	// ... other imports ...
 	// By convention, cross-service waiter imports are aliased as {SERVICE}waiter
-	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
+	iamwaiter "github.com/hashicorp/terraform-provider-aws/internal/service/iam/waiter"
 )
 
 // ... Create and typically Update function ...
@@ -223,9 +223,9 @@ The below code example highlights this situation for a resource creation that al
 
 import (
 	// ... other imports ...
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/{SERVICE}/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/{SERVICE}/waiter"
 	// By convention, cross-service waiter imports are aliased as {SERVICE}waiter
-	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
+	iamwaiter "github.com/hashicorp/terraform-provider-aws/internal/service/iam/waiter"
 )
 
 // ... Create function ...
@@ -288,7 +288,7 @@ The pattern that most resources should follow is to have the `Create` function r
 Note that for eventually consistent resources, "not found" errors can still occur in the `Read` function even after implementing [Resource Lifecycle Waiters](#resource-lifecycle-waiters) for the Create function.
 
 ```go
-// aws/internal/service/example/waiter/waiter.go (created if does not exist)
+// internal/service/example/waiter/waiter.go (created if does not exist)
 
 const (
 	// Maximum amount of time to wait for Thing eventual consistency on creation
@@ -365,7 +365,7 @@ In rare cases, it may be easier to duplicate all `Read` function logic in the `C
 An emergent solution for handling eventual consistency with attribute values on updates is to introduce a custom `resource.StateChangeConf` and `resource.RefreshStateFunc` handlers. For example:
 
 ```go
-// aws/internal/service/example/waiter/status.go (created if does not exist)
+// internal/service/example/waiter/status.go (created if does not exist)
 
 // ThingAttribute fetches the Thing and its Attribute
 func ThingAttribute(conn *example.Example, id string) resource.StateRefreshFunc {
@@ -390,7 +390,7 @@ func ThingAttribute(conn *example.Example, id string) resource.StateRefreshFunc 
 ```
 
 ```go
-// aws/internal/service/example/waiter/waiter.go (created if does not exist)
+// internal/service/example/waiter/waiter.go (created if does not exist)
 
 const (
 	ThingAttributePropagationTimeout = 2 * time.Minute
@@ -452,10 +452,10 @@ If it is necessary to customize the timeouts and polling, we generally prefer us
 
 ### Resource Lifecycle Waiters
 
-Most of the codebase uses `resource.StateChangeConf` and `resource.RefreshStateFunc` handlers for tracking either component level status fields or explicit tracking identifiers. These should be placed in the `aws/internal/service/{SERVICE}/waiter` package and split into separate functions. For example:
+Most of the codebase uses `resource.StateChangeConf` and `resource.RefreshStateFunc` handlers for tracking either component level status fields or explicit tracking identifiers. These should be placed in the `internal/service/{SERVICE}/waiter` package and split into separate functions. For example:
 
 ```go
-// aws/internal/service/example/waiter/status.go (created if does not exist)
+// internal/service/example/waiter/status.go (created if does not exist)
 
 // ThingStatus fetches the Thing and its Status
 func ThingStatus(conn *example.Example, id string) resource.StateRefreshFunc {
@@ -480,7 +480,7 @@ func ThingStatus(conn *example.Example, id string) resource.StateRefreshFunc {
 ```
 
 ```go
-// aws/internal/service/example/waiter/waiter.go (created if does not exist)
+// internal/service/example/waiter/waiter.go (created if does not exist)
 
 const (
 	ThingCreationTimeout = 2 * time.Minute
@@ -548,4 +548,4 @@ function ExampleThingDelete(d *schema.ResourceData, meta interface{}) error {
 }
 ```
 
-Typically, the AWS Go SDK should include constants for various status field values (e.g., `StatusCreating` for `CREATING`). If not, create them in a file named `aws/internal/service/{SERVICE}/consts.go`.
+Typically, the AWS Go SDK should include constants for various status field values (e.g., `StatusCreating` for `CREATING`). If not, create them in a file named `internal/service/{SERVICE}/consts.go`.

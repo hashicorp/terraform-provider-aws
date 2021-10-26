@@ -547,7 +547,7 @@ More details about this code generation, including fixes for potential error mes
   }
   ```
 
-- Verify all acceptance testing passes for the resource (e.g., `make testacc TESTARGS='-run=TestAccEKSCluster_'`)
+- Verify all acceptance testing passes for the resource (e.g., `make testacc TESTARGS='-run=TestAccEKSCluster_' PKG_NAME=internal/service/eks`)
 
 ### Resource Tagging Documentation Implementation
 
@@ -571,7 +571,7 @@ See the [EC2 Listing and filtering your resources page](https://docs.aws.amazon.
 Implementing server-side filtering support for Terraform AWS Provider resources requires the following, each with its own section below:
 
 - [ ] _Generated Service Filtering Code_: In the internal code generators (e.g., `internal/generate/namevaluesfilters`), implementation and customization of how a service handles filtering, which is standardized for the resources.
-- [ ] _Resource Filtering Code Implementation_: In the resource's equivalent data source code (e.g., `aws/data_source_aws_service_thing.go`), implementation of `filter` schema attribute, along with handling in the `Read` function.
+- [ ] _Resource Filtering Code Implementation_: In the resource's equivalent data source code (e.g., `internal/service/{servicename}/thing_data_source.go`), implementation of `filter` schema attribute, along with handling in the `Read` function.
 - [ ] _Resource Filtering Documentation Implementation_: In the resource's equivalent data source documentation (e.g., `website/docs/d/service_thing.html.markdown`), addition of `filter` argument
 
 ### Adding Service to Filter Generating Code
@@ -586,7 +586,7 @@ More details about this code generation can be found in the [namevaluesfilters d
 
 ### Resource Filter Code Implementation
 
-- In the resource's equivalent data source Go file (e.g., `aws/data_source_aws_internet_gateway.go`), add the following Go import: `"github.com/hashicorp/terraform-provider-aws/internal/namevaluesfilters"`
+- In the resource's equivalent data source Go file (e.g., `internal/service/ec2/internet_gateway_data_source.go`), add the following Go import: `"github.com/hashicorp/terraform-provider-aws/internal/namevaluesfilters"`
 - In the resource schema, add `"filter": namevaluesfilters.Schema(),`
 - Implement the logic to build the list of filters:
 
@@ -672,9 +672,9 @@ guidelines.
 
 Adding a tag resource, similar to the `aws_ecs_tag` resource, has its own implementation procedure since the resource code and initial acceptance testing functions are automatically generated. The rest of the resource acceptance testing and resource documentation must still be manually created.
 
-- In `aws/internal/keyvaluetags`: Ensure the service is supported by all generators. Run `make gen` after any modifications.
-- In `aws/tag_resources.go`: Add the new `//go:generate` call with the correct service name. Run `make gen` after any modifications.
-- In `aws/provider.go`: Add the new resource.
+- In `internal/generate`: Ensure the service is supported by all generators. Run `make gen` after any modifications.
+- In `internal/service/{service}/generate.go`: Add the new `//go:generate` call with the correct generator directives. Run `make gen` after any modifications.
+- In `internal/provider/provider.go`: Add the new resource.
 - Run `make test` and ensure there are no failures.
 - Create `internal/service/{service}/tag_gen_test.go` with initial acceptance testing similar to the following (where the parent resource is simple to provision):
 
@@ -792,7 +792,7 @@ resource "aws_{service}_tag" "test" {
 }
 ```
 
-- Run `make testacc TEST=./aws TESTARGS='-run=TestAcc{Service}Tags_'` and ensure there are no failures.
+- Run `make testacc TESTARGS='-run=TestAcc{Service}Tags_' PKG_NAME=internal/serivce/{Service}` and ensure there are no failures.
 - Create `website/docs/r/{service}_tag.html.markdown` with initial documentation similar to the following:
 
 ``````markdown
@@ -860,14 +860,14 @@ into Terraform.
 
   To add the AWS Go SDK service client:
 
-    - In `aws/provider.go` Add a new service entry to `endpointServiceNames`.
+    - In `internal/provider/provider.go` Add a new service entry to `endpointServiceNames`.
     This service name should match the AWS Go SDK or AWS CLI service name.
-    - In `aws/config.go`: Add a new import for the AWS Go SDK code. E.g.
+    - In `internal/conns/conns.go`: Add a new import for the AWS Go SDK code. E.g.
     `github.com/aws/aws-sdk-go/service/quicksight`
-    - In `aws/config.go`: Add a new `{SERVICE}conn` field to the `AWSClient`
+    - In `internal/conns/conns.go`: Add a new `{SERVICE}conn` field to the `AWSClient`
     struct for the service client. The service name should match the name
     in `endpointServiceNames`. E.g., `quicksightconn *quicksight.QuickSight`
-    - In `aws/config.go`: Create the new service client in the `{SERVICE}conn`
+    - In `internal/conns/conns.go`: Create the new service client in the `{SERVICE}conn`
     field in the `AWSClient` instantiation within `Client()`. E.g.
     `quicksightconn: quicksight.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["quicksight"])})),`
     - In `website/allowed-subcategories.txt`: Add a name acceptable for the documentation navigation.
@@ -888,7 +888,7 @@ into Terraform.
   ```yaml
   # ... other services ...
   service/quicksight:
-    - 'aws/internal/service/quicksight/**/*'
+    - 'internal/service/quicksight/**/*'
     - '**/*_quicksight_*'
     - '**/quicksight_*'
   # ... other services ...

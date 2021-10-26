@@ -141,15 +141,15 @@ Please Note: On macOS 10.14 and later (and some Linux distributions), the defaul
 Certain testing requires multiple AWS accounts. This additional setup is not typically required and the testing will return an error (shown below) if your current setup does not have the secondary AWS configuration:
 
 ```console
-$ make testacc TEST=./aws TESTARGS='-run=TestAccDBInstance_DbSubnetGroupName_RamShared'
-=== RUN   TestAccDBInstance_DbSubnetGroupName_RamShared
-=== PAUSE TestAccDBInstance_DbSubnetGroupName_RamShared
-=== CONT  TestAccDBInstance_DbSubnetGroupName_RamShared
-    TestAccDBInstance_DbSubnetGroupName_RamShared: provider_test.go:386: AWS_ALTERNATE_ACCESS_KEY_ID or AWS_ALTERNATE_PROFILE must be set for acceptance tests
---- FAIL: TestAccDBInstance_DbSubnetGroupName_RamShared (2.22s)
-FAIL
-FAIL	github.com/hashicorp/terraform-provider-aws/aws	4.305s
-FAIL
+$ make testacc TESTARGS='-run=TestAccRDSInstance_DBSubnetGroupName_ramShared' PKG_NAME=internal/service/rds
+TF_ACC=1 go test ./internal/service/rds/... -v -count 1 -parallel 20 -run=TestAccRDSInstance_DBSubnetGroupName_ramShared -timeout 180m
+=== RUN   TestAccRDSInstance_DBSubnetGroupName_ramShared
+=== PAUSE TestAccRDSInstance_DBSubnetGroupName_ramShared
+=== CONT  TestAccRDSInstance_DBSubnetGroupName_ramShared
+    acctest.go:674: skipping test because at least one environment variable of [AWS_ALTERNATE_PROFILE AWS_ALTERNATE_ACCESS_KEY_ID] must be set. Usage: credentials for running acceptance testing in alternate AWS account.
+--- SKIP: TestAccRDSInstance_DBSubnetGroupName_ramShared (0.85s)
+PASS
+ok      github.com/hashicorp/terraform-provider-aws/internal/service/rds        0.888s
 ```
 
 Running these acceptance tests is the same as before, except the following additional AWS credential information is required:
@@ -1318,7 +1318,7 @@ The below are required items that will be noted during submission review and pre
 
 - [ ] __Implements CheckDestroy__: Resource testing should include a `CheckDestroy` function (typically named `testAccCheckAws{SERVICE}{RESOURCE}Destroy`) that calls the API to verify that the Terraform resource has been deleted or disassociated as appropriate. More information about `CheckDestroy` functions can be found in the [Extending Terraform TestCase documentation](https://www.terraform.io/docs/extend/testing/acceptance-tests/testcase.html#checkdestroy).
 - [ ] __Implements Exists Check Function__: Resource testing should include a `TestCheckFunc` function (typically named `testAccCheckAws{SERVICE}{RESOURCE}Exists`) that calls the API to verify that the Terraform resource has been created or associated as appropriate. Preferably, this function will also accept a pointer to an API object representing the Terraform resource from the API response that can be set for potential usage in later `TestCheckFunc`. More information about these functions can be found in the [Extending Terraform Custom Check Functions documentation](https://www.terraform.io/docs/extend/testing/acceptance-tests/testcase.html#checkdestroy).
-- [ ] __Excludes Provider Declarations__: Test configurations should not include `provider "aws" {...}` declarations. If necessary, only the provider declarations in `provider_test.go` should be used for multiple account/region or otherwise specialized testing.
+- [ ] __Excludes Provider Declarations__: Test configurations should not include `provider "aws" {...}` declarations. If necessary, only the provider declarations in `acctest.go` should be used for multiple account/region or otherwise specialized testing.
 - [ ] __Passes in us-west-2 Region__: Tests default to running in `us-west-2` and at a minimum should pass in that region or include necessary `PreCheck` functions to skip the test when ran outside an expected environment.
 - [ ] __Includes ErrorCheck__: All acceptance tests should include a call to the common ErrorCheck (`ErrorCheck:   acctest.ErrorCheck(t, service.EndpointsID),`).
 - [ ] __Uses resource.ParallelTest__: Tests should use [`resource.ParallelTest()`](https://godoc.org/github.com/hashicorp/terraform/helper/resource#ParallelTest) instead of [`resource.Test()`](https://godoc.org/github.com/hashicorp/terraform/helper/resource#Test) except where serialized testing is absolutely required.
