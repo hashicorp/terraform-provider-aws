@@ -2217,33 +2217,6 @@ func TestAccS3Bucket_Replication_schemaV2SameRegion(t *testing.T) {
 	})
 }
 
-func TestAccS3Bucket_Replication_RTC_expectValidationError(t *testing.T) {
-	rInt := sdkacctest.RandInt()
-
-	// record the initialized providers so that we can use them to check for the instances in each region
-	var providers []*schema.Provider
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckMultipleRegion(t, 2)
-		},
-		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketDestroyWithProvider, &providers),
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccBucketReplicationWithReplicationConfigurationWithRTCNoFilterConfig(rInt),
-				ExpectError: regexp.MustCompile(`A filter block must be present to enable RTC due to differences between V1 and V2 of the replication configuration schema.`),
-			},
-			{
-				Config:      testAccBucketReplicationWithReplicationConfigurationWithRTCInvalidNoMetricsConfig(rInt),
-				ExpectError: regexp.MustCompile(`Metrics must be enabled to allow S3 RTC. Enable by adding a block like: metrics {}`),
-			},
-		},
-	})
-}
-
 func TestAccS3Bucket_Replication_RTC_valid(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 	alternateRegion := acctest.AlternateRegion()
@@ -4276,7 +4249,7 @@ resource "aws_s3_bucket" "bucket" {
         storage_class = "STANDARD"
         metrics {}
         replication_time {
-            minutes = 15
+          minutes = 15
         }
       }
     }
@@ -4308,63 +4281,6 @@ resource "aws_s3_bucket" "bucket" {
         storage_class = "STANDARD"
         metrics {}
         replication_time {}
-      }
-    }
-  }
-}
-`, randInt))
-}
-
-func testAccBucketReplicationWithReplicationConfigurationWithRTCInvalidNoMetricsConfig(randInt int) string {
-	return acctest.ConfigCompose(
-		testAccBucketReplicationBasicConfig(randInt),
-		fmt.Sprintf(`
-resource "aws_s3_bucket" "bucket" {
-  bucket = "tf-test-bucket-rtc-no-metrics-%[1]d"
-  acl    = "private"
-  versioning {
-    enabled = true
-  }
-  replication_configuration {
-    role = aws_iam_role.role.arn
-    rules {
-      id     = "rtc-no-metrics"
-      status = "Enabled"
-      filter {
-        tags = {}
-      }
-      destination {
-        bucket        = aws_s3_bucket.destination.arn
-        storage_class = "STANDARD"
-        replication_time {}
-      }
-    }
-  }
-}
-`, randInt))
-}
-
-func testAccBucketReplicationWithReplicationConfigurationWithRTCNoFilterConfig(randInt int) string {
-	return acctest.ConfigCompose(
-		testAccBucketReplicationBasicConfig(randInt),
-		fmt.Sprintf(`
-resource "aws_s3_bucket" "bucket" {
-  bucket = "tf-test-bucket-rtc-no-metrics-%[1]d"
-  acl    = "private"
-  versioning {
-    enabled = true
-  }
-  replication_configuration {
-    role = aws_iam_role.role.arn
-    rules {
-      id     = "rtc-no-metrics"
-      prefix = "foo"
-      status = "Enabled"
-      destination {
-        bucket        = aws_s3_bucket.destination.arn
-        storage_class = "STANDARD"
-        replication_time {}
-        metrics {}
       }
     }
   }

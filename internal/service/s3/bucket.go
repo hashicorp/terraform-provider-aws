@@ -480,7 +480,6 @@ func ResourceBucket() *schema.Resource {
 												"metrics": {
 													Type:     schema.TypeList,
 													Optional: true,
-													MinItems: 1,
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
@@ -2086,7 +2085,6 @@ func resourceBucketReplicationConfigurationUpdate(conn *s3.S3, d *schema.Resourc
 			rcRule.ID = aws.String(rrid.(string))
 		}
 
-		rtcEnabled := false // Note: RTC requires schemaV2
 		ruleDestination := &s3.Destination{}
 		if dest, ok := rr["destination"].([]interface{}); ok && len(dest) > 0 {
 			if dest[0] != nil {
@@ -2115,19 +2113,13 @@ func resourceBucketReplicationConfigurationUpdate(conn *s3.S3, d *schema.Resourc
 				}
 
 				// replication metrics (required for RTC)
-				metricsEnabled := false
 				if metrics, ok := bd["metrics"].([]interface{}); ok && len(metrics) > 0 {
 					metricsConfig := &s3.Metrics{}
 					metricsValues := metrics[0].(map[string]interface{})
 					metricsConfig.EventThreshold = &s3.ReplicationTimeValue{}
-
 					metricsConfig.Status = aws.String(metricsValues["status"].(string))
 					metricsConfig.EventThreshold.Minutes = aws.Int64(int64(metricsValues["minutes"].(int)))
 					ruleDestination.Metrics = metricsConfig
-
-					if *metricsConfig.Status == s3.MetricsStatusEnabled {
-						metricsEnabled = true
-					}
 				}
 
 				// replication time control (RTC)
@@ -2137,14 +2129,6 @@ func resourceBucketReplicationConfigurationUpdate(conn *s3.S3, d *schema.Resourc
 					rtcConfig.Status = aws.String(rtcValues["status"].(string))
 					rtcConfig.Time = &s3.ReplicationTimeValue{}
 					rtcConfig.Time.Minutes = aws.Int64(int64(rtcValues["minutes"].(int)))
-
-					if *rtcConfig.Status == s3.ReplicationTimeStatusEnabled {
-						rtcEnabled = true
-						if !metricsEnabled {
-							return fmt.Errorf("Metrics must be enabled to allow S3 RTC. Enable by adding a block like: metrics {}")
-						}
-					}
-
 					ruleDestination.ReplicationTime = rtcConfig
 				}
 			}
@@ -2171,13 +2155,8 @@ func resourceBucketReplicationConfigurationUpdate(conn *s3.S3, d *schema.Resourc
 			}
 		}
 
-		f, ok := rr["filter"].([]interface{})
-		if ok && (len(f) == 0 || f[0] == nil) {
-			// an empty filter means apply the rule to all objects in the bucket
-			rcRule.Priority = aws.Int64(int64(rr["priority"].(int)))
-			rcRule.Filter = &s3.ReplicationRuleFilter{}
-		} else if ok && len(f) > 0 && f[0] != nil {
-			// XML schema V2 (required for S3 RTC).
+		if f, ok := rr["filter"].([]interface{}); ok && len(f) > 0 && f[0] != nil {
+			// XML schema V2.
 			rcRule.Priority = aws.Int64(int64(rr["priority"].(int)))
 			rcRule.Filter = &s3.ReplicationRuleFilter{}
 			filter := f[0].(map[string]interface{})
@@ -2200,10 +2179,8 @@ func resourceBucketReplicationConfigurationUpdate(conn *s3.S3, d *schema.Resourc
 					Status: aws.String(s3.DeleteMarkerReplicationStatusDisabled),
 				}
 			}
-		} else if rtcEnabled {
-			return fmt.Errorf("A filter block must be present to enable RTC due to differences between V1 and V2 of the replication configuration schema.")
 		} else {
-			// XML schema V1. (Note: Incompatible with RTC)
+			// XML schema V1.
 			rcRule.Prefix = aws.String(rr["prefix"].(string))
 		}
 
@@ -2442,17 +2419,14 @@ func flattenBucketReplicationConfiguration(r *s3.ReplicationConfiguration) []map
 			}
 			if v.Destination.ReplicationTime != nil {
 				rtc := map[string]interface{}{
-					"minutes": aws.Int64Value(v.Destination.ReplicationTime.Time.Minutes),
+					"minutes": int(aws.Int64Value(v.Destination.ReplicationTime.Time.Minutes)),
 					"status":  aws.StringValue(v.Destination.ReplicationTime.Status),
 				}
 				rd["replication_time"] = []interface{}{rtc}
-				if v.Destination.Metrics == nil {
-					log.Printf("[WARN] Metrics must be enabled to enable RTC")
-				}
 			}
 			if v.Destination.Metrics != nil {
 				metrics := map[string]interface{}{
-					"minutes": aws.Int64Value(v.Destination.Metrics.EventThreshold.Minutes),
+					"minutes": int(aws.Int64Value(v.Destination.Metrics.EventThreshold.Minutes)),
 					"status":  aws.StringValue(v.Destination.Metrics.Status),
 				}
 				rd["metrics"] = []interface{}{metrics}
@@ -2735,6 +2709,12 @@ func destinationHash(v interface{}) int {
 	if v, ok := m["access_control_translation"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		buf.WriteString(fmt.Sprintf("%d-", accessControlTranslationHash(v[0])))
 	}
+	if v, ok := m["replication_time"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		buf.WriteString(fmt.Sprintf("%d-", replicationTimeHash(v[0])))
+	}
+	if v, ok := m["metrics"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		buf.WriteString(fmt.Sprintf("%d-", metricsHash(v[0])))
+	}
 	return create.StringHashcode(buf.String())
 }
 
@@ -2747,6 +2727,40 @@ func accessControlTranslationHash(v interface{}) int {
 	}
 
 	if v, ok := m["owner"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+	return create.StringHashcode(buf.String())
+}
+
+func metricsHash(v interface{}) int {
+	var buf bytes.Buffer
+	m, ok := v.(map[string]interface{})
+
+	if !ok {
+		return 0
+	}
+
+	if v, ok := m["minutes"]; ok {
+		buf.WriteString(fmt.Sprintf("%d-", v.(int)))
+	}
+	if v, ok := m["status"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+	return create.StringHashcode(buf.String())
+}
+
+func replicationTimeHash(v interface{}) int {
+	var buf bytes.Buffer
+	m, ok := v.(map[string]interface{})
+
+	if !ok {
+		return 0
+	}
+
+	if v, ok := m["minutes"]; ok {
+		buf.WriteString(fmt.Sprintf("%d-", v.(int)))
+	}
+	if v, ok := m["status"]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
 	return create.StringHashcode(buf.String())
