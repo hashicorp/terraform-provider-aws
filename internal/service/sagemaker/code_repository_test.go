@@ -321,7 +321,7 @@ resource "aws_sagemaker_code_repository" "test" {
 
   tags = {
     %[2]q = %[3]q
-  }  
+  }
 }
 `, rName, tagKey1, tagValue1)
 }
