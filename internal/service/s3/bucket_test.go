@@ -2217,7 +2217,7 @@ func TestAccS3Bucket_Replication_schemaV2SameRegion(t *testing.T) {
 	})
 }
 
-func TestAccBucket_Replication_RTC_expectValidationError(t *testing.T) {
+func TestAccS3Bucket_Replication_RTC_expectValidationError(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 
 	// record the initialized providers so that we can use them to check for the instances in each region
@@ -2244,7 +2244,7 @@ func TestAccBucket_Replication_RTC_expectValidationError(t *testing.T) {
 	})
 }
 
-func TestAccBucket_Replication_RTC_valid(t *testing.T) {
+func TestAccS3Bucket_Replication_RTC_valid(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 	alternateRegion := acctest.AlternateRegion()
 	region := acctest.Region()
