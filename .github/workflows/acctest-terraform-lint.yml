@@ -9,7 +9,7 @@ on:
       - .github/workflows/acctest-terraform-lint.yml
       - .go-version
       - .tflint.hcl
-      - aws/*_test.go
+      - internal/service/*/*_test.go
       - scripts/validate-terraform.sh
       - tools/go.mod
 
