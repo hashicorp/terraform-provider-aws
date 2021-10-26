@@ -21,6 +21,7 @@ ENHANCEMENTS:
 * resource/aws_kms_external_key: Add `multi_region` argument ([#20533](https://github.com/hashicorp/terraform-provider-aws/issues/20533))
 * resource/aws_kms_key: Add `multi_region` argument ([#20533](https://github.com/hashicorp/terraform-provider-aws/issues/20533))
 * resource/aws_route53_key_signing_key: Deactivate key-signing key with `ACTION_NEEDED` status before deletion ([#21369](https://github.com/hashicorp/terraform-provider-aws/issues/21369))
+* resource/aws_s3_bucket: Add `metrics` and `replication_time` arguments to `replication_configuration.rules` configuration block to support Amazon S3 Replication Time Control ([#21176](https://github.com/hashicorp/terraform-provider-aws/issues/21176))
 * resource/aws_s3_bucket: Return `hosted_zone_id` attribute for `cn-northwest-1` (Ningxia) region ([#21337](https://github.com/hashicorp/terraform-provider-aws/issues/21337))
 * resource/aws_storage_gateway_nfs_file_share: Add `audit_destination_arn` argument. ([#21482](https://github.com/hashicorp/terraform-provider-aws/issues/21482))
 
