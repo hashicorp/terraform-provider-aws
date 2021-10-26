@@ -52,7 +52,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_servicecatalog_portfolio_share` can be imported using the portfolio share ID, e.g.
+`aws_servicecatalog_portfolio_share` can be imported using the portfolio share ID, e.g.,
 
 ```
 $ terraform import aws_servicecatalog_portfolio_share.example port-12344321:ACCOUNT:123456789012

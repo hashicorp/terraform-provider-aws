@@ -27,7 +27,7 @@ resource "aws_secretsmanager_secret_rotation" "example" {
 
 ### Rotation Configuration
 
-To enable automatic secret rotation, the Secrets Manager service requires usage of a Lambda function. The [Rotate Secrets section in the Secrets Manager User Guide](https://docs.aws.amazon.com/secretsmanager/latest/userguide/rotating-secrets_strategies.html) provides additional information about deploying a prebuilt Lambda functions for supported credential rotation (e.g. RDS) or deploying a custom Lambda function.
+To enable automatic secret rotation, the Secrets Manager service requires usage of a Lambda function. The [Rotate Secrets section in the Secrets Manager User Guide](https://docs.aws.amazon.com/secretsmanager/latest/userguide/rotating-secrets_strategies.html) provides additional information about deploying a prebuilt Lambda functions for supported credential rotation (e.g., RDS) or deploying a custom Lambda function.
 
 ~> **NOTE:** Configuring rotation causes the secret to rotate once as soon as you enable rotation. Before you do this, you must ensure that all of your applications that use the credentials stored in the secret are updated to retrieve the secret from AWS Secrets Manager. The old credentials might no longer be usable after the initial rotation and any applications that you fail to update will break as soon as the old credentials are no longer valid.
 
@@ -55,7 +55,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_secretsmanager_secret_rotation` can be imported by using the secret Amazon Resource Name (ARN), e.g.
+`aws_secretsmanager_secret_rotation` can be imported by using the secret Amazon Resource Name (ARN), e.g.,
 
 ```
 $ terraform import aws_secretsmanager_secret_rotation.example arn:aws:secretsmanager:us-east-1:123456789012:secret:example-123456

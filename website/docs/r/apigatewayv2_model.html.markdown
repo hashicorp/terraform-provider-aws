@@ -51,7 +51,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_apigatewayv2_model` can be imported by using the API identifier and model identifier, e.g.
+`aws_apigatewayv2_model` can be imported by using the API identifier and model identifier, e.g.,
 
 ```
 $ terraform import aws_apigatewayv2_model.example aabbccddee/1122334

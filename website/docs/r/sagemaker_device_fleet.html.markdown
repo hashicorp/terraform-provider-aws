@@ -51,7 +51,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Sagemaker Device Fleets can be imported using the `name`, e.g.
+Sagemaker Device Fleets can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_sagemaker_device_fleet.example my-fleet

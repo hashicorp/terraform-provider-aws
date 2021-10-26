@@ -30,8 +30,8 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The Name of Domain.
-* `arn` - The ARN of Domain.
+* `id` - The ARN of the Domain.
+* `arn` - The ARN of the Domain.
 * `owner` - The AWS account ID that owns the domain.
 * `repository_count` - The number of repositories in the domain.
 * `created_time` - A timestamp that represents the date and time the domain was created in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8).
@@ -40,7 +40,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-CodeArtifact Domain can be imported using the CodeArtifact Domain arn, e.g.
+CodeArtifact Domain can be imported using the CodeArtifact Domain arn, e.g.,
 
 ```
 $ terraform import aws_codeartifact_domain.example arn:aws:codeartifact:us-west-2:012345678912:domain/tf-acc-test-8593714120730241305

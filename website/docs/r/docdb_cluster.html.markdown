@@ -66,8 +66,8 @@ The following arguments are supported:
 * `master_username` - (Required unless a `snapshot_identifier` is provided) Username for the master DB user.
 * `port` - (Optional) The port on which the DB accepts connections
 * `preferred_backup_window` - (Optional) The daily time range during which automated backups are created if automated backups are enabled using the BackupRetentionPeriod parameter.Time in UTC
-Default: A 30-minute window selected at random from an 8-hour block of time per region. e.g. 04:00-09:00
-* `preferred_maintenance_window` - (Optional) The weekly time range during which system maintenance can occur, in (UTC) e.g. wed:04:00-wed:04:30
+Default: A 30-minute window selected at random from an 8-hour block of time per regionE.g., 04:00-09:00
+* `preferred_maintenance_window` - (Optional) The weekly time range during which system maintenance can occur, in (UTC) e.g., wed:04:00-wed:04:30
 * `skip_final_snapshot` - (Optional) Determines whether a final DB snapshot is created before the DB cluster is deleted. If true is specified, no DB snapshot is created. If false is specified, a DB snapshot is created before the DB cluster is deleted, using the value from `final_snapshot_identifier`. Default is `false`.
 * `snapshot_identifier` - (Optional) Specifies whether or not to create this cluster from a snapshot. You can use either the name or ARN when specifying a DB cluster snapshot, or the ARN when specifying a DB snapshot.
 * `storage_encrypted` - (Optional) Specifies whether the DB cluster is encrypted. The default is `false`.
@@ -100,7 +100,7 @@ any cleanup task during the destroying process.
 
 ## Import
 
-DocDB Clusters can be imported using the `cluster_identifier`, e.g.
+DocDB Clusters can be imported using the `cluster_identifier`, e.g.,
 
 ```
 $ terraform import aws_docdb_cluster.docdb_cluster docdb-prod-cluster

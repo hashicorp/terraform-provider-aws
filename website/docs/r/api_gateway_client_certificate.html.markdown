@@ -38,7 +38,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-API Gateway Client Certificates can be imported using the id, e.g.
+API Gateway Client Certificates can be imported using the id, e.g.,
 
 ```
 $ terraform import aws_api_gateway_client_certificate.demo ab1cqe
