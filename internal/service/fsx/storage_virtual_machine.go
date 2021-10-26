@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -37,6 +38,82 @@ func ResourceStorageVirtualMachine() *schema.Resource {
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"endpoints": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"iscsi": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"dns_name": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"ip_addresses": {
+										Type:     schema.TypeSet,
+										Computed: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+								},
+							},
+						},
+						"management": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"dns_name": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"ip_addresses": {
+										Type:     schema.TypeSet,
+										Computed: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+								},
+							},
+						},
+						"nfs": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"dns_name": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"ip_addresses": {
+										Type:     schema.TypeSet,
+										Computed: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+								},
+							},
+						},
+						"smb": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"dns_name": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"ip_addresses": {
+										Type:     schema.TypeSet,
+										Computed: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+								},
+							},
+						},
+					},
+				},
 			},
 			"file_system_id": {
 				Type:     schema.TypeString,
@@ -194,4 +271,46 @@ func resourceAwsFsxStorageVirtualMachineDelete(d *schema.ResourceData, meta inte
 	}
 
 	return nil
+}
+
+func flattenFsxSvmEndpoints(rs *fsx.SvmEndpoints) []interface{} {
+	if rs == nil {
+		return []interface{}{}
+	}
+
+	m := make(map[string]interface{})
+	if rs.Iscsi != nil {
+		m["iscsi"] = flattenFsxSvmEndpoint(rs.Iscsi)
+	}
+
+	if rs.Management != nil {
+		m["management"] = flattenFsxSvmEndpoint(rs.Management)
+	}
+
+	if rs.Nfs != nil {
+		m["nfs"] = flattenFsxSvmEndpoint(rs.Nfs)
+	}
+
+	if rs.Smb != nil {
+		m["smb"] = flattenFsxSvmEndpoint(rs.Smb)
+	}
+
+	return []interface{}{m}
+}
+
+func flattenFsxSvmEndpoint(rs *fsx.SvmEndpoint) []interface{} {
+	if rs == nil {
+		return []interface{}{}
+	}
+
+	m := make(map[string]interface{})
+	if rs.DNSName != nil {
+		m["dns_name"] = aws.StringValue(rs.DNSName)
+	}
+
+	if rs.IpAddresses != nil {
+		m["ip_addresses"] = flex.FlattenStringSet(rs.IpAddresses)
+	}
+
+	return []interface{}{m}
 }
