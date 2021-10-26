@@ -236,13 +236,19 @@ func FindNetworkACLEntry(conn *ec2.EC2, networkAclID string, egress bool, ruleNu
 	return nil, nil
 }
 
-// FindNetworkInterfaceByID looks up a NetworkInterface by ID. When not found, returns nil and potentially an API error.
 func FindNetworkInterfaceByID(conn *ec2.EC2, id string) (*ec2.NetworkInterface, error) {
 	input := &ec2.DescribeNetworkInterfacesInput{
 		NetworkInterfaceIds: aws.StringSlice([]string{id}),
 	}
 
 	output, err := conn.DescribeNetworkInterfaces(input)
+
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidNetworkInterfaceIDNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return nil, err
@@ -252,43 +258,42 @@ func FindNetworkInterfaceByID(conn *ec2.EC2, id string) (*ec2.NetworkInterface, 
 		return nil, nil
 	}
 
-	for _, networkInterface := range output.NetworkInterfaces {
-		if networkInterface == nil {
-			continue
-		}
-
-		if aws.StringValue(networkInterface.NetworkInterfaceId) != id {
-			continue
-		}
-
-		return networkInterface, nil
+	if output == nil || len(output.NetworkInterfaces) == 0 || output.NetworkInterfaces[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return nil, nil
+	if count := len(output.NetworkInterfaces); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	networkInterface := output.NetworkInterfaces[0]
+
+	// Eventual consistency check.
+	if aws.StringValue(networkInterface.NetworkInterfaceId) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return networkInterface, nil
 }
 
-// FindNetworkInterfaceSecurityGroup returns the associated GroupIdentifier if found
 func FindNetworkInterfaceSecurityGroup(conn *ec2.EC2, networkInterfaceID string, securityGroupID string) (*ec2.GroupIdentifier, error) {
-	var result *ec2.GroupIdentifier
-
 	networkInterface, err := FindNetworkInterfaceByID(conn, networkInterfaceID)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if networkInterface == nil {
-		return nil, nil
-	}
-
 	for _, groupIdentifier := range networkInterface.Groups {
 		if aws.StringValue(groupIdentifier.GroupId) == securityGroupID {
-			result = groupIdentifier
-			break
+			return groupIdentifier, nil
 		}
 	}
 
-	return result, err
+	return nil, &resource.NotFoundError{
+		LastError: fmt.Errorf("Network Interface (%s) Security Group (%s) not found", networkInterfaceID, securityGroupID),
+	}
 }
 
 // FindMainRouteTableAssociationByID returns the main route table association corresponding to the specified identifier.

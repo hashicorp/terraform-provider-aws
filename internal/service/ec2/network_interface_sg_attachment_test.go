@@ -5,13 +5,13 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccEC2NetworkInterfaceSgAttachment_SG_basic(t *testing.T) {
@@ -155,21 +155,15 @@ func testAccCheckNetworkInterfaceSGAttachmentExists(resourceName string) resourc
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No resource ID set: %s", resourceName)
+			return fmt.Errorf("No EC2 Network Interface Security Group Attachment ID is set: %s", resourceName)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-		networkInterfaceID := rs.Primary.Attributes["network_interface_id"]
-		securityGroupID := rs.Primary.Attributes["security_group_id"]
 
-		groupIdentifier, err := tfec2.FindNetworkInterfaceSecurityGroup(conn, networkInterfaceID, securityGroupID)
+		_, err := tfec2.FindNetworkInterfaceSecurityGroup(conn, rs.Primary.Attributes["network_interface_id"], rs.Primary.Attributes["security_group_id"])
 
 		if err != nil {
-			return fmt.Errorf("error reading EC2 Network Interface Security Group Attachment (%s): %s", rs.Primary.ID, err)
-		}
-
-		if groupIdentifier == nil {
-			return fmt.Errorf("Security Group ID (%s) not attached to ENI (%s)", securityGroupID, networkInterfaceID)
+			return err
 		}
 
 		return nil
@@ -184,22 +178,17 @@ func testAccCheckNetworkInterfaceSGAttachmentDestroy(s *terraform.State) error {
 			continue
 		}
 
-		networkInterfaceID := rs.Primary.Attributes["network_interface_id"]
-		securityGroupID := rs.Primary.Attributes["security_group_id"]
+		_, err := tfec2.FindNetworkInterfaceSecurityGroup(conn, rs.Primary.Attributes["network_interface_id"], rs.Primary.Attributes["security_group_id"])
 
-		groupIdentifier, err := tfec2.FindNetworkInterfaceSecurityGroup(conn, networkInterfaceID, securityGroupID)
-
-		if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidNetworkInterfaceIDNotFound) {
+		if tfresource.NotFound(err) {
 			continue
 		}
 
 		if err != nil {
-			return fmt.Errorf("error reading EC2 Network Interface Security Group Attachment (%s): %s", rs.Primary.ID, err)
+			return err
 		}
 
-		if groupIdentifier != nil {
-			return fmt.Errorf("Security Group ID (%s) still attached to ENI (%s)", securityGroupID, networkInterfaceID)
-		}
+		return fmt.Errorf("EC2 Network Interface Security Group Attachment %s still exists", rs.Primary.ID)
 	}
 
 	return nil
