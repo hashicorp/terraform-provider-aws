@@ -1163,10 +1163,11 @@ func Provider() *schema.Provider {
 			"aws_fms_admin_account": fms.ResourceAdminAccount(),
 			"aws_fms_policy":        fms.ResourcePolicy(),
 
-			"aws_fsx_backup":              fsx.ResourceBackup(),
-			"aws_fsx_lustre_file_system":  fsx.ResourceLustreFileSystem(),
-			"aws_fsx_ontap_file_system":   fsx.ResourceOntapFileSystem(),
-			"aws_fsx_windows_file_system": fsx.ResourceWindowsFileSystem(),
+			"aws_fsx_backup":                  fsx.ResourceBackup(),
+			"aws_fsx_lustre_file_system":      fsx.ResourceLustreFileSystem(),
+			"aws_fsx_ontap_file_system":       fsx.ResourceOntapFileSystem(),
+			"aws_fsx_windows_file_system":     fsx.ResourceWindowsFileSystem(),
+			"aws_fsx_storage_virtual_machine": fsx.ResourceStorageVirtualMachine(),
 
 			"aws_gamelift_alias":              gamelift.ResourceAlias(),
 			"aws_gamelift_build":              gamelift.ResourceBuild(),
