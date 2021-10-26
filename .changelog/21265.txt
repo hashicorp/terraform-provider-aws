@@ -1,3 +1,3 @@
-```release-note:bug
-resource/aws_route_table: Remove cross account ENIs managed by services like FSX for ONTAP from terraform managed routes to avoid deletion.
+```release-note:bug-fix
+resource/aws_route_table: Remove cross-account ENIs managed by AWS services like FSX for ONTAP from Terraform-managed routes to avoid diffs.
 ```
