@@ -16,7 +16,7 @@ Provides an AppStream Directory Config.
 resource "aws_appstream_directory_config" "example" {
   directory_name                          = "NAME OF DIRECTORY CONFIG"
   organizational_unit_distinguished_names = ["DISTINGUISHED NAME"]
-  
+
   service_account_credentials {
     account_name     = "NAME OF ACCOUNT"
     account_password = "PASSWORD OF ACCOUNT"
