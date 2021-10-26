@@ -4217,7 +4217,7 @@ resource "aws_s3_bucket" "bucket" {
         storage_class = "STANDARD"
         metrics {}
         replication_time {
-          status  = "Enabled"
+          status = "Enabled"
         }
       }
     }
