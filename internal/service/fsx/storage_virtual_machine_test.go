@@ -33,7 +33,7 @@ func TestAccAWSFsxStorageVirtualMachine_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexp.MustCompile(`storage-virtual-machine/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "file_system_id", "aws_fsx_ontap_file_system.test", "id"),
-					resource.TestCheckResourceAttr(resourceName, "endpoints.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "endpoints.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoints.0.isci.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoints.0.isci.0.dns_name"),
 					resource.TestCheckResourceAttr(resourceName, "endpoints.0.management.#", "1"),
