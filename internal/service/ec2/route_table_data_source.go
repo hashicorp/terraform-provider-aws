@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -231,7 +230,7 @@ func dataSourceRouteTableRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 
-	if err := d.Set("routes", dataSourceRoutesRead(rt.Routes, meta)); err != nil {
+	if err := d.Set("routes", dataSourceRoutesRead(conn, rt.Routes)); err != nil {
 		return err
 	}
 
@@ -242,15 +241,15 @@ func dataSourceRouteTableRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func dataSourceRoutesRead(ec2Routes []*ec2.Route, meta interface{}) []map[string]interface{} {
+func dataSourceRoutesRead(conn *ec2.EC2, ec2Routes []*ec2.Route) []map[string]interface{} {
 	routes := make([]map[string]interface{}, 0, len(ec2Routes))
 	// Loop through the routes and add them to the set
 	for _, r := range ec2Routes {
-		if r.GatewayId != nil && *r.GatewayId == "local" {
+		if aws.StringValue(r.GatewayId) == "local" {
 			continue
 		}
 
-		if r.Origin != nil && *r.Origin == "EnableVgwRoutePropagation" {
+		if aws.StringValue(r.Origin) == ec2.RouteOriginEnableVgwRoutePropagation {
 			continue
 		}
 
@@ -260,46 +259,16 @@ func dataSourceRoutesRead(ec2Routes []*ec2.Route, meta interface{}) []map[string
 			continue
 		}
 
-		if r.NetworkInterfaceId != nil {
+		// Skip cross-account ENIs for AWS services.
+		if networkInterfaceID := aws.StringValue(r.NetworkInterfaceId); networkInterfaceID != "" {
+			networkInterface, err := FindNetworkInterfaceByID(conn, networkInterfaceID)
 
-			conn := meta.(*conns.AWSClient).EC2Conn
-
-			describe_network_interfaces_request := &ec2.DescribeNetworkInterfacesInput{
-				NetworkInterfaceIds: []*string{r.NetworkInterfaceId},
-			}
-
-			describeResp, err := conn.DescribeNetworkInterfaces(describe_network_interfaces_request)
-
-			if err != nil {
-				if tfawserr.ErrMessageContains(err, "InvalidNetworkInterfaceID.NotFound", "") {
-					log.Printf("Network Interface %s not found", err)
-				} else {
-					log.Printf("Error occurred checking network inteface for route: %s", err)
+			if err == nil && networkInterface.Attachment != nil {
+				if ownerID, instanceOwnerID := aws.StringValue(networkInterface.OwnerId), aws.StringValue(networkInterface.Attachment.InstanceOwnerId); ownerID != "" && instanceOwnerID != ownerID {
+					log.Printf("[DEBUG] Skip cross-account ENI (%s)", networkInterfaceID)
+					continue
 				}
 			}
-
-			if len(describeResp.NetworkInterfaces) != 1 {
-				log.Printf("Unable to find ENI: %s", describeResp.NetworkInterfaces)
-			} else {
-
-				eni := describeResp.NetworkInterfaces[0]
-
-				if eni.Attachment != nil {
-
-					owner := aws.StringValue(eni.OwnerId)
-					iowner := aws.StringValue(eni.Attachment.InstanceOwnerId)
-
-					log.Printf("[DEBUG] ENI owner: %s, ENI Instane Owner %s", owner, iowner)
-
-					if iowner != "" && iowner != owner {
-						//Skipping cross account ENI for AWS services
-						log.Printf("Found Cross Account ENI: %s. Skipping", aws.StringValue(describeResp.NetworkInterfaces[0].NetworkInterfaceId))
-						log.Printf("[DEBUG] Cross Account ENI Details: \n %s", describeResp.NetworkInterfaces[0])
-						continue
-					}
-				}
-			}
-
 		}
 
 		m := make(map[string]interface{})
