@@ -111,7 +111,13 @@ The `kafka_settings` configuration block supports the following arguments:
 
 The `kinesis_settings` configuration block supports the following arguments:
 
+* `include_control_details` - (Optional) Shows detailed control information for table definition, column definition, and table and column changes in the Kinesis message output. The default is `false`.
+* `include_null_and_empty` - (Optional) Include NULL and empty columns in the target. The default is `false`.
+* `include_partition_value` - (Optional) Shows the partition value within the Kinesis message output, unless the partition type is schema-table-type. The default is `false`.
+* `include_table_alter_operations` - (Optional) Includes any data definition language (DDL) operations that change the table in the control data. The default is `false`.
+* `include_transaction_details` - (Optional) Provides detailed transaction information from the source database. The default is `false`.
 * `message_format` - (Optional) Output format for the records created. Defaults to `json`. Valid values are `json` and `json_unformatted` (a single line with no tab).
+* `partition_include_schema_table` - (Optional) Prefixes schema and table names to partition values, when the partition type is primary-key-type. The default is `false`.
 * `service_access_role_arn` - (Optional) Amazon Resource Name (ARN) of the IAM Role with permissions to write to the Kinesis data stream.
 * `stream_arn` - (Optional) Amazon Resource Name (ARN) of the Kinesis data stream.
 
@@ -157,7 +163,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Endpoints can be imported using the `endpoint_id`, e.g.
+Endpoints can be imported using the `endpoint_id`, e.g.,
 
 ```
 $ terraform import aws_dms_endpoint.test test-dms-endpoint-tf

@@ -91,7 +91,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-SQS Queues can be imported using the `queue url`, e.g.
+SQS Queues can be imported using the `queue url`, e.g.,
 
 ```
 $ terraform import aws_sqs_queue.public_queue https://queue.amazonaws.com/80398EXAMPLE/MyQueue

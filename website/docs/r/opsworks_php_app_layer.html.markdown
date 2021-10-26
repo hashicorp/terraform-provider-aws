@@ -68,7 +68,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-OpsWorks PHP Application Layers can be imported using the `id`, e.g.
+OpsWorks PHP Application Layers can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_opsworks_php_app_layer.bar 00000000-0000-0000-0000-000000000000

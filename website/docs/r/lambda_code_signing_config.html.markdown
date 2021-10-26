@@ -57,7 +57,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Code Signing Configs can be imported using their ARN, e.g.
+Code Signing Configs can be imported using their ARN, e.g.,
 
 ```
 $ terraform import aws_lambda_code_signing_config.imported_csc arn:aws:lambda:us-west-2:123456789012:code-signing-config:csc-0f6c334abcdea4d8b

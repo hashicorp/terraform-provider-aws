@@ -54,7 +54,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Internet Gateways can be imported using the `id`, e.g.
+Internet Gateways can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_internet_gateway.gw igw-c0a643a9

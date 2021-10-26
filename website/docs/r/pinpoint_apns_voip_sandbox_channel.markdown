@@ -58,7 +58,7 @@ No additional attributes are exported.
 
 ## Import
 
-Pinpoint APNs VoIP Sandbox Channel can be imported using the `application-id`, e.g.
+Pinpoint APNs VoIP Sandbox Channel can be imported using the `application-id`, e.g.,
 
 ```
 $ terraform import aws_pinpoint_apns_voip_sandbox_channel.apns_voip_sandbox application-id

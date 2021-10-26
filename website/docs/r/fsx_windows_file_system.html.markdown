@@ -94,8 +94,8 @@ The following arguments are supported for `self_managed_active_directory` config
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - Amazon Resource Name of the file system.
-* `dns_name` - DNS name for the file system, e.g. `fs-12345678.corp.example.com` (domain name matching the Active Directory domain name)
-* `id` - Identifier of the file system, e.g. `fs-12345678`
+* `dns_name` - DNS name for the file system, e.g., `fs-12345678.corp.example.com` (domain name matching the Active Directory domain name)
+* `id` - Identifier of the file system, e.g., `fs-12345678`
 * `network_interface_ids` - Set of Elastic Network Interface identifiers from which the file system is accessible.
 * `owner_id` - AWS account identifier that created the file system.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
@@ -114,13 +114,13 @@ configuration options:
 
 ## Import
 
-FSx File Systems can be imported using the `id`, e.g.
+FSx File Systems can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_fsx_windows_file_system.example fs-543ab12b1ca672f33
 ```
 
-Certain resource arguments, like `security_group_ids` and the `self_managed_active_directory` configuation block `password`, do not have a FSx API method for reading the information after creation. If these arguments are set in the Terraform configuration on an imported resource, Terraform will always show a difference. To workaround this behavior, either omit the argument from the Terraform configuration or use [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) to hide the difference, e.g.
+Certain resource arguments, like `security_group_ids` and the `self_managed_active_directory` configuation block `password`, do not have a FSx API method for reading the information after creation. If these arguments are set in the Terraform configuration on an imported resource, Terraform will always show a difference. To workaround this behavior, either omit the argument from the Terraform configuration or use [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) to hide the difference, e.g.,
 
 ```terraform
 resource "aws_fsx_windows_file_system" "example" {

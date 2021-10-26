@@ -42,7 +42,7 @@ The following arguments are supported:
 #### Arguments
 
 * `type` - (Required) Type of the IP address - `IPV4` or `IPV6`.
-* `value` - (Required) An IPv4 or IPv6 address specified via CIDR notation. e.g. `192.0.2.44/32` or `1111:0000:0000:0000:0000:0000:0000:0000/64`
+* `value` - (Required) An IPv4 or IPv6 address specified via CIDR notationE.g., `192.0.2.44/32` or `1111:0000:0000:0000:0000:0000:0000:0000/64`
 
 ## Attributes Reference
 
@@ -53,7 +53,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-WAF IPSets can be imported using their ID, e.g.
+WAF IPSets can be imported using their ID, e.g.,
 
 ```
 $ terraform import aws_waf_ipset.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc

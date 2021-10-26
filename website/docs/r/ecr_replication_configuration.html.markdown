@@ -80,7 +80,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-ECR Replication Configuration can be imported using the `registry_id`, e.g.
+ECR Replication Configuration can be imported using the `registry_id`, e.g.,
 
 ```
 $ terraform import aws_ecr_replication_configuration.service 012345678912

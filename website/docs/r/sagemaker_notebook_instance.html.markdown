@@ -81,7 +81,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Sagemaker Notebook Instances can be imported using the `name`, e.g.
+Sagemaker Notebook Instances can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_sagemaker_notebook_instance.test_notebook_instance my-notebook-instance

@@ -98,7 +98,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_appstream_fleet` can be imported using the id, e.g.
+`aws_appstream_fleet` can be imported using the id, e.g.,
 
 ```
 $ terraform import aws_appstream_fleet.example fleetNameExample

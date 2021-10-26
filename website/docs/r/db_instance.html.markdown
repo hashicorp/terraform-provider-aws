@@ -135,7 +135,7 @@ identifier beginning with the specified prefix. Conflicts with `identifier`.
 storage_type of "io1".
 * `kms_key_id` - (Optional) The ARN for the KMS encryption key. If creating an
 encrypted replica, set this to the destination KMS ARN.
-* `license_model` - (Optional, but required for some DB engines, i.e. Oracle
+* `license_model` - (Optional, but required for some DB engines, i.e., Oracle
 SE1) License model information for this DB instance.
 * `maintenance_window` - (Optional) The window to perform maintenance in.
 Syntax: "ddd:hh24:mi-ddd:hh24:mi". Eg: "Mon:00:00-Mon:03:00". See [RDS
@@ -306,7 +306,7 @@ On Oracle and Microsoft SQL instances the following is exported additionally:
 
 ## Import
 
-DB Instances can be imported using the `identifier`, e.g.
+DB Instances can be imported using the `identifier`, e.g.,
 
 ```
 $ terraform import aws_db_instance.default mydb-rds-instance
