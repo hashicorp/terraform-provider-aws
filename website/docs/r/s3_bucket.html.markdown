@@ -285,14 +285,16 @@ resource "aws_s3_bucket" "source" {
       destination {
         bucket        = aws_s3_bucket.destination.arn
         storage_class = "STANDARD"
+
         replication_time {
-          status = "Enabled"
+          status  = "Enabled"
           minutes = 15
         }
-      }
-      metrics {
-        status = "Enabled"
-        minutes = 15
+
+        metrics {
+          status  = "Enabled"
+          minutes = 15
+        }
       }
     }
   }
