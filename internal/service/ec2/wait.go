@@ -756,9 +756,26 @@ func WaitManagedPrefixListDeleted(conn *ec2.EC2, id string) (*ec2.ManagedPrefixL
 	return nil, err
 }
 
-// Hyperplane attached ENI.
-// Wait for it to be moved into a removable state.
+func WaitNetworkInterfaceAttached(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.NetworkInterfaceAttachment, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.AttachmentStatusAttaching},
+		Target:  []string{ec2.AttachmentStatusAttached},
+		Timeout: timeout,
+		Refresh: StatusNetworkInterfaceAttachmentStatus(conn, id),
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.NetworkInterfaceAttachment); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 func WaitNetworkInterfaceAvailableAfterUse(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.NetworkInterface, error) {
+	// Hyperplane attached ENI.
+	// Wait for it to be moved into a removable state.
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{ec2.NetworkInterfaceStatusInUse},
 		Target:     []string{ec2.NetworkInterfaceStatusAvailable},
@@ -791,6 +808,23 @@ func WaitNetworkInterfaceCreated(conn *ec2.EC2, id string, timeout time.Duration
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*ec2.NetworkInterface); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitNetworkInterfaceDetached(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.NetworkInterfaceAttachment, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.AttachmentStatusDetaching},
+		Target:  []string{ec2.AttachmentStatusDetached},
+		Timeout: timeout,
+		Refresh: StatusNetworkInterfaceAttachmentStatus(conn, id),
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.NetworkInterfaceAttachment); ok {
 		return output, err
 	}
 

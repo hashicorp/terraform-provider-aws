@@ -527,6 +527,22 @@ func StatusNetworkInterfaceStatus(conn *ec2.EC2, id string) resource.StateRefres
 	}
 }
 
+func StatusNetworkInterfaceAttachmentStatus(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindNetworkInterfaceAttachmentByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}
+
 func StatusPlacementGroupState(conn *ec2.EC2, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindPlacementGroupByName(conn, name)

@@ -236,11 +236,7 @@ func FindNetworkACLEntry(conn *ec2.EC2, networkAclID string, egress bool, ruleNu
 	return nil, nil
 }
 
-func FindNetworkInterfaceByID(conn *ec2.EC2, id string) (*ec2.NetworkInterface, error) {
-	input := &ec2.DescribeNetworkInterfacesInput{
-		NetworkInterfaceIds: aws.StringSlice([]string{id}),
-	}
-
+func FindNetworkInterface(conn *ec2.EC2, input *ec2.DescribeNetworkInterfacesInput) (*ec2.NetworkInterface, error) {
 	output, err := conn.DescribeNetworkInterfaces(input)
 
 	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidNetworkInterfaceIDNotFound) {
@@ -266,7 +262,19 @@ func FindNetworkInterfaceByID(conn *ec2.EC2, id string) (*ec2.NetworkInterface, 
 		return nil, tfresource.NewTooManyResultsError(count, input)
 	}
 
-	networkInterface := output.NetworkInterfaces[0]
+	return output.NetworkInterfaces[0], nil
+}
+
+func FindNetworkInterfaceByID(conn *ec2.EC2, id string) (*ec2.NetworkInterface, error) {
+	input := &ec2.DescribeNetworkInterfacesInput{
+		NetworkInterfaceIds: aws.StringSlice([]string{id}),
+	}
+
+	networkInterface, err := FindNetworkInterface(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
 
 	// Eventual consistency check.
 	if aws.StringValue(networkInterface.NetworkInterfaceId) != id {
@@ -276,6 +284,26 @@ func FindNetworkInterfaceByID(conn *ec2.EC2, id string) (*ec2.NetworkInterface, 
 	}
 
 	return networkInterface, nil
+}
+
+func FindNetworkInterfaceAttachmentByID(conn *ec2.EC2, id string) (*ec2.NetworkInterfaceAttachment, error) {
+	input := &ec2.DescribeNetworkInterfacesInput{
+		Filters: BuildAttributeFilterList(map[string]string{
+			"attachment.attachment-id": id,
+		}),
+	}
+
+	networkInterface, err := FindNetworkInterface(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if networkInterface.Attachment == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return networkInterface.Attachment, nil
 }
 
 func FindNetworkInterfaceSecurityGroup(conn *ec2.EC2, networkInterfaceID string, securityGroupID string) (*ec2.GroupIdentifier, error) {

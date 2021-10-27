@@ -1380,10 +1380,12 @@ func deleteLingeringLambdaENIs(conn *ec2.EC2, filterName, resourceId string, tim
 			eni = networkInterface
 		}
 
-		err = detachNetworkInterface(conn, eni, timeout)
+		if eni.Attachment != nil {
+			err = detachNetworkInterface(conn, eniId, aws.StringValue(eni.Attachment.AttachmentId), timeout)
 
-		if err != nil {
-			return fmt.Errorf("error detaching Lambda ENI (%s): %w", eniId, err)
+			if err != nil {
+				return fmt.Errorf("error detaching Lambda ENI (%s): %w", eniId, err)
+			}
 		}
 
 		err = deleteNetworkInterface(conn, eniId)

@@ -208,7 +208,7 @@ func resourceNetworkInterfaceCreate(d *schema.ResourceData, meta interface{}) er
 	if v, ok := d.GetOk("attachment"); ok && v.(*schema.Set).Len() > 0 {
 		attachment := v.(*schema.Set).List()[0].(map[string]interface{})
 
-		err := attachNetworkInterface(conn, d.Id(), attachment["instance"].(string), attachment["device_index"].(int))
+		err := attachNetworkInterface(conn, d.Id(), attachment["instance"].(string), attachment["device_index"].(int), 5*time.Minute)
 
 		if err != nil {
 			return err
@@ -321,54 +321,27 @@ func networkInterfaceAttachmentRefreshFunc(conn *ec2.EC2, id string) resource.St
 	}
 }
 
-func resourceNetworkInterfaceDetach(oa *schema.Set, meta interface{}, eniId string) error {
-	// if there was an old attachment, remove it
-	if oa != nil && len(oa.List()) > 0 {
-		old_attachment := oa.List()[0].(map[string]interface{})
-		detach_request := &ec2.DetachNetworkInterfaceInput{
-			AttachmentId: aws.String(old_attachment["attachment_id"].(string)),
-			Force:        aws.Bool(true),
-		}
-		conn := meta.(*conns.AWSClient).EC2Conn
-		_, detach_err := conn.DetachNetworkInterface(detach_request)
-		if detach_err != nil {
-			if !tfawserr.ErrMessageContains(detach_err, "InvalidAttachmentID.NotFound", "") {
-				return fmt.Errorf("Error detaching ENI: %s", detach_err)
-			}
-		}
-
-		log.Printf("[DEBUG] Waiting for ENI (%s) to become detached", eniId)
-		stateConf := &resource.StateChangeConf{
-			Pending: []string{"true"},
-			Target:  []string{"false"},
-			Refresh: networkInterfaceAttachmentRefreshFunc(conn, eniId),
-			Timeout: 10 * time.Minute,
-		}
-		if _, err := stateConf.WaitForState(); err != nil {
-			return fmt.Errorf(
-				"Error waiting for ENI (%s) to become detached: %s", eniId, err)
-		}
-	}
-
-	return nil
-}
-
 func resourceNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	if d.HasChange("attachment") {
 		oa, na := d.GetChange("attachment")
 
-		detach_err := resourceNetworkInterfaceDetach(oa.(*schema.Set), meta, d.Id())
-		if detach_err != nil {
-			return detach_err
+		if oa != nil && oa.(*schema.Set).Len() > 0 {
+			attachment := oa.(*schema.Set).List()[0].(map[string]interface{})
+
+			err := detachNetworkInterface(conn, d.Id(), attachment["attachment_id"].(string), 10*time.Minute)
+
+			if err != nil {
+				return err
+			}
 		}
 
 		// if there is a new attachment, attach it
 		if na != nil && na.(*schema.Set).Len() > 0 {
 			attachment := na.(*schema.Set).List()[0].(map[string]interface{})
 
-			err := attachNetworkInterface(conn, d.Id(), attachment["instance"].(string), attachment["device_index"].(int))
+			err := attachNetworkInterface(conn, d.Id(), attachment["instance"].(string), attachment["device_index"].(int), 5*time.Minute)
 
 			if err != nil {
 				return err
@@ -578,14 +551,20 @@ func resourceNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) er
 func resourceNetworkInterfaceDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	if err := resourceNetworkInterfaceDetach(d.Get("attachment").(*schema.Set), meta, d.Id()); err != nil {
-		return err
+	if v, ok := d.GetOk("attachment"); ok && v.(*schema.Set).Len() > 0 {
+		attachment := v.(*schema.Set).List()[0].(map[string]interface{})
+
+		err := detachNetworkInterface(conn, d.Id(), attachment["attachment_id"].(string), 10*time.Minute)
+
+		if err != nil {
+			return err
+		}
 	}
 
 	return deleteNetworkInterface(conn, d.Id())
 }
 
-func attachNetworkInterface(conn *ec2.EC2, networkInterfaceID, instanceID string, deviceIndex int) error {
+func attachNetworkInterface(conn *ec2.EC2, networkInterfaceID, instanceID string, deviceIndex int, timeout time.Duration) error {
 	input := &ec2.AttachNetworkInterfaceInput{
 		DeviceIndex:        aws.Int64(int64(deviceIndex)),
 		InstanceId:         aws.String(instanceID),
@@ -593,10 +572,18 @@ func attachNetworkInterface(conn *ec2.EC2, networkInterfaceID, instanceID string
 	}
 
 	log.Printf("[INFO] Attaching EC2 Network Interface: %s", input)
-	_, err := conn.AttachNetworkInterface(input)
+	output, err := conn.AttachNetworkInterface(input)
 
 	if err != nil {
 		return fmt.Errorf("error attaching EC2 Network Interface (%s/%s): %w", networkInterfaceID, instanceID, err)
+	}
+
+	attachmentID := aws.StringValue(output.AttachmentId)
+
+	_, err = WaitNetworkInterfaceAttached(conn, attachmentID, timeout)
+
+	if err != nil {
+		return fmt.Errorf("error waiting for EC2 Network Interface (%s/%s) attach: %w", networkInterfaceID, attachmentID, err)
 	}
 
 	return nil
@@ -619,88 +606,32 @@ func deleteNetworkInterface(conn *ec2.EC2, networkInterfaceID string) error {
 	return nil
 }
 
-func detachNetworkInterface(conn *ec2.EC2, eni *ec2.NetworkInterface, timeout time.Duration) error {
-	if eni == nil {
-		return nil
-	}
-
-	eniId := aws.StringValue(eni.NetworkInterfaceId)
-	if eni.Attachment == nil {
-		log.Printf("[DEBUG] ENI %s is already detached", eniId)
-		return nil
-	}
-
-	_, err := conn.DetachNetworkInterface(&ec2.DetachNetworkInterfaceInput{
-		AttachmentId: eni.Attachment.AttachmentId,
+func detachNetworkInterface(conn *ec2.EC2, networkInterfaceID, attachmentID string, timeout time.Duration) error {
+	input := &ec2.DetachNetworkInterfaceInput{
+		AttachmentId: aws.String(attachmentID),
 		Force:        aws.Bool(true),
-	})
+	}
 
-	if tfawserr.ErrMessageContains(err, "InvalidAttachmentID.NotFound", "") {
+	log.Printf("[INFO] Detaching EC2 Network Interface: %s", input)
+	_, err := conn.DetachNetworkInterface(input)
+
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidAttachmentIDNotFound) {
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error detaching ENI (%s): %s", eniId, err)
+		return fmt.Errorf("error detaching EC2 Network Interface (%s/%s): %w", networkInterfaceID, attachmentID, err)
 	}
 
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			ec2.AttachmentStatusAttaching,
-			ec2.AttachmentStatusAttached,
-			ec2.AttachmentStatusDetaching,
-		},
-		Target: []string{
-			ec2.AttachmentStatusDetached,
-		},
-		Refresh:        networkInterfaceAttachmentStateRefresh(conn, eniId),
-		Timeout:        timeout,
-		Delay:          10 * time.Second,
-		MinTimeout:     5 * time.Second,
-		NotFoundChecks: 1,
-	}
-
-	log.Printf("[DEBUG] Waiting for ENI (%s) to become detached", eniId)
-	_, err = stateConf.WaitForState()
+	_, err = WaitNetworkInterfaceDetached(conn, attachmentID, timeout)
 
 	if tfresource.NotFound(err) {
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error waiting for ENI (%s) to become detached: %s", eniId, err)
+		return fmt.Errorf("error waiting for EC2 Network Interface (%s/%s) detach: %w", networkInterfaceID, attachmentID, err)
 	}
 
 	return nil
-}
-
-func networkInterfaceAttachmentStateRefresh(conn *ec2.EC2, eniId string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		resp, err := conn.DescribeNetworkInterfaces(&ec2.DescribeNetworkInterfacesInput{
-			NetworkInterfaceIds: aws.StringSlice([]string{eniId}),
-		})
-
-		if tfawserr.ErrMessageContains(err, "InvalidNetworkInterfaceID.NotFound", "") {
-			return nil, ec2.AttachmentStatusDetached, nil
-		}
-
-		if err != nil {
-			return nil, "", fmt.Errorf("error describing ENI (%s): %s", eniId, err)
-		}
-
-		n := len(resp.NetworkInterfaces)
-		switch n {
-		case 0:
-			return nil, ec2.AttachmentStatusDetached, nil
-
-		case 1:
-			attachment := resp.NetworkInterfaces[0].Attachment
-			if attachment == nil {
-				return nil, ec2.AttachmentStatusDetached, nil
-			}
-			return attachment, aws.StringValue(attachment.Status), nil
-
-		default:
-			return nil, "", fmt.Errorf("found %d ENIs for %s, expected 1", n, eniId)
-		}
-	}
 }
