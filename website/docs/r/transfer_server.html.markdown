@@ -50,7 +50,7 @@ resource "aws_transfer_server" "example" {
 
 ```terraform
 resource "aws_transfer_server" "example" {
-  identity_provider_type = AWS_DIRECTORY_SERVICE
+  identity_provider_type = "AWS_DIRECTORY_SERVICE"
   directory_id           = aws_directory_service_directory.example.id
 }
 ```
