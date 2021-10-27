@@ -5,8 +5,6 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -78,28 +76,25 @@ func DataSourceSlotType() *schema.Resource {
 }
 
 func dataSourceSlotTypeRead(d *schema.ResourceData, meta interface{}) error {
-	slotTypeName := d.Get("name").(string)
-
 	conn := meta.(*conns.AWSClient).LexModelBuildingConn
 
-	resp, err := conn.GetSlotType(&lexmodelbuildingservice.GetSlotTypeInput{
-		Name:    aws.String(slotTypeName),
-		Version: aws.String(d.Get("version").(string)),
-	})
+	name := d.Get("name").(string)
+	version := d.Get("version").(string)
+	output, err := FindSlotTypeVersionByName(conn, name, version)
+
 	if err != nil {
-		return fmt.Errorf("error getting slot type %s: %w", slotTypeName, err)
+		return fmt.Errorf("error reading Lex Slot Type (%s/%s): %w", name, version, err)
 	}
 
-	d.Set("checksum", resp.Checksum)
-	d.Set("created_date", resp.CreatedDate.Format(time.RFC3339))
-	d.Set("description", resp.Description)
-	d.Set("enumeration_value", flattenLexEnumerationValues(resp.EnumerationValues))
-	d.Set("last_updated_date", resp.LastUpdatedDate.Format(time.RFC3339))
-	d.Set("name", resp.Name)
-	d.Set("value_selection_strategy", resp.ValueSelectionStrategy)
-	d.Set("version", resp.Version)
-
-	d.SetId(slotTypeName)
+	d.SetId(name)
+	d.Set("checksum", output.Checksum)
+	d.Set("created_date", output.CreatedDate.Format(time.RFC3339))
+	d.Set("description", output.Description)
+	d.Set("enumeration_value", flattenLexEnumerationValues(output.EnumerationValues))
+	d.Set("last_updated_date", output.LastUpdatedDate.Format(time.RFC3339))
+	d.Set("name", output.Name)
+	d.Set("value_selection_strategy", output.ValueSelectionStrategy)
+	d.Set("version", output.Version)
 
 	return nil
 }

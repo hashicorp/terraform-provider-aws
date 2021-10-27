@@ -22,7 +22,6 @@ const (
 	LexSlotTypeCreateTimeout = 1 * time.Minute
 	LexSlotTypeUpdateTimeout = 1 * time.Minute
 	LexSlotTypeDeleteTimeout = 5 * time.Minute
-	SlotTypeVersionLatest    = "$LATEST"
 )
 
 func ResourceSlotType() *schema.Resource {

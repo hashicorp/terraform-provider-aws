@@ -36,6 +36,32 @@ func FindBotVersionByName(conn *lexmodelbuildingservice.LexModelBuildingService,
 	return output, nil
 }
 
+func FindSlotTypeVersionByName(conn *lexmodelbuildingservice.LexModelBuildingService, name, version string) (*lexmodelbuildingservice.GetSlotTypeOutput, error) {
+	input := &lexmodelbuildingservice.GetSlotTypeInput{
+		Name:    aws.String(name),
+		Version: aws.String(version),
+	}
+
+	output, err := conn.GetSlotType(input)
+
+	if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
 // FindLatestBotVersionByName returns the latest published version of a bot or $LATEST if the bot has never been published.
 // See https://docs.aws.amazon.com/lex/latest/dg/versioning-aliases.html.
 func FindLatestBotVersionByName(conn *lexmodelbuildingservice.LexModelBuildingService, name string) (string, error) {
