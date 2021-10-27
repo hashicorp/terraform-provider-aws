@@ -528,17 +528,6 @@ func ResourceGroup() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"instance_warmup": {
-										Type:         nullable.TypeNullableInt,
-										Optional:     true,
-										ValidateFunc: nullable.ValidateTypeStringNullableIntAtLeast(0),
-									},
-									"min_healthy_percentage": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										Default:      90,
-										ValidateFunc: validation.IntBetween(0, 100),
-									},
 									"checkpoint_delay": {
 										Type:         nullable.TypeNullableInt,
 										Optional:     true,
@@ -550,6 +539,17 @@ func ResourceGroup() *schema.Resource {
 										Elem: &schema.Schema{
 											Type: schema.TypeInt,
 										},
+									},
+									"instance_warmup": {
+										Type:         nullable.TypeNullableInt,
+										Optional:     true,
+										ValidateFunc: nullable.ValidateTypeStringNullableIntAtLeast(0),
+									},
+									"min_healthy_percentage": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										Default:      90,
+										ValidateFunc: validation.IntBetween(0, 100),
 									},
 								},
 							},
@@ -2211,16 +2211,6 @@ func expandAutoScalingGroupInstanceRefreshPreferences(l []interface{}) *autoscal
 
 	refreshPreferences := &autoscaling.RefreshPreferences{}
 
-	if v, ok := m["instance_warmup"]; ok {
-		if v, null, _ := nullable.Int(v.(string)).Value(); !null {
-			refreshPreferences.InstanceWarmup = aws.Int64(v)
-		}
-	}
-
-	if v, ok := m["min_healthy_percentage"]; ok {
-		refreshPreferences.MinHealthyPercentage = aws.Int64(int64(v.(int)))
-	}
-
 	if v, ok := m["checkpoint_delay"]; ok {
 		if v, null, _ := nullable.Int(v.(string)).Value(); !null {
 			refreshPreferences.CheckpointDelay = aws.Int64(v)
@@ -2234,6 +2224,16 @@ func expandAutoScalingGroupInstanceRefreshPreferences(l []interface{}) *autoscal
 			p[i] = aws.Int64(int64(v.(int)))
 		}
 		refreshPreferences.CheckpointPercentages = p
+	}
+
+	if v, ok := m["instance_warmup"]; ok {
+		if v, null, _ := nullable.Int(v.(string)).Value(); !null {
+			refreshPreferences.InstanceWarmup = aws.Int64(v)
+		}
+	}
+
+	if v, ok := m["min_healthy_percentage"]; ok {
+		refreshPreferences.MinHealthyPercentage = aws.Int64(int64(v.(int)))
 	}
 
 	return refreshPreferences
