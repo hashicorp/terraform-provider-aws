@@ -1,3 +1,4 @@
+name: Autoremove Labels
 on:
   issues:
     types: [closed]

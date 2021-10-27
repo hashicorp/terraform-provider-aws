@@ -78,7 +78,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-VPCs can be imported using the `vpc id`, e.g.
+VPCs can be imported using the `vpc id`, e.g.,
 
 ```
 $ terraform import aws_vpc.test_vpc vpc-a01106c2

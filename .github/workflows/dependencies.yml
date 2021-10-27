@@ -20,7 +20,7 @@ jobs:
         with:
           filters: |
             changed:
-              - awsproviderlint/**
+              - providerlint/**
               - go.mod
               - go.sum
   comment:

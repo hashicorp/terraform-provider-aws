@@ -54,9 +54,9 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - Amazon Resource Name of the file system.
-* `dns_name` - DNS name for the file system, e.g. `fs-12345678.fsx.us-west-2.amazonaws.com`
+* `dns_name` - DNS name for the file system, e.g., `fs-12345678.fsx.us-west-2.amazonaws.com`
 * `endpoints` - The endpoints that are used to access data or to manage the file system using the NetApp ONTAP CLI, REST API, or NetApp SnapMirror. See [Endpoints](#endpoints) below.
-* `id` - Identifier of the file system, e.g. `fs-12345678`
+* `id` - Identifier of the file system, e.g., `fs-12345678`
 * `network_interface_ids` - Set of Elastic Network Interface identifiers from which the file system is accessible The first network interface returned is the primary network interface.
 * `owner_id` - AWS account identifier that created the file system.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
@@ -83,13 +83,13 @@ configuration options:
 
 ## Import
 
-FSx File Systems can be imported using the `id`, e.g.
+FSx File Systems can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_fsx_ontap_file_system.example fs-543ab12b1ca672f33
 ```
 
-Certain resource arguments, like `security_group_ids`, do not have a FSx API method for reading the information after creation. If the argument is set in the Terraform configuration on an imported resource, Terraform will always show a difference. To workaround this behavior, either omit the argument from the Terraform configuration or use [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) to hide the difference, e.g.
+Certain resource arguments, like `security_group_ids`, do not have a FSx API method for reading the information after creation. If the argument is set in the Terraform configuration on an imported resource, Terraform will always show a difference. To workaround this behavior, either omit the argument from the Terraform configuration or use [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) to hide the difference, e.g.,
 
 ```terraform
 resource "aws_fsx_ontap_file_system" "example" {

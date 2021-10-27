@@ -198,7 +198,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-AWS Batch compute can be imported using the `compute_environment_name`, e.g.
+AWS Batch compute can be imported using the `compute_environment_name`, e.g.,
 
 ```
 $ terraform import aws_batch_compute_environment.sample sample

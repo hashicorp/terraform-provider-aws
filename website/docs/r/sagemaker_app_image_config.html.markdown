@@ -78,7 +78,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Sagemaker App Image Configs can be imported using the `name`, e.g.
+Sagemaker App Image Configs can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_sagemaker_app_image_config.example example

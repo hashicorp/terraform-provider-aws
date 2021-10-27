@@ -110,7 +110,7 @@ valid results. Wait for an `AVAILABLE` status before performing operations.
 
 ## Import
 
-`aws_servicecatalog_provisioned_product` can be imported using the provisioned product ID, e.g.
+`aws_servicecatalog_provisioned_product` can be imported using the provisioned product ID, e.g.,
 
 ```
 $ terraform import aws_servicecatalog_provisioned_product.example pp-dnigbtea24ste

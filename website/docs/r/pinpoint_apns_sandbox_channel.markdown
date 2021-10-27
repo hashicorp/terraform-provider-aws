@@ -58,7 +58,7 @@ No additional attributes are exported.
 
 ## Import
 
-Pinpoint APNs Sandbox Channel can be imported using the `application-id`, e.g.
+Pinpoint APNs Sandbox Channel can be imported using the `application-id`, e.g.,
 
 ```
 $ terraform import aws_pinpoint_apns_sandbox_channel.apns_sandbox application-id

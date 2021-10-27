@@ -319,7 +319,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Lambda Functions can be imported using the `function_name`, e.g.
+Lambda Functions can be imported using the `function_name`, e.g.,
 
 ```
 $ terraform import aws_lambda_function.test_lambda my_test_lambda_function

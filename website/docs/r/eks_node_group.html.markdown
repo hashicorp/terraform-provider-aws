@@ -41,7 +41,7 @@ resource "aws_eks_node_group" "example" {
 
 ### Ignoring Changes to Desired Size
 
-You can utilize the generic Terraform resource [lifecycle configuration block](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html) with `ignore_changes` to create an EKS Node Group with an initial size of running instances, then ignore any changes to that count caused externally (e.g. Application Autoscaling).
+You can utilize the generic Terraform resource [lifecycle configuration block](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html) with `ignore_changes` to create an EKS Node Group with an initial size of running instances, then ignore any changes to that count caused externally (e.g., Application Autoscaling).
 
 ```terraform
 resource "aws_eks_node_group" "example" {
@@ -147,7 +147,7 @@ The following arguments are optional:
 
 * `id` - (Optional) Identifier of the EC2 Launch Template. Conflicts with `name`.
 * `name` - (Optional) Name of the EC2 Launch Template. Conflicts with `id`.
-* `version` - (Required) EC2 Launch Template version number. While the API accepts values like `$Default` and `$Latest`, the API will convert the value to the associated version number (e.g. `1`) on read and Terraform will show a difference on next plan. Using the `default_version` or `latest_version` attribute of the `aws_launch_template` resource or data source is recommended for this argument.
+* `version` - (Required) EC2 Launch Template version number. While the API accepts values like `$Default` and `$Latest`, the API will convert the value to the associated version number (e.g., `1`) on read and Terraform will show a difference on next plan. Using the `default_version` or `latest_version` attribute of the `aws_launch_template` resource or data source is recommended for this argument.
 
 ### remote_access Configuration Block
 
@@ -197,7 +197,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-EKS Node Groups can be imported using the `cluster_name` and `node_group_name` separated by a colon (`:`), e.g.
+EKS Node Groups can be imported using the `cluster_name` and `node_group_name` separated by a colon (`:`), e.g.,
 
 ```
 $ terraform import aws_eks_node_group.my_node_group my_cluster:my_node_group

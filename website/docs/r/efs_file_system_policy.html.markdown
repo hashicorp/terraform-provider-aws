@@ -62,11 +62,11 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The ID that identifies the file system (e.g. fs-ccfc0d65).
+* `id` - The ID that identifies the file system (e.g., fs-ccfc0d65).
 
 ## Import
 
-The EFS file system policies can be imported using the `id`, e.g.
+The EFS file system policies can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_efs_file_system_policy.foo fs-6fa144c6

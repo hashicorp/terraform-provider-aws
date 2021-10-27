@@ -13,8 +13,8 @@ Provides an EC2 Host resource. This allows Dedicated Hosts to be allocated, modi
 ## Example Usage
 
 ```terraform
-# Create a new host with instance type of c5.18xlarge with Auto Placement 
-# and Host Recovery enabled. 
+# Create a new host with instance type of c5.18xlarge with Auto Placement
+# and Host Recovery enabled.
 resource "aws_ec2_host" "test" {
   instance_type     = "c5.18xlarge"
   availability_zone = "us-west-2a"
@@ -45,7 +45,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Hosts can be imported using the host `id`, e.g.
+Hosts can be imported using the host `id`, e.g.,
 
 ```
 $ terraform import aws_ec2_host.example h-0385a99d0e4b20cbb

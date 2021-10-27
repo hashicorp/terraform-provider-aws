@@ -126,7 +126,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_appsync_resolver` can be imported with their `api_id`, a hyphen, `type`, a hypen and `field` e.g.
+`aws_appsync_resolver` can be imported with their `api_id`, a hyphen, `type`, a hypen and `field` e.g.,
 
 ```
 $ terraform import aws_appsync_resolver.example abcdef123456-exampleType-exampleField
