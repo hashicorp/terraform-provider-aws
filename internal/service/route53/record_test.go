@@ -98,6 +98,10 @@ func TestParseRecordId(t *testing.T) {
 		{"ABCDEF_under_score.example.com_A_set1", "ABCDEF", "under_score.example.com", "A", "set1"},
 		{"ABCDEF_under_score.example.com_A_set_with1", "ABCDEF", "under_score.example.com", "A", "set_with1"},
 		{"ABCDEF_under_score.example.com_A_set_with_1", "ABCDEF", "under_score.example.com", "A", "set_with_1"},
+		{"ABCDEF__under_score.example.com_A", "ABCDEF", "_under_score.example.com", "A", ""},
+		{"ABCDEF__under_score.example.com_A_set1", "ABCDEF", "_under_score.example.com", "A", "set1"},
+		{"ABCDEF__under_score.example.com_A_set_with1", "ABCDEF", "_under_score.example.com", "A", "set_with1"},
+		{"ABCDEF__under_score.example.com_A_set_with_1", "ABCDEF", "_under_score.example.com", "A", "set_with_1"},
 	}
 
 	for _, tc := range cases {

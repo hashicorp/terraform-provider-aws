@@ -28,9 +28,11 @@ const (
 )
 
 var (
-	r53NoRecordsFound    = errors.New("No matching records found")
-	r53NoHostedZoneFound = errors.New("No matching Hosted Zone found")
-	r53ValidRecordTypes  = regexp.MustCompile("^(A|AAAA|CAA|CNAME|MX|NAPTR|NS|PTR|SOA|SPF|SRV|TXT|DS)$")
+	r53NoRecordsFound       = errors.New("No matching records found")
+	r53NoHostedZoneFound    = errors.New("No matching Hosted Zone found")
+	r53ValidRecordTypesList = "(A|AAAA|CAA|CNAME|MX|NAPTR|NS|PTR|SOA|SPF|SRV|TXT|DS)"
+	r53ValidRecordTypesFind = regexp.MustCompile(fmt.Sprintf("_%s_?", r53ValidRecordTypesList))
+	r53ValidRecordTypes     = regexp.MustCompile(fmt.Sprintf("^%s$", r53ValidRecordTypesList))
 )
 
 func ResourceRecord() *schema.Resource {
@@ -976,21 +978,14 @@ func NormalizeAliasName(alias interface{}) string {
 func ParseRecordID(id string) [4]string {
 	var recZone, recType, recName, recSet string
 	parts := strings.SplitN(id, "_", 2)
-	if len(parts) == 2 {
-		recZone = parts[0]
-		firstUnderscore := strings.Index(parts[1][:], "_")
-		// Handles the case of having a DNS name that starts with _
-		if firstUnderscore == 0 {
-			firstUnderscore = strings.Index(parts[1][1:], "_") + 1
-		}
-		recName, recType = parts[1][0:firstUnderscore], parts[1][firstUnderscore+1:]
-		if !r53ValidRecordTypes.MatchString(recType) {
-			firstUnderscore = strings.Index(recType, "_")
-			if firstUnderscore != -1 {
-				recType, recSet = recType[0:firstUnderscore], recType[firstUnderscore+1:]
-			}
-		}
-	}
+	recZone = parts[0]
+	// find recType pefixed with an underscore and optionally suffixed by one
+	recType = r53ValidRecordTypesFind.FindString(parts[1])
+	split := strings.Split(parts[1], recType)
+	recName, recSet = split[0], split[1]
+
+	recType = strings.TrimSuffix(recType, "_")
 	recName = strings.TrimSuffix(recName, ".")
+	recType = strings.TrimPrefix(recType, "_")
 	return [4]string{recZone, recName, recType, recSet}
 }
