@@ -4488,8 +4488,8 @@ resource "aws_autoscaling_group" "test" {
     preferences {
       instance_warmup        = 10
       min_healthy_percentage = 50
-			checkpoint_delay       = 25
-			checkpoint_percentages = [1, 20, 25, 50, 100]
+      checkpoint_delay       = 25
+      checkpoint_percentages = [1, 20, 25, 50, 100]
     }
   }
 }
