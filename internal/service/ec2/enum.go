@@ -35,3 +35,8 @@ const (
 	EBSSnapshotImportStateConverting = "converting"
 	EBSSnapshotImportStateCompleted  = "completed"
 )
+
+// See https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_CreateNetworkInterface.html#API_CreateNetworkInterface_Example_2_Response
+const (
+	NetworkInterfaceStatusPending = "pending"
+)

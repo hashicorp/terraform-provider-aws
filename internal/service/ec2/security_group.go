@@ -1367,25 +1367,7 @@ func deleteLingeringLambdaENIs(conn *ec2.EC2, filterName, resourceId string, tim
 		eniId := aws.StringValue(eni.NetworkInterfaceId)
 
 		if eni.Attachment != nil && aws.StringValue(eni.Attachment.InstanceOwnerId) == "amazon-aws" {
-			// Hyperplane attached ENI.
-			// Wait for it to be moved into a removable state.
-			stateConf := &resource.StateChangeConf{
-				Pending: []string{
-					ec2.NetworkInterfaceStatusInUse,
-				},
-				Target: []string{
-					ec2.NetworkInterfaceStatusAvailable,
-				},
-				Refresh:    networkInterfaceStateRefresh(conn, eniId),
-				Timeout:    timeout,
-				Delay:      10 * time.Second,
-				MinTimeout: 10 * time.Second,
-				// Handle EC2 ENI eventual consistency. It can take up to 3 minutes.
-				ContinuousTargetOccurence: 18,
-				NotFoundChecks:            1,
-			}
-
-			eniRaw, err := stateConf.WaitForState()
+			networkInterface, err := WaitNetworkInterfaceAvailableAfterUse(conn, eniId, timeout)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -1395,7 +1377,7 @@ func deleteLingeringLambdaENIs(conn *ec2.EC2, filterName, resourceId string, tim
 				return fmt.Errorf("error waiting for Lambda V2N ENI (%s) to become available for detachment: %w", eniId, err)
 			}
 
-			eni = eniRaw.(*ec2.NetworkInterface)
+			eni = networkInterface
 		}
 
 		err = detachNetworkInterface(conn, eni, timeout)

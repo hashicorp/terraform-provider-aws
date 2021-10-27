@@ -42,13 +42,13 @@ func ResourceNetworkInterface() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"device_index": {
-							Type:     schema.TypeInt,
-							Required: true,
-						},
 						"attachment_id": {
 							Type:     schema.TypeString,
 							Computed: true,
+						},
+						"device_index": {
+							Type:     schema.TypeInt,
+							Required: true,
 						},
 						"instance": {
 							Type:     schema.TypeString,
@@ -141,80 +141,77 @@ func ResourceNetworkInterface() *schema.Resource {
 }
 
 func resourceNetworkInterfaceCreate(d *schema.ResourceData, meta interface{}) error {
-
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	request := &ec2.CreateNetworkInterfaceInput{
+	input := &ec2.CreateNetworkInterfaceInput{
 		SubnetId:          aws.String(d.Get("subnet_id").(string)),
 		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeNetworkInterface),
 	}
 
-	if v, ok := d.GetOk("security_groups"); ok && v.(*schema.Set).Len() > 0 {
-		request.Groups = flex.ExpandStringSet(v.(*schema.Set))
-	}
-
-	if v, ok := d.GetOk("private_ips"); ok && v.(*schema.Set).Len() > 0 {
-		request.PrivateIpAddresses = ExpandPrivateIPAddresses(v.(*schema.Set).List())
-	}
-
 	if v, ok := d.GetOk("description"); ok {
-		request.Description = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("private_ips_count"); ok {
-		request.SecondaryPrivateIpAddressCount = aws.Int64(int64(v.(int)))
-	}
-
-	if v, ok := d.GetOk("ipv6_address_count"); ok {
-		request.Ipv6AddressCount = aws.Int64(int64(v.(int)))
-	}
-
-	if v, ok := d.GetOk("ipv6_addresses"); ok && v.(*schema.Set).Len() > 0 {
-		request.Ipv6Addresses = expandIP6Addresses(v.(*schema.Set).List())
+		input.Description = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("interface_type"); ok {
-		request.InterfaceType = aws.String(v.(string))
+		input.InterfaceType = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating network interface")
-	resp, err := conn.CreateNetworkInterface(request)
+	if v, ok := d.GetOk("ipv6_address_count"); ok {
+		input.Ipv6AddressCount = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("ipv6_addresses"); ok && v.(*schema.Set).Len() > 0 {
+		input.Ipv6Addresses = expandIP6Addresses(v.(*schema.Set).List())
+	}
+
+	if v, ok := d.GetOk("private_ips"); ok && v.(*schema.Set).Len() > 0 {
+		input.PrivateIpAddresses = ExpandPrivateIPAddresses(v.(*schema.Set).List())
+	}
+
+	if v, ok := d.GetOk("private_ips_count"); ok {
+		input.SecondaryPrivateIpAddressCount = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("security_groups"); ok && v.(*schema.Set).Len() > 0 {
+		input.Groups = flex.ExpandStringSet(v.(*schema.Set))
+	}
+
+	log.Printf("[DEBUG] Creating EC2 Network Interface: %s", input)
+	output, err := conn.CreateNetworkInterface(input)
+
 	if err != nil {
-		return fmt.Errorf("Error creating ENI: %s", err)
+		return fmt.Errorf("error creating EC2 Network Interface: %w", err)
 	}
 
-	d.SetId(aws.StringValue(resp.NetworkInterface.NetworkInterfaceId))
+	d.SetId(aws.StringValue(output.NetworkInterface.NetworkInterfaceId))
 
-	if err := waitForNetworkInterfaceCreation(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("error waiting for Network Interface (%s) creation: %s", d.Id(), err)
+	if _, err := WaitNetworkInterfaceCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return fmt.Errorf("error waiting for EC2 Network Interface (%s) create: %w", d.Id(), err)
 	}
 
 	//Default value is enabled
 	if !d.Get("source_dest_check").(bool) {
-		request := &ec2.ModifyNetworkInterfaceAttributeInput{
+		input := &ec2.ModifyNetworkInterfaceAttributeInput{
 			NetworkInterfaceId: aws.String(d.Id()),
 			SourceDestCheck:    &ec2.AttributeBooleanValue{Value: aws.Bool(false)},
 		}
 
-		_, err := conn.ModifyNetworkInterfaceAttribute(request)
+		_, err := conn.ModifyNetworkInterfaceAttribute(input)
+
 		if err != nil {
-			return fmt.Errorf("Failure updating SourceDestCheck: %s", err)
+			return fmt.Errorf("error setting EC2 Network Interface (%s) SourceDestCheck: %w", d.Id(), err)
 		}
 	}
 
 	if v, ok := d.GetOk("attachment"); ok && v.(*schema.Set).Len() > 0 {
 		attachment := v.(*schema.Set).List()[0].(map[string]interface{})
-		di := attachment["device_index"].(int)
-		attachReq := &ec2.AttachNetworkInterfaceInput{
-			DeviceIndex:        aws.Int64(int64(di)),
-			InstanceId:         aws.String(attachment["instance"].(string)),
-			NetworkInterfaceId: aws.String(d.Id()),
-		}
-		_, err := conn.AttachNetworkInterface(attachReq)
+
+		err := attachNetworkInterface(conn, d.Id(), attachment["instance"].(string), attachment["device_index"].(int))
+
 		if err != nil {
-			return fmt.Errorf("Error attaching ENI: %s", err)
+			return err
 		}
 	}
 
@@ -371,17 +368,13 @@ func resourceNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 
 		// if there is a new attachment, attach it
-		if na != nil && len(na.(*schema.Set).List()) > 0 {
-			new_attachment := na.(*schema.Set).List()[0].(map[string]interface{})
-			di := new_attachment["device_index"].(int)
-			attach_request := &ec2.AttachNetworkInterfaceInput{
-				DeviceIndex:        aws.Int64(int64(di)),
-				InstanceId:         aws.String(new_attachment["instance"].(string)),
-				NetworkInterfaceId: aws.String(d.Id()),
-			}
-			_, attach_err := conn.AttachNetworkInterface(attach_request)
-			if attach_err != nil {
-				return fmt.Errorf("Error attaching ENI: %s", attach_err)
+		if na != nil && na.(*schema.Set).Len() > 0 {
+			attachment := na.(*schema.Set).List()[0].(map[string]interface{})
+
+			err := attachNetworkInterface(conn, d.Id(), attachment["instance"].(string), attachment["device_index"].(int))
+
+			if err != nil {
+				return err
 			}
 		}
 	}
@@ -595,6 +588,23 @@ func resourceNetworkInterfaceDelete(d *schema.ResourceData, meta interface{}) er
 	return deleteNetworkInterface(conn, d.Id())
 }
 
+func attachNetworkInterface(conn *ec2.EC2, networkInterfaceID, instanceID string, deviceIndex int) error {
+	input := &ec2.AttachNetworkInterfaceInput{
+		DeviceIndex:        aws.Int64(int64(deviceIndex)),
+		InstanceId:         aws.String(instanceID),
+		NetworkInterfaceId: aws.String(networkInterfaceID),
+	}
+
+	log.Printf("[INFO] Attaching EC2 Network Interface: %s", input)
+	_, err := conn.AttachNetworkInterface(input)
+
+	if err != nil {
+		return fmt.Errorf("error attaching EC2 Network Interface (%s/%s): %w", networkInterfaceID, instanceID, err)
+	}
+
+	return nil
+}
+
 func deleteNetworkInterface(conn *ec2.EC2, networkInterfaceID string) error {
 	log.Printf("[INFO] Deleting EC2 Network Interface: %s", networkInterfaceID)
 	_, err := conn.DeleteNetworkInterface(&ec2.DeleteNetworkInterfaceInput{
@@ -696,47 +706,4 @@ func networkInterfaceAttachmentStateRefresh(conn *ec2.EC2, eniId string) resourc
 			return nil, "", fmt.Errorf("found %d ENIs for %s, expected 1", n, eniId)
 		}
 	}
-}
-
-func networkInterfaceStateRefresh(conn *ec2.EC2, eniId string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		resp, err := conn.DescribeNetworkInterfaces(&ec2.DescribeNetworkInterfacesInput{
-			NetworkInterfaceIds: aws.StringSlice([]string{eniId}),
-		})
-
-		if tfawserr.ErrMessageContains(err, "InvalidNetworkInterfaceID.NotFound", "") {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", fmt.Errorf("error describing ENI (%s): %s", eniId, err)
-		}
-
-		n := len(resp.NetworkInterfaces)
-		switch n {
-		case 0:
-			return nil, "", nil
-
-		case 1:
-			eni := resp.NetworkInterfaces[0]
-			return eni, aws.StringValue(eni.Status), nil
-
-		default:
-			return nil, "", fmt.Errorf("found %d ENIs for %s, expected 1", n, eniId)
-		}
-	}
-}
-
-func waitForNetworkInterfaceCreation(conn *ec2.EC2, id string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{"pending"},
-		Target:  []string{ec2.NetworkInterfaceStatusAvailable},
-		Refresh: networkInterfaceStateRefresh(conn, id),
-		Timeout: timeout,
-		Delay:   30 * time.Second,
-	}
-
-	_, err := stateConf.WaitForState()
-
-	return err
 }
