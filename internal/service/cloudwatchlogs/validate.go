@@ -32,6 +32,6 @@ var validLogMetricFilterName = validation.All(
 
 // http://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_MetricTransformation.html
 var validLogMetricFilterTransformationName = validation.All(
-	validation.StringLenBetween(1, 255),
-	validation.StringMatch(regexp.MustCompile(`^[^:*]+$`), "must not contain a colon, an asterisk or a dollar sign"),
+	validation.StringLenBetween(0, 255),
+	validation.StringMatch(regexp.MustCompile(`^[^:*$]*$`), "must not contain a colon, an asterisk or a dollar sign"),
 )
