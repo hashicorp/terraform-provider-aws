@@ -98,16 +98,16 @@ func waitLexIntentDeleted(conn *lexmodelbuildingservice.LexModelBuildingService,
 	return nil, err
 }
 
-func waitLexSlotTypeDeleted(conn *lexmodelbuildingservice.LexModelBuildingService, slotTypeId string) (*lexmodelbuildingservice.GetSlotTypeVersionsOutput, error) {
+func waitLexSlotTypeDeleted(conn *lexmodelbuildingservice.LexModelBuildingService, name string) (*lexmodelbuildingservice.GetSlotTypeOutput, error) {
 	stateChangeConf := &resource.StateChangeConf{
 		Pending: []string{lexModelBuildingServiceStatusCreated},
-		Target:  []string{}, // An empty slice indicates that the resource is gone
-		Refresh: statusLexSlotType(conn, slotTypeId),
+		Target:  []string{},
+		Refresh: statusLexSlotType(conn, name, SlotTypeVersionLatest),
 		Timeout: lexSlotTypeDeletedTimeout,
 	}
 	outputRaw, err := stateChangeConf.WaitForState()
 
-	if v, ok := outputRaw.(*lexmodelbuildingservice.GetSlotTypeVersionsOutput); ok {
+	if v, ok := outputRaw.(*lexmodelbuildingservice.GetSlotTypeOutput); ok {
 		return v, err
 	}
 
