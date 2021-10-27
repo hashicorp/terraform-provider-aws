@@ -223,26 +223,21 @@ func resourceNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) erro
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	describe_network_interfaces_request := &ec2.DescribeNetworkInterfacesInput{
-		NetworkInterfaceIds: []*string{aws.String(d.Id())},
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(1*time.Minute, func() (interface{}, error) {
+		return FindNetworkInterfaceByID(conn, d.Id())
+	}, d.IsNewResource())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] EC2 Network Interface (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
-	describeResp, err := conn.DescribeNetworkInterfaces(describe_network_interfaces_request)
 
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, "InvalidNetworkInterfaceID.NotFound", "") {
-			// The ENI is gone now, so just remove it from the state
-			log.Printf("[WARN] EC2 Network Interface (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-
-		return fmt.Errorf("Error retrieving ENI: %s", err)
-	}
-	if len(describeResp.NetworkInterfaces) != 1 {
-		return fmt.Errorf("Unable to find ENI: %#v", describeResp.NetworkInterfaces)
+		return fmt.Errorf("error reading EC2 Network Interface (%s): %w", d.Id(), err)
 	}
 
-	eni := describeResp.NetworkInterfaces[0]
+	eni := outputRaw.(*ec2.NetworkInterface)
 
 	attachment := []map[string]interface{}{}
 
@@ -251,7 +246,7 @@ func resourceNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if err := d.Set("attachment", attachment); err != nil {
-		return fmt.Errorf("error setting attachment: %s", err)
+		return fmt.Errorf("error setting attachment: %w", err)
 	}
 
 	ownerID := aws.StringValue(eni.OwnerId)
@@ -263,32 +258,34 @@ func resourceNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) erro
 		Resource:  fmt.Sprintf("network-interface/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)
-	d.Set("owner_id", ownerID)
 
-	d.Set("interface_type", eni.InterfaceType)
 	d.Set("description", eni.Description)
-	d.Set("private_dns_name", eni.PrivateDnsName)
+	d.Set("interface_type", eni.InterfaceType)
+
+	d.Set("ipv6_address_count", len(eni.Ipv6Addresses))
+
+	if err := d.Set("ipv6_addresses", flattenNetworkInterfaceIPv6Address(eni.Ipv6Addresses)); err != nil {
+		return fmt.Errorf("error setting ipv6_addresses: %w", err)
+	}
+
 	d.Set("mac_address", eni.MacAddress)
-	d.Set("private_ip", eni.PrivateIpAddress)
 	d.Set("outpost_arn", eni.OutpostArn)
+	d.Set("owner_id", ownerID)
+	d.Set("private_dns_name", eni.PrivateDnsName)
+	d.Set("private_ip", eni.PrivateIpAddress)
 
 	if err := d.Set("private_ips", FlattenNetworkInterfacesPrivateIPAddresses(eni.PrivateIpAddresses)); err != nil {
-		return fmt.Errorf("error setting private_ips: %s", err)
+		return fmt.Errorf("error setting private_ips: %w", err)
 	}
 
 	d.Set("private_ips_count", len(eni.PrivateIpAddresses)-1)
 
 	if err := d.Set("security_groups", FlattenGroupIdentifiers(eni.Groups)); err != nil {
-		return fmt.Errorf("error setting security_groups: %s", err)
+		return fmt.Errorf("error setting security_groups: %w", err)
 	}
 
 	d.Set("source_dest_check", eni.SourceDestCheck)
 	d.Set("subnet_id", eni.SubnetId)
-	d.Set("ipv6_address_count", len(eni.Ipv6Addresses))
-
-	if err := d.Set("ipv6_addresses", flattenNetworkInterfaceIPv6Address(eni.Ipv6Addresses)); err != nil {
-		return fmt.Errorf("error setting ipv6 addresses: %s", err)
-	}
 
 	tags := KeyValueTags(eni.TagSet).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
@@ -571,7 +568,7 @@ func resourceNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) er
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating EC2 Network Interface (%s) tags: %s", d.Id(), err)
+			return fmt.Errorf("error updating EC2 Network Interface (%s) tags: %w", d.Id(), err)
 		}
 	}
 

@@ -7,13 +7,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccEC2NetworkInterface_ENI_basic(t *testing.T) {
@@ -478,7 +478,7 @@ func TestAccEC2NetworkInterface_ENIInterfaceType_efa(t *testing.T) {
 	})
 }
 
-func testAccCheckENIExists(n string, res *ec2.NetworkInterface) resource.TestCheckFunc {
+func testAccCheckENIExists(n string, v *ec2.NetworkInterface) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -486,49 +486,42 @@ func testAccCheckENIExists(n string, res *ec2.NetworkInterface) resource.TestChe
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ENI ID is set")
+			return fmt.Errorf("No EC2 Network Interface ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-		input := &ec2.DescribeNetworkInterfacesInput{
-			NetworkInterfaceIds: []*string{aws.String(rs.Primary.ID)},
-		}
-		describeResp, err := conn.DescribeNetworkInterfaces(input)
+
+		output, err := tfec2.FindNetworkInterfaceByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if len(describeResp.NetworkInterfaces) != 1 ||
-			*describeResp.NetworkInterfaces[0].NetworkInterfaceId != rs.Primary.ID {
-			return fmt.Errorf("ENI not found")
-		}
-
-		*res = *describeResp.NetworkInterfaces[0]
+		*v = *output
 
 		return nil
 	}
 }
 
 func testAccCheckENIDestroy(s *terraform.State) error {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_network_interface" {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-		input := &ec2.DescribeNetworkInterfacesInput{
-			NetworkInterfaceIds: []*string{aws.String(rs.Primary.ID)},
+		_, err := tfec2.FindNetworkInterfaceByID(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
 		}
-		_, err := conn.DescribeNetworkInterfaces(input)
 
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, "InvalidNetworkInterfaceID.NotFound", "") {
-				return nil
-			}
-
 			return err
 		}
+
+		return fmt.Errorf("EC2 Network Interface %s still exists", rs.Primary.ID)
 	}
 
 	return nil
