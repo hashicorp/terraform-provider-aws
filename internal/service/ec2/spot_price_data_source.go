@@ -15,7 +15,7 @@ func DataSourceSpotPrice() *schema.Resource {
 		Read: dataSourceSpotPriceRead,
 
 		Schema: map[string]*schema.Schema{
-			"filter": DataSourceFiltersSchema(),
+			"filter": dataSourceFiltersSchema(),
 			"instance_type": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -57,7 +57,7 @@ func dataSourceSpotPriceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("filter"); ok {
-		input.Filters = BuildFiltersDataSource(v.(*schema.Set))
+		input.Filters = buildFiltersDataSource(v.(*schema.Set))
 	}
 
 	var foundSpotPrice []*ec2.SpotPrice

@@ -1,4 +1,4 @@
-package nas_test
+package ec2_test
 
 import (
 	"fmt"
@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccNASARNDataSource_basic(t *testing.T) {
+func TestAccEC2ARNDataSource_basic(t *testing.T) {
 	resourceName := "data.aws_arn.test"
 
 	testARN := arn.ARN{

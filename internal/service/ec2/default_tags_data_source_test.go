@@ -1,4 +1,4 @@
-package nas_test
+package ec2_test
 
 import (
 	"testing"
@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccNASDefaultTagsDataSource_basic(t *testing.T) {
+func TestAccEC2DefaultTagsDataSource_basic(t *testing.T) {
 	var providers []*schema.Provider
 
 	dataSourceName := "data.aws_default_tags.test"
@@ -34,7 +34,7 @@ func TestAccNASDefaultTagsDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccNASDefaultTagsDataSource_empty(t *testing.T) {
+func TestAccEC2DefaultTagsDataSource_empty(t *testing.T) {
 	var providers []*schema.Provider
 
 	dataSourceName := "data.aws_default_tags.test"
@@ -58,7 +58,7 @@ func TestAccNASDefaultTagsDataSource_empty(t *testing.T) {
 	})
 }
 
-func TestAccNASDefaultTagsDataSource_multiple(t *testing.T) {
+func TestAccEC2DefaultTagsDataSource_multiple(t *testing.T) {
 	var providers []*schema.Provider
 
 	dataSourceName := "data.aws_default_tags.test"
@@ -84,7 +84,7 @@ func TestAccNASDefaultTagsDataSource_multiple(t *testing.T) {
 	})
 }
 
-func TestAccNASDefaultTagsDataSource_ignore(t *testing.T) {
+func TestAccEC2DefaultTagsDataSource_ignore(t *testing.T) {
 	var providers []*schema.Provider
 
 	dataSourceName := "data.aws_default_tags.test"

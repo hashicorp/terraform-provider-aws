@@ -1,4 +1,4 @@
-package nas_test
+package sts_test
 
 import (
 	"testing"
@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccNASCallerIdentityDataSource_basic(t *testing.T) {
+func TestAccSTSCallerIdentityDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, sts.EndpointsID),

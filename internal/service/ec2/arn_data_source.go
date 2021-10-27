@@ -1,4 +1,4 @@
-package nas
+package ec2
 
 import (
 	"fmt"

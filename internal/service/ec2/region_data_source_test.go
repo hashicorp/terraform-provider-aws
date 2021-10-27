@@ -1,4 +1,4 @@
-package nas_test
+package ec2_test
 
 import (
 	"fmt"
@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	tfnas "github.com/hashicorp/terraform-provider-aws/internal/service/nas"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
 func TestFindRegionByEc2Endpoint(t *testing.T) {
@@ -35,7 +35,7 @@ func TestFindRegionByEc2Endpoint(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		_, err := tfnas.FindRegionByEndpoint(tc.Value)
+		_, err := tfec2.FindRegionByEndpoint(tc.Value)
 		if tc.ErrCount == 0 && err != nil {
 			t.Fatalf("expected %q not to trigger an error, received: %s", tc.Value, err)
 		}
@@ -65,7 +65,7 @@ func TestFindRegionByName(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		_, err := tfnas.FindRegionByName(tc.Value)
+		_, err := tfec2.FindRegionByName(tc.Value)
 		if tc.ErrCount == 0 && err != nil {
 			t.Fatalf("expected %q not to trigger an error, received: %s", tc.Value, err)
 		}
@@ -75,7 +75,7 @@ func TestFindRegionByName(t *testing.T) {
 	}
 }
 
-func TestAccNASRegionDataSource_basic(t *testing.T) {
+func TestAccEC2RegionDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_region.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -95,7 +95,7 @@ func TestAccNASRegionDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccNASRegionDataSource_endpoint(t *testing.T) {
+func TestAccEC2RegionDataSource_endpoint(t *testing.T) {
 	dataSourceName := "data.aws_region.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -115,7 +115,7 @@ func TestAccNASRegionDataSource_endpoint(t *testing.T) {
 	})
 }
 
-func TestAccNASRegionDataSource_endpointAndName(t *testing.T) {
+func TestAccEC2RegionDataSource_endpointAndName(t *testing.T) {
 	dataSourceName := "data.aws_region.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -135,7 +135,7 @@ func TestAccNASRegionDataSource_endpointAndName(t *testing.T) {
 	})
 }
 
-func TestAccNASRegionDataSource_name(t *testing.T) {
+func TestAccEC2RegionDataSource_name(t *testing.T) {
 	dataSourceName := "data.aws_region.test"
 
 	resource.ParallelTest(t, resource.TestCase{

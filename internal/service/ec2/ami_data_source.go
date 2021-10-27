@@ -28,7 +28,7 @@ func DataSourceAMI() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"filter": DataSourceFiltersSchema(),
+			"filter": dataSourceFiltersSchema(),
 			"executable_users": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -212,7 +212,7 @@ func dataSourceAMIRead(d *schema.ResourceData, meta interface{}) error {
 		params.ExecutableUsers = flex.ExpandStringList(v.([]interface{}))
 	}
 	if v, ok := d.GetOk("filter"); ok {
-		params.Filters = BuildFiltersDataSource(v.(*schema.Set))
+		params.Filters = buildFiltersDataSource(v.(*schema.Set))
 	}
 
 	log.Printf("[DEBUG] Reading AMI: %s", params)

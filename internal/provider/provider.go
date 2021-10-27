@@ -100,7 +100,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediastore"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mq"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mwaa"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/nas"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/opsworks"
@@ -141,6 +140,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/sts"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/swf"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/synthetics"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/timestreamwrite"
@@ -413,9 +413,12 @@ func Provider() *schema.Provider {
 
 			"aws_ami":                                        ec2.DataSourceAMI(),
 			"aws_ami_ids":                                    ec2.DataSourceAMIIDs(),
+			"aws_arn":                                        ec2.DataSourceARN(),
 			"aws_availability_zone":                          ec2.DataSourceAvailabilityZone(),
 			"aws_availability_zones":                         ec2.DataSourceAvailabilityZones(),
+			"aws_billing_service_account":                    ec2.DataSourceBillingServiceAccount(),
 			"aws_customer_gateway":                           ec2.DataSourceCustomerGateway(),
+			"aws_default_tags":                               ec2.DataSourceDefaultTags(),
 			"aws_ebs_default_kms_key":                        ec2.DataSourceEBSDefaultKMSKey(),
 			"aws_ebs_encryption_by_default":                  ec2.DataSourceEBSEncryptionByDefault(),
 			"aws_ebs_snapshot":                               ec2.DataSourceEBSSnapshot(),
@@ -448,12 +451,16 @@ func Provider() *schema.Provider {
 			"aws_instance":                                   ec2.DataSourceInstance(),
 			"aws_instances":                                  ec2.DataSourceInstances(),
 			"aws_internet_gateway":                           ec2.DataSourceInternetGateway(),
+			"aws_ip_ranges":                                  ec2.DataSourceIPRanges(),
 			"aws_launch_template":                            ec2.DataSourceLaunchTemplate(),
 			"aws_nat_gateway":                                ec2.DataSourceNatGateway(),
 			"aws_network_acls":                               ec2.DataSourceNetworkACLs(),
 			"aws_network_interface":                          ec2.DataSourceNetworkInterface(),
 			"aws_network_interfaces":                         ec2.DataSourceNetworkInterfaces(),
+			"aws_partition":                                  ec2.DataSourcePartition(),
 			"aws_prefix_list":                                ec2.DataSourcePrefixList(),
+			"aws_region":                                     ec2.DataSourceRegion(),
+			"aws_regions":                                    ec2.DataSourceRegions(),
 			"aws_route_table":                                ec2.DataSourceRouteTable(),
 			"aws_route_tables":                               ec2.DataSourceRouteTables(),
 			"aws_route":                                      ec2.DataSourceRoute(),
@@ -583,16 +590,6 @@ func Provider() *schema.Provider {
 
 			"aws_mq_broker": mq.DataSourceBroker(),
 
-			"aws_arn":                     nas.DataSourceARN(),
-			"aws_billing_service_account": nas.DataSourceBillingServiceAccount(),
-			"aws_caller_identity":         nas.DataSourceCallerIdentity(),
-			"aws_canonical_user_id":       nas.DataSourceCanonicalUserID(),
-			"aws_default_tags":            nas.DataSourceDefaultTags(),
-			"aws_ip_ranges":               nas.DataSourceIPRanges(),
-			"aws_partition":               nas.DataSourcePartition(),
-			"aws_region":                  nas.DataSourceRegion(),
-			"aws_regions":                 nas.DataSourceRegions(),
-
 			"aws_neptune_engine_version":        neptune.DataSourceEngineVersion(),
 			"aws_neptune_orderable_db_instance": neptune.DataSourceOrderableDBInstance(),
 
@@ -641,6 +638,7 @@ func Provider() *schema.Provider {
 			"aws_s3_bucket":         s3.DataSourceBucket(),
 			"aws_s3_bucket_object":  s3.DataSourceBucketObject(),
 			"aws_s3_bucket_objects": s3.DataSourceBucketObjects(),
+			"aws_canonical_user_id": s3.DataSourceCanonicalUserID(),
 
 			"aws_sagemaker_prebuilt_ecr_image": sagemaker.DataSourcePrebuiltECRImage(),
 
@@ -680,6 +678,8 @@ func Provider() *schema.Provider {
 			"aws_ssoadmin_permission_set": ssoadmin.DataSourcePermissionSet(),
 
 			"aws_storagegateway_local_disk": storagegateway.DataSourceLocalDisk(),
+
+			"aws_caller_identity": sts.DataSourceCallerIdentity(),
 
 			"aws_transfer_server": transfer.DataSourceServer(),
 

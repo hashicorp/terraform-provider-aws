@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func BuildFiltersDataSource(set *schema.Set) []*ec2.Filter {
+func buildFiltersDataSource(set *schema.Set) []*ec2.Filter {
 	var filters []*ec2.Filter
 	for _, v := range set.List() {
 		m := v.(map[string]interface{})
@@ -22,7 +22,7 @@ func BuildFiltersDataSource(set *schema.Set) []*ec2.Filter {
 	return filters
 }
 
-func DataSourceFiltersSchema() *schema.Schema {
+func dataSourceFiltersSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,

@@ -39,7 +39,7 @@ func DataSourceManagedPrefixList() *schema.Resource {
 					},
 				},
 			},
-			"filter": DataSourceFiltersSchema(),
+			"filter": dataSourceFiltersSchema(),
 			"id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -74,7 +74,7 @@ func dataSourceManagedPrefixListRead(ctx context.Context, d *schema.ResourceData
 	input := ec2.DescribeManagedPrefixListsInput{}
 
 	if filters, ok := d.GetOk("filter"); ok {
-		input.Filters = BuildFiltersDataSource(filters.(*schema.Set))
+		input.Filters = buildFiltersDataSource(filters.(*schema.Set))
 	}
 
 	if prefixListId, ok := d.GetOk("id"); ok {

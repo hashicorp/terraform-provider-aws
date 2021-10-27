@@ -412,7 +412,7 @@ func DataSourceLaunchTemplate() *schema.Resource {
 				},
 			},
 			"tags":   tftags.TagsSchemaComputed(),
-			"filter": DataSourceFiltersSchema(),
+			"filter": dataSourceFiltersSchema(),
 		},
 	}
 }
@@ -428,7 +428,7 @@ func dataSourceLaunchTemplateRead(d *schema.ResourceData, meta interface{}) erro
 
 	params := &ec2.DescribeLaunchTemplatesInput{}
 	if filtersOk {
-		params.Filters = BuildFiltersDataSource(filters.(*schema.Set))
+		params.Filters = buildFiltersDataSource(filters.(*schema.Set))
 	}
 	if idOk {
 		params.LaunchTemplateIds = []*string{aws.String(id.(string))}

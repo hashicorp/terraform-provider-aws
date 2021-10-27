@@ -49,7 +49,7 @@ func DataSourceTransitGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"filter": DataSourceFiltersSchema(),
+			"filter": dataSourceFiltersSchema(),
 			"id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -79,7 +79,7 @@ func dataSourceTransitGatewayRead(d *schema.ResourceData, meta interface{}) erro
 	input := &ec2.DescribeTransitGatewaysInput{}
 
 	if v, ok := d.GetOk("filter"); ok {
-		input.Filters = BuildFiltersDataSource(v.(*schema.Set))
+		input.Filters = buildFiltersDataSource(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("id"); ok {

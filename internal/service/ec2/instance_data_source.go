@@ -22,7 +22,7 @@ func DataSourceInstance() *schema.Resource {
 		Read: dataSourceInstanceRead,
 
 		Schema: map[string]*schema.Schema{
-			"filter":        DataSourceFiltersSchema(),
+			"filter":        dataSourceFiltersSchema(),
 			"tags":          tftags.TagsSchemaComputed(),
 			"instance_tags": tftags.TagsSchemaComputed(),
 			"instance_id": {
@@ -374,7 +374,7 @@ func dataSourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	// Build up search parameters
 	params := &ec2.DescribeInstancesInput{}
 	if filtersOk {
-		params.Filters = BuildFiltersDataSource(filters.(*schema.Set))
+		params.Filters = buildFiltersDataSource(filters.(*schema.Set))
 	}
 	if instanceIDOk {
 		params.InstanceIds = []*string{aws.String(instanceID.(string))}

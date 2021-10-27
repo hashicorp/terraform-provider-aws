@@ -26,7 +26,7 @@ func DataSourceTransitGatewayVPNAttachment() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"filter": DataSourceFiltersSchema(),
+			"filter": dataSourceFiltersSchema(),
 		},
 	}
 }
@@ -50,7 +50,7 @@ func dataSourceTransitGatewayVPNAttachmentRead(d *schema.ResourceData, meta inte
 	}
 
 	if filtersOk {
-		input.Filters = append(input.Filters, BuildFiltersDataSource(filters.(*schema.Set))...)
+		input.Filters = append(input.Filters, buildFiltersDataSource(filters.(*schema.Set))...)
 	}
 	if tagsOk {
 		input.Filters = append(input.Filters, ec2TagFiltersFromMap(tags.(map[string]interface{}))...)

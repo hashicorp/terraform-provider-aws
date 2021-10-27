@@ -64,7 +64,7 @@ func TestReverseDns(t *testing.T) {
 	}
 }
 
-func TestAccNASAcctest_ProviderDefaultTags_emptyBlock(t *testing.T) {
+func TestAccAcctest_ProviderDefaultTags_emptyBlock(t *testing.T) {
 	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -83,7 +83,7 @@ func TestAccNASAcctest_ProviderDefaultTags_emptyBlock(t *testing.T) {
 	})
 }
 
-func TestAccNASAcctest_ProviderDefaultTagsTags_none(t *testing.T) {
+func TestAccAcctest_ProviderDefaultTagsTags_none(t *testing.T) {
 	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -102,7 +102,7 @@ func TestAccNASAcctest_ProviderDefaultTagsTags_none(t *testing.T) {
 	})
 }
 
-func TestAccNASAcctest_ProviderDefaultTagsTags_one(t *testing.T) {
+func TestAccAcctest_ProviderDefaultTagsTags_one(t *testing.T) {
 	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -121,7 +121,7 @@ func TestAccNASAcctest_ProviderDefaultTagsTags_one(t *testing.T) {
 	})
 }
 
-func TestAccNASAcctest_ProviderDefaultTagsTags_multiple(t *testing.T) {
+func TestAccAcctest_ProviderDefaultTagsTags_multiple(t *testing.T) {
 	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -143,7 +143,7 @@ func TestAccNASAcctest_ProviderDefaultTagsTags_multiple(t *testing.T) {
 	})
 }
 
-func TestAccNASAcctest_ProviderDefaultAndIgnoreTags_emptyBlocks(t *testing.T) {
+func TestAccAcctest_ProviderDefaultAndIgnoreTags_emptyBlocks(t *testing.T) {
 	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -164,7 +164,7 @@ func TestAccNASAcctest_ProviderDefaultAndIgnoreTags_emptyBlocks(t *testing.T) {
 	})
 }
 
-func TestAccNASAcctest_Provider_endpoints(t *testing.T) {
+func TestAccAcctest_Provider_endpoints(t *testing.T) {
 	var providers []*schema.Provider
 	var endpoints strings.Builder
 
@@ -189,7 +189,7 @@ func TestAccNASAcctest_Provider_endpoints(t *testing.T) {
 	})
 }
 
-func TestAccNASAcctest_ProviderIgnoreTags_emptyBlock(t *testing.T) {
+func TestAccAcctest_ProviderIgnoreTags_emptyBlock(t *testing.T) {
 	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -209,7 +209,7 @@ func TestAccNASAcctest_ProviderIgnoreTags_emptyBlock(t *testing.T) {
 	})
 }
 
-func TestAccNASAcctest_ProviderIgnoreTagsKeyPrefixes_none(t *testing.T) {
+func TestAccAcctest_ProviderIgnoreTagsKeyPrefixes_none(t *testing.T) {
 	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -228,7 +228,7 @@ func TestAccNASAcctest_ProviderIgnoreTagsKeyPrefixes_none(t *testing.T) {
 	})
 }
 
-func TestAccNASAcctest_ProviderIgnoreTagsKeyPrefixes_one(t *testing.T) {
+func TestAccAcctest_ProviderIgnoreTagsKeyPrefixes_one(t *testing.T) {
 	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -247,7 +247,7 @@ func TestAccNASAcctest_ProviderIgnoreTagsKeyPrefixes_one(t *testing.T) {
 	})
 }
 
-func TestAccNASAcctest_ProviderIgnoreTagsKeyPrefixes_multiple(t *testing.T) {
+func TestAccAcctest_ProviderIgnoreTagsKeyPrefixes_multiple(t *testing.T) {
 	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -266,7 +266,7 @@ func TestAccNASAcctest_ProviderIgnoreTagsKeyPrefixes_multiple(t *testing.T) {
 	})
 }
 
-func TestAccNASAcctest_ProviderIgnoreTagsKeys_none(t *testing.T) {
+func TestAccAcctest_ProviderIgnoreTagsKeys_none(t *testing.T) {
 	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -285,7 +285,7 @@ func TestAccNASAcctest_ProviderIgnoreTagsKeys_none(t *testing.T) {
 	})
 }
 
-func TestAccNASAcctest_ProviderIgnoreTagsKeys_one(t *testing.T) {
+func TestAccAcctest_ProviderIgnoreTagsKeys_one(t *testing.T) {
 	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -304,7 +304,7 @@ func TestAccNASAcctest_ProviderIgnoreTagsKeys_one(t *testing.T) {
 	})
 }
 
-func TestAccNASAcctest_ProviderIgnoreTagsKeys_multiple(t *testing.T) {
+func TestAccAcctest_ProviderIgnoreTagsKeys_multiple(t *testing.T) {
 	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -323,7 +323,7 @@ func TestAccNASAcctest_ProviderIgnoreTagsKeys_multiple(t *testing.T) {
 	})
 }
 
-func TestAccNASAcctest_ProviderRegion_awsC2S(t *testing.T) {
+func TestAccAcctest_ProviderRegion_awsC2S(t *testing.T) {
 	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -345,7 +345,7 @@ func TestAccNASAcctest_ProviderRegion_awsC2S(t *testing.T) {
 	})
 }
 
-func TestAccNASAcctest_ProviderRegion_awsChina(t *testing.T) {
+func TestAccAcctest_ProviderRegion_awsChina(t *testing.T) {
 	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -367,7 +367,7 @@ func TestAccNASAcctest_ProviderRegion_awsChina(t *testing.T) {
 	})
 }
 
-func TestAccNASAcctest_ProviderRegion_awsCommercial(t *testing.T) {
+func TestAccAcctest_ProviderRegion_awsCommercial(t *testing.T) {
 	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -389,7 +389,7 @@ func TestAccNASAcctest_ProviderRegion_awsCommercial(t *testing.T) {
 	})
 }
 
-func TestAccNASAcctest_ProviderRegion_awsGovCloudUs(t *testing.T) {
+func TestAccAcctest_ProviderRegion_awsGovCloudUs(t *testing.T) {
 	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -411,7 +411,7 @@ func TestAccNASAcctest_ProviderRegion_awsGovCloudUs(t *testing.T) {
 	})
 }
 
-func TestAccNASAcctest_ProviderRegion_awsSC2S(t *testing.T) {
+func TestAccAcctest_ProviderRegion_awsSC2S(t *testing.T) {
 	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -433,7 +433,7 @@ func TestAccNASAcctest_ProviderRegion_awsSC2S(t *testing.T) {
 	})
 }
 
-func TestAccNASAcctest_ProviderAssumeRole_empty(t *testing.T) {
+func TestAccAcctest_ProviderAssumeRole_empty(t *testing.T) {
 	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{

@@ -33,7 +33,7 @@ func DataSourceHost() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"filter": DataSourceFiltersSchema(),
+			"filter": dataSourceFiltersSchema(),
 			"host_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -72,7 +72,7 @@ func dataSourceHostRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	host, err := FindHostByIDAndFilters(conn, d.Get("host_id").(string), BuildFiltersDataSource(d.Get("filter").(*schema.Set)))
+	host, err := FindHostByIDAndFilters(conn, d.Get("host_id").(string), buildFiltersDataSource(d.Get("filter").(*schema.Set)))
 
 	if err != nil {
 		return tfresource.SingularDataSourceFindError("EC2 Host", err)

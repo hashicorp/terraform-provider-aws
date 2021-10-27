@@ -1,4 +1,4 @@
-package nas_test
+package ec2_test
 
 import (
 	"fmt"
@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccNASRegionsDataSource_basic(t *testing.T) {
+func TestAccEC2RegionsDataSource_basic(t *testing.T) {
 	resourceName := "data.aws_regions.empty"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -30,7 +30,7 @@ func TestAccNASRegionsDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccNASRegionsDataSource_filter(t *testing.T) {
+func TestAccEC2RegionsDataSource_filter(t *testing.T) {
 	resourceName := "data.aws_regions.opt_in_status"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -48,7 +48,7 @@ func TestAccNASRegionsDataSource_filter(t *testing.T) {
 	})
 }
 
-func TestAccNASRegionsDataSource_allRegions(t *testing.T) {
+func TestAccEC2RegionsDataSource_allRegions(t *testing.T) {
 	resourceAllRegions := "data.aws_regions.all_regions"
 
 	resource.ParallelTest(t, resource.TestCase{

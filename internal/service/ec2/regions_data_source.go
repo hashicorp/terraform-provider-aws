@@ -1,4 +1,4 @@
-package nas
+package ec2
 
 import (
 	"fmt"
@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
 func DataSourceRegions() *schema.Resource {
@@ -16,7 +15,7 @@ func DataSourceRegions() *schema.Resource {
 		Read: dataSourceRegionsRead,
 
 		Schema: map[string]*schema.Schema{
-			"filter": tfec2.DataSourceFiltersSchema(),
+			"filter": dataSourceFiltersSchema(),
 			"names": {
 				Type:     schema.TypeSet,
 				Computed: true,
@@ -37,7 +36,7 @@ func dataSourceRegionsRead(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Reading regions.")
 	request := &ec2.DescribeRegionsInput{}
 	if v, ok := d.GetOk("filter"); ok {
-		request.Filters = tfec2.BuildFiltersDataSource(v.(*schema.Set))
+		request.Filters = buildFiltersDataSource(v.(*schema.Set))
 	}
 	if v, ok := d.GetOk("all_regions"); ok {
 		request.AllRegions = aws.Bool(v.(bool))

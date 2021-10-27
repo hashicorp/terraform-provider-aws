@@ -18,7 +18,7 @@ func DataSourceInstances() *schema.Resource {
 		Read: dataSourceInstancesRead,
 
 		Schema: map[string]*schema.Schema{
-			"filter":        DataSourceFiltersSchema(),
+			"filter":        dataSourceFiltersSchema(),
 			"instance_tags": tftags.TagsSchemaComputed(),
 			"instance_state_names": {
 				Type:     schema.TypeSet,
@@ -80,7 +80,7 @@ func dataSourceInstancesRead(d *schema.ResourceData, meta interface{}) error {
 
 	if filtersOk {
 		params.Filters = append(params.Filters,
-			BuildFiltersDataSource(filters.(*schema.Set))...)
+			buildFiltersDataSource(filters.(*schema.Set))...)
 	}
 	if tagsOk {
 		params.Filters = append(params.Filters, BuildTagFilterList(

@@ -15,7 +15,7 @@ func DataSourceInstanceTypeOffering() *schema.Resource {
 		Read: dataSourceInstanceTypeOfferingRead,
 
 		Schema: map[string]*schema.Schema{
-			"filter": DataSourceFiltersSchema(),
+			"filter": dataSourceFiltersSchema(),
 			"instance_type": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -44,7 +44,7 @@ func dataSourceInstanceTypeOfferingRead(d *schema.ResourceData, meta interface{}
 	input := &ec2.DescribeInstanceTypeOfferingsInput{}
 
 	if v, ok := d.GetOk("filter"); ok {
-		input.Filters = BuildFiltersDataSource(v.(*schema.Set))
+		input.Filters = buildFiltersDataSource(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("location_type"); ok {

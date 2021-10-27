@@ -17,7 +17,7 @@ func DataSourceEBSSnapshotIDs() *schema.Resource {
 		Read: dataSourceEBSSnapshotIDsRead,
 
 		Schema: map[string]*schema.Schema{
-			"filter": DataSourceFiltersSchema(),
+			"filter": dataSourceFiltersSchema(),
 			"owners": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -54,7 +54,7 @@ func dataSourceEBSSnapshotIDsRead(d *schema.ResourceData, meta interface{}) erro
 		params.RestorableByUserIds = flex.ExpandStringList(restorableUsers.([]interface{}))
 	}
 	if filtersOk {
-		params.Filters = BuildFiltersDataSource(filters.(*schema.Set))
+		params.Filters = buildFiltersDataSource(filters.(*schema.Set))
 	}
 	if ownersOk {
 		params.OwnerIds = flex.ExpandStringList(owners.([]interface{}))
