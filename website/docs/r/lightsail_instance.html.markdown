@@ -45,7 +45,7 @@ Lightsail console (cannot use `aws_key_pair` at this time)
 * `tags` - (Optional) A map of tags to assign to the resource. To create a key-only tag, use an empty string as the value. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Availability Zones
-Lightsail currently supports the following Availability Zones (e.g. `us-east-1a`):
+Lightsail currently supports the following Availability Zones (e.g., `us-east-1a`):
 
 - `ap-northeast-1{a,c,d}`
 - `ap-northeast-2{a,c}`
@@ -63,7 +63,7 @@ Lightsail currently supports the following Availability Zones (e.g. `us-east-1a`
 
 ## Bundles
 
-Lightsail currently supports the following Bundle IDs (e.g. an instance in `ap-northeast-1` would use `small_2_0`):
+Lightsail currently supports the following Bundle IDs (e.g., an instance in `ap-northeast-1` would use `small_2_0`):
 
 ### Prefix
 
@@ -108,7 +108,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Lightsail Instances can be imported using their name, e.g.
+Lightsail Instances can be imported using their name, e.g.,
 
 ```
 $ terraform import aws_lightsail_instance.gitlab_test 'custom gitlab'

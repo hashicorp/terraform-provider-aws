@@ -125,7 +125,7 @@ An `authentication_configuration` block supports the following arguments:
 A `filter` block supports the following arguments:
 
 * `json_path` - (Required) The [JSON path](https://github.com/json-path/JsonPath) to filter on.
-* `match_equals` - (Required) The value to match on (e.g. `refs/heads/{Branch}`). See [AWS docs](https://docs.aws.amazon.com/codepipeline/latest/APIReference/API_WebhookFilterRule.html) for details.
+* `match_equals` - (Required) The value to match on (e.g., `refs/heads/{Branch}`). See [AWS docs](https://docs.aws.amazon.com/codepipeline/latest/APIReference/API_WebhookFilterRule.html) for details.
 
 ## Attributes Reference
 
@@ -137,7 +137,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-CodePipeline Webhooks can be imported by their ARN, e.g.
+CodePipeline Webhooks can be imported by their ARN, e.g.,
 
 ```
 $ terraform import aws_codepipeline_webhook.example arn:aws:codepipeline:us-west-2:123456789012:webhook:example

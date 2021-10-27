@@ -47,7 +47,7 @@ resource "aws_lambda_function" "test_lambda" {
   filename      = "lambda_function_payload.zip"
   function_name = "lambda_function_name"
   role          = aws_iam_role.iam_for_lambda.arn
-  handler       = "exports.test"
+  handler       = "index.test"
 
   # The filebase64sha256() function is available in Terraform 0.11.12 and later
   # For Terraform 0.11.11 and earlier, use the base64sha256() function and the file() function:
@@ -141,6 +141,10 @@ resource "aws_efs_access_point" "access_point_for_lambda" {
 }
 ```
 
+### Lambda retries
+
+Lambda Functions allow you to configure error handling for asynchronous invocation. The settings that it supports are `Maximum age of event` and `Retry attempts` as stated in [Lambda documentation for Configuring error handling for asynchronous invocation](https://docs.aws.amazon.com/lambda/latest/dg/invocation-async.html#invocation-async-errors). To configure these settings, refer to the [aws_lambda_function_event_invoke_config resource](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_function_event_invoke_config).
+
 ## CloudWatch Logging and Permissions
 
 For more information about CloudWatch Logs for Lambda, see the [Lambda User Guide](https://docs.aws.amazon.com/lambda/latest/dg/monitoring-functions-logs.html).
@@ -214,6 +218,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `architectures` - (Optional) Instruction set architecture for your Lambda function. Valid values are `["x86_64"]` and `["arm64"]`. Default is `["x86_64"]`. Removing this attribute, function's architecture stay the same.
 * `code_signing_config_arn` - (Optional) To enable code signing for this function, specify the ARN of a code-signing configuration. A code-signing configuration includes a set of signing profiles, which define the trusted publishers for this function.
 * `dead_letter_config` - (Optional) Configuration block. Detailed below.
 * `description` - (Optional) Description of what your Lambda Function does.
@@ -251,7 +256,7 @@ Dead letter queue configuration that specifies the queue or topic where Lambda s
 
 ### file_system_config
 
-Connection settings for an EFS file system. Before creating or updating Lambda functions with `file_system_config`, EFS mount targets much be in available lifecycle state. Use `depends_on` to explicitly declare this dependency. See [Using Amazon EFS with Lambda][12].
+Connection settings for an EFS file system. Before creating or updating Lambda functions with `file_system_config`, EFS mount targets must be in available lifecycle state. Use `depends_on` to explicitly declare this dependency. See [Using Amazon EFS with Lambda][12].
 
 * `arn` - (Required) Amazon Resource Name (ARN) of the Amazon EFS Access Point that provides access to the file system.
 * `local_mount_path` - (Required) Path where the function can access the file system, starting with /mnt/.
@@ -314,7 +319,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Lambda Functions can be imported using the `function_name`, e.g.
+Lambda Functions can be imported using the `function_name`, e.g.,
 
 ```
 $ terraform import aws_lambda_function.test_lambda my_test_lambda_function

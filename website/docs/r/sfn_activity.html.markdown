@@ -36,7 +36,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Activities can be imported using the `arn`, e.g.
+Activities can be imported using the `arn`, e.g.,
 
 ```
 $ terraform import aws_sfn_activity.foo arn:aws:states:eu-west-1:123456789098:activity:bar

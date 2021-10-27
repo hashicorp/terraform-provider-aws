@@ -27,7 +27,7 @@ resource "aws_apprunner_service" "example" {
         code_configuration_values {
           build_command = "python setup.py develop"
           port          = "8000"
-          runtime       = "python3"
+          runtime       = "PYTHON_3"
           start_command = "python runapp.py"
         }
         configuration_source = "API"
@@ -160,7 +160,7 @@ The `code_configuration_values` blocks supports the following arguments:
 
 * `build_command` - (Optional) The command App Runner runs to build your application.
 * `port` - (Optional) The port that your application listens to in the container. Defaults to `"8080"`.
-* `runtime` - (Required) A runtime environment type for building and running an App Runner service. Represents a programming language runtime. Valid values: `python3`, `nodejs12`.
+* `runtime` - (Required) A runtime environment type for building and running an App Runner service. Represents a programming language runtime. Valid values: `PYTHON_3`, `NODEJS_12`.
 * `runtime_environment_variables` - (Optional) Environment variables available to your running App Runner service. A map of key/value pairs. Keys with a prefix of `AWSAPPRUNNER` are reserved for system use and aren't valid.
 * `start_command` - (Optional) The command App Runner runs to start your application.
 
@@ -191,7 +191,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-App Runner Services can be imported by using the `arn`, e.g.
+App Runner Services can be imported by using the `arn`, e.g.,
 
 ```
 $ terraform import aws_apprunner_service.example arn:aws:apprunner:us-east-1:1234567890:service/example/0a03292a89764e5882c41d8f991c82fe

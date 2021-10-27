@@ -331,9 +331,9 @@ The `test_traffic_route` configuration block supports the following:
 
 * `listener_arns` - (Required) List of Amazon Resource Names (ARNs) of the load balancer listeners.
 
-### on_premises_tag_filter Argument Reference
+### on_premises_instance_tag_filter Argument Reference
 
-The `on_premises_tag_filter` configuration block supports the following:
+The `on_premises_instance_tag_filter` configuration block supports the following:
 
 * `key` - (Optional) The key of the tag filter.
 * `type` - (Optional) The type of the tag filter, either `KEY_ONLY`, `VALUE_ONLY`, or `KEY_AND_VALUE`.
@@ -359,7 +359,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-CodeDeploy Deployment Groups can be imported by their `app_name`, a colon, and `deployment_group_name`, e.g.
+CodeDeploy Deployment Groups can be imported by their `app_name`, a colon, and `deployment_group_name`, e.g.,
 
 ```
 $ terraform import aws_codedeploy_deployment_group.example my-application:my-deployment-group

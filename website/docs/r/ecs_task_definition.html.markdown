@@ -199,7 +199,7 @@ TASK_DEFINITION
 
 ## Argument Reference
 
-~> **NOTE**: Proper escaping is required for JSON field values containing quotes (`"`) such as `environment` values. If directly setting the JSON, they should be escaped as `\"` in the JSON,  e.g. `"value": "I \"love\" escaped quotes"`. If using a Terraform variable value, they should be escaped as `\\\"` in the variable, e.g. `value = "I \\\"love\\\" escaped quotes"` in the variable and `"value": "${var.myvariable}"` in the JSON.
+~> **NOTE**: Proper escaping is required for JSON field values containing quotes (`"`) such as `environment` values. If directly setting the JSON, they should be escaped as `\"` in the JSON,  e.g., `"value": "I \"love\" escaped quotes"`. If using a Terraform variable value, they should be escaped as `\\\"` in the variable, e.g., `value = "I \\\"love\\\" escaped quotes"` in the variable and `"value": "${var.myvariable}"` in the JSON.
 
 The following arguments are required:
 
@@ -217,6 +217,7 @@ The following arguments are optional:
 * `pid_mode` - (Optional) Process namespace to use for the containers in the task. The valid values are `host` and `task`.
 * `placement_constraints` - (Optional) Configuration block for rules that are taken into consideration during task placement. Maximum number of `placement_constraints` is `10`. [Detailed below](#placement_constraints).
 * `proxy_configuration` - (Optional) Configuration block for the App Mesh proxy. [Detailed below.](#proxy_configuration)
+* `ephemeral_storage` - (Optional)  The amount of ephemeral storage to allocate for the task. This parameter is used to expand the total amount of ephemeral storage available, beyond the default amount, for tasks hosted on AWS Fargate. See [Ephemeral Storage](#ephemeral_storage).
 * `requires_compatibilities` - (Optional) Set of launch types required by the task. The valid values are `EC2` and `FARGATE`.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `task_role_arn` - (Optional) ARN of IAM role that allows your Amazon ECS container task to make calls to other AWS services.
@@ -279,6 +280,10 @@ For more information, see [Specifying an FSX Windows File Server volume in your 
 * `container_name` - (Required) Name of the container that will serve as the App Mesh proxy.
 * `properties` - (Required) Set of network configuration parameters to provide the Container Network Interface (CNI) plugin, specified a key-value mapping.
 * `type` - (Optional) Proxy type. The default value is `APPMESH`. The only supported value is `APPMESH`.
+
+### ephemeral_storage
+
+* `size_in_gib` - (Required) The total amount, in GiB, of ephemeral storage to set for the task. The minimum supported value is `21` GiB and the maximum supported value is `200` GiB.
 
 ### inference_accelerator
 

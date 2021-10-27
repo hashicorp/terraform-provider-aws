@@ -99,7 +99,7 @@ In addition to all arguments above, the following attributes are exported:
 ## Import
 
 SES event destinations can be imported using `configuration_set_name` together with the event destination's `name`,
-e.g.
+e.g.,
 
 ```
 $ terraform import aws_ses_event_destination.sns some-configuration-set-test/event-destination-sns
