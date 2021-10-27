@@ -2222,7 +2222,9 @@ func expandAutoScalingGroupInstanceRefreshPreferences(l []interface{}) *autoscal
 	}
 
 	if v, ok := m["checkpoint_delay"]; ok {
-		refreshPreferences.CheckpointDelay = aws.Int64(int64(v.(int)))
+		if v, null, _ := nullable.Int(v.(string)).Value(); !null {
+			refreshPreferences.CheckpointDelay = aws.Int64(v)
+		}
 	}
 
 	if v, ok := m["checkpoint_percentages"]; ok {
