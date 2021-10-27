@@ -987,7 +987,8 @@ func Provider() *schema.Provider {
 			"aws_dax_parameter_group": dax.ResourceParameterGroup(),
 			"aws_dax_subnet_group":    dax.ResourceSubnetGroup(),
 
-			"aws_devicefarm_project": devicefarm.ResourceProject(),
+			"aws_devicefarm_project":     devicefarm.ResourceProject(),
+			"aws_devicefarm_device_pool": devicefarm.ResourceDevicePool(),
 
 			"aws_detective_graph": detective.ResourceGraph(),
 
