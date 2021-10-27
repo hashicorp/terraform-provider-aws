@@ -2115,7 +2115,7 @@ resource "aws_elasticache_replication_group" "test" {
   security_group_ids            = [aws_security_group.test.id]
   availability_zones            = [data.aws_availability_zones.available.names[0]]
   auto_minor_version_upgrade    = false
-	user_group_ids                = [aws_elasticache_user_group.test.id]
+  user_group_ids                = [aws_elasticache_user_group.test.id]
 }
 `, rName)
 }

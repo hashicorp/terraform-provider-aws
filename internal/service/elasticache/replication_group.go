@@ -448,7 +448,7 @@ func resourceReplicationGroupCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if userGroupIds := d.Get("user_group_ids").(*schema.Set); userGroupIds.Len() > 0 {
-		params.UserGroupIds = expandStringSet(userGroupIds)
+		params.UserGroupIds = flex.ExpandStringSet(userGroupIds)
 	}
 
 	resp, err := conn.CreateReplicationGroup(params)
@@ -714,12 +714,12 @@ func resourceReplicationGroupUpdate(d *schema.ResourceData, meta interface{}) er
 		remove := oldSet.Difference(newSet)
 
 		if add.Len() > 0 {
-			params.UserGroupIdsToAdd = expandStringSet(add)
+			params.UserGroupIdsToAdd = flex.ExpandStringSet(add)
 			requestUpdate = true
 		}
 
 		if remove.Len() > 0 {
-			params.UserGroupIdsToRemove = expandStringSet(remove)
+			params.UserGroupIdsToRemove = flex.ExpandStringSet(remove)
 			requestUpdate = true
 		}
 
