@@ -635,10 +635,10 @@ func Provider() *schema.Provider {
 			"aws_route53_resolver_rule":     route53resolver.DataSourceRule(),
 			"aws_route53_resolver_rules":    route53resolver.DataSourceRules(),
 
+			"aws_canonical_user_id": s3.DataSourceCanonicalUserID(),
 			"aws_s3_bucket":         s3.DataSourceBucket(),
 			"aws_s3_bucket_object":  s3.DataSourceBucketObject(),
 			"aws_s3_bucket_objects": s3.DataSourceBucketObjects(),
-			"aws_canonical_user_id": s3.DataSourceCanonicalUserID(),
 
 			"aws_sagemaker_prebuilt_ecr_image": sagemaker.DataSourcePrebuiltECRImage(),
 
