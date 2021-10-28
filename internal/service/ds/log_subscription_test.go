@@ -44,7 +44,7 @@ func TestAccDirectoryServiceLogSubscription_basic(t *testing.T) {
 }
 
 func testAccCheckLogSubscriptionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DirectoryServiceConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_directory_service_log_subscription" {
@@ -82,7 +82,7 @@ func testAccCheckLogSubscriptionExists(name string, logGroupName string) resourc
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectoryServiceConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn
 
 		res, err := conn.ListLogSubscriptions(&directoryservice.ListLogSubscriptionsInput{
 			DirectoryId: aws.String(rs.Primary.ID),

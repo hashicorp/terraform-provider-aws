@@ -75,7 +75,7 @@ New Resource(s)
 
 - [AWS Transfer Server: Attach VPC security groups at creation](https://github.com/hashicorp/terraform-provider-aws/issues/15788)
 - [EC2 Launch Templates](https://github.com/hashicorp/terraform-provider-aws/issues/4264)
-- [AWS ElasticSearch Native SAML for Kibana](https://github.com/hashicorp/terraform-provider-aws/issues/16259)
+- [AWS Elasticsearch Native SAML for Kibana](https://github.com/hashicorp/terraform-provider-aws/issues/16259)
 
 ## Core Service Reliability
 

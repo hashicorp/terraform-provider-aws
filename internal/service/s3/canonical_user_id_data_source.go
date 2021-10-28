@@ -1,4 +1,4 @@
-package nas
+package s3
 
 import (
 	"fmt"

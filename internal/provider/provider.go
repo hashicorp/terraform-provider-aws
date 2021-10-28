@@ -98,9 +98,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediaconvert"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediapackage"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediastore"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/meta"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mq"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mwaa"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/nas"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/opsworks"
@@ -141,6 +141,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/sts"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/swf"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/synthetics"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/timestreamwrite"
@@ -581,17 +582,15 @@ func Provider() *schema.Provider {
 			"aws_lex_intent":    lexmodelbuilding.DataSourceIntent(),
 			"aws_lex_slot_type": lexmodelbuilding.DataSourceSlotType(),
 
-			"aws_mq_broker": mq.DataSourceBroker(),
+			"aws_arn":                     meta.DataSourceARN(),
+			"aws_billing_service_account": meta.DataSourceBillingServiceAccount(),
+			"aws_default_tags":            meta.DataSourceDefaultTags(),
+			"aws_ip_ranges":               meta.DataSourceIPRanges(),
+			"aws_partition":               meta.DataSourcePartition(),
+			"aws_region":                  meta.DataSourceRegion(),
+			"aws_regions":                 meta.DataSourceRegions(),
 
-			"aws_arn":                     nas.DataSourceARN(),
-			"aws_billing_service_account": nas.DataSourceBillingServiceAccount(),
-			"aws_caller_identity":         nas.DataSourceCallerIdentity(),
-			"aws_canonical_user_id":       nas.DataSourceCanonicalUserID(),
-			"aws_default_tags":            nas.DataSourceDefaultTags(),
-			"aws_ip_ranges":               nas.DataSourceIPRanges(),
-			"aws_partition":               nas.DataSourcePartition(),
-			"aws_region":                  nas.DataSourceRegion(),
-			"aws_regions":                 nas.DataSourceRegions(),
+			"aws_mq_broker": mq.DataSourceBroker(),
 
 			"aws_neptune_engine_version":        neptune.DataSourceEngineVersion(),
 			"aws_neptune_orderable_db_instance": neptune.DataSourceOrderableDBInstance(),
@@ -638,6 +637,7 @@ func Provider() *schema.Provider {
 			"aws_route53_resolver_rule":     route53resolver.DataSourceRule(),
 			"aws_route53_resolver_rules":    route53resolver.DataSourceRules(),
 
+			"aws_canonical_user_id": s3.DataSourceCanonicalUserID(),
 			"aws_s3_bucket":         s3.DataSourceBucket(),
 			"aws_s3_bucket_object":  s3.DataSourceBucketObject(),
 			"aws_s3_bucket_objects": s3.DataSourceBucketObjects(),
@@ -680,6 +680,8 @@ func Provider() *schema.Provider {
 			"aws_ssoadmin_permission_set": ssoadmin.DataSourcePermissionSet(),
 
 			"aws_storagegateway_local_disk": storagegateway.DataSourceLocalDisk(),
+
+			"aws_caller_identity": sts.DataSourceCallerIdentity(),
 
 			"aws_transfer_server": transfer.DataSourceServer(),
 
@@ -1990,8 +1992,8 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 
 	for _, endpointsSetI := range endpointsSet.List() {
 		endpoints := endpointsSetI.(map[string]interface{})
-		for _, endpointServiceName := range EndpointServiceNames {
-			config.Endpoints[endpointServiceName] = endpoints[endpointServiceName].(string)
+		for _, serviceKey := range conns.ServiceKeys() {
+			config.Endpoints[serviceKey] = endpoints[serviceKey].(string)
 		}
 	}
 

@@ -355,7 +355,7 @@ More details about this code generation, including fixes for potential error mes
   }
   ```
 
-- Otherwise if the API does not support tagging on creation (the `Input` struct does not accept a `Tags` field), in the resource `Create` function, implement the logic to convert the configuration tags into the service API call to tag a resource, e.g., with ElasticSearch Domain:
+- Otherwise if the API does not support tagging on creation (the `Input` struct does not accept a `Tags` field), in the resource `Create` function, implement the logic to convert the configuration tags into the service API call to tag a resource, e.g., with Elasticsearch Domain:
 
   ```go
   // Typically declared near conn := /* ... */

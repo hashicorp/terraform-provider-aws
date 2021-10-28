@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
@@ -40,8 +41,8 @@ func TestAccEC2RouteTableDataSource_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(datasource1Name, "subnet_id"),
 					resource.TestCheckNoResourceAttr(datasource1Name, "gateway_id"),
 					resource.TestCheckResourceAttr(datasource1Name, "associations.#", "2"),
-					acctest.CheckListHasSomeElementAttrPair(datasource1Name, "associations", "subnet_id", snResourceName, "id"),
-					acctest.CheckListHasSomeElementAttrPair(datasource1Name, "associations", "gateway_id", igwResourceName, "id"),
+					testAccCheckListHasSomeElementAttrPair(datasource1Name, "associations", "subnet_id", snResourceName, "id"),
+					testAccCheckListHasSomeElementAttrPair(datasource1Name, "associations", "gateway_id", igwResourceName, "id"),
 					resource.TestCheckResourceAttr(datasource1Name, "tags.Name", rName),
 					// By filter.
 					acctest.MatchResourceAttrRegionalARN(datasource2Name, "arn", "ec2", regexp.MustCompile(`route-table/.+$`)),
@@ -52,8 +53,8 @@ func TestAccEC2RouteTableDataSource_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(datasource2Name, "subnet_id"),
 					resource.TestCheckNoResourceAttr(datasource2Name, "gateway_id"),
 					resource.TestCheckResourceAttr(datasource2Name, "associations.#", "2"),
-					acctest.CheckListHasSomeElementAttrPair(datasource2Name, "associations", "subnet_id", snResourceName, "id"),
-					acctest.CheckListHasSomeElementAttrPair(datasource2Name, "associations", "gateway_id", igwResourceName, "id"),
+					testAccCheckListHasSomeElementAttrPair(datasource2Name, "associations", "subnet_id", snResourceName, "id"),
+					testAccCheckListHasSomeElementAttrPair(datasource2Name, "associations", "gateway_id", igwResourceName, "id"),
 					resource.TestCheckResourceAttr(datasource2Name, "tags.Name", rName),
 					// By subnet ID.
 					acctest.MatchResourceAttrRegionalARN(datasource3Name, "arn", "ec2", regexp.MustCompile(`route-table/.+$`)),
@@ -64,8 +65,8 @@ func TestAccEC2RouteTableDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasource3Name, "subnet_id", snResourceName, "id"),
 					resource.TestCheckNoResourceAttr(datasource3Name, "gateway_id"),
 					resource.TestCheckResourceAttr(datasource3Name, "associations.#", "2"),
-					acctest.CheckListHasSomeElementAttrPair(datasource3Name, "associations", "subnet_id", snResourceName, "id"),
-					acctest.CheckListHasSomeElementAttrPair(datasource3Name, "associations", "gateway_id", igwResourceName, "id"),
+					testAccCheckListHasSomeElementAttrPair(datasource3Name, "associations", "subnet_id", snResourceName, "id"),
+					testAccCheckListHasSomeElementAttrPair(datasource3Name, "associations", "gateway_id", igwResourceName, "id"),
 					resource.TestCheckResourceAttr(datasource3Name, "tags.Name", rName),
 					// By route table ID.
 					acctest.MatchResourceAttrRegionalARN(datasource4Name, "arn", "ec2", regexp.MustCompile(`route-table/.+$`)),
@@ -76,8 +77,8 @@ func TestAccEC2RouteTableDataSource_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(datasource4Name, "subnet_id"),
 					resource.TestCheckNoResourceAttr(datasource4Name, "gateway_id"),
 					resource.TestCheckResourceAttr(datasource4Name, "associations.#", "2"),
-					acctest.CheckListHasSomeElementAttrPair(datasource4Name, "associations", "subnet_id", snResourceName, "id"),
-					acctest.CheckListHasSomeElementAttrPair(datasource4Name, "associations", "gateway_id", igwResourceName, "id"),
+					testAccCheckListHasSomeElementAttrPair(datasource4Name, "associations", "subnet_id", snResourceName, "id"),
+					testAccCheckListHasSomeElementAttrPair(datasource4Name, "associations", "gateway_id", igwResourceName, "id"),
 					resource.TestCheckResourceAttr(datasource4Name, "tags.Name", rName),
 					// By gateway ID.
 					acctest.MatchResourceAttrRegionalARN(datasource5Name, "arn", "ec2", regexp.MustCompile(`route-table/.+$`)),
@@ -88,8 +89,8 @@ func TestAccEC2RouteTableDataSource_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(datasource5Name, "subnet_id"),
 					resource.TestCheckResourceAttrPair(datasource5Name, "gateway_id", igwResourceName, "id"),
 					resource.TestCheckResourceAttr(datasource5Name, "associations.#", "2"),
-					acctest.CheckListHasSomeElementAttrPair(datasource5Name, "associations", "subnet_id", snResourceName, "id"),
-					acctest.CheckListHasSomeElementAttrPair(datasource5Name, "associations", "gateway_id", igwResourceName, "id"),
+					testAccCheckListHasSomeElementAttrPair(datasource5Name, "associations", "subnet_id", snResourceName, "id"),
+					testAccCheckListHasSomeElementAttrPair(datasource5Name, "associations", "gateway_id", igwResourceName, "id"),
 					resource.TestCheckResourceAttr(datasource5Name, "tags.Name", rName),
 				),
 			},
@@ -116,6 +117,52 @@ func TestAccEC2RouteTableDataSource_main(t *testing.T) {
 			},
 		},
 	})
+}
+
+// testAccCheckListHasSomeElementAttrPair is a TestCheckFunc which validates that the collection on the left has an element with an attribute value
+// matching the value on the left
+// Based on TestCheckResourceAttrPair from the Terraform SDK testing framework
+func testAccCheckListHasSomeElementAttrPair(nameFirst string, resourceAttr string, elementAttr string, nameSecond string, keySecond string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		isFirst, err := acctest.PrimaryInstanceState(s, nameFirst)
+		if err != nil {
+			return err
+		}
+
+		isSecond, err := acctest.PrimaryInstanceState(s, nameSecond)
+		if err != nil {
+			return err
+		}
+
+		vSecond, ok := isSecond.Attributes[keySecond]
+		if !ok {
+			return fmt.Errorf("%s: No attribute %q found", nameSecond, keySecond)
+		} else if vSecond == "" {
+			return fmt.Errorf("%s: No value was set on attribute %q", nameSecond, keySecond)
+		}
+
+		attrsFirst := make([]string, 0, len(isFirst.Attributes))
+		attrMatcher := regexp.MustCompile(fmt.Sprintf("%s\\.\\d+\\.%s", resourceAttr, elementAttr))
+		for k := range isFirst.Attributes {
+			if attrMatcher.MatchString(k) {
+				attrsFirst = append(attrsFirst, k)
+			}
+		}
+
+		found := false
+		for _, attrName := range attrsFirst {
+			vFirst := isFirst.Attributes[attrName]
+			if vFirst == vSecond {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return fmt.Errorf("%s: No element of %q found with attribute %q matching value %q set on %q of %s", nameFirst, resourceAttr, elementAttr, vSecond, keySecond, nameSecond)
+		}
+
+		return nil
+	}
 }
 
 func testAccRouteTableBasicDataSourceConfig(rName string) string {

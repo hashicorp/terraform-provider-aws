@@ -184,7 +184,7 @@ func ResourceTopicRule() *schema.Resource {
 						"endpoint": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validTopicRuleElasticSearchEndpoint,
+							ValidateFunc: validTopicRuleElasticsearchEndpoint,
 						},
 						"id": {
 							Type:     schema.TypeString,
@@ -656,7 +656,7 @@ func ResourceTopicRule() *schema.Resource {
 									"endpoint": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validTopicRuleElasticSearchEndpoint,
+										ValidateFunc: validTopicRuleElasticsearchEndpoint,
 									},
 									"id": {
 										Type:     schema.TypeString,
