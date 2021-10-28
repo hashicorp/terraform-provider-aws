@@ -1,4 +1,4 @@
-package ec2_test
+package meta_test
 
 import (
 	"fmt"
@@ -8,12 +8,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfmeta "github.com/hashicorp/terraform-provider-aws/internal/service/meta"
 )
 
-func TestAccEC2PartitionDataSource_basic(t *testing.T) {
+func TestAccMetaPartitionDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t),
+		ErrorCheck: acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{

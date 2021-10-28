@@ -98,6 +98,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediaconvert"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediapackage"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediastore"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/meta"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mq"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mwaa"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
@@ -413,12 +414,9 @@ func Provider() *schema.Provider {
 
 			"aws_ami":                                        ec2.DataSourceAMI(),
 			"aws_ami_ids":                                    ec2.DataSourceAMIIDs(),
-			"aws_arn":                                        ec2.DataSourceARN(),
 			"aws_availability_zone":                          ec2.DataSourceAvailabilityZone(),
 			"aws_availability_zones":                         ec2.DataSourceAvailabilityZones(),
-			"aws_billing_service_account":                    ec2.DataSourceBillingServiceAccount(),
 			"aws_customer_gateway":                           ec2.DataSourceCustomerGateway(),
-			"aws_default_tags":                               ec2.DataSourceDefaultTags(),
 			"aws_ebs_default_kms_key":                        ec2.DataSourceEBSDefaultKMSKey(),
 			"aws_ebs_encryption_by_default":                  ec2.DataSourceEBSEncryptionByDefault(),
 			"aws_ebs_snapshot":                               ec2.DataSourceEBSSnapshot(),
@@ -451,16 +449,12 @@ func Provider() *schema.Provider {
 			"aws_instance":                                   ec2.DataSourceInstance(),
 			"aws_instances":                                  ec2.DataSourceInstances(),
 			"aws_internet_gateway":                           ec2.DataSourceInternetGateway(),
-			"aws_ip_ranges":                                  ec2.DataSourceIPRanges(),
 			"aws_launch_template":                            ec2.DataSourceLaunchTemplate(),
 			"aws_nat_gateway":                                ec2.DataSourceNatGateway(),
 			"aws_network_acls":                               ec2.DataSourceNetworkACLs(),
 			"aws_network_interface":                          ec2.DataSourceNetworkInterface(),
 			"aws_network_interfaces":                         ec2.DataSourceNetworkInterfaces(),
-			"aws_partition":                                  ec2.DataSourcePartition(),
 			"aws_prefix_list":                                ec2.DataSourcePrefixList(),
-			"aws_region":                                     ec2.DataSourceRegion(),
-			"aws_regions":                                    ec2.DataSourceRegions(),
 			"aws_route_table":                                ec2.DataSourceRouteTable(),
 			"aws_route_tables":                               ec2.DataSourceRouteTables(),
 			"aws_route":                                      ec2.DataSourceRoute(),
@@ -587,6 +581,14 @@ func Provider() *schema.Provider {
 			"aws_lex_bot_alias": lexmodelbuilding.DataSourceBotAlias(),
 			"aws_lex_intent":    lexmodelbuilding.DataSourceIntent(),
 			"aws_lex_slot_type": lexmodelbuilding.DataSourceSlotType(),
+
+			"aws_arn":                     meta.DataSourceARN(),
+			"aws_billing_service_account": meta.DataSourceBillingServiceAccount(),
+			"aws_default_tags":            meta.DataSourceDefaultTags(),
+			"aws_ip_ranges":               meta.DataSourceIPRanges(),
+			"aws_partition":               meta.DataSourcePartition(),
+			"aws_region":                  meta.DataSourceRegion(),
+			"aws_regions":                 meta.DataSourceRegions(),
 
 			"aws_mq_broker": mq.DataSourceBroker(),
 
@@ -1990,8 +1992,8 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 
 	for _, endpointsSetI := range endpointsSet.List() {
 		endpoints := endpointsSetI.(map[string]interface{})
-		for _, endpointServiceName := range EndpointServiceNames {
-			config.Endpoints[endpointServiceName] = endpoints[endpointServiceName].(string)
+		for _, serviceKey := range conns.ServiceKeys() {
+			config.Endpoints[serviceKey] = endpoints[serviceKey].(string)
 		}
 	}
 

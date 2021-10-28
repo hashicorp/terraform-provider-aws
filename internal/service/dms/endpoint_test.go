@@ -198,11 +198,11 @@ func TestAccDMSEndpoint_elasticSearch(t *testing.T) {
 	})
 }
 
-// TestAccDMSEndpoint_ElasticSearch_extraConnectionAttributes validates
+// TestAccDMSEndpoint_Elasticsearch_extraConnectionAttributes validates
 // extra_connection_attributes handling for "elasticsearch" engine not affected
 // by changes made specific to suppressing diffs in the case of "s3"/"mongodb" engine
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/8009
-func TestAccDMSEndpoint_ElasticSearch_extraConnectionAttributes(t *testing.T) {
+func TestAccDMSEndpoint_Elasticsearch_extraConnectionAttributes(t *testing.T) {
 	resourceName := "aws_dms_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -229,7 +229,7 @@ func TestAccDMSEndpoint_ElasticSearch_extraConnectionAttributes(t *testing.T) {
 	})
 }
 
-func TestAccDMSEndpoint_ElasticSearch_errorRetryDuration(t *testing.T) {
+func TestAccDMSEndpoint_Elasticsearch_errorRetryDuration(t *testing.T) {
 	resourceName := "aws_dms_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -267,7 +267,7 @@ func TestAccDMSEndpoint_ElasticSearch_errorRetryDuration(t *testing.T) {
 	})
 }
 
-func TestAccDMSEndpoint_ElasticSearch_fullLoadErrorPercentage(t *testing.T) {
+func TestAccDMSEndpoint_Elasticsearch_fullLoadErrorPercentage(t *testing.T) {
 	resourceName := "aws_dms_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 

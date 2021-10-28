@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"reflect"
 	"regexp"
 	"sort"
 	"strconv"
@@ -1214,79 +1213,6 @@ func CheckDNSSuffix(providers *[]*schema.Provider, expectedDnsSuffix string) res
 	}
 }
 
-func CheckEndpoints(providers *[]*schema.Provider) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if providers == nil {
-			return fmt.Errorf("no providers initialized")
-		}
-
-		// Match conns.AWSClient struct field names to endpoint configuration names
-		endpointFieldNameF := func(endpoint string) func(string) bool {
-			return func(name string) bool {
-				switch endpoint {
-				case "applicationautoscaling":
-					endpoint = "appautoscaling"
-				case "budgets":
-					endpoint = "budget"
-				case "cloudformation":
-					endpoint = "cf"
-				case "cloudhsm":
-					endpoint = "cloudhsmv2"
-				case "cognitoidentity":
-					endpoint = "cognito"
-				case "configservice":
-					endpoint = "config"
-				case "cur":
-					endpoint = "costandusagereport"
-				case "directconnect":
-					endpoint = "dx"
-				case "lexmodels":
-					endpoint = "lexmodel"
-				case "route53":
-					endpoint = "r53"
-				case "sdb":
-					endpoint = "simpledb"
-				case "serverlessrepo":
-					endpoint = "serverlessapplicationrepository"
-				case "servicecatalog":
-					endpoint = "sc"
-				case "servicediscovery":
-					endpoint = "sd"
-				case "stepfunctions":
-					endpoint = "sfn"
-				}
-
-				return name == fmt.Sprintf("%sconn", endpoint)
-			}
-		}
-
-		for _, provo := range *providers {
-			if provo == nil || provo.Meta() == nil || provo.Meta().(*conns.AWSClient) == nil {
-				continue
-			}
-
-			providerClient := provo.Meta().(*conns.AWSClient)
-
-			for _, endpointServiceName := range provider.EndpointServiceNames {
-				providerClientField := reflect.Indirect(reflect.ValueOf(providerClient)).FieldByNameFunc(endpointFieldNameF(endpointServiceName))
-
-				if !providerClientField.IsValid() {
-					return fmt.Errorf("unable to match conns.AWSClient struct field name for endpoint name: %s", endpointServiceName)
-				}
-
-				actualEndpoint := reflect.Indirect(reflect.Indirect(providerClientField).FieldByName("Config").FieldByName("Endpoint")).String()
-				expectedEndpoint := fmt.Sprintf("http://%s", endpointServiceName)
-
-				if actualEndpoint != expectedEndpoint {
-					return fmt.Errorf("expected endpoint (%s) value (%s), got: %s", endpointServiceName, expectedEndpoint, actualEndpoint)
-				}
-			}
-		}
-
-		return nil
-	}
-}
-
 func CheckIgnoreTagsKeyPrefixes(providers *[]*schema.Provider, expectedKeyPrefixes []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if providers == nil {
@@ -1658,24 +1584,6 @@ provider "aws" {
   skip_requesting_account_id  = true
 }
 `)
-}
-
-func ConfigEndpoints(endpoints string) string {
-	//lintignore:AT004
-	return ConfigCompose(
-		testAccProviderConfigBase,
-		fmt.Sprintf(`
-provider "aws" {
-  skip_credentials_validation = true
-  skip_get_ec2_platforms      = true
-  skip_metadata_api_check     = true
-  skip_requesting_account_id  = true
-
-  endpoints {
-    %[1]s
-  }
-}
-`, endpoints))
 }
 
 func ConfigIgnoreTagsEmptyConfigurationBlock() string {
@@ -2109,7 +2017,7 @@ func PreCheckAPIGatewayTypeEDGE(t *testing.T) {
 }
 
 func PreCheckDirectoryService(t *testing.T) {
-	conn := Provider.Meta().(*conns.AWSClient).DirectoryServiceConn
+	conn := Provider.Meta().(*conns.AWSClient).DSConn
 
 	input := &directoryservice.DescribeDirectoriesInput{}
 
@@ -2128,7 +2036,7 @@ func PreCheckDirectoryService(t *testing.T) {
 // and we do not have a good read-only way to determine this situation. Here we
 // opt to perform a creation that will fail so we can determine Simple AD support.
 func PreCheckDirectoryServiceSimpleDirectory(t *testing.T) {
-	conn := Provider.Meta().(*conns.AWSClient).DirectoryServiceConn
+	conn := Provider.Meta().(*conns.AWSClient).DSConn
 
 	input := &directoryservice.CreateDirectoryInput{
 		Name:     aws.String("corp.example.com"),

@@ -1,22 +1,22 @@
-package ec2_test
+package meta_test
 
 import (
 	"fmt"
 	"strconv"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfmeta "github.com/hashicorp/terraform-provider-aws/internal/service/meta"
 )
 
-func TestAccEC2RegionsDataSource_basic(t *testing.T) {
+func TestAccMetaRegionsDataSource_basic(t *testing.T) {
 	resourceName := "data.aws_regions.empty"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck: acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
@@ -30,12 +30,12 @@ func TestAccEC2RegionsDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2RegionsDataSource_filter(t *testing.T) {
+func TestAccMetaRegionsDataSource_filter(t *testing.T) {
 	resourceName := "data.aws_regions.opt_in_status"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck: acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
@@ -48,12 +48,12 @@ func TestAccEC2RegionsDataSource_filter(t *testing.T) {
 	})
 }
 
-func TestAccEC2RegionsDataSource_allRegions(t *testing.T) {
+func TestAccMetaRegionsDataSource_allRegions(t *testing.T) {
 	resourceAllRegions := "data.aws_regions.all_regions"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck: acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{

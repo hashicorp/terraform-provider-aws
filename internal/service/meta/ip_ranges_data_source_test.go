@@ -1,4 +1,4 @@
-package ec2_test
+package meta_test
 
 import (
 	"fmt"
@@ -12,12 +12,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfmeta "github.com/hashicorp/terraform-provider-aws/internal/service/meta"
 )
 
-func TestAccEC2IPRangesDataSource_basic(t *testing.T) {
+func TestAccMetaIPRangesDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t),
+		ErrorCheck: acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
@@ -32,10 +33,10 @@ func TestAccEC2IPRangesDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2IPRangesDataSource_url(t *testing.T) {
+func TestAccMetaIPRangesDataSource_url(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t),
+		ErrorCheck: acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{

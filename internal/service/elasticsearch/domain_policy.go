@@ -37,21 +37,21 @@ func ResourceDomainPolicy() *schema.Resource {
 }
 
 func resourceDomainPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticSearchConn
+	conn := meta.(*conns.AWSClient).ElasticsearchConn
 	name := d.Get("domain_name").(string)
 	out, err := conn.DescribeElasticsearchDomain(&elasticsearch.DescribeElasticsearchDomainInput{
 		DomainName: aws.String(name),
 	})
 	if err != nil {
 		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "ResourceNotFoundException" {
-			log.Printf("[WARN] ElasticSearch Domain %q not found, removing", name)
+			log.Printf("[WARN] Elasticsearch Domain %q not found, removing", name)
 			d.SetId("")
 			return nil
 		}
 		return err
 	}
 
-	log.Printf("[DEBUG] Received ElasticSearch domain: %s", out)
+	log.Printf("[DEBUG] Received Elasticsearch domain: %s", out)
 
 	ds := out.DomainStatus
 	d.Set("access_policies", ds.AccessPolicies)
@@ -60,7 +60,7 @@ func resourceDomainPolicyRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDomainPolicyUpsert(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticSearchConn
+	conn := meta.(*conns.AWSClient).ElasticsearchConn
 	domainName := d.Get("domain_name").(string)
 	_, err := conn.UpdateElasticsearchDomainConfig(&elasticsearch.UpdateElasticsearchDomainConfigInput{
 		DomainName:     aws.String(domainName),
@@ -103,7 +103,7 @@ func resourceDomainPolicyUpsert(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceDomainPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticSearchConn
+	conn := meta.(*conns.AWSClient).ElasticsearchConn
 
 	_, err := conn.UpdateElasticsearchDomainConfig(&elasticsearch.UpdateElasticsearchDomainConfigInput{
 		DomainName:     aws.String(d.Get("domain_name").(string)),
@@ -113,7 +113,7 @@ func resourceDomainPolicyDelete(d *schema.ResourceData, meta interface{}) error 
 		return err
 	}
 
-	log.Printf("[DEBUG] Waiting for ElasticSearch domain policy %q to be deleted", d.Get("domain_name").(string))
+	log.Printf("[DEBUG] Waiting for Elasticsearch domain policy %q to be deleted", d.Get("domain_name").(string))
 	input := &elasticsearch.DescribeElasticsearchDomainInput{
 		DomainName: aws.String(d.Get("domain_name").(string)),
 	}

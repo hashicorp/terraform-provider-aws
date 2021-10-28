@@ -1,4 +1,4 @@
-package ec2
+package meta
 
 import (
 	"github.com/aws/aws-sdk-go/aws/arn"

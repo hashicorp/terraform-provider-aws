@@ -2,11 +2,13 @@ package acctest
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
@@ -169,8 +171,8 @@ func TestAccAcctest_Provider_endpoints(t *testing.T) {
 	var endpoints strings.Builder
 
 	// Initialize each endpoint configuration with matching name and value
-	for _, endpointServiceName := range provider.EndpointServiceNames {
-		endpoints.WriteString(fmt.Sprintf("%s = \"http://%s\"\n", endpointServiceName, endpointServiceName))
+	for _, serviceKey := range conns.ServiceKeys() {
+		endpoints.WriteString(fmt.Sprintf("%s = \"http://%s\"\n", serviceKey, serviceKey))
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -450,4 +452,68 @@ func TestAccAcctest_ProviderAssumeRole_empty(t *testing.T) {
 			},
 		},
 	})
+}
+
+func ConfigEndpoints(endpoints string) string {
+	//lintignore:AT004
+	return ConfigCompose(
+		testAccProviderConfigBase,
+		fmt.Sprintf(`
+provider "aws" {
+  skip_credentials_validation = true
+  skip_get_ec2_platforms      = true
+  skip_metadata_api_check     = true
+  skip_requesting_account_id  = true
+
+  endpoints {
+    %[1]s
+  }
+}
+`, endpoints))
+}
+
+func CheckEndpoints(providers *[]*schema.Provider) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if providers == nil {
+			return fmt.Errorf("no providers initialized")
+		}
+
+		// Match conns.AWSClient struct field names to endpoint configuration names
+		endpointFieldNameF := func(key string) func(string) bool {
+			return func(name string) bool {
+				serviceUpper := ""
+				var err error
+				if serviceUpper, err = conns.ServiceProviderNameUpper(key); err != nil {
+					return false
+				}
+
+				return name == fmt.Sprintf("%sConn", serviceUpper)
+			}
+		}
+
+		for _, provo := range *providers {
+			if provo == nil || provo.Meta() == nil || provo.Meta().(*conns.AWSClient) == nil {
+				continue
+			}
+
+			providerClient := provo.Meta().(*conns.AWSClient)
+
+			for _, serviceKey := range conns.ServiceKeys() {
+				providerClientField := reflect.Indirect(reflect.ValueOf(providerClient)).FieldByNameFunc(endpointFieldNameF(serviceKey))
+
+				if !providerClientField.IsValid() {
+					return fmt.Errorf("unable to match conns.AWSClient struct field name for endpoint name: %s", serviceKey)
+				}
+
+				actualEndpoint := reflect.Indirect(reflect.Indirect(providerClientField).FieldByName("Config").FieldByName("Endpoint")).String()
+				expectedEndpoint := fmt.Sprintf("http://%s", serviceKey)
+
+				if actualEndpoint != expectedEndpoint {
+					return fmt.Errorf("expected endpoint (%s) value (%s), got: %s", serviceKey, expectedEndpoint, actualEndpoint)
+				}
+			}
+		}
+
+		return nil
+	}
 }

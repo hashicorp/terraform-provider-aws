@@ -1,22 +1,22 @@
-package ec2_test
+package meta_test
 
 import (
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfmeta "github.com/hashicorp/terraform-provider-aws/internal/service/meta"
 )
 
-func TestAccEC2DefaultTagsDataSource_basic(t *testing.T) {
+func TestAccMetaDefaultTagsDataSource_basic(t *testing.T) {
 	var providers []*schema.Provider
 
 	dataSourceName := "data.aws_default_tags.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:        acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		ProviderFactories: acctest.FactoriesInternal(&providers),
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
@@ -34,14 +34,14 @@ func TestAccEC2DefaultTagsDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2DefaultTagsDataSource_empty(t *testing.T) {
+func TestAccMetaDefaultTagsDataSource_empty(t *testing.T) {
 	var providers []*schema.Provider
 
 	dataSourceName := "data.aws_default_tags.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:        acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		ProviderFactories: acctest.FactoriesInternal(&providers),
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
@@ -58,14 +58,14 @@ func TestAccEC2DefaultTagsDataSource_empty(t *testing.T) {
 	})
 }
 
-func TestAccEC2DefaultTagsDataSource_multiple(t *testing.T) {
+func TestAccMetaDefaultTagsDataSource_multiple(t *testing.T) {
 	var providers []*schema.Provider
 
 	dataSourceName := "data.aws_default_tags.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:        acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		ProviderFactories: acctest.FactoriesInternal(&providers),
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
@@ -84,14 +84,14 @@ func TestAccEC2DefaultTagsDataSource_multiple(t *testing.T) {
 	})
 }
 
-func TestAccEC2DefaultTagsDataSource_ignore(t *testing.T) {
+func TestAccMetaDefaultTagsDataSource_ignore(t *testing.T) {
 	var providers []*schema.Provider
 
 	dataSourceName := "data.aws_default_tags.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:        acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		ProviderFactories: acctest.FactoriesInternal(&providers),
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{

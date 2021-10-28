@@ -278,7 +278,7 @@ func DataSourceDomain() *schema.Resource {
 }
 
 func dataSourceDomainRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticSearchConn
+	conn := meta.(*conns.AWSClient).ElasticsearchConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	req := &elasticsearchservice.DescribeElasticsearchDomainInput{

@@ -1,4 +1,4 @@
-package ec2_test
+package meta_test
 
 import (
 	"fmt"
@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfmeta "github.com/hashicorp/terraform-provider-aws/internal/service/meta"
 )
 
 func TestFindRegionByEc2Endpoint(t *testing.T) {
@@ -35,7 +35,7 @@ func TestFindRegionByEc2Endpoint(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		_, err := tfec2.FindRegionByEndpoint(tc.Value)
+		_, err := tfmeta.FindRegionByEndpoint(tc.Value)
 		if tc.ErrCount == 0 && err != nil {
 			t.Fatalf("expected %q not to trigger an error, received: %s", tc.Value, err)
 		}
@@ -65,7 +65,7 @@ func TestFindRegionByName(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		_, err := tfec2.FindRegionByName(tc.Value)
+		_, err := tfmeta.FindRegionByName(tc.Value)
 		if tc.ErrCount == 0 && err != nil {
 			t.Fatalf("expected %q not to trigger an error, received: %s", tc.Value, err)
 		}
@@ -75,12 +75,12 @@ func TestFindRegionByName(t *testing.T) {
 	}
 }
 
-func TestAccEC2RegionDataSource_basic(t *testing.T) {
+func TestAccMetaRegionDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_region.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck: acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
@@ -95,19 +95,19 @@ func TestAccEC2RegionDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2RegionDataSource_endpoint(t *testing.T) {
+func TestAccMetaRegionDataSource_endpoint(t *testing.T) {
 	dataSourceName := "data.aws_region.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck: acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRegionDataSourceConfig_endpoint(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, "description", regexp.MustCompile(`^.+$`)),
-					resource.TestMatchResourceAttr(dataSourceName, "endpoint", regexp.MustCompile(fmt.Sprintf("^ec2\\.[^.]+\\.%s$", acctest.PartitionDNSSuffix()))),
+					resource.TestMatchResourceAttr(dataSourceName, "endpoint", regexp.MustCompile(fmt.Sprintf("^%s\\.[^.]+\\.%s$", ec2.EndpointsID, acctest.PartitionDNSSuffix()))),
 					resource.TestMatchResourceAttr(dataSourceName, "name", regexp.MustCompile(`^.+$`)),
 				),
 			},
@@ -115,12 +115,12 @@ func TestAccEC2RegionDataSource_endpoint(t *testing.T) {
 	})
 }
 
-func TestAccEC2RegionDataSource_endpointAndName(t *testing.T) {
+func TestAccMetaRegionDataSource_endpointAndName(t *testing.T) {
 	dataSourceName := "data.aws_region.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck: acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
@@ -135,12 +135,12 @@ func TestAccEC2RegionDataSource_endpointAndName(t *testing.T) {
 	})
 }
 
-func TestAccEC2RegionDataSource_name(t *testing.T) {
+func TestAccMetaRegionDataSource_name(t *testing.T) {
 	dataSourceName := "data.aws_region.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck: acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
