@@ -3,6 +3,8 @@ package kafka_test
 import (
 	"fmt"
 	"regexp"
+	"sort"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -81,9 +83,9 @@ func TestAccKafkaCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers", ""),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_sasl_scram", ""),
 					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_tls", mskClusterBoostrapBrokersTlsRegexp),
-					acctest.CheckResourceAttrIsSortedCSV(resourceName, "bootstrap_brokers_tls"),
-					acctest.CheckResourceAttrIsSortedCSV(resourceName, "zookeeper_connect_string"),
-					acctest.CheckResourceAttrIsSortedCSV(resourceName, "zookeeper_connect_string_tls"),
+					testAccCheckResourceAttrIsSortedCSV(resourceName, "bootstrap_brokers_tls"),
+					testAccCheckResourceAttrIsSortedCSV(resourceName, "zookeeper_connect_string"),
+					testAccCheckResourceAttrIsSortedCSV(resourceName, "zookeeper_connect_string_tls"),
 				),
 			},
 			{
@@ -202,7 +204,7 @@ func TestAccKafkaCluster_ClientAuthenticationSASL_scram(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers", ""),
 					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_sasl_scram", mskClusterBoostrapBrokersSaslScramRegexp),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_tls", ""),
-					acctest.CheckResourceAttrIsSortedCSV(resourceName, "bootstrap_brokers_sasl_scram"),
+					testAccCheckResourceAttrIsSortedCSV(resourceName, "bootstrap_brokers_sasl_scram"),
 				),
 			},
 			{
@@ -224,7 +226,7 @@ func TestAccKafkaCluster_ClientAuthenticationSASL_scram(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers", ""),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_sasl_scram", ""),
 					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_tls", mskClusterBoostrapBrokersTlsRegexp),
-					acctest.CheckResourceAttrIsSortedCSV(resourceName, "bootstrap_brokers_tls"),
+					testAccCheckResourceAttrIsSortedCSV(resourceName, "bootstrap_brokers_tls"),
 				),
 			},
 			{
@@ -260,7 +262,7 @@ func TestAccKafkaCluster_ClientAuthenticationSASL_iam(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers", ""),
 					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_sasl_iam", mskClusterBoostrapBrokersSaslIamRegexp),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_tls", ""),
-					acctest.CheckResourceAttrIsSortedCSV(resourceName, "bootstrap_brokers_sasl_iam"),
+					testAccCheckResourceAttrIsSortedCSV(resourceName, "bootstrap_brokers_sasl_iam"),
 				),
 			},
 			{
@@ -282,7 +284,7 @@ func TestAccKafkaCluster_ClientAuthenticationSASL_iam(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers", ""),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_sasl_iam", ""),
 					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_tls", mskClusterBoostrapBrokersTlsRegexp),
-					acctest.CheckResourceAttrIsSortedCSV(resourceName, "bootstrap_brokers_tls"),
+					testAccCheckResourceAttrIsSortedCSV(resourceName, "bootstrap_brokers_tls"),
 				),
 			},
 			{
@@ -445,7 +447,7 @@ func TestAccKafkaCluster_EncryptionInfoEncryptionInTransit_clientBroker(t *testi
 					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers", mskClusterBoostrapBrokersRegexp),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_sasl_scram", ""),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_tls", ""),
-					acctest.CheckResourceAttrIsSortedCSV(resourceName, "bootstrap_brokers"),
+					testAccCheckResourceAttrIsSortedCSV(resourceName, "bootstrap_brokers"),
 				),
 			},
 			{
@@ -554,7 +556,7 @@ func TestAccKafkaCluster_numberOfBrokerNodes(t *testing.T) {
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.client_subnets.*", "aws_subnet.example_subnet_az2", "id"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.client_subnets.*", "aws_subnet.example_subnet_az3", "id"),
 					resource.TestCheckResourceAttr(resourceName, "number_of_broker_nodes", "3"),
-					acctest.CheckResourceAttrIsSortedCSV(resourceName, "bootstrap_brokers_tls"),
+					testAccCheckResourceAttrIsSortedCSV(resourceName, "bootstrap_brokers_tls"),
 				),
 			},
 			{
@@ -579,7 +581,7 @@ func TestAccKafkaCluster_numberOfBrokerNodes(t *testing.T) {
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.client_subnets.*", "aws_subnet.example_subnet_az2", "id"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.client_subnets.*", "aws_subnet.example_subnet_az3", "id"),
 					resource.TestCheckResourceAttr(resourceName, "number_of_broker_nodes", "6"),
-					acctest.CheckResourceAttrIsSortedCSV(resourceName, "bootstrap_brokers_tls"),
+					testAccCheckResourceAttrIsSortedCSV(resourceName, "bootstrap_brokers_tls"),
 				),
 			},
 		},
@@ -743,8 +745,8 @@ func TestAccKafkaCluster_kafkaVersionDowngrade(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers", mskClusterBoostrapBrokersRegexp),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_sasl_scram", ""),
 					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_tls", mskClusterBoostrapBrokersTlsRegexp),
-					acctest.CheckResourceAttrIsSortedCSV(resourceName, "bootstrap_brokers"),
-					acctest.CheckResourceAttrIsSortedCSV(resourceName, "bootstrap_brokers_tls"),
+					testAccCheckResourceAttrIsSortedCSV(resourceName, "bootstrap_brokers"),
+					testAccCheckResourceAttrIsSortedCSV(resourceName, "bootstrap_brokers_tls"),
 				),
 			},
 			{
@@ -764,8 +766,8 @@ func TestAccKafkaCluster_kafkaVersionDowngrade(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers", mskClusterBoostrapBrokersRegexp),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_sasl_scram", ""),
 					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_tls", mskClusterBoostrapBrokersTlsRegexp),
-					acctest.CheckResourceAttrIsSortedCSV(resourceName, "bootstrap_brokers"),
-					acctest.CheckResourceAttrIsSortedCSV(resourceName, "bootstrap_brokers_tls"),
+					testAccCheckResourceAttrIsSortedCSV(resourceName, "bootstrap_brokers"),
+					testAccCheckResourceAttrIsSortedCSV(resourceName, "bootstrap_brokers_tls"),
 				),
 			},
 		},
@@ -864,6 +866,27 @@ func TestAccKafkaCluster_tags(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccCheckResourceAttrIsSortedCSV(resourceName, attributeName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		is, err := acctest.PrimaryInstanceState(s, resourceName)
+		if err != nil {
+			return err
+		}
+
+		v, ok := is.Attributes[attributeName]
+		if !ok {
+			return fmt.Errorf("%s: No attribute %q found", resourceName, attributeName)
+		}
+
+		splitV := strings.Split(v, ",")
+		if !sort.StringsAreSorted(splitV) {
+			return fmt.Errorf("%s: Expected attribute %q to be sorted, got %q", resourceName, attributeName, v)
+		}
+
+		return nil
+	}
 }
 
 func testAccCheckMskClusterDestroy(s *terraform.State) error {

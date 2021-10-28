@@ -2,9 +2,11 @@ package ec2_test
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -38,7 +40,7 @@ func TestAccEC2NetworkInterface_ENI_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ipv6_addresses.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "mac_address"),
 					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
-					acctest.CheckResourceAttrPrivateDNSName(resourceName, "private_dns_name", &conf.PrivateIpAddress),
+					checkResourceAttrPrivateDNSName(resourceName, "private_dns_name", &conf.PrivateIpAddress),
 					resource.TestCheckResourceAttrSet(resourceName, "private_ip"),
 					resource.TestCheckResourceAttr(resourceName, "private_ips.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
@@ -551,6 +553,29 @@ func testAccCheckENIMakeExternalAttachment(n string, conf *ec2.NetworkInterface)
 		}
 		return nil
 	}
+}
+
+// checkResourceAttrPrivateDNSName ensures the Terraform state exactly matches a private DNS name
+//
+// For example: ip-172-16-10-100.us-west-2.compute.internal
+func checkResourceAttrPrivateDNSName(resourceName, attributeName string, privateIpAddress **string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		privateDnsName := fmt.Sprintf("ip-%s.%s", convertIPToDashIP(**privateIpAddress), regionalPrivateDNSSuffix(acctest.Region()))
+
+		return resource.TestCheckResourceAttr(resourceName, attributeName, privateDnsName)(s)
+	}
+}
+
+func convertIPToDashIP(ip string) string {
+	return strings.Replace(ip, ".", "-", -1)
+}
+
+func regionalPrivateDNSSuffix(region string) string {
+	if region == endpoints.UsEast1RegionID {
+		return "ec2.internal"
+	}
+
+	return fmt.Sprintf("%s.compute.internal", region)
 }
 
 func testAccENIIPV4BaseConfig(rName string) string {
