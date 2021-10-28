@@ -30,6 +30,8 @@ const (
 	AppDeletedTimeout                 = 10 * time.Minute
 	FlowDefinitionActiveTimeout       = 2 * time.Minute
 	FlowDefinitionDeletedTimeout      = 2 * time.Minute
+	ProjectCreatedTimeout             = 2 * time.Minute
+	ProjectDeletedTimeout             = 2 * time.Minute
 )
 
 // WaitNotebookInstanceInService waits for a NotebookInstance to return InService
@@ -423,6 +425,42 @@ func WaitFlowDefinitionDeleted(conn *sagemaker.SageMaker, name string) (*sagemak
 			tfresource.SetLastError(err, errors.New(reason))
 		}
 
+		return output, err
+	}
+
+	return nil, err
+}
+
+// WaitProjectDeleted waits for a FlowDefinition to return Deleted
+func WaitProjectDeleted(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeProjectOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{sagemaker.ProjectStatusDeleteInProgress},
+		Target:  []string{},
+		Refresh: StatusProject(conn, name),
+		Timeout: ProjectDeletedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*sagemaker.DescribeProjectOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+// WaitProjectCreated waits for a Project to return Created
+func WaitProjectCreated(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeProjectOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{sagemaker.ProjectStatusPending, sagemaker.ProjectStatusCreateInProgress},
+		Target:  []string{sagemaker.ProjectStatusCreateCompleted},
+		Refresh: StatusProject(conn, name),
+		Timeout: ProjectCreatedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*sagemaker.DescribeProjectOutput); ok {
 		return output, err
 	}
 
