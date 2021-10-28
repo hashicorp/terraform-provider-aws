@@ -29,6 +29,7 @@ The following arguments are supported:
 * `gateway_arn` - (Required) Amazon Resource Name (ARN) of the file gateway.
 * `location_arn` - (Required) The ARN of the backed storage used for storing file data.
 * `role_arn` - (Required) The ARN of the AWS Identity and Access Management (IAM) role that a file gateway assumes when it accesses the underlying storage.
+* `audit_destination_arn` - (Optional) The Amazon Resource Name (ARN) of the storage used for audit logs.
 * `default_storage_class` - (Optional) The default storage class for objects put into an Amazon S3 bucket by the file gateway. Defaults to `S3_STANDARD`. Valid values: `S3_STANDARD`, `S3_STANDARD_IA`, `S3_ONEZONE_IA`.
 * `guess_mime_type_enabled` - (Optional) Boolean value that enables guessing of the MIME type for uploaded objects based on file extensions. Defaults to `true`.
 * `kms_encrypted` - (Optional) Boolean value if `true` to use Amazon S3 server side encryption with your own AWS KMS key, or `false` to use a key managed by Amazon S3. Defaults to `false`.

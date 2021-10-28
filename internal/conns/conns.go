@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/aws/request"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/accessanalyzer"
 	"github.com/aws/aws-sdk-go/service/acm"
 	"github.com/aws/aws-sdk-go/service/acmpca"
@@ -448,12 +449,7 @@ func (c *Config) Client() (interface{}, error) {
 		SkipRequestingAccountId:     c.SkipRequestingAccountId,
 		StsEndpoint:                 c.Endpoints["sts"],
 		Token:                       c.Token,
-		UserAgentProducts: []*awsbase.UserAgentProduct{
-			{Name: "APN", Version: "1.0"},
-			{Name: "HashiCorp", Version: "1.0"},
-			{Name: "Terraform", Version: c.TerraformVersion, Extra: []string{"+https://www.terraform.io"}},
-			{Name: "terraform-provider-aws", Version: version.ProviderVersion, Extra: []string{"+https://registry.terraform.io/providers/hashicorp/aws"}},
-		},
+		UserAgentProducts:           StdUserAgentProducts(c.TerraformVersion),
 	}
 
 	sess, accountID, Partition, err := awsbase.GetSessionWithAccountIDAndPartition(awsbaseConfig)
@@ -939,6 +935,32 @@ func (c *Config) Client() (interface{}, error) {
 	}
 
 	return client, nil
+}
+
+func StdUserAgentProducts(terraformVersion string) []*awsbase.UserAgentProduct {
+	return []*awsbase.UserAgentProduct{
+		{Name: "APN", Version: "1.0"},
+		{Name: "HashiCorp", Version: "1.0"},
+		{Name: "Terraform", Version: terraformVersion, Extra: []string{"+https://www.terraform.io"}},
+		{Name: "terraform-provider-aws", Version: version.ProviderVersion, Extra: []string{"+https://registry.terraform.io/providers/hashicorp/aws"}},
+	}
+}
+
+func NewSessionForRegion(cfg *aws.Config, region, terraformVersion string) (*session.Session, error) {
+	session, err := session.NewSession(cfg)
+
+	if err != nil {
+		return nil, err
+	}
+
+	userAgentProducts := StdUserAgentProducts(terraformVersion)
+	// Copied from github.com/hashicorp/aws-sdk-go-base@v1.0.0/session.go:
+	for i := len(userAgentProducts) - 1; i >= 0; i-- {
+		product := userAgentProducts[i]
+		session.Handlers.Build.PushFront(request.MakeAddToUserAgentHandler(product.Name, product.Version, product.Extra...))
+	}
+
+	return session.Copy(&aws.Config{Region: aws.String(region)}), nil
 }
 
 func HasEC2Classic(platforms []string) bool {

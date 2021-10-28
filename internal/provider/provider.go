@@ -807,13 +807,14 @@ func Provider() *schema.Provider {
 
 			"aws_autoscalingplans_scaling_plan": autoscalingplans.ResourceScalingPlan(),
 
-			"aws_backup_global_settings":     backup.ResourceGlobalSettings(),
-			"aws_backup_plan":                backup.ResourcePlan(),
-			"aws_backup_region_settings":     backup.ResourceRegionSettings(),
-			"aws_backup_selection":           backup.ResourceSelection(),
-			"aws_backup_vault":               backup.ResourceVault(),
-			"aws_backup_vault_notifications": backup.ResourceVaultNotifications(),
-			"aws_backup_vault_policy":        backup.ResourceVaultPolicy(),
+			"aws_backup_global_settings":          backup.ResourceGlobalSettings(),
+			"aws_backup_plan":                     backup.ResourcePlan(),
+			"aws_backup_region_settings":          backup.ResourceRegionSettings(),
+			"aws_backup_selection":                backup.ResourceSelection(),
+			"aws_backup_vault":                    backup.ResourceVault(),
+			"aws_backup_vault_lock_configuration": backup.ResourceVaultLockConfiguration(),
+			"aws_backup_vault_notifications":      backup.ResourceVaultNotifications(),
+			"aws_backup_vault_policy":             backup.ResourceVaultPolicy(),
 
 			"aws_batch_compute_environment": batch.ResourceComputeEnvironment(),
 			"aws_batch_job_definition":      batch.ResourceJobDefinition(),
@@ -1266,11 +1267,13 @@ func Provider() *schema.Provider {
 
 			"aws_kinesis_video_stream": kinesisvideo.ResourceStream(),
 
-			"aws_kms_alias":        kms.ResourceAlias(),
-			"aws_kms_ciphertext":   kms.ResourceCiphertext(),
-			"aws_kms_external_key": kms.ResourceExternalKey(),
-			"aws_kms_grant":        kms.ResourceGrant(),
-			"aws_kms_key":          kms.ResourceKey(),
+			"aws_kms_alias":                kms.ResourceAlias(),
+			"aws_kms_ciphertext":           kms.ResourceCiphertext(),
+			"aws_kms_external_key":         kms.ResourceExternalKey(),
+			"aws_kms_grant":                kms.ResourceGrant(),
+			"aws_kms_key":                  kms.ResourceKey(),
+			"aws_kms_replica_external_key": kms.ResourceReplicaExternalKey(),
+			"aws_kms_replica_key":          kms.ResourceReplicaKey(),
 
 			"aws_lakeformation_data_lake_settings": lakeformation.ResourceDataLakeSettings(),
 			"aws_lakeformation_permissions":        lakeformation.ResourcePermissions(),
@@ -1376,6 +1379,7 @@ func Provider() *schema.Provider {
 
 			"aws_prometheus_workspace":                prometheus.ResourceWorkspace(),
 			"aws_prometheus_alert_manager_definition": prometheus.ResourceAlertManagerDefinition(),
+			"aws_prometheus_rule_group_namespace":     prometheus.ResourceRuleGroupNamespace(),
 
 			"aws_qldb_ledger": qldb.ResourceLedger(),
 

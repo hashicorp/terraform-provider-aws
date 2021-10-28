@@ -678,6 +678,67 @@ func TestAccGlueCrawler_S3Target_exclusions(t *testing.T) {
 	})
 }
 
+func TestAccGlueCrawler_S3Target_eventqueue(t *testing.T) {
+	var crawler glue.Crawler
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_glue_crawler.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckCrawlerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlueCrawlerConfig_S3Target_EventQueue(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCrawlerExists(resourceName, &crawler),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "s3_target.#", "1"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "s3_target.0.event_queue_arn", "sqs", rName),
+					resource.TestCheckResourceAttr(resourceName, "recrawl_policy.0.recrawl_behavior", "CRAWL_EVENT_MODE"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccGlueCrawler_S3Target_dlqeventqueue(t *testing.T) {
+	var crawler glue.Crawler
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_glue_crawler.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckCrawlerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlueCrawlerConfig_S3Target_DlqEventQueue(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCrawlerExists(resourceName, &crawler),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "s3_target.#", "1"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "s3_target.0.event_queue_arn", "sqs", rName),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "s3_target.0.dlq_event_queue_arn", "sqs", fmt.Sprintf("%sdlq", rName)),
+					resource.TestCheckResourceAttr(resourceName, "recrawl_policy.0.recrawl_behavior", "CRAWL_EVENT_MODE"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccGlueCrawler_S3Target_multiple(t *testing.T) {
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -2097,6 +2158,150 @@ resource "aws_glue_crawler" "test" {
   }
 }
 `, rName, exclusion1, exclusion2)
+}
+
+func testAccGlueCrawlerConfig_S3Target_EventQueue(rName string) string {
+	return testAccGlueCrawlerConfig_Base(rName) + fmt.Sprintf(`
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_sqs_queue" "test" {
+  name = %[1]q
+
+  visibility_timeout_seconds = 3600
+}
+
+resource "aws_iam_role_policy" "test_sqs" {
+  role = aws_iam_role.test.name
+
+  policy = data.aws_iam_policy_document.role_test_sqs.json
+}
+
+data "aws_iam_policy_document" "role_test_sqs" {
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "sqs:DeleteMessage",
+      "sqs:GetQueueUrl",
+      "sqs:ListDeadLetterSourceQueues",
+      "sqs:DeleteMessageBatch",
+      "sqs:ReceiveMessage",
+      "sqs:GetQueueAttributes",
+      "sqs:ListQueueTags",
+      "sqs:SetQueueAttributes",
+      "sqs:PurgeQueue",
+    ]
+
+    resources = [
+      aws_sqs_queue.test.arn,
+    ]
+  }
+}
+
+resource "aws_glue_crawler" "test" {
+  depends_on = [
+    aws_iam_role_policy_attachment.test-AWSGlueServiceRole,
+    aws_iam_role_policy.test_sqs,
+  ]
+
+  database_name = aws_glue_catalog_database.test.name
+  name          = %[1]q
+  role          = aws_iam_role.test.name
+
+  s3_target {
+    path = "s3://${aws_s3_bucket.test.bucket}"
+
+    event_queue_arn = aws_sqs_queue.test.arn
+  }
+
+  recrawl_policy {
+    recrawl_behavior = "CRAWL_EVENT_MODE"
+  }
+}
+`, rName)
+}
+
+func testAccGlueCrawlerConfig_S3Target_DlqEventQueue(rName string) string {
+	return testAccGlueCrawlerConfig_Base(rName) + fmt.Sprintf(`
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_sqs_queue" "test" {
+  name = %[1]q
+
+  visibility_timeout_seconds = 3600
+}
+
+resource "aws_sqs_queue" "test_dlq" {
+  name = "%[1]sdlq"
+
+  visibility_timeout_seconds = 3600
+}
+
+resource "aws_iam_role_policy" "test_sqs" {
+  role = aws_iam_role.test.name
+
+  policy = data.aws_iam_policy_document.role_test_sqs.json
+}
+
+data "aws_iam_policy_document" "role_test_sqs" {
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "sqs:DeleteMessage",
+      "sqs:GetQueueUrl",
+      "sqs:ListDeadLetterSourceQueues",
+      "sqs:DeleteMessageBatch",
+      "sqs:ReceiveMessage",
+      "sqs:GetQueueAttributes",
+      "sqs:ListQueueTags",
+      "sqs:SetQueueAttributes",
+      "sqs:PurgeQueue",
+    ]
+
+    resources = [
+      aws_sqs_queue.test_dlq.arn,
+      aws_sqs_queue.test.arn,
+    ]
+  }
+}
+
+resource "aws_glue_crawler" "test" {
+  depends_on = [
+    aws_iam_role_policy_attachment.test-AWSGlueServiceRole,
+    aws_iam_role_policy.test_sqs,
+  ]
+
+  database_name = aws_glue_catalog_database.test.name
+  name          = %[1]q
+  role          = aws_iam_role.test.name
+
+  s3_target {
+    path = "s3://${aws_s3_bucket.test.bucket}"
+
+    event_queue_arn     = aws_sqs_queue.test.arn
+    dlq_event_queue_arn = aws_sqs_queue.test_dlq.arn
+  }
+
+  recrawl_policy {
+    recrawl_behavior = "CRAWL_EVENT_MODE"
+  }
+}
+`, rName)
 }
 
 func testAccGlueCrawlerConfig_S3Target_Multiple(rName, path1, path2 string) string {
