@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/aws/aws-sdk-go/service/elbv2"
@@ -22,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -565,7 +565,7 @@ func resourceLoadBalancerDelete(d *schema.ResourceData, meta interface{}) error 
 
 	ec2conn := meta.(*conns.AWSClient).EC2Conn
 
-	err := cleanupLBNetworkInterfaces(ec2conn, d.Id())
+	err := cleanupLBNetworkInterfaces(ec2conn, d.Id(), d.Timeout(schema.TimeoutDelete))
 	if err != nil {
 		log.Printf("[WARN] Failed to cleanup ENIs for ALB %q: %#v", d.Id(), err)
 	}
@@ -582,7 +582,7 @@ func resourceLoadBalancerDelete(d *schema.ResourceData, meta interface{}) error 
 // but the cleanup is asynchronous and may take time
 // which then blocks IGW, SG or VPC on deletion
 // So we make the cleanup "synchronous" here
-func cleanupLBNetworkInterfaces(conn *ec2.EC2, lbArn string) error {
+func cleanupLBNetworkInterfaces(conn *ec2.EC2, lbArn string, timeout time.Duration) error {
 	name, err := getLbNameFromArn(lbArn)
 	if err != nil {
 		return err
@@ -612,12 +612,12 @@ func cleanupLBNetworkInterfaces(conn *ec2.EC2, lbArn string) error {
 		return nil
 	}
 
-	err = detachNetworkInterfaces(conn, out.NetworkInterfaces)
+	err = tfec2.DetachNetworkInterfaces(conn, out.NetworkInterfaces, timeout)
 	if err != nil {
 		return err
 	}
 
-	err = deleteNetworkInterfaces(conn, out.NetworkInterfaces)
+	err = tfec2.DeleteNetworkInterfaces(conn, out.NetworkInterfaces)
 
 	return err
 }
@@ -874,64 +874,6 @@ func customizeDiffNLBSubnets(_ context.Context, diff *schema.ResourceDiff, v int
 
 		if err := diff.ForceNew("subnets"); err != nil {
 			return err
-		}
-	}
-	return nil
-}
-
-func deleteNetworkInterfaces(conn *ec2.EC2, nis []*ec2.NetworkInterface) error {
-	log.Printf("[DEBUG] Trying to delete %d leftover ENIs", len(nis))
-	for _, ni := range nis {
-		_, err := conn.DeleteNetworkInterface(&ec2.DeleteNetworkInterfaceInput{
-			NetworkInterfaceId: ni.NetworkInterfaceId,
-		})
-		if err != nil {
-			awsErr, ok := err.(awserr.Error)
-			if ok && awsErr.Code() == "InvalidNetworkInterfaceID.NotFound" {
-				log.Printf("[DEBUG] ENI %s is already deleted", *ni.NetworkInterfaceId)
-				continue
-			}
-			return err
-		}
-	}
-	return nil
-}
-
-func detachNetworkInterfaces(conn *ec2.EC2, nis []*ec2.NetworkInterface) error {
-	log.Printf("[DEBUG] Trying to detach %d leftover ENIs", len(nis))
-	for _, ni := range nis {
-		if ni.Attachment == nil {
-			log.Printf("[DEBUG] ENI %s is already detached", *ni.NetworkInterfaceId)
-			continue
-		}
-		_, err := conn.DetachNetworkInterface(&ec2.DetachNetworkInterfaceInput{
-			AttachmentId: ni.Attachment.AttachmentId,
-			Force:        aws.Bool(true),
-		})
-		if err != nil {
-			awsErr, ok := err.(awserr.Error)
-			if ok && awsErr.Code() == "InvalidAttachmentID.NotFound" {
-				log.Printf("[DEBUG] ENI %s is already detached", *ni.NetworkInterfaceId)
-				continue
-			}
-			return err
-		}
-
-		log.Printf("[DEBUG] Waiting for ENI (%s) to become detached", *ni.NetworkInterfaceId)
-		stateConf := &resource.StateChangeConf{
-			Pending: []string{"true"},
-			Target:  []string{"false"},
-			Refresh: networkInterfaceAttachmentRefreshFunc(conn, *ni.NetworkInterfaceId),
-			Timeout: 10 * time.Minute,
-		}
-
-		if _, err := stateConf.WaitForState(); err != nil {
-			awsErr, ok := err.(awserr.Error)
-			if ok && awsErr.Code() == "InvalidNetworkInterfaceID.NotFound" {
-				continue
-			}
-			return fmt.Errorf(
-				"Error waiting for ENI (%s) to become detached: %s", *ni.NetworkInterfaceId, err)
 		}
 	}
 	return nil
