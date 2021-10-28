@@ -14,7 +14,7 @@ Use this data source to get a list of AWS Cloudwatch Log Groups
 
 ```terraform
 data "aws_cloudwatch_log_groups" "example" {
-  log_group_prefix = "/MyImportantLogs"
+  log_group_name_prefix = "/MyImportantLogs"
 }
 ```
 
