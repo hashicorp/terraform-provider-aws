@@ -5426,6 +5426,16 @@ var awsPartition = partition{
 				"us-west-2":  endpoint{},
 			},
 		},
+		"nimble": service{
+
+			Endpoints: endpoints{
+				"ap-southeast-2": endpoint{},
+				"ca-central-1":   endpoint{},
+				"eu-west-2":      endpoint{},
+				"us-east-1":      endpoint{},
+				"us-west-2":      endpoint{},
+			},
+		},
 		"oidc": service{
 
 			Endpoints: endpoints{
