@@ -81,8 +81,11 @@ func testAccPolicy_cloudFrontDistribution(t *testing.T) {
 }
 
 func testAccPolicy_includeMap(t *testing.T) {
-	fmsPolicyName := fmt.Sprintf("tf-fms-%s", sdkacctest.RandString(5))
-	wafRuleGroupName := fmt.Sprintf("tf-waf-rg-%s", sdkacctest.RandString(5))
+
+	// fmsPolicyName := fmt.Sprintf("tf-fms-%s", sdkacctest.RandString(5))
+	fmsPolicyName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	// wafRuleGroupName := fmt.Sprintf("tf-waf-rg-%s", sdkacctest.RandString(5))
+	wafRuleGroupName := sdkacctest.RandomWithPrefix("tf-waf-rg-")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -114,9 +117,15 @@ func testAccPolicy_includeMap(t *testing.T) {
 }
 
 func testAccPolicy_update(t *testing.T) {
-	fmsPolicyName := fmt.Sprintf("tf-fms-%s", sdkacctest.RandString(5))
-	fmsPolicyName2 := fmt.Sprintf("tf-fms-%s2", sdkacctest.RandString(5))
-	wafRuleGroupName := fmt.Sprintf("tf-waf-rg-%s", sdkacctest.RandString(5))
+
+	// fmsPolicyName := fmt.Sprintf("tf-fms-%s", sdkacctest.RandString(5))
+	// fmsPolicyName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	// wafRuleGroupName := fmt.Sprintf("tf-waf-rg-%s", sdkacctest.RandString(5))
+	// wafRuleGroupName := sdkacctest.RandomWithPrefix("tf-waf-rg-")
+
+	fmsPolicyName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	fmsPolicyName2 := fmt.Sprintf("%s2", sdkacctest.RandomWithPrefix(acctest.ResourcePrefix))
+	wafRuleGroupName := sdkacctest.RandomWithPrefix("tf-waf-rg")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -145,8 +154,10 @@ func testAccPolicy_update(t *testing.T) {
 }
 
 func testAccPolicy_resourceTags(t *testing.T) {
-	fmsPolicyName := fmt.Sprintf("tf-fms-%s", sdkacctest.RandString(5))
-	wafRuleGroupName := fmt.Sprintf("tf-waf-rg-%s", sdkacctest.RandString(5))
+	// fmsPolicyName := fmt.Sprintf("tf-fms-%s", sdkacctest.RandString(5))
+	fmsPolicyName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	// wafRuleGroupName := fmt.Sprintf("tf-waf-rg-%s", sdkacctest.RandString(5))
+	wafRuleGroupName := sdkacctest.RandomWithPrefix("tf-waf-rg-")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -181,24 +192,28 @@ func testAccPolicy_resourceTags(t *testing.T) {
 }
 
 func testAccAWSFmsPolicy_tags(t *testing.T) {
-	fmsPolicyName := fmt.Sprintf("tf-fms-%s", acctest.RandString(5))
-	wafRuleGroupName := fmt.Sprintf("tf-waf-rg-%s", acctest.RandString(5))
+
+	// fmsPolicyName := fmt.Sprintf("tf-fms-%s", sdkacctest.RandString(5))
+	fmsPolicyName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	// wafRuleGroupName := fmt.Sprintf("tf-waf-rg-%s", sdkacctest.RandString(5))
+	wafRuleGroupName := sdkacctest.RandomWithPrefix("tf-waf-rg-")
+
 	resourceName := "aws_fms_policy.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			acctest.PreCheck(t)
 			testAccPreCheckFmsAdmin(t)
-			testAccOrganizationsAccountPreCheck(t)
+			acctest.PreCheckOrganizationsAccount(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, fms.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsFmsPolicyDestroy,
+		ErrorCheck:   acctest.ErrorCheck(t, fms.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFmsPolicyConfig_tags1(fmsPolicyName, wafRuleGroupName, "key1", "test"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsFmsPolicyExists(resourceName),
+					testAccCheckPolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", fmsPolicyName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "test"),
@@ -207,7 +222,7 @@ func testAccAWSFmsPolicy_tags(t *testing.T) {
 			{
 				Config: testAccFmsPolicyConfig_tags2(fmsPolicyName, wafRuleGroupName, "key1", "changed", "key2", "test2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsFmsPolicyExists(resourceName),
+					testAccCheckPolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", fmsPolicyName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "changed"),
@@ -508,7 +523,7 @@ resource "aws_wafregional_rule_group" "test" {
 }
 
 func testAccFmsPolicyConfig_tags1(name string, group string, tagKey string, tagValue string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccFmsPolicyConfigBase(),
 		fmt.Sprintf(`
 resource "aws_fms_policy" "test" {
@@ -533,7 +548,7 @@ resource "aws_wafregional_rule_group" "test" {
 }
 
 func testAccFmsPolicyConfig_tags2(name string, group string, tagKey1 string, tagValue1 string, tagKey2 string, tagValue2 string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccFmsPolicyConfigBase(),
 		fmt.Sprintf(`
 resource "aws_fms_policy" "test" {
