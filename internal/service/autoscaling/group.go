@@ -528,6 +528,18 @@ func ResourceGroup() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"checkpoint_delay": {
+										Type:         nullable.TypeNullableInt,
+										Optional:     true,
+										ValidateFunc: nullable.ValidateTypeStringNullableIntAtLeast(0),
+									},
+									"checkpoint_percentages": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem: &schema.Schema{
+											Type: schema.TypeInt,
+										},
+									},
 									"instance_warmup": {
 										Type:         nullable.TypeNullableInt,
 										Optional:     true,
@@ -2198,6 +2210,21 @@ func expandAutoScalingGroupInstanceRefreshPreferences(l []interface{}) *autoscal
 	m := l[0].(map[string]interface{})
 
 	refreshPreferences := &autoscaling.RefreshPreferences{}
+
+	if v, ok := m["checkpoint_delay"]; ok {
+		if v, null, _ := nullable.Int(v.(string)).Value(); !null {
+			refreshPreferences.CheckpointDelay = aws.Int64(v)
+		}
+	}
+
+	if v, ok := m["checkpoint_percentages"]; ok {
+		l := v.([]interface{})
+		p := make([]*int64, len(l))
+		for i, v := range l {
+			p[i] = aws.Int64(int64(v.(int)))
+		}
+		refreshPreferences.CheckpointPercentages = p
+	}
 
 	if v, ok := m["instance_warmup"]; ok {
 		if v, null, _ := nullable.Int(v.(string)).Value(); !null {
