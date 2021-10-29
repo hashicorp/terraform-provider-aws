@@ -70,7 +70,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-ElastiCache Global Replication Groups can be imported using the `global_replication_group_id`, e.g.
+ElastiCache Global Replication Groups can be imported using the `global_replication_group_id`, e.g.,
 
 ```
 $ terraform import aws_elasticache_global_replication_group.my_global_replication_group okuqm-global-replication-group-1

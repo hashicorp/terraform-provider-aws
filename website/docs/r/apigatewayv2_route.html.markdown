@@ -85,7 +85,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_apigatewayv2_route` can be imported by using the API identifier and route identifier, e.g.
+`aws_apigatewayv2_route` can be imported by using the API identifier and route identifier, e.g.,
 
 ```
 $ terraform import aws_apigatewayv2_route.example aabbccddee/1122334

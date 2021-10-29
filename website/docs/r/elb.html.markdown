@@ -150,7 +150,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-ELBs can be imported using the `name`, e.g.
+ELBs can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_elb.bar elb-production-12345

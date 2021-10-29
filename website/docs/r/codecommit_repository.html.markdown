@@ -40,7 +40,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Codecommit repository can be imported using repository name, e.g.
+Codecommit repository can be imported using repository name, e.g.,
 
 ```
 $ terraform import aws_codecommit_repository.imported ExistingRepo

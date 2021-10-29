@@ -86,7 +86,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_servicecatalog_constraint` can be imported using the constraint ID, e.g.
+`aws_servicecatalog_constraint` can be imported using the constraint ID, e.g.,
 
 ```
 $ terraform import aws_servicecatalog_constraint.example cons-nmdkb6cgxfcrs
