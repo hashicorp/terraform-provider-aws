@@ -575,7 +575,6 @@ type ServiceDatum struct {
 }
 
 var serviceData map[string]*ServiceDatum
-var serviceDataReady bool
 
 func init() {
 	serviceData := make(map[string]*ServiceDatum)
@@ -853,8 +852,6 @@ func init() {
 	serviceData[WorkMailMessageFlow] = &ServiceDatum{AWSClientName: "WorkMailMessageFlow", AWSServiceName: workmailmessageflow.ServiceName, AWSEndpointsID: workmailmessageflow.EndpointsID, AWSServiceID: workmailmessageflow.ServiceID, ProviderNameUpper: "WorkMailMessageFlow", HCLKeys: []string{"workmailmessageflow"}}
 	serviceData[WorkSpaces] = &ServiceDatum{AWSClientName: "WorkSpaces", AWSServiceName: workspaces.ServiceName, AWSEndpointsID: workspaces.EndpointsID, AWSServiceID: workspaces.ServiceID, ProviderNameUpper: "WorkSpaces", HCLKeys: []string{"workspaces"}}
 	serviceData[XRay] = &ServiceDatum{AWSClientName: "XRay", AWSServiceName: xray.ServiceName, AWSEndpointsID: xray.EndpointsID, AWSServiceID: xray.ServiceID, ProviderNameUpper: "XRay", HCLKeys: []string{"xray"}}
-
-	serviceDataReady = true
 }
 
 type Config struct {

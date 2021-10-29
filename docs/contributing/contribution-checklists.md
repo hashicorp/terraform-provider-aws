@@ -647,8 +647,8 @@ guidelines.
    and to prevent future conflicts with new AWS services/resources.
    For reference:
 
-    - `service` is the AWS short service name that matches the entry in
-     `endpointServiceNames` (created via the [New Service](#new-service)
+    - `service` is the AWS short service name that matches the key in
+     the `serviceData` map in the `conns` package (created via the [New Service](#new-service)
      section)
     - `name` represents the conceptual infrastructure represented by the
      create, read, update, and delete methods of the service API. It should
@@ -860,16 +860,30 @@ into Terraform.
 
   To add the AWS Go SDK service client:
 
-    - In `internal/provider/provider.go` Add a new service entry to `endpointServiceNames`.
-    This service name should match the AWS Go SDK or AWS CLI service name.
+    - In `internal/conns/conns.go`: Add a string constant for the service. Follow these rules to name the constant.
+        - The constant name should be the same as the service name used in the AWS Go SDK except:
+            1. Drop "service" or "api" if the service name ends with either or both, and
+            2. Shorten the service name if it is excessively long. Avoid names longer than 17 characters if possible. When shortening a service name, look to the endpoints ID, common usage in documentation and marketing, and discuss the change with the community and maintainers to get buy in. The goals for this alternate name are to be instantly recognizable, not verbose, and more easily managed.
+        - The constant name should be capitalized following Go mixed-case rules. In other words:
+            1. Do not use underscores,
+            2. The first letter of each word is capitalized, and
+            3. Abbreviations and initialisms are all caps.
+        - Proper examples include `CognitoIdentity`, `DevOpsGuru`, `DynamoDB`, `ECS`, `Prometheus` ("Service" is dropped from end), and `ServerlessAppRepo` (shortened from "Serverless Application Repository").
+        - The constant value is the same as the name but all lowercase (_e.g._, `DynamoDB = "dynamodb"`).
+    - In `internal/conns/conns.go`: Add a new entry to the `serviceData` map:
+        1. The entry key is the string constant created above
+        2. The `AWSClientName` is the exact name of the return type of the `New()` method of the service. For example, see the `New()` method in the [Application Auto Scaling documentation](https://docs.aws.amazon.com/sdk-for-go/api/service/applicationautoscaling/#New).
+        3. For `AWSServiceName`, `AWSEndpointsID`, and `AWSServiceID`, directly reference the AWS Go SDK service package for the values. For example, `accessanalyzer.ServiceName`, `accessanalyzer.EndpointsID`, and `accessanalyzer.ServiceID` respectively.
+        4. `ProviderNameUpper` is the exact same as the constant _name_ (_not_ value) as described above.
+        5. In most cases, the `HCLKeys` slice will have one element, an all-lowercase string that matches the AWS SDK Go service name and provider constant value, described above. However, when these diverge, it may be helpful to add additional elements. Practitioners can use any of these names in the provider configuration when customizing service endpoints.
     - In `internal/conns/conns.go`: Add a new import for the AWS Go SDK code. E.g.
     `github.com/aws/aws-sdk-go/service/quicksight`
-    - In `internal/conns/conns.go`: Add a new `{SERVICE}conn` field to the `AWSClient`
-    struct for the service client. The service name should match the name
-    in `endpointServiceNames`. E.g., `quicksightconn *quicksight.QuickSight`
-    - In `internal/conns/conns.go`: Create the new service client in the `{SERVICE}conn`
-    field in the `AWSClient` instantiation within `Client()`. E.g.
-    `quicksightconn: quicksight.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["quicksight"])})),`
+    - In `internal/conns/conns.go`: Add a new `{ServiceName}Conn` field to the `AWSClient`
+    struct for the service client. The service name should match the constant name, capitalized the same, as described above.
+    _E.g._, `DynamoDBConn *dynamodb.DynamoDB`.
+    - In `internal/conns/conns.go`: Create the new service client in the `{ServiceName}Conn`
+    field in the `AWSClient` instantiation within `Client()`, using the constant created above as a key to a value in the `Endpoints` map. _E.g._,
+    `DynamoDBConn: dynamodb.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[DynamoDB])})),`.
     - In `website/allowed-subcategories.txt`: Add a name acceptable for the documentation navigation.
     - In `website/docs/guides/custom-service-endpoints.html.md`: Add the service
     name in the list of customizable endpoints.
