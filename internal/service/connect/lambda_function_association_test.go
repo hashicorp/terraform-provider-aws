@@ -1,4 +1,4 @@
-package aws
+package connect
 
 import (
 	"context"
@@ -6,18 +6,19 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/connect"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	tfconnect "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/connect"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/connect/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 //Serialized acceptance tests due to Connect account limits (max 2 parallel tests)
-func TestAccAwsConnectLambdaFunctionAssociation_serial(t *testing.T) {
+func TestAccLambdaFunctionAssociation_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
-		"basic":      testAccAwsConnectLambdaFunctionAssociation_basic,
-		"disappears": testAccAwsConnectLambdaFunctionAssociation_disappears,
+		"basic":      testAccLambdaFunctionAssociation_basic,
+		"disappears": testAccLambdaFunctionAssociation_disappears,
 	}
 
 	for name, tc := range testCases {
@@ -28,21 +29,21 @@ func TestAccAwsConnectLambdaFunctionAssociation_serial(t *testing.T) {
 	}
 }
 
-func testAccAwsConnectLambdaFunctionAssociation_basic(t *testing.T) {
-	rName := acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
-	rName2 := acctest.RandomWithPrefix("resource-test-terraform")
+func testAccLambdaFunctionAssociation_basic(t *testing.T) {
+	rName := sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_lambda_function_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, connect.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsConnectLambdaFunctionAssociationDestroy,
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckLambdaFunctionAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsConnectLambdaFunctionAssociationConfigBasic(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsConnectLambdaFunctionAssociationExists(resourceName),
+					testAccCheckLambdaFunctionAssociationExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "function_arn"),
 				),
@@ -56,22 +57,22 @@ func testAccAwsConnectLambdaFunctionAssociation_basic(t *testing.T) {
 	})
 }
 
-func testAccAwsConnectLambdaFunctionAssociation_disappears(t *testing.T) {
-	rName := acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
-	rName2 := acctest.RandomWithPrefix("resource-test-terraform")
+func testAccLambdaFunctionAssociation_disappears(t *testing.T) {
+	rName := sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_lambda_function_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, connect.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccAwsConnectLambdaFunctionAssociationDestroy,
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccLambdaFunctionAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsConnectLambdaFunctionAssociationConfigBasic(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsConnectLambdaFunctionAssociationExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsConnectLambdaFunctionAssociation(), resourceName),
+					testAccCheckLambdaFunctionAssociationExists(resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceLambdaFunctionAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -79,21 +80,21 @@ func testAccAwsConnectLambdaFunctionAssociation_disappears(t *testing.T) {
 	})
 }
 
-func testAccAwsConnectLambdaFunctionAssociationDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).connectconn
+func testAccLambdaFunctionAssociationDestroy(s *terraform.State) error {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_connect_lambda_function_association" {
 			continue
 		}
 
-		instanceID, functionArn, err := tfconnect.LambdaFunctionAssociationParseID(rs.Primary.ID)
+		instanceID, functionArn, err := LambdaFunctionAssociationParseID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		lfaArn, err := finder.LambdaFunctionAssociationByArnWithContext(context.Background(), conn, instanceID, functionArn)
-		if err != nil && !isAWSErr(err, "ResourceNotFoundException", "") {
+		lfaArn, err := FindLambdaFunctionAssociationByArnWithContext(context.Background(), conn, instanceID, functionArn)
+		if err != nil && !tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
 			return fmt.Errorf("error Connect Lambda Function Association (%s): still exists: %w", functionArn, err)
 		}
 
@@ -104,7 +105,7 @@ func testAccAwsConnectLambdaFunctionAssociationDestroy(s *terraform.State) error
 	return nil
 }
 
-func testAccCheckAwsConnectLambdaFunctionAssociationExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckLambdaFunctionAssociationExists(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -114,15 +115,15 @@ func testAccCheckAwsConnectLambdaFunctionAssociationExists(resourceName string) 
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("error Connect Lambda Function Association ID not set")
 		}
-		instanceID, functionArn, err := tfconnect.LambdaFunctionAssociationParseID(rs.Primary.ID)
+		instanceID, functionArn, err := LambdaFunctionAssociationParseID(rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).connectconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
 
-		lfaArn, err := finder.LambdaFunctionAssociationByArnWithContext(context.Background(), conn, instanceID, functionArn)
+		lfaArn, err := FindLambdaFunctionAssociationByArnWithContext(context.Background(), conn, instanceID, functionArn)
 		if err != nil {
 			return fmt.Errorf("error finding Connect Lambda Function Association by Function Arn (%s): %w", functionArn, err)
 		}
@@ -135,7 +136,7 @@ func testAccCheckAwsConnectLambdaFunctionAssociationExists(resourceName string) 
 	}
 }
 
-func testAccCheckAwsConnectLambdaFunctionAssociationDestroy(s *terraform.State) error {
+func testAccCheckLambdaFunctionAssociationDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_connect_lambda_function_association" {
 			continue
@@ -144,16 +145,16 @@ func testAccCheckAwsConnectLambdaFunctionAssociationDestroy(s *terraform.State) 
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("Connect Lambda Function Association ID not set")
 		}
-		instanceID, functionArn, err := tfconnect.LambdaFunctionAssociationParseID(rs.Primary.ID)
+		instanceID, functionArn, err := LambdaFunctionAssociationParseID(rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).connectconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
 
-		lfaArn, err := finder.LambdaFunctionAssociationByArnWithContext(context.Background(), conn, instanceID, functionArn)
-		if err != nil && !isAWSErr(err, "ResourceNotFoundException", "") {
+		lfaArn, err := FindLambdaFunctionAssociationByArnWithContext(context.Background(), conn, instanceID, functionArn)
+		if err != nil && !tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
 			return fmt.Errorf("error LambdaFunction Association by Function Arn (%s): still exists: %w ", functionArn, err)
 		}
 
@@ -164,7 +165,7 @@ func testAccCheckAwsConnectLambdaFunctionAssociationDestroy(s *terraform.State) 
 	return nil
 }
 
-func testAccAwsConnectLambdaFunctionAssociationConfigBase(rName string, rName2 string) string {
+func testAccLambdaFunctionAssociationConfigBase(rName string, rName2 string) string {
 	return fmt.Sprintf(`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
@@ -204,8 +205,8 @@ resource "aws_connect_instance" "test" {
 }
 
 func testAccAwsConnectLambdaFunctionAssociationConfigBasic(rName string, rName2 string) string {
-	return composeConfig(
-		testAccAwsConnectLambdaFunctionAssociationConfigBase(rName, rName2), `
+	return acctest.ConfigCompose(
+		testAccLambdaFunctionAssociationConfigBase(rName, rName2), `
 resource "aws_connect_lambda_function_association" "test" {
   instance_id  = aws_connect_instance.test.id
   function_arn = aws_lambda_function.test.arn

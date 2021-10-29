@@ -1,4 +1,4 @@
-package aws
+package connect
 
 import (
 	"context"
@@ -14,21 +14,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tfconnect "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/connect"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/connect/finder"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/connect/waiter"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func resourceAwsConnectBotAssociation() *schema.Resource {
+func ResourceBotAssociation() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceAwsConnectBotAssociationCreate,
-		ReadContext:   resourceAwsConnectBotAssociationRead,
-		UpdateContext: resourceAwsConnectBotAssociationRead,
-		DeleteContext: resourceAwsConnectBotAssociationDelete,
+		CreateContext: resourceBotAssociationCreate,
+		ReadContext:   resourceBotAssociationRead,
+		UpdateContext: resourceBotAssociationRead,
+		DeleteContext: resourceBotAssociationDelete,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				instanceID, name, region, err := resourceAwsConnectBotV1AssociationParseID(d.Id())
+				instanceID, name, region, err := resourceBotV1AssociationParseID(d.Id())
 				if err != nil {
 					return nil, err
 				}
@@ -41,8 +39,8 @@ func resourceAwsConnectBotAssociation() *schema.Resource {
 			},
 		},
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(waiter.ConnectBotAssociationCreateTimeout),
-			Delete: schema.DefaultTimeout(waiter.ConnectBotAssociationDeleteTimeout),
+			Create: schema.DefaultTimeout(connectBotAssociationCreateTimeout),
+			Delete: schema.DefaultTimeout(connectBotAssociationDeleteTimeout),
 		},
 		Schema: map[string]*schema.Schema{
 			/*
@@ -85,8 +83,8 @@ func resourceAwsConnectBotAssociation() *schema.Resource {
 	}
 }
 
-func resourceAwsConnectBotAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).connectconn
+func resourceBotAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).ConnectConn
 
 	input := &connect.AssociateBotInput{
 		InstanceId: aws.String(d.Get("instance_id").(string)),
@@ -131,17 +129,17 @@ func resourceAwsConnectBotAssociationCreate(ctx context.Context, d *schema.Resou
 	}
 
 	d.SetId(lbaId)
-	return resourceAwsConnectBotAssociationRead(ctx, d, meta)
+	return resourceBotAssociationRead(ctx, d, meta)
 }
 
-func resourceAwsConnectBotAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).connectconn
+func resourceBotAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).ConnectConn
 	instanceID := d.Get("instance_id")
 	name := d.Get("bot_name")
 
-	lexBot, err := finder.BotAssociationV1ByNameWithContext(ctx, conn, instanceID.(string), name.(string))
+	lexBot, err := FindBotAssociationV1ByNameWithContext(ctx, conn, instanceID.(string), name.(string))
 
-	if isAWSErr(err, tfconnect.BotAssociationStatusNotFound, "") || errors.Is(err, tfresource.ErrEmptyResult) {
+	if tfawserr.ErrMessageContains(err, BotAssociationStatusNotFound, "") || errors.Is(err, tfresource.ErrEmptyResult) {
 		log.Printf("[WARN] Connect Bot V1 Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -177,10 +175,10 @@ func resourceAwsConnectBotAssociationRead(ctx context.Context, d *schema.Resourc
 	return nil
 }
 
-func resourceAwsConnectBotAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).connectconn
+func resourceBotAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).ConnectConn
 
-	instanceID, name, region, err := resourceAwsConnectBotV1AssociationParseID(d.Id())
+	instanceID, name, region, err := resourceBotV1AssociationParseID(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -205,7 +203,7 @@ func resourceAwsConnectBotAssociationDelete(ctx context.Context, d *schema.Resou
 	return nil
 }
 
-func resourceAwsConnectBotV1AssociationParseID(id string) (string, string, string, error) {
+func resourceBotV1AssociationParseID(id string) (string, string, string, error) {
 	parts := strings.SplitN(id, ":", 3)
 
 	if len(parts) != 3 || parts[0] == "" || parts[1] == "" || parts[2] == "" {

@@ -1,4 +1,4 @@
-package aws
+package connect
 
 import (
 	"context"
@@ -6,17 +6,18 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/connect/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func dataSourceAwsConnectLambdaFunctionAssociation() *schema.Resource {
+func DataSourceLambdaFunctionAssociation() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceAwsConnectLambdaFunctionAssociationRead,
+		ReadContext: dataSourceLambdaFunctionAssociationRead,
 		Schema: map[string]*schema.Schema{
 			"function_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"instance_id": {
 				Type:     schema.TypeString,
@@ -26,12 +27,12 @@ func dataSourceAwsConnectLambdaFunctionAssociation() *schema.Resource {
 	}
 }
 
-func dataSourceAwsConnectLambdaFunctionAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).connectconn
+func dataSourceLambdaFunctionAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).ConnectConn
 	functionArn := d.Get("function_arn")
 	instanceID := d.Get("instance_id")
 
-	lfaArn, err := finder.LambdaFunctionAssociationByArnWithContext(ctx, conn, instanceID.(string), functionArn.(string))
+	lfaArn, err := FindLambdaFunctionAssociationByArnWithContext(ctx, conn, instanceID.(string), functionArn.(string))
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error finding Connect Lambda Function Association by ARN (%s): %w", functionArn, err))
 	}

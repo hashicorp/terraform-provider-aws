@@ -1,4 +1,4 @@
-package aws
+package connect
 
 import (
 	"context"
@@ -8,28 +8,29 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/connect"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	tfconnect "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/connect"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/connect/finder"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccAwsConnectBotAssociationDataSource_basic(t *testing.T) {
-	rName := acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
-	rName2 := acctest.RandomWithPrefix("resource-test-terraform")
+func TestAccBotAssociationDataSource_basic(t *testing.T) {
+	rName := sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_bot_association.test"
 	datasourceName := "data.aws_connect_bot_association.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, connect.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccAwsConnectBotAssociationDataSourceDestroy,
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccBotAssociationDataSourceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsConnectBotAssociationDataSourceConfigBasic(rName, rName2),
+				Config: testAccBotAssociationDataSourceConfigBasic(rName, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "instance_id", resourceName, "instance_id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "bot_name", resourceName, "bot_name"),
@@ -40,7 +41,7 @@ func TestAccAwsConnectBotAssociationDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccAwsConnectBotAssociationDataSourceDestroy(s *terraform.State) error {
+func testAccBotAssociationDataSourceDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_connect_bot_association" {
 			continue
@@ -49,16 +50,16 @@ func testAccAwsConnectBotAssociationDataSourceDestroy(s *terraform.State) error 
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("Connect Connect Bot V1 Association ID not set")
 		}
-		instanceID, name, _, err := resourceAwsConnectBotV1AssociationParseID(rs.Primary.ID)
+		instanceID, name, _, err := resourceBotV1AssociationParseID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).connectconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
 
-		lexBot, err := finder.BotAssociationV1ByNameWithContext(context.Background(), conn, instanceID, name)
+		lexBot, err := FindBotAssociationV1ByNameWithContext(context.Background(), conn, instanceID, name)
 
-		if isAWSErr(err, tfconnect.BotAssociationStatusNotFound, "") || errors.Is(err, tfresource.ErrEmptyResult) {
+		if tfawserr.ErrCodeEquals(err, BotAssociationStatusNotFound, "") || errors.Is(err, tfresource.ErrEmptyResult) {
 			log.Printf("[DEBUG] Connect Bot V1 Association (%s) not found, has been removed from state", name)
 			return nil
 		}
@@ -74,7 +75,7 @@ func testAccAwsConnectBotAssociationDataSourceDestroy(s *terraform.State) error 
 	return nil
 }
 
-func testAccAwsConnectBotAssociationDataSourceBaseConfig(rName string, rName2 string) string {
+func testAccBotAssociationDataSourceBaseConfig(rName string, rName2 string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 
@@ -127,8 +128,8 @@ resource "aws_connect_bot_association" "test" {
 `, rName, rName2)
 }
 
-func testAccAwsConnectBotAssociationDataSourceConfigBasic(rName string, rName2 string) string {
-	return fmt.Sprintf(testAccAwsConnectBotAssociationDataSourceBaseConfig(rName, rName2) + `
+func testAccBotAssociationDataSourceConfigBasic(rName string, rName2 string) string {
+	return fmt.Sprintf(testAccBotAssociationDataSourceBaseConfig(rName, rName2) + `
 data "aws_connect_bot_association" "test" {
   instance_id = aws_connect_instance.test.id
   bot_name    = aws_connect_bot_association.test.bot_name

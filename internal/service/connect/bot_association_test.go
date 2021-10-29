@@ -1,4 +1,4 @@
-package aws
+package connect
 
 import (
 	"context"
@@ -8,19 +8,20 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/connect"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	tfconnect "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/connect"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/connect/finder"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 //Serialized acceptance tests due to Connect account limits (max 2 parallel tests)
-func TestAccAwsConnectBotAssociation_serial(t *testing.T) {
+func TestAccBotAssociation_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
-		"basic":      testAccAwsConnectBotAssociation_basic,
-		"disappears": testAccAwsConnectBotAssociation_disappears,
+		"basic":      testAccBotAssociation_basic,
+		"disappears": testAccBotAssociation_disappears,
 	}
 
 	for name, tc := range testCases {
@@ -31,22 +32,22 @@ func TestAccAwsConnectBotAssociation_serial(t *testing.T) {
 	}
 }
 
-func testAccAwsConnectBotAssociation_basic(t *testing.T) {
+func testAccBotAssociation_basic(t *testing.T) {
 	var v connect.LexBot
-	rName := acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
-	rName2 := acctest.RandomWithPrefix("resource-test-terraform")
+	rName := sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_bot_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, connect.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsConnectBotAssociationDestroy,
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBotAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsConnectBotV1AssociationConfigBasic(rName, rName2),
+				Config: testAccBotV1AssociationConfigBasic(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsConnectBotAssociationExists(resourceName, &v),
+					testAccCheckBotAssociationExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "bot_name"),
 					resource.TestCheckResourceAttrSet(resourceName, "lex_region"),
@@ -61,24 +62,24 @@ func testAccAwsConnectBotAssociation_basic(t *testing.T) {
 	})
 }
 
-func testAccAwsConnectBotAssociation_disappears(t *testing.T) {
+func testAccBotAssociation_disappears(t *testing.T) {
 	var v connect.LexBot
-	rName := acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
-	rName2 := acctest.RandomWithPrefix("resource-test-terraform")
+	rName := sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_bot_association.test"
 	instanceResourceName := "aws_connect_bot_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, connect.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsConnectBotAssociationDestroy,
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBotAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsConnectBotV1AssociationConfigBasic(rName, rName2),
+				Config: testAccBotV1AssociationConfigBasic(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsConnectBotAssociationExists(resourceName, &v),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsConnectBotAssociation(), instanceResourceName),
+					testAccCheckBotAssociationExists(resourceName, &v),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceBotAssociation(), instanceResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -86,7 +87,7 @@ func testAccAwsConnectBotAssociation_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsConnectBotAssociationExists(resourceName string, function *connect.LexBot) resource.TestCheckFunc {
+func testAccCheckBotAssociationExists(resourceName string, function *connect.LexBot) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -96,15 +97,15 @@ func testAccCheckAwsConnectBotAssociationExists(resourceName string, function *c
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("Connect Bot V1 Association ID not set")
 		}
-		instanceID, name, _, err := resourceAwsConnectBotV1AssociationParseID(rs.Primary.ID)
+		instanceID, name, _, err := resourceBotV1AssociationParseID(rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).connectconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
 
-		lexBot, err := finder.BotAssociationV1ByNameWithContext(context.Background(), conn, instanceID, name)
+		lexBot, err := FindBotAssociationV1ByNameWithContext(context.Background(), conn, instanceID, name)
 
 		if err != nil {
 			return fmt.Errorf("error finding Connect Bot V1 Association by name (%s): %w", name, err)
@@ -120,7 +121,7 @@ func testAccCheckAwsConnectBotAssociationExists(resourceName string, function *c
 	}
 }
 
-func testAccCheckAwsConnectBotAssociationDestroy(s *terraform.State) error {
+func testAccCheckBotAssociationDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_connect_bot_association" {
 			continue
@@ -129,16 +130,16 @@ func testAccCheckAwsConnectBotAssociationDestroy(s *terraform.State) error {
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("Connect Connect Bot V1 Association ID not set")
 		}
-		instanceID, name, _, err := resourceAwsConnectBotV1AssociationParseID(rs.Primary.ID)
+		instanceID, name, _, err := resourceBotV1AssociationParseID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).connectconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
 
-		lexBot, err := finder.BotAssociationV1ByNameWithContext(context.Background(), conn, instanceID, name)
+		lexBot, err := FindBotAssociationV1ByNameWithContext(context.Background(), conn, instanceID, name)
 
-		if isAWSErr(err, tfconnect.BotAssociationStatusNotFound, "") || errors.Is(err, tfresource.ErrEmptyResult) {
+		if tfawserr.ErrCodeEquals(err, BotAssociationStatusNotFound, "") || errors.Is(err, tfresource.ErrEmptyResult) {
 			log.Printf("[DEBUG] Connect Bot V1 Association (%s) not found, has been removed from state", name)
 			return nil
 		}
@@ -154,7 +155,7 @@ func testAccCheckAwsConnectBotAssociationDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAwsConnectBotV1AssociationConfigBase(rName string, rName2 string) string {
+func testAccBotV1AssociationConfigBase(rName string, rName2 string) string {
 	return fmt.Sprintf(`
 resource "aws_lex_intent" "test" {
   create_version = true
@@ -201,9 +202,9 @@ resource "aws_connect_instance" "test" {
   `, rName, rName2)
 }
 
-func testAccAwsConnectBotV1AssociationConfigBasic(rName string, rName2 string) string {
-	return composeConfig(
-		testAccAwsConnectBotV1AssociationConfigBase(rName, rName2),
+func testAccBotV1AssociationConfigBasic(rName string, rName2 string) string {
+	return acctest.ConfigCompose(
+		testAccBotV1AssociationConfigBase(rName, rName2),
 		`
 data "aws_region" "current" {}
 

@@ -1,27 +1,28 @@
-package aws
+package connect
 
 import (
 	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/connect"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAwsConnectLambdaFunctionAssociationDataSource_basic(t *testing.T) {
-	rName := acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
-	rName2 := acctest.RandomWithPrefix("resource-test-terraform")
+func TestAccLambdaFunctionAssociationDataSource_basic(t *testing.T) {
+	rName := sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_lambda_function_association.test"
 	datasourceName := "data.aws_connect_lambda_function_association.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, connect.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, connect.EndpointsID),
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsConnectLambdaFunctionAssociationDataSourceConfigBasic(rName, rName2),
+				Config: testAccLambdaFunctionAssociationDataSourceConfigBasic(rName, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "instance_id", resourceName, "instance_id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "function_arn", resourceName, "function_arn"),
@@ -31,7 +32,7 @@ func TestAccAwsConnectLambdaFunctionAssociationDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccAwsConnectLambdaFunctionAssociationDataSourceBaseConfig(rName string, rName2 string) string {
+func testAccLambdaFunctionAssociationDataSourceBaseConfig(rName string, rName2 string) string {
 	return fmt.Sprintf(`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
@@ -75,8 +76,8 @@ resource "aws_connect_lambda_function_association" "test" {
 `, rName, rName2)
 }
 
-func testAccAwsConnectLambdaFunctionAssociationDataSourceConfigBasic(rName string, rName2 string) string {
-	return fmt.Sprintf(testAccAwsConnectLambdaFunctionAssociationDataSourceBaseConfig(rName, rName2) + `
+func testAccLambdaFunctionAssociationDataSourceConfigBasic(rName string, rName2 string) string {
+	return fmt.Sprintf(testAccLambdaFunctionAssociationDataSourceBaseConfig(rName, rName2) + `
 data "aws_connect_lambda_function_association" "test" {
   function_arn = aws_connect_lambda_function_association.test.function_arn
   instance_id  = aws_connect_instance.test.id

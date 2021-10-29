@@ -1,4 +1,4 @@
-package aws
+package connect
 
 import (
 	"context"
@@ -7,10 +7,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/connect/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsConnectBotAssociation() *schema.Resource {
+func DataSourceBotAssociation() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceAwsConnectLexBotAssociationRead,
 		Schema: map[string]*schema.Schema{
@@ -33,11 +33,11 @@ func dataSourceAwsConnectBotAssociation() *schema.Resource {
 }
 
 func dataSourceAwsConnectLexBotAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).connectconn
+	conn := meta.(*conns.AWSClient).ConnectConn
 	instanceID := d.Get("instance_id")
 	name := d.Get("bot_name")
 
-	lexBot, err := finder.BotAssociationV1ByNameWithContext(ctx, conn, instanceID.(string), name.(string))
+	lexBot, err := FindBotAssociationV1ByNameWithContext(ctx, conn, instanceID.(string), name.(string))
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error finding Connect Bot V1 Association by name (%s): %w", name, err))
 	}
