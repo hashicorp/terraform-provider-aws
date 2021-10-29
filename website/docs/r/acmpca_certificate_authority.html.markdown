@@ -16,7 +16,7 @@ Provides a resource to manage AWS Certificate Manager Private Certificate Author
 
 ### Basic
 
-```hcl
+```terraform
 resource "aws_acmpca_certificate_authority" "example" {
   certificate_authority_configuration {
     key_algorithm     = "RSA_4096"
@@ -33,7 +33,7 @@ resource "aws_acmpca_certificate_authority" "example" {
 
 ### Enable Certificate Revocation List
 
-```hcl
+```terraform
 resource "aws_s3_bucket" "example" {
   bucket = "example"
 }
@@ -48,7 +48,7 @@ data "aws_iam_policy_document" "acmpca_bucket_access" {
     ]
 
     resources = [
-      "${aws_s3_bucket.example.arn}",
+      aws_s3_bucket.example.arn,
       "${aws_s3_bucket.example.arn}/*",
     ]
 
@@ -60,8 +60,8 @@ data "aws_iam_policy_document" "acmpca_bucket_access" {
 }
 
 resource "aws_s3_bucket_policy" "example" {
-  bucket = "${aws_s3_bucket.example.id}"
-  policy = "${data.aws_iam_policy_document.acmpca_bucket_access.json}"
+  bucket = aws_s3_bucket.example.id
+  policy = data.aws_iam_policy_document.acmpca_bucket_access.json
 }
 
 resource "aws_acmpca_certificate_authority" "example" {
@@ -79,11 +79,11 @@ resource "aws_acmpca_certificate_authority" "example" {
       custom_cname       = "crl.example.com"
       enabled            = true
       expiration_in_days = 7
-      s3_bucket_name     = "${aws_s3_bucket.example.id}"
+      s3_bucket_name     = aws_s3_bucket.example.id
     }
   }
 
-  depends_on = ["aws_s3_bucket_policy.example"]
+  depends_on = [aws_s3_bucket_policy.example]
 }
 ```
 
@@ -94,7 +94,7 @@ The following arguments are supported:
 * `certificate_authority_configuration` - (Required) Nested argument containing algorithms and certificate subject information. Defined below.
 * `enabled` - (Optional) Whether the certificate authority is enabled or disabled. Defaults to `true`.
 * `revocation_configuration` - (Optional) Nested argument containing revocation configuration. Defined below.
-* `tags` - (Optional) Specifies a key-value map of user-defined tags that are attached to the certificate authority.
+* `tags` - (Optional) Specifies a key-value map of user-defined tags that are attached to the certificate authority. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `type` - (Optional) The type of the certificate authority. Defaults to `SUBORDINATE`. Valid values: `ROOT` and `SUBORDINATE`.
 * `permanent_deletion_time_in_days` - (Optional) The number of days to make a CA restorable after it has been deleted, must be between 7 to 30 days, with default to 30 days.
 
@@ -108,19 +108,19 @@ The following arguments are supported:
 
 Contains information about the certificate subject. Identifies the entity that owns or controls the public key in the certificate. The entity can be a user, computer, device, or service.
 
-* `common_name` - (Optional) Fully qualified domain name (FQDN) associated with the certificate subject.
-* `country` - (Optional) Two digit code that specifies the country in which the certificate subject located.
-* `distinguished_name_qualifier` - (Optional) Disambiguating information for the certificate subject.
-* `generation_qualifier` - (Optional) Typically a qualifier appended to the name of an individual. Examples include Jr. for junior, Sr. for senior, and III for third.
-* `given_name` - (Optional) First name.
-* `initials` - (Optional) Concatenation that typically contains the first letter of the `given_name`, the first letter of the middle name if one exists, and the first letter of the `surname`.
-* `locality` - (Optional) The locality (such as a city or town) in which the certificate subject is located.
-* `organization` - (Optional) Legal name of the organization with which the certificate subject is affiliated.
-* `organizational_unit` - (Optional) A subdivision or unit of the organization (such as sales or finance) with which the certificate subject is affiliated.
-* `pseudonym` - (Optional) Typically a shortened version of a longer `given_name`. For example, Jonathan is often shortened to John. Elizabeth is often shortened to Beth, Liz, or Eliza.
-* `state` - (Optional) State in which the subject of the certificate is located.
-* `surname` - (Optional) Family name. In the US and the UK for example, the surname of an individual is ordered last. In Asian cultures the surname is typically ordered first.
-* `title` - (Optional) A title such as Mr. or Ms. which is pre-pended to the name to refer formally to the certificate subject.
+* `common_name` - (Optional) Fully qualified domain name (FQDN) associated with the certificate subject. Must be less than or equal to 64 characters in length.
+* `country` - (Optional) Two digit code that specifies the country in which the certificate subject located. Must be less than or equal to 2 characters in length.
+* `distinguished_name_qualifier` - (Optional) Disambiguating information for the certificate subject. Must be less than or equal to 64 characters in length.
+* `generation_qualifier` - (Optional) Typically a qualifier appended to the name of an individual. Examples include Jr. for junior, Sr. for senior, and III for third. Must be less than or equal to 3 characters in length.
+* `given_name` - (Optional) First name. Must be less than or equal to 16 characters in length.
+* `initials` - (Optional) Concatenation that typically contains the first letter of the `given_name`, the first letter of the middle name if one exists, and the first letter of the `surname`. Must be less than or equal to 5 characters in length.
+* `locality` - (Optional) The locality (such as a city or town) in which the certificate subject is located. Must be less than or equal to 128 characters in length.
+* `organization` - (Optional) Legal name of the organization with which the certificate subject is affiliated. Must be less than or equal to 64 characters in length.
+* `organizational_unit` - (Optional) A subdivision or unit of the organization (such as sales or finance) with which the certificate subject is affiliated. Must be less than or equal to 64 characters in length.
+* `pseudonym` - (Optional) Typically a shortened version of a longer `given_name`. For example, Jonathan is often shortened to John. Elizabeth is often shortened to Beth, Liz, or Eliza. Must be less than or equal to 128 characters in length.
+* `state` - (Optional) State in which the subject of the certificate is located. Must be less than or equal to 128 characters in length.
+* `surname` - (Optional) Family name. In the US and the UK for example, the surname of an individual is ordered last. In Asian cultures the surname is typically ordered first. Must be less than or equal to 40 characters in length.
+* `title` - (Optional) A title such as Mr. or Ms. which is pre-pended to the name to refer formally to the certificate subject. Must be less than or equal to 64 characters in length.
 
 ### revocation_configuration
 
@@ -128,12 +128,13 @@ Contains information about the certificate subject. Identifies the entity that o
 
 #### crl_configuration
 
-* `custom_cname` - (Optional) Name inserted into the certificate CRL Distribution Points extension that enables the use of an alias for the CRL distribution point. Use this value if you don't want the name of your S3 bucket to be public.
+* `custom_cname` - (Optional) Name inserted into the certificate CRL Distribution Points extension that enables the use of an alias for the CRL distribution point. Use this value if you don't want the name of your S3 bucket to be public. Must be less than or equal to 253 characters in length.
 * `enabled` - (Optional) Boolean value that specifies whether certificate revocation lists (CRLs) are enabled. Defaults to `false`.
 * `expiration_in_days` - (Required) Number of days until a certificate expires. Must be between 1 and 5000.
-* `s3_bucket_name` - (Optional) Name of the S3 bucket that contains the CRL. If you do not provide a value for the `custom_cname` argument, the name of your S3 bucket is placed into the CRL Distribution Points extension of the issued certificate. You must specify a bucket policy that allows ACM PCA to write the CRL to your bucket.
+* `s3_bucket_name` - (Optional) Name of the S3 bucket that contains the CRL. If you do not provide a value for the `custom_cname` argument, the name of your S3 bucket is placed into the CRL Distribution Points extension of the issued certificate. You must specify a bucket policy that allows ACM PCA to write the CRL to your bucket. Must be less than or equal to 255 characters in length.
+* `s3_object_acl` - (Optional) Determines whether the CRL will be publicly readable or privately held in the CRL Amazon S3 bucket. Defaults to `PUBLIC_READ`.
 
-## Attribute Reference
+## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
@@ -146,17 +147,18 @@ In addition to all arguments above, the following attributes are exported:
 * `not_before` - Date and time before which the certificate authority is not valid. Only available after the certificate authority certificate has been imported.
 * `serial` - Serial number of the certificate authority. Only available after the certificate authority certificate has been imported.
 * `status` - Status of the certificate authority.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Timeouts
 
-`aws_acmpca_certificate_authority` provides the following [Timeouts](/docs/configuration/resources.html#timeouts)
+`aws_acmpca_certificate_authority` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts)
 configuration options:
 
 * `create` - (Default `1m`) How long to wait for a certificate authority to be created.
 
 ## Import
 
-`aws_acmpca_certificate_authority` can be imported by using the certificate authority Amazon Resource Name (ARN), e.g.
+`aws_acmpca_certificate_authority` can be imported by using the certificate authority Amazon Resource Name (ARN), e.g.,
 
 ```
 $ terraform import aws_acmpca_certificate_authority.example arn:aws:acm-pca:us-east-1:123456789012:certificate-authority/12345678-1234-1234-1234-123456789012

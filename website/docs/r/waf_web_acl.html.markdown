@@ -12,7 +12,9 @@ Provides a WAF Web ACL Resource
 
 ## Example Usage
 
-```hcl
+This example blocks requests coming from `192.0.7.0/24` and allows everything else.
+
+```terraform
 resource "aws_waf_ipset" "ipset" {
   name = "tfIPSet"
 
@@ -23,19 +25,22 @@ resource "aws_waf_ipset" "ipset" {
 }
 
 resource "aws_waf_rule" "wafrule" {
-  depends_on  = ["aws_waf_ipset.ipset"]
+  depends_on  = [aws_waf_ipset.ipset]
   name        = "tfWAFRule"
   metric_name = "tfWAFRule"
 
   predicates {
-    data_id = "${aws_waf_ipset.ipset.id}"
+    data_id = aws_waf_ipset.ipset.id
     negated = false
     type    = "IPMatch"
   }
 }
 
 resource "aws_waf_web_acl" "waf_acl" {
-  depends_on  = ["aws_waf_ipset.ipset", "aws_waf_rule.wafrule"]
+  depends_on = [
+    aws_waf_ipset.ipset,
+    aws_waf_rule.wafrule,
+  ]
   name        = "tfWebACL"
   metric_name = "tfWebACL"
 
@@ -49,7 +54,7 @@ resource "aws_waf_web_acl" "waf_acl" {
     }
 
     priority = 1
-    rule_id  = "${aws_waf_rule.wafrule.id}"
+    rule_id  = aws_waf_rule.wafrule.id
     type     = "REGULAR"
   }
 }
@@ -59,11 +64,11 @@ resource "aws_waf_web_acl" "waf_acl" {
 
 ~> *NOTE:* The Kinesis Firehose Delivery Stream name must begin with `aws-waf-logs-` and be located in `us-east-1` region. See the [AWS WAF Developer Guide](https://docs.aws.amazon.com/waf/latest/developerguide/logging.html) for more information about enabling WAF logging.
 
-```hcl
+```terraform
 resource "aws_waf_web_acl" "example" {
   # ... other configuration ...
   logging_configuration {
-    log_destination = "${aws_kinesis_firehose_delivery_stream.example.arn}"
+    log_destination = aws_kinesis_firehose_delivery_stream.example.arn
 
     redacted_fields {
       field_to_match {
@@ -88,12 +93,12 @@ The following arguments are supported:
 * `name` - (Required) The name or description of the web ACL.
 * `rules` - (Optional) Configuration blocks containing rules to associate with the web ACL and the settings for each rule. Detailed below.
 * `logging_configuration` - (Optional) Configuration block to enable WAF logging. Detailed below.
-* `tags` - (Optional) Key-value map of resource tags
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `default_action` Configuration Block
 
 * `type` - (Required) Specifies how you want AWS WAF to respond to requests that don't match the criteria in any of the `rules`.
-  e.g. `ALLOW`, `BLOCK` or `COUNT`
+  e.g., `ALLOW`, `BLOCK` or `COUNT`
 
 ### `logging_configuration` Configuration Block
 
@@ -109,7 +114,7 @@ The following arguments are supported:
 -> Additional information about this configuration can be found in the [AWS WAF Regional API Reference](https://docs.aws.amazon.com/waf/latest/APIReference/API_regional_FieldToMatch.html).
 
 * `data` - (Optional) When the value of `type` is `HEADER`, enter the name of the header that you want the WAF to search, for example, `User-Agent` or `Referer`. If the value of `type` is any other value, omit `data`.
-* `type` - (Required) The part of the web request that you want AWS WAF to search for a specified string. e.g. `HEADER` or `METHOD`
+* `type` - (Required) The part of the web request that you want AWS WAF to search for a specified stringE.g., `HEADER` or `METHOD`
 
 ### `rules` Configuration Block
 
@@ -121,7 +126,7 @@ See [docs](http://docs.aws.amazon.com/waf/latest/APIReference/API_ActivatedRule.
     * `type` - (Required) valid values are: `NONE` or `COUNT`
 * `priority` - (Required) Specifies the order in which the rules in a WebACL are evaluated.
   Rules with a lower value are evaluated before rules with a higher value.
-* `rule_id` - (Required) ID of the associated WAF (Global) rule (e.g. [`aws_waf_rule`](/docs/providers/aws/r/waf_rule.html)). WAF (Regional) rules cannot be used.
+* `rule_id` - (Required) ID of the associated WAF (Global) rule (e.g., [`aws_waf_rule`](/docs/providers/aws/r/waf_rule.html)). WAF (Regional) rules cannot be used.
 * `type` - (Optional) The rule type, either `REGULAR`, as defined by [Rule](http://docs.aws.amazon.com/waf/latest/APIReference/API_Rule.html), `RATE_BASED`, as defined by [RateBasedRule](http://docs.aws.amazon.com/waf/latest/APIReference/API_RateBasedRule.html), or `GROUP`, as defined by [RuleGroup](https://docs.aws.amazon.com/waf/latest/APIReference/API_RuleGroup.html). The default is REGULAR. If you add a RATE_BASED rule, you need to set `type` as `RATE_BASED`. If you add a GROUP rule, you need to set `type` as `GROUP`.
 
 ## Attributes Reference
@@ -130,10 +135,11 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the WAF WebACL.
 * `arn` - The ARN of the WAF WebACL.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 
-WAF Web ACL can be imported using the `id`, e.g.
+WAF Web ACL can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_waf_web_acl.main 0c8e583e-18f3-4c13-9e2a-67c4805d2f94

@@ -12,19 +12,19 @@ Provides a [Route53 Delegation Set](https://docs.aws.amazon.com/Route53/latest/A
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_route53_delegation_set" "main" {
   reference_name = "DynDNS"
 }
 
 resource "aws_route53_zone" "primary" {
   name              = "hashicorp.com"
-  delegation_set_id = "${aws_route53_delegation_set.main.id}"
+  delegation_set_id = aws_route53_delegation_set.main.id
 }
 
 resource "aws_route53_zone" "secondary" {
   name              = "terraform.io"
-  delegation_set_id = "${aws_route53_delegation_set.main.id}"
+  delegation_set_id = aws_route53_delegation_set.main.id
 }
 ```
 
@@ -39,6 +39,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `arn` - The Amazon Resource Name (ARN) of the Delegation Set.
 * `id` - The delegation set ID
 * `name_servers` - A list of authoritative name servers for the hosted zone
   (effectively a list of NS records).
@@ -47,7 +48,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Route53 Delegation Sets can be imported using the `delegation set id`, e.g.
+Route53 Delegation Sets can be imported using the `delegation set id`, e.g.,
 
 ```
 $ terraform import aws_route53_delegation_set.set1 N1PA6795SAMPLE

@@ -28,9 +28,9 @@ which is currently in use (eg, by [`aws_lb_listener`](lb_listener.html)).
 
 ## Example Usage
 
-### Certificate creation
+### Create Certificate
 
-```hcl
+```terraform
 resource "aws_acm_certificate" "cert" {
   domain_name       = "example.com"
   validation_method = "DNS"
@@ -45,16 +45,16 @@ resource "aws_acm_certificate" "cert" {
 }
 ```
 
-### Importing an existing certificate
+### Existing Certificate Body Import
 
-```hcl
+```terraform
 resource "tls_private_key" "example" {
   algorithm = "RSA"
 }
 
 resource "tls_self_signed_cert" "example" {
   key_algorithm   = "RSA"
-  private_key_pem = "${tls_private_key.example.private_key_pem}"
+  private_key_pem = tls_private_key.example.private_key_pem
 
   subject {
     common_name  = "example.com"
@@ -71,8 +71,31 @@ resource "tls_self_signed_cert" "example" {
 }
 
 resource "aws_acm_certificate" "cert" {
-  private_key      = "${tls_private_key.example.private_key_pem}"
-  certificate_body = "${tls_self_signed_cert.example.cert_pem}"
+  private_key      = tls_private_key.example.private_key_pem
+  certificate_body = tls_self_signed_cert.example.cert_pem
+}
+```
+
+### Referencing domain_validation_options With for_each Based Resources
+
+See the [`aws_acm_certificate_validation` resource](acm_certificate_validation.html) for a full example of performing DNS validation.
+
+```terraform
+resource "aws_route53_record" "example" {
+  for_each = {
+    for dvo in aws_acm_certificate.example.domain_validation_options : dvo.domain_name => {
+      name   = dvo.resource_record_name
+      record = dvo.resource_record_value
+      type   = dvo.resource_record_type
+    }
+  }
+
+  allow_overwrite = true
+  name            = each.value.name
+  records         = [each.value.record]
+  ttl             = 60
+  type            = each.value.type
+  zone_id         = aws_route53_zone.example.zone_id
 }
 ```
 
@@ -91,9 +114,9 @@ The following arguments are supported:
     * `certificate_chain` - (Optional) The certificate's PEM-formatted chain
 * Creating a private CA issued certificate
     * `domain_name` - (Required) A domain name for which the certificate should be issued
-    * `certificate_authority_arn` - (Required) ARN of an ACMPCA
+    * `certificate_authority_arn` - (Required) ARN of an ACM PCA
     * `subject_alternative_names` - (Optional) Set of domains that should be SANs in the issued certificate. To remove all elements of a previously configured list, set this value equal to an empty list (`[]`) or use the [`terraform taint` command](https://www.terraform.io/docs/commands/taint.html) to trigger recreation.
-* `tags` - (Optional) A map of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## options Configuration Block
 
@@ -108,8 +131,9 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - The ARN of the certificate
 * `arn` - The ARN of the certificate
 * `domain_name` - The domain name for which the certificate is issued
-* `domain_validation_options` - A list of attributes to feed into other resources to complete certificate validation. Can have more than one element, e.g. if SANs are defined. Only set if `DNS`-validation was used.
+* `domain_validation_options` - Set of domain validation objects which can be used to complete certificate validation. Can have more than one element, e.g., if SANs are defined. Only set if `DNS`-validation was used.
 * `status` - Status of the certificate.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 * `validation_emails` - A list of addresses that received a validation E-Mail. Only set if `EMAIL`-validation was used.
 
 Domain validation objects export the following attributes:
@@ -119,11 +143,11 @@ Domain validation objects export the following attributes:
 * `resource_record_type` - The type of DNS record to create
 * `resource_record_value` - The value the DNS record needs to have
 
-[1]: /docs/configuration/resources.html#lifecycle
+[1]: https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html
 
 ## Import
 
-Certificates can be imported using their ARN, e.g.
+Certificates can be imported using their ARN, e.g.,
 
 ```
 $ terraform import aws_acm_certificate.cert arn:aws:acm:eu-central-1:123456789012:certificate/7e7a28d2-163f-4b8f-b9cd-822f96c08d6a

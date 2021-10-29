@@ -10,12 +10,12 @@ description: |-
 
 Use this data source to get information about a DB Cluster Snapshot for use when provisioning DB clusters.
 
-~> **NOTE:** This data source does not apply to snapshots created on DB Instances. 
+~> **NOTE:** This data source does not apply to snapshots created on DB Instances.
 See the [`aws_db_snapshot` data source](/docs/providers/aws/d/db_snapshot.html) for DB Instance snapshots.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_db_cluster_snapshot" "development_final_snapshot" {
   db_cluster_identifier = "development_cluster"
   most_recent           = true
@@ -25,16 +25,16 @@ data "aws_db_cluster_snapshot" "development_final_snapshot" {
 # a new dev database.
 resource "aws_rds_cluster" "aurora" {
   cluster_identifier   = "development_cluster"
-  snapshot_identifier  = "${data.aws_db_cluster_snapshot.development_final_snapshot.id}"
+  snapshot_identifier  = data.aws_db_cluster_snapshot.development_final_snapshot.id
   db_subnet_group_name = "my_db_subnet_group"
 
   lifecycle {
-    ignore_changes = ["snapshot_identifier"]
+    ignore_changes = [snapshot_identifier]
   }
 }
 
 resource "aws_rds_cluster_instance" "aurora" {
-  cluster_identifier   = "${aws_rds_cluster.aurora.id}"
+  cluster_identifier   = aws_rds_cluster.aurora.id
   instance_class       = "db.t2.small"
   db_subnet_group_name = "my_db_subnet_group"
 }
@@ -52,7 +52,7 @@ The following arguments are supported:
 
 * `snapshot_type` - (Optional) The type of snapshots to be returned. If you don't specify a SnapshotType
 value, then both automated and manual DB cluster snapshots are returned. Shared and public DB Cluster Snapshots are not
-included in the returned results by default. Possible values are, `automated`, `manual`, `shared` and `public`.
+included in the returned results by default. Possible values are, `automated`, `manual`, `shared`, `public` and `awsbackup`.
 
 * `include_shared` - (Optional) Set this value to true to include shared manual DB Cluster Snapshots from other
 AWS accounts that this AWS account has been given permission to copy or restore, otherwise set this value to false.

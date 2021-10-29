@@ -12,36 +12,68 @@ Provides an API Gateway Usage Plan.
 
 ## Example Usage
 
-```hcl
-resource "aws_api_gateway_rest_api" "myapi" {
-  name = "MyDemoAPI"
+```terraform
+resource "aws_api_gateway_rest_api" "example" {
+  body = jsonencode({
+    openapi = "3.0.1"
+    info = {
+      title   = "example"
+      version = "1.0"
+    }
+    paths = {
+      "/path1" = {
+        get = {
+          x-amazon-apigateway-integration = {
+            httpMethod           = "GET"
+            payloadFormatVersion = "1.0"
+            type                 = "HTTP_PROXY"
+            uri                  = "https://ip-ranges.amazonaws.com/ip-ranges.json"
+          }
+        }
+      }
+    }
+  })
+
+  name = "example"
 }
 
-# ...
+resource "aws_api_gateway_deployment" "example" {
+  rest_api_id = aws_api_gateway_rest_api.example.id
 
-resource "aws_api_gateway_deployment" "dev" {
-  rest_api_id = "${aws_api_gateway_rest_api.myapi.id}"
-  stage_name  = "dev"
+  triggers = {
+    redeployment = sha1(jsonencode(aws_api_gateway_rest_api.example.body))
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
-resource "aws_api_gateway_deployment" "prod" {
-  rest_api_id = "${aws_api_gateway_rest_api.myapi.id}"
-  stage_name  = "prod"
+resource "aws_api_gateway_stage" "development" {
+  deployment_id = aws_api_gateway_deployment.example.id
+  rest_api_id   = aws_api_gateway_rest_api.example.id
+  stage_name    = "development"
 }
 
-resource "aws_api_gateway_usage_plan" "MyUsagePlan" {
+resource "aws_api_gateway_stage" "production" {
+  deployment_id = aws_api_gateway_deployment.example.id
+  rest_api_id   = aws_api_gateway_rest_api.example.id
+  stage_name    = "production"
+}
+
+resource "aws_api_gateway_usage_plan" "example" {
   name         = "my-usage-plan"
   description  = "my description"
   product_code = "MYCODE"
 
   api_stages {
-    api_id = "${aws_api_gateway_rest_api.myapi.id}"
-    stage  = "${aws_api_gateway_deployment.dev.stage_name}"
+    api_id = aws_api_gateway_rest_api.example.id
+    stage  = aws_api_gateway_stage.development.stage_name
   }
 
   api_stages {
-    api_id = "${aws_api_gateway_rest_api.myapi.id}"
-    stage  = "${aws_api_gateway_deployment.prod.stage_name}"
+    api_id = aws_api_gateway_rest_api.example.id
+    stage  = aws_api_gateway_stage.production.stage_name
   }
 
   quota_settings {
@@ -68,13 +100,20 @@ The API Gateway Usage Plan argument layout is a structure composed of several su
 * `api_stages` - (Optional) The associated [API stages](#api-stages-arguments) of the usage plan.
 * `quota_settings` - (Optional) The [quota settings](#quota-settings-arguments) of the usage plan.
 * `throttle_settings` - (Optional) The [throttling limits](#throttling-settings-arguments) of the usage plan.
-* `product_code` - (Optional) The AWS Markeplace product identifier to associate with the usage plan as a SaaS product on AWS Marketplace.
-* `tags` - (Optional) Key-value map of resource tags
+* `product_code` - (Optional) The AWS Marketplace product identifier to associate with the usage plan as a SaaS product on AWS Marketplace.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 #### Api Stages arguments
 
 * `api_id` (Required) - API Id of the associated API stage in a usage plan.
 * `stage` (Required) - API stage name of the associated API stage in a usage plan.
+* `throttle` - (Optional) The [throttling limits](#throttle) of the usage plan.
+
+##### Throttle
+
+* `path` (Required) - The method to apply the throttle settings for. Specfiy the path and method, for example `/test/GET`.
+* `burst_limit` (Optional) - The API request burst limit, the maximum rate limit over a time ranging from one to a few seconds, depending upon whether the underlying token bucket is at its full capacity.
+* `rate_limit` (Optional) - The API request steady-state rate limit.
 
 #### Quota Settings Arguments
 
@@ -97,12 +136,13 @@ In addition to all arguments above, the following attributes are exported:
 * `api_stages` - The associated API stages of the usage plan.
 * `quota_settings` - The quota of the usage plan.
 * `throttle_settings` - The throttling limits of the usage plan.
-* `product_code` - The AWS Markeplace product identifier to associate with the usage plan as a SaaS product on AWS Marketplace.
+* `product_code` - The AWS Marketplace product identifier to associate with the usage plan as a SaaS product on AWS Marketplace.
 * `arn` - Amazon Resource Name (ARN)
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 
-AWS API Gateway Usage Plan can be imported using the `id`, e.g.
+AWS API Gateway Usage Plan can be imported using the `id`, e.g.,
 
 ```sh
 $ terraform import aws_api_gateway_usage_plan.myusageplan <usage_plan_id>

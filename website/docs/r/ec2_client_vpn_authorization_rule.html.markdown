@@ -8,15 +8,15 @@ description: |-
 
 # Resource: aws_ec2_client_vpn_authorization_rule
 
-Provides authorization rules for AWS Client VPN endpoints. For more information on usage, please see the 
+Provides authorization rules for AWS Client VPN endpoints. For more information on usage, please see the
 [AWS Client VPN Administrator's Guide](https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/what-is.html).
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_ec2_client_vpn_authorization_rule" "example" {
-  client_vpn_endpoint_id = "${aws_ec2_client_vpn_endpoint.example.id}"
-  target_network_cidr    = "${aws_subnet.example.cidr_block}"
+  client_vpn_endpoint_id = aws_ec2_client_vpn_endpoint.example.id
+  target_network_cidr    = aws_subnet.example.cidr_block
   authorize_all_groups   = true
 }
 ```
@@ -30,6 +30,10 @@ The following arguments are supported:
 * `access_group_id` - (Optional) The ID of the group to which the authorization rule grants access. One of `access_group_id` or `authorize_all_groups` must be set.
 * `authorize_all_groups` - (Optional) Indicates whether the authorization rule grants access to all clients. One of `access_group_id` or `authorize_all_groups` must be set.
 * `description` - (Optional) A brief description of the authorization rule.
+
+## Attributes Reference
+
+No additional attributes are exported.
 
 ## Import
 

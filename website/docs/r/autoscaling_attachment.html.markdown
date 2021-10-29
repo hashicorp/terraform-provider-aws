@@ -8,19 +8,20 @@ description: |-
 
 # Resource: aws_autoscaling_attachment
 
-Provides an AutoScaling Attachment resource.
+Provides an Auto Scaling Attachment resource.
 
-~> **NOTE on AutoScaling Groups and ASG Attachments:** Terraform currently provides
-both a standalone ASG Attachment resource (describing an ASG attached to
-an ELB or ALB), and an [AutoScaling Group resource](autoscaling_group.html) with
-`load_balancers` and `target_group_arns` defined in-line. At this time you can use an ASG with in-line
-`load balancers` or `target_group_arns` in conjunction with an ASG Attachment resource, however, to prevent
-unintended resource updates, the `aws_autoscaling_group` resource must be configured 
-to ignore changes to the `load_balancers` and `target_group_arns` arguments within a [`lifecycle` configuration block](/docs/configuration/resources.html#lifecycle-lifecycle-customizations).
+~> **NOTE on Auto Scaling Groups and ASG Attachments:** Terraform currently provides
+both a standalone [`aws_autoscaling_attachment`](autoscaling_attachment.html) resource
+(describing an ASG attached to an ELB or ALB), and an [`aws_autoscaling_group`](autoscaling_group.html)
+with `load_balancers` and `target_group_arns` defined in-line. These two methods are not
+mutually-exclusive. If `aws_autoscaling_attachment` resources are used, either alone or with inline
+`load_balancers` or `target_group_arns`, the `aws_autoscaling_group` resource must be configured
+to ignore changes to the `load_balancers` and `target_group_arns` arguments within a
+[`lifecycle` configuration block](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html).
 
 ## Example Usage
 
-```hcl
+```terraform
 # Create a new load balancer attachment
 resource "aws_autoscaling_attachment" "asg_attachment_bar" {
   autoscaling_group_name = aws_autoscaling_group.asg.id
@@ -28,17 +29,17 @@ resource "aws_autoscaling_attachment" "asg_attachment_bar" {
 }
 ```
 
-```hcl
+```terraform
 # Create a new ALB Target Group attachment
 resource "aws_autoscaling_attachment" "asg_attachment_bar" {
   autoscaling_group_name = aws_autoscaling_group.asg.id
-  alb_target_group_arn   = aws_alb_target_group.test.arn
+  alb_target_group_arn   = aws_lb_target_group.test.arn
 }
 ```
 
 ## With An AutoScaling Group Resource
 
-```hcl
+```terraform
 resource "aws_autoscaling_group" "asg" {
   # ... other configuration ...
 
@@ -61,3 +62,6 @@ The following arguments are supported:
 * `elb` - (Optional) The name of the ELB.
 * `alb_target_group_arn` - (Optional) The ARN of an ALB Target Group.
 
+## Attributes Reference
+
+No additional attributes are exported.

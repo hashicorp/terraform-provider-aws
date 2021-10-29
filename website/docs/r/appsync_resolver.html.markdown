@@ -12,7 +12,7 @@ Provides an AppSync Resolver.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_appsync_graphql_api" "test" {
   authentication_type = "API_KEY"
   name                = "tf-example"
@@ -39,7 +39,7 @@ EOF
 }
 
 resource "aws_appsync_datasource" "test" {
-  api_id = "${aws_appsync_graphql_api.test.id}"
+  api_id = aws_appsync_graphql_api.test.id
   name   = "tf_example"
   type   = "HTTP"
 
@@ -50,10 +50,10 @@ resource "aws_appsync_datasource" "test" {
 
 # UNIT type resolver (default)
 resource "aws_appsync_resolver" "test" {
-  api_id      = "${aws_appsync_graphql_api.test.id}"
+  api_id      = aws_appsync_graphql_api.test.id
   field       = "singlePost"
   type        = "Query"
-  data_source = "${aws_appsync_datasource.test.name}"
+  data_source = aws_appsync_datasource.test.name
 
   request_template = <<EOF
 {
@@ -77,7 +77,7 @@ EOF
   caching_config {
     caching_keys = [
       "$context.identity.sub",
-      "$context.arguments.id"
+      "$context.arguments.id",
     ]
     ttl = 60
   }
@@ -86,16 +86,16 @@ EOF
 # PIPELINE type resolver
 resource "aws_appsync_resolver" "Mutation_pipelineTest" {
   type              = "Mutation"
-  api_id            = "${aws_appsync_graphql_api.test.id}"
+  api_id            = aws_appsync_graphql_api.test.id
   field             = "pipelineTest"
   request_template  = "{}"
   response_template = "$util.toJson($ctx.result)"
   kind              = "PIPELINE"
   pipeline_config {
     functions = [
-      "${aws_appsync_function.test1.function_id}",
-      "${aws_appsync_function.test2.function_id}",
-      "${aws_appsync_function.test3.function_id}"
+      aws_appsync_function.test1.function_id,
+      aws_appsync_function.test2.function_id,
+      aws_appsync_function.test3.function_id,
     ]
   }
 }
@@ -108,8 +108,8 @@ The following arguments are supported:
 * `api_id` - (Required) The API ID for the GraphQL API.
 * `type` - (Required) The type name from the schema defined in the GraphQL API.
 * `field` - (Required) The field name from the schema defined in the GraphQL API.
-* `request_template` - (Required) The request mapping template for UNIT resolver or 'before mapping template' for PIPELINE resolver.
-* `response_template` - (Required) The response mapping template for UNIT resolver or 'after mapping template' for PIPELINE resolver.
+* `request_template` - (Optional) The request mapping template for UNIT resolver or 'before mapping template' for PIPELINE resolver. Required for non-Lambda resolvers.
+* `response_template` - (Optional) The response mapping template for UNIT resolver or 'after mapping template' for PIPELINE resolver. Required for non-Lambda resolvers.
 * `data_source` - (Optional) The DataSource name.
 * `kind`  - (Optional) The resolver type. Valid values are `UNIT` and `PIPELINE`.
 * `pipeline_config` - (Optional) The PipelineConfig.
@@ -126,7 +126,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_appsync_resolver` can be imported with their `api_id`, a hyphen, `type`, a hypen and `field` e.g.
+`aws_appsync_resolver` can be imported with their `api_id`, a hyphen, `type`, a hypen and `field` e.g.,
 
 ```
 $ terraform import aws_appsync_resolver.example abcdef123456-exampleType-exampleField

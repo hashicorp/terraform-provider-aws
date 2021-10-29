@@ -19,8 +19,8 @@ origin access identities, see
 
 The following example below creates a CloudFront origin access identity.
 
-```hcl
-resource "aws_cloudfront_origin_access_identity" "origin_access_identity" {
+```terraform
+resource "aws_cloudfront_origin_access_identity" "example" {
   comment = "Some comment"
 }
 ```
@@ -29,7 +29,7 @@ resource "aws_cloudfront_origin_access_identity" "origin_access_identity" {
 
 * `comment` (Optional) - An optional comment for the origin access identity.
 
-## Attribute Reference
+## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
@@ -55,9 +55,15 @@ The `cloudfront_access_identity_path` allows this to be circumvented.
 The below snippet demonstrates use with the `s3_origin_config` structure for the
 [`aws_cloudfront_distribution`][3] resource:
 
-```hcl
-s3_origin_config {
-  origin_access_identity = "${aws_cloudfront_origin_access_identity.origin_access_identity.cloudfront_access_identity_path}"
+```terraform
+resource "aws_cloudfront_distribution" "example" {
+  # ... other configuration ...
+
+  origin {
+    s3_origin_config {
+      origin_access_identity = aws_cloudfront_origin_access_identity.example.cloudfront_access_identity_path
+    }
+  }
 }
 ```
 
@@ -68,7 +74,7 @@ principal into an `AWS` IAM ARN principal when supplied in an
 [`aws_s3_bucket`][4] bucket policy, causing spurious diffs in Terraform. If
 you see this behaviour, use the `iam_arn` instead:
 
-```hcl
+```terraform
 data "aws_iam_policy_document" "s3_policy" {
   statement {
     actions   = ["s3:GetObject"]
@@ -76,14 +82,14 @@ data "aws_iam_policy_document" "s3_policy" {
 
     principals {
       type        = "AWS"
-      identifiers = ["${aws_cloudfront_origin_access_identity.origin_access_identity.iam_arn}"]
+      identifiers = [aws_cloudfront_origin_access_identity.example.iam_arn]
     }
   }
 }
 
 resource "aws_s3_bucket_policy" "example" {
-  bucket = "${aws_s3_bucket.example.id}"
-  policy = "${data.aws_iam_policy_document.s3_policy.json}"
+  bucket = aws_s3_bucket.example.id
+  policy = data.aws_iam_policy_document.s3_policy.json
 }
 ```
 
@@ -95,7 +101,7 @@ resource "aws_s3_bucket_policy" "example" {
 
 ## Import
 
-Cloudfront Origin Access Identities can be imported using the `id`, e.g.
+Cloudfront Origin Access Identities can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_cloudfront_origin_access_identity.origin_access E74FTE3AEXAMPLE

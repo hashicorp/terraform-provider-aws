@@ -15,12 +15,12 @@ interface, subnet, or VPC. Logs are sent to a CloudWatch Log Group or a S3 Bucke
 
 ### CloudWatch Logging
 
-```hcl
+```terraform
 resource "aws_flow_log" "example" {
-  iam_role_arn    = "${aws_iam_role.example.arn}"
-  log_destination = "${aws_cloudwatch_log_group.example.arn}"
+  iam_role_arn    = aws_iam_role.example.arn
+  log_destination = aws_cloudwatch_log_group.example.arn
   traffic_type    = "ALL"
-  vpc_id          = "${aws_vpc.example.id}"
+  vpc_id          = aws_vpc.example.id
 }
 
 resource "aws_cloudwatch_log_group" "example" {
@@ -49,7 +49,7 @@ EOF
 
 resource "aws_iam_role_policy" "example" {
   name = "example"
-  role = "${aws_iam_role.example.id}"
+  role = aws_iam_role.example.id
 
   policy = <<EOF
 {
@@ -74,12 +74,31 @@ EOF
 
 ### S3 Logging
 
-```hcl
+```terraform
 resource "aws_flow_log" "example" {
-  log_destination      = "${aws_s3_bucket.example.arn}"
+  log_destination      = aws_s3_bucket.example.arn
   log_destination_type = "s3"
   traffic_type         = "ALL"
-  vpc_id               = "${aws_vpc.example.id}"
+  vpc_id               = aws_vpc.example.id
+}
+
+resource "aws_s3_bucket" "example" {
+  bucket = "example"
+}
+```
+
+### S3 Logging in Apache Parquet format with per-hour partitions
+
+```terraform
+resource "aws_flow_log" "example" {
+  log_destination      = aws_s3_bucket.example.arn
+  log_destination_type = "s3"
+  traffic_type         = "ALL"
+  vpc_id               = aws_vpc.example.id
+  destination_options {
+    file_format        = "parquet"
+    per_hour_partition = true
+  }
 }
 
 resource "aws_s3_bucket" "example" {
@@ -106,7 +125,16 @@ The following arguments are supported:
   during which a flow of packets is captured and aggregated into a flow
   log record. Valid Values: `60` seconds (1 minute) or `600` seconds (10
   minutes). Default: `600`.
-* `tags` - (Optional) Key-value map of resource tags
+* `destination_options` - (Optional) Describes the destination options for a flow log. More details below.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+### destination_options
+
+Describes the destination options for a flow log.
+
+* `file_format` - (Optional) The format for the flow log. Default value: `plain-text`. Valid values: `plain-text`, `parquet`.
+* `hive_compatible_partitions` - (Optional) Indicates whether to use Hive-compatible prefixes for flow logs stored in Amazon S3. Default value: `false`.
+* `per_hour_partition` - (Optional) Indicates whether to partition the flow log per hour. This reduces the cost and response time for queries. Default value: `false`.
 
 ## Attributes Reference
 
@@ -114,10 +142,11 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The Flow Log ID
 * `arn` - The ARN of the Flow Log.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 
-Flow Logs can be imported using the `id`, e.g.
+Flow Logs can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_flow_log.test_flow_log fl-1a2b3c4d
