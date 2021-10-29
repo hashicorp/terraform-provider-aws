@@ -45,4 +45,8 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - AWS Region.
-* `instance_types` - Set of EC2 Instance Types.
+* `instance_types` - List of EC2 Instance Types.
+* `locations` - List of locations.
+* `location_types` - List of location types.
+
+Note that the indexes of Instance Type Offering instance types, locations and location types correspond.

@@ -38,7 +38,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-EventBridge schema registries can be imported using the `name`, e.g.
+EventBridge schema registries can be imported using the `name`, e.g.,
 
 ```console
 $ terraform import aws_schemas_registry.test my_own_registry

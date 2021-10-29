@@ -34,7 +34,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
- Route 53 Resolver query logging configuration associations can be imported using the Route 53 Resolver query logging configuration association ID, e.g.
+ Route 53 Resolver query logging configuration associations can be imported using the Route 53 Resolver query logging configuration association ID, e.g.,
 
 ```
 $ terraform import aws_route53_resolver_query_log_config_association.example rqlca-b320624fef3c4d70

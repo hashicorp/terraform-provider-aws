@@ -66,7 +66,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Kinesis Streams can be imported using the `name`, e.g.
+Kinesis Streams can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_kinesis_stream.test_stream terraform-kinesis-test

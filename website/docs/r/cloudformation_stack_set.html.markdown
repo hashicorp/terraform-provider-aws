@@ -116,7 +116,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-CloudFormation StackSets can be imported using the `name`, e.g.
+CloudFormation StackSets can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_cloudformation_stack_set.example example

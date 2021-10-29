@@ -25,7 +25,7 @@ resource "aws_apprunner_custom_domain_association" "example" {
 
 The following arguments supported:
 
-* `domain_name` - (Required) The custom domain endpoint to association. Specify a base domain e.g. `example.com` or a subdomain e.g. `subdomain.example.com`.
+* `domain_name` - (Required) The custom domain endpoint to association. Specify a base domain e.g., `example.com` or a subdomain e.g., `subdomain.example.com`.
 * `enable_www_subdomain` (Optional) Whether to associate the subdomain with the App Runner service in addition to the base domain. Defaults to `true`.
 * `service_arn` - (Required) The ARN of the App Runner service.
 
@@ -48,7 +48,7 @@ The configuration block consists of the following arguments:
 
 ## Import
 
-App Runner Custom Domain Associations can be imported by using the `domain_name` and `service_arn` separated by a comma (`,`), e.g.
+App Runner Custom Domain Associations can be imported by using the `domain_name` and `service_arn` separated by a comma (`,`), e.g.,
 
 ```
 $ terraform import aws_apprunner_custom_domain_association.example example.com,arn:aws:apprunner:us-east-1:123456789012:service/example-

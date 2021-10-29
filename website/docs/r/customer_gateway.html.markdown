@@ -47,7 +47,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Customer Gateways can be imported using the `id`, e.g.
+Customer Gateways can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_customer_gateway.main cgw-b4dc3961
