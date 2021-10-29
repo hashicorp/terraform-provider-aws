@@ -17,7 +17,7 @@ import (
 
 func TestAccLexModelBuildingSlotType_basic(t *testing.T) {
 	var v lexmodelbuildingservice.GetSlotTypeOutput
-	rName := "aws_lex_slot_type.test"
+	rName := "aws_lexmodelbuilding_slot_type.test"
 	testSlotTypeID := "test_slot_type_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -62,7 +62,7 @@ func TestAccLexModelBuildingSlotType_basic(t *testing.T) {
 
 func TestAccLexModelBuildingSlotType_createVersion(t *testing.T) {
 	var v lexmodelbuildingservice.GetSlotTypeOutput
-	rName := "aws_lex_slot_type.test"
+	rName := "aws_lexmodelbuilding_slot_type.test"
 	testSlotTypeID := "test_slot_type_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -108,7 +108,7 @@ func TestAccLexModelBuildingSlotType_createVersion(t *testing.T) {
 
 func TestAccLexModelBuildingSlotType_description(t *testing.T) {
 	var v lexmodelbuildingservice.GetSlotTypeOutput
-	rName := "aws_lex_slot_type.test"
+	rName := "aws_lexmodelbuilding_slot_type.test"
 	testSlotTypeID := "test_slot_type_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -152,7 +152,7 @@ func TestAccLexModelBuildingSlotType_description(t *testing.T) {
 
 func TestAccLexModelBuildingSlotType_enumerationValues(t *testing.T) {
 	var v lexmodelbuildingservice.GetSlotTypeOutput
-	rName := "aws_lex_slot_type.test"
+	rName := "aws_lexmodelbuilding_slot_type.test"
 	testSlotTypeID := "test_slot_type_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -201,7 +201,7 @@ func TestAccLexModelBuildingSlotType_enumerationValues(t *testing.T) {
 
 func TestAccLexModelBuildingSlotType_name(t *testing.T) {
 	var v lexmodelbuildingservice.GetSlotTypeOutput
-	rName := "aws_lex_slot_type.test"
+	rName := "aws_lexmodelbuilding_slot_type.test"
 	testSlotTypeID1 := "test_slot_type_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 	testSlotTypeID2 := "test_slot_type_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
@@ -246,7 +246,7 @@ func TestAccLexModelBuildingSlotType_name(t *testing.T) {
 
 func TestAccLexModelBuildingSlotType_valueSelectionStrategy(t *testing.T) {
 	var v lexmodelbuildingservice.GetSlotTypeOutput
-	rName := "aws_lex_slot_type.test"
+	rName := "aws_lexmodelbuilding_slot_type.test"
 	testSlotTypeID := "test_slot_type_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -290,7 +290,7 @@ func TestAccLexModelBuildingSlotType_valueSelectionStrategy(t *testing.T) {
 
 func TestAccLexModelBuildingSlotType_disappears(t *testing.T) {
 	var v lexmodelbuildingservice.GetSlotTypeOutput
-	rName := "aws_lex_slot_type.test"
+	rName := "aws_lexmodelbuilding_slot_type.test"
 	testSlotTypeID := "test_slot_type_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -318,8 +318,8 @@ func TestAccLexModelBuildingSlotType_computeVersion(t *testing.T) {
 	var v1 lexmodelbuildingservice.GetSlotTypeOutput
 	var v2 lexmodelbuildingservice.GetIntentOutput
 
-	slotTypeResourceName := "aws_lex_slot_type.test"
-	intentResourceName := "aws_lex_intent.test"
+	slotTypeResourceName := "aws_lexmodelbuilding_slot_type.test"
+	intentResourceName := "aws_lexmodelbuilding_intent.test"
 	testSlotTypeID := "test_slot_type_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
 	version := "1"
@@ -421,7 +421,7 @@ func testAccCheckSlotTypeDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelBuildingConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_lex_slot_type" {
+		if rs.Type != "aws_lexmodelbuilding_slot_type" {
 			continue
 		}
 
@@ -445,7 +445,7 @@ func testAccCheckSlotTypeDestroy(s *terraform.State) error {
 
 func testAccSlotTypeConfig_basic(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lex_slot_type" "test" {
+resource "aws_lexmodelbuilding_slot_type" "test" {
   name = "%s"
   enumeration_value {
     synonyms = [
@@ -460,7 +460,7 @@ resource "aws_lex_slot_type" "test" {
 
 func testAccSlotTypeConfig_withVersion(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lex_slot_type" "test" {
+resource "aws_lexmodelbuilding_slot_type" "test" {
   create_version = true
   name           = "%s"
   enumeration_value {
@@ -476,7 +476,7 @@ resource "aws_lex_slot_type" "test" {
 
 func testAccSlotTypeUpdateConfig_description(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lex_slot_type" "test" {
+resource "aws_lexmodelbuilding_slot_type" "test" {
   description = "Types of flowers to pick up"
   name        = "%s"
   enumeration_value {
@@ -492,7 +492,7 @@ resource "aws_lex_slot_type" "test" {
 
 func testAccSlotTypeConfig_enumerationValues(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lex_slot_type" "test" {
+resource "aws_lexmodelbuilding_slot_type" "test" {
   name = "%s"
   enumeration_value {
     synonyms = [
@@ -515,7 +515,7 @@ resource "aws_lex_slot_type" "test" {
 
 func testAccSlotTypeConfig_valueSelectionStrategy(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lex_slot_type" "test" {
+resource "aws_lexmodelbuilding_slot_type" "test" {
   name                     = "%s"
   value_selection_strategy = "TOP_RESOLUTION"
   enumeration_value {
@@ -531,7 +531,7 @@ resource "aws_lex_slot_type" "test" {
 
 func testAccSlotTypeUpdateConfig_enumerationValuesWithVersion(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lex_slot_type" "test" {
+resource "aws_lexmodelbuilding_slot_type" "test" {
   create_version = true
   name           = "%s"
   enumeration_value {

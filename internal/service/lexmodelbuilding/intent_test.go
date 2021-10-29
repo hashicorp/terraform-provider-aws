@@ -19,7 +19,7 @@ import (
 
 func TestAccLexModelBuildingIntent_basic(t *testing.T) {
 	var v lexmodelbuildingservice.GetIntentOutput
-	rName := "aws_lex_intent.test"
+	rName := "aws_lexmodelbuilding_intent.test"
 	testIntentID := "test_intent_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -68,7 +68,7 @@ func TestAccLexModelBuildingIntent_basic(t *testing.T) {
 
 func TestAccLexModelBuildingIntent_createVersion(t *testing.T) {
 	var v lexmodelbuildingservice.GetIntentOutput
-	rName := "aws_lex_intent.test"
+	rName := "aws_lexmodelbuilding_intent.test"
 	testIntentID := "test_intent_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -113,7 +113,7 @@ func TestAccLexModelBuildingIntent_createVersion(t *testing.T) {
 
 func TestAccLexModelBuildingIntent_conclusionStatement(t *testing.T) {
 	var v lexmodelbuildingservice.GetIntentOutput
-	rName := "aws_lex_intent.test"
+	rName := "aws_lexmodelbuilding_intent.test"
 	testIntentID := "test_intent_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -169,7 +169,7 @@ func TestAccLexModelBuildingIntent_conclusionStatement(t *testing.T) {
 
 func TestAccLexModelBuildingIntent_confirmationPromptAndRejectionStatement(t *testing.T) {
 	var v lexmodelbuildingservice.GetIntentOutput
-	rName := "aws_lex_intent.test"
+	rName := "aws_lexmodelbuilding_intent.test"
 	testIntentID := "test_intent_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -235,7 +235,7 @@ func TestAccLexModelBuildingIntent_confirmationPromptAndRejectionStatement(t *te
 
 func TestAccLexModelBuildingIntent_dialogCodeHook(t *testing.T) {
 	var v lexmodelbuildingservice.GetIntentOutput
-	rName := "aws_lex_intent.test"
+	rName := "aws_lexmodelbuilding_intent.test"
 	testIntentID := "test_intent_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -271,7 +271,7 @@ func TestAccLexModelBuildingIntent_dialogCodeHook(t *testing.T) {
 
 func TestAccLexModelBuildingIntent_followUpPrompt(t *testing.T) {
 	var v lexmodelbuildingservice.GetIntentOutput
-	rName := "aws_lex_intent.test"
+	rName := "aws_lexmodelbuilding_intent.test"
 	testIntentID := "test_intent_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -343,7 +343,7 @@ func TestAccLexModelBuildingIntent_followUpPrompt(t *testing.T) {
 
 func TestAccLexModelBuildingIntent_fulfillmentActivity(t *testing.T) {
 	var v lexmodelbuildingservice.GetIntentOutput
-	rName := "aws_lex_intent.test"
+	rName := "aws_lexmodelbuilding_intent.test"
 	testIntentID := "test_intent_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -381,7 +381,7 @@ func TestAccLexModelBuildingIntent_fulfillmentActivity(t *testing.T) {
 
 func TestAccLexModelBuildingIntent_sampleUtterances(t *testing.T) {
 	var v lexmodelbuildingservice.GetIntentOutput
-	rName := "aws_lex_intent.test"
+	rName := "aws_lexmodelbuilding_intent.test"
 	testIntentID := "test_intent_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -426,7 +426,7 @@ func TestAccLexModelBuildingIntent_sampleUtterances(t *testing.T) {
 
 func TestAccLexModelBuildingIntent_slots(t *testing.T) {
 	var v lexmodelbuildingservice.GetIntentOutput
-	rName := "aws_lex_intent.test"
+	rName := "aws_lexmodelbuilding_intent.test"
 	testIntentID := "test_intent_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -482,7 +482,7 @@ func TestAccLexModelBuildingIntent_slots(t *testing.T) {
 
 func TestAccLexModelBuildingIntent_slotsCustom(t *testing.T) {
 	var v lexmodelbuildingservice.GetIntentOutput
-	rName := "aws_lex_intent.test"
+	rName := "aws_lexmodelbuilding_intent.test"
 	testIntentID := "test_intent_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -529,7 +529,7 @@ func TestAccLexModelBuildingIntent_slotsCustom(t *testing.T) {
 
 func TestAccLexModelBuildingIntent_disappears(t *testing.T) {
 	var v lexmodelbuildingservice.GetIntentOutput
-	rName := "aws_lex_intent.test"
+	rName := "aws_lexmodelbuilding_intent.test"
 	testIntentID := "test_intent_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -555,7 +555,7 @@ func TestAccLexModelBuildingIntent_disappears(t *testing.T) {
 
 func TestAccLexModelBuildingIntent_updateWithExternalChange(t *testing.T) {
 	var v lexmodelbuildingservice.GetIntentOutput
-	rName := "aws_lex_intent.test"
+	rName := "aws_lexmodelbuilding_intent.test"
 	testIntentID := "test_intent_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
 	testAccCheckAWSLexIntentUpdateDescription := func(provider *schema.Provider, _ *schema.Resource, resourceName string) resource.TestCheckFunc {
@@ -626,8 +626,8 @@ func TestAccLexModelBuildingIntent_computeVersion(t *testing.T) {
 	var v1 lexmodelbuildingservice.GetIntentOutput
 	var v2 lexmodelbuildingservice.GetBotOutput
 
-	intentResourceName := "aws_lex_intent.test"
-	botResourceName := "aws_lex_bot.test"
+	intentResourceName := "aws_lexmodelbuilding_intent.test"
+	botResourceName := "aws_lexmodelbuilding_bot.test"
 	testIntentID := "test_intent_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
 	version := "1"
@@ -732,7 +732,7 @@ func testAccCheckIntentDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelBuildingConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_lex_intent" {
+		if rs.Type != "aws_lexmodelbuilding_intent" {
 			continue
 		}
 
@@ -791,7 +791,7 @@ resource "aws_lambda_function" "test" {
 
 func testAccIntentConfig_basic(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lex_intent" "test" {
+resource "aws_lexmodelbuilding_intent" "test" {
   name = "%s"
   fulfillment_activity {
     type = "ReturnIntent"
@@ -802,7 +802,7 @@ resource "aws_lex_intent" "test" {
 
 func testAccIntentConfig_createVersion(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lex_intent" "test" {
+resource "aws_lexmodelbuilding_intent" "test" {
   create_version = true
   name           = "%s"
   fulfillment_activity {
@@ -814,7 +814,7 @@ resource "aws_lex_intent" "test" {
 
 func testAccIntentConfig_conclusionStatement(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lex_intent" "test" {
+resource "aws_lexmodelbuilding_intent" "test" {
   name = "%s"
   fulfillment_activity {
     type = "ReturnIntent"
@@ -832,7 +832,7 @@ resource "aws_lex_intent" "test" {
 
 func testAccIntentConfig_conclusionStatementUpdate(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lex_intent" "test" {
+resource "aws_lexmodelbuilding_intent" "test" {
   name = "%s"
   fulfillment_activity {
     type = "ReturnIntent"
@@ -856,7 +856,7 @@ resource "aws_lex_intent" "test" {
 
 func testAccIntentConfig_confirmationPromptAndRejectionStatement(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lex_intent" "test" {
+resource "aws_lexmodelbuilding_intent" "test" {
   name = "%s"
   fulfillment_activity {
     type = "ReturnIntent"
@@ -882,7 +882,7 @@ resource "aws_lex_intent" "test" {
 
 func testAccIntentConfig_confirmationPromptAndRejectionStatementUpdate(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lex_intent" "test" {
+resource "aws_lexmodelbuilding_intent" "test" {
   name = "%s"
   fulfillment_activity {
     type = "ReturnIntent"
@@ -916,7 +916,7 @@ resource "aws_lex_intent" "test" {
 
 func testAccIntentConfig_dialogCodeHook(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lex_intent" "test" {
+resource "aws_lexmodelbuilding_intent" "test" {
   name = "%s"
   fulfillment_activity {
     type = "ReturnIntent"
@@ -931,7 +931,7 @@ resource "aws_lex_intent" "test" {
 
 func testAccIntentConfig_followUpPrompt(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lex_intent" "test" {
+resource "aws_lexmodelbuilding_intent" "test" {
   name = "%s"
   fulfillment_activity {
     type = "ReturnIntent"
@@ -959,7 +959,7 @@ resource "aws_lex_intent" "test" {
 
 func testAccIntentConfig_followUpPromptUpdate(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lex_intent" "test" {
+resource "aws_lexmodelbuilding_intent" "test" {
   name = "%s"
   fulfillment_activity {
     type = "ReturnIntent"
@@ -995,7 +995,7 @@ resource "aws_lex_intent" "test" {
 
 func testAccIntentConfig_fulfillmentActivity(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lex_intent" "test" {
+resource "aws_lexmodelbuilding_intent" "test" {
   name = "%s"
   fulfillment_activity {
     code_hook {
@@ -1010,7 +1010,7 @@ resource "aws_lex_intent" "test" {
 
 func testAccIntentConfig_sampleUtterances(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lex_intent" "test" {
+resource "aws_lexmodelbuilding_intent" "test" {
   name = "%s"
   fulfillment_activity {
     type = "ReturnIntent"
@@ -1024,7 +1024,7 @@ resource "aws_lex_intent" "test" {
 
 func testAccIntentConfig_sampleUtterancesUpdate(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lex_intent" "test" {
+resource "aws_lexmodelbuilding_intent" "test" {
   name = "%s"
   fulfillment_activity {
     type = "ReturnIntent"
@@ -1039,7 +1039,7 @@ resource "aws_lex_intent" "test" {
 
 func testAccIntentConfig_slots(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lex_intent" "test" {
+resource "aws_lexmodelbuilding_intent" "test" {
   name = "%s"
   fulfillment_activity {
     type = "ReturnIntent"
@@ -1067,7 +1067,7 @@ resource "aws_lex_intent" "test" {
 
 func testAccIntentConfig_slotsUpdate(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lex_intent" "test" {
+resource "aws_lexmodelbuilding_intent" "test" {
   name = "%s"
   fulfillment_activity {
     type = "ReturnIntent"
@@ -1112,7 +1112,7 @@ resource "aws_lex_intent" "test" {
 
 func testAccIntentConfig_slotsCustom(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lex_intent" "test" {
+resource "aws_lexmodelbuilding_intent" "test" {
   name = "%s"
   fulfillment_activity {
     type = "ReturnIntent"
@@ -1125,7 +1125,7 @@ resource "aws_lex_intent" "test" {
       "I would like to order {FlowerType}",
     ]
     slot_constraint   = "Required"
-    slot_type         = aws_lex_slot_type.test.name
+    slot_type         = aws_lexmodelbuilding_slot_type.test.name
     slot_type_version = "$LATEST"
     value_elicitation_prompt {
       max_attempts = 2
@@ -1142,7 +1142,7 @@ resource "aws_lex_intent" "test" {
 
 func testAccIntentConfig_sampleUtterancesWithVersion(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lex_intent" "test" {
+resource "aws_lexmodelbuilding_intent" "test" {
   create_version = true
   name           = "%s"
   fulfillment_activity {
@@ -1157,7 +1157,7 @@ resource "aws_lex_intent" "test" {
 
 func testAccIntentConfig_slotsWithVersion(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lex_intent" "test" {
+resource "aws_lexmodelbuilding_intent" "test" {
   create_version = true
   name           = "%s"
   fulfillment_activity {
@@ -1171,8 +1171,8 @@ resource "aws_lex_intent" "test" {
       "I would like to order {FlowerType}",
     ]
     slot_constraint   = "Required"
-    slot_type         = aws_lex_slot_type.test.name
-    slot_type_version = aws_lex_slot_type.test.version
+    slot_type         = aws_lexmodelbuilding_slot_type.test.name
+    slot_type_version = aws_lexmodelbuilding_slot_type.test.version
   }
 }
 `, rName)

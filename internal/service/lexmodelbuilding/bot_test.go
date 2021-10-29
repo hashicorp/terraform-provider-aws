@@ -28,7 +28,7 @@ func testAccErrorCheckSkipLex(t *testing.T) resource.ErrorCheckFunc {
 
 func TestAccLexModelBuildingBot_basic(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotOutput
-	rName := "aws_lex_bot.test"
+	rName := "aws_lexmodelbuilding_bot.test"
 	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -99,7 +99,7 @@ func TestAccLexModelBuildingBot_Version_serial(t *testing.T) {
 
 func testAccBot_createVersion(t *testing.T) {
 	var v1, v2 lexmodelbuildingservice.GetBotOutput
-	rName := "aws_lex_bot.test"
+	rName := "aws_lexmodelbuilding_bot.test"
 	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
 	// If this test runs in parallel with other Lex Bot tests, it loses its description
@@ -146,7 +146,7 @@ func testAccBot_createVersion(t *testing.T) {
 
 func TestAccLexModelBuildingBot_abortStatement(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotOutput
-	rName := "aws_lex_bot.test"
+	rName := "aws_lexmodelbuilding_bot.test"
 	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -206,7 +206,7 @@ func TestAccLexModelBuildingBot_abortStatement(t *testing.T) {
 
 func TestAccLexModelBuildingBot_clarificationPrompt(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotOutput
-	rName := "aws_lex_bot.test"
+	rName := "aws_lexmodelbuilding_bot.test"
 	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -262,7 +262,7 @@ func TestAccLexModelBuildingBot_clarificationPrompt(t *testing.T) {
 
 func TestAccLexModelBuildingBot_childDirected(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotOutput
-	rName := "aws_lex_bot.test"
+	rName := "aws_lexmodelbuilding_bot.test"
 	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -309,7 +309,7 @@ func TestAccLexModelBuildingBot_childDirected(t *testing.T) {
 
 func TestAccLexModelBuildingBot_description(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotOutput
-	rName := "aws_lex_bot.test"
+	rName := "aws_lexmodelbuilding_bot.test"
 	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -356,7 +356,7 @@ func TestAccLexModelBuildingBot_description(t *testing.T) {
 
 func TestAccLexModelBuildingBot_detectSentiment(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotOutput
-	rName := "aws_lex_bot.test"
+	rName := "aws_lexmodelbuilding_bot.test"
 	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -403,7 +403,7 @@ func TestAccLexModelBuildingBot_detectSentiment(t *testing.T) {
 
 func TestAccLexModelBuildingBot_enableModelImprovements(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotOutput
-	rName := "aws_lex_bot.test"
+	rName := "aws_lexmodelbuilding_bot.test"
 	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -451,7 +451,7 @@ func TestAccLexModelBuildingBot_enableModelImprovements(t *testing.T) {
 
 func TestAccLexModelBuildingBot_idleSessionTTLInSeconds(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotOutput
-	rName := "aws_lex_bot.test"
+	rName := "aws_lexmodelbuilding_bot.test"
 	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -498,7 +498,7 @@ func TestAccLexModelBuildingBot_idleSessionTTLInSeconds(t *testing.T) {
 
 func TestAccLexModelBuildingBot_intents(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotOutput
-	rName := "aws_lex_bot.test"
+	rName := "aws_lexmodelbuilding_bot.test"
 	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -547,10 +547,10 @@ func TestAccLexModelBuildingBot_computeVersion(t *testing.T) {
 	var v1 lexmodelbuildingservice.GetBotOutput
 	var v2 lexmodelbuildingservice.GetBotAliasOutput
 
-	botResourceName := "aws_lex_bot.test"
-	botAliasResourceName := "aws_lex_bot_alias.test"
-	intentResourceName := "aws_lex_intent.test"
-	intentResourceName2 := "aws_lex_intent.test_2"
+	botResourceName := "aws_lexmodelbuilding_bot.test"
+	botAliasResourceName := "aws_lexmodelbuilding_bot_alias.test"
+	intentResourceName := "aws_lexmodelbuilding_intent.test"
+	intentResourceName2 := "aws_lexmodelbuilding_intent.test_2"
 
 	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
@@ -605,7 +605,7 @@ func TestAccLexModelBuildingBot_computeVersion(t *testing.T) {
 
 func TestAccLexModelBuildingBot_locale(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotOutput
-	rName := "aws_lex_bot.test"
+	rName := "aws_lexmodelbuilding_bot.test"
 	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -652,7 +652,7 @@ func TestAccLexModelBuildingBot_locale(t *testing.T) {
 
 func TestAccLexModelBuildingBot_voiceID(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotOutput
-	rName := "aws_lex_bot.test"
+	rName := "aws_lexmodelbuilding_bot.test"
 	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -699,7 +699,7 @@ func TestAccLexModelBuildingBot_voiceID(t *testing.T) {
 
 func TestAccLexModelBuildingBot_disappears(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotOutput
-	rName := "aws_lex_bot.test"
+	rName := "aws_lexmodelbuilding_bot.test"
 	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -777,7 +777,7 @@ func testAccCheckBotDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelBuildingConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_lex_bot" {
+		if rs.Type != "aws_lexmodelbuilding_bot" {
 			continue
 		}
 
@@ -801,7 +801,7 @@ func testAccCheckBotDestroy(s *terraform.State) error {
 
 func testAccBotConfig_intent(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lex_intent" "test" {
+resource "aws_lexmodelbuilding_intent" "test" {
   create_version = true
   name           = "%s"
   fulfillment_activity {
@@ -816,7 +816,7 @@ resource "aws_lex_intent" "test" {
 
 func testAccBotConfig_intentMultiple(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lex_intent" "test" {
+resource "aws_lexmodelbuilding_intent" "test" {
   create_version = true
   name           = "%[1]s"
   fulfillment_activity {
@@ -827,7 +827,7 @@ resource "aws_lex_intent" "test" {
   ]
 }
 
-resource "aws_lex_intent" "test_2" {
+resource "aws_lexmodelbuilding_intent" "test_2" {
   create_version = true
   name           = "%[1]stwo"
   fulfillment_activity {
@@ -842,7 +842,7 @@ resource "aws_lex_intent" "test_2" {
 
 func testAccBotConfig_intentMultipleSecondUpdated(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lex_intent" "test" {
+resource "aws_lexmodelbuilding_intent" "test" {
   create_version = true
   name           = "%[1]s"
   fulfillment_activity {
@@ -853,7 +853,7 @@ resource "aws_lex_intent" "test" {
   ]
 }
 
-resource "aws_lex_intent" "test_2" {
+resource "aws_lexmodelbuilding_intent" "test_2" {
   create_version = true
   name           = "%[1]stwo"
   fulfillment_activity {
@@ -868,7 +868,7 @@ resource "aws_lex_intent" "test_2" {
 
 func testAccBotConfig_basic(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lex_bot" "test" {
+resource "aws_lexmodelbuilding_bot" "test" {
   child_directed = false
   description    = "Bot to order flowers on the behalf of a user"
   name           = "%s"
@@ -879,8 +879,8 @@ resource "aws_lex_bot" "test" {
     }
   }
   intent {
-    intent_name    = aws_lex_intent.test.name
-    intent_version = aws_lex_intent.test.version
+    intent_name    = aws_lexmodelbuilding_intent.test.name
+    intent_version = aws_lexmodelbuilding_intent.test.version
   }
 }
 `, rName)
@@ -888,7 +888,7 @@ resource "aws_lex_bot" "test" {
 
 func testAccBotConfig_createVersion(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lex_bot" "test" {
+resource "aws_lexmodelbuilding_bot" "test" {
   child_directed   = false
   create_version   = true
   description      = "Bot to order flowers on the behalf of a user"
@@ -901,8 +901,8 @@ resource "aws_lex_bot" "test" {
     }
   }
   intent {
-    intent_name    = aws_lex_intent.test.name
-    intent_version = aws_lex_intent.test.version
+    intent_name    = aws_lexmodelbuilding_intent.test.name
+    intent_version = aws_lexmodelbuilding_intent.test.version
   }
 }
 `, rName)
@@ -910,7 +910,7 @@ resource "aws_lex_bot" "test" {
 
 func testAccBotConfig_abortStatement(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lex_bot" "test" {
+resource "aws_lexmodelbuilding_bot" "test" {
   child_directed = false
   description    = "Bot to order flowers on the behalf of a user"
   name           = "%s"
@@ -921,8 +921,8 @@ resource "aws_lex_bot" "test" {
     }
   }
   intent {
-    intent_name    = aws_lex_intent.test.name
-    intent_version = aws_lex_intent.test.version
+    intent_name    = aws_lexmodelbuilding_intent.test.name
+    intent_version = aws_lexmodelbuilding_intent.test.version
   }
 }
 `, rName)
@@ -930,7 +930,7 @@ resource "aws_lex_bot" "test" {
 
 func testAccBotConfig_abortStatementUpdate(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lex_bot" "test" {
+resource "aws_lexmodelbuilding_bot" "test" {
   child_directed = false
   description    = "Bot to order flowers on the behalf of a user"
   name           = "%s"
@@ -948,8 +948,8 @@ resource "aws_lex_bot" "test" {
     response_card = "Sorry, I'm not able to assist at this time"
   }
   intent {
-    intent_name    = aws_lex_intent.test.name
-    intent_version = aws_lex_intent.test.version
+    intent_name    = aws_lexmodelbuilding_intent.test.name
+    intent_version = aws_lexmodelbuilding_intent.test.version
   }
 }
 `, rName)
@@ -957,7 +957,7 @@ resource "aws_lex_bot" "test" {
 
 func testAccBotConfig_clarificationPrompt(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lex_bot" "test" {
+resource "aws_lexmodelbuilding_bot" "test" {
   child_directed = false
   description    = "Bot to order flowers on the behalf of a user"
   name           = "%s"
@@ -975,8 +975,8 @@ resource "aws_lex_bot" "test" {
     }
   }
   intent {
-    intent_name    = aws_lex_intent.test.name
-    intent_version = aws_lex_intent.test.version
+    intent_name    = aws_lexmodelbuilding_intent.test.name
+    intent_version = aws_lexmodelbuilding_intent.test.version
   }
 }
 `, rName)
@@ -984,7 +984,7 @@ resource "aws_lex_bot" "test" {
 
 func testAccBotConfig_clarificationPromptUpdate(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lex_bot" "test" {
+resource "aws_lexmodelbuilding_bot" "test" {
   child_directed = false
   description    = "Bot to order flowers on the behalf of a user"
   name           = "%s"
@@ -1009,8 +1009,8 @@ resource "aws_lex_bot" "test" {
     response_card = "I didn't understand you, what would you like to do?"
   }
   intent {
-    intent_name    = aws_lex_intent.test.name
-    intent_version = aws_lex_intent.test.version
+    intent_name    = aws_lexmodelbuilding_intent.test.name
+    intent_version = aws_lexmodelbuilding_intent.test.version
   }
 }
 `, rName)
@@ -1018,7 +1018,7 @@ resource "aws_lex_bot" "test" {
 
 func testAccBotConfig_childDirectedUpdate(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lex_bot" "test" {
+resource "aws_lexmodelbuilding_bot" "test" {
   child_directed = true
   description    = "Bot to order flowers on the behalf of a user"
   name           = "%s"
@@ -1029,8 +1029,8 @@ resource "aws_lex_bot" "test" {
     }
   }
   intent {
-    intent_name    = aws_lex_intent.test.name
-    intent_version = aws_lex_intent.test.version
+    intent_name    = aws_lexmodelbuilding_intent.test.name
+    intent_version = aws_lexmodelbuilding_intent.test.version
   }
 }
 `, rName)
@@ -1038,7 +1038,7 @@ resource "aws_lex_bot" "test" {
 
 func testAccBotConfig_descriptionUpdate(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lex_bot" "test" {
+resource "aws_lexmodelbuilding_bot" "test" {
   child_directed = false
   description    = "Bot to order flowers"
   name           = "%s"
@@ -1049,8 +1049,8 @@ resource "aws_lex_bot" "test" {
     }
   }
   intent {
-    intent_name    = aws_lex_intent.test.name
-    intent_version = aws_lex_intent.test.version
+    intent_name    = aws_lexmodelbuilding_intent.test.name
+    intent_version = aws_lexmodelbuilding_intent.test.version
   }
 }
 `, rName)
@@ -1058,7 +1058,7 @@ resource "aws_lex_bot" "test" {
 
 func testAccBotConfig_detectSentimentUpdate(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lex_bot" "test" {
+resource "aws_lexmodelbuilding_bot" "test" {
   child_directed   = false
   description      = "Bot to order flowers on the behalf of a user"
   detect_sentiment = true
@@ -1070,8 +1070,8 @@ resource "aws_lex_bot" "test" {
     }
   }
   intent {
-    intent_name    = aws_lex_intent.test.name
-    intent_version = aws_lex_intent.test.version
+    intent_name    = aws_lexmodelbuilding_intent.test.name
+    intent_version = aws_lexmodelbuilding_intent.test.version
   }
 }
 `, rName)
@@ -1079,7 +1079,7 @@ resource "aws_lex_bot" "test" {
 
 func testAccBotConfig_enableModelImprovementsUpdate(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lex_bot" "test" {
+resource "aws_lexmodelbuilding_bot" "test" {
   child_directed                  = false
   description                     = "Bot to order flowers on the behalf of a user"
   enable_model_improvements       = true
@@ -1092,8 +1092,8 @@ resource "aws_lex_bot" "test" {
     }
   }
   intent {
-    intent_name    = aws_lex_intent.test.name
-    intent_version = aws_lex_intent.test.version
+    intent_name    = aws_lexmodelbuilding_intent.test.name
+    intent_version = aws_lexmodelbuilding_intent.test.version
   }
 }
 `, rName)
@@ -1101,7 +1101,7 @@ resource "aws_lex_bot" "test" {
 
 func testAccBotConfig_idleSessionTTLInSecondsUpdate(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lex_bot" "test" {
+resource "aws_lexmodelbuilding_bot" "test" {
   child_directed              = false
   description                 = "Bot to order flowers on the behalf of a user"
   idle_session_ttl_in_seconds = 600
@@ -1113,8 +1113,8 @@ resource "aws_lex_bot" "test" {
     }
   }
   intent {
-    intent_name    = aws_lex_intent.test.name
-    intent_version = aws_lex_intent.test.version
+    intent_name    = aws_lexmodelbuilding_intent.test.name
+    intent_version = aws_lexmodelbuilding_intent.test.version
   }
 }
 `, rName)
@@ -1122,7 +1122,7 @@ resource "aws_lex_bot" "test" {
 
 func testAccBotConfig_intentsUpdate(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lex_bot" "test" {
+resource "aws_lexmodelbuilding_bot" "test" {
   child_directed = false
   description    = "Bot to order flowers on the behalf of a user"
   name           = "%s"
@@ -1133,12 +1133,12 @@ resource "aws_lex_bot" "test" {
     }
   }
   intent {
-    intent_name    = aws_lex_intent.test.name
-    intent_version = aws_lex_intent.test.version
+    intent_name    = aws_lexmodelbuilding_intent.test.name
+    intent_version = aws_lexmodelbuilding_intent.test.version
   }
   intent {
-    intent_name    = aws_lex_intent.test_2.name
-    intent_version = aws_lex_intent.test_2.version
+    intent_name    = aws_lexmodelbuilding_intent.test_2.name
+    intent_version = aws_lexmodelbuilding_intent.test_2.version
   }
 }
 `, rName)
@@ -1146,7 +1146,7 @@ resource "aws_lex_bot" "test" {
 
 func testAccBotConfig_localeUpdate(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lex_bot" "test" {
+resource "aws_lexmodelbuilding_bot" "test" {
   child_directed            = false
   description               = "Bot to order flowers on the behalf of a user"
   enable_model_improvements = true
@@ -1159,8 +1159,8 @@ resource "aws_lex_bot" "test" {
     }
   }
   intent {
-    intent_name    = aws_lex_intent.test.name
-    intent_version = aws_lex_intent.test.version
+    intent_name    = aws_lexmodelbuilding_intent.test.name
+    intent_version = aws_lexmodelbuilding_intent.test.version
   }
 }
 `, rName)
@@ -1168,7 +1168,7 @@ resource "aws_lex_bot" "test" {
 
 func testAccBotConfig_voiceIdUpdate(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lex_bot" "test" {
+resource "aws_lexmodelbuilding_bot" "test" {
   child_directed = false
   description    = "Bot to order flowers on the behalf of a user"
   name           = "%s"
@@ -1180,8 +1180,8 @@ resource "aws_lex_bot" "test" {
     }
   }
   intent {
-    intent_name    = aws_lex_intent.test.name
-    intent_version = aws_lex_intent.test.version
+    intent_name    = aws_lexmodelbuilding_intent.test.name
+    intent_version = aws_lexmodelbuilding_intent.test.version
   }
 }
 `, rName)
@@ -1189,7 +1189,7 @@ resource "aws_lex_bot" "test" {
 
 func testAccBotConfig_multipleIntentsWithVersion(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lex_bot" "test" {
+resource "aws_lexmodelbuilding_bot" "test" {
   child_directed   = false
   create_version   = true
   description      = "Bot to order flowers on the behalf of a user"
@@ -1202,12 +1202,12 @@ resource "aws_lex_bot" "test" {
     }
   }
   intent {
-    intent_name    = aws_lex_intent.test.name
-    intent_version = aws_lex_intent.test.version
+    intent_name    = aws_lexmodelbuilding_intent.test.name
+    intent_version = aws_lexmodelbuilding_intent.test.version
   }
   intent {
-    intent_name    = aws_lex_intent.test_2.name
-    intent_version = aws_lex_intent.test_2.version
+    intent_name    = aws_lexmodelbuilding_intent.test_2.name
+    intent_version = aws_lexmodelbuilding_intent.test_2.version
   }
 }
 `, rName)

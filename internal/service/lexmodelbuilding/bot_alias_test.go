@@ -18,7 +18,7 @@ import (
 
 func TestAccLexModelBuildingBotAlias_basic(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotAliasOutput
-	resourceName := "aws_lex_bot_alias.test"
+	resourceName := "aws_lexmodelbuilding_bot_alias.test"
 	testBotAliasID := "test_bot_alias" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -61,7 +61,7 @@ func TestAccLexModelBuildingBotAlias_basic(t *testing.T) {
 
 func testAccBotAlias_botVersion(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotAliasOutput
-	resourceName := "aws_lex_bot_alias.test"
+	resourceName := "aws_lexmodelbuilding_bot_alias.test"
 	testBotAliasID := "test_bot_alias" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
 	// If this test runs in parallel with other Lex Bot tests, it loses its description
@@ -117,7 +117,7 @@ func TestAccLexModelBuildingBotAlias_conversationLogsText(t *testing.T) {
 	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 	testBotAliasID := "test_bot_alias" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
-	resourceName := "aws_lex_bot_alias.test"
+	resourceName := "aws_lexmodelbuilding_bot_alias.test"
 	iamRoleResourceName := "aws_iam_role.test"
 	cloudwatchLogGroupResourceName := "aws_cloudwatch_log_group.test"
 
@@ -166,7 +166,7 @@ func TestAccLexModelBuildingBotAlias_conversationLogsAudio(t *testing.T) {
 	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 	testBotAliasID := sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
-	resourceName := "aws_lex_bot_alias.test"
+	resourceName := "aws_lexmodelbuilding_bot_alias.test"
 	iamRoleResourceName := "aws_iam_role.test"
 	s3BucketResourceName := "aws_s3_bucket.test"
 	kmsKeyResourceName := "aws_kms_key.test"
@@ -216,7 +216,7 @@ func TestAccLexModelBuildingBotAlias_conversationLogsBoth(t *testing.T) {
 	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 	testBotAliasID := sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
-	resourceName := "aws_lex_bot_alias.test"
+	resourceName := "aws_lexmodelbuilding_bot_alias.test"
 	iamRoleResourceName := "aws_iam_role.test"
 	cloudwatchLogGroupResourceName := "aws_cloudwatch_log_group.test"
 	s3BucketResourceName := "aws_s3_bucket.test"
@@ -269,7 +269,7 @@ func TestAccLexModelBuildingBotAlias_conversationLogsBoth(t *testing.T) {
 
 func TestAccLexModelBuildingBotAlias_description(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotAliasOutput
-	resourceName := "aws_lex_bot_alias.test"
+	resourceName := "aws_lexmodelbuilding_bot_alias.test"
 	testBotAliasID := "test_bot_alias" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -318,7 +318,7 @@ func TestAccLexModelBuildingBotAlias_description(t *testing.T) {
 
 func TestAccLexModelBuildingBotAlias_disappears(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotAliasOutput
-	resourceName := "aws_lex_bot_alias.test"
+	resourceName := "aws_lexmodelbuilding_bot_alias.test"
 	testBotAliasID := "test_bot_alias" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -401,9 +401,9 @@ func testAccCheckBotAliasDestroy(botName, botAliasName string) resource.TestChec
 
 func testAccBotAliasConfig_basic(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lex_bot_alias" "test" {
-  bot_name    = aws_lex_bot.test.name
-  bot_version = aws_lex_bot.test.version
+resource "aws_lexmodelbuilding_bot_alias" "test" {
+  bot_name    = aws_lexmodelbuilding_bot.test.name
+  bot_version = aws_lexmodelbuilding_bot.test.version
   description = "Testing lex bot alias create."
   name        = "%s"
 }
@@ -412,8 +412,8 @@ resource "aws_lex_bot_alias" "test" {
 
 func testAccBotAliasConfig_botVersionUpdate(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lex_bot_alias" "test" {
-  bot_name    = aws_lex_bot.test.name
+resource "aws_lexmodelbuilding_bot_alias" "test" {
+  bot_name    = aws_lexmodelbuilding_bot.test.name
   bot_version = "1"
   description = "Testing lex bot alias create."
   name        = "%s"
@@ -423,9 +423,9 @@ resource "aws_lex_bot_alias" "test" {
 
 func testAccBotAliasConfig_conversationLogsText(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lex_bot_alias" "test" {
-  bot_name    = aws_lex_bot.test.name
-  bot_version = aws_lex_bot.test.version
+resource "aws_lexmodelbuilding_bot_alias" "test" {
+  bot_name    = aws_lexmodelbuilding_bot.test.name
+  bot_version = aws_lexmodelbuilding_bot.test.version
   description = "Testing lex bot alias create."
   name        = "%[1]s"
   conversation_logs {
@@ -481,9 +481,9 @@ resource "aws_iam_role_policy" "test" {
 
 func testAccBotAliasConfig_conversationLogsAudio(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lex_bot_alias" "test" {
-  bot_name    = aws_lex_bot.test.name
-  bot_version = aws_lex_bot.test.version
+resource "aws_lexmodelbuilding_bot_alias" "test" {
+  bot_name    = aws_lexmodelbuilding_bot.test.name
+  bot_version = aws_lexmodelbuilding_bot.test.version
   description = "Testing lex bot alias create."
   name        = "%[1]s"
   conversation_logs {
@@ -541,9 +541,9 @@ resource "aws_iam_role_policy" "test" {
 
 func testAccBotAliasConfig_conversationLogsBoth(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lex_bot_alias" "test" {
-  bot_name    = aws_lex_bot.test.name
-  bot_version = aws_lex_bot.test.version
+resource "aws_lexmodelbuilding_bot_alias" "test" {
+  bot_name    = aws_lexmodelbuilding_bot.test.name
+  bot_version = aws_lexmodelbuilding_bot.test.version
   description = "Testing lex bot alias create."
   name        = "%[1]s"
   conversation_logs {
@@ -629,9 +629,9 @@ resource "aws_iam_role_policy" "lex_s3_policy" {
 
 func testAccBotAliasConfig_descriptionUpdate(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lex_bot_alias" "test" {
-  bot_name    = aws_lex_bot.test.name
-  bot_version = aws_lex_bot.test.version
+resource "aws_lexmodelbuilding_bot_alias" "test" {
+  bot_name    = aws_lexmodelbuilding_bot.test.name
+  bot_version = aws_lexmodelbuilding_bot.test.version
   description = "Testing lex bot alias update."
   name        = "%s"
 }

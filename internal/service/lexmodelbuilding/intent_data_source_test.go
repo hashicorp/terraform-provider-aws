@@ -11,8 +11,8 @@ import (
 
 func TestAccLexModelBuildingIntentDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
-	dataSourceName := "data.aws_lex_intent.test"
-	resourceName := "aws_lex_intent.test"
+	dataSourceName := "data.aws_lexmodelbuilding_intent.test"
+	resourceName := "aws_lexmodelbuilding_intent.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -43,8 +43,8 @@ func TestAccLexModelBuildingIntentDataSource_basic(t *testing.T) {
 
 func TestAccLexModelBuildingIntentDataSource_withVersion(t *testing.T) {
 	rName := sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
-	dataSourceName := "data.aws_lex_intent.test"
-	resourceName := "aws_lex_intent.test"
+	dataSourceName := "data.aws_lexmodelbuilding_intent.test"
+	resourceName := "aws_lexmodelbuilding_intent.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -75,16 +75,16 @@ func TestAccLexModelBuildingIntentDataSource_withVersion(t *testing.T) {
 
 func testAccIntentDataSourceConfig_basic() string {
 	return `
-data "aws_lex_intent" "test" {
-  name = aws_lex_intent.test.name
+data "aws_lexmodelbuilding_intent" "test" {
+  name = aws_lexmodelbuilding_intent.test.name
 }
 `
 }
 
 func testAccIntentDataSourceConfig_withVersion() string {
 	return `
-data "aws_lex_intent" "test" {
-  name    = aws_lex_intent.test.name
+data "aws_lexmodelbuilding_intent" "test" {
+  name    = aws_lexmodelbuilding_intent.test.name
   version = "1"
 }
 `

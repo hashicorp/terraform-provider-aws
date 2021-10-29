@@ -11,8 +11,8 @@ import (
 
 func testAccBotAliasDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
-	dataSourceName := "data.aws_lex_bot_alias.test"
-	resourceName := "aws_lex_bot_alias.test"
+	dataSourceName := "data.aws_lexmodelbuilding_bot_alias.test"
+	resourceName := "aws_lexmodelbuilding_bot_alias.test"
 
 	// If this test runs in parallel with other Lex Bot tests, it loses its description
 	resource.Test(t, resource.TestCase{
@@ -47,9 +47,9 @@ func testAccBotAliasDataSource_basic(t *testing.T) {
 
 func testAccBotAliasDataSourceConfig_basic() string {
 	return `
-data "aws_lex_bot_alias" "test" {
-  name     = aws_lex_bot_alias.test.name
-  bot_name = aws_lex_bot.test.name
+data "aws_lexmodelbuilding_bot_alias" "test" {
+  name     = aws_lexmodelbuilding_bot_alias.test.name
+  bot_name = aws_lexmodelbuilding_bot.test.name
 }
 `
 }
