@@ -1,12 +1,12 @@
 ---
 subcategory: "Lex"
 layout: "aws"
-page_title: "AWS: aws_lex_intent"
+page_title: "AWS: aws_lexmodelbuilding_intent"
 description: |-
   Provides an Amazon Lex intent resource.
 ---
 
-# Resource: aws_lex_intent
+# Resource: aws_lexmodelbuilding_intent
 
 Provides an Amazon Lex Intent resource. For more information see
 [Amazon Lex: How It Works](https://docs.aws.amazon.com/lex/latest/dg/how-it-works.html)
@@ -14,7 +14,7 @@ Provides an Amazon Lex Intent resource. For more information see
 ## Example Usage
 
 ```terraform
-resource "aws_lex_intent" "order_flowers_intent" {
+resource "aws_lexmodelbuilding_intent" "order_flowers_intent" {
   confirmation_prompt {
     max_attempts = 2
 
@@ -265,5 +265,5 @@ included as an argument because the resource will add it automatically when upda
 Intents can be imported using their name.
 
 ```
-$ terraform import aws_lex_intent.order_flowers_intent OrderFlowers
+$ terraform import aws_lexmodelbuilding_intent.order_flowers_intent OrderFlowers
 ```

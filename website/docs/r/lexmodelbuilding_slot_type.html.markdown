@@ -1,12 +1,12 @@
 ---
 subcategory: "Lex"
 layout: "aws"
-page_title: "AWS: aws_lex_slot_type"
+page_title: "AWS: aws_lexmodelbuilding_slot_type"
 description: |-
   Provides details about a specific Amazon Lex Slot Type
 ---
 
-# Resource: aws_lex_slot_type
+# Resource: aws_lexmodelbuilding_slot_type
 
 Provides an Amazon Lex Slot Type resource. For more information see
 [Amazon Lex: How It Works](https://docs.aws.amazon.com/lex/latest/dg/how-it-works.html)
@@ -14,7 +14,7 @@ Provides an Amazon Lex Slot Type resource. For more information see
 ## Example Usage
 
 ```terraform
-resource "aws_lex_slot_type" "flower_types" {
+resource "aws_lexmodelbuilding_slot_type" "flower_types" {
   create_version = true
   description    = "Types of flowers to order"
 
@@ -93,5 +93,5 @@ not included as an argument because the resource will add it automatically when 
 Slot types can be imported using their name.
 
 ```
-$ terraform import aws_lex_slot_type.flower_types FlowerTypes
+$ terraform import aws_lexmodelbuilding_slot_type.flower_types FlowerTypes
 ```

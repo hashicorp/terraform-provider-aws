@@ -1,12 +1,12 @@
 ---
 subcategory: "Lex"
 layout: "aws"
-page_title: "AWS: aws_lex_bot"
+page_title: "AWS: aws_lexmodelbuilding_bot"
 description: |-
   Provides an Amazon Lex bot resource.
 ---
 
-# Resource: aws_lex_bot
+# Resource: aws_lexmodelbuilding_bot
 
 Provides an Amazon Lex Bot resource. For more information see
 [Amazon Lex: How It Works](https://docs.aws.amazon.com/lex/latest/dg/how-it-works.html)
@@ -14,7 +14,7 @@ Provides an Amazon Lex Bot resource. For more information see
 ## Example Usage
 
 ```terraform
-resource "aws_lex_bot" "order_flowers_bot" {
+resource "aws_lexmodelbuilding_bot" "order_flowers_bot" {
   abort_statement {
     message {
       content      = "Sorry, I am not able to assist at this time"
@@ -138,5 +138,5 @@ failure_reason response element.
 Bots can be imported using their name.
 
 ```
-$ terraform import aws_lex_bot.order_flowers_bot OrderFlowers
+$ terraform import aws_lexmodelbuilding_bot.order_flowers_bot OrderFlowers
 ```

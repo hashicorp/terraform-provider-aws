@@ -1,19 +1,19 @@
 ---
 subcategory: "Lex"
 layout: "aws"
-page_title: "AWS: aws_lex_intent"
+page_title: "AWS: aws_lexmodelbuilding_intent"
 description: |-
   Provides details about a specific Amazon Lex Intent
 ---
 
-# Data Source: aws_lex_intent
+# Data Source: aws_lexmodelbuilding_intent
 
 Provides details about a specific Amazon Lex Intent.
 
 ## Example Usage
 
 ```terraform
-data "aws_lex_intent" "order_flowers" {
+data "aws_lexmodelbuilding_intent" "order_flowers" {
   name    = "OrderFlowers"
   version = "$LATEST"
 }
