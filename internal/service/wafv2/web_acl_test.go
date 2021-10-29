@@ -1872,7 +1872,7 @@ resource "aws_wafv2_web_acl" "test" {
     action {
       block {
         custom_response {
-          response_code = %[3]d
+          response_code            = %[3]d
           custom_response_body_key = "test_body"
         }
       }
