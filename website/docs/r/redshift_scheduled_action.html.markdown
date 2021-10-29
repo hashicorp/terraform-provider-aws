@@ -137,7 +137,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Redshift Scheduled Action can be imported using the `name`, e.g.
+Redshift Scheduled Action can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_redshift_scheduled_action.example tf-redshift-scheduled-action

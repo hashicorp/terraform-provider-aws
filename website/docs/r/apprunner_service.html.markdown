@@ -191,7 +191,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-App Runner Services can be imported by using the `arn`, e.g.
+App Runner Services can be imported by using the `arn`, e.g.,
 
 ```
 $ terraform import aws_apprunner_service.example arn:aws:apprunner:us-east-1:1234567890:service/example/0a03292a89764e5882c41d8f991c82fe

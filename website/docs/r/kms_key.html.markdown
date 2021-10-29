@@ -3,12 +3,12 @@ subcategory: "KMS"
 layout: "aws"
 page_title: "AWS: aws_kms_key"
 description: |-
-  Provides a KMS customer master key.
+  Manages a single-Region or multi-Region primary KMS key.
 ---
 
 # Resource: aws_kms_key
 
-Provides a KMS single-Region customer master key (CMK).
+Manages a single-Region or multi-Region primary KMS key.
 
 ## Example Usage
 
@@ -32,10 +32,16 @@ Valid values: `SYMMETRIC_DEFAULT`,  `RSA_2048`, `RSA_3072`, `RSA_4096`, `ECC_NIS
 
 ~> **NOTE:** Note: All KMS keys must have a key policy. If a key policy is not specified, AWS gives the KMS key a [default key policy](https://docs.aws.amazon.com/kms/latest/developerguide/key-policies.html#key-policy-default) that gives all principals in the owning account unlimited access to all KMS operations for the key. This default key policy effectively delegates all access control to IAM policies and KMS grants.
 
-* `bypass_policy_lockout_safety_check` - (Optional) Specifies whether to disable the policy lockout check performed when creating or updating the key's policy. Setting this value to `true` increases the risk that the CMK becomes unmanageable. For more information, refer to the scenario in the [Default Key Policy](https://docs.aws.amazon.com/kms/latest/developerguide/key-policies.html#key-policy-default-allow-root-enable-iam) section in the AWS Key Management Service Developer Guide. Defaults to `false`.
-* `deletion_window_in_days` - (Optional) Duration in days after which the key is deleted after destruction of the resource, must be between 7 and 30 days. Defaults to 30 days.
-* `is_enabled` - (Optional) Specifies whether the key is enabled. Defaults to true.
+* `bypass_policy_lockout_safety_check` - (Optional) A flag to indicate whether to bypass the key policy lockout safety check.
+Setting this value to true increases the risk that the KMS key becomes unmanageable. Do not set this value to true indiscriminately.
+For more information, refer to the scenario in the [Default Key Policy](https://docs.aws.amazon.com/kms/latest/developerguide/key-policies.html#key-policy-default-allow-root-enable-iam) section in the _AWS Key Management Service Developer Guide_.
+The default value is `false`.
+* `deletion_window_in_days` - (Optional) The waiting period, specified in number of days. After the waiting period ends, AWS KMS deletes the KMS key.
+If you specify a value, it must be between `7` and `30`, inclusive. If you do not specify a value, it defaults to `30`.
+If the KMS key is a multi-Region primary key with replicas, the waiting period begins when the last of its replica keys is deleted. Otherwise, the waiting period begins immediately.
+* `is_enabled` - (Optional) Specifies whether the key is enabled. Defaults to `true`.
 * `enable_key_rotation` - (Optional) Specifies whether [key rotation](http://docs.aws.amazon.com/kms/latest/developerguide/rotate-keys.html) is enabled. Defaults to false.
+* `multi_region` - (Optional) Indicates whether the KMS key is a multi-Region (`true`) or regional (`false`) key. Defaults to `false`.
 * `tags` - (Optional) A map of tags to assign to the object. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference
@@ -48,7 +54,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-KMS Keys can be imported using the `id`, e.g.
+KMS Keys can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_kms_key.a 1234abcd-12ab-34cd-56ef-1234567890ab

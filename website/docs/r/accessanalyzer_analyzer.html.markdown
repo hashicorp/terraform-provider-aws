@@ -55,7 +55,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Access Analyzer Analyzers can be imported using the `analyzer_name`, e.g.
+Access Analyzer Analyzers can be imported using the `analyzer_name`, e.g.,
 
 ```
 $ terraform import aws_accessanalyzer_analyzer.example example

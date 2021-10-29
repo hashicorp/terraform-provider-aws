@@ -62,7 +62,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_api_gateway_rest_api_policy` can be imported by using the REST API ID, e.g.
+`aws_api_gateway_rest_api_policy` can be imported by using the REST API ID, e.g.,
 
 ```
 $ terraform import aws_api_gateway_rest_api_policy.example 12345abcde

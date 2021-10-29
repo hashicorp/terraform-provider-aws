@@ -152,6 +152,6 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Budgets can be imported using `AccountID:ActionID:BudgetName`, e.g.
+Budgets can be imported using `AccountID:ActionID:BudgetName`, e.g.,
 
 `$ terraform import aws_budgets_budget_action.myBudget 123456789012:some-id:myBudget`

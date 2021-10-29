@@ -50,7 +50,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Sagemaker Code Apps can be imported using the `id`, e.g.
+Sagemaker Code Apps can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_sagemaker_app.example arn:aws:sagemaker:us-west-2:012345678912:app/domain-id/user-profile-name/app-type/app-name

@@ -181,7 +181,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Lambda event source mappings can be imported using the `UUID` (event source mapping identifier), e.g.
+Lambda event source mappings can be imported using the `UUID` (event source mapping identifier), e.g.,
 
 ```
 $ terraform import aws_lambda_event_source_mapping.event_source_mapping 12345kxodurf3443

@@ -94,7 +94,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Network ACLs can be imported using the `id`, e.g.
+Network ACLs can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_network_acl.main acl-7aaabd18
