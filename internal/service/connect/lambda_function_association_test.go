@@ -3,7 +3,6 @@ package connect_test
 import (
 	"context"
 	"fmt"
-	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/connect"
@@ -13,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
 )
 
 //Serialized acceptance tests due to Connect account limits (max 2 parallel tests)

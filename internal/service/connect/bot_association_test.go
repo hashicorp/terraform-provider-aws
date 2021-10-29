@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
 	"log"
 	"testing"
 
@@ -15,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
