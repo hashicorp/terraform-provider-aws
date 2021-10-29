@@ -1,9 +1,10 @@
-package connect
+package connect_test
 
 import (
 	"context"
 	"errors"
 	"fmt"
+	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
 	"log"
 	"testing"
 
@@ -50,16 +51,16 @@ func testAccBotAssociationDataSourceDestroy(s *terraform.State) error {
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("Connect Connect Bot V1 Association ID not set")
 		}
-		instanceID, name, _, err := resourceBotV1AssociationParseID(rs.Primary.ID)
+		instanceID, name, _, err := tfconnect.BotV1AssociationParseResourceID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
 
-		lexBot, err := FindBotAssociationV1ByNameWithContext(context.Background(), conn, instanceID, name)
+		lexBot, err := tfconnect.FindBotAssociationV1ByNameWithContext(context.Background(), conn, instanceID, name)
 
-		if tfawserr.ErrCodeEquals(err, BotAssociationStatusNotFound, "") || errors.Is(err, tfresource.ErrEmptyResult) {
+		if tfawserr.ErrCodeEquals(err, tfconnect.BotAssociationStatusNotFound, "") || errors.Is(err, tfresource.ErrEmptyResult) {
 			log.Printf("[DEBUG] Connect Bot V1 Association (%s) not found, has been removed from state", name)
 			return nil
 		}

@@ -1,9 +1,10 @@
-package connect
+package connect_test
 
 import (
 	"context"
 	"errors"
 	"fmt"
+	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
 	"log"
 	"testing"
 
@@ -79,7 +80,7 @@ func testAccBotAssociation_disappears(t *testing.T) {
 				Config: testAccBotV1AssociationConfigBasic(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBotAssociationExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceBotAssociation(), instanceResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfconnect.ResourceBotAssociation(), instanceResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -97,7 +98,7 @@ func testAccCheckBotAssociationExists(resourceName string, function *connect.Lex
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("Connect Bot V1 Association ID not set")
 		}
-		instanceID, name, _, err := resourceBotV1AssociationParseID(rs.Primary.ID)
+		instanceID, name, _, err := tfconnect.BotV1AssociationParseResourceID(rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -105,7 +106,7 @@ func testAccCheckBotAssociationExists(resourceName string, function *connect.Lex
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
 
-		lexBot, err := FindBotAssociationV1ByNameWithContext(context.Background(), conn, instanceID, name)
+		lexBot, err := tfconnect.FindBotAssociationV1ByNameWithContext(context.Background(), conn, instanceID, name)
 
 		if err != nil {
 			return fmt.Errorf("error finding Connect Bot V1 Association by name (%s): %w", name, err)
@@ -130,16 +131,16 @@ func testAccCheckBotAssociationDestroy(s *terraform.State) error {
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("Connect Connect Bot V1 Association ID not set")
 		}
-		instanceID, name, _, err := resourceBotV1AssociationParseID(rs.Primary.ID)
+		instanceID, name, _, err := tfconnect.BotV1AssociationParseResourceID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
 
-		lexBot, err := FindBotAssociationV1ByNameWithContext(context.Background(), conn, instanceID, name)
+		lexBot, err := tfconnect.FindBotAssociationV1ByNameWithContext(context.Background(), conn, instanceID, name)
 
-		if tfawserr.ErrCodeEquals(err, BotAssociationStatusNotFound, "") || errors.Is(err, tfresource.ErrEmptyResult) {
+		if tfawserr.ErrCodeEquals(err, tfconnect.BotAssociationStatusNotFound, "") || errors.Is(err, tfresource.ErrEmptyResult) {
 			log.Printf("[DEBUG] Connect Bot V1 Association (%s) not found, has been removed from state", name)
 			return nil
 		}

@@ -1,4 +1,4 @@
-package connect
+package connect_test
 
 import (
 	"fmt"

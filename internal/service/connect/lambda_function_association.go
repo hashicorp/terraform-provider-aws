@@ -21,7 +21,21 @@ func ResourceLambdaFunctionAssociation() *schema.Resource {
 		UpdateContext: resourceLambdaFunctionAssociationRead,
 		DeleteContext: resourceLambdaFunctionAssociationDelete,
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				instanceID, functionArn, err := LambdaFunctionAssociationParseResourceID(d.Id())
+				if err != nil {
+					return nil, err
+				}
+				d.Set("function_arn", functionArn)
+				d.Set("instance_id", instanceID)
+				d.SetId(LambdaFunctionAssociationCreateResourceID(instanceID, functionArn))
+
+				return []*schema.ResourceData{d}, nil
+			},
+		},
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(connectLambdaFunctionAssociationCreatedTimeout),
+			Delete: schema.DefaultTimeout(connectLambdaFunctionAssociationDeletedTimeout),
 		},
 		Schema: map[string]*schema.Schema{
 			"function_arn": {
@@ -45,7 +59,7 @@ func resourceLambdaFunctionAssociationCreate(ctx context.Context, d *schema.Reso
 		FunctionArn: aws.String(d.Get("function_arn").(string)),
 	}
 
-	lfaId := fmt.Sprintf("%s:%s", d.Get("instance_id").(string), d.Get("function_arn").(string))
+	lfaId := LambdaFunctionAssociationCreateResourceID(d.Get("instance_id").(string), d.Get("function_arn").(string))
 
 	lfaArn, err := FindLambdaFunctionAssociationByArnWithContext(ctx, conn, d.Get("instance_id").(string), d.Get("function_arn").(string))
 	if err != nil {
@@ -65,7 +79,7 @@ func resourceLambdaFunctionAssociationCreate(ctx context.Context, d *schema.Reso
 func resourceLambdaFunctionAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ConnectConn
 
-	instanceID, functionArn, err := LambdaFunctionAssociationParseID(d.Id())
+	instanceID, functionArn, err := LambdaFunctionAssociationParseResourceID(d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -90,7 +104,7 @@ func resourceLambdaFunctionAssociationRead(ctx context.Context, d *schema.Resour
 func resourceLambdaFunctionAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ConnectConn
 
-	instanceID, functionArn, err := LambdaFunctionAssociationParseID(d.Id())
+	instanceID, functionArn, err := LambdaFunctionAssociationParseResourceID(d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}

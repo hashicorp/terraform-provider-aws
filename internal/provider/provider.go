@@ -394,9 +394,9 @@ func Provider() *schema.Provider {
 
 			"aws_cognito_user_pools": cognitoidp.DataSourceUserPools(),
 
-			"aws_connect_bot_association": connect.DataSourceBotAssociation(),
-			"aws_connect_contact_flow": connect.DataSourceContactFlow(),
-			"aws_connect_instance":     connect.DataSourceInstance(),
+			"aws_connect_bot_association":             connect.DataSourceBotAssociation(),
+			"aws_connect_contact_flow":                connect.DataSourceContactFlow(),
+			"aws_connect_instance":                    connect.DataSourceInstance(),
 			"aws_connect_lambda_function_association": connect.DataSourceLambdaFunctionAssociation(),
 
 			"aws_cur_report_definition": cur.DataSourceReportDefinition(),
@@ -928,9 +928,9 @@ func Provider() *schema.Provider {
 			"aws_config_organization_managed_rule":     config.ResourceOrganizationManagedRule(),
 			"aws_config_remediation_configuration":     config.ResourceRemediationConfiguration(),
 
-			"aws_connect_bot_association": connect.ResourceBotAssociation(),
-			"aws_connect_contact_flow": connect.ResourceContactFlow(),
-			"aws_connect_instance":     connect.ResourceInstance(),
+			"aws_connect_bot_association":             connect.ResourceBotAssociation(),
+			"aws_connect_contact_flow":                connect.ResourceContactFlow(),
+			"aws_connect_instance":                    connect.ResourceInstance(),
 			"aws_connect_lambda_function_association": connect.ResourceLambdaFunctionAssociation(),
 
 			"aws_cur_report_definition": cur.ResourceReportDefinition(),

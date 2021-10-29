@@ -1,8 +1,9 @@
-package connect
+package connect_test
 
 import (
 	"context"
 	"fmt"
+	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/connect"
@@ -72,7 +73,7 @@ func testAccLambdaFunctionAssociation_disappears(t *testing.T) {
 				Config: testAccAwsConnectLambdaFunctionAssociationConfigBasic(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLambdaFunctionAssociationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceLambdaFunctionAssociation(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfconnect.ResourceLambdaFunctionAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -88,12 +89,12 @@ func testAccLambdaFunctionAssociationDestroy(s *terraform.State) error {
 			continue
 		}
 
-		instanceID, functionArn, err := LambdaFunctionAssociationParseID(rs.Primary.ID)
+		instanceID, functionArn, err := tfconnect.LambdaFunctionAssociationParseResourceID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		lfaArn, err := FindLambdaFunctionAssociationByArnWithContext(context.Background(), conn, instanceID, functionArn)
+		lfaArn, err := tfconnect.FindLambdaFunctionAssociationByArnWithContext(context.Background(), conn, instanceID, functionArn)
 		if err != nil && !tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
 			return fmt.Errorf("error Connect Lambda Function Association (%s): still exists: %w", functionArn, err)
 		}
@@ -115,7 +116,7 @@ func testAccCheckLambdaFunctionAssociationExists(resourceName string) resource.T
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("error Connect Lambda Function Association ID not set")
 		}
-		instanceID, functionArn, err := LambdaFunctionAssociationParseID(rs.Primary.ID)
+		instanceID, functionArn, err := tfconnect.LambdaFunctionAssociationParseResourceID(rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -123,7 +124,7 @@ func testAccCheckLambdaFunctionAssociationExists(resourceName string) resource.T
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
 
-		lfaArn, err := FindLambdaFunctionAssociationByArnWithContext(context.Background(), conn, instanceID, functionArn)
+		lfaArn, err := tfconnect.FindLambdaFunctionAssociationByArnWithContext(context.Background(), conn, instanceID, functionArn)
 		if err != nil {
 			return fmt.Errorf("error finding Connect Lambda Function Association by Function Arn (%s): %w", functionArn, err)
 		}
@@ -145,7 +146,7 @@ func testAccCheckLambdaFunctionAssociationDestroy(s *terraform.State) error {
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("Connect Lambda Function Association ID not set")
 		}
-		instanceID, functionArn, err := LambdaFunctionAssociationParseID(rs.Primary.ID)
+		instanceID, functionArn, err := tfconnect.LambdaFunctionAssociationParseResourceID(rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -153,7 +154,7 @@ func testAccCheckLambdaFunctionAssociationDestroy(s *terraform.State) error {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
 
-		lfaArn, err := FindLambdaFunctionAssociationByArnWithContext(context.Background(), conn, instanceID, functionArn)
+		lfaArn, err := tfconnect.FindLambdaFunctionAssociationByArnWithContext(context.Background(), conn, instanceID, functionArn)
 		if err != nil && !tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
 			return fmt.Errorf("error LambdaFunction Association by Function Arn (%s): still exists: %w ", functionArn, err)
 		}

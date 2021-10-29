@@ -4,9 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
-	"strings"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/connect"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
@@ -16,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"log"
 )
 
 func ResourceBotAssociation() *schema.Resource {
@@ -26,14 +24,14 @@ func ResourceBotAssociation() *schema.Resource {
 		DeleteContext: resourceBotAssociationDelete,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				instanceID, name, region, err := resourceBotV1AssociationParseID(d.Id())
+				instanceID, name, region, err := BotV1AssociationParseResourceID(d.Id())
 				if err != nil {
 					return nil, err
 				}
 				d.Set("bot_name", name)
 				d.Set("instance_id", instanceID)
 				d.Set("lex_region", region)
-				d.SetId(fmt.Sprintf("%s:%s:%s", instanceID, name, region))
+				d.SetId(BotV1AssociationCreateResourceID(instanceID, name, region))
 
 				return []*schema.ResourceData{d}, nil
 			},
@@ -105,7 +103,7 @@ func resourceBotAssociationCreate(ctx context.Context, d *schema.ResourceData, m
 		}
 	*/
 	// I'm really not sure how we can overload the ID to make it handle V1 and V2
-	lbaId := fmt.Sprintf("%s:%s:%s", d.Get("instance_id").(string), d.Get("bot_name").(string), d.Get("lex_region").(string))
+	lbaId := BotV1AssociationCreateResourceID(d.Get("instance_id").(string), d.Get("bot_name").(string), d.Get("lex_region").(string))
 
 	log.Printf("[DEBUG] Creating Connect Bot V1 Association %s", input)
 	err := resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
@@ -152,7 +150,7 @@ func resourceBotAssociationRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("instance_id", instanceID)
 	d.Set("lex_region", lexBot.LexRegion)
 
-	lbaId := fmt.Sprintf("%s:%s:%s", instanceID, d.Get("bot_name").(string), d.Get("lex_region").(string))
+	lbaId := BotV1AssociationCreateResourceID(instanceID.(string), d.Get("bot_name").(string), d.Get("lex_region").(string))
 	d.SetId(lbaId)
 
 	/*
@@ -178,7 +176,7 @@ func resourceBotAssociationRead(ctx context.Context, d *schema.ResourceData, met
 func resourceBotAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ConnectConn
 
-	instanceID, name, region, err := resourceBotV1AssociationParseID(d.Id())
+	instanceID, name, region, err := BotV1AssociationParseResourceID(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -201,14 +199,4 @@ func resourceBotAssociationDelete(ctx context.Context, d *schema.ResourceData, m
 		return diag.FromErr(fmt.Errorf("error deleting Connect Bot V1 Association (%s): %s", instanceID, err))
 	}
 	return nil
-}
-
-func resourceBotV1AssociationParseID(id string) (string, string, string, error) {
-	parts := strings.SplitN(id, ":", 3)
-
-	if len(parts) != 3 || parts[0] == "" || parts[1] == "" || parts[2] == "" {
-		return "", "", "", fmt.Errorf("unexpected format of Connect Bot V1 Association ID (%s), expected instanceID:name:region", id)
-	}
-
-	return parts[0], parts[1], parts[2], nil
 }
