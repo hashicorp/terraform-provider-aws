@@ -1,0 +1,31 @@
+```release-note:enhancement
+data-source/aws_lex_bot: Rename data source to aws_lexmodelbuilding_bot (with alias to aws_lex_bot)
+```
+
+```release-note:enhancement
+data-source/aws_lex_bot_alias: Rename data source to aws_lexmodelbuilding_bot_alias (with alias to aws_lex_bot_alias)
+```
+
+```release-note:enhancement
+data-source/aws_lex_intent: Rename data source to aws_lexmodelbuilding_intent (with alias to aws_lex_intent)
+```
+
+```release-note:enhancement
+data-source/aws_lex_slot_type: Rename data source to aws_lexmodelbuilding_slot_type (with alias to aws_lex_slot_type)
+```
+
+```release-note:enhancement
+resource/aws_lex_bot: Rename resource to aws_lexmodelbuilding_bot (with alias to aws_lex_bot)
+```
+
+```release-note:enhancement
+resource/aws_lex_bot_alias: Rename resource to aws_lexmodelbuilding_bot_alias (with alias to aws_lex_bot_alias)
+```
+
+```release-note:enhancement
+resource/aws_lex_intent: Rename resource to aws_lexmodelbuilding_intent (with alias to aws_lex_intent)
+```
+
+```release-note:enhancement
+resource/aws_lex_slot_type: Rename resource to aws_lexmodelbuilding_slot_type (with alias to aws_lex_slot_type)
+```
