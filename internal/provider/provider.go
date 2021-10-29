@@ -577,10 +577,14 @@ func Provider() *schema.Provider {
 			"aws_lambda_invocation":          lambda.DataSourceInvocation(),
 			"aws_lambda_layer_version":       lambda.DataSourceLayerVersion(),
 
-			"aws_lex_bot":       lexmodelbuilding.DataSourceBot(),
-			"aws_lex_bot_alias": lexmodelbuilding.DataSourceBotAlias(),
-			"aws_lex_intent":    lexmodelbuilding.DataSourceIntent(),
-			"aws_lex_slot_type": lexmodelbuilding.DataSourceSlotType(),
+			"aws_lexmodelbuilding_bot":       lexmodelbuilding.DataSourceBot(),
+			"aws_lexmodelbuilding_bot_alias": lexmodelbuilding.DataSourceBotAlias(),
+			"aws_lexmodelbuilding_intent":    lexmodelbuilding.DataSourceIntent(),
+			"aws_lexmodelbuilding_slot_type": lexmodelbuilding.DataSourceSlotType(),
+			"aws_lex_bot":                    lexmodelbuilding.DataSourceBot(),      // backward compatible alias
+			"aws_lex_bot_alias":              lexmodelbuilding.DataSourceBotAlias(), // backward compatible alias
+			"aws_lex_intent":                 lexmodelbuilding.DataSourceIntent(),   // backward compatible alias
+			"aws_lex_slot_type":              lexmodelbuilding.DataSourceSlotType(), // backward compatible alias
 
 			"aws_arn":                     meta.DataSourceARN(),
 			"aws_billing_service_account": meta.DataSourceBillingServiceAccount(),
@@ -1290,10 +1294,14 @@ func Provider() *schema.Provider {
 			"aws_lambda_permission":                     lambda.ResourcePermission(),
 			"aws_lambda_provisioned_concurrency_config": lambda.ResourceProvisionedConcurrencyConfig(),
 
-			"aws_lex_bot":       lexmodelbuilding.ResourceBot(),
-			"aws_lex_bot_alias": lexmodelbuilding.ResourceBotAlias(),
-			"aws_lex_intent":    lexmodelbuilding.ResourceIntent(),
-			"aws_lex_slot_type": lexmodelbuilding.ResourceSlotType(),
+			"aws_lexmodelbuilding_bot":       lexmodelbuilding.ResourceBot(),
+			"aws_lexmodelbuilding_bot_alias": lexmodelbuilding.ResourceBotAlias(),
+			"aws_lexmodelbuilding_intent":    lexmodelbuilding.ResourceIntent(),
+			"aws_lexmodelbuilding_slot_type": lexmodelbuilding.ResourceSlotType(),
+			"aws_lex_bot":                    lexmodelbuilding.ResourceBot(),      // backward compatible alias
+			"aws_lex_bot_alias":              lexmodelbuilding.ResourceBotAlias(), // backward compatible alias
+			"aws_lex_intent":                 lexmodelbuilding.ResourceIntent(),   // backward compatible alias
+			"aws_lex_slot_type":              lexmodelbuilding.ResourceSlotType(), // backward compatible alias
 
 			"aws_licensemanager_association":           licensemanager.ResourceAssociation(),
 			"aws_licensemanager_license_configuration": licensemanager.ResourceLicenseConfiguration(),

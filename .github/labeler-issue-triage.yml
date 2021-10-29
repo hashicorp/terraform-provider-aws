@@ -223,7 +223,7 @@ service/lakeformation:
 service/lambda:
   - '((\*|-) ?`?|(data|resource) "?)aws_lambda_'
 service/lexmodelbuildingservice:
-  - '((\*|-) ?`?|(data|resource) "?)aws_lex_'
+  - '((\*|-) ?`?|(data|resource) "?)aws_lexmodelbuilding_'
 service/licensemanager:
   - '((\*|-) ?`?|(data|resource) "?)aws_licensemanager_'
 service/lightsail:
