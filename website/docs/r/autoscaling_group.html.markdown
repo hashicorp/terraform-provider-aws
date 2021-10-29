@@ -473,6 +473,8 @@ This configuration block supports the following:
 
 * `strategy` - (Required) The strategy to use for instance refresh. The only allowed value is `Rolling`. See [StartInstanceRefresh Action](https://docs.aws.amazon.com/autoscaling/ec2/APIReference/API_StartInstanceRefresh.html#API_StartInstanceRefresh_RequestParameters) for more information.
 * `preferences` - (Optional) Override default parameters for Instance Refresh.
+    * `checkpoint_delay` - (Optional) The number of seconds to wait after a checkpoint. Defaults to `3600`.
+    * `checkpoint_percentages` - (Optional) List of percentages for each checkpoint. Values must be unique and in ascending order. To replace all instances, the final number must be `100`.
     * `instance_warmup` - (Optional) The number of seconds until a newly launched instance is configured and ready to use. Default behavior is to use the Auto Scaling Group's health check grace period.
     * `min_healthy_percentage` - (Optional) The amount of capacity in the Auto Scaling group that must remain healthy during an instance refresh to allow the operation to continue, as a percentage of the desired capacity of the Auto Scaling group. Defaults to `90`.
 * `triggers` - (Optional) Set of additional property names that will trigger an Instance Refresh. A refresh will always be triggered by a change in any of `launch_configuration`, `launch_template`, or `mixed_instances_policy`.
@@ -579,7 +581,7 @@ updates.
 These parameters can be used to ensure that service is being provided before
 Terraform moves on. If new instances don't pass the ELB's health checks for any
 reason, the Terraform apply will time out, and the ASG will be marked as
-tainted (i.e. marked to be destroyed in a follow up run).
+tainted (i.e., marked to be destroyed in a follow up run).
 
 As with ASG Capacity, Terraform will wait for up to `wait_for_capacity_timeout`
 for the proper number of instances to be healthy.
@@ -594,7 +596,7 @@ for more information.
 
 ## Import
 
-Auto Scaling Groups can be imported using the `name`, e.g.
+Auto Scaling Groups can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_autoscaling_group.web web-asg

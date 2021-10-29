@@ -26,7 +26,7 @@ This guide outlines how to get started with customizing endpoints, the available
 
 ## Getting Started with Custom Endpoints
 
-To configure the Terraform AWS Provider to use customized endpoints, it can be done within `provider` declarations using the `endpoints` configuration block, e.g.
+To configure the Terraform AWS Provider to use customized endpoints, it can be done within `provider` declarations using the `endpoints` configuration block, e.g.,
 
 ```terraform
 provider "aws" {
@@ -75,6 +75,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
   <li><code>budgets</code></li>
   <li><code>chime</code></li>
   <li><code>cloud9</code></li>
+  <li><code>cloudcontrolapi</code></li>
   <li><code>cloudformation</code></li>
   <li><code>cloudfront</code></li>
   <li><code>cloudhsm</code></li>

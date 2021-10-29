@@ -56,7 +56,7 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - Amazon Resource Name (ARN) of the EBS Snapshot.
-* `id` - The snapshot ID (e.g. snap-59fcb34e).
+* `id` - The snapshot ID (e.g., snap-59fcb34e).
 * `owner_id` - The AWS account ID of the snapshot owner.
 * `owner_alias` - Value from an Amazon-maintained list (`amazon`, `aws-marketplace`, `microsoft`) of snapshot owners.
 * `encrypted` - Whether the snapshot is encrypted.

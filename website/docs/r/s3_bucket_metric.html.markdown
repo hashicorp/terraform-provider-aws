@@ -68,7 +68,7 @@ No additional attributes are exported.
 
 ## Import
 
-S3 bucket metric configurations can be imported using `bucket:metric`, e.g.
+S3 bucket metric configurations can be imported using `bucket:metric`, e.g.,
 
 ```
 $ terraform import aws_s3_bucket_metric.my-bucket-entire-bucket my-bucket:EntireBucket

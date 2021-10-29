@@ -113,6 +113,14 @@ attribute once the route resource is created.
 * `owner_id` - The ID of the AWS account that owns the route table.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
+## Timeouts
+
+`aws_default_route_table` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+- `create` - (Default `2 minutes`) Used for route creation
+- `update` - (Default `2 minutes`) Used for route creation
+- `delete` - (Default `5 minutes`) Used for route deletion
+
 ## Import
 
 Route Tables can be imported using the route table `id`. For example, to import

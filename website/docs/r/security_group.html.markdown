@@ -174,7 +174,7 @@ configuration options:
 
 ## Import
 
-Security Groups can be imported using the `security group id`, e.g.
+Security Groups can be imported using the `security group id`, e.g.,
 
 ```
 $ terraform import aws_security_group.elb_sg sg-903004f8

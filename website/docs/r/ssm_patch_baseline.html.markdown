@@ -196,7 +196,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-SSM Patch Baselines can be imported by their baseline ID, e.g.
+SSM Patch Baselines can be imported by their baseline ID, e.g.,
 
 ```
 $ terraform import aws_ssm_patch_baseline.example pb-12345678

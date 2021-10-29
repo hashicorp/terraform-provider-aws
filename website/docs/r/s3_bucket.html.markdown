@@ -277,12 +277,24 @@ resource "aws_s3_bucket" "source" {
 
     rules {
       id     = "foobar"
-      prefix = "foo"
       status = "Enabled"
 
+      filter {
+        tags = {}
+      }
       destination {
         bucket        = aws_s3_bucket.destination.arn
         storage_class = "STANDARD"
+
+        replication_time {
+          status  = "Enabled"
+          minutes = 15
+        }
+
+        metrics {
+          status  = "Enabled"
+          minutes = 15
+        }
       }
     }
   }
@@ -337,8 +349,8 @@ resource "aws_s3_bucket" "bucket" {
 
 The following arguments are supported:
 
-* `bucket` - (Optional, Forces new resource) The name of the bucket. If omitted, Terraform will assign a random, unique name. Must be less than or equal to 63 characters in length.
-* `bucket_prefix` - (Optional, Forces new resource) Creates a unique bucket name beginning with the specified prefix. Conflicts with `bucket`. Must be less than or equal to 37 characters in length.
+* `bucket` - (Optional, Forces new resource) The name of the bucket. If omitted, Terraform will assign a random, unique name. Must be lowercase and less than or equal to 63 characters in length. A full list of bucket naming rules [may be found here](https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucketnamingrules.html).
+* `bucket_prefix` - (Optional, Forces new resource) Creates a unique bucket name beginning with the specified prefix. Conflicts with `bucket`. Must be lowercase and less than or equal to 37 characters in length. A full list of bucket naming rules [may be found here](https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucketnamingrules.html).
 * `acl` - (Optional) The [canned ACL](https://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html#canned-acl) to apply. Valid values are `private`, `public-read`, `public-read-write`, `aws-exec-read`, `authenticated-read`, and `log-delivery-write`. Defaults to `private`.  Conflicts with `grant`.
 * `grant` - (Optional) An [ACL policy grant](https://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html#sample-acl) (documented below). Conflicts with `acl`.
 * `policy` - (Optional) A valid [bucket policy](https://docs.aws.amazon.com/AmazonS3/latest/dev/example-bucket-policies.html) JSON document. Note that if the policy document is not specific enough (but still valid), Terraform may view the policy as constantly changing in a `terraform plan`. In this case, please make sure you use the verbose/specific version of the policy. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy).
@@ -452,6 +464,18 @@ The `destination` object supports the following:
   `sse_kms_encrypted_objects` source selection criteria.
 * `access_control_translation` - (Optional) Specifies the overrides to use for object owners on replication. Must be used in conjunction with `account_id` owner override configuration.
 * `account_id` - (Optional) The Account ID to use for overriding the object owner on replication. Must be used in conjunction with `access_control_translation` override configuration.
+* `replication_time` - (Optional) Enables S3 Replication Time Control (S3 RTC) (documented below).
+* `metrics` - (Optional) Enables replication metrics (required for S3 RTC) (documented below).
+
+The `replication_time` object supports the following:
+
+* `status` - (Optional) The status of RTC. Either `Enabled` or `Disabled`.
+* `minutes` - (Optional) Threshold within which objects are to be replicated. The only valid value is `15`.
+
+The `metrics` object supports the following:
+
+* `status` - (Optional) The status of replication metrics. Either `Enabled` or `Disabled`.
+* `minutes` - (Optional) Threshold within which objects are to be replicated. The only valid value is `15`.
 
 The `source_selection_criteria` object supports the following:
 
@@ -530,7 +554,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-S3 bucket can be imported using the `bucket`, e.g.
+S3 bucket can be imported using the `bucket`, e.g.,
 
 ```
 $ terraform import aws_s3_bucket.bucket bucket-name

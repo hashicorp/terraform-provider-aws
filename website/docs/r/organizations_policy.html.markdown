@@ -49,7 +49,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_organizations_policy` can be imported by using the policy ID, e.g.
+`aws_organizations_policy` can be imported by using the policy ID, e.g.,
 
 ```
 $ terraform import aws_organizations_policy.example p-12345678

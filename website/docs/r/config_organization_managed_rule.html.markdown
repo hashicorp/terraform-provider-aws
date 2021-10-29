@@ -62,7 +62,7 @@ configuration options:
 
 ## Import
 
-Config Organization Managed Rules can be imported using the name, e.g.
+Config Organization Managed Rules can be imported using the name, e.g.,
 
 ```
 $ terraform import aws_config_organization_managed_rule.example example

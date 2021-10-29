@@ -21,6 +21,7 @@ Batch
 Budgets
 Chime
 Cloud9
+Cloud Control API
 CloudFormation
 CloudFront
 CloudHSM v2

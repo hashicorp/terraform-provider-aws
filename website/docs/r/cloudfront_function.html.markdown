@@ -51,7 +51,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-CloudFront Functions can be imported using the `name`, e.g.
+CloudFront Functions can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_cloudfront_function.test my_test_function

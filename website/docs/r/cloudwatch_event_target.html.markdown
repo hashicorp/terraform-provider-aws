@@ -414,7 +414,7 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
     * You must use JSON dot notation, not bracket notation.
     * The keys can't start with "AWS".
 
-* `input_template` - (Required) Template to customize data sent to the target. Must be valid JSON. To send a string value, the string value must include double quotes. Values must be escaped for both JSON and Terraform, e.g. `"\"Your string goes here.\\nA new line.\""`
+* `input_template` - (Required) Template to customize data sent to the target. Must be valid JSON. To send a string value, the string value must include double quotes. Values must be escaped for both JSON and Terraform, e.g., `"\"Your string goes here.\\nA new line.\""`
 
 ### retry_policy
 

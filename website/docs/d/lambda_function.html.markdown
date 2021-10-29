@@ -27,7 +27,7 @@ data "aws_lambda_function" "existing" {
 The following arguments are supported:
 
 * `function_name` - (Required) Name of the lambda function.
-* `qualifier` - (Optional) Alias name or version number of the lambda function. e.g. `$LATEST`, `my-alias`, or `1`
+* `qualifier` - (Optional) Alias name or version number of the lambda functionE.g., `$LATEST`, `my-alias`, or `1`
 
 ## Attributes Reference
 

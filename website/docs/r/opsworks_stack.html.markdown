@@ -86,7 +86,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-OpsWorks stacks can be imported using the `id`, e.g.
+OpsWorks stacks can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_opsworks_stack.bar 00000000-0000-0000-0000-000000000000
