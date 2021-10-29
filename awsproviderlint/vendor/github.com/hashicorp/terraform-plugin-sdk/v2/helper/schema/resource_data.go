@@ -580,3 +580,51 @@ func (d *ResourceData) GetProviderMeta(dst interface{}) error {
 	}
 	return gocty.FromCtyValue(d.providerMeta, &dst)
 }
+
+// GetRawConfig returns the cty.Value that Terraform sent the SDK for the
+// config. If no value was sent, or if a null value was sent, the value will be
+// a null value of the resource's type.
+//
+// GetRawConfig is considered experimental and advanced functionality, and
+// familiarity with the Terraform protocol is suggested when using it.
+func (d *ResourceData) GetRawConfig() cty.Value {
+	if d.diff != nil && !d.diff.RawConfig.IsNull() {
+		return d.diff.RawConfig
+	}
+	if d.state != nil && !d.state.RawConfig.IsNull() {
+		return d.state.RawConfig
+	}
+	return cty.NullVal(schemaMap(d.schema).CoreConfigSchema().ImpliedType())
+}
+
+// GetRawState returns the cty.Value that Terraform sent the SDK for the state.
+// If no value was sent, or if a null value was sent, the value will be a null
+// value of the resource's type.
+//
+// GetRawState is considered experimental and advanced functionality, and
+// familiarity with the Terraform protocol is suggested when using it.
+func (d *ResourceData) GetRawState() cty.Value {
+	if d.diff != nil && !d.diff.RawState.IsNull() {
+		return d.diff.RawState
+	}
+	if d.state != nil && !d.state.RawState.IsNull() {
+		return d.state.RawState
+	}
+	return cty.NullVal(schemaMap(d.schema).CoreConfigSchema().ImpliedType())
+}
+
+// GetRawPlan returns the cty.Value that Terraform sent the SDK for the plan.
+// If no value was sent, or if a null value was sent, the value will be a null
+// value of the resource's type.
+//
+// GetRawPlan is considered experimental and advanced functionality, and
+// familiarity with the Terraform protocol is suggested when using it.
+func (d *ResourceData) GetRawPlan() cty.Value {
+	if d.diff != nil && !d.diff.RawPlan.IsNull() {
+		return d.diff.RawPlan
+	}
+	if d.state != nil && !d.state.RawPlan.IsNull() {
+		return d.state.RawPlan
+	}
+	return cty.NullVal(schemaMap(d.schema).CoreConfigSchema().ImpliedType())
+}

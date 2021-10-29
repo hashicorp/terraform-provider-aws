@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
@@ -429,7 +428,7 @@ func resourceAwsElasticacheReplicationGroupCreate(d *schema.ResourceData, meta i
 	}
 	resp, err := conn.CreateReplicationGroup(params)
 	if err != nil {
-		return fmt.Errorf("Error creating ElastiCache Replication Group (%s): %w", d.Get("replication_group_id").(string), err)
+		return fmt.Errorf("error creating ElastiCache Replication Group (%s): %w", d.Get("replication_group_id").(string), err)
 	}
 
 	d.SetId(aws.StringValue(resp.ReplicationGroup.ReplicationGroupId))
@@ -512,6 +511,28 @@ func resourceAwsElasticacheReplicationGroupRead(d *schema.ResourceData, meta int
 	d.Set("replication_group_id", rgp.ReplicationGroupId)
 	d.Set("arn", rgp.ARN)
 
+	// Tags cannot be read when the replication group is not Available
+	_, err = waiter.ReplicationGroupAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+	if err != nil {
+		return fmt.Errorf("error listing tags for resource (%s): %w", aws.StringValue(rgp.ARN), err)
+	}
+	tags, err := keyvaluetags.ElasticacheListTags(conn, aws.StringValue(rgp.ARN))
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for resource (%s): %w", aws.StringValue(rgp.ARN), err)
+	}
+
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
+	}
+
 	if rgp.NodeGroups != nil {
 		if len(rgp.NodeGroups[0].NodeGroupMembers) == 0 {
 			return nil
@@ -555,31 +576,6 @@ func resourceAwsElasticacheReplicationGroupRead(d *schema.ResourceData, meta int
 
 		if c.AuthTokenEnabled != nil && !aws.BoolValue(c.AuthTokenEnabled) {
 			d.Set("auth_token", nil)
-		}
-
-		arn := arn.ARN{
-			Partition: meta.(*AWSClient).partition,
-			Service:   "elasticache",
-			Region:    meta.(*AWSClient).region,
-			AccountID: meta.(*AWSClient).accountid,
-			Resource:  fmt.Sprintf("cluster:%s", aws.StringValue(c.CacheClusterId)),
-		}.String()
-
-		tags, err := keyvaluetags.ElasticacheListTags(conn, arn)
-
-		if err != nil {
-			return fmt.Errorf("error listing tags for resource (%s): %w", arn, err)
-		}
-
-		tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
-
-		//lintignore:AWSR002
-		if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-			return fmt.Errorf("error setting tags: %w", err)
-		}
-
-		if err := d.Set("tags_all", tags.Map()); err != nil {
-			return fmt.Errorf("error setting tags_all: %w", err)
 		}
 	}
 
@@ -683,30 +679,22 @@ func resourceAwsElasticacheReplicationGroupUpdate(d *schema.ResourceData, meta i
 	}
 
 	if requestUpdate {
-		err := resourceAwsElasticacheReplicationGroupModify(conn, d.Timeout(schema.TimeoutUpdate), params)
+		_, err := conn.ModifyReplicationGroup(params)
 		if err != nil {
 			return fmt.Errorf("error updating ElastiCache Replication Group (%s): %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
-		clusters := d.Get("member_clusters").(*schema.Set).List()
-
-		for _, cluster := range clusters {
-
-			arn := arn.ARN{
-				Partition: meta.(*AWSClient).partition,
-				Service:   "elasticache",
-				Region:    meta.(*AWSClient).region,
-				AccountID: meta.(*AWSClient).accountid,
-				Resource:  fmt.Sprintf("cluster:%s", cluster),
-			}.String()
-
-			o, n := d.GetChange("tags_all")
-			if err := keyvaluetags.ElasticacheUpdateTags(conn, arn, o, n); err != nil {
-				return fmt.Errorf("error updating tags: %w", err)
-			}
+		o, n := d.GetChange("tags_all")
+		if err := keyvaluetags.ElasticacheUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating tags: %w", err)
 		}
+	}
+
+	_, err := waiter.ReplicationGroupAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+	if err != nil {
+		return fmt.Errorf("error waiting for modification: %w", err)
 	}
 
 	return resourceAwsElasticacheReplicationGroupRead(d, meta)
@@ -970,19 +958,6 @@ func elasticacheReplicationGroupDecreaseNumCacheClusters(conn *elasticache.Elast
 		return fmt.Errorf("error waiting for ElastiCache Replication Group (%s) replica removal: %w", replicationGroupID, err)
 	}
 
-	return nil
-}
-
-func resourceAwsElasticacheReplicationGroupModify(conn *elasticache.ElastiCache, timeout time.Duration, input *elasticache.ModifyReplicationGroupInput) error {
-	_, err := conn.ModifyReplicationGroup(input)
-	if err != nil {
-		return fmt.Errorf("error requesting modification: %w", err)
-	}
-
-	_, err = waiter.ReplicationGroupAvailable(conn, aws.StringValue(input.ReplicationGroupId), timeout)
-	if err != nil {
-		return fmt.Errorf("error waiting for modification: %w", err)
-	}
 	return nil
 }
 

@@ -1,6 +1,8 @@
 package finder
 
 import (
+	"regexp"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
@@ -105,6 +107,38 @@ func Policies(conn *iam.IAM, arn, name, pathPrefix string) ([]*iam.Policy, error
 			}
 
 			results = append(results, p)
+		}
+
+		return !lastPage
+	})
+
+	return results, err
+}
+
+func Users(conn *iam.IAM, nameRegex, pathPrefix string) ([]*iam.User, error) {
+	input := &iam.ListUsersInput{}
+
+	if pathPrefix != "" {
+		input.PathPrefix = aws.String(pathPrefix)
+	}
+
+	var results []*iam.User
+
+	err := conn.ListUsersPages(input, func(page *iam.ListUsersOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, user := range page.Users {
+			if user == nil {
+				continue
+			}
+
+			if nameRegex != "" && !regexp.MustCompile(nameRegex).MatchString(aws.StringValue(user.UserName)) {
+				continue
+			}
+
+			results = append(results, user)
 		}
 
 		return !lastPage

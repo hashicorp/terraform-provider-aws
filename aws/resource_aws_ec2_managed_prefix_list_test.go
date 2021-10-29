@@ -6,12 +6,11 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func TestAccAwsEc2ManagedPrefixList_basic(t *testing.T) {
@@ -309,19 +308,17 @@ func testAccCheckAwsEc2ManagedPrefixListDestroy(s *terraform.State) error {
 			continue
 		}
 
-		pl, err := finder.ManagedPrefixListByID(conn, rs.Primary.ID)
+		_, err := finder.ManagedPrefixListByID(conn, rs.Primary.ID)
 
-		if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidPrefixListIDNotFound) {
+		if tfresource.NotFound(err) {
 			continue
 		}
 
 		if err != nil {
-			return fmt.Errorf("error reading EC2 Managed Prefix List (%s): %w", rs.Primary.ID, err)
+			return err
 		}
 
-		if pl != nil {
-			return fmt.Errorf("EC2 Managed Prefix List (%s) still exists", rs.Primary.ID)
-		}
+		return fmt.Errorf("EC2 Managed Prefix List %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -330,25 +327,20 @@ func testAccCheckAwsEc2ManagedPrefixListDestroy(s *terraform.State) error {
 func testAccAwsEc2ManagedPrefixListExists(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
-
 		if !ok {
-			return fmt.Errorf("resource %s not found", resourceName)
+			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("resource %s has not set its id", resourceName)
+			return fmt.Errorf("No EC2 Managed Prefix List ID is set")
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
 
-		pl, err := finder.ManagedPrefixListByID(conn, rs.Primary.ID)
+		_, err := finder.ManagedPrefixListByID(conn, rs.Primary.ID)
 
 		if err != nil {
-			return fmt.Errorf("error reading EC2 Managed Prefix List (%s): %w", rs.Primary.ID, err)
-		}
-
-		if pl == nil {
-			return fmt.Errorf("EC2 Managed Prefix List (%s) not found", rs.Primary.ID)
+			return err
 		}
 
 		return nil

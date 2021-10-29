@@ -30,6 +30,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/budgets"
 	"github.com/aws/aws-sdk-go/service/chime"
 	"github.com/aws/aws-sdk-go/service/cloud9"
+	"github.com/aws/aws-sdk-go/service/cloudcontrolapi"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/aws/aws-sdk-go/service/cloudhsmv2"
@@ -205,6 +206,7 @@ type Config struct {
 	Endpoints         map[string]string
 	IgnoreTagsConfig  *keyvaluetags.IgnoreConfig
 	Insecure          bool
+	HTTPProxy         string
 
 	SkipCredsValidation     bool
 	SkipGetEC2Platforms     bool
@@ -241,6 +243,7 @@ type AWSClient struct {
 	cfconn                              *cloudformation.CloudFormation
 	chimeconn                           *chime.Chime
 	cloud9conn                          *cloud9.Cloud9
+	cloudcontrolapiconn                 *cloudcontrolapi.CloudControlApi
 	cloudfrontconn                      *cloudfront.CloudFront
 	cloudhsmv2conn                      *cloudhsmv2.CloudHSMV2
 	cloudsearchconn                     *cloudsearch.CloudSearch
@@ -435,6 +438,7 @@ func (c *Config) Client() (interface{}, error) {
 		DebugLogging:                logging.IsDebugOrHigher(),
 		IamEndpoint:                 c.Endpoints["iam"],
 		Insecure:                    c.Insecure,
+		HTTPProxy:                   c.HTTPProxy,
 		MaxRetries:                  c.MaxRetries,
 		Profile:                     c.Profile,
 		Region:                      c.Region,
@@ -495,6 +499,7 @@ func (c *Config) Client() (interface{}, error) {
 		cfconn:                              cloudformation.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["cloudformation"])})),
 		chimeconn:                           chime.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["chime"])})),
 		cloud9conn:                          cloud9.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["cloud9"])})),
+		cloudcontrolapiconn:                 cloudcontrolapi.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["cloudcontrolapi"])})),
 		cloudfrontconn:                      cloudfront.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["cloudfront"])})),
 		cloudhsmv2conn:                      cloudhsmv2.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["cloudhsm"])})),
 		cloudsearchconn:                     cloudsearch.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["cloudsearch"])})),

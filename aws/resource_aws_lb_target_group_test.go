@@ -105,7 +105,7 @@ func TestAccAWSLBTargetGroup_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSLBTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLBTargetGroupConfig_basic(rName),
+				Config: testAccAWSLBTargetGroupConfig_basic(rName, 200),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBTargetGroupExists(resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -132,6 +132,39 @@ func TestAccAWSLBTargetGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.matcher", "200-299"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSLBTargetGroup_attrsOnCreate(t *testing.T) {
+	var conf elbv2.TargetGroup
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_lb_target_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLBTargetGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLBTargetGroupConfig_basic(rName, 0),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBTargetGroupExists(resourceName, &conf),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "0"),
+					resource.TestCheckResourceAttr(resourceName, "slow_start", "0"),
+				),
+			},
+			{
+				Config: testAccAWSLBTargetGroupConfig_basic(rName, 200),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBTargetGroupExists(resourceName, &conf),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
+					resource.TestCheckResourceAttr(resourceName, "slow_start", "0"),
 				),
 			},
 		},
@@ -311,7 +344,7 @@ func TestAccAWSLBTargetGroup_networkLB_TargetGroup(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroup_Protocol_Geneve(t *testing.T) {
+func TestAccAWSLBTargetGroup_protocolGeneve(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lb_target_group.test"
@@ -339,6 +372,46 @@ func TestAccAWSLBTargetGroup_Protocol_Geneve(t *testing.T) {
 					"proxy_protocol_v2",
 					"slow_start",
 				},
+			},
+		},
+	})
+}
+
+func TestAccAWSLBTargetGroup_protocolGeneveNotSticky(t *testing.T) {
+	var conf elbv2.TargetGroup
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_lb_target_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckElbv2GatewayLoadBalancer(t) },
+		ErrorCheck:        testAccErrorCheck(t, elbv2.EndpointsID),
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAWSLBTargetGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLBTargetGroupConfigProtocolGeneve(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBTargetGroupExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "port", "6081"),
+					resource.TestCheckResourceAttr(resourceName, "protocol", elbv2.ProtocolEnumGeneve),
+				),
+			},
+			{
+				Config: testAccAWSLBTargetGroupProtocolGeneveHealthConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBTargetGroupExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "port", "6081"),
+					resource.TestCheckResourceAttr(resourceName, "protocol", elbv2.ProtocolEnumGeneve),
+					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.path", "/health"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "60"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.port", "80"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", "HTTP"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", "3"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", "3"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", "3"),
+				),
 			},
 		},
 	})
@@ -434,7 +507,7 @@ func TestAccAWSLBTargetGroup_ProtocolVersion_HTTP_GRPC_Update(t *testing.T) {
 		CheckDestroy: testAccCheckAWSLBTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLBTargetGroupConfig_basic(rName),
+				Config: testAccAWSLBTargetGroupConfig_basic(rName, 200),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBTargetGroupExists(resourceName, &targetGroup1),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTPS"),
@@ -640,14 +713,14 @@ func TestAccAWSLBTargetGroup_changeNameForceNew(t *testing.T) {
 		CheckDestroy: testAccCheckAWSLBTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLBTargetGroupConfig_basic(rNameBefore),
+				Config: testAccAWSLBTargetGroupConfig_basic(rNameBefore, 200),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBTargetGroupExists(resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "name", rNameBefore),
 				),
 			},
 			{
-				Config: testAccAWSLBTargetGroupConfig_basic(rNameAfter),
+				Config: testAccAWSLBTargetGroupConfig_basic(rNameAfter, 200),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBTargetGroupExists(resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, "name", rNameAfter),
@@ -669,7 +742,7 @@ func TestAccAWSLBTargetGroup_changeProtocolForceNew(t *testing.T) {
 		CheckDestroy: testAccCheckAWSLBTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLBTargetGroupConfig_basic(rName),
+				Config: testAccAWSLBTargetGroupConfig_basic(rName, 200),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBTargetGroupExists(resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTPS"),
@@ -698,7 +771,7 @@ func TestAccAWSLBTargetGroup_changePortForceNew(t *testing.T) {
 		CheckDestroy: testAccCheckAWSLBTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLBTargetGroupConfig_basic(rName),
+				Config: testAccAWSLBTargetGroupConfig_basic(rName, 200),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBTargetGroupExists(resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "port", "443"),
@@ -727,7 +800,7 @@ func TestAccAWSLBTargetGroup_changeVpcForceNew(t *testing.T) {
 		CheckDestroy: testAccCheckAWSLBTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLBTargetGroupConfig_basic(rName),
+				Config: testAccAWSLBTargetGroupConfig_basic(rName, 200),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBTargetGroupExists(resourceName, &before),
 				),
@@ -829,7 +902,7 @@ func TestAccAWSLBTargetGroup_updateHealthCheck(t *testing.T) {
 		CheckDestroy: testAccCheckAWSLBTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLBTargetGroupConfig_basic(rName),
+				Config: testAccAWSLBTargetGroupConfig_basic(rName, 200),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBTargetGroupExists(resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -1558,7 +1631,7 @@ resource "aws_vpc" "test" {
 `, rName, healthCheckBlock)
 }
 
-func testAccAWSLBTargetGroupConfig_basic(rName string) string {
+func testAccAWSLBTargetGroupConfig_basic(rName string, deregDelay int) string {
 	return fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
   name     = %[1]q
@@ -1566,7 +1639,7 @@ resource "aws_lb_target_group" "test" {
   protocol = "HTTPS"
   vpc_id   = aws_vpc.test.id
 
-  deregistration_delay = 200
+  deregistration_delay = %[2]d
   slow_start           = 0
 
   stickiness {
@@ -1597,7 +1670,7 @@ resource "aws_vpc" "test" {
     Name = %[1]q
   }
 }
-`, rName)
+`, rName, deregDelay)
 }
 
 func testAccAWSLBTargetGroupConfig_ProtocolVersion(rName string) string {
@@ -1662,6 +1735,35 @@ resource "aws_lb_target_group" "test" {
   health_check {
     port     = 80
     protocol = "HTTP"
+  }
+}
+`, rName)
+}
+
+func testAccAWSLBTargetGroupProtocolGeneveHealthConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.10.10.0/25"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_lb_target_group" "test" {
+  name     = %[1]q
+  port     = 6081
+  protocol = "GENEVE"
+  vpc_id   = aws_vpc.test.id
+
+  health_check {
+    path                = "/health"
+    interval            = 60
+    port                = 80
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
   }
 }
 `, rName)

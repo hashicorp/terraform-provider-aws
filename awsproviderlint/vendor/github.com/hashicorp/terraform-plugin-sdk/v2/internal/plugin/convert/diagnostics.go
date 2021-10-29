@@ -123,7 +123,7 @@ func PathToAttributePath(p cty.Path) *tftypes.AttributePath {
 				ap = ap.WithElementKeyString(key.AsString())
 			case cty.Number:
 				v, _ := key.AsBigFloat().Int64()
-				ap = ap.WithElementKeyInt(v)
+				ap = ap.WithElementKeyInt(int(v))
 			default:
 				// We'll bail early if we encounter anything else, and just
 				// return the valid prefix.

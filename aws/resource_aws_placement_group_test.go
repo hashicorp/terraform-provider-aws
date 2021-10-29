@@ -7,10 +7,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func init() {
@@ -28,46 +29,39 @@ func init() {
 
 func testSweepEc2PlacementGroups(region string) error {
 	client, err := sharedClientForRegion(region)
-
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("error getting client: %s", err)
 	}
-
 	conn := client.(*AWSClient).ec2conn
-	sweepResources := make([]*testSweepResource, 0)
-	var errs *multierror.Error
-
 	input := &ec2.DescribePlacementGroupsInput{}
+	sweepResources := make([]*testSweepResource, 0)
 
-	// EC2 API provides no NextToken/Marker
 	output, err := conn.DescribePlacementGroups(input)
 
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping EC2 Placement Group sweep for %s: %s", region, err)
+		return nil
+	}
+
 	if err != nil {
-		err := fmt.Errorf("error reading EC2 Placement Group: %w", err)
-		log.Printf("[ERROR] %s", err)
-		errs = multierror.Append(errs, err)
-		return errs.ErrorOrNil()
+		return fmt.Errorf("error listing EC2 Placement Groups (%s): %w", region, err)
 	}
 
 	for _, placementGroup := range output.PlacementGroups {
 		r := resourceAwsPlacementGroup()
 		d := r.Data(nil)
-
 		d.SetId(aws.StringValue(placementGroup.GroupName))
 
 		sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
 	}
 
-	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping EC2 Placement Group for %s: %w", region, err))
+	err = testSweepResourceOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping EC2 Placement Groups (%s): %w", region, err)
 	}
 
-	if testSweepSkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping EC2 Placement Group sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
+	return nil
 }
 
 func TestAccAWSPlacementGroup_basic(t *testing.T) {
@@ -99,7 +93,30 @@ func TestAccAWSPlacementGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSPlacementGroup_tags(t *testing.T) {
+func TestAccAWSPlacementGroup_disappears(t *testing.T) {
+	var pg ec2.PlacementGroup
+	resourceName := "aws_placement_group.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSPlacementGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSPlacementGroupConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSPlacementGroupExists(resourceName, &pg),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsPlacementGroup(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSPlacementGroup_Tags(t *testing.T) {
 	var pg ec2.PlacementGroup
 	resourceName := "aws_placement_group.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -143,10 +160,10 @@ func TestAccAWSPlacementGroup_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSPlacementGroup_disappears(t *testing.T) {
+func TestAccAWSPlacementGroup_PartitionCount(t *testing.T) {
 	var pg ec2.PlacementGroup
 	resourceName := "aws_placement_group.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := acctest.RandomWithPrefix("tf-acc-partition")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -155,12 +172,18 @@ func TestAccAWSPlacementGroup_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckAWSPlacementGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSPlacementGroupConfig(rName),
+				Config: testAccAWSPlacementGroupConfigPartitionCount(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSPlacementGroupExists(resourceName, &pg),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsPlacementGroup(), resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "strategy", "partition"),
+					resource.TestCheckResourceAttr(resourceName, "partition_count", "7"),
 				),
-				ExpectNonEmptyPlan: true,
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -174,11 +197,9 @@ func testAccCheckAWSPlacementGroupDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := conn.DescribePlacementGroups(&ec2.DescribePlacementGroupsInput{
-			GroupNames: []*string{aws.String(rs.Primary.Attributes["name"])},
-		})
+		_, err := finder.PlacementGroupByName(conn, rs.Primary.ID)
 
-		if isAWSErr(err, "InvalidPlacementGroup.Unknown", "") {
+		if tfresource.NotFound(err) {
 			continue
 		}
 
@@ -186,12 +207,13 @@ func testAccCheckAWSPlacementGroupDestroy(s *terraform.State) error {
 			return err
 		}
 
-		return fmt.Errorf("still exists")
+		return fmt.Errorf("EC2 Placement Group %s still exists", rs.Primary.ID)
 	}
+
 	return nil
 }
 
-func testAccCheckAWSPlacementGroupExists(n string, pg *ec2.PlacementGroup) resource.TestCheckFunc {
+func testAccCheckAWSPlacementGroupExists(n string, v *ec2.PlacementGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -199,19 +221,18 @@ func testAccCheckAWSPlacementGroupExists(n string, pg *ec2.PlacementGroup) resou
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Placement Group ID is set")
+			return fmt.Errorf("No EC2 Placement Group ID is set")
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
-		resp, err := conn.DescribePlacementGroups(&ec2.DescribePlacementGroupsInput{
-			GroupNames: []*string{aws.String(rs.Primary.ID)},
-		})
+
+		output, err := finder.PlacementGroupByName(conn, rs.Primary.ID)
 
 		if err != nil {
-			return fmt.Errorf("Placement Group error: %v", err)
+			return err
 		}
 
-		*pg = *resp.PlacementGroups[0]
+		*v = *output
 
 		return nil
 	}
@@ -220,7 +241,7 @@ func testAccCheckAWSPlacementGroupExists(n string, pg *ec2.PlacementGroup) resou
 func testAccAWSPlacementGroupConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_placement_group" "test" {
-  name     = %q
+  name     = %[1]q
   strategy = "cluster"
 }
 `, rName)
@@ -251,4 +272,14 @@ resource "aws_placement_group" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccAWSPlacementGroupConfigPartitionCount(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_placement_group" "test" {
+  name            = %[1]q
+  strategy        = "partition"
+  partition_count = 7
+}
+`, rName)
 }

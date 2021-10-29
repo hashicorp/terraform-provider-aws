@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/ecrpublic"
-	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -23,16 +22,14 @@ func init() {
 
 func testSweepEcrPublicRepositories(region string) error {
 	client, err := sharedClientForRegion(region)
-
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("error getting client: %s", err)
 	}
-
 	conn := client.(*AWSClient).ecrpublicconn
+	input := &ecrpublic.DescribeRepositoriesInput{}
 	sweepResources := make([]*testSweepResource, 0)
-	var errs *multierror.Error
 
-	err = conn.DescribeRepositoriesPages(&ecrpublic.DescribeRepositoriesInput{}, func(page *ecrpublic.DescribeRepositoriesOutput, lastPage bool) bool {
+	err = conn.DescribeRepositoriesPages(input, func(page *ecrpublic.DescribeRepositoriesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -50,20 +47,22 @@ func testSweepEcrPublicRepositories(region string) error {
 		return !lastPage
 	})
 
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error describing ECR Public Repositories for %s: %w", region, err))
-	}
-
-	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping ECR Public Repositories for %s: %w", region, err))
-	}
-
-	if testSweepSkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping ECR Public Repositories sweep for %s: %s", region, errs)
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping ECR Public Repository sweep for %s: %s", region, err)
 		return nil
 	}
 
-	return errs.ErrorOrNil()
+	if err != nil {
+		return fmt.Errorf("error listing ECR Public Repositories (%s): %w", region, err)
+	}
+
+	err = testSweepResourceOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping ECR Public Repositories (%s): %w", region, err)
+	}
+
+	return nil
 }
 
 func TestAccAWSEcrPublicRepository_basic(t *testing.T) {

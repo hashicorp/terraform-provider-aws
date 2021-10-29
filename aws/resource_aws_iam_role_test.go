@@ -42,6 +42,7 @@ func init() {
 			"aws_lambda_function",
 			"aws_launch_configuration",
 			"aws_redshift_cluster",
+			"aws_redshift_scheduled_action",
 			"aws_spot_fleet_request",
 		},
 		F: testSweepIamRoles,

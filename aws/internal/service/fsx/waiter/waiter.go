@@ -15,6 +15,28 @@ const (
 	BackupDeletedTimeout   = 10 * time.Minute
 )
 
+func AdministrativeActionCompleted(conn *fsx.FSx, fsID, actionType string, timeout time.Duration) (*fsx.AdministrativeAction, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{fsx.StatusInProgress, fsx.StatusPending},
+		Target:  []string{fsx.StatusCompleted, fsx.StatusUpdatedOptimizing},
+		Refresh: AdministrativeActionStatus(conn, fsID, actionType),
+		Timeout: timeout,
+		Delay:   30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*fsx.AdministrativeAction); ok {
+		if status, details := aws.StringValue(output.Status), output.FailureDetails; status == fsx.StatusFailed && details != nil {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.FailureDetails.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
 func BackupAvailable(conn *fsx.FSx, id string) (*fsx.Backup, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{fsx.BackupLifecycleCreating, fsx.BackupLifecyclePending, fsx.BackupLifecycleTransferring},
@@ -49,9 +71,9 @@ func BackupDeleted(conn *fsx.FSx, id string) (*fsx.Backup, error) {
 	return nil, err
 }
 
-func FileSystemAvailable(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.FileSystem, error) {
+func FileSystemCreated(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.FileSystem, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{fsx.FileSystemLifecycleCreating, fsx.FileSystemLifecycleUpdating},
+		Pending: []string{fsx.FileSystemLifecycleCreating},
 		Target:  []string{fsx.FileSystemLifecycleAvailable},
 		Refresh: FileSystemStatus(conn, id),
 		Timeout: timeout,
@@ -61,9 +83,33 @@ func FileSystemAvailable(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*fsx.FileSystem); ok {
-		if output.FailureDetails != nil {
+		if status, details := aws.StringValue(output.Lifecycle), output.FailureDetails; status == fsx.FileSystemLifecycleFailed && details != nil {
 			tfresource.SetLastError(err, errors.New(aws.StringValue(output.FailureDetails.Message)))
 		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func FileSystemUpdated(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.FileSystem, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{fsx.FileSystemLifecycleUpdating},
+		Target:  []string{fsx.FileSystemLifecycleAvailable},
+		Refresh: FileSystemStatus(conn, id),
+		Timeout: timeout,
+		Delay:   30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*fsx.FileSystem); ok {
+		if status, details := aws.StringValue(output.Lifecycle), output.FailureDetails; status == fsx.FileSystemLifecycleFailed && details != nil {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.FailureDetails.Message)))
+		}
+
+		return output, err
 	}
 
 	return nil, err
@@ -81,35 +127,11 @@ func FileSystemDeleted(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.Fi
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*fsx.FileSystem); ok {
-		if output.FailureDetails != nil {
+		if status, details := aws.StringValue(output.Lifecycle), output.FailureDetails; status == fsx.FileSystemLifecycleFailed && details != nil {
 			tfresource.SetLastError(err, errors.New(aws.StringValue(output.FailureDetails.Message)))
 		}
-	}
 
-	return nil, err
-}
-
-func FileSystemAdministrativeActionsCompleted(conn *fsx.FSx, id, action string, timeout time.Duration) (*fsx.FileSystem, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			fsx.StatusInProgress,
-			fsx.StatusPending,
-		},
-		Target: []string{
-			fsx.StatusCompleted,
-			fsx.StatusUpdatedOptimizing,
-		},
-		Refresh: FileSystemAdministrativeActionsStatus(conn, id, action),
-		Timeout: timeout,
-		Delay:   30 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForState()
-
-	if output, ok := outputRaw.(*fsx.FileSystem); ok {
-		if output.FailureDetails != nil {
-			tfresource.SetLastError(err, errors.New(aws.StringValue(output.FailureDetails.Message)))
-		}
+		return output, err
 	}
 
 	return nil, err

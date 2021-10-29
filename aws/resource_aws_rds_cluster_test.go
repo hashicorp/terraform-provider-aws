@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strings"
 	"testing"
 	"time"
 
@@ -147,11 +148,13 @@ func TestAccAWSRDSCluster_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"allow_major_version_upgrade",
 					"apply_immediately",
 					"cluster_identifier_prefix",
+					"db_instance_parameter_group_name",
+					"enable_global_write_forwarding",
 					"master_password",
 					"skip_final_snapshot",
-					"snapshot_identifier",
 				},
 			},
 		},
@@ -192,12 +195,106 @@ func TestAccAWSRDSCluster_AllowMajorVersionUpgrade(t *testing.T) {
 					"allow_major_version_upgrade",
 					"apply_immediately",
 					"cluster_identifier_prefix",
+					"db_instance_parameter_group_name",
+					"enable_global_write_forwarding",
 					"master_password",
 					"skip_final_snapshot",
 				},
 			},
 			{
 				Config: testAccAWSClusterConfig_AllowMajorVersionUpgrade(rName, true, engine, engineVersion2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterExists(resourceName, &dbCluster2),
+					resource.TestCheckResourceAttr(resourceName, "allow_major_version_upgrade", "true"),
+					resource.TestCheckResourceAttr(resourceName, "engine", engine),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", engineVersion2),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSRDSCluster_AllowMajorVersionUpgradeWithCustomParametersApplyImm(t *testing.T) {
+	var dbCluster1, dbCluster2 rds.DBCluster
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_rds_cluster.test"
+	// If these hardcoded versions become a maintenance burden, use DescribeDBEngineVersions
+	// either by having a new data source created or implementing the testing similar
+	// to TestAccAWSDmsReplicationInstance_EngineVersion
+	engine := "aurora-postgresql"
+	engineVersion1 := "11.9"
+	engineVersion2 := "12.4"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSClusterConfig_AllowMajorVersionUpgradeWithCustomParameters(rName, true, engine, engineVersion1, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterExists(resourceName, &dbCluster1),
+					resource.TestCheckResourceAttr(resourceName, "allow_major_version_upgrade", "true"),
+					resource.TestCheckResourceAttr(resourceName, "engine", engine),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", engineVersion1),
+				),
+			},
+			{
+				Config: testAccAWSClusterConfig_AllowMajorVersionUpgradeWithCustomParameters(rName, true, engine, engineVersion2, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterExists(resourceName, &dbCluster2),
+					resource.TestCheckResourceAttr(resourceName, "allow_major_version_upgrade", "true"),
+					resource.TestCheckResourceAttr(resourceName, "engine", engine),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", engineVersion2),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSRDSCluster_AllowMajorVersionUpgradeWithCustomParameters(t *testing.T) {
+	var dbCluster1, dbCluster2 rds.DBCluster
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_rds_cluster.test"
+	// If these hardcoded versions become a maintenance burden, use DescribeDBEngineVersions
+	// either by having a new data source created or implementing the testing similar
+	// to TestAccAWSDmsReplicationInstance_EngineVersion
+	engine := "aurora-postgresql"
+	engineVersion1 := "10.11"
+	engineVersion2 := "11.7"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSClusterConfig_AllowMajorVersionUpgradeWithCustomParameters(rName, true, engine, engineVersion1, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterExists(resourceName, &dbCluster1),
+					resource.TestCheckResourceAttr(resourceName, "allow_major_version_upgrade", "true"),
+					resource.TestCheckResourceAttr(resourceName, "engine", engine),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", engineVersion1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"allow_major_version_upgrade",
+					"apply_immediately",
+					"cluster_identifier_prefix",
+					"db_instance_parameter_group_name",
+					"enable_global_write_forwarding",
+					"master_password",
+					"skip_final_snapshot",
+				},
+			},
+			{
+				Config: testAccAWSClusterConfig_AllowMajorVersionUpgradeWithCustomParameters(rName, true, engine, engineVersion2, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSClusterExists(resourceName, &dbCluster2),
 					resource.TestCheckResourceAttr(resourceName, "allow_major_version_upgrade", "true"),
@@ -241,9 +338,11 @@ func TestAccAWSRDSCluster_OnlyMajorVersion(t *testing.T) {
 					"allow_major_version_upgrade",
 					"apply_immediately",
 					"cluster_identifier_prefix",
+					"db_instance_parameter_group_name",
+					"enable_global_write_forwarding",
+					"engine_version",
 					"master_password",
 					"skip_final_snapshot",
-					"engine_version",
 				},
 			},
 		},
@@ -266,17 +365,6 @@ func TestAccAWSRDSCluster_AvailabilityZones(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSClusterExists(resourceName, &dbCluster),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"cluster_identifier_prefix",
-					"master_password",
-					"skip_final_snapshot",
-				},
 			},
 		},
 	})
@@ -306,17 +394,6 @@ func TestAccAWSRDSCluster_BacktrackWindow(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "backtrack_window", "86400"),
 				),
 			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"cluster_identifier_prefix",
-					"master_password",
-					"skip_final_snapshot",
-				},
-			},
 		},
 	})
 }
@@ -339,18 +416,6 @@ func TestAccAWSRDSCluster_ClusterIdentifierPrefix(t *testing.T) {
 						resourceName, "cluster_identifier", regexp.MustCompile("^tf-test-")),
 				),
 			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"cluster_identifier_prefix",
-					"master_password",
-					"skip_final_snapshot",
-					"snapshot_identifier",
-				},
-			},
 		},
 	})
 }
@@ -371,17 +436,6 @@ func TestAccAWSRDSCluster_DbSubnetGroupName(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSClusterExists(resourceName, &dbCluster),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"cluster_identifier_prefix",
-					"master_password",
-					"skip_final_snapshot",
-				},
 			},
 		},
 	})
@@ -406,18 +460,6 @@ func TestAccAWSRDSCluster_s3Restore(t *testing.T) {
 					testAccCheckAWSClusterExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "engine", "aurora"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"cluster_identifier_prefix",
-					"master_password",
-					"skip_final_snapshot",
-					"snapshot_identifier",
-				},
 			},
 		},
 	})
@@ -495,18 +537,6 @@ func TestAccAWSRDSCluster_generatedName(t *testing.T) {
 						resourceName, "cluster_identifier", regexp.MustCompile("^tf-")),
 				),
 			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"cluster_identifier_prefix",
-					"master_password",
-					"skip_final_snapshot",
-					"snapshot_identifier",
-				},
-			},
 		},
 	})
 }
@@ -527,19 +557,6 @@ func TestAccAWSRDSCluster_takeFinalSnapshot(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSClusterExists(resourceName, &v),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"cluster_identifier_prefix",
-					"master_password",
-					"skip_final_snapshot",
-					"snapshot_identifier",
-					"final_snapshot_identifier",
-				},
 			},
 		},
 	})
@@ -583,18 +600,6 @@ func TestAccAWSRDSCluster_Tags(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"cluster_identifier_prefix",
-					"master_password",
-					"skip_final_snapshot",
-					"snapshot_identifier",
-				},
-			},
-			{
 				Config: testAccAWSClusterConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSClusterExists(resourceName, &dbCluster2),
@@ -633,18 +638,6 @@ func TestAccAWSRDSCluster_EnabledCloudwatchLogsExports_MySQL(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "audit"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"cluster_identifier_prefix",
-					"master_password",
-					"skip_final_snapshot",
-					"snapshot_identifier",
-				},
 			},
 			{
 				Config: testAccAWSClusterConfigEnabledCloudwatchLogsExports2(rName, "slowquery", "error"),
@@ -686,18 +679,6 @@ func TestAccAWSRDSCluster_EnabledCloudwatchLogsExports_Postgresql(t *testing.T) 
 					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "postgresql"),
 				),
 			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"cluster_identifier_prefix",
-					"master_password",
-					"skip_final_snapshot",
-					"snapshot_identifier",
-				},
-			},
 		},
 	})
 }
@@ -718,18 +699,6 @@ func TestAccAWSRDSCluster_updateIamRoles(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSClusterExists(resourceName, &v),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"cluster_identifier_prefix",
-					"master_password",
-					"skip_final_snapshot",
-					"snapshot_identifier",
-				},
 			},
 			{
 				Config: testAccAWSClusterConfigAddIamRoles(ri),
@@ -769,18 +738,6 @@ func TestAccAWSRDSCluster_kmsKey(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName, "arn"),
 				),
 			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"cluster_identifier_prefix",
-					"master_password",
-					"skip_final_snapshot",
-					"snapshot_identifier",
-				},
-			},
 		},
 	})
 }
@@ -805,18 +762,6 @@ func TestAccAWSRDSCluster_encrypted(t *testing.T) {
 						resourceName, "db_cluster_parameter_group_name", "default.aurora5.6"),
 				),
 			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"cluster_identifier_prefix",
-					"master_password",
-					"skip_final_snapshot",
-					"snapshot_identifier",
-				},
-			},
 		},
 	})
 }
@@ -838,18 +783,6 @@ func TestAccAWSRDSCluster_copyTagsToSnapshot(t *testing.T) {
 					testAccCheckAWSClusterExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "true"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"cluster_identifier_prefix",
-					"master_password",
-					"skip_final_snapshot",
-					"snapshot_identifier",
-				},
 			},
 			{
 				Config: testAccAWSClusterConfigWithCopyTagsToSnapshot(rInt, false),
@@ -896,19 +829,6 @@ func TestAccAWSRDSCluster_ReplicationSourceIdentifier_KmsKeyId(t *testing.T) {
 					testAccCheckAWSClusterExistsWithProvider(resourceName2, &replicaCluster, testAccAwsRegionProviderFunc(testAccGetAlternateRegion(), &providers)),
 				),
 			},
-			{
-				Config:            testAccAWSClusterConfigReplicationSourceIdentifierKmsKeyId(rName),
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"cluster_identifier_prefix",
-					"master_password",
-					"skip_final_snapshot",
-					"snapshot_identifier",
-				},
-			},
 		},
 	})
 }
@@ -935,18 +855,6 @@ func TestAccAWSRDSCluster_backupsUpdate(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName, "preferred_maintenance_window", "tue:04:00-tue:04:30"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"cluster_identifier_prefix",
-					"master_password",
-					"skip_final_snapshot",
-					"snapshot_identifier",
-				},
 			},
 			{
 				Config: testAccAWSClusterConfig_backupsUpdate(ri),
@@ -982,18 +890,6 @@ func TestAccAWSRDSCluster_iamAuth(t *testing.T) {
 						resourceName, "iam_database_authentication_enabled", "true"),
 				),
 			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"cluster_identifier_prefix",
-					"master_password",
-					"skip_final_snapshot",
-					"snapshot_identifier",
-				},
-			},
 		},
 	})
 }
@@ -1015,18 +911,6 @@ func TestAccAWSRDSCluster_DeletionProtection(t *testing.T) {
 					testAccCheckAWSClusterExists(resourceName, &dbCluster1),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "true"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"cluster_identifier_prefix",
-					"master_password",
-					"skip_final_snapshot",
-					"snapshot_identifier",
-				},
 			},
 			{
 				Config: testAccAWSRDSClusterConfig_DeletionProtection(rName, false),
@@ -1060,18 +944,6 @@ func TestAccAWSRDSCluster_EngineMode(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"cluster_identifier_prefix",
-					"master_password",
-					"skip_final_snapshot",
-					"snapshot_identifier",
-				},
-			},
-			{
 				Config: testAccAWSRDSClusterConfig_EngineMode(rName, "provisioned"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSClusterExists(resourceName, &dbCluster2),
@@ -1079,18 +951,6 @@ func TestAccAWSRDSCluster_EngineMode(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "engine_mode", "provisioned"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.#", "0"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"cluster_identifier_prefix",
-					"master_password",
-					"skip_final_snapshot",
-					"snapshot_identifier",
-				},
 			},
 		},
 	})
@@ -1115,18 +975,6 @@ func TestAccAWSRDSCluster_EngineMode_Global(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "engine_mode", "global"),
 				),
 			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"cluster_identifier_prefix",
-					"master_password",
-					"skip_final_snapshot",
-					"snapshot_identifier",
-				},
-			},
 		},
 	})
 }
@@ -1149,18 +997,6 @@ func TestAccAWSRDSCluster_EngineMode_Multimaster(t *testing.T) {
 					testAccCheckAWSClusterExists(resourceName, &dbCluster1),
 					resource.TestCheckResourceAttr(resourceName, "engine_mode", "multimaster"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"cluster_identifier_prefix",
-					"master_password",
-					"skip_final_snapshot",
-					"snapshot_identifier",
-				},
 			},
 		},
 	})
@@ -1185,18 +1021,6 @@ func TestAccAWSRDSCluster_EngineMode_ParallelQuery(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "engine_mode", "parallelquery"),
 				),
 			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"cluster_identifier_prefix",
-					"master_password",
-					"skip_final_snapshot",
-					"snapshot_identifier",
-				},
-			},
 		},
 	})
 }
@@ -1220,18 +1044,6 @@ func TestAccAWSRDSCluster_EngineVersion(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "engine", "aurora-postgresql"),
 					resource.TestCheckResourceAttrPair(resourceName, "engine_version", dataSourceName, "version"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"cluster_identifier_prefix",
-					"master_password",
-					"skip_final_snapshot",
-					"snapshot_identifier",
-				},
 			},
 			{
 				Config:      testAccAWSClusterConfig_EngineVersion(true, rInt),
@@ -1261,18 +1073,6 @@ func TestAccAWSRDSCluster_EngineVersionWithPrimaryInstance(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "engine", dataSourceName, "engine"),
 					resource.TestCheckResourceAttrPair(resourceName, "engine_version", dataSourceName, "version"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"cluster_identifier_prefix",
-					"master_password",
-					"skip_final_snapshot",
-					"snapshot_identifier",
-				},
 			},
 			{
 				Config: testAccAWSClusterConfig_EngineVersionWithPrimaryInstance(true, rInt),
@@ -1306,18 +1106,6 @@ func TestAccAWSRDSCluster_GlobalClusterIdentifier_EngineMode_Global(t *testing.T
 					resource.TestCheckResourceAttrPair(resourceName, "global_cluster_identifier", globalClusterResourceName, "id"),
 				),
 			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"cluster_identifier_prefix",
-					"master_password",
-					"skip_final_snapshot",
-					"snapshot_identifier",
-				},
-			},
 		},
 	})
 }
@@ -1340,18 +1128,6 @@ func TestAccAWSRDSCluster_GlobalClusterIdentifier_EngineMode_Global_Add(t *testi
 					testAccCheckAWSClusterExists(resourceName, &dbCluster1),
 					resource.TestCheckResourceAttr(resourceName, "global_cluster_identifier", ""),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"cluster_identifier_prefix",
-					"master_password",
-					"skip_final_snapshot",
-					"snapshot_identifier",
-				},
 			},
 			{
 				Config:      testAccAWSRDSClusterConfig_GlobalClusterIdentifier_EngineMode_Global(rName),
@@ -1380,18 +1156,6 @@ func TestAccAWSRDSCluster_GlobalClusterIdentifier_EngineMode_Global_Remove(t *te
 					testAccCheckAWSClusterExists(resourceName, &dbCluster1),
 					resource.TestCheckResourceAttrPair(resourceName, "global_cluster_identifier", globalClusterResourceName, "id"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"cluster_identifier_prefix",
-					"master_password",
-					"skip_final_snapshot",
-					"snapshot_identifier",
-				},
 			},
 			{
 				Config: testAccAWSRDSClusterConfig_EngineMode_Global(rName),
@@ -1426,18 +1190,6 @@ func TestAccAWSRDSCluster_GlobalClusterIdentifier_EngineMode_Global_Update(t *te
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"cluster_identifier_prefix",
-					"master_password",
-					"skip_final_snapshot",
-					"snapshot_identifier",
-				},
-			},
-			{
 				Config:      testAccAWSRDSClusterConfig_GlobalClusterIdentifier_EngineMode_Global_Update(rName, globalClusterResourceName2),
 				ExpectError: regexp.MustCompile(`Existing RDS Clusters cannot be migrated between existing RDS Global Clusters`),
 			},
@@ -1464,18 +1216,6 @@ func TestAccAWSRDSCluster_GlobalClusterIdentifier_EngineMode_Provisioned(t *test
 					testAccCheckAWSClusterExists(resourceName, &dbCluster1),
 					resource.TestCheckResourceAttrPair(resourceName, "global_cluster_identifier", globalClusterResourceName, "id"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"cluster_identifier_prefix",
-					"master_password",
-					"skip_final_snapshot",
-					"snapshot_identifier",
-				},
 			},
 		},
 	})
@@ -1544,6 +1284,40 @@ func TestAccAWSRDSCluster_GlobalClusterIdentifier_ReplicationSourceIdentifier(t 
 	})
 }
 
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/14457
+func TestAccAWSRDSCluster_GlobalClusterIdentifier_SecondaryClustersWriteForwarding(t *testing.T) {
+	var providers []*schema.Provider
+	var primaryDbCluster, secondaryDbCluster rds.DBCluster
+
+	rNameGlobal := acctest.RandomWithPrefix("tf-acc-test-global")
+	rNamePrimary := acctest.RandomWithPrefix("tf-acc-test-primary")
+	rNameSecondary := acctest.RandomWithPrefix("tf-acc-test-secondary")
+
+	resourceNamePrimary := "aws_rds_cluster.primary"
+	resourceNameSecondary := "aws_rds_cluster.secondary"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccMultipleRegionPreCheck(t, 2)
+			testAccPreCheckAWSRdsGlobalCluster(t)
+		},
+		ErrorCheck:        testAccErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		CheckDestroy:      testAccCheckAWSClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRDSClusterConfig_GlobalClusterIdentifier_SecondaryClustersWriteForwarding(rNameGlobal, rNamePrimary, rNameSecondary),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterExistsWithProvider(resourceNamePrimary, &primaryDbCluster, testAccAwsRegionProviderFunc(testAccGetRegion(), &providers)),
+					testAccCheckAWSClusterExistsWithProvider(resourceNameSecondary, &secondaryDbCluster, testAccAwsRegionProviderFunc(testAccGetAlternateRegion(), &providers)),
+					resource.TestCheckResourceAttr(resourceNameSecondary, "enable_global_write_forwarding", "true"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSRDSCluster_Port(t *testing.T) {
 	var dbCluster1, dbCluster2 rds.DBCluster
 	rInt := acctest.RandInt()
@@ -1561,18 +1335,6 @@ func TestAccAWSRDSCluster_Port(t *testing.T) {
 					testAccCheckAWSClusterExists(resourceName, &dbCluster1),
 					resource.TestCheckResourceAttr(resourceName, "port", "5432"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"cluster_identifier_prefix",
-					"master_password",
-					"skip_final_snapshot",
-					"snapshot_identifier",
-				},
 			},
 			{
 				Config: testAccAWSClusterConfig_Port(rInt, 2345),
@@ -1621,18 +1383,6 @@ func TestAccAWSRDSCluster_ScalingConfiguration(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.timeout_action", "ForceApplyCapacityChange"),
 				),
 			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"cluster_identifier_prefix",
-					"master_password",
-					"skip_final_snapshot",
-					"snapshot_identifier",
-				},
-			},
 		},
 	})
 }
@@ -1662,18 +1412,6 @@ func TestAccAWSRDSCluster_ScalingConfiguration_DefaultMinCapacity(t *testing.T) 
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.timeout_action", "RollbackCapacityChange"),
 				),
 			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"cluster_identifier_prefix",
-					"master_password",
-					"skip_final_snapshot",
-					"snapshot_identifier",
-				},
-			},
 		},
 	})
 }
@@ -1700,18 +1438,6 @@ func TestAccAWSRDSCluster_SnapshotIdentifier(t *testing.T) {
 					testAccCheckDbClusterSnapshotExists(snapshotResourceName, &dbClusterSnapshot),
 					testAccCheckAWSClusterExists(resourceName, &dbCluster),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"cluster_identifier_prefix",
-					"master_password",
-					"skip_final_snapshot",
-					"snapshot_identifier",
-				},
 			},
 		},
 	})
@@ -1740,18 +1466,6 @@ func TestAccAWSRDSCluster_SnapshotIdentifier_DeletionProtection(t *testing.T) {
 					testAccCheckAWSClusterExists(resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "true"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"cluster_identifier_prefix",
-					"master_password",
-					"skip_final_snapshot",
-					"snapshot_identifier",
-				},
 			},
 			// Ensure we disable deletion protection before attempting to delete :)
 			{
@@ -1791,18 +1505,6 @@ func TestAccAWSRDSCluster_SnapshotIdentifier_EngineMode_ParallelQuery(t *testing
 					resource.TestCheckResourceAttr(resourceName, "engine_mode", "parallelquery"),
 				),
 			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"cluster_identifier_prefix",
-					"master_password",
-					"skip_final_snapshot",
-					"snapshot_identifier",
-				},
-			},
 		},
 	})
 }
@@ -1830,18 +1532,6 @@ func TestAccAWSRDSCluster_SnapshotIdentifier_EngineMode_Provisioned(t *testing.T
 					testAccCheckAWSClusterExists(resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "engine_mode", "provisioned"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"cluster_identifier_prefix",
-					"master_password",
-					"skip_final_snapshot",
-					"snapshot_identifier",
-				},
 			},
 		},
 	})
@@ -1875,18 +1565,6 @@ func TestAccAWSRDSCluster_SnapshotIdentifier_EngineMode_Serverless(t *testing.T)
 					resource.TestCheckResourceAttr(resourceName, "engine_mode", "serverless"),
 				),
 			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"cluster_identifier_prefix",
-					"master_password",
-					"skip_final_snapshot",
-					"snapshot_identifier",
-				},
-			},
 		},
 	})
 }
@@ -1916,18 +1594,6 @@ func TestAccAWSRDSCluster_SnapshotIdentifier_EngineVersion_Different(t *testing.
 					testAccCheckAWSClusterExists(resourceName, &dbCluster),
 					resource.TestCheckResourceAttrPair(resourceName, "engine_version", dataSourceName, "version"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"cluster_identifier_prefix",
-					"master_password",
-					"skip_final_snapshot",
-					"snapshot_identifier",
-				},
 			},
 		},
 	})
@@ -1959,18 +1625,6 @@ func TestAccAWSRDSCluster_SnapshotIdentifier_EngineVersion_Equal(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "engine_version", dataSourceName, "version"),
 				),
 			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"cluster_identifier_prefix",
-					"master_password",
-					"skip_final_snapshot",
-					"snapshot_identifier",
-				},
-			},
 		},
 	})
 }
@@ -2000,18 +1654,6 @@ func TestAccAWSRDSCluster_SnapshotIdentifier_KmsKeyId(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName, "arn"),
 				),
 			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"cluster_identifier_prefix",
-					"master_password",
-					"skip_final_snapshot",
-					"snapshot_identifier",
-				},
-			},
 		},
 	})
 }
@@ -2039,18 +1681,6 @@ func TestAccAWSRDSCluster_SnapshotIdentifier_MasterPassword(t *testing.T) {
 					testAccCheckAWSClusterExists(resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "master_password", "password1"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"cluster_identifier_prefix",
-					"master_password",
-					"skip_final_snapshot",
-					"snapshot_identifier",
-				},
 			},
 		},
 	})
@@ -2082,18 +1712,6 @@ func TestAccAWSRDSCluster_SnapshotIdentifier_MasterUsername(t *testing.T) {
 				// It is not currently possible to update the master username in the RDS API
 				ExpectNonEmptyPlan: true,
 			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"cluster_identifier_prefix",
-					"master_password",
-					"skip_final_snapshot",
-					"snapshot_identifier",
-				},
-			},
 		},
 	})
 }
@@ -2122,18 +1740,6 @@ func TestAccAWSRDSCluster_SnapshotIdentifier_PreferredBackupWindow(t *testing.T)
 					resource.TestCheckResourceAttr(resourceName, "preferred_backup_window", "00:00-08:00"),
 				),
 			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"cluster_identifier_prefix",
-					"master_password",
-					"skip_final_snapshot",
-					"snapshot_identifier",
-				},
-			},
 		},
 	})
 }
@@ -2161,18 +1767,6 @@ func TestAccAWSRDSCluster_SnapshotIdentifier_PreferredMaintenanceWindow(t *testi
 					testAccCheckAWSClusterExists(resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "preferred_maintenance_window", "sun:01:00-sun:01:30"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"cluster_identifier_prefix",
-					"master_password",
-					"skip_final_snapshot",
-					"snapshot_identifier",
-				},
 			},
 		},
 	})
@@ -2203,18 +1797,6 @@ func TestAccAWSRDSCluster_SnapshotIdentifier_Tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"cluster_identifier_prefix",
-					"master_password",
-					"skip_final_snapshot",
-					"snapshot_identifier",
-				},
-			},
 		},
 	})
 }
@@ -2241,18 +1823,6 @@ func TestAccAWSRDSCluster_SnapshotIdentifier_VpcSecurityGroupIds(t *testing.T) {
 					testAccCheckDbClusterSnapshotExists(snapshotResourceName, &dbClusterSnapshot),
 					testAccCheckAWSClusterExists(resourceName, &dbCluster),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"cluster_identifier_prefix",
-					"master_password",
-					"skip_final_snapshot",
-					"snapshot_identifier",
-				},
 			},
 		},
 	})
@@ -2287,18 +1857,6 @@ func TestAccAWSRDSCluster_SnapshotIdentifier_VpcSecurityGroupIds_Tags(t *testing
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"cluster_identifier_prefix",
-					"master_password",
-					"skip_final_snapshot",
-					"snapshot_identifier",
-				},
-			},
 		},
 	})
 }
@@ -2329,17 +1887,35 @@ func TestAccAWSRDSCluster_SnapshotIdentifier_EncryptedRestore(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "true"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccAWSRDSCluster_EnableHttpEndpoint(t *testing.T) {
+	var dbCluster rds.DBCluster
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSClusterDestroy,
+		Steps: []resource.TestStep{
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"cluster_identifier_prefix",
-					"master_password",
-					"skip_final_snapshot",
-					"snapshot_identifier",
-				},
+				Config: testAccAWSRDSClusterConfig_EnableHttpEndpoint(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterExists(resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "enable_http_endpoint", "true"),
+				),
+			},
+			{
+				Config: testAccAWSRDSClusterConfig_EnableHttpEndpoint(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterExists(resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "enable_http_endpoint", "false"),
+				),
 			},
 		},
 	})
@@ -2480,48 +2056,6 @@ func testAccCheckAWSClusterRecreated(i, j *rds.DBCluster) resource.TestCheckFunc
 	}
 }
 
-func TestAccAWSRDSCluster_EnableHttpEndpoint(t *testing.T) {
-	var dbCluster rds.DBCluster
-
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_rds_cluster.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSClusterDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSRDSClusterConfig_EnableHttpEndpoint(rName, true),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSClusterExists(resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "enable_http_endpoint", "true"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"cluster_identifier_prefix",
-					"master_password",
-					"skip_final_snapshot",
-					"snapshot_identifier",
-				},
-			},
-			{
-				Config: testAccAWSRDSClusterConfig_EnableHttpEndpoint(rName, false),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSClusterExists(resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "enable_http_endpoint", "false"),
-				),
-			},
-		},
-	})
-}
-
 func testAccAWSClusterConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
@@ -2567,6 +2101,62 @@ resource "aws_rds_cluster_instance" "test" {
   }
 }
 `, allowMajorVersionUpgrade, rName, engine, engineVersion)
+}
+
+func testAccAWSClusterConfig_AllowMajorVersionUpgradeWithCustomParameters(rName string, allowMajorVersionUpgrade bool, engine string, engineVersion string, applyImmediate bool) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  allow_major_version_upgrade      = %[1]t
+  apply_immediately                = true
+  cluster_identifier               = %[2]q
+  db_cluster_parameter_group_name  = aws_rds_cluster_parameter_group.test.name
+  db_instance_parameter_group_name = aws_db_parameter_group.test.name
+  engine                           = %[3]q
+  engine_version                   = %[4]q
+  master_password                  = "mustbeeightcharaters"
+  master_username                  = "test"
+  skip_final_snapshot              = true
+}
+
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = aws_rds_cluster.test.engine
+  engine_version             = aws_rds_cluster.test.engine_version
+  preferred_instance_classes = ["db.t3.medium", "db.r5.large", "db.r6g.large"]
+}
+
+# Upgrading requires a healthy primary instance
+resource "aws_rds_cluster_instance" "test" {
+  apply_immediately       = %[5]t
+  cluster_identifier      = aws_rds_cluster.test.id
+  db_parameter_group_name = aws_db_parameter_group.test.name
+  engine                  = data.aws_rds_orderable_db_instance.test.engine
+  engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
+  identifier              = %[2]q
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+
+  lifecycle {
+    ignore_changes = [engine_version]
+  }
+}
+
+resource "aws_rds_cluster_parameter_group" "test" {
+  name_prefix = %[2]q
+  family      = %[6]q
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_db_parameter_group" "test" {
+  name_prefix = %[2]q
+  family      = %[6]q
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+`, allowMajorVersionUpgrade, rName, engine, engineVersion, applyImmediate, engine+strings.Split(engineVersion, ".")[0])
 }
 
 func testAccAWSClusterConfig_MajorVersionOnly(rName string, allowMajorVersionUpgrade bool, engine string, engineVersion string) string {
@@ -3764,6 +3354,104 @@ resource "aws_rds_cluster" "secondary" {
   engine                    = aws_rds_global_cluster.test.engine
   engine_version            = aws_rds_global_cluster.test.engine_version
   depends_on                = [aws_rds_cluster_instance.primary]
+
+  lifecycle {
+    ignore_changes = [
+      replication_source_identifier,
+    ]
+  }
+}
+
+resource "aws_rds_cluster_instance" "secondary" {
+  provider           = "awsalternate"
+  identifier         = "%[3]s"
+  cluster_identifier = aws_rds_cluster.secondary.id
+  instance_class     = "db.r4.large" # only db.r4 or db.r5 are valid for Aurora global db
+  engine             = aws_rds_cluster.secondary.engine
+  engine_version     = aws_rds_cluster.secondary.engine_version
+}
+`, rNameGlobal, rNamePrimary, rNameSecondary))
+}
+
+func testAccAWSRDSClusterConfig_GlobalClusterIdentifier_SecondaryClustersWriteForwarding(rNameGlobal, rNamePrimary, rNameSecondary string) string {
+	return composeConfig(
+		testAccMultipleRegionProviderConfig(2),
+		fmt.Sprintf(`
+data "aws_region" "current" {}
+
+data "aws_availability_zones" "alternate" {
+  provider = "awsalternate"
+  state    = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_rds_global_cluster" "test" {
+  global_cluster_identifier = "%[1]s"
+  engine                    = "aurora-mysql"
+  engine_version            = "5.7.mysql_aurora.2.08.1"
+}
+
+resource "aws_rds_cluster" "primary" {
+  cluster_identifier        = "%[2]s"
+  database_name             = "mydb"
+  master_username           = "foo"
+  master_password           = "barbarbar"
+  skip_final_snapshot       = true
+  global_cluster_identifier = aws_rds_global_cluster.test.id
+  engine                    = aws_rds_global_cluster.test.engine
+  engine_version            = aws_rds_global_cluster.test.engine_version
+}
+
+resource "aws_rds_cluster_instance" "primary" {
+  identifier         = "%[2]s"
+  cluster_identifier = aws_rds_cluster.primary.id
+  instance_class     = "db.r4.large" # only db.r4 or db.r5 are valid for Aurora global db
+  engine             = aws_rds_cluster.primary.engine
+  engine_version     = aws_rds_cluster.primary.engine_version
+}
+
+resource "aws_vpc" "alternate" {
+  provider   = "awsalternate"
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "%[3]s"
+  }
+}
+
+resource "aws_subnet" "alternate" {
+  provider          = "awsalternate"
+  count             = 3
+  vpc_id            = aws_vpc.alternate.id
+  availability_zone = data.aws_availability_zones.alternate.names[count.index]
+  cidr_block        = "10.0.${count.index}.0/24"
+
+  tags = {
+    Name = "%[3]s"
+  }
+}
+
+resource "aws_db_subnet_group" "alternate" {
+  provider   = "awsalternate"
+  name       = "%[3]s"
+  subnet_ids = aws_subnet.alternate[*].id
+}
+
+resource "aws_rds_cluster" "secondary" {
+  provider                       = "awsalternate"
+  cluster_identifier             = "%[3]s"
+  db_subnet_group_name           = aws_db_subnet_group.alternate.name
+  skip_final_snapshot            = true
+  source_region                  = data.aws_region.current.name
+  global_cluster_identifier      = aws_rds_global_cluster.test.id
+  enable_global_write_forwarding = true
+  engine                         = aws_rds_global_cluster.test.engine
+  engine_version                 = aws_rds_global_cluster.test.engine_version
+  depends_on                     = [aws_rds_cluster_instance.primary]
 
   lifecycle {
     ignore_changes = [

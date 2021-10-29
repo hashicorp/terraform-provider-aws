@@ -11,18 +11,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	tflex "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/lex"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/lex/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/lex/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
-)
-
-const (
-	LexBotCreateTimeout = 1 * time.Minute
-	LexBotUpdateTimeout = 1 * time.Minute
-	LexBotDeleteTimeout = 5 * time.Minute
-	LexBotVersionLatest = "$LATEST"
 )
 
 func resourceAwsLexBot() *schema.Resource {
@@ -43,9 +37,9 @@ func resourceAwsLexBot() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(LexBotCreateTimeout),
-			Update: schema.DefaultTimeout(LexBotUpdateTimeout),
-			Delete: schema.DefaultTimeout(LexBotDeleteTimeout),
+			Create: schema.DefaultTimeout(5 * time.Minute),
+			Update: schema.DefaultTimeout(5 * time.Minute),
+			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -225,8 +219,8 @@ var validateLexBotVersion = validation.All(
 
 func resourceAwsLexBotCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).lexmodelconn
-	name := d.Get("name").(string)
 
+	name := d.Get("name").(string)
 	input := &lexmodelbuildingservice.PutBotInput{
 		AbortStatement:          expandLexStatement(d.Get("abort_statement")),
 		ChildDirected:           aws.Bool(d.Get("child_directed").(bool)),
@@ -254,29 +248,27 @@ func resourceAwsLexBotCreate(d *schema.ResourceData, meta interface{}) error {
 		input.VoiceId = aws.String(v.(string))
 	}
 
-	err := resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		output, err := conn.PutBot(input)
+	var output *lexmodelbuildingservice.PutBotOutput
+	_, err := tfresource.RetryWhenAwsErrCodeEquals(d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+		var err error
 
-		if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeConflictException) {
+		if output != nil {
 			input.Checksum = output.Checksum
-			return resource.RetryableError(fmt.Errorf("%q bot still creating, another operation is pending: %s", d.Id(), err))
 		}
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
+		output, err = conn.PutBot(input)
 
-		return nil
-	})
-
-	if tfresource.TimedOut(err) { // nosemgrep: helper-schema-TimeoutError-check-doesnt-return-output
-		_, err = conn.PutBot(input)
-	}
+		return output, err
+	}, lexmodelbuildingservice.ErrCodeConflictException)
 
 	if err != nil {
-		return fmt.Errorf("error creating bot %s: %w", name, err)
+		return fmt.Errorf("error creating Lex Bot (%s): %w", name, err)
 	}
 
-	d.SetId(name)
+	d.SetId(aws.StringValue(output.Name))
+
+	if _, err := waiter.BotVersionCreated(conn, name, tflex.LexBotVersionLatest, d.Timeout(schema.TimeoutCreate)); err != nil {
+		return fmt.Errorf("error waiting for Lex Bot (%s) create: %w", d.Id(), err)
+	}
 
 	return resourceAwsLexBotRead(d, meta)
 }
@@ -284,17 +276,16 @@ func resourceAwsLexBotCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsLexBotRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).lexmodelconn
 
-	resp, err := conn.GetBot(&lexmodelbuildingservice.GetBotInput{
-		Name:           aws.String(d.Id()),
-		VersionOrAlias: aws.String(LexBotVersionLatest),
-	})
-	if isAWSErr(err, lexmodelbuildingservice.ErrCodeNotFoundException, "") {
-		log.Printf("[WARN] Bot (%s) not found, removing from state", d.Id())
+	output, err := finder.BotVersionByName(conn, d.Id(), tflex.LexBotVersionLatest)
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Lex Bot (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
+
 	if err != nil {
-		return fmt.Errorf("error getting intent %s: %w", d.Id(), err)
+		return fmt.Errorf("error reading Lex Bot (%s): %w", d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -313,40 +304,40 @@ func resourceAwsLexBotRead(d *schema.ResourceData, meta interface{}) error {
 		processBehavior = v.(string)
 	}
 
-	d.Set("checksum", resp.Checksum)
-	d.Set("child_directed", resp.ChildDirected)
-	d.Set("created_date", resp.CreatedDate.Format(time.RFC3339))
-	d.Set("description", resp.Description)
-	d.Set("detect_sentiment", resp.DetectSentiment)
-	d.Set("enable_model_improvements", resp.EnableModelImprovements)
-	d.Set("failure_reason", resp.FailureReason)
-	d.Set("idle_session_ttl_in_seconds", resp.IdleSessionTTLInSeconds)
-	d.Set("intent", flattenLexIntents(resp.Intents))
-	d.Set("last_updated_date", resp.LastUpdatedDate.Format(time.RFC3339))
-	d.Set("locale", resp.Locale)
-	d.Set("name", resp.Name)
-	d.Set("nlu_intent_confidence_threshold", resp.NluIntentConfidenceThreshold)
+	d.Set("checksum", output.Checksum)
+	d.Set("child_directed", output.ChildDirected)
+	d.Set("created_date", output.CreatedDate.Format(time.RFC3339))
+	d.Set("description", output.Description)
+	d.Set("detect_sentiment", output.DetectSentiment)
+	d.Set("enable_model_improvements", output.EnableModelImprovements)
+	d.Set("failure_reason", output.FailureReason)
+	d.Set("idle_session_ttl_in_seconds", output.IdleSessionTTLInSeconds)
+	d.Set("intent", flattenLexIntents(output.Intents))
+	d.Set("last_updated_date", output.LastUpdatedDate.Format(time.RFC3339))
+	d.Set("locale", output.Locale)
+	d.Set("name", output.Name)
+	d.Set("nlu_intent_confidence_threshold", output.NluIntentConfidenceThreshold)
 	d.Set("process_behavior", processBehavior)
-	d.Set("status", resp.Status)
+	d.Set("status", output.Status)
 
-	if resp.AbortStatement != nil {
-		d.Set("abort_statement", flattenLexStatement(resp.AbortStatement))
+	if output.AbortStatement != nil {
+		d.Set("abort_statement", flattenLexStatement(output.AbortStatement))
 	}
 
-	if resp.ClarificationPrompt != nil {
-		d.Set("clarification_prompt", flattenLexPrompt(resp.ClarificationPrompt))
+	if output.ClarificationPrompt != nil {
+		d.Set("clarification_prompt", flattenLexPrompt(output.ClarificationPrompt))
 	}
 
-	version, err := getLatestLexBotVersion(conn, &lexmodelbuildingservice.GetBotVersionsInput{
-		Name: aws.String(d.Id()),
-	})
+	version, err := finder.LatestBotVersionByName(conn, d.Id())
+
 	if err != nil {
-		return fmt.Errorf("error reading Lex Bot (%s) version: %w", d.Id(), err)
+		return fmt.Errorf("error reading Lex Bot (%s) latest version: %w", d.Id(), err)
 	}
+
 	d.Set("version", version)
 
-	if resp.VoiceId != nil {
-		d.Set("voice_id", resp.VoiceId)
+	if output.VoiceId != nil {
+		d.Set("voice_id", output.VoiceId)
 	}
 
 	return nil
@@ -382,25 +373,16 @@ func resourceAwsLexBotUpdate(d *schema.ResourceData, meta interface{}) error {
 		input.VoiceId = aws.String(v.(string))
 	}
 
-	err := resource.Retry(d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
-		_, err := conn.PutBot(input)
-
-		if isAWSErr(err, lexmodelbuildingservice.ErrCodeConflictException, "") {
-			return resource.RetryableError(fmt.Errorf("%q: bot still updating", d.Id()))
-		}
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.PutBot(input)
-	}
+	_, err := tfresource.RetryWhenAwsErrCodeEquals(d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
+		return conn.PutBot(input)
+	}, lexmodelbuildingservice.ErrCodeConflictException)
 
 	if err != nil {
-		return fmt.Errorf("error updating bot %s: %w", d.Id(), err)
+		return fmt.Errorf("error updating Lex Bot (%s): %w", d.Id(), err)
+	}
+
+	if _, err = waiter.BotVersionCreated(conn, d.Id(), tflex.LexBotVersionLatest, d.Timeout(schema.TimeoutUpdate)); err != nil {
+		return fmt.Errorf("error waiting for Lex Bot (%s) update: %w", d.Id(), err)
 	}
 
 	return resourceAwsLexBotRead(d, meta)
@@ -413,62 +395,24 @@ func resourceAwsLexBotDelete(d *schema.ResourceData, meta interface{}) error {
 		Name: aws.String(d.Id()),
 	}
 
-	err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
-		_, err := conn.DeleteBot(input)
+	log.Printf("[DEBUG] Deleting Lex Bot: (%s)", d.Id())
+	_, err := tfresource.RetryWhenAwsErrCodeEquals(d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+		return conn.DeleteBot(input)
+	}, lexmodelbuildingservice.ErrCodeConflictException)
 
-		if isAWSErr(err, lexmodelbuildingservice.ErrCodeConflictException, "") {
-			return resource.RetryableError(fmt.Errorf("%q: there is a pending operation, bot still deleting", d.Id()))
-		}
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
+	if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeNotFoundException) {
 		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteBot(input)
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting bot %s: %w", d.Id(), err)
+		return fmt.Errorf("error deleting Lex Bot (%s): %w", d.Id(), err)
 	}
 
-	_, err = waiter.LexBotDeleted(conn, d.Id())
-
-	return err
-}
-
-func getLatestLexBotVersion(conn *lexmodelbuildingservice.LexModelBuildingService, input *lexmodelbuildingservice.GetBotVersionsInput) (string, error) {
-	version := LexBotVersionLatest
-
-	for {
-		page, err := conn.GetBotVersions(input)
-		if err != nil {
-			return "", err
-		}
-
-		// At least 1 version will always be returned.
-		if len(page.Bots) == 1 {
-			break
-		}
-
-		for _, bot := range page.Bots {
-			if *bot.Version == LexBotVersionLatest {
-				continue
-			}
-			if *bot.Version > version {
-				version = *bot.Version
-			}
-		}
-
-		if page.NextToken == nil {
-			break
-		}
-		input.NextToken = page.NextToken
+	if _, err = waiter.BotDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return fmt.Errorf("error waiting for Lex Bot (%s) delete: %w", d.Id(), err)
 	}
 
-	return version, nil
+	return nil
 }
 
 func flattenLexIntents(intents []*lexmodelbuildingservice.Intent) (flattenedIntents []map[string]interface{}) {

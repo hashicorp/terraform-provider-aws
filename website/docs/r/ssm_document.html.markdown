@@ -11,10 +11,11 @@ description: |-
 Provides an SSM Document resource
 
 ~> **NOTE on updating SSM documents:** Only documents with a schema version of 2.0
-or greater can update their content once created, see [SSM Schema Features][1]. To update a document with an older
-schema version you must recreate the resource.
+or greater can update their content once created, see [SSM Schema Features][1]. To update a document with an older schema version you must recreate the resource. Not all document types support a schema version of 2.0 or greater. Refer to [SSM document schema features and examples][2] for information about which schema versions are supported for the respective `document_type`.
 
 ## Example Usage
+
+### Create an ssm document in JSON format
 
 ```terraform
 resource "aws_ssm_document" "foo" {
@@ -39,6 +40,28 @@ resource "aws_ssm_document" "foo" {
       }
     }
   }
+DOC
+}
+```
+
+### Create an ssm document in YAML format
+
+```terraform
+resource "aws_ssm_document" "foo" {
+  name            = "test_document"
+  document_format = "YAML"
+  document_type   = "Command"
+
+  content = <<DOC
+schemaVersion: '1.2'
+description: Check ip configuration of a Linux instance.
+parameters: {}
+runtimeConfig:
+  'aws:runShellScript':
+    properties:
+      - id: '0.aws:runShellScript'
+        runCommand:
+          - ifconfig
 DOC
 }
 ```
@@ -84,6 +107,7 @@ In addition to all arguments above, the following attributes are exported:
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 [1]: http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-ssm-docs.html#document-schemas-features
+[2]: https://docs.aws.amazon.com/systems-manager/latest/userguide/document-schemas-features.html
 
 ## Permissions
 

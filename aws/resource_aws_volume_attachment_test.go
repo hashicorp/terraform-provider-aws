@@ -214,6 +214,40 @@ func TestAccAWSVolumeAttachment_disappears(t *testing.T) {
 	})
 }
 
+func TestAccAWSVolumeAttachment_stopInstance(t *testing.T) {
+	var i ec2.Instance
+	var v ec2.Volume
+	resourceName := "aws_volume_attachment.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckVolumeAttachmentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVolumeAttachmentStopInstanceConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "device_name", "/dev/sdh"),
+					testAccCheckInstanceExists("aws_instance.test", &i),
+					testAccCheckVolumeExists("aws_ebs_volume.test", &v),
+					testAccCheckVolumeAttachmentExists(resourceName, &i, &v),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSVolumeAttachmentImportStateIDFunc(resourceName),
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"stop_instance_before_detaching",
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckVolumeAttachmentExists(n string, i *ec2.Instance, v *ec2.Volume) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -320,6 +354,27 @@ resource "aws_volume_attachment" "test" {
   instance_id = aws_instance.test.id
 }
 `
+}
+
+func testAccVolumeAttachmentStopInstanceConfig(rName string) string {
+	return composeConfig(testAccVolumeAttachmentInstanceOnlyConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_ebs_volume" "test" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  size              = 1000
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_volume_attachment" "test" {
+  device_name                    = "/dev/sdh"
+  volume_id                      = aws_ebs_volume.test.id
+  instance_id                    = aws_instance.test.id
+  stop_instance_before_detaching = "true"
+}
+`, rName))
 }
 
 func testAccVolumeAttachmentConfigSkipDestroy(rName string) string {

@@ -22,6 +22,11 @@ const (
 )
 
 const (
+	ErrCodeClientInvalidHostIDNotFound = "Client.InvalidHostID.NotFound"
+	ErrCodeInvalidHostIDNotFound       = "InvalidHostID.NotFound"
+)
+
+const (
 	ErrCodeInvalidNetworkInterfaceIDNotFound = "InvalidNetworkInterfaceID.NotFound"
 )
 
@@ -87,6 +92,14 @@ const (
 	ErrCodeInvalidPermissionDuplicate = "InvalidPermission.Duplicate"
 	ErrCodeInvalidPermissionMalformed = "InvalidPermission.Malformed"
 	ErrCodeInvalidPermissionNotFound  = "InvalidPermission.NotFound"
+)
+
+const (
+	ErrCodeInvalidFlowLogIdNotFound = "InvalidFlowLogId.NotFound"
+)
+
+const (
+	ErrCodeInvalidPlacementGroupUnknown = "InvalidPlacementGroup.Unknown"
 )
 
 // See https://docs.aws.amazon.com/vm-import/latest/userguide/vmimport-image-import.html#check-import-task-status

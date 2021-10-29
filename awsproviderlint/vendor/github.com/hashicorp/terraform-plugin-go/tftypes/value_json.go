@@ -53,7 +53,7 @@ func jsonUnmarshal(buf []byte, typ Type, p *AttributePath) (Value, error) {
 		return jsonUnmarshalSet(buf, typ.(Set).ElementType, p)
 
 	case typ.Is(Map{}):
-		return jsonUnmarshalMap(buf, typ.(Map).AttributeType, p)
+		return jsonUnmarshalMap(buf, typ.(Map).ElementType, p)
 	case typ.Is(Tuple{}):
 		return jsonUnmarshalTuple(buf, typ.(Tuple).ElementTypes, p)
 	case typ.Is(Object{}):
@@ -216,7 +216,7 @@ func jsonUnmarshalList(buf []byte, elementType Type, p *AttributePath) (Value, e
 	// distinction, so we'll allow it.
 	vals := []Value{}
 
-	var idx int64
+	var idx int
 	for dec.More() {
 		innerPath := p.WithElementKeyInt(idx)
 		// update the index
@@ -355,8 +355,20 @@ func jsonUnmarshalMap(buf []byte, attrType Type, p *AttributePath) (Value, error
 		return Value{}, p.NewErrorf("invalid JSON, expected %q, got %q", json.Delim('}'), tok)
 	}
 
+	elTyp := attrType
+	if attrType.Is(DynamicPseudoType) {
+		var elements []Value
+		for _, val := range vals {
+			elements = append(elements, val)
+		}
+		elTyp, err = TypeFromElements(elements)
+		if err != nil {
+			return Value{}, p.NewErrorf("invalid elements for map: %w", err)
+		}
+	}
+
 	return NewValue(Map{
-		AttributeType: attrType,
+		ElementType: elTyp,
 	}, vals), nil
 }
 
@@ -381,11 +393,12 @@ func jsonUnmarshalTuple(buf []byte, elementTypes []Type, p *AttributePath) (Valu
 	// while generally in Go it's undesirable to treat empty and nil slices
 	// separately, in this case we're surfacing a non-Go-in-origin
 	// distinction, so we'll allow it.
+	types := []Type{}
 	vals := []Value{}
 
-	var idx int64
+	var idx int
 	for dec.More() {
-		if idx >= int64(len(elementTypes)) {
+		if idx >= len(elementTypes) {
 			return Value{}, p.NewErrorf("too many tuple elements (only have types for %d)", len(elementTypes))
 		}
 
@@ -402,6 +415,7 @@ func jsonUnmarshalTuple(buf []byte, elementTypes []Type, p *AttributePath) (Valu
 		if err != nil {
 			return Value{}, err
 		}
+		types = append(types, val.Type())
 		vals = append(vals, val)
 	}
 
@@ -418,7 +432,7 @@ func jsonUnmarshalTuple(buf []byte, elementTypes []Type, p *AttributePath) (Valu
 	}
 
 	return NewValue(Tuple{
-		ElementTypes: elementTypes,
+		ElementTypes: types,
 	}, vals), nil
 }
 
@@ -433,6 +447,7 @@ func jsonUnmarshalObject(buf []byte, attrTypes map[string]Type, p *AttributePath
 		return Value{}, p.NewErrorf("invalid JSON, expected %q, got %q", json.Delim('{'), tok)
 	}
 
+	types := map[string]Type{}
 	vals := map[string]Value{}
 	for dec.More() {
 		innerPath := p.WithElementKeyValue(NewValue(String, UnknownValue))
@@ -459,6 +474,7 @@ func jsonUnmarshalObject(buf []byte, attrTypes map[string]Type, p *AttributePath
 		if err != nil {
 			return Value{}, err
 		}
+		types[key] = val.Type()
 		vals[key] = val
 	}
 
@@ -478,6 +494,6 @@ func jsonUnmarshalObject(buf []byte, attrTypes map[string]Type, p *AttributePath
 	}
 
 	return NewValue(Object{
-		AttributeTypes: attrTypes,
+		AttributeTypes: types,
 	}, vals), nil
 }

@@ -8,7 +8,7 @@ import (
 // Map is a Terraform type representing an unordered collection of elements,
 // all of the same type, each identifiable with a unique string key.
 type Map struct {
-	AttributeType Type
+	ElementType Type
 
 	// used to make this type uncomparable
 	// see https://golang.org/ref/spec#Comparison_operators
@@ -17,44 +17,47 @@ type Map struct {
 }
 
 // Equal returns true if the two Maps are exactly equal. Unlike Is, passing in
-// a Map with no AttributeType will always return false.
-func (m Map) Equal(o Map) bool {
-	return m.equals(o, true)
-}
-
-// Is returns whether `t` is a Map type or not. If `t` is an instance of the
-// Map type and its AttributeType property is not nil, it will only return true
-// if its AttributeType is considered the same type as `m`'s AttributeType.
-func (m Map) Is(t Type) bool {
-	return m.equals(t, false)
-}
-
-func (m Map) equals(t Type, exact bool) bool {
-	v, ok := t.(Map)
+// a Map with no ElementType will always return false.
+func (m Map) Equal(o Type) bool {
+	v, ok := o.(Map)
 	if !ok {
 		return false
 	}
-	if v.AttributeType == nil || m.AttributeType == nil {
+	if v.ElementType == nil || m.ElementType == nil {
 		// when doing exact comparisons, we can't compare types that
 		// don't have element types set, so we just consider them not
 		// equal
-		//
-		// when doing inexact comparisons, the absence of an element
-		// type just means "is this a Map?" We know it is, so return
-		// true if and only if m has an ElementType and t doesn't. This
-		// behavior only makes sense if the user is trying to see if a
-		// proper type is a map, so we want to ensure that the method
-		// receiver always has an element type.
-		if exact {
-			return false
-		}
-		return m.AttributeType != nil
+		return false
 	}
-	return m.AttributeType.equals(v.AttributeType, exact)
+	return m.ElementType.Equal(v.ElementType)
+}
+
+// UsableAs returns whether the two Maps are type compatible.
+//
+// If the other type is DynamicPseudoType, it will return true.
+// If the other type is not a Map, it will return false.
+// If the other Map does not have a type compatible ElementType, it will
+// return false.
+func (m Map) UsableAs(o Type) bool {
+	if o.Is(DynamicPseudoType) {
+		return true
+	}
+	v, ok := o.(Map)
+	if !ok {
+		return false
+	}
+	return m.ElementType.UsableAs(v.ElementType)
+}
+
+// Is returns whether `t` is a Map type or not. It does not perform any
+// ElementType checks.
+func (m Map) Is(t Type) bool {
+	_, ok := t.(Map)
+	return ok
 }
 
 func (m Map) String() string {
-	return "tftypes.Map[" + m.AttributeType.String() + "]"
+	return "tftypes.Map[" + m.ElementType.String() + "]"
 }
 
 func (m Map) private() {}
@@ -64,13 +67,13 @@ func (m Map) supportedGoTypes() []string {
 }
 
 // MarshalJSON returns a JSON representation of the full type signature of `m`,
-// including its AttributeType.
+// including its ElementType.
 //
 // Deprecated: this is not meant to be called by third-party code.
 func (m Map) MarshalJSON() ([]byte, error) {
-	attributeType, err := m.AttributeType.MarshalJSON()
+	attributeType, err := m.ElementType.MarshalJSON()
 	if err != nil {
-		return nil, fmt.Errorf("error marshaling tftypes.Map's attribute type %T to JSON: %w", m.AttributeType, err)
+		return nil, fmt.Errorf("error marshaling tftypes.Map's attribute type %T to JSON: %w", m.ElementType, err)
 	}
 	return []byte(`["map",` + string(attributeType) + `]`), nil
 }
@@ -86,18 +89,20 @@ func valueFromMap(typ Type, in interface{}) (Value, error) {
 		var elType Type
 		for _, k := range keys {
 			v := value[k]
-			if err := useTypeAs(v.Type(), typ, NewAttributePath().WithElementKeyString(k)); err != nil {
-				return Value{}, err
+			if v.Type().Is(DynamicPseudoType) && v.IsKnown() {
+				return Value{}, NewAttributePath().WithElementKeyString(k).NewErrorf("invalid value %s for %s", v, v.Type())
+			} else if !v.Type().Is(DynamicPseudoType) && !v.Type().UsableAs(typ) {
+				return Value{}, NewAttributePath().WithElementKeyString(k).NewErrorf("can't use %s as %s", v.Type(), typ)
 			}
 			if elType == nil {
 				elType = v.Type()
 			}
-			if !elType.equals(v.Type(), true) {
+			if !elType.Equal(v.Type()) {
 				return Value{}, fmt.Errorf("maps must only contain one type of element, saw %s and %s", elType, v.Type())
 			}
 		}
 		return Value{
-			typ:   Map{AttributeType: typ},
+			typ:   Map{ElementType: typ},
 			value: value,
 		}, nil
 	default:

@@ -7,6 +7,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
@@ -448,6 +449,54 @@ func (d *ResourceDiff) Id() string {
 		result = d.state.ID
 	}
 	return result
+}
+
+// GetRawConfig returns the cty.Value that Terraform sent the SDK for the
+// config. If no value was sent, or if a null value was sent, the value will be
+// a null value of the resource's type.
+//
+// GetRawConfig is considered experimental and advanced functionality, and
+// familiarity with the Terraform protocol is suggested when using it.
+func (d *ResourceDiff) GetRawConfig() cty.Value {
+	if d.diff != nil {
+		return d.diff.RawConfig
+	}
+	if d.state != nil {
+		return d.state.RawConfig
+	}
+	return cty.NullVal(schemaMap(d.schema).CoreConfigSchema().ImpliedType())
+}
+
+// GetRawState returns the cty.Value that Terraform sent the SDK for the state.
+// If no value was sent, or if a null value was sent, the value will be a null
+// value of the resource's type.
+//
+// GetRawState is considered experimental and advanced functionality, and
+// familiarity with the Terraform protocol is suggested when using it.
+func (d *ResourceDiff) GetRawState() cty.Value {
+	if d.diff != nil {
+		return d.diff.RawState
+	}
+	if d.state != nil {
+		return d.state.RawState
+	}
+	return cty.NullVal(schemaMap(d.schema).CoreConfigSchema().ImpliedType())
+}
+
+// GetRawPlan returns the cty.Value that Terraform sent the SDK for the plan.
+// If no value was sent, or if a null value was sent, the value will be a null
+// value of the resource's type.
+//
+// GetRawPlan is considered experimental and advanced functionality, and
+// familiarity with the Terraform protocol is suggested when using it.
+func (d *ResourceDiff) GetRawPlan() cty.Value {
+	if d.diff != nil {
+		return d.diff.RawPlan
+	}
+	if d.state != nil {
+		return d.state.RawPlan
+	}
+	return cty.NullVal(schemaMap(d.schema).CoreConfigSchema().ImpliedType())
 }
 
 // getChange gets values from two different levels, designed for use in

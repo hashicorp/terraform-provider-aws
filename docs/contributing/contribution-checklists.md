@@ -626,8 +626,8 @@ guidelines.
    through long feedback cycles on a big PR with many resources. We ask you to
    only submit **1 resource at a time**.
 - [ ] __Acceptance tests__: New resources should include acceptance tests
-   covering their behavior. See [Writing Acceptance
-   Tests](#writing-acceptance-tests) below for a detailed guide on how to
+   covering their behavior. See [Writing An Acceptance
+   Test](running-and-writing-acceptance-tests.md#writing-an-acceptance-test) section for a detailed guide on how to
    approach these.
 - [ ] __Resource Naming__: Resources should be named `aws_<service>_<name>`,
    using underscores (`_`) as the separator. Resources are namespaced with the

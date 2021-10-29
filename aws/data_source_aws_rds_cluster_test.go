@@ -10,7 +10,7 @@ import (
 )
 
 func TestAccDataSourceAWSRDSCluster_basic(t *testing.T) {
-	clusterName := fmt.Sprintf("testaccawsrdscluster-basic-%s", acctest.RandString(10))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_rds_cluster.test"
 	resourceName := "aws_rds_cluster.test"
 
@@ -20,7 +20,7 @@ func TestAccDataSourceAWSRDSCluster_basic(t *testing.T) {
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsRdsClusterConfigBasic(clusterName),
+				Config: testAccDataSourceAwsRdsClusterConfigBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "backtrack_window", resourceName, "backtrack_window"),
@@ -38,10 +38,10 @@ func TestAccDataSourceAWSRDSCluster_basic(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAwsRdsClusterConfigBasic(clusterName string) string {
+func testAccDataSourceAwsRdsClusterConfigBasic(rName string) string {
 	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
-  cluster_identifier              = "%[1]s"
+  cluster_identifier              = %[1]q
   database_name                   = "mydb"
   db_cluster_parameter_group_name = "default.aurora5.6"
   db_subnet_group_name            = aws_db_subnet_group.test.name
@@ -58,7 +58,7 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-rds-cluster-data-source-basic"
+    Name = %[1]q
   }
 }
 
@@ -68,7 +68,7 @@ resource "aws_subnet" "a" {
   availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
-    Name = "tf-acc-rds-cluster-data-source-basic"
+    Name = %[1]q
   }
 }
 
@@ -78,17 +78,17 @@ resource "aws_subnet" "b" {
   availability_zone = data.aws_availability_zones.available.names[1]
 
   tags = {
-    Name = "tf-acc-rds-cluster-data-source-basic"
+    Name = %[1]q
   }
 }
 
 resource "aws_db_subnet_group" "test" {
-  name       = "%[1]s"
+  name       = %[1]q
   subnet_ids = [aws_subnet.a.id, aws_subnet.b.id]
 }
 
 data "aws_rds_cluster" "test" {
   cluster_identifier = aws_rds_cluster.test.cluster_identifier
 }
-`, clusterName))
+`, rName))
 }

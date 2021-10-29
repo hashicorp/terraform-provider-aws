@@ -13,6 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/firehose/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func init() {
@@ -27,12 +29,12 @@ func testSweepKinesisFirehoseDeliveryStreams(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-
 	conn := client.(*AWSClient).firehoseconn
 	input := &firehose.ListDeliveryStreamsInput{}
+	sweepResources := make([]*testSweepResource, 0)
 
 	for {
-		output, err := conn.ListDeliveryStreams(input)
+		page, err := conn.ListDeliveryStreams(input)
 
 		if testSweepSkipSweepError(err) {
 			log.Printf("[WARN] Skipping Kinesis Firehose Delivery Streams sweep for %s: %s", region, err)
@@ -40,39 +42,27 @@ func testSweepKinesisFirehoseDeliveryStreams(region string) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("error listing Kinesis Firehose Delivery Streams: %s", err)
+			return fmt.Errorf("error listing Kinesis Firehose Delivery Streams: %w", err)
 		}
 
-		if len(output.DeliveryStreamNames) == 0 {
-			log.Print("[DEBUG] No Kinesis Firehose Delivery Streams to sweep")
-			return nil
+		for _, sn := range page.DeliveryStreamNames {
+			r := resourceAwsKinesisFirehoseDeliveryStream()
+			d := r.Data(nil)
+			d.SetId("???")
+			d.Set("name", sn)
+
+			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
 		}
 
-		for _, deliveryStreamNamePtr := range output.DeliveryStreamNames {
-			input := &firehose.DeleteDeliveryStreamInput{
-				DeliveryStreamName: deliveryStreamNamePtr,
-			}
-			name := aws.StringValue(deliveryStreamNamePtr)
-
-			log.Printf("[INFO] Deleting Kinesis Firehose Delivery Stream: %s", name)
-			_, err := conn.DeleteDeliveryStream(input)
-
-			if isAWSErr(err, firehose.ErrCodeResourceNotFoundException, "") {
-				continue
-			}
-
-			if err != nil {
-				return fmt.Errorf("error deleting Kinesis Firehose Delivery Stream (%s): %s", name, err)
-			}
-
-			if err := waitForKinesisFirehoseDeliveryStreamDeletion(conn, name); err != nil {
-				return fmt.Errorf("error waiting for Kinesis Firehose Delivery Stream (%s) deletion: %s", name, err)
-			}
-		}
-
-		if !aws.BoolValue(output.HasMoreDeliveryStreams) {
+		if !aws.BoolValue(page.HasMoreDeliveryStreams) {
 			break
 		}
+	}
+
+	err = testSweepResourceOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping Kinesis Firehose Delivery Streams (%s): %w", region, err)
 	}
 
 	return nil
@@ -1482,28 +1472,27 @@ func TestAccAWSKinesisFirehoseDeliveryStream_missingProcessingConfiguration(t *t
 	})
 }
 
-func testAccCheckKinesisFirehoseDeliveryStreamExists(n string, stream *firehose.DeliveryStreamDescription) resource.TestCheckFunc {
+func testAccCheckKinesisFirehoseDeliveryStreamExists(n string, v *firehose.DeliveryStreamDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
-		log.Printf("State: %#v", s.RootModule().Resources)
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Kinesis Firehose ID is set")
+			return fmt.Errorf("No Kinesis Firehose Delivery Stream ID is set")
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).firehoseconn
-		describeOpts := &firehose.DescribeDeliveryStreamInput{
-			DeliveryStreamName: aws.String(rs.Primary.Attributes["name"]),
-		}
-		resp, err := conn.DescribeDeliveryStream(describeOpts)
+
+		sn := rs.Primary.Attributes["name"]
+		output, err := finder.DeliveryStreamByName(conn, sn)
+
 		if err != nil {
 			return err
 		}
 
-		*stream = *resp.DeliveryStreamDescription
+		*v = *output
 
 		return nil
 	}
@@ -1697,19 +1686,21 @@ func testAccCheckKinesisFirehoseDeliveryStreamDestroy(s *terraform.State) error 
 		if rs.Type != "aws_kinesis_firehose_delivery_stream" {
 			continue
 		}
+
 		conn := testAccProvider.Meta().(*AWSClient).firehoseconn
-		describeOpts := &firehose.DescribeDeliveryStreamInput{
-			DeliveryStreamName: aws.String(rs.Primary.Attributes["name"]),
-		}
-		resp, err := conn.DescribeDeliveryStream(describeOpts)
-		if err == nil {
-			if resp.DeliveryStreamDescription != nil && *resp.DeliveryStreamDescription.DeliveryStreamStatus != "DELETING" {
-				return fmt.Errorf("Error: Delivery Stream still exists")
-			}
+
+		sn := rs.Primary.Attributes["name"]
+		_, err := finder.DeliveryStreamByName(conn, sn)
+
+		if tfresource.NotFound(err) {
+			continue
 		}
 
-		return nil
+		if err != nil {
+			return err
+		}
 
+		return fmt.Errorf("Kinesis Firehose Delivery Stream %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -2713,16 +2704,8 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 func testAccKinesisFirehoseDeliveryStreamRedshiftConfigBase(rName string, rInt int) string {
 	return composeConfig(
 		fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamBaseConfig, rInt, rInt, rInt),
+		testAccAvailableAZsNoOptInExcludeConfig("usw2-az2", "usgw1-az2"),
 		fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 

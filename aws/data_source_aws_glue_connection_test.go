@@ -34,6 +34,7 @@ func TestAccDataSourceAwsGlueConnection_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "connection_properties", resourceName, "connection_properties"),
 					resource.TestCheckResourceAttrPair(datasourceName, "physical_connection_requirements", resourceName, "physical_connection_requirements"),
 					resource.TestCheckResourceAttrPair(datasourceName, "match_criteria", resourceName, "match_criteria"),
+					resource.TestCheckResourceAttrPair(datasourceName, "tags", resourceName, "tags"),
 				),
 			},
 		},

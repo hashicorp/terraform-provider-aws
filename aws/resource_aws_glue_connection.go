@@ -10,6 +10,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/glue/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsGlueConnection() *schema.Resource {
@@ -21,6 +24,7 @@ func resourceAwsGlueConnection() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
+		CustomizeDiff: SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -89,12 +93,17 @@ func resourceAwsGlueConnection() *schema.Resource {
 					},
 				},
 			},
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
 	}
 }
 
 func resourceAwsGlueConnectionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).glueconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+
 	var catalogID string
 	if v, ok := d.GetOkExists("catalog_id"); ok {
 		catalogID = v.(string)
@@ -106,6 +115,7 @@ func resourceAwsGlueConnectionCreate(d *schema.ResourceData, meta interface{}) e
 	input := &glue.CreateConnectionInput{
 		CatalogId:       aws.String(catalogID),
 		ConnectionInput: expandGlueConnectionInput(d),
+		Tags:            tags.IgnoreAws().GlueTags(),
 	}
 
 	log.Printf("[DEBUG] Creating Glue Connection: %s", input)
@@ -121,33 +131,23 @@ func resourceAwsGlueConnectionCreate(d *schema.ResourceData, meta interface{}) e
 
 func resourceAwsGlueConnectionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).glueconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	catalogID, connectionName, err := decodeGlueConnectionID(d.Id())
 	if err != nil {
 		return err
 	}
 
-	input := &glue.GetConnectionInput{
-		CatalogId: aws.String(catalogID),
-		Name:      aws.String(connectionName),
-	}
-
-	log.Printf("[DEBUG] Reading Glue Connection: %s", input)
-	output, err := conn.GetConnection(input)
-	if err != nil {
-		if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
-			log.Printf("[WARN] Glue Connection (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("error reading Glue Connection (%s): %w", d.Id(), err)
-	}
-
-	connection := output.Connection
-	if connection == nil {
+	connection, err := finder.ConnectionByName(conn, connectionName, catalogID)
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Glue Connection (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error reading Glue Connection (%s): %w", d.Id(), err)
 	}
 
 	connectionArn := arn.ARN{
@@ -173,27 +173,53 @@ func resourceAwsGlueConnectionRead(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("error setting physical_connection_requirements: %w", err)
 	}
 
+	tags, err := keyvaluetags.GlueListTags(conn, connectionArn)
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for Glue Connection (%s): %w", connectionArn, err)
+	}
+
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
+	}
+
 	return nil
 }
 
 func resourceAwsGlueConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).glueconn
 
-	catalogID, connectionName, err := decodeGlueConnectionID(d.Id())
-	if err != nil {
-		return err
+	if d.HasChangesExcept("tags", "tags_all") {
+		catalogID, connectionName, err := decodeGlueConnectionID(d.Id())
+		if err != nil {
+			return err
+		}
+
+		input := &glue.UpdateConnectionInput{
+			CatalogId:       aws.String(catalogID),
+			ConnectionInput: expandGlueConnectionInput(d),
+			Name:            aws.String(connectionName),
+		}
+
+		log.Printf("[DEBUG] Updating Glue Connection: %s", input)
+		_, err = conn.UpdateConnection(input)
+		if err != nil {
+			return fmt.Errorf("error updating Glue Connection (%s): %w", d.Id(), err)
+		}
 	}
 
-	input := &glue.UpdateConnectionInput{
-		CatalogId:       aws.String(catalogID),
-		ConnectionInput: expandGlueConnectionInput(d),
-		Name:            aws.String(connectionName),
-	}
-
-	log.Printf("[DEBUG] Updating Glue Connection: %s", input)
-	_, err = conn.UpdateConnection(input)
-	if err != nil {
-		return fmt.Errorf("error updating Glue Connection (%s): %w", d.Id(), err)
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+		if err := keyvaluetags.GlueUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating tags: %w", err)
+		}
 	}
 
 	return nil

@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	tflex "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/lex"
 )
 
 func init() {
@@ -103,7 +104,7 @@ func TestAccAwsLexIntent_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(rName, "rejection_statement"),
 					resource.TestCheckNoResourceAttr(rName, "sample_utterances"),
 					resource.TestCheckNoResourceAttr(rName, "slot"),
-					resource.TestCheckResourceAttr(rName, "version", LexIntentVersionLatest),
+					resource.TestCheckResourceAttr(rName, "version", tflex.LexIntentVersionLatest),
 				),
 			},
 			{
@@ -658,12 +659,14 @@ func TestAccAwsLexIntent_computeVersion(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: composeConfig(
-					testAccAwsLexIntentConfig_createVersion(testIntentID),
+					testAccAwsLexBotConfig_intent(testIntentID),
 					testAccAwsLexBotConfig_createVersion(testIntentID),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsLexIntentExistsWithVersion(intentResourceName, version, &v1),
 					resource.TestCheckResourceAttr(intentResourceName, "version", version),
+					resource.TestCheckResourceAttr(intentResourceName, "sample_utterances.#", "1"),
+					resource.TestCheckResourceAttr(intentResourceName, "sample_utterances.0", "I would like to pick up flowers"),
 					testAccCheckAwsLexBotExistsWithVersion(botResourceName, version, &v2),
 					resource.TestCheckResourceAttr(botResourceName, "version", version),
 					resource.TestCheckResourceAttr(botResourceName, "intent.0.intent_version", version),
@@ -678,7 +681,7 @@ func TestAccAwsLexIntent_computeVersion(t *testing.T) {
 					testAccCheckAwsLexIntentExistsWithVersion(intentResourceName, updatedVersion, &v1),
 					resource.TestCheckResourceAttr(intentResourceName, "version", updatedVersion),
 					resource.TestCheckResourceAttr(intentResourceName, "sample_utterances.#", "1"),
-					resource.TestCheckResourceAttr(intentResourceName, "sample_utterances.0", "I would like to pick up flowers"),
+					resource.TestCheckResourceAttr(intentResourceName, "sample_utterances.0", "I would not like to pick up flowers"),
 					testAccCheckAwsLexBotExistsWithVersion(botResourceName, updatedVersion, &v2),
 					resource.TestCheckResourceAttr(botResourceName, "version", updatedVersion),
 					resource.TestCheckResourceAttr(botResourceName, "intent.0.intent_version", updatedVersion),
@@ -718,7 +721,7 @@ func testAccCheckAwsLexIntentExistsWithVersion(rName, intentVersion string, outp
 }
 
 func testAccCheckAwsLexIntentExists(rName string, output *lexmodelbuildingservice.GetIntentOutput) resource.TestCheckFunc {
-	return testAccCheckAwsLexIntentExistsWithVersion(rName, LexIntentVersionLatest, output)
+	return testAccCheckAwsLexIntentExistsWithVersion(rName, tflex.LexIntentVersionLatest, output)
 }
 
 func testAccCheckAwsLexIntentNotExists(intentName, intentVersion string) resource.TestCheckFunc {
@@ -1161,7 +1164,7 @@ resource "aws_lex_intent" "test" {
     type = "ReturnIntent"
   }
   sample_utterances = [
-    "I would like to pick up flowers",
+    "I would not like to pick up flowers",
   ]
 }
 `, rName)

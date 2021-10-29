@@ -22,7 +22,7 @@ func TestAccAWSSQSQueuePolicy_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSQSPolicyConfig(rName),
+				Config: testAccAWSSQSQueuePolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSQSQueueExists(queueResourceName, &queueAttributes),
 					resource.TestCheckResourceAttrSet(resourceName, "policy"),
@@ -34,7 +34,7 @@ func TestAccAWSSQSQueuePolicy_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:   testAccAWSSQSPolicyConfig(rName),
+				Config:   testAccAWSSQSQueuePolicyConfig(rName),
 				PlanOnly: true,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "policy", queueResourceName, "policy"),
@@ -57,7 +57,7 @@ func TestAccAWSSQSQueuePolicy_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSQSPolicyConfig(rName),
+				Config: testAccAWSSQSQueuePolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSQSQueueExists(queueResourceName, &queueAttributes),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsSqsQueuePolicy(), resourceName),
@@ -80,7 +80,7 @@ func TestAccAWSSQSQueuePolicy_disappears_queue(t *testing.T) {
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSQSPolicyConfig(rName),
+				Config: testAccAWSSQSQueuePolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSQSQueueExists(queueResourceName, &queueAttributes),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsSqsQueue(), queueResourceName),
@@ -104,7 +104,7 @@ func TestAccAWSSQSQueuePolicy_Update(t *testing.T) {
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSQSPolicyConfig(rName),
+				Config: testAccAWSSQSQueuePolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSQSQueueExists(queueResourceName, &queueAttributes),
 					resource.TestCheckResourceAttrSet(resourceName, "policy"),
@@ -125,7 +125,7 @@ func TestAccAWSSQSQueuePolicy_Update(t *testing.T) {
 	})
 }
 
-func testAccAWSSQSPolicyConfig(rName string) string {
+func testAccAWSSQSQueuePolicyConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sqs_queue" "test" {
   name = %[1]q

@@ -18,7 +18,7 @@ func TestAccAWSDataSourceIAMGroup_basic(t *testing.T) {
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsIAMGroupConfig(groupName),
+				Config: testAccAwsIAMGroupDataSourceConfig(groupName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.aws_iam_group.test", "group_id"),
 					resource.TestCheckResourceAttr("data.aws_iam_group.test", "path", "/"),
@@ -42,7 +42,7 @@ func TestAccAWSDataSourceIAMGroup_users(t *testing.T) {
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsIAMGroupConfigWithUser(groupName, userName, groupMemberShipName, userCount),
+				Config: testAccAwsIAMGroupDataSourceConfigWithUser(groupName, userName, groupMemberShipName, userCount),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.aws_iam_group.test", "group_id"),
 					resource.TestCheckResourceAttr("data.aws_iam_group.test", "path", "/"),
@@ -59,7 +59,7 @@ func TestAccAWSDataSourceIAMGroup_users(t *testing.T) {
 	})
 }
 
-func testAccAwsIAMGroupConfig(name string) string {
+func testAccAwsIAMGroupDataSourceConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_group" "group" {
   name = "%s"
@@ -72,7 +72,7 @@ data "aws_iam_group" "test" {
 `, name)
 }
 
-func testAccAwsIAMGroupConfigWithUser(groupName, userName, membershipName string, userCount int) string {
+func testAccAwsIAMGroupDataSourceConfigWithUser(groupName, userName, membershipName string, userCount int) string {
 	return fmt.Sprintf(`
 resource "aws_iam_group" "group" {
   name = "%s"

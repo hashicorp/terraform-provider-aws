@@ -5,14 +5,14 @@ import (
 	"regexp"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/rds/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func TestAccAWSRDSClusterInstance_basic(t *testing.T) {
@@ -23,7 +23,7 @@ func TestAccAWSRDSClusterInstance_basic(t *testing.T) {
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSClusterDestroy,
+		CheckDestroy: testAccCheckAWSClusterInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSClusterInstanceConfig(acctest.RandInt()),
@@ -71,7 +71,7 @@ func TestAccAWSRDSClusterInstance_isAlreadyBeingDeleted(t *testing.T) {
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSClusterDestroy,
+		CheckDestroy: testAccCheckAWSClusterInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSClusterInstanceConfig(rInt),
@@ -108,7 +108,7 @@ func TestAccAWSRDSClusterInstance_az(t *testing.T) {
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSClusterDestroy,
+		CheckDestroy: testAccCheckAWSClusterInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSClusterInstanceConfig_az(acctest.RandInt()),
@@ -140,7 +140,7 @@ func TestAccAWSRDSClusterInstance_namePrefix(t *testing.T) {
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSClusterDestroy,
+		CheckDestroy: testAccCheckAWSClusterInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSClusterInstanceConfig_namePrefix(rInt),
@@ -172,7 +172,7 @@ func TestAccAWSRDSClusterInstance_generatedName(t *testing.T) {
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSClusterDestroy,
+		CheckDestroy: testAccCheckAWSClusterInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSClusterInstanceConfig_generatedName(acctest.RandInt()),
@@ -204,7 +204,7 @@ func TestAccAWSRDSClusterInstance_kmsKey(t *testing.T) {
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSClusterDestroy,
+		CheckDestroy: testAccCheckAWSClusterInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSClusterInstanceConfigKmsKey(acctest.RandInt()),
@@ -235,15 +235,14 @@ func TestAccAWSRDSClusterInstance_disappears(t *testing.T) {
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSClusterDestroy,
+		CheckDestroy: testAccCheckAWSClusterInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSClusterInstanceConfig(acctest.RandInt()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSClusterInstanceExists(resourceName, &v),
-					testAccAWSClusterInstanceDisappears(&v),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsRDSClusterInstance(), resourceName),
 				),
-				// A non-empty plan is what we want. A crash is what we don't want. :)
 				ExpectNonEmptyPlan: true,
 			},
 		},
@@ -259,7 +258,7 @@ func TestAccAWSRDSClusterInstance_PubliclyAccessible(t *testing.T) {
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSClusterDestroy,
+		CheckDestroy: testAccCheckAWSClusterInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSRDSClusterInstanceConfig_PubliclyAccessible(rName, true),
@@ -297,7 +296,7 @@ func TestAccAWSRDSClusterInstance_CopyTagsToSnapshot(t *testing.T) {
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSClusterDestroy,
+		CheckDestroy: testAccCheckAWSClusterInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSClusterInstanceConfig_CopyTagsToSnapshot(rNameSuffix, true),
@@ -324,79 +323,6 @@ func TestAccAWSRDSClusterInstance_CopyTagsToSnapshot(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccCheckAWSDBClusterInstanceAttributes(v *rds.DBInstance) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if *v.Engine != "aurora" && *v.Engine != "aurora-postgresql" && *v.Engine != "aurora-mysql" {
-			return fmt.Errorf("bad engine, expected \"aurora\", \"aurora-mysql\" or \"aurora-postgresql\": %#v", *v.Engine)
-		}
-
-		if !strings.HasPrefix(*v.DBClusterIdentifier, "tf-aurora-cluster") {
-			return fmt.Errorf("Bad Cluster Identifier prefix:\nexpected: %s\ngot: %s", "tf-aurora-cluster", *v.DBClusterIdentifier)
-		}
-
-		return nil
-	}
-}
-
-func testAccAWSClusterInstanceDisappears(v *rds.DBInstance) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).rdsconn
-		opts := &rds.DeleteDBInstanceInput{
-			DBInstanceIdentifier: v.DBInstanceIdentifier,
-		}
-		if _, err := conn.DeleteDBInstance(opts); err != nil {
-			return err
-		}
-		return resource.Retry(40*time.Minute, func() *resource.RetryError {
-			opts := &rds.DescribeDBInstancesInput{
-				DBInstanceIdentifier: v.DBInstanceIdentifier,
-			}
-			_, err := conn.DescribeDBInstances(opts)
-			if err != nil {
-				dbinstanceerr, ok := err.(awserr.Error)
-				if ok && dbinstanceerr.Code() == rds.ErrCodeDBInstanceNotFoundFault {
-					return nil
-				}
-				return resource.NonRetryableError(
-					fmt.Errorf("Error retrieving DB Instances: %s", err))
-			}
-			return resource.RetryableError(fmt.Errorf(
-				"Waiting for instance to be deleted: %v", v.DBInstanceIdentifier))
-		})
-	}
-}
-
-func testAccCheckAWSClusterInstanceExists(n string, v *rds.DBInstance) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No DB Instance ID is set")
-		}
-
-		conn := testAccProvider.Meta().(*AWSClient).rdsconn
-		resp, err := conn.DescribeDBInstances(&rds.DescribeDBInstancesInput{
-			DBInstanceIdentifier: aws.String(rs.Primary.ID),
-		})
-
-		if err != nil {
-			return err
-		}
-
-		for _, d := range resp.DBInstances {
-			if *d.DBInstanceIdentifier == rs.Primary.ID {
-				*v = *d
-				return nil
-			}
-		}
-
-		return fmt.Errorf("DB Cluster (%s) not found", rs.Primary.ID)
-	}
 }
 
 func TestAccAWSRDSClusterInstance_MonitoringInterval(t *testing.T) {
@@ -576,7 +502,7 @@ func TestAccAWSRDSClusterInstance_PerformanceInsightsEnabled_AuroraMysql1(t *tes
 		PreCheck:     func() { testAccPreCheck(t); testAccRDSPerformanceInsightsDefaultVersionPreCheck(t, engine) },
 		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSClusterDestroy,
+		CheckDestroy: testAccCheckAWSClusterInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSClusterInstanceConfigPerformanceInsightsEnabledAuroraMysql1(rName, engine),
@@ -609,7 +535,7 @@ func TestAccAWSRDSClusterInstance_PerformanceInsightsEnabled_AuroraMysql2(t *tes
 		PreCheck:     func() { testAccPreCheck(t); testAccRDSPerformanceInsightsPreCheck(t, engine, engineVersion) },
 		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSClusterDestroy,
+		CheckDestroy: testAccCheckAWSClusterInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSClusterInstanceConfigPerformanceInsightsEnabledAuroraMysql2(rName, engine, engineVersion),
@@ -641,7 +567,7 @@ func TestAccAWSRDSClusterInstance_PerformanceInsightsEnabled_AuroraPostgresql(t 
 		PreCheck:     func() { testAccPreCheck(t); testAccRDSPerformanceInsightsDefaultVersionPreCheck(t, engine) },
 		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSClusterDestroy,
+		CheckDestroy: testAccCheckAWSClusterInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSClusterInstanceConfigPerformanceInsightsEnabledAuroraPostgresql(rName, engine),
@@ -674,7 +600,7 @@ func TestAccAWSRDSClusterInstance_PerformanceInsightsKmsKeyId_AuroraMysql1(t *te
 		PreCheck:     func() { testAccPreCheck(t); testAccRDSPerformanceInsightsDefaultVersionPreCheck(t, engine) },
 		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSClusterDestroy,
+		CheckDestroy: testAccCheckAWSClusterInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSClusterInstanceConfigPerformanceInsightsKmsKeyIdAuroraMysql1(rName, engine),
@@ -707,7 +633,7 @@ func TestAccAWSRDSClusterInstance_PerformanceInsightsKmsKeyId_AuroraMysql1_Defau
 		PreCheck:     func() { testAccPreCheck(t); testAccRDSPerformanceInsightsDefaultVersionPreCheck(t, engine) },
 		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSClusterDestroy,
+		CheckDestroy: testAccCheckAWSClusterInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSClusterInstanceConfigPerformanceInsightsEnabledAuroraMysql1(rName, engine),
@@ -745,7 +671,7 @@ func TestAccAWSRDSClusterInstance_PerformanceInsightsKmsKeyId_AuroraMysql2(t *te
 		PreCheck:     func() { testAccPreCheck(t); testAccRDSPerformanceInsightsPreCheck(t, engine, engineVersion) },
 		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSClusterDestroy,
+		CheckDestroy: testAccCheckAWSClusterInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSClusterInstanceConfigPerformanceInsightsKmsKeyIdAuroraMysql2(rName, engine, engineVersion),
@@ -779,7 +705,7 @@ func TestAccAWSRDSClusterInstance_PerformanceInsightsKmsKeyId_AuroraMysql2_Defau
 		PreCheck:     func() { testAccPreCheck(t); testAccRDSPerformanceInsightsPreCheck(t, engine, engineVersion) },
 		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSClusterDestroy,
+		CheckDestroy: testAccCheckAWSClusterInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSClusterInstanceConfigPerformanceInsightsEnabledAuroraMysql2(rName, engine, engineVersion),
@@ -805,6 +731,46 @@ func TestAccAWSRDSClusterInstance_PerformanceInsightsKmsKeyId_AuroraMysql2_Defau
 	})
 }
 
+func TestAccAWSRDSClusterInstance_PerformanceInsightsRetentionPeriod(t *testing.T) {
+	var dbInstance rds.DBInstance
+	resourceName := "aws_rds_cluster_instance.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccRDSPerformanceInsightsDefaultVersionPreCheck(t, "aurora") },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSClusterInstanceConfigPerformanceInsightsRetentionPeriod(rName, 731),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_retention_period", "731"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"identifier_prefix",
+				},
+			},
+			{
+				Config: testAccAWSClusterInstanceConfigPerformanceInsightsRetentionPeriod(rName, 7),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_retention_period", "7"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSRDSClusterInstance_PerformanceInsightsKmsKeyId_AuroraPostgresql(t *testing.T) {
 	var dbInstance rds.DBInstance
 	kmsKeyResourceName := "aws_kms_key.test"
@@ -816,7 +782,7 @@ func TestAccAWSRDSClusterInstance_PerformanceInsightsKmsKeyId_AuroraPostgresql(t
 		PreCheck:     func() { testAccPreCheck(t); testAccRDSPerformanceInsightsDefaultVersionPreCheck(t, engine) },
 		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSClusterDestroy,
+		CheckDestroy: testAccCheckAWSClusterInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSClusterInstanceConfigPerformanceInsightsKmsKeyIdAuroraPostgresql(rName, engine),
@@ -849,7 +815,7 @@ func TestAccAWSRDSClusterInstance_PerformanceInsightsKmsKeyId_AuroraPostgresql_D
 		PreCheck:     func() { testAccPreCheck(t); testAccRDSPerformanceInsightsDefaultVersionPreCheck(t, engine) },
 		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSClusterDestroy,
+		CheckDestroy: testAccCheckAWSClusterInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSClusterInstanceConfigPerformanceInsightsEnabledAuroraPostgresql(rName, engine),
@@ -885,7 +851,7 @@ func TestAccAWSRDSClusterInstance_CACertificateIdentifier(t *testing.T) {
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSClusterDestroy,
+		CheckDestroy: testAccCheckAWSClusterInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSRDSClusterInstanceConfig_CACertificateIdentifier(rName),
@@ -961,6 +927,69 @@ func testAccRDSPerformanceInsightsPreCheck(t *testing.T, engine string, engineVe
 	if !supportsPerformanceInsights {
 		t.Skipf("RDS Performance Insights not supported, skipping acceptance test")
 	}
+}
+
+func testAccCheckAWSDBClusterInstanceAttributes(v *rds.DBInstance) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if *v.Engine != "aurora" && *v.Engine != "aurora-postgresql" && *v.Engine != "aurora-mysql" {
+			return fmt.Errorf("bad engine, expected \"aurora\", \"aurora-mysql\" or \"aurora-postgresql\": %#v", *v.Engine)
+		}
+
+		if !strings.HasPrefix(*v.DBClusterIdentifier, "tf-aurora-cluster") {
+			return fmt.Errorf("Bad Cluster Identifier prefix:\nexpected: %s\ngot: %s", "tf-aurora-cluster", *v.DBClusterIdentifier)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckAWSClusterInstanceExists(n string, v *rds.DBInstance) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No RDS Cluster Instance ID is set")
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).rdsconn
+
+		output, err := finder.DBInstanceByID(conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		*v = *output
+
+		return nil
+	}
+}
+
+func testAccCheckAWSClusterInstanceDestroy(s *terraform.State) error {
+	conn := testAccProvider.Meta().(*AWSClient).rdsconn
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_db_instance" {
+			continue
+		}
+
+		_, err := finder.DBInstanceByID(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
+		}
+
+		if err != nil {
+			return err
+		}
+
+		return fmt.Errorf("RDS Cluster Instance %s still exists", rs.Primary.ID)
+	}
+
+	return nil
 }
 
 // Add some random to the name, to avoid collision
@@ -1605,6 +1634,35 @@ resource "aws_rds_cluster_instance" "test" {
   performance_insights_kms_key_id = aws_kms_key.test.arn
 }
 `, rName, engine)
+}
+
+func testAccAWSClusterInstanceConfigPerformanceInsightsRetentionPeriod(rName string, performanceInsightsRetentionPeriod int) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier  = %[1]q
+  database_name       = "mydb"
+  engine              = "aurora"
+  master_password     = "mustbeeightcharacters"
+  master_username     = "foo"
+  skip_final_snapshot = true
+}
+
+data "aws_rds_orderable_db_instance" "test" {
+  engine                        = aws_rds_cluster.test.engine
+  engine_version                = aws_rds_cluster.test.engine_version
+  supports_performance_insights = true
+  preferred_instance_classes    = ["db.t3.medium", "db.r5.large", "db.r4.large"]
+}
+
+resource "aws_rds_cluster_instance" "test" {
+  cluster_identifier                    = aws_rds_cluster.test.id
+  engine                                = aws_rds_cluster.test.engine
+  identifier                            = %[1]q
+  instance_class                        = data.aws_rds_orderable_db_instance.test.instance_class
+  performance_insights_enabled          = true
+  performance_insights_retention_period = %[2]d
+}
+`, rName, performanceInsightsRetentionPeriod)
 }
 
 func testAccAWSRDSClusterInstanceConfig_PubliclyAccessible(rName string, publiclyAccessible bool) string {

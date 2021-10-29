@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -12,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	tfcloudwatchlogs "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatchlogs"
 )
 
 func resourceAwsCloudWatchLogGroup() *schema.Resource {
@@ -138,7 +138,7 @@ func resourceAwsCloudWatchLogGroupRead(d *schema.ResourceData, meta interface{})
 		return nil
 	}
 
-	d.Set("arn", strings.TrimSuffix(aws.StringValue(lg.Arn), ":*"))
+	d.Set("arn", tfcloudwatchlogs.TrimLogGroupARNWildcardSuffix(aws.StringValue(lg.Arn)))
 	d.Set("name", lg.LogGroupName)
 	d.Set("kms_key_id", lg.KmsKeyId)
 	d.Set("retention_in_days", lg.RetentionInDays)

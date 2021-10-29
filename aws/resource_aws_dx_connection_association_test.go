@@ -13,6 +13,7 @@ import (
 )
 
 func TestAccAWSDxConnectionAssociation_basic(t *testing.T) {
+	resourceName := "aws_dx_connection_association.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -22,16 +23,17 @@ func TestAccAWSDxConnectionAssociation_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAwsDxConnectionAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxConnectionAssociationConfig(rName),
+				Config: testAccDxConnectionAssociationConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDxConnectionAssociationExists("aws_dx_connection_association.test"),
+					testAccCheckAwsDxConnectionAssociationExists(resourceName),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAWSDxConnectionAssociation_multiConns(t *testing.T) {
+func TestAccAWSDxConnectionAssociation_LAGOnConnection(t *testing.T) {
+	resourceName := "aws_dx_connection_association.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -41,10 +43,31 @@ func TestAccAWSDxConnectionAssociation_multiConns(t *testing.T) {
 		CheckDestroy: testAccCheckAwsDxConnectionAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxConnectionAssociationConfig_multiConns(rName),
+				Config: testAccDxConnectionAssociationConfigLAGOnConnection(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDxConnectionAssociationExists("aws_dx_connection_association.test1"),
-					testAccCheckAwsDxConnectionAssociationExists("aws_dx_connection_association.test2"),
+					testAccCheckAwsDxConnectionAssociationExists(resourceName),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDxConnectionAssociation_Multiple(t *testing.T) {
+	resourceName1 := "aws_dx_connection_association.test1"
+	resourceName2 := "aws_dx_connection_association.test2"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, directconnect.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsDxConnectionAssociationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDxConnectionAssociationConfigMultiple(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsDxConnectionAssociationExists(resourceName1),
+					testAccCheckAwsDxConnectionAssociationExists(resourceName2),
 				),
 			},
 		},
@@ -98,7 +121,7 @@ func testAccCheckAwsDxConnectionAssociationExists(name string) resource.TestChec
 	}
 }
 
-func testAccDxConnectionAssociationConfig(rName string) string {
+func testAccDxConnectionAssociationConfigBasic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_dx_locations" "test" {}
 
@@ -122,7 +145,37 @@ resource "aws_dx_connection_association" "test" {
 `, rName)
 }
 
-func testAccDxConnectionAssociationConfig_multiConns(rName string) string {
+func testAccDxConnectionAssociationConfigLAGOnConnection(rName string) string {
+	return fmt.Sprintf(`
+data "aws_dx_locations" "test" {}
+
+resource "aws_dx_connection" "test1" {
+  name      = "%[1]s-1"
+  bandwidth = "1Gbps"
+  location  = tolist(data.aws_dx_locations.test.location_codes)[0]
+}
+
+resource "aws_dx_connection" "test2" {
+  name      = "%[1]s-2"
+  bandwidth = "1Gbps"
+  location  = tolist(data.aws_dx_locations.test.location_codes)[0]
+}
+
+resource "aws_dx_lag" "test" {
+  name                  = %[1]q
+  connection_id         = aws_dx_connection.test1.id
+  connections_bandwidth = "1Gbps"
+  location              = tolist(data.aws_dx_locations.test.location_codes)[0]
+}
+
+resource "aws_dx_connection_association" "test" {
+  connection_id = aws_dx_connection.test2.id
+  lag_id        = aws_dx_lag.test.id
+}
+`, rName)
+}
+
+func testAccDxConnectionAssociationConfigMultiple(rName string) string {
 	return fmt.Sprintf(`
 data "aws_dx_locations" "test" {}
 

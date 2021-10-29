@@ -27,9 +27,15 @@ func TimedOut(err error) bool {
 // SetLastError sets the LastError field on the error if supported.
 // If lastErr is nil it is ignored.
 func SetLastError(err, lastErr error) {
-	if te := (*resource.TimeoutError)(nil); errors.As(err, &te) && te.LastError == nil {
-		te.LastError = lastErr
-	} else if use := (*resource.UnexpectedStateError)(nil); errors.As(err, &use) && use.LastError == nil {
-		use.LastError = lastErr
+	switch err := err.(type) {
+	case *resource.TimeoutError:
+		if err.LastError == nil {
+			err.LastError = lastErr
+		}
+
+	case *resource.UnexpectedStateError:
+		if err.LastError == nil {
+			err.LastError = lastErr
+		}
 	}
 }

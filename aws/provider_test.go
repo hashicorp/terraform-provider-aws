@@ -356,6 +356,7 @@ func testAccCheckResourceAttrRegionalReverseDnsService(resourceName, attributeNa
 	}
 }
 
+/*
 // testAccCheckResourceAttrHostnameWithPort ensures the Terraform state regexp matches a formatted DNS hostname with prefix, partition DNS suffix, and given port
 func testAccCheckResourceAttrHostnameWithPort(resourceName, attributeName, serviceName, hostnamePrefix string, port int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -365,6 +366,7 @@ func testAccCheckResourceAttrHostnameWithPort(resourceName, attributeName, servi
 		return resource.TestCheckResourceAttr(resourceName, attributeName, hostname)(s)
 	}
 }
+*/
 
 // testAccCheckResourceAttrPrivateDnsName ensures the Terraform state exactly matches a private DNS name
 //

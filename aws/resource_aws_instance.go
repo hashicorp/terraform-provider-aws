@@ -419,6 +419,12 @@ func resourceAwsInstance() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
+			"placement_partition_number": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
 			"primary_network_interface_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -922,6 +928,9 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	if instance.Placement.GroupName != nil {
 		d.Set("placement_group", instance.Placement.GroupName)
+	}
+	if instance.Placement.PartitionNumber != nil {
+		d.Set("placement_partition_number", instance.Placement.PartitionNumber)
 	}
 	if instance.Placement.Tenancy != nil {
 		d.Set("tenancy", instance.Placement.Tenancy)
@@ -2636,6 +2645,10 @@ func buildAwsInstanceOpts(d *schema.ResourceData, meta interface{}) (*awsInstanc
 	opts.Placement = &ec2.Placement{
 		AvailabilityZone: aws.String(d.Get("availability_zone").(string)),
 		GroupName:        aws.String(d.Get("placement_group").(string)),
+	}
+
+	if v, ok := d.GetOk("placement_partition_number"); ok {
+		opts.Placement.PartitionNumber = aws.Int64(int64(v.(int)))
 	}
 
 	opts.SpotPlacement = &ec2.SpotPlacement{
