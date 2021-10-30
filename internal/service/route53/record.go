@@ -975,22 +975,22 @@ func NormalizeAliasName(alias interface{}) string {
 
 func ParseRecordID(id string) [4]string {
 	var recZone, recType, recName, recSet string
-	parts := strings.SplitN(id, "_", 2)
-	if len(parts) == 2 {
+	parts := strings.Split(id, "_")
+	if len(parts) >= 3 {
 		recZone = parts[0]
-		firstUnderscore := strings.Index(parts[1][:], "_")
-		// Handles the case of having a DNS name that starts with _
-		if firstUnderscore == 0 {
-			firstUnderscore = strings.Index(parts[1][1:], "_") + 1
-		}
-		recName, recType = parts[1][0:firstUnderscore], parts[1][firstUnderscore+1:]
-		if !r53ValidRecordTypes.MatchString(recType) {
-			firstUnderscore = strings.Index(recType, "_")
-			if firstUnderscore != -1 {
-				recType, recSet = recType[0:firstUnderscore], recType[firstUnderscore+1:]
+		var recTypeIndex int = -1
+		for i, maybeRecType := range parts[1:] {
+			if r53ValidRecordTypes.MatchString(maybeRecType) {
+				recTypeIndex = i + 1
+				break
 			}
 		}
+		if recTypeIndex > 1 {
+			recName = strings.Join(parts[1:recTypeIndex], "_")
+			recName = strings.TrimSuffix(recName, ".")
+			recType = parts[recTypeIndex]
+			recSet = strings.Join(parts[recTypeIndex+1:], "_")
+		}
 	}
-	recName = strings.TrimSuffix(recName, ".")
 	return [4]string{recZone, recName, recType, recSet}
 }
