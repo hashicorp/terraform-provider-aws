@@ -13,7 +13,7 @@ import (
 	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
 )
 
-func TestAccFindingAggregator_basic(t *testing.T) {
+func testAccFindingAggregator_basic(t *testing.T) {
 	resourceName := "aws_securityhub_finding_aggregator.test_aggregator"
 
 	resource.Test(t, resource.TestCase{
@@ -55,7 +55,7 @@ func TestAccFindingAggregator_basic(t *testing.T) {
 	})
 }
 
-func TestAccFindingAggregator_disappears(t *testing.T) {
+func testAccFindingAggregator_disappears(t *testing.T) {
 	resourceName := "aws_securityhub_finding_aggregator.test_aggregator"
 
 	resource.Test(t, resource.TestCase{
