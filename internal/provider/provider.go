@@ -1519,6 +1519,7 @@ func Provider() *schema.Provider {
 			"aws_securityhub_product_subscription":       securityhub.ResourceProductSubscription(),
 			"aws_securityhub_standards_control":          securityhub.ResourceStandardsControl(),
 			"aws_securityhub_standards_subscription":     securityhub.ResourceStandardsSubscription(),
+			"aws_securityhub_finding_aggregator":         securityhub.ResourceFindingAggregator(),
 
 			"aws_serverlessapplicationrepository_cloudformation_stack": serverlessapprepo.ResourceCloudFormationStack(),
 
