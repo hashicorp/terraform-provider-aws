@@ -27,6 +27,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+const detachNetworkInterfaceTimeout = 10 * time.Minute
+
 func ResourceLoadBalancer() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceLoadBalancerCreate,
@@ -966,7 +968,7 @@ func CleanupNetworkInterfaces(conn *ec2.EC2, name string) error {
 		return nil
 	}
 
-	err = tfec2.DetachNetworkInterfaces(conn, out.NetworkInterfaces, 10*time.Minute)
+	err = tfec2.DetachNetworkInterfaces(conn, out.NetworkInterfaces, detachNetworkInterfaceTimeout)
 	if err != nil {
 		return err
 	}
