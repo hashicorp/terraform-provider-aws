@@ -252,6 +252,45 @@ func TestAccElastiCacheReplicationGroup_updateMaintenanceWindow(t *testing.T) {
 	})
 }
 
+func TestAccElastiCacheReplicationGroup_updateUserGroups(t *testing.T) {
+	var rg elasticache.ReplicationGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	userGroup := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resourceName := "aws_elasticache_replication_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckReplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationGroupUserGroup(rName, userGroup, 0),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(resourceName, &rg),
+					testAccCheckReplicationGroupUserGroup(resourceName, fmt.Sprintf("%s-%d", userGroup, 0)),
+					resource.TestCheckTypeSetElemAttr(resourceName, "user_group_ids.*", fmt.Sprintf("%s-%d", userGroup, 0)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"apply_immediately"},
+			},
+			{
+				Config: testAccReplicationGroupUserGroup(rName, userGroup, 1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(resourceName, &rg),
+					testAccCheckReplicationGroupUserGroup(resourceName, fmt.Sprintf("%s-%d", userGroup, 1)),
+					resource.TestCheckTypeSetElemAttr(resourceName, "user_group_ids.*", fmt.Sprintf("%s-%d", userGroup, 1)),
+				),
+			},
+		},
+	})
+}
+
 func TestAccElastiCacheReplicationGroup_updateNodeSize(t *testing.T) {
 	var rg elasticache.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1821,6 +1860,31 @@ func testAccCheckReplicationGroupMemberClusters(n string, v *map[string]*elastic
 	}
 }
 
+func testAccCheckReplicationGroupUserGroup(resourceName, userGroupID string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn
+		rg, err := tfelasticache.FindReplicationGroupByID(conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+		if len(rg.UserGroupIds) < 1 {
+			return fmt.Errorf("ElastiCache Replication Group (%s) was not assigned any usergroups", resourceName)
+		}
+
+		if *rg.UserGroupIds[0] != userGroupID {
+			return fmt.Errorf("ElastiCache Replication Group (%s) was not assigned usergroup (%s), usergroup was (%s) instead", resourceName, userGroupID, *rg.UserGroupIds[0])
+		}
+		return nil
+
+	}
+}
+
 func testAccCheckReplicationGroupRecreated(i, j *map[string]*elasticache.CacheCluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for key, iv := range *i {
@@ -2043,6 +2107,52 @@ resource "aws_elasticache_replication_group" "test" {
 `, rName)
 }
 
+func testAccReplicationGroupUserGroup(rName, userGroup string, flag int) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_user" "test0" {
+  user_id       = "%[2]s-0"
+  user_name     = "default"
+  access_string = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
+  engine        = "REDIS"
+  passwords     = ["password123456789"]
+}
+resource "aws_elasticache_user_group" "test0" {
+  user_group_id = "%[2]s-0"
+  engine        = "REDIS"
+  user_ids      = [aws_elasticache_user.test0.user_id]
+}
+
+resource "aws_elasticache_user" "test1" {
+  user_id       = "%[2]s-1"
+  user_name     = "default"
+  access_string = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
+  engine        = "REDIS"
+  passwords     = ["password123456789"]
+}
+resource "aws_elasticache_user_group" "test1" {
+  user_group_id = "%[2]s-1"
+  engine        = "REDIS"
+  user_ids      = [aws_elasticache_user.test1.user_id]
+}
+
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id          = %[1]q
+  replication_group_description = "test description"
+  node_type                     = "cache.t3.small"
+  port                          = 6379
+  apply_immediately             = true
+  auto_minor_version_upgrade    = false
+  maintenance_window            = "tue:06:30-tue:07:30"
+  snapshot_window               = "01:00-02:00"
+	transit_encryption_enabled    = true
+	user_group_ids                = [aws_elasticache_user_group.test%[3]d.id]
+}
+
+}
+`, rName, userGroup, flag)
+
+}
+
 func testAccReplicationGroupInVPCConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
@@ -2091,20 +2201,6 @@ resource "aws_security_group" "test" {
   }
 }
 
-resource "aws_elasticache_user" "test" {
-  user_id       = %[1]q
-  user_name     = "default"
-  access_string = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
-  engine        = "REDIS"
-  passwords     = ["password123456789"]
-}
-
-resource "aws_elasticache_user_group" "test" {
-  user_group_id = %[1]q
-  engine        = "REDIS"
-  user_ids      = [aws_elasticache_user.test.user_id]
-}
-
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id          = %[1]q
   replication_group_description = "test description"
@@ -2115,7 +2211,6 @@ resource "aws_elasticache_replication_group" "test" {
   security_group_ids            = [aws_security_group.test.id]
   availability_zones            = [data.aws_availability_zones.available.names[0]]
   auto_minor_version_upgrade    = false
-  user_group_ids                = [aws_elasticache_user_group.test.id]
 }
 `, rName)
 }
