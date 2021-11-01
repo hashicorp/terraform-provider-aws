@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/securityhub"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -140,27 +141,27 @@ resource "aws_securityhub_finding_aggregator" "test_aggregator" {
 }
 
 func testAccFindingAggregatorSpecifiedRegionsConfig() string {
-	return `
+	return fmt.Sprintf(`
 resource "aws_securityhub_account" "example" {}
 
 resource "aws_securityhub_finding_aggregator" "test_aggregator" {
 	linking_mode      = "SPECIFIED_REGIONS"
-	specified_regions = ["eu-west-2", "eu-west-1", "us-east-1"]
+	specified_regions = ["%s", "%s", "%s"]
 
 	depends_on 	      = [aws_securityhub_account.example]
 }
-`
+`, endpoints.EuWest1RegionID, endpoints.EuWest2RegionID, endpoints.UsEast1RegionID)
 }
 
 func testAccFindingAggregatorAllRegionsExceptSpecifiedConfig() string {
-	return `
+	return fmt.Sprintf(`
 resource "aws_securityhub_account" "example" {}
 
 resource "aws_securityhub_finding_aggregator" "test_aggregator" {
 	linking_mode      = "ALL_REGIONS_EXCEPT_SPECIFIED"
-	specified_regions = ["eu-west-2", "eu-west-1"]
+	specified_regions = ["%s", "%s"]
 
 	depends_on 	      = [aws_securityhub_account.example]
 }
-`
+`, endpoints.EuWest1RegionID, endpoints.EuWest2RegionID)
 }

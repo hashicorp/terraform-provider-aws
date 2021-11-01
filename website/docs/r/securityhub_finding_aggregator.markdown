@@ -18,9 +18,9 @@ The following example will enable the aggregator for every region.
 resource "aws_securityhub_account" "example" {}
 
 resource "aws_securityhub_finding_aggregator" "example" {
-    linking_mode = "ALL_REGIONS"
+  linking_mode = "ALL_REGIONS"
 
-    depends_on   = [aws_securityhub_account.example]
+  depends_on = [aws_securityhub_account.example]
 }
 ```
 
@@ -32,10 +32,10 @@ The following example will enable the aggregator for every region except those s
 resource "aws_securityhub_account" "example" {}
 
 resource "aws_securityhub_finding_aggregator" "example" {
-    linking_mode      = "ALL_REGIONS_EXCEPT_SPECIFIED"
-    specified_regions = ["eu-west-1", "eu-west-2]
+  linking_mode      = "ALL_REGIONS_EXCEPT_SPECIFIED"
+  specified_regions = ["eu-west-1", "eu-west-2"]
 
-    depends_on        = [aws_securityhub_account.example]
+  depends_on = [aws_securityhub_account.example]
 }
 ```
 
@@ -47,10 +47,10 @@ The following example will enable the aggregator for every region specified in `
 resource "aws_securityhub_account" "example" {}
 
 resource "aws_securityhub_finding_aggregator" "example" {
-    linking_mode      = "SPECIFIED_REGIONS"
-    specified_regions = ["eu-west-1", "eu-west-2]
+  linking_mode      = "SPECIFIED_REGIONS"
+  specified_regions = ["eu-west-1", "eu-west-2"]
 
-    depends_on        = [aws_securityhub_account.example]
+  depends_on = [aws_securityhub_account.example]
 }
 ```
 
