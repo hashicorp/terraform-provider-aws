@@ -23,7 +23,7 @@ import (
 
 func TestAccAutoScalingLaunchConfiguration_basic(t *testing.T) {
 	var conf autoscaling.LaunchConfiguration
-	resourceName := "aws_launch_configuration.test"
+	resourceName := "aws_autoscaling_launch_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -50,7 +50,7 @@ func TestAccAutoScalingLaunchConfiguration_basic(t *testing.T) {
 
 func TestAccAutoScalingLaunchConfiguration_Name_generated(t *testing.T) {
 	var conf autoscaling.LaunchConfiguration
-	resourceName := "aws_launch_configuration.test"
+	resourceName := "aws_autoscaling_launch_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -78,7 +78,7 @@ func TestAccAutoScalingLaunchConfiguration_Name_generated(t *testing.T) {
 
 func TestAccAutoScalingLaunchConfiguration_namePrefix(t *testing.T) {
 	var conf autoscaling.LaunchConfiguration
-	resourceName := "aws_launch_configuration.test"
+	resourceName := "aws_autoscaling_launch_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -106,7 +106,7 @@ func TestAccAutoScalingLaunchConfiguration_namePrefix(t *testing.T) {
 
 func TestAccAutoScalingLaunchConfiguration_withBlockDevices(t *testing.T) {
 	var conf autoscaling.LaunchConfiguration
-	resourceName := "aws_launch_configuration.test"
+	resourceName := "aws_autoscaling_launch_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -138,7 +138,7 @@ func TestAccAutoScalingLaunchConfiguration_withBlockDevices(t *testing.T) {
 func TestAccAutoScalingLaunchConfiguration_withInstanceStoreAMI(t *testing.T) {
 	var conf autoscaling.LaunchConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_launch_configuration.test"
+	resourceName := "aws_autoscaling_launch_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -166,7 +166,7 @@ func TestAccAutoScalingLaunchConfiguration_RootBlockDevice_amiDisappears(t *test
 	var ami ec2.Image
 	var conf autoscaling.LaunchConfiguration
 	amiCopyResourceName := "aws_ami_copy.test"
-	resourceName := "aws_launch_configuration.test"
+	resourceName := "aws_autoscaling_launch_configuration.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -196,7 +196,7 @@ func TestAccAutoScalingLaunchConfiguration_RootBlockDevice_amiDisappears(t *test
 
 func TestAccAutoScalingLaunchConfiguration_RootBlockDevice_volumeSize(t *testing.T) {
 	var conf autoscaling.LaunchConfiguration
-	resourceName := "aws_launch_configuration.test"
+	resourceName := "aws_autoscaling_launch_configuration.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -232,7 +232,7 @@ func TestAccAutoScalingLaunchConfiguration_RootBlockDevice_volumeSize(t *testing
 func TestAccAutoScalingLaunchConfiguration_encryptedRootBlockDevice(t *testing.T) {
 	var conf autoscaling.LaunchConfiguration
 	rInt := sdkacctest.RandInt()
-	resourceName := "aws_launch_configuration.test"
+	resourceName := "aws_autoscaling_launch_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -259,7 +259,7 @@ func TestAccAutoScalingLaunchConfiguration_encryptedRootBlockDevice(t *testing.T
 
 func TestAccAutoScalingLaunchConfiguration_withSpotPrice(t *testing.T) {
 	var conf autoscaling.LaunchConfiguration
-	resourceName := "aws_launch_configuration.test"
+	resourceName := "aws_autoscaling_launch_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -289,7 +289,7 @@ func TestAccAutoScalingLaunchConfiguration_withVPCClassicLink(t *testing.T) {
 	var group ec2.SecurityGroup
 	var conf autoscaling.LaunchConfiguration
 	rInt := sdkacctest.RandInt()
-	resourceName := "aws_launch_configuration.test"
+	resourceName := "aws_autoscaling_launch_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckEC2Classic(t) },
@@ -317,7 +317,7 @@ func TestAccAutoScalingLaunchConfiguration_withVPCClassicLink(t *testing.T) {
 func TestAccAutoScalingLaunchConfiguration_withIAMProfile(t *testing.T) {
 	var conf autoscaling.LaunchConfiguration
 	rInt := sdkacctest.RandInt()
-	resourceName := "aws_launch_configuration.test"
+	resourceName := "aws_autoscaling_launch_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -343,7 +343,7 @@ func TestAccAutoScalingLaunchConfiguration_withIAMProfile(t *testing.T) {
 
 func TestAccAutoScalingLaunchConfiguration_withEncryption(t *testing.T) {
 	var conf autoscaling.LaunchConfiguration
-	resourceName := "aws_launch_configuration.test"
+	resourceName := "aws_autoscaling_launch_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -354,7 +354,7 @@ func TestAccAutoScalingLaunchConfiguration_withEncryption(t *testing.T) {
 			{
 				Config: testAccLaunchConfigurationWithEncryption(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLaunchConfigurationExists("aws_launch_configuration.test", &conf),
+					testAccCheckLaunchConfigurationExists("aws_autoscaling_launch_configuration.test", &conf),
 					testAccCheckLaunchConfigurationWithEncryption(&conf),
 				),
 			},
@@ -370,7 +370,7 @@ func TestAccAutoScalingLaunchConfiguration_withEncryption(t *testing.T) {
 
 func TestAccAutoScalingLaunchConfiguration_withGP3(t *testing.T) {
 	var conf autoscaling.LaunchConfiguration
-	resourceName := "aws_launch_configuration.test"
+	resourceName := "aws_autoscaling_launch_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -381,7 +381,7 @@ func TestAccAutoScalingLaunchConfiguration_withGP3(t *testing.T) {
 			{
 				Config: testAccLaunchConfigurationWithGP3(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLaunchConfigurationExists("aws_launch_configuration.test", &conf),
+					testAccCheckLaunchConfigurationExists("aws_autoscaling_launch_configuration.test", &conf),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						"volume_type": "gp3",
 					}),
@@ -402,7 +402,7 @@ func TestAccAutoScalingLaunchConfiguration_withGP3(t *testing.T) {
 
 func TestAccAutoScalingLaunchConfiguration_updateEBSBlockDevices(t *testing.T) {
 	var conf autoscaling.LaunchConfiguration
-	resourceName := "aws_launch_configuration.test"
+	resourceName := "aws_autoscaling_launch_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -441,7 +441,7 @@ func TestAccAutoScalingLaunchConfiguration_updateEBSBlockDevices(t *testing.T) {
 func TestAccAutoScalingLaunchConfiguration_metadataOptions(t *testing.T) {
 	var conf autoscaling.LaunchConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_launch_configuration.test"
+	resourceName := "aws_autoscaling_launch_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -471,7 +471,7 @@ func TestAccAutoScalingLaunchConfiguration_metadataOptions(t *testing.T) {
 func TestAccAutoScalingLaunchConfiguration_EBS_noDevice(t *testing.T) {
 	var conf autoscaling.LaunchConfiguration
 	rInt := sdkacctest.RandInt()
-	resourceName := "aws_launch_configuration.test"
+	resourceName := "aws_autoscaling_launch_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -502,7 +502,7 @@ func TestAccAutoScalingLaunchConfiguration_EBS_noDevice(t *testing.T) {
 
 func TestAccAutoScalingLaunchConfiguration_userData(t *testing.T) {
 	var conf autoscaling.LaunchConfiguration
-	resourceName := "aws_launch_configuration.test"
+	resourceName := "aws_autoscaling_launch_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -564,7 +564,7 @@ func testAccCheckLaunchConfigurationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_launch_configuration" {
+		if rs.Type != "aws_autoscaling_launch_configuration" {
 			continue
 		}
 
@@ -686,7 +686,7 @@ data "aws_ami" "amzn-ami-minimal-pv-instance-store" {
 
 func testAccLaunchConfigurationWithInstanceStoreAMIConfig(rName string) string {
 	return acctest.ConfigCompose(testAccLatestAmazonLinuxPVInstanceStoreAMIConfig(), fmt.Sprintf(`
-resource "aws_launch_configuration" "test" {
+resource "aws_autoscaling_launch_configuration" "test" {
   name     = %[1]q
   image_id = data.aws_ami.amzn-ami-minimal-pv-instance-store.id
 
@@ -706,7 +706,7 @@ resource "aws_ami_copy" "test" {
   source_ami_region = data.aws_region.current.name
 }
 
-resource "aws_launch_configuration" "test" {
+resource "aws_autoscaling_launch_configuration" "test" {
   name          = %[1]q
   image_id      = aws_ami_copy.test.id
   instance_type = "t3.micro"
@@ -720,7 +720,7 @@ resource "aws_launch_configuration" "test" {
 
 func testAccLaunchConfigurationWithRootBlockDeviceVolumeSizeConfig(rName string, volumeSize int) string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), fmt.Sprintf(`
-resource "aws_launch_configuration" "test" {
+resource "aws_autoscaling_launch_configuration" "test" {
   name          = %[1]q
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t3.micro"
@@ -755,7 +755,7 @@ resource "aws_subnet" "test" {
   }
 }
 
-resource "aws_launch_configuration" "test" {
+resource "aws_autoscaling_launch_configuration" "test" {
   name_prefix                 = "tf-acc-test-%[1]d"
   image_id                    = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type               = "t3.nano"
@@ -775,7 +775,7 @@ func testAccLaunchConfigurationMetadataOptionsConfig(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		fmt.Sprintf(`
-resource "aws_launch_configuration" "test" {
+resource "aws_autoscaling_launch_configuration" "test" {
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t3.nano"
   name          = %[1]q
@@ -790,7 +790,7 @@ resource "aws_launch_configuration" "test" {
 
 func testAccLaunchConfigurationConfig() string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), fmt.Sprintf(`
-resource "aws_launch_configuration" "test" {
+resource "aws_autoscaling_launch_configuration" "test" {
   name                        = "tf-acc-test-%d"
   image_id                    = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type               = "m1.small"
@@ -824,7 +824,7 @@ resource "aws_launch_configuration" "test" {
 
 func testAccLaunchConfigurationWithSpotPriceConfig() string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), fmt.Sprintf(`
-resource "aws_launch_configuration" "test" {
+resource "aws_autoscaling_launch_configuration" "test" {
   name          = "tf-acc-test-%d"
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t2.micro"
@@ -835,7 +835,7 @@ resource "aws_launch_configuration" "test" {
 
 func testAccLaunchConfigurationNameGeneratedConfig() string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), `
-resource "aws_launch_configuration" "test" {
+resource "aws_autoscaling_launch_configuration" "test" {
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t2.micro"
 }
@@ -844,7 +844,7 @@ resource "aws_launch_configuration" "test" {
 
 func testAccLaunchConfigurationNamePrefixConfig(namePrefix string) string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), fmt.Sprintf(`
-resource "aws_launch_configuration" "test" {
+resource "aws_autoscaling_launch_configuration" "test" {
   name_prefix   = %[1]q
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t2.micro"
@@ -854,7 +854,7 @@ resource "aws_launch_configuration" "test" {
 
 func testAccLaunchConfigurationWithEncryption() string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), `
-resource "aws_launch_configuration" "test" {
+resource "aws_autoscaling_launch_configuration" "test" {
   image_id                    = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type               = "t2.micro"
   associate_public_ip_address = false
@@ -875,7 +875,7 @@ resource "aws_launch_configuration" "test" {
 
 func testAccLaunchConfigurationWithGP3() string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), `
-resource "aws_launch_configuration" "test" {
+resource "aws_autoscaling_launch_configuration" "test" {
   image_id                    = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type               = "t2.micro"
   associate_public_ip_address = false
@@ -898,7 +898,7 @@ resource "aws_launch_configuration" "test" {
 
 func testAccLaunchConfigurationWithEncryptionUpdated() string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), `
-resource "aws_launch_configuration" "test" {
+resource "aws_autoscaling_launch_configuration" "test" {
   image_id                    = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type               = "t2.micro"
   associate_public_ip_address = false
@@ -933,7 +933,7 @@ resource "aws_security_group" "test" {
   vpc_id = aws_vpc.test.id
 }
 
-resource "aws_launch_configuration" "test" {
+resource "aws_autoscaling_launch_configuration" "test" {
   name          = "tf-acc-test-%[1]d"
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t2.micro"
@@ -971,7 +971,7 @@ resource "aws_iam_instance_profile" "profile" {
   role = aws_iam_role.role.name
 }
 
-resource "aws_launch_configuration" "test" {
+resource "aws_autoscaling_launch_configuration" "test" {
   image_id             = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type        = "t2.nano"
   iam_instance_profile = aws_iam_instance_profile.profile.name
@@ -981,7 +981,7 @@ resource "aws_launch_configuration" "test" {
 
 func testAccLaunchConfigurationEBSNoDeviceConfig(rInt int) string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), fmt.Sprintf(`
-resource "aws_launch_configuration" "test" {
+resource "aws_autoscaling_launch_configuration" "test" {
   name_prefix   = "tf-acc-test-%d"
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "m1.small"
@@ -996,7 +996,7 @@ resource "aws_launch_configuration" "test" {
 
 func testAccLaunchConfigurationConfig_userData() string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), `
-resource "aws_launch_configuration" "test" {
+resource "aws_autoscaling_launch_configuration" "test" {
   image_id                    = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type               = "t2.micro"
   user_data                   = "foo:-with-character's"
@@ -1007,7 +1007,7 @@ resource "aws_launch_configuration" "test" {
 
 func testAccLaunchConfigurationConfig_userDataBase64() string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), `
-resource "aws_launch_configuration" "test" {
+resource "aws_autoscaling_launch_configuration" "test" {
   image_id                    = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type               = "t2.micro"
   user_data_base64            = base64encode("hello world")

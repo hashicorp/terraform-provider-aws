@@ -256,7 +256,7 @@ resource "aws_autoscaling_group" "asg" {
   desired_capacity          = 0
   health_check_grace_period = 300
   force_delete              = true
-  launch_configuration      = aws_launch_configuration.as_conf.name
+  launch_configuration      = aws_autoscaling_launch_configuration.as_conf.name
 
   tag {
     key                 = "Name"
@@ -269,7 +269,7 @@ resource "aws_autoscaling_group" "asg" {
   }
 }
 
-resource "aws_launch_configuration" "as_conf" {
+resource "aws_autoscaling_launch_configuration" "as_conf" {
   name          = "test_config_%d"
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t1.micro"
@@ -318,7 +318,7 @@ resource "aws_elb" "bar" {
   }
 }
 
-resource "aws_launch_configuration" "as_conf" {
+resource "aws_autoscaling_launch_configuration" "as_conf" {
   name          = "test_config_%d"
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t1.micro"
@@ -332,7 +332,7 @@ resource "aws_autoscaling_group" "asg" {
   desired_capacity          = 0
   health_check_grace_period = 300
   force_delete              = true
-  launch_configuration      = aws_launch_configuration.as_conf.name
+  launch_configuration      = aws_autoscaling_launch_configuration.as_conf.name
 
   tag {
     key                 = "Name"

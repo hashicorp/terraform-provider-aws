@@ -95,7 +95,7 @@ data "aws_ami" "test_ami" {
   }
 }
 
-resource "aws_launch_configuration" "foobar" {
+resource "aws_autoscaling_launch_configuration" "foobar" {
   image_id      = data.aws_ami.test_ami.id
   instance_type = "t1.micro"
 }
@@ -109,7 +109,7 @@ resource "aws_autoscaling_group" "bar" {
   desired_capacity   = 0
   force_delete       = true
 
-  launch_configuration = aws_launch_configuration.foobar.name
+  launch_configuration = aws_autoscaling_launch_configuration.foobar.name
 
   tag {
     key                 = "Foo"
@@ -127,7 +127,7 @@ resource "aws_autoscaling_group" "foo" {
   desired_capacity   = 0
   force_delete       = true
 
-  launch_configuration = aws_launch_configuration.foobar.name
+  launch_configuration = aws_autoscaling_launch_configuration.foobar.name
 
   tag {
     key                 = "Foo"
@@ -145,7 +145,7 @@ resource "aws_autoscaling_group" "barbaz" {
   desired_capacity   = 0
   force_delete       = true
 
-  launch_configuration = aws_launch_configuration.foobar.name
+  launch_configuration = aws_autoscaling_launch_configuration.foobar.name
 
   tag {
     key                 = "Foo"
@@ -168,7 +168,7 @@ data "aws_ami" "test_ami" {
   }
 }
 
-resource "aws_launch_configuration" "foobar" {
+resource "aws_autoscaling_launch_configuration" "foobar" {
   image_id      = data.aws_ami.test_ami.id
   instance_type = "t1.micro"
 }
@@ -182,7 +182,7 @@ resource "aws_autoscaling_group" "bar" {
   desired_capacity   = 0
   force_delete       = true
 
-  launch_configuration = aws_launch_configuration.foobar.name
+  launch_configuration = aws_autoscaling_launch_configuration.foobar.name
 
   tag {
     key                 = "Foo"
@@ -200,7 +200,7 @@ resource "aws_autoscaling_group" "foo" {
   desired_capacity   = 0
   force_delete       = true
 
-  launch_configuration = aws_launch_configuration.foobar.name
+  launch_configuration = aws_autoscaling_launch_configuration.foobar.name
 
   tag {
     key                 = "Foo"
@@ -218,7 +218,7 @@ resource "aws_autoscaling_group" "barbaz" {
   desired_capacity   = 0
   force_delete       = true
 
-  launch_configuration = aws_launch_configuration.foobar.name
+  launch_configuration = aws_autoscaling_launch_configuration.foobar.name
 
   tag {
     key                 = "Foo"

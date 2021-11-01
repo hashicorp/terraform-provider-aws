@@ -12,8 +12,8 @@ import (
 )
 
 func TestAccAutoScalingLaunchConfigurationDataSource_basic(t *testing.T) {
-	resourceName := "aws_launch_configuration.test"
-	datasourceName := "data.aws_launch_configuration.test"
+	resourceName := "aws_autoscaling_launch_configuration.test"
+	datasourceName := "data.aws_autoscaling_launch_configuration.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -42,7 +42,7 @@ func TestAccAutoScalingLaunchConfigurationDataSource_basic(t *testing.T) {
 
 func TestAccAutoScalingLaunchConfigurationDataSource_securityGroups(t *testing.T) {
 	rInt := sdkacctest.RandInt()
-	rName := "data.aws_launch_configuration.foo"
+	rName := "data.aws_autoscaling_launch_configuration.foo"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
@@ -60,8 +60,8 @@ func TestAccAutoScalingLaunchConfigurationDataSource_securityGroups(t *testing.T
 }
 
 func TestAccAutoScalingLaunchConfigurationDataSource_ebsNoDevice(t *testing.T) {
-	resourceName := "aws_launch_configuration.test"
-	datasourceName := "data.aws_launch_configuration.test"
+	resourceName := "aws_autoscaling_launch_configuration.test"
+	datasourceName := "data.aws_autoscaling_launch_configuration.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -84,8 +84,8 @@ func TestAccAutoScalingLaunchConfigurationDataSource_ebsNoDevice(t *testing.T) {
 
 func TestAccAutoScalingLaunchConfigurationDataSource_metadataOptions(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	dataSourceName := "data.aws_launch_configuration.test"
-	resourceName := "aws_launch_configuration.test"
+	dataSourceName := "data.aws_autoscaling_launch_configuration.test"
+	resourceName := "aws_autoscaling_launch_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -108,7 +108,7 @@ func TestAccAutoScalingLaunchConfigurationDataSource_metadataOptions(t *testing.
 
 func testAccLaunchConfigurationDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), fmt.Sprintf(`
-resource "aws_launch_configuration" "test" {
+resource "aws_autoscaling_launch_configuration" "test" {
   name                        = %[1]q
   image_id                    = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type               = "m1.small"
@@ -138,8 +138,8 @@ resource "aws_launch_configuration" "test" {
   }
 }
 
-data "aws_launch_configuration" "test" {
-  name = aws_launch_configuration.test.name
+data "aws_autoscaling_launch_configuration" "test" {
+  name = aws_autoscaling_launch_configuration.test.name
 }
 `, rName))
 }
@@ -155,15 +155,15 @@ resource "aws_security_group" "test" {
   vpc_id = aws_vpc.test.id
 }
 
-resource "aws_launch_configuration" "test" {
+resource "aws_autoscaling_launch_configuration" "test" {
   name            = "terraform-test-%d"
   image_id        = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type   = "m1.small"
   security_groups = [aws_security_group.test.id]
 }
 
-data "aws_launch_configuration" "foo" {
-  name = aws_launch_configuration.test.name
+data "aws_autoscaling_launch_configuration" "foo" {
+  name = aws_autoscaling_launch_configuration.test.name
 }
 `, rInt, rInt)
 }
@@ -172,7 +172,7 @@ func testAccLaunchConfigurationDataSourceConfig_metadataOptions(rName string) st
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		fmt.Sprintf(`
-resource "aws_launch_configuration" "test" {
+resource "aws_autoscaling_launch_configuration" "test" {
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t3.nano"
   name          = %[1]q
@@ -183,8 +183,8 @@ resource "aws_launch_configuration" "test" {
   }
 }
 
-data "aws_launch_configuration" "test" {
-  name = aws_launch_configuration.test.name
+data "aws_autoscaling_launch_configuration" "test" {
+  name = aws_autoscaling_launch_configuration.test.name
 }
 `, rName))
 }
@@ -193,7 +193,7 @@ func testAccLaunchConfigurationDataSourceConfigEbsNoDevice(rName string) string 
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		fmt.Sprintf(`
-resource "aws_launch_configuration" "test" {
+resource "aws_autoscaling_launch_configuration" "test" {
   name          = %[1]q
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "m1.small"
@@ -204,8 +204,8 @@ resource "aws_launch_configuration" "test" {
   }
 }
 
-data "aws_launch_configuration" "test" {
-  name = aws_launch_configuration.test.name
+data "aws_autoscaling_launch_configuration" "test" {
+  name = aws_autoscaling_launch_configuration.test.name
 }
 `, rName))
 }

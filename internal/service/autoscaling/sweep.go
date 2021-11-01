@@ -23,8 +23,8 @@ func init() {
 		F:    sweepGroups,
 	})
 
-	resource.AddTestSweepers("aws_launch_configuration", &resource.Sweeper{
-		Name:         "aws_launch_configuration",
+	resource.AddTestSweepers("aws_autoscaling_launch_configuration", &resource.Sweeper{
+		Name:         "aws_autoscaling_launch_configuration",
 		Dependencies: []string{"aws_autoscaling_group"},
 		F:            sweepLaunchConfigurations,
 	})

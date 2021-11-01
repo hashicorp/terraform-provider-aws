@@ -1,19 +1,19 @@
 ---
 subcategory: "Autoscaling"
 layout: "aws"
-page_title: "AWS: aws_launch_configuration"
+page_title: "AWS: aws_autoscaling_launch_configuration"
 description: |-
   Provides a Launch Configuration data source.
 ---
 
-# Data Source: aws_launch_configuration
+# Data Source: aws_autoscaling_launch_configuration
 
 Provides information about a Launch Configuration.
 
 ## Example Usage
 
 ```terraform
-data "aws_launch_configuration" "ubuntu" {
+data "aws_autoscaling_launch_configuration" "ubuntu" {
   name = "test-launch-config"
 }
 ```

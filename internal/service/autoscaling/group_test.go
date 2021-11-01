@@ -62,7 +62,7 @@ func TestAccAutoScalingGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_autoscaling_group.bar", "health_check_grace_period", "300"),
 					resource.TestCheckResourceAttr("aws_autoscaling_group.bar", "health_check_type", "ELB"),
 					resource.TestCheckNoResourceAttr("aws_autoscaling_group.bar", "initial_lifecycle_hook.#"),
-					resource.TestCheckResourceAttrPair("aws_autoscaling_group.bar", "launch_configuration", "aws_launch_configuration.foobar", "name"),
+					resource.TestCheckResourceAttrPair("aws_autoscaling_group.bar", "launch_configuration", "aws_autoscaling_launch_configuration.foobar", "name"),
 					resource.TestCheckResourceAttr("aws_autoscaling_group.bar", "launch_template.#", "0"),
 					resource.TestCheckResourceAttr("aws_autoscaling_group.bar", "load_balancers.#", "0"),
 					resource.TestCheckResourceAttr("aws_autoscaling_group.bar", "max_size", "5"),
@@ -102,7 +102,7 @@ func TestAccAutoScalingGroup_basic(t *testing.T) {
 				Config: testAccGroupUpdateConfig(randName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists("aws_autoscaling_group.bar", &group),
-					testAccCheckLaunchConfigurationExists("aws_launch_configuration.new", &lc),
+					testAccCheckLaunchConfigurationExists("aws_autoscaling_launch_configuration.new", &lc),
 					testAccCheckAutoScalingInstanceRefreshCount(&group, 0),
 					resource.TestCheckResourceAttr("aws_autoscaling_group.bar", "desired_capacity", "5"),
 					resource.TestCheckResourceAttr("aws_autoscaling_group.bar", "termination_policies.0", "ClosestToNextInstanceHour"),
@@ -1005,7 +1005,7 @@ func TestAccAutoScalingGroup_InstanceRefresh_basic(t *testing.T) {
 func TestAccAutoScalingGroup_InstanceRefresh_start(t *testing.T) {
 	var group autoscaling.Group
 	resourceName := "aws_autoscaling_group.test"
-	launchConfigurationName := "aws_launch_configuration.test"
+	launchConfigurationName := "aws_autoscaling_launch_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -2298,7 +2298,7 @@ func testAccGroupNameGeneratedConfig() string {
 		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		`
-resource "aws_launch_configuration" "test" {
+resource "aws_autoscaling_launch_configuration" "test" {
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t2.micro"
 }
@@ -2307,7 +2307,7 @@ resource "aws_autoscaling_group" "test" {
   availability_zones   = [data.aws_availability_zones.available.names[0]]
   max_size             = 0
   min_size             = 0
-  launch_configuration = aws_launch_configuration.test.name
+  launch_configuration = aws_autoscaling_launch_configuration.test.name
 }
 `)
 }
@@ -2317,7 +2317,7 @@ func testAccGroupNamePrefixConfig(namePrefix string) string {
 		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		fmt.Sprintf(`
-resource "aws_launch_configuration" "test" {
+resource "aws_autoscaling_launch_configuration" "test" {
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t2.micro"
 }
@@ -2327,7 +2327,7 @@ resource "aws_autoscaling_group" "test" {
   max_size             = 0
   min_size             = 0
   name_prefix          = %[1]q
-  launch_configuration = aws_launch_configuration.test.name
+  launch_configuration = aws_autoscaling_launch_configuration.test.name
 }
 `, namePrefix))
 }
@@ -2345,7 +2345,7 @@ data "aws_ami" "test_ami" {
   }
 }
 
-resource "aws_launch_configuration" "foobar" {
+resource "aws_autoscaling_launch_configuration" "foobar" {
   image_id      = data.aws_ami.test_ami.id
   instance_type = "t2.micro"
 }
@@ -2356,7 +2356,7 @@ resource "aws_autoscaling_group" "bar" {
   min_size           = 0
   desired_capacity   = 0
 
-  launch_configuration = aws_launch_configuration.foobar.name
+  launch_configuration = aws_autoscaling_launch_configuration.foobar.name
 }
 `)
 }
@@ -2374,7 +2374,7 @@ data "aws_ami" "test_ami" {
   }
 }
 
-resource "aws_launch_configuration" "foobar" {
+resource "aws_autoscaling_launch_configuration" "foobar" {
   image_id      = data.aws_ami.test_ami.id
   instance_type = "t2.micro"
 }
@@ -2386,7 +2386,7 @@ resource "aws_autoscaling_group" "bar" {
   desired_capacity     = 0
   termination_policies = ["Default"]
 
-  launch_configuration = aws_launch_configuration.foobar.name
+  launch_configuration = aws_autoscaling_launch_configuration.foobar.name
 }
 `)
 }
@@ -2404,7 +2404,7 @@ data "aws_ami" "test_ami" {
   }
 }
 
-resource "aws_launch_configuration" "foobar" {
+resource "aws_autoscaling_launch_configuration" "foobar" {
   image_id      = data.aws_ami.test_ami.id
   instance_type = "t2.micro"
 }
@@ -2416,7 +2416,7 @@ resource "aws_autoscaling_group" "bar" {
   desired_capacity     = 0
   termination_policies = ["OldestInstance"]
 
-  launch_configuration = aws_launch_configuration.foobar.name
+  launch_configuration = aws_autoscaling_launch_configuration.foobar.name
 }
 `)
 }
@@ -2434,7 +2434,7 @@ data "aws_ami" "test_ami" {
   }
 }
 
-resource "aws_launch_configuration" "foobar" {
+resource "aws_autoscaling_launch_configuration" "foobar" {
   image_id      = data.aws_ami.test_ami.id
   instance_type = "t2.micro"
 }
@@ -2455,7 +2455,7 @@ resource "aws_autoscaling_group" "bar" {
   force_delete         = true
   termination_policies = ["OldestInstance", "ClosestToNextInstanceHour"]
 
-  launch_configuration = aws_launch_configuration.foobar.name
+  launch_configuration = aws_autoscaling_launch_configuration.foobar.name
 
   tags = [
     {
@@ -2491,12 +2491,12 @@ data "aws_ami" "test_ami" {
   }
 }
 
-resource "aws_launch_configuration" "foobar" {
+resource "aws_autoscaling_launch_configuration" "foobar" {
   image_id      = data.aws_ami.test_ami.id
   instance_type = "t2.micro"
 }
 
-resource "aws_launch_configuration" "new" {
+resource "aws_autoscaling_launch_configuration" "new" {
   image_id      = data.aws_ami.test_ami.id
   instance_type = "t2.micro"
 }
@@ -2513,7 +2513,7 @@ resource "aws_autoscaling_group" "bar" {
   termination_policies      = ["ClosestToNextInstanceHour"]
   protect_from_scale_in     = true
 
-  launch_configuration = aws_launch_configuration.new.name
+  launch_configuration = aws_autoscaling_launch_configuration.new.name
 
   tags = [
     {
@@ -2601,7 +2601,7 @@ resource "aws_elb" "bar" {
   depends_on = [aws_internet_gateway.gw]
 }
 
-resource "aws_launch_configuration" "foobar" {
+resource "aws_autoscaling_launch_configuration" "foobar" {
   image_id        = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type   = "t2.micro"
   security_groups = [aws_security_group.foo.id]
@@ -2623,7 +2623,7 @@ resource "aws_autoscaling_group" "bar" {
   wait_for_elb_capacity     = 2
   force_delete              = true
 
-  launch_configuration = aws_launch_configuration.foobar.name
+  launch_configuration = aws_autoscaling_launch_configuration.foobar.name
   load_balancers       = [aws_elb.bar.name]
 }
 `)
@@ -2700,7 +2700,7 @@ resource "aws_elb" "bar" {
   depends_on = [aws_internet_gateway.gw]
 }
 
-resource "aws_launch_configuration" "foobar" {
+resource "aws_autoscaling_launch_configuration" "foobar" {
   image_id        = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type   = "t2.micro"
   security_groups = [aws_security_group.foo.id]
@@ -2722,7 +2722,7 @@ resource "aws_autoscaling_group" "bar" {
   wait_for_elb_capacity     = 2
   force_delete              = true
 
-  launch_configuration = aws_launch_configuration.foobar.name
+  launch_configuration = aws_autoscaling_launch_configuration.foobar.name
   target_group_arns    = [aws_lb_target_group.foo.arn]
 }
 `)
@@ -2757,7 +2757,7 @@ data "aws_ami" "test_ami" {
   }
 }
 
-resource "aws_launch_configuration" "foobar" {
+resource "aws_autoscaling_launch_configuration" "foobar" {
   image_id      = data.aws_ami.test_ami.id
   instance_type = "t2.micro"
 }
@@ -2769,7 +2769,7 @@ resource "aws_autoscaling_group" "bar" {
   desired_capacity     = 0
   max_size             = 0
   min_size             = 0
-  launch_configuration = aws_launch_configuration.foobar.name
+  launch_configuration = aws_autoscaling_launch_configuration.foobar.name
 }
 `)
 }
@@ -2803,7 +2803,7 @@ data "aws_ami" "test_ami" {
   }
 }
 
-resource "aws_launch_configuration" "foobar" {
+resource "aws_autoscaling_launch_configuration" "foobar" {
   image_id      = data.aws_ami.test_ami.id
   instance_type = "t2.micro"
 }
@@ -2815,7 +2815,7 @@ resource "aws_autoscaling_group" "bar" {
   desired_capacity     = 0
   max_size             = 0
   min_size             = 0
-  launch_configuration = aws_launch_configuration.foobar.name
+  launch_configuration = aws_autoscaling_launch_configuration.foobar.name
 }
 `)
 }
@@ -2833,7 +2833,7 @@ data "aws_ami" "test_ami" {
   }
 }
 
-resource "aws_launch_configuration" "foobar" {
+resource "aws_autoscaling_launch_configuration" "foobar" {
   image_id      = data.aws_ami.test_ami.id
   instance_type = "c3.large"
 }
@@ -2855,7 +2855,7 @@ resource "aws_autoscaling_group" "bar" {
   termination_policies      = ["OldestInstance", "ClosestToNextInstanceHour"]
   placement_group           = aws_placement_group.test.name
 
-  launch_configuration = aws_launch_configuration.foobar.name
+  launch_configuration = aws_autoscaling_launch_configuration.foobar.name
 
   tag {
     key                 = "Foo"
@@ -2883,7 +2883,7 @@ data "aws_iam_role" "autoscaling_service_linked_role" {
   name = "AWSServiceRoleForAutoScaling"
 }
 
-resource "aws_launch_configuration" "foobar" {
+resource "aws_autoscaling_launch_configuration" "foobar" {
   image_id      = data.aws_ami.test_ami.id
   instance_type = "t2.micro"
 }
@@ -2893,7 +2893,7 @@ resource "aws_autoscaling_group" "bar" {
   desired_capacity        = 0
   max_size                = 0
   min_size                = 0
-  launch_configuration    = aws_launch_configuration.foobar.name
+  launch_configuration    = aws_autoscaling_launch_configuration.foobar.name
   service_linked_role_arn = data.aws_iam_role.autoscaling_service_linked_role.arn
 }
 `)
@@ -2912,7 +2912,7 @@ data "aws_ami" "test_ami" {
   }
 }
 
-resource "aws_launch_configuration" "foobar" {
+resource "aws_autoscaling_launch_configuration" "foobar" {
   image_id      = data.aws_ami.test_ami.id
   instance_type = "t2.micro"
 }
@@ -2922,7 +2922,7 @@ resource "aws_autoscaling_group" "bar" {
   desired_capacity      = 0
   max_size              = 0
   min_size              = 0
-  launch_configuration  = aws_launch_configuration.foobar.name
+  launch_configuration  = aws_autoscaling_launch_configuration.foobar.name
   max_instance_lifetime = "864000"
 }
 `)
@@ -2941,7 +2941,7 @@ data "aws_ami" "test_ami" {
   }
 }
 
-resource "aws_launch_configuration" "foobar" {
+resource "aws_autoscaling_launch_configuration" "foobar" {
   image_id      = data.aws_ami.test_ami.id
   instance_type = "t2.micro"
 }
@@ -2951,7 +2951,7 @@ resource "aws_autoscaling_group" "bar" {
   desired_capacity      = 0
   max_size              = 0
   min_size              = 0
-  launch_configuration  = aws_launch_configuration.foobar.name
+  launch_configuration  = aws_autoscaling_launch_configuration.foobar.name
   max_instance_lifetime = "604800"
 }
 `)
@@ -2970,7 +2970,7 @@ data "aws_ami" "test_ami" {
   }
 }
 
-resource "aws_launch_configuration" "foobar" {
+resource "aws_autoscaling_launch_configuration" "foobar" {
   image_id      = data.aws_ami.test_ami.id
   instance_type = "t2.micro"
 }
@@ -2984,7 +2984,7 @@ resource "aws_autoscaling_group" "bar" {
   desired_capacity          = 0
   force_delete              = true
   termination_policies      = ["OldestInstance", "ClosestToNextInstanceHour"]
-  launch_configuration      = aws_launch_configuration.foobar.name
+  launch_configuration      = aws_autoscaling_launch_configuration.foobar.name
   enabled_metrics = ["GroupTotalInstances",
     "GroupPendingInstances",
     "GroupTerminatingInstances",
@@ -3017,7 +3017,7 @@ data "aws_ami" "test_ami" {
   }
 }
 
-resource "aws_launch_configuration" "foobar" {
+resource "aws_autoscaling_launch_configuration" "foobar" {
   image_id      = data.aws_ami.test_ami.id
   instance_type = "t2.micro"
 }
@@ -3031,7 +3031,7 @@ resource "aws_autoscaling_group" "bar" {
   desired_capacity          = 0
   force_delete              = true
   termination_policies      = ["OldestInstance", "ClosestToNextInstanceHour"]
-  launch_configuration      = aws_launch_configuration.foobar.name
+  launch_configuration      = aws_autoscaling_launch_configuration.foobar.name
   enabled_metrics = ["GroupTotalInstances",
     "GroupPendingInstances",
     "GroupTerminatingInstances",
@@ -3091,7 +3091,7 @@ data "aws_ami" "test_ami" {
   }
 }
 
-resource "aws_launch_configuration" "foobar" {
+resource "aws_autoscaling_launch_configuration" "foobar" {
   image_id          = data.aws_ami.test_ami.id
   instance_type     = "t2.micro"
   enable_monitoring = false
@@ -3110,7 +3110,7 @@ resource "aws_autoscaling_group" "bar" {
   desired_capacity          = 0
   force_delete              = true
   termination_policies      = ["OldestInstance"]
-  launch_configuration      = aws_launch_configuration.foobar.name
+  launch_configuration      = aws_autoscaling_launch_configuration.foobar.name
 }
 
 resource "aws_security_group" "tf_test_self" {
@@ -3180,7 +3180,7 @@ data "aws_ami" "test_ami" {
   }
 }
 
-resource "aws_launch_configuration" "foobar" {
+resource "aws_autoscaling_launch_configuration" "foobar" {
   image_id          = data.aws_ami.test_ami.id
   instance_type     = "t2.micro"
   enable_monitoring = false
@@ -3201,7 +3201,7 @@ resource "aws_autoscaling_group" "bar" {
   desired_capacity          = 0
   force_delete              = true
   termination_policies      = ["OldestInstance"]
-  launch_configuration      = aws_launch_configuration.foobar.name
+  launch_configuration      = aws_autoscaling_launch_configuration.foobar.name
 }
 
 resource "aws_security_group" "tf_test_self" {
@@ -3278,7 +3278,7 @@ data "aws_ami" "test_ami" {
   }
 }
 
-resource "aws_launch_configuration" "foobar" {
+resource "aws_autoscaling_launch_configuration" "foobar" {
   image_id          = data.aws_ami.test_ami.id
   instance_type     = "t2.micro"
   enable_monitoring = false
@@ -3302,7 +3302,7 @@ resource "aws_autoscaling_group" "bar" {
   desired_capacity          = 0
   force_delete              = true
   termination_policies      = ["OldestInstance"]
-  launch_configuration      = aws_launch_configuration.foobar.name
+  launch_configuration      = aws_autoscaling_launch_configuration.foobar.name
 }
 
 resource "aws_security_group" "tf_test_self" {
@@ -3396,7 +3396,7 @@ data "aws_ami" "test_ami" {
   }
 }
 
-resource "aws_launch_configuration" "foobar" {
+resource "aws_autoscaling_launch_configuration" "foobar" {
   image_id      = data.aws_ami.test_ami.id
   instance_type = "t2.micro"
 }
@@ -3411,7 +3411,7 @@ resource "aws_autoscaling_group" "bar" {
   force_delete         = true
   termination_policies = ["OldestInstance", "ClosestToNextInstanceHour"]
 
-  launch_configuration = aws_launch_configuration.foobar.name
+  launch_configuration = aws_autoscaling_launch_configuration.foobar.name
 
   initial_lifecycle_hook {
     name                 = "launching"
@@ -3527,7 +3527,7 @@ data "aws_ami" "test_ami" {
   }
 }
 
-resource "aws_launch_configuration" "foobar" {
+resource "aws_autoscaling_launch_configuration" "foobar" {
   image_id                    = data.aws_ami.test_ami.id
   instance_type               = "t2.micro"
   associate_public_ip_address = "true"
@@ -3557,7 +3557,7 @@ resource "aws_autoscaling_group" "bar" {
   wait_for_elb_capacity     = 2
   force_delete              = true
   termination_policies      = ["OldestInstance"]
-  launch_configuration      = aws_launch_configuration.foobar.name
+  launch_configuration      = aws_autoscaling_launch_configuration.foobar.name
 }
 `, rInt)
 }
@@ -3575,7 +3575,7 @@ data "aws_ami" "test_ami" {
   }
 }
 
-resource "aws_launch_configuration" "foobar" {
+resource "aws_autoscaling_launch_configuration" "foobar" {
   image_id      = data.aws_ami.test_ami.id
   instance_type = "t2.micro"
 }
@@ -3595,7 +3595,7 @@ resource "aws_autoscaling_group" "bar" {
   force_delete         = true
   termination_policies = ["OldestInstance", "ClosestToNextInstanceHour"]
 
-  launch_configuration = aws_launch_configuration.foobar.name
+  launch_configuration = aws_autoscaling_launch_configuration.foobar.name
 
   suspended_processes = ["AlarmNotification", "ScheduledActions"]
 
@@ -3621,7 +3621,7 @@ data "aws_ami" "test_ami" {
   }
 }
 
-resource "aws_launch_configuration" "foobar" {
+resource "aws_autoscaling_launch_configuration" "foobar" {
   image_id      = data.aws_ami.test_ami.id
   instance_type = "t2.micro"
 }
@@ -3641,7 +3641,7 @@ resource "aws_autoscaling_group" "bar" {
   force_delete         = true
   termination_policies = ["OldestInstance", "ClosestToNextInstanceHour"]
 
-  launch_configuration = aws_launch_configuration.foobar.name
+  launch_configuration = aws_autoscaling_launch_configuration.foobar.name
 
   suspended_processes = ["AZRebalance", "ScheduledActions"]
 
@@ -3662,7 +3662,7 @@ resource "aws_autoscaling_group" "test" {
   max_size = 0
 
   availability_zones   = [data.aws_availability_zones.available.names[0]]
-  launch_configuration = aws_launch_configuration.test.name
+  launch_configuration = aws_autoscaling_launch_configuration.test.name
 }
 
 data "aws_ami" "test_ami" {
@@ -3675,7 +3675,7 @@ data "aws_ami" "test_ami" {
   }
 }
 
-resource "aws_launch_configuration" "test" {
+resource "aws_autoscaling_launch_configuration" "test" {
   image_id      = data.aws_ami.test_ami.id
   instance_type = "t1.micro"
 }
@@ -3733,7 +3733,7 @@ resource "aws_launch_template" "foobar" {
   instance_type = "t2.micro"
 }
 
-resource "aws_launch_configuration" "test" {
+resource "aws_autoscaling_launch_configuration" "test" {
   image_id      = data.aws_ami.test_ami.id
   instance_type = "t2.micro"
 }
@@ -3743,7 +3743,7 @@ resource "aws_autoscaling_group" "bar" {
   desired_capacity     = 0
   max_size             = 0
   min_size             = 0
-  launch_configuration = aws_launch_configuration.test.name
+  launch_configuration = aws_autoscaling_launch_configuration.test.name
 }
 `)
 }
@@ -3767,7 +3767,7 @@ resource "aws_launch_template" "foobar" {
   instance_type = "t2.micro"
 }
 
-resource "aws_launch_configuration" "test" {
+resource "aws_autoscaling_launch_configuration" "test" {
   image_id      = data.aws_ami.test_ami.id
   instance_type = "t2.micro"
 }
@@ -3809,7 +3809,7 @@ resource "aws_launch_template" "foobar" {
   instance_type = "t2.micro"
 }
 
-resource "aws_launch_configuration" "test" {
+resource "aws_autoscaling_launch_configuration" "test" {
   image_id      = data.aws_ami.test_ami.id
   instance_type = "t2.micro"
 }
@@ -4441,7 +4441,7 @@ resource "aws_autoscaling_group" "test" {
   max_size             = 2
   min_size             = 1
   desired_capacity     = 1
-  launch_configuration = aws_launch_configuration.test.name
+  launch_configuration = aws_autoscaling_launch_configuration.test.name
 
   instance_refresh {
     strategy = "Rolling"
@@ -4467,7 +4467,7 @@ data "aws_availability_zones" "current" {
   }
 }
 
-resource "aws_launch_configuration" "test" {
+resource "aws_autoscaling_launch_configuration" "test" {
   image_id      = data.aws_ami.test.id
   instance_type = "t3.nano"
 }
@@ -4481,7 +4481,7 @@ resource "aws_autoscaling_group" "test" {
   max_size             = 2
   min_size             = 1
   desired_capacity     = 1
-  launch_configuration = aws_launch_configuration.test.name
+  launch_configuration = aws_autoscaling_launch_configuration.test.name
 
   instance_refresh {
     strategy = "Rolling"
@@ -4513,7 +4513,7 @@ data "aws_availability_zones" "current" {
   }
 }
 
-resource "aws_launch_configuration" "test" {
+resource "aws_autoscaling_launch_configuration" "test" {
   image_id      = data.aws_ami.test.id
   instance_type = "t3.nano"
 }
@@ -4527,7 +4527,7 @@ resource "aws_autoscaling_group" "test" {
   max_size             = 2
   min_size             = 1
   desired_capacity     = 1
-  launch_configuration = aws_launch_configuration.test.name
+  launch_configuration = aws_autoscaling_launch_configuration.test.name
 }
 
 data "aws_ami" "test" {
@@ -4549,7 +4549,7 @@ data "aws_availability_zones" "current" {
   }
 }
 
-resource "aws_launch_configuration" "test" {
+resource "aws_autoscaling_launch_configuration" "test" {
   image_id      = data.aws_ami.test.id
   instance_type = "t3.nano"
 }
@@ -4563,7 +4563,7 @@ resource "aws_autoscaling_group" "test" {
   max_size             = 2
   min_size             = 1
   desired_capacity     = 1
-  launch_configuration = aws_launch_configuration.test.name
+  launch_configuration = aws_autoscaling_launch_configuration.test.name
 
   instance_refresh {
     strategy = "Rolling"
@@ -4589,7 +4589,7 @@ data "aws_availability_zones" "current" {
   }
 }
 
-resource "aws_launch_configuration" "test" {
+resource "aws_autoscaling_launch_configuration" "test" {
   name_prefix   = %[1]q
   image_id      = data.aws_ami.test.id
   instance_type = "t3.nano"
@@ -4608,7 +4608,7 @@ resource "aws_autoscaling_group" "test" {
   max_size             = 2
   min_size             = 1
   desired_capacity     = 1
-  launch_configuration = aws_launch_configuration.test.name
+  launch_configuration = aws_autoscaling_launch_configuration.test.name
 
   instance_refresh {
     strategy = "Rolling"
@@ -4641,7 +4641,7 @@ data "aws_availability_zones" "current" {
   }
 }
 
-resource "aws_launch_configuration" "test" {
+resource "aws_autoscaling_launch_configuration" "test" {
   image_id      = data.aws_ami.test.id
   instance_type = "t3.nano"
 }
@@ -4669,7 +4669,7 @@ data "aws_availability_zones" "current" {
   }
 }
 
-resource "aws_launch_configuration" "test" {
+resource "aws_autoscaling_launch_configuration" "test" {
   image_id      = data.aws_ami.test.id
   instance_type = "t3.nano"
 }
@@ -4683,7 +4683,7 @@ resource "aws_autoscaling_group" "test" {
   max_size             = 5
   min_size             = 1
   desired_capacity     = 1
-  launch_configuration = aws_launch_configuration.test.name
+  launch_configuration = aws_autoscaling_launch_configuration.test.name
 
   warm_pool {}
 }
@@ -4697,7 +4697,7 @@ resource "aws_autoscaling_group" "test" {
   max_size             = 5
   min_size             = 1
   desired_capacity     = 1
-  launch_configuration = aws_launch_configuration.test.name
+  launch_configuration = aws_autoscaling_launch_configuration.test.name
 
   warm_pool {
     pool_state                  = "Stopped"
@@ -4715,7 +4715,7 @@ resource "aws_autoscaling_group" "test" {
   max_size             = 5
   min_size             = 1
   desired_capacity     = 1
-  launch_configuration = aws_launch_configuration.test.name
+  launch_configuration = aws_autoscaling_launch_configuration.test.name
 }
 `
 }
