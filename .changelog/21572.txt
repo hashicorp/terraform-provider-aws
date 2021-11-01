@@ -1,0 +1,7 @@
+```release-note:enhancement
+  data-source/aws_cloudcontrolapi_resource: Rename data source to aws_cloudcontrol_resource (with alias for aws_cloudcontrolapi_resource)
+  ```
+
+  ```release-note:enhancement
+ resource/aws_cloudcontrolapi_resource: Rename resource to aws_cloudcontrol_resource (with alias for aws_cloudcontrolapi_resource)
+  ```
