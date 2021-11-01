@@ -3816,13 +3816,13 @@ resource "aws_s3_bucket" "bucket" {
 
 func testAccBucketWithGrantsConfig(bucketName string) string {
 	return fmt.Sprintf(`
-data "aws_canonical_user_id" "current" {}
+data "aws_s3_canonical_user_id" "current" {}
 
 resource "aws_s3_bucket" "bucket" {
   bucket = %[1]q
 
   grant {
-    id          = data.aws_canonical_user_id.current.id
+    id          = data.aws_s3_canonical_user_id.current.id
     type        = "CanonicalUser"
     permissions = ["FULL_CONTROL", "WRITE"]
   }
@@ -3832,13 +3832,13 @@ resource "aws_s3_bucket" "bucket" {
 
 func testAccBucketWithGrantsUpdateConfig(bucketName string) string {
 	return fmt.Sprintf(`
-data "aws_canonical_user_id" "current" {}
+data "aws_s3_canonical_user_id" "current" {}
 
 resource "aws_s3_bucket" "bucket" {
   bucket = %[1]q
 
   grant {
-    id          = data.aws_canonical_user_id.current.id
+    id          = data.aws_s3_canonical_user_id.current.id
     type        = "CanonicalUser"
     permissions = ["READ"]
   }

@@ -326,13 +326,13 @@ resource "aws_s3_bucket" "mybucket" {
 ### Using ACL policy grants
 
 ```terraform
-data "aws_canonical_user_id" "current_user" {}
+data "aws_s3_canonical_user_id" "current_user" {}
 
 resource "aws_s3_bucket" "bucket" {
   bucket = "mybucket"
 
   grant {
-    id          = data.aws_canonical_user_id.current_user.id
+    id          = data.aws_s3_canonical_user_id.current_user.id
     type        = "CanonicalUser"
     permissions = ["FULL_CONTROL"]
   }

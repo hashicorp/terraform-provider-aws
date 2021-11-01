@@ -169,13 +169,13 @@ func testAccPreCheckSpotDatafeedSubscription(t *testing.T) {
 
 func testAccSpotDatafeedSubscription(rName string) string {
 	return fmt.Sprintf(`
-data "aws_canonical_user_id" "current" {}
+data "aws_s3_canonical_user_id" "current" {}
 
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 
   grant {
-    id          = data.aws_canonical_user_id.current.id
+    id          = data.aws_s3_canonical_user_id.current.id
     permissions = ["FULL_CONTROL"]
     type        = "CanonicalUser"
   }

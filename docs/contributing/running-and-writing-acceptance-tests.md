@@ -1345,7 +1345,7 @@ Avoid hard coding values in acceptance test checks and configurations for consis
 
 - [ ] __Uses Account Data Sources__: Any hardcoded account numbers in configuration, e.g., `137112412989`, should be replaced with a data source. Depending on the situation, there are several data sources for account IDs including:
     - [`aws_caller_identity` data source](https://www.terraform.io/docs/providers/aws/d/caller_identity.html),
-    - [`aws_canonical_user_id` data source](https://www.terraform.io/docs/providers/aws/d/canonical_user_id.html),
+    - [`aws_s3_canonical_user_id` data source](https://www.terraform.io/docs/providers/aws/d/canonical_user_id.html),
     - [`aws_billing_service_account` data source](https://www.terraform.io/docs/providers/aws/d/billing_service_account.html), and
     - [`aws_sagemaker_prebuilt_ecr_image` data source](https://www.terraform.io/docs/providers/aws/d/sagemaker_prebuilt_ecr_image.html).
 - [ ] __Uses Account Test Checks__: Any check required to verify an AWS Account ID of the current testing account or another account should use one of the following available helper functions over the usage of `resource.TestCheckResourceAttrSet()` and `resource.TestMatchResourceAttr()`:

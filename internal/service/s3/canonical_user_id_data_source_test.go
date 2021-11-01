@@ -19,7 +19,7 @@ func TestAccS3CanonicalUserIDDataSource_basic(t *testing.T) {
 			{
 				Config: testAccCanonicalUserIdDataSourceConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCanonicalUserIdCheckExistsDataSource("data.aws_canonical_user_id.current"),
+					testAccCanonicalUserIdCheckExistsDataSource("data.aws_s3_canonical_user_id.current"),
 				),
 			},
 		},
@@ -45,5 +45,5 @@ func testAccCanonicalUserIdCheckExistsDataSource(name string) resource.TestCheck
 }
 
 const testAccCanonicalUserIdDataSourceConfig = `
-data "aws_canonical_user_id" "current" {}
+data "aws_s3_canonical_user_id" "current" {}
 `

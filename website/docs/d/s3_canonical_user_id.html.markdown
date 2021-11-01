@@ -1,13 +1,13 @@
 ---
 subcategory: "S3"
 layout: "aws"
-page_title: "AWS: aws_canonical_user_id"
+page_title: "AWS: aws_s3_canonical_user_id"
 description: |-
   Provides the canonical user ID for the AWS account associated with the provider
   connection to AWS.
 ---
 
-# Data Source: aws_canonical_user_id
+# Data Source: aws_s3_canonical_user_id
 
 The Canonical User ID data source allows access to the [canonical user ID](http://docs.aws.amazon.com/general/latest/gr/acct-identifiers.html)
 for the effective account in which Terraform is working.  
@@ -15,10 +15,10 @@ for the effective account in which Terraform is working.
 ## Example Usage
 
 ```terraform
-data "aws_canonical_user_id" "current" {}
+data "aws_s3_canonical_user_id" "current" {}
 
 output "canonical_user_id" {
-  value = data.aws_canonical_user_id.current.id
+  value = data.aws_s3_canonical_user_id.current.id
 }
 ```
 
