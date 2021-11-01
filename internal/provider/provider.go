@@ -364,7 +364,8 @@ func Provider() *schema.Provider {
 			"aws_batch_compute_environment": batch.DataSourceComputeEnvironment(),
 			"aws_batch_job_queue":           batch.DataSourceJobQueue(),
 
-			"aws_cloudcontrolapi_resource": cloudcontrol.DataSourceResource(),
+			"aws_cloudcontrol_resource":    cloudcontrol.DataSourceResource(),
+			"aws_cloudcontrolapi_resource": cloudcontrol.DataSourceResource(), // backward compatible alias
 
 			"aws_cloudformation_export": cloudformation.DataSourceExport(),
 			"aws_cloudformation_stack":  cloudformation.DataSourceStack(),
@@ -835,7 +836,8 @@ func Provider() *schema.Provider {
 
 			"aws_cloud9_environment_ec2": cloud9.ResourceEnvironmentEC2(),
 
-			"aws_cloudcontrolapi_resource": cloudcontrol.ResourceResource(),
+			"aws_cloudcontrol_resource":    cloudcontrol.ResourceResource(),
+			"aws_cloudcontrolapi_resource": cloudcontrol.ResourceResource(), // backward compatible alias
 
 			"aws_cloudformation_stack":              cloudformation.ResourceStack(),
 			"aws_cloudformation_stack_set":          cloudformation.ResourceStackSet(),

@@ -79,7 +79,7 @@ service/chime:
 service/cloud9:
   - '((\*|-) ?`?|(data|resource) "?)aws_cloud9_'
 service/cloudcontrolapi:
-  - '((\*|-) ?`?|(data|resource) "?)aws_cloudcontrolapi_'
+  - '((\*|-) ?`?|(data|resource) "?)aws_cloudcontrol_'
 service/clouddirectory:
   - '((\*|-) ?`?|(data|resource) "?)aws_clouddirectory_'
 service/cloudformation:
