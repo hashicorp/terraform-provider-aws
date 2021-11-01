@@ -167,7 +167,7 @@ resource "aws_batch_compute_environment" "sample" {
 * `desired_vcpus` - (Optional) The desired number of EC2 vCPUS in the compute environment. This parameter isn't applicable to jobs running on Fargate resources, and shouldn't be specified.
 * `ec2_configuration` - (Optional) Provides information used to select Amazon Machine Images (AMIs) for EC2 instances in the compute environment. If Ec2Configuration isn't specified, the default is ECS_AL2. This parameter isn't applicable to jobs that are running on Fargate resources, and shouldn't be specified.
 * `ec2_key_pair` - (Optional) The EC2 key pair that is used for instances launched in the compute environment. This parameter isn't applicable to jobs running on Fargate resources, and shouldn't be specified.
-* `image_id` - (Optional) The Amazon Machine Image (AMI) ID used for instances launched in the compute environment. This parameter isn't applicable to jobs running on Fargate resources, and shouldn't be specified. (Deprecated, use [`image_id_override`](/docs/resources/batch_compute_environment#image_id_override) instead)
+* `image_id` - (Optional) The Amazon Machine Image (AMI) ID used for instances launched in the compute environment. This parameter isn't applicable to jobs running on Fargate resources, and shouldn't be specified. (Deprecated, use [`image_id_override`](#image_id_override) instead)
 * `instance_role` - (Optional) The Amazon ECS instance role applied to Amazon EC2 instances in a compute environment. This parameter isn't applicable to jobs running on Fargate resources, and shouldn't be specified.
 * `instance_type` - (Optional) A list of instance types that may be launched. This parameter isn't applicable to jobs running on Fargate resources, and shouldn't be specified.
 * `launch_template` - (Optional) The launch template to use for your compute resources. See details below. This parameter isn't applicable to jobs running on Fargate resources, and shouldn't be specified.
@@ -183,7 +183,7 @@ resource "aws_batch_compute_environment" "sample" {
 
 `ec2_configuration` supports the following:
 
-* `image_id_override` - (Optional) The AMI ID used for instances launched in the compute environment that match the image type. This setting overrides the [`image_id` argument](/docs/resources/batch_compute_environment#image_id) in the `compute_resourcess block.
+* `image_id_override` - (Optional) The AMI ID used for instances launched in the compute environment that match the image type. This setting overrides the [`image_id` argument](#image_id) in the `compute_resourcess block.
 * `image_type` - (Optional) The image type to match with the instance type to select an AMI. If the `image_id_override` parameter isn't specified, then a recent [Amazon ECS-optimized Amazon Linux 2 AMI](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html#al2ami) (`ECS_AL2`) is used.
 
 ### launch_template
