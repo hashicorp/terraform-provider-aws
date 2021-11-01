@@ -564,35 +564,42 @@ rules:
         - internal/service/events
         - internal/service/[f-z]*
       exclude:
-        - internal/service/codebuild/project_test.go
-        - internal/service/codepipeline/codepipeline.go
-        - internal/service/cognitoidentity/pool_roles_attachment_test.go
-        - internal/service/cognitoidentity/pool_test.go
-        - internal/service/cognitoidp/identity_provider_test.go
+        - internal/service/ds
         - internal/service/firehose/delivery_stream_test.go
-        - internal/service/globalaccelerator/accelerator_test.go
+        - internal/service/fsx/windows_file_system_test.go
         - internal/service/iam/openid_connect_provider_test.go
-        - internal/service/lightsail/domain_test.go
         - internal/service/mq/broker_test.go
-        - internal/service/opsworks/application_test.go
-        - internal/service/opsworks/stack_test.go
-        - internal/service/ram/resource_share_accepter_test.go
-        - internal/service/rds/instance_test.go
+        - internal/service/mq/forge_test.go
         - internal/service/route53/sweep.go
         - internal/service/s3/bucket_test.go
-        - internal/service/s3control/bucket_test.go
-        - internal/service/sagemaker/code_repository_test.go
-        - internal/service/sagemaker/notebook_instance_test.go
-        - internal/service/shield/protection_test.go
+        - internal/service/s3/bucket_object_test.go
         - internal/service/storagegateway/cached_iscsi_volume.go
         - internal/service/storagegateway/cached_iscsi_volume_test.go
+        - internal/service/storagegateway/stored_iscsi_volume_test.go
+        - internal/service/transfer/access_test.go
         - internal/service/transfer/server_test.go
     patterns:
       - patterns:
-        - pattern-regex: '[\"`].*(?<!(example))\.(com|net|org)\b'
-        - pattern-regex: '[\"`].*(?<!(amazonaws))\.com\b'
-        - pattern-regex: '[\"`].*(?<!(awsapps))\.com\b'
+        - pattern-regex: '(([-a-zA-Z0-9]{2,}\.)|(%[sdftq]))+(com|net|org)\b'
       - pattern-inside: '($X : string)'
+      - pattern-not-regex: 'amazonaws\.com'
+      - pattern-not-regex: 'awsapps\.com'
+      - pattern-not-regex: '@(([-a-zA-Z0-9]{2,}\.)|(%[sdftq]))+(com|net|org)\b' # exclude domain names in email addresses
+      - pattern-not-regex: '[^-a-zA-Z0-9]example\.com'
+      - pattern-not-regex: '[^-a-zA-Z0-9]example\.net'
+      - pattern-not-regex: '[^-a-zA-Z0-9]example\.org'
+      - pattern-not-regex: 'github\.com'
+      - pattern-not-regex: 'aws\.amazon\.com'
+      - pattern-not-regex: 'graph\.facebook\.com'
+      - pattern-not-regex: 'people\.googleapis\.com'
+      - pattern-not-regex: 'www\.googleapis\.com'
+      - pattern-not-regex: 'accounts\.google\.com'
+      - pattern-not-regex: '[-a-z0-9]+\.apps\.googleusercontent\.com'
+      - pattern-not-regex: 'elasticbeanstalk\.com'
+      - pattern-not-regex: 'awsglobalaccelerator\.com'
+      - pattern-not-regex: 'cloudfront\.net'
+      - pattern-not-regex: 'http://json-schema\.org/draft-0\d/schema'
+      - pattern-not-regex: 'http://activemq.apache.org/schema/core'
     severity: WARNING
 
   - id: email-address

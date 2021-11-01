@@ -192,6 +192,7 @@ func testAccClientVPNEndpoint_mutualAuthAndMsAD(t *testing.T) {
 func testAccClientVPNEndpoint_federated(t *testing.T) {
 	var v ec2.ClientVpnEndpoint
 	rStr := sdkacctest.RandString(5)
+	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -201,7 +202,7 @@ func testAccClientVPNEndpoint_federated(t *testing.T) {
 		CheckDestroy: testAccCheckClientVPNEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEc2ClientVpnEndpointConfigWithFederatedAuth(rStr),
+				Config: testAccEc2ClientVpnEndpointConfigWithFederatedAuth(rStr, idpEntityId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNEndpointExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "authentication_options.#", "1"),
@@ -215,7 +216,7 @@ func testAccClientVPNEndpoint_federated(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEc2ClientVpnEndpointConfigWithFederatedAuthSelfServiceSamlProviderArn(rStr),
+				Config: testAccEc2ClientVpnEndpointConfigWithFederatedAuthSelfServiceSamlProviderArn(rStr, idpEntityId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNEndpointExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "authentication_options.#", "1"),
@@ -373,6 +374,7 @@ func testAccClientVPNEndpoint_splitTunnel(t *testing.T) {
 func testAccClientVPNEndpoint_selfServicePortal(t *testing.T) {
 	var v1, v2 ec2.ClientVpnEndpoint
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -382,7 +384,7 @@ func testAccClientVPNEndpoint_selfServicePortal(t *testing.T) {
 		CheckDestroy: testAccCheckClientVPNEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEc2ClientVpnEndpointConfigSelfServicePortal(rName, "enabled"),
+				Config: testAccEc2ClientVpnEndpointConfigSelfServicePortal(rName, "enabled", idpEntityId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNEndpointExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "self_service_portal", "enabled"),
@@ -394,7 +396,7 @@ func testAccClientVPNEndpoint_selfServicePortal(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEc2ClientVpnEndpointConfigSelfServicePortal(rName, "disabled"),
+				Config: testAccEc2ClientVpnEndpointConfigSelfServicePortal(rName, "disabled", idpEntityId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNEndpointExists(resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "self_service_portal", "disabled"),
@@ -618,15 +620,17 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
 `, rName)
 }
 
-func testAccEc2ClientVpnEndpointConfigWithFederatedAuth(rName string) string {
-	return testAccEc2ClientVpnEndpointConfigAcmCertificateBase() + fmt.Sprintf(`
+func testAccEc2ClientVpnEndpointConfigWithFederatedAuth(rName, idpEntityId string) string {
+	return acctest.ConfigCompose(
+		testAccEc2ClientVpnEndpointConfigAcmCertificateBase(),
+		fmt.Sprintf(`
 resource "aws_iam_saml_provider" "default" {
-  name                   = "myprovider-%s"
-  saml_metadata_document = file("./test-fixtures/saml-metadata.xml")
+  name                   = "myprovider-%[1]s"
+  saml_metadata_document = templatefile("./test-fixtures/saml-metadata.xml.tpl", { entity_id = %[2]q })
 }
 
 resource "aws_ec2_client_vpn_endpoint" "test" {
-  description            = "terraform-testacc-clientvpn-%s"
+  description            = "terraform-testacc-clientvpn-%[1]s"
   server_certificate_arn = aws_acm_certificate.test.arn
   client_cidr_block      = "10.0.0.0/16"
 
@@ -639,23 +643,23 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
     enabled = false
   }
 }
-`, rName, rName)
+`, rName, idpEntityId))
 }
 
-func testAccEc2ClientVpnEndpointConfigWithFederatedAuthSelfServiceSamlProviderArn(rName string) string {
+func testAccEc2ClientVpnEndpointConfigWithFederatedAuthSelfServiceSamlProviderArn(rName, idpEntityId string) string {
 	return testAccEc2ClientVpnEndpointConfigAcmCertificateBase() + fmt.Sprintf(`
 resource "aws_iam_saml_provider" "default" {
-  name                   = "myprovider-%s"
-  saml_metadata_document = file("./test-fixtures/saml-metadata.xml")
+  name                   = "myprovider-%[1]s"
+  saml_metadata_document = templatefile("./test-fixtures/saml-metadata.xml.tpl", { entity_id = %[2]q })
 }
 
 resource "aws_iam_saml_provider" "self_service" {
-  name                   = "myprovider-selfservice--%s"
-  saml_metadata_document = file("./test-fixtures/saml-metadata.xml")
+  name                   = "myprovider-selfservice-%[1]s"
+  saml_metadata_document = templatefile("./test-fixtures/saml-metadata.xml.tpl", { entity_id = %[2]q })
 }
 
 resource "aws_ec2_client_vpn_endpoint" "test" {
-  description            = "terraform-testacc-clientvpn-%s"
+  description            = "terraform-testacc-clientvpn-%[1]s"
   server_certificate_arn = aws_acm_certificate.test.arn
   client_cidr_block      = "10.0.0.0/16"
 
@@ -669,7 +673,7 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
     enabled = false
   }
 }
-`, rName, rName, rName)
+`, rName, idpEntityId)
 }
 
 func testAccEc2ClientVpnEndpointConfig_tags(rName string) string {
@@ -739,15 +743,15 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
 `, rName, splitTunnel)
 }
 
-func testAccEc2ClientVpnEndpointConfigSelfServicePortal(rName string, selfServicePortal string) string {
+func testAccEc2ClientVpnEndpointConfigSelfServicePortal(rName, selfServicePortal, idpEntityId string) string {
 	return testAccEc2ClientVpnEndpointConfigAcmCertificateBase() + fmt.Sprintf(`
 resource "aws_iam_saml_provider" "default" {
-  name                   = "myprovider-%s"
-  saml_metadata_document = file("./test-fixtures/saml-metadata.xml")
+  name                   = "myprovider-%[1]s"
+  saml_metadata_document = templatefile("./test-fixtures/saml-metadata.xml.tpl", { entity_id = %[2]q })
 }
 
 resource "aws_ec2_client_vpn_endpoint" "test" {
-  description            = "terraform-testacc-clientvpn-%s"
+  description            = "terraform-testacc-clientvpn-%[1]s"
   server_certificate_arn = aws_acm_certificate.test.arn
   client_cidr_block      = "10.0.0.0/16"
   self_service_portal    = %[3]q
@@ -761,5 +765,5 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
     enabled = false
   }
 }
-`, rName, rName, selfServicePortal)
+`, rName, idpEntityId, selfServicePortal)
 }

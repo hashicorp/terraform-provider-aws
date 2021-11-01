@@ -2442,8 +2442,7 @@ func testAccESDomainConfig_CognitoOptions(randInt int, includeCognitoOptions boo
 	}
 
 	return fmt.Sprintf(`
-data "aws_partition" "current" {
-}
+data "aws_partition" "current" {}
 
 resource "aws_cognito_user_pool" "example" {
   name = "tf-test-%[1]d"
@@ -2492,7 +2491,7 @@ resource "aws_elasticsearch_domain" "test" {
 
   elasticsearch_version = "6.0"
 
-	%s
+  %s
 
   ebs_options {
     ebs_enabled = true

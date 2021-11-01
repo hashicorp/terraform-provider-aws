@@ -183,7 +183,7 @@ func TestAccWorkLinkFleet_network(t *testing.T) {
 func TestAccWorkLinkFleet_deviceCaCertificate(t *testing.T) {
 	rName := sdkacctest.RandStringFromCharSet(20, sdkacctest.CharSetAlpha)
 	resourceName := "aws_worklink_fleet.test"
-	fName := "test-fixtures/worklink-device-ca-certificate.pem"
+	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -192,7 +192,7 @@ func TestAccWorkLinkFleet_deviceCaCertificate(t *testing.T) {
 		CheckDestroy: testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetDeviceCaCertificateConfig(rName, fName),
+				Config: testAccFleetDeviceCaCertificateConfig(rName, idpEntityId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName),
 					resource.TestMatchResourceAttr(resourceName, "device_ca_certificate", regexp.MustCompile("^-----BEGIN CERTIFICATE-----")),
@@ -482,15 +482,15 @@ resource "aws_worklink_fleet" "test" {
 `, r, fName)
 }
 
-func testAccFleetIdentityProviderConfig(r string, fName string) string {
+func testAccFleetIdentityProviderConfig(rName, idpEntityId string) string {
 	return fmt.Sprintf(`
 resource "aws_worklink_fleet" "test" {
-  name = "tf-worklink-fleet-%s"
+  name = "tf-worklink-fleet-%[1]s"
 
   identity_provider {
     type          = "SAML"
-    saml_metadata = file("%s")
+    saml_metadata = templatefile("./test-fixtures/saml-metadata.xml.tpl", { entity_id = %[2]q })
   }
 }
-`, r, fName)
+`, rName, idpEntityId)
 }

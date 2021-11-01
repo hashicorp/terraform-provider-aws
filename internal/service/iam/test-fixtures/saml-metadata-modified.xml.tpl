@@ -1,4 +1,5 @@
-<?xml version="1.0" encoding="UTF-8"?><md:EntityDescriptor xmlns:md="urn:oasis:names:tc:SAML:2.0:metadata" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" entityID="https://terraform2-dev-ed.my.salesforce.com" validUntil="2025-09-02T18:27:19.710Z">
+<?xml version="1.0" encoding="UTF-8"?>
+<md:EntityDescriptor xmlns:md="urn:oasis:names:tc:SAML:2.0:metadata" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" entityID="${entity_id_modified}" validUntil="2025-09-02T18:27:19.710Z">
    <md:IDPSSODescriptor protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
       <md:KeyDescriptor use="signing">
          <ds:KeyInfo>
@@ -8,7 +9,7 @@
          </ds:KeyInfo>
       </md:KeyDescriptor>
       <md:NameIDFormat>urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified</md:NameIDFormat>
-      <md:SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://terraform2-dev-ed.my.salesforce.com/idp/endpoint/HttpPost"/>
-      <md:SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="https://terraform2-dev-ed.my.salesforce.com/idp/endpoint/HttpRedirect"/>
+      <md:SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="${entity_id_modified}/idp/endpoint/HttpPost"/>
+      <md:SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="${entity_id_modified}/idp/endpoint/HttpRedirect"/>
    </md:IDPSSODescriptor>
 </md:EntityDescriptor>
