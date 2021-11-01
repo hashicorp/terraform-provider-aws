@@ -1,0 +1,3 @@
+```release-note:enhancement
+ data-source/aws_caller_idenity: Rename data source to aws_sts_caller_identity (with alias for aws_caller_idenity)
+ ```
