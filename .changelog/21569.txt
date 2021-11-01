@@ -1,0 +1,3 @@
+```release-note:enhancement
+  data-source/aws_canonical_user_id: Rename data source to aws_s3_canonical_user_id (with alias for aws_canonical_user_id)
+  ```
