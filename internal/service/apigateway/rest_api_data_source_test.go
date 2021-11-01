@@ -11,8 +11,8 @@ import (
 
 func TestAccAPIGatewayRestAPIDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandString(8)
-	dataSourceName := "data.aws_api_gateway_rest_api.test"
-	resourceName := "aws_api_gateway_rest_api.test"
+	dataSourceName := "data.aws_apigateway_rest_api.test"
+	resourceName := "aws_apigateway_rest_api.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck: acctest.ErrorCheck(t, apigateway.EndpointsID),
@@ -43,8 +43,8 @@ func TestAccAPIGatewayRestAPIDataSource_basic(t *testing.T) {
 
 func TestAccAPIGatewayRestAPIDataSource_Endpoint_vpcEndpointIDs(t *testing.T) {
 	rName := sdkacctest.RandString(8)
-	dataSourceName := "data.aws_api_gateway_rest_api.test"
-	resourceName := "aws_api_gateway_rest_api.test"
+	dataSourceName := "data.aws_apigateway_rest_api.test"
+	resourceName := "aws_apigateway_rest_api.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, apigateway.EndpointsID),
@@ -76,8 +76,8 @@ func TestAccAPIGatewayRestAPIDataSource_Endpoint_vpcEndpointIDs(t *testing.T) {
 
 func testAccRestAPINameDataSourceConfig() string {
 	return `
-data "aws_api_gateway_rest_api" "test" {
-  name = aws_api_gateway_rest_api.test.name
+data "aws_apigateway_rest_api" "test" {
+  name = aws_apigateway_rest_api.test.name
 }
 `
 }

@@ -1224,7 +1224,7 @@ resource "aws_cloudwatch_event_rule" "test" {
 }
 
 resource "aws_cloudwatch_event_target" "test" {
-  arn  = "${aws_api_gateway_stage.test.execution_arn}/GET"
+  arn  = "${aws_apigateway_stage.test.execution_arn}/GET"
   rule = aws_cloudwatch_event_rule.test.id
 
   http_target {
@@ -1239,7 +1239,7 @@ resource "aws_cloudwatch_event_target" "test" {
   }
 }
 
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name = %[1]q
   body = jsonencode({
     openapi = "3.0.1"
@@ -1262,11 +1262,11 @@ resource "aws_api_gateway_rest_api" "test" {
   })
 }
 
-resource "aws_api_gateway_deployment" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
+resource "aws_apigateway_deployment" "test" {
+  rest_api_id = aws_apigateway_rest_api.test.id
 
   triggers = {
-    redeployment = sha1(jsonencode(aws_api_gateway_rest_api.test.body))
+    redeployment = sha1(jsonencode(aws_apigateway_rest_api.test.body))
   }
 
   lifecycle {
@@ -1274,9 +1274,9 @@ resource "aws_api_gateway_deployment" "test" {
   }
 }
 
-resource "aws_api_gateway_stage" "test" {
-  deployment_id = aws_api_gateway_deployment.test.id
-  rest_api_id   = aws_api_gateway_rest_api.test.id
+resource "aws_apigateway_stage" "test" {
+  deployment_id = aws_apigateway_deployment.test.id
+  rest_api_id   = aws_apigateway_rest_api.test.id
   stage_name    = "test"
 }
 

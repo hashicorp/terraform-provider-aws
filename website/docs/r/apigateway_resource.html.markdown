@@ -1,26 +1,26 @@
 ---
 subcategory: "API Gateway (REST APIs)"
 layout: "aws"
-page_title: "AWS: aws_api_gateway_resource"
+page_title: "AWS: aws_apigateway_resource"
 description: |-
   Provides an API Gateway Resource.
 ---
 
-# Resource: aws_api_gateway_resource
+# Resource: aws_apigateway_resource
 
 Provides an API Gateway Resource.
 
 ## Example Usage
 
 ```terraform
-resource "aws_api_gateway_rest_api" "MyDemoAPI" {
+resource "aws_apigateway_rest_api" "MyDemoAPI" {
   name        = "MyDemoAPI"
   description = "This is my API for demonstration purposes"
 }
 
-resource "aws_api_gateway_resource" "MyDemoResource" {
-  rest_api_id = aws_api_gateway_rest_api.MyDemoAPI.id
-  parent_id   = aws_api_gateway_rest_api.MyDemoAPI.root_resource_id
+resource "aws_apigateway_resource" "MyDemoResource" {
+  rest_api_id = aws_apigateway_rest_api.MyDemoAPI.id
+  parent_id   = aws_apigateway_rest_api.MyDemoAPI.root_resource_id
   path_part   = "mydemoresource"
 }
 ```
@@ -42,8 +42,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_api_gateway_resource` can be imported using `REST-API-ID/RESOURCE-ID`, e.g.,
+`aws_apigateway_resource` can be imported using `REST-API-ID/RESOURCE-ID`, e.g.,
 
 ```
-$ terraform import aws_api_gateway_resource.example 12345abcde/67890fghij
+$ terraform import aws_apigateway_resource.example 12345abcde/67890fghij
 ```

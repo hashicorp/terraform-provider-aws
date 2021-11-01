@@ -1,12 +1,12 @@
 ---
 subcategory: "API Gateway (REST APIs)"
 layout: "aws"
-page_title: "AWS: aws_api_gateway_rest_api"
+page_title: "AWS: aws_apigateway_rest_api"
 description: |-
   Get information on a API Gateway REST API
 ---
 
-# Data Source: aws_api_gateway_rest_api
+# Data Source: aws_apigateway_rest_api
 
 Use this data source to get the id and root_resource_id of a REST API in
 API Gateway. To fetch the REST API you must provide a name to match against.
@@ -16,7 +16,7 @@ error if there is more than one match.
 ## Example Usage
 
 ```terraform
-data "aws_api_gateway_rest_api" "my_rest_api" {
+data "aws_apigateway_rest_api" "my_rest_api" {
   name = "my-rest-api"
 }
 ```

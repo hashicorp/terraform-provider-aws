@@ -1,58 +1,58 @@
 ---
 subcategory: "API Gateway (REST APIs)"
 layout: "aws"
-page_title: "AWS: aws_api_gateway_integration_response"
+page_title: "AWS: aws_apigateway_integration_response"
 description: |-
   Provides an HTTP Method Integration Response for an API Gateway Resource.
 ---
 
-# Resource: aws_api_gateway_integration_response
+# Resource: aws_apigateway_integration_response
 
 Provides an HTTP Method Integration Response for an API Gateway Resource.
 
--> **Note:** Depends on having `aws_api_gateway_integration` inside your rest api. To ensure this
+-> **Note:** Depends on having `aws_apigateway_integration` inside your rest api. To ensure this
 you might need to add an explicit `depends_on` for clean runs.
 
 ## Example Usage
 
 ```terraform
-resource "aws_api_gateway_rest_api" "MyDemoAPI" {
+resource "aws_apigateway_rest_api" "MyDemoAPI" {
   name        = "MyDemoAPI"
   description = "This is my API for demonstration purposes"
 }
 
-resource "aws_api_gateway_resource" "MyDemoResource" {
-  rest_api_id = aws_api_gateway_rest_api.MyDemoAPI.id
-  parent_id   = aws_api_gateway_rest_api.MyDemoAPI.root_resource_id
+resource "aws_apigateway_resource" "MyDemoResource" {
+  rest_api_id = aws_apigateway_rest_api.MyDemoAPI.id
+  parent_id   = aws_apigateway_rest_api.MyDemoAPI.root_resource_id
   path_part   = "mydemoresource"
 }
 
-resource "aws_api_gateway_method" "MyDemoMethod" {
-  rest_api_id   = aws_api_gateway_rest_api.MyDemoAPI.id
-  resource_id   = aws_api_gateway_resource.MyDemoResource.id
+resource "aws_apigateway_method" "MyDemoMethod" {
+  rest_api_id   = aws_apigateway_rest_api.MyDemoAPI.id
+  resource_id   = aws_apigateway_resource.MyDemoResource.id
   http_method   = "GET"
   authorization = "NONE"
 }
 
-resource "aws_api_gateway_integration" "MyDemoIntegration" {
-  rest_api_id = aws_api_gateway_rest_api.MyDemoAPI.id
-  resource_id = aws_api_gateway_resource.MyDemoResource.id
-  http_method = aws_api_gateway_method.MyDemoMethod.http_method
+resource "aws_apigateway_integration" "MyDemoIntegration" {
+  rest_api_id = aws_apigateway_rest_api.MyDemoAPI.id
+  resource_id = aws_apigateway_resource.MyDemoResource.id
+  http_method = aws_apigateway_method.MyDemoMethod.http_method
   type        = "MOCK"
 }
 
-resource "aws_api_gateway_method_response" "response_200" {
-  rest_api_id = aws_api_gateway_rest_api.MyDemoAPI.id
-  resource_id = aws_api_gateway_resource.MyDemoResource.id
-  http_method = aws_api_gateway_method.MyDemoMethod.http_method
+resource "aws_apigateway_method_response" "response_200" {
+  rest_api_id = aws_apigateway_rest_api.MyDemoAPI.id
+  resource_id = aws_apigateway_resource.MyDemoResource.id
+  http_method = aws_apigateway_method.MyDemoMethod.http_method
   status_code = "200"
 }
 
-resource "aws_api_gateway_integration_response" "MyDemoIntegrationResponse" {
-  rest_api_id = aws_api_gateway_rest_api.MyDemoAPI.id
-  resource_id = aws_api_gateway_resource.MyDemoResource.id
-  http_method = aws_api_gateway_method.MyDemoMethod.http_method
-  status_code = aws_api_gateway_method_response.response_200.status_code
+resource "aws_apigateway_integration_response" "MyDemoIntegrationResponse" {
+  rest_api_id = aws_apigateway_rest_api.MyDemoAPI.id
+  resource_id = aws_apigateway_resource.MyDemoResource.id
+  http_method = aws_apigateway_method.MyDemoMethod.http_method
+  status_code = aws_apigateway_method_response.response_200.status_code
 
   # Transforms the backend JSON response to XML
   response_templates = {
@@ -90,8 +90,8 @@ No additional attributes are exported.
 
 ## Import
 
-`aws_api_gateway_integration_response` can be imported using `REST-API-ID/RESOURCE-ID/HTTP-METHOD/STATUS-CODE`, e.g.,
+`aws_apigateway_integration_response` can be imported using `REST-API-ID/RESOURCE-ID/HTTP-METHOD/STATUS-CODE`, e.g.,
 
 ```
-$ terraform import aws_api_gateway_integration_response.example 12345abcde/67890fghij/GET/200
+$ terraform import aws_apigateway_integration_response.example 12345abcde/67890fghij/GET/200
 ```

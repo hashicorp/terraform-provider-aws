@@ -19,7 +19,7 @@ import (
 func TestAccAPIGatewayMethod_basic(t *testing.T) {
 	var conf apigateway.Method
 	rInt := sdkacctest.RandInt()
-	resourceName := "aws_api_gateway_method.test"
+	resourceName := "aws_apigateway_method.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -58,7 +58,7 @@ func TestAccAPIGatewayMethod_basic(t *testing.T) {
 func TestAccAPIGatewayMethod_customAuthorizer(t *testing.T) {
 	var conf apigateway.Method
 	rInt := sdkacctest.RandInt()
-	resourceName := "aws_api_gateway_method.test"
+	resourceName := "aws_apigateway_method.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -100,7 +100,7 @@ func TestAccAPIGatewayMethod_customAuthorizer(t *testing.T) {
 func TestAccAPIGatewayMethod_cognitoAuthorizer(t *testing.T) {
 	var conf apigateway.Method
 	rInt := sdkacctest.RandInt()
-	resourceName := "aws_api_gateway_method.test"
+	resourceName := "aws_apigateway_method.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -145,7 +145,7 @@ func TestAccAPIGatewayMethod_cognitoAuthorizer(t *testing.T) {
 func TestAccAPIGatewayMethod_customRequestValidator(t *testing.T) {
 	var conf apigateway.Method
 	rInt := sdkacctest.RandInt()
-	resourceName := "aws_api_gateway_method.test"
+	resourceName := "aws_apigateway_method.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -186,7 +186,7 @@ func TestAccAPIGatewayMethod_customRequestValidator(t *testing.T) {
 func TestAccAPIGatewayMethod_disappears(t *testing.T) {
 	var conf apigateway.Method
 	rInt := sdkacctest.RandInt()
-	resourceName := "aws_api_gateway_method.test"
+	resourceName := "aws_apigateway_method.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -209,7 +209,7 @@ func TestAccAPIGatewayMethod_disappears(t *testing.T) {
 func TestAccAPIGatewayMethod_operationName(t *testing.T) {
 	var conf apigateway.Method
 	rInt := sdkacctest.RandInt()
-	resourceName := "aws_api_gateway_method.test"
+	resourceName := "aws_apigateway_method.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -304,8 +304,8 @@ func testAccCheckMethodExists(n string, res *apigateway.Method) resource.TestChe
 
 		req := &apigateway.GetMethodInput{
 			HttpMethod: aws.String("GET"),
-			ResourceId: aws.String(s.RootModule().Resources["aws_api_gateway_resource.test"].Primary.ID),
-			RestApiId:  aws.String(s.RootModule().Resources["aws_api_gateway_rest_api.test"].Primary.ID),
+			ResourceId: aws.String(s.RootModule().Resources["aws_apigateway_resource.test"].Primary.ID),
+			RestApiId:  aws.String(s.RootModule().Resources["aws_apigateway_rest_api.test"].Primary.ID),
 		}
 		describe, err := conn.GetMethod(req)
 		if err != nil {
@@ -322,14 +322,14 @@ func testAccCheckMethodDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_api_gateway_method" {
+		if rs.Type != "aws_apigateway_method" {
 			continue
 		}
 
 		req := &apigateway.GetMethodInput{
 			HttpMethod: aws.String("GET"),
-			ResourceId: aws.String(s.RootModule().Resources["aws_api_gateway_resource.test"].Primary.ID),
-			RestApiId:  aws.String(s.RootModule().Resources["aws_api_gateway_rest_api.test"].Primary.ID),
+			ResourceId: aws.String(s.RootModule().Resources["aws_apigateway_resource.test"].Primary.ID),
+			RestApiId:  aws.String(s.RootModule().Resources["aws_apigateway_rest_api.test"].Primary.ID),
 		}
 		_, err := conn.GetMethod(req)
 
@@ -364,7 +364,7 @@ func testAccMethodImportStateIdFunc(resourceName string) resource.ImportStateIdF
 
 func testAccMethodWithCustomAuthorizerConfig(rInt int) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name = "tf-acc-test-custom-auth-%d"
 }
 
@@ -436,25 +436,25 @@ resource "aws_lambda_function" "authorizer" {
   runtime          = "nodejs12.x"
 }
 
-resource "aws_api_gateway_authorizer" "test" {
+resource "aws_apigateway_authorizer" "test" {
   name                   = "tf-acc-test-authorizer"
-  rest_api_id            = aws_api_gateway_rest_api.test.id
+  rest_api_id            = aws_apigateway_rest_api.test.id
   authorizer_uri         = aws_lambda_function.authorizer.invoke_arn
   authorizer_credentials = aws_iam_role.invocation_role.arn
 }
 
-resource "aws_api_gateway_resource" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
+resource "aws_apigateway_resource" "test" {
+  rest_api_id = aws_apigateway_rest_api.test.id
+  parent_id   = aws_apigateway_rest_api.test.root_resource_id
   path_part   = "test"
 }
 
-resource "aws_api_gateway_method" "test" {
-  rest_api_id   = aws_api_gateway_rest_api.test.id
-  resource_id   = aws_api_gateway_resource.test.id
+resource "aws_apigateway_method" "test" {
+  rest_api_id   = aws_apigateway_rest_api.test.id
+  resource_id   = aws_apigateway_resource.test.id
   http_method   = "GET"
   authorization = "CUSTOM"
-  authorizer_id = aws_api_gateway_authorizer.test.id
+  authorizer_id = aws_apigateway_authorizer.test.id
 
   request_models = {
     "application/json" = "Error"
@@ -470,7 +470,7 @@ resource "aws_api_gateway_method" "test" {
 
 func testAccMethodWithCognitoAuthorizerConfig(rInt int) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name = "tf-acc-test-cognito-auth-%d"
 }
 
@@ -519,26 +519,26 @@ resource "aws_cognito_user_pool" "pool" {
   name = "tf-acc-test-cognito-pool-%d"
 }
 
-resource "aws_api_gateway_authorizer" "test" {
+resource "aws_apigateway_authorizer" "test" {
   name            = "tf-acc-test-cognito-authorizer"
-  rest_api_id     = aws_api_gateway_rest_api.test.id
+  rest_api_id     = aws_apigateway_rest_api.test.id
   identity_source = "method.request.header.Authorization"
   provider_arns   = [aws_cognito_user_pool.pool.arn]
   type            = "COGNITO_USER_POOLS"
 }
 
-resource "aws_api_gateway_resource" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
+resource "aws_apigateway_resource" "test" {
+  rest_api_id = aws_apigateway_rest_api.test.id
+  parent_id   = aws_apigateway_rest_api.test.root_resource_id
   path_part   = "test"
 }
 
-resource "aws_api_gateway_method" "test" {
-  rest_api_id          = aws_api_gateway_rest_api.test.id
-  resource_id          = aws_api_gateway_resource.test.id
+resource "aws_apigateway_method" "test" {
+  rest_api_id          = aws_apigateway_rest_api.test.id
+  resource_id          = aws_apigateway_resource.test.id
   http_method          = "GET"
   authorization        = "COGNITO_USER_POOLS"
-  authorizer_id        = aws_api_gateway_authorizer.test.id
+  authorizer_id        = aws_apigateway_authorizer.test.id
   authorization_scopes = ["test.read", "test.write"]
 
   request_models = {
@@ -555,7 +555,7 @@ resource "aws_api_gateway_method" "test" {
 
 func testAccMethodWithCognitoAuthorizerUpdateConfig(rInt int) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name = "tf-acc-test-cognito-auth-%d"
 }
 
@@ -604,26 +604,26 @@ resource "aws_cognito_user_pool" "pool" {
   name = "tf-acc-test-cognito-pool-%d"
 }
 
-resource "aws_api_gateway_authorizer" "test" {
+resource "aws_apigateway_authorizer" "test" {
   name            = "tf-acc-test-cognito-authorizer"
-  rest_api_id     = aws_api_gateway_rest_api.test.id
+  rest_api_id     = aws_apigateway_rest_api.test.id
   identity_source = "method.request.header.Authorization"
   provider_arns   = [aws_cognito_user_pool.pool.arn]
   type            = "COGNITO_USER_POOLS"
 }
 
-resource "aws_api_gateway_resource" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
+resource "aws_apigateway_resource" "test" {
+  rest_api_id = aws_apigateway_rest_api.test.id
+  parent_id   = aws_apigateway_rest_api.test.root_resource_id
   path_part   = "test"
 }
 
-resource "aws_api_gateway_method" "test" {
-  rest_api_id          = aws_api_gateway_rest_api.test.id
-  resource_id          = aws_api_gateway_resource.test.id
+resource "aws_apigateway_method" "test" {
+  rest_api_id          = aws_apigateway_rest_api.test.id
+  resource_id          = aws_apigateway_resource.test.id
   http_method          = "GET"
   authorization        = "COGNITO_USER_POOLS"
-  authorizer_id        = aws_api_gateway_authorizer.test.id
+  authorizer_id        = aws_apigateway_authorizer.test.id
   authorization_scopes = ["test.read", "test.write", "test.delete"]
 
   request_models = {
@@ -639,19 +639,19 @@ resource "aws_api_gateway_method" "test" {
 
 func testAccMethodConfig(rInt int) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name = "tf-acc-test-apig-method-%d"
 }
 
-resource "aws_api_gateway_resource" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
+resource "aws_apigateway_resource" "test" {
+  rest_api_id = aws_apigateway_rest_api.test.id
+  parent_id   = aws_apigateway_rest_api.test.root_resource_id
   path_part   = "test"
 }
 
-resource "aws_api_gateway_method" "test" {
-  rest_api_id   = aws_api_gateway_rest_api.test.id
-  resource_id   = aws_api_gateway_resource.test.id
+resource "aws_apigateway_method" "test" {
+  rest_api_id   = aws_apigateway_rest_api.test.id
+  resource_id   = aws_apigateway_resource.test.id
   http_method   = "GET"
   authorization = "NONE"
 
@@ -669,19 +669,19 @@ resource "aws_api_gateway_method" "test" {
 
 func testAccMethodUpdateConfig(rInt int) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name = "tf-acc-test-apig-method-%d"
 }
 
-resource "aws_api_gateway_resource" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
+resource "aws_apigateway_resource" "test" {
+  rest_api_id = aws_apigateway_rest_api.test.id
+  parent_id   = aws_apigateway_rest_api.test.root_resource_id
   path_part   = "test"
 }
 
-resource "aws_api_gateway_method" "test" {
-  rest_api_id   = aws_api_gateway_rest_api.test.id
-  resource_id   = aws_api_gateway_resource.test.id
+resource "aws_apigateway_method" "test" {
+  rest_api_id   = aws_apigateway_rest_api.test.id
+  resource_id   = aws_apigateway_resource.test.id
   http_method   = "GET"
   authorization = "NONE"
 
@@ -698,25 +698,25 @@ resource "aws_api_gateway_method" "test" {
 
 func testAccMethodWithCustomRequestValidatorConfig(rInt int) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name = "tf-acc-test-apig-method-custom-req-validator-%d"
 }
 
-resource "aws_api_gateway_resource" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
+resource "aws_apigateway_resource" "test" {
+  rest_api_id = aws_apigateway_rest_api.test.id
+  parent_id   = aws_apigateway_rest_api.test.root_resource_id
   path_part   = "test"
 }
 
-resource "aws_api_gateway_request_validator" "validator" {
-  rest_api_id                 = aws_api_gateway_rest_api.test.id
+resource "aws_apigateway_request_validator" "validator" {
+  rest_api_id                 = aws_apigateway_rest_api.test.id
   name                        = "paramsValidator"
   validate_request_parameters = true
 }
 
-resource "aws_api_gateway_method" "test" {
-  rest_api_id   = aws_api_gateway_rest_api.test.id
-  resource_id   = aws_api_gateway_resource.test.id
+resource "aws_apigateway_method" "test" {
+  rest_api_id   = aws_apigateway_rest_api.test.id
+  resource_id   = aws_apigateway_resource.test.id
   http_method   = "GET"
   authorization = "NONE"
 
@@ -729,32 +729,32 @@ resource "aws_api_gateway_method" "test" {
     "method.request.querystring.page"    = true
   }
 
-  request_validator_id = aws_api_gateway_request_validator.validator.id
+  request_validator_id = aws_apigateway_request_validator.validator.id
 }
 `, rInt)
 }
 
 func testAccMethodWithCustomRequestValidatorUpdateConfig(rInt int) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name = "tf-acc-test-apig-method-custom-req-validator-%d"
 }
 
-resource "aws_api_gateway_resource" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
+resource "aws_apigateway_resource" "test" {
+  rest_api_id = aws_apigateway_rest_api.test.id
+  parent_id   = aws_apigateway_rest_api.test.root_resource_id
   path_part   = "test"
 }
 
-resource "aws_api_gateway_request_validator" "validator" {
-  rest_api_id                 = aws_api_gateway_rest_api.test.id
+resource "aws_apigateway_request_validator" "validator" {
+  rest_api_id                 = aws_apigateway_rest_api.test.id
   name                        = "paramsValidator"
   validate_request_parameters = true
 }
 
-resource "aws_api_gateway_method" "test" {
-  rest_api_id   = aws_api_gateway_rest_api.test.id
-  resource_id   = aws_api_gateway_resource.test.id
+resource "aws_apigateway_method" "test" {
+  rest_api_id   = aws_apigateway_rest_api.test.id
+  resource_id   = aws_apigateway_resource.test.id
   http_method   = "GET"
   authorization = "NONE"
 
@@ -771,22 +771,22 @@ resource "aws_api_gateway_method" "test" {
 
 func testAccMethodOperationNameConfig(rInt int, operationName string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name = "tf-acc-test-apig-method-custom-op-name-%[1]d"
 }
 
-resource "aws_api_gateway_resource" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
+resource "aws_apigateway_resource" "test" {
+  rest_api_id = aws_apigateway_rest_api.test.id
+  parent_id   = aws_apigateway_rest_api.test.root_resource_id
   path_part   = "test"
 }
 
-resource "aws_api_gateway_method" "test" {
+resource "aws_apigateway_method" "test" {
   authorization  = "NONE"
   http_method    = "GET"
   operation_name = %[2]q
-  resource_id    = aws_api_gateway_resource.test.id
-  rest_api_id    = aws_api_gateway_rest_api.test.id
+  resource_id    = aws_apigateway_resource.test.id
+  rest_api_id    = aws_apigateway_rest_api.test.id
 
   request_models = {
     "application/json" = "Error"

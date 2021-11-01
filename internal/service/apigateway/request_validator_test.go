@@ -18,7 +18,7 @@ import (
 func TestAccAPIGatewayRequestValidator_basic(t *testing.T) {
 	var conf apigateway.UpdateRequestValidatorOutput
 	rName := fmt.Sprintf("tf-test-acc-%s", sdkacctest.RandString(8))
-	resourceName := "aws_api_gateway_request_validator.test"
+	resourceName := "aws_apigateway_request_validator.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -63,7 +63,7 @@ func TestAccAPIGatewayRequestValidator_basic(t *testing.T) {
 func TestAccAPIGatewayRequestValidator_disappears(t *testing.T) {
 	var conf apigateway.UpdateRequestValidatorOutput
 	rName := fmt.Sprintf("tf-test-acc-%s", sdkacctest.RandString(8))
-	resourceName := "aws_api_gateway_request_validator.test"
+	resourceName := "aws_apigateway_request_validator.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -151,7 +151,7 @@ func testAccCheckRequestValidatorDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_api_gateway_request_validator" {
+		if rs.Type != "aws_apigateway_request_validator" {
 			continue
 		}
 
@@ -192,7 +192,7 @@ func testAccRequestValidatorImportStateIdFunc(resourceName string) resource.Impo
 
 func testAccRequestValidatorConfig_base(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name = "%s"
 }
 `, rName)
@@ -200,18 +200,18 @@ resource "aws_api_gateway_rest_api" "test" {
 
 func testAccRequestValidatorConfig(rName string) string {
 	return fmt.Sprintf(testAccRequestValidatorConfig_base(rName) + `
-resource "aws_api_gateway_request_validator" "test" {
+resource "aws_apigateway_request_validator" "test" {
   name        = "tf-acc-test-request-validator"
-  rest_api_id = aws_api_gateway_rest_api.test.id
+  rest_api_id = aws_apigateway_rest_api.test.id
 }
 `)
 }
 
 func testAccRequestValidatorUpdatedConfig(rName string) string {
 	return fmt.Sprintf(testAccRequestValidatorConfig_base(rName) + `
-resource "aws_api_gateway_request_validator" "test" {
+resource "aws_apigateway_request_validator" "test" {
   name                        = "tf-acc-test-request-validator_modified"
-  rest_api_id                 = aws_api_gateway_rest_api.test.id
+  rest_api_id                 = aws_apigateway_rest_api.test.id
   validate_request_body       = true
   validate_request_parameters = true
 }

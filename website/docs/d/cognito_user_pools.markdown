@@ -13,7 +13,7 @@ Use this data source to get a list of cognito user pools.
 ## Example Usage
 
 ```terraform
-data "aws_api_gateway_rest_api" "selected" {
+data "aws_apigateway_rest_api" "selected" {
   name = var.api_gateway_name
 }
 
@@ -21,10 +21,10 @@ data "aws_cognito_user_pools" "selected" {
   name = var.cognito_user_pool_name
 }
 
-resource "aws_api_gateway_authorizer" "cognito" {
+resource "aws_apigateway_authorizer" "cognito" {
   name          = "cognito"
   type          = "COGNITO_USER_POOLS"
-  rest_api_id   = data.aws_api_gateway_rest_api.selected.id
+  rest_api_id   = data.aws_apigateway_rest_api.selected.id
   provider_arns = data.aws_cognito_user_pools.selected.arns
 }
 ```

@@ -111,7 +111,7 @@ resource "aws_iam_role" "default" {
 ## Specify Lambda permissions for API Gateway REST API
 
 ```terraform
-resource "aws_api_gateway_rest_api" "MyDemoAPI" {
+resource "aws_apigateway_rest_api" "MyDemoAPI" {
   name        = "MyDemoAPI"
   description = "This is my API for demonstration purposes"
 }
@@ -124,7 +124,7 @@ resource "aws_lambda_permission" "lambda_permission" {
 
   # The /*/*/* part allows invocation from any stage, method and resource path
   # within API Gateway REST API.
-  source_arn = "${aws_api_gateway_rest_api.MyDemoAPI.execution_arn}/*/*/*"
+  source_arn = "${aws_apigateway_rest_api.MyDemoAPI.execution_arn}/*/*/*"
 }
 ```
 

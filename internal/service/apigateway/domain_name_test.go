@@ -23,7 +23,7 @@ func TestAccAPIGatewayDomainName_certificateARN(t *testing.T) {
 
 	var domainName apigateway.DomainName
 	acmCertificateResourceName := "aws_acm_certificate.test"
-	resourceName := "aws_api_gateway_domain_name.test"
+	resourceName := "aws_apigateway_domain_name.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckApigatewayEdgeDomainName(t) },
@@ -85,7 +85,7 @@ func TestAccAPIGatewayDomainName_certificateName(t *testing.T) {
 	}
 
 	var conf apigateway.DomainName
-	resourceName := "aws_api_gateway_domain_name.test"
+	resourceName := "aws_apigateway_domain_name.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -117,7 +117,7 @@ func TestAccAPIGatewayDomainName_certificateName(t *testing.T) {
 
 func TestAccAPIGatewayDomainName_regionalCertificateARN(t *testing.T) {
 	var domainName apigateway.DomainName
-	resourceName := "aws_api_gateway_domain_name.test"
+	resourceName := "aws_apigateway_domain_name.test"
 	rName := acctest.RandomSubdomain()
 
 	key := acctest.TLSRSAPrivateKeyPEM(2048)
@@ -158,7 +158,7 @@ func TestAccAPIGatewayDomainName_regionalCertificateName(t *testing.T) {
 	}
 
 	var domainName apigateway.DomainName
-	resourceName := "aws_api_gateway_domain_name.test"
+	resourceName := "aws_apigateway_domain_name.test"
 
 	domain := acctest.RandomDomainName()
 	domainWildcard := fmt.Sprintf("*.%s", domain)
@@ -196,7 +196,7 @@ func TestAccAPIGatewayDomainName_regionalCertificateName(t *testing.T) {
 
 func TestAccAPIGatewayDomainName_securityPolicy(t *testing.T) {
 	var domainName apigateway.DomainName
-	resourceName := "aws_api_gateway_domain_name.test"
+	resourceName := "aws_apigateway_domain_name.test"
 	rName := acctest.RandomSubdomain()
 
 	key := acctest.TLSRSAPrivateKeyPEM(2048)
@@ -226,7 +226,7 @@ func TestAccAPIGatewayDomainName_securityPolicy(t *testing.T) {
 
 func TestAccAPIGatewayDomainName_tags(t *testing.T) {
 	var domainName apigateway.DomainName
-	resourceName := "aws_api_gateway_domain_name.test"
+	resourceName := "aws_apigateway_domain_name.test"
 	rName := acctest.RandomSubdomain()
 
 	key := acctest.TLSRSAPrivateKeyPEM(2048)
@@ -274,7 +274,7 @@ func TestAccAPIGatewayDomainName_tags(t *testing.T) {
 
 func TestAccAPIGatewayDomainName_disappears(t *testing.T) {
 	var domainName apigateway.DomainName
-	resourceName := "aws_api_gateway_domain_name.test"
+	resourceName := "aws_apigateway_domain_name.test"
 	rName := acctest.RandomSubdomain()
 
 	key := acctest.TLSRSAPrivateKeyPEM(2048)
@@ -303,7 +303,7 @@ func TestAccAPIGatewayDomainName_mutualTLSAuthentication(t *testing.T) {
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
 
 	var v apigateway.DomainName
-	resourceName := "aws_api_gateway_domain_name.test"
+	resourceName := "aws_apigateway_domain_name.test"
 	acmCertificateResourceName := "aws_acm_certificate.test"
 	s3BucketObjectResourceName := "aws_s3_bucket_object.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -378,7 +378,7 @@ func testAccCheckDomainNameDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_api_gateway_domain_name" {
+		if rs.Type != "aws_apigateway_domain_name" {
 			continue
 		}
 
@@ -433,7 +433,7 @@ func testAccCheckEdgeDomainNameDestroy(s *terraform.State) error {
 	conn := testAccProviderApigatewayEdgeDomainName.Meta().(*conns.AWSClient).APIGatewayConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_api_gateway_domain_name" {
+		if rs.Type != "aws_apigateway_domain_name" {
 			continue
 		}
 
@@ -512,7 +512,7 @@ func testAccDomainNameConfig_CertificateARN(rootDomain string, domain string) st
 		testAccApigatewayEdgeDomainNameRegionProviderConfig(),
 		testAccDomainNamePublicCertConfig(rootDomain, domain),
 		`
-resource "aws_api_gateway_domain_name" "test" {
+resource "aws_apigateway_domain_name" "test" {
   domain_name     = aws_acm_certificate.test.domain_name
   certificate_arn = aws_acm_certificate_validation.test.certificate_arn
 
@@ -525,7 +525,7 @@ resource "aws_api_gateway_domain_name" "test" {
 
 func testAccDomainNameConfig_CertificateName(domainName, key, certificate, chainCertificate string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_domain_name" "test" {
+resource "aws_apigateway_domain_name" "test" {
   domain_name             = "%[1]s"
   certificate_body        = "%[2]s"
   certificate_chain       = "%[3]s"
@@ -542,7 +542,7 @@ resource "aws_acm_certificate" "test" {
   private_key      = "%[3]s"
 }
 
-resource "aws_api_gateway_domain_name" "test" {
+resource "aws_apigateway_domain_name" "test" {
   domain_name              = %[1]q
   regional_certificate_arn = aws_acm_certificate.test.arn
 
@@ -555,7 +555,7 @@ resource "aws_api_gateway_domain_name" "test" {
 
 func testAccDomainNameConfig_RegionalCertificateName(domainName, key, certificate, chainCertificate string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_domain_name" "test" {
+resource "aws_apigateway_domain_name" "test" {
   certificate_body          = "%[2]s"
   certificate_chain         = "%[3]s"
   certificate_private_key   = "%[4]s"
@@ -576,7 +576,7 @@ resource "aws_acm_certificate" "test" {
   private_key      = "%[3]s"
 }
 
-resource "aws_api_gateway_domain_name" "test" {
+resource "aws_apigateway_domain_name" "test" {
   domain_name              = %[1]q
   regional_certificate_arn = aws_acm_certificate.test.arn
   security_policy          = %[4]q
@@ -595,7 +595,7 @@ resource "aws_acm_certificate" "test" {
   private_key      = "%[3]s"
 }
 
-resource "aws_api_gateway_domain_name" "test" {
+resource "aws_apigateway_domain_name" "test" {
   domain_name              = %[1]q
   regional_certificate_arn = aws_acm_certificate.test.arn
 
@@ -617,7 +617,7 @@ resource "aws_acm_certificate" "test" {
   private_key      = "%[3]s"
 }
 
-resource "aws_api_gateway_domain_name" "test" {
+resource "aws_apigateway_domain_name" "test" {
   domain_name              = %[1]q
   regional_certificate_arn = aws_acm_certificate.test.arn
 
@@ -653,7 +653,7 @@ resource "aws_s3_bucket_object" "test" {
   source = "test-fixtures/apigateway-domain-name-truststore-1.pem"
 }
 
-resource "aws_api_gateway_domain_name" "test" {
+resource "aws_apigateway_domain_name" "test" {
   domain_name              = aws_acm_certificate.test.domain_name
   regional_certificate_arn = aws_acm_certificate_validation.test.certificate_arn
   security_policy          = "TLS_1_2"
@@ -674,7 +674,7 @@ func testAccDomainNameConfig_MutualTLSAuthenticationMissing(rootDomain, domain s
 	return acctest.ConfigCompose(
 		testAccDomainNamePublicCertConfig(rootDomain, domain),
 		`
-resource "aws_api_gateway_domain_name" "test" {
+resource "aws_apigateway_domain_name" "test" {
   domain_name              = aws_acm_certificate.test.domain_name
   regional_certificate_arn = aws_acm_certificate_validation.test.certificate_arn
   security_policy          = "TLS_1_2"

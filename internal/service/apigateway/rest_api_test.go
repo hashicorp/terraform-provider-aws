@@ -19,7 +19,7 @@ import (
 func TestAccAPIGatewayRestAPI_basic(t *testing.T) {
 	var conf apigateway.RestApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_api_gateway_rest_api.test"
+	resourceName := "aws_apigateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -58,7 +58,7 @@ func TestAccAPIGatewayRestAPI_basic(t *testing.T) {
 
 func TestAccAPIGatewayRestAPI_tags(t *testing.T) {
 	var conf apigateway.RestApi
-	resourceName := "aws_api_gateway_rest_api.test"
+	resourceName := "aws_apigateway_rest_api.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -108,7 +108,7 @@ func TestAccAPIGatewayRestAPI_tags(t *testing.T) {
 
 func TestAccAPIGatewayRestAPI_disappears(t *testing.T) {
 	var restApi apigateway.RestApi
-	resourceName := "aws_api_gateway_rest_api.test"
+	resourceName := "aws_apigateway_rest_api.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -132,7 +132,7 @@ func TestAccAPIGatewayRestAPI_disappears(t *testing.T) {
 func TestAccAPIGatewayRestAPI_endpoint(t *testing.T) {
 	var restApi apigateway.RestApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_api_gateway_rest_api.test"
+	resourceName := "aws_apigateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -208,7 +208,7 @@ func TestAccAPIGatewayRestAPI_endpoint(t *testing.T) {
 func TestAccAPIGatewayRestAPI_Endpoint_private(t *testing.T) {
 	var restApi apigateway.RestApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_api_gateway_rest_api.test"
+	resourceName := "aws_apigateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -261,7 +261,7 @@ func TestAccAPIGatewayRestAPI_Endpoint_private(t *testing.T) {
 
 func TestAccAPIGatewayRestAPI_apiKeySource(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_api_gateway_rest_api.test"
+	resourceName := "aws_apigateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -299,7 +299,7 @@ func TestAccAPIGatewayRestAPI_apiKeySource(t *testing.T) {
 func TestAccAPIGatewayRestAPI_APIKeySource_overrideBody(t *testing.T) {
 	var conf apigateway.RestApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_api_gateway_rest_api.test"
+	resourceName := "aws_apigateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -343,7 +343,7 @@ func TestAccAPIGatewayRestAPI_APIKeySource_overrideBody(t *testing.T) {
 func TestAccAPIGatewayRestAPI_APIKeySource_setByBody(t *testing.T) {
 	var conf apigateway.RestApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_api_gateway_rest_api.test"
+	resourceName := "aws_apigateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -371,7 +371,7 @@ func TestAccAPIGatewayRestAPI_APIKeySource_setByBody(t *testing.T) {
 func TestAccAPIGatewayRestAPI_binaryMediaTypes(t *testing.T) {
 	var conf apigateway.RestApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_api_gateway_rest_api.test"
+	resourceName := "aws_apigateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -408,7 +408,7 @@ func TestAccAPIGatewayRestAPI_binaryMediaTypes(t *testing.T) {
 func TestAccAPIGatewayRestAPI_BinaryMediaTypes_overrideBody(t *testing.T) {
 	var conf apigateway.RestApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_api_gateway_rest_api.test"
+	resourceName := "aws_apigateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -455,7 +455,7 @@ func TestAccAPIGatewayRestAPI_BinaryMediaTypes_overrideBody(t *testing.T) {
 func TestAccAPIGatewayRestAPI_BinaryMediaTypes_setByBody(t *testing.T) {
 	var conf apigateway.RestApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_api_gateway_rest_api.test"
+	resourceName := "aws_apigateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -484,7 +484,7 @@ func TestAccAPIGatewayRestAPI_BinaryMediaTypes_setByBody(t *testing.T) {
 func TestAccAPIGatewayRestAPI_body(t *testing.T) {
 	var conf apigateway.RestApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_api_gateway_rest_api.test"
+	resourceName := "aws_apigateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -528,7 +528,7 @@ func TestAccAPIGatewayRestAPI_body(t *testing.T) {
 func TestAccAPIGatewayRestAPI_description(t *testing.T) {
 	var conf apigateway.RestApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_api_gateway_rest_api.test"
+	resourceName := "aws_apigateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -563,7 +563,7 @@ func TestAccAPIGatewayRestAPI_description(t *testing.T) {
 func TestAccAPIGatewayRestAPI_Description_overrideBody(t *testing.T) {
 	var conf apigateway.RestApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_api_gateway_rest_api.test"
+	resourceName := "aws_apigateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -607,7 +607,7 @@ func TestAccAPIGatewayRestAPI_Description_overrideBody(t *testing.T) {
 func TestAccAPIGatewayRestAPI_Description_setByBody(t *testing.T) {
 	var conf apigateway.RestApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_api_gateway_rest_api.test"
+	resourceName := "aws_apigateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -634,7 +634,7 @@ func TestAccAPIGatewayRestAPI_Description_setByBody(t *testing.T) {
 
 func TestAccAPIGatewayRestAPI_disableExecuteAPIEndpoint(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_api_gateway_rest_api.test"
+	resourceName := "aws_apigateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -672,7 +672,7 @@ func TestAccAPIGatewayRestAPI_disableExecuteAPIEndpoint(t *testing.T) {
 func TestAccAPIGatewayRestAPI_DisableExecuteAPIEndpoint_overrideBody(t *testing.T) {
 	var conf apigateway.RestApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_api_gateway_rest_api.test"
+	resourceName := "aws_apigateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -716,7 +716,7 @@ func TestAccAPIGatewayRestAPI_DisableExecuteAPIEndpoint_overrideBody(t *testing.
 func TestAccAPIGatewayRestAPI_DisableExecuteAPIEndpoint_setByBody(t *testing.T) {
 	var conf apigateway.RestApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_api_gateway_rest_api.test"
+	resourceName := "aws_apigateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -744,7 +744,7 @@ func TestAccAPIGatewayRestAPI_DisableExecuteAPIEndpoint_setByBody(t *testing.T) 
 func TestAccAPIGatewayRestAPI_Endpoint_vpcEndpointIDs(t *testing.T) {
 	var restApi apigateway.RestApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_api_gateway_rest_api.test"
+	resourceName := "aws_apigateway_rest_api.test"
 	vpcEndpointResourceName1 := "aws_vpc_endpoint.test"
 	vpcEndpointResourceName2 := "aws_vpc_endpoint.test2"
 
@@ -801,7 +801,7 @@ func TestAccAPIGatewayRestAPI_Endpoint_vpcEndpointIDs(t *testing.T) {
 func TestAccAPIGatewayRestAPI_EndpointVPCEndpointIDs_overrideBody(t *testing.T) {
 	var conf apigateway.RestApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_api_gateway_rest_api.test"
+	resourceName := "aws_apigateway_rest_api.test"
 	vpcEndpointResourceName1 := "aws_vpc_endpoint.test.0"
 	vpcEndpointResourceName2 := "aws_vpc_endpoint.test.1"
 	vpcEndpointResourceName3 := "aws_vpc_endpoint.test.2"
@@ -854,7 +854,7 @@ func TestAccAPIGatewayRestAPI_EndpointVPCEndpointIDs_overrideBody(t *testing.T) 
 func TestAccAPIGatewayRestAPI_EndpointVPCEndpointIDs_setByBody(t *testing.T) {
 	var conf apigateway.RestApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_api_gateway_rest_api.test"
+	resourceName := "aws_apigateway_rest_api.test"
 	vpcEndpointResourceName := "aws_vpc_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -885,7 +885,7 @@ func TestAccAPIGatewayRestAPI_EndpointVPCEndpointIDs_setByBody(t *testing.T) {
 func TestAccAPIGatewayRestAPI_minimumCompressionSize(t *testing.T) {
 	var conf apigateway.RestApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_api_gateway_rest_api.test"
+	resourceName := "aws_apigateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -927,7 +927,7 @@ func TestAccAPIGatewayRestAPI_minimumCompressionSize(t *testing.T) {
 func TestAccAPIGatewayRestAPI_MinimumCompressionSize_overrideBody(t *testing.T) {
 	var conf apigateway.RestApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_api_gateway_rest_api.test"
+	resourceName := "aws_apigateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -971,7 +971,7 @@ func TestAccAPIGatewayRestAPI_MinimumCompressionSize_overrideBody(t *testing.T) 
 func TestAccAPIGatewayRestAPI_MinimumCompressionSize_setByBody(t *testing.T) {
 	var conf apigateway.RestApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_api_gateway_rest_api.test"
+	resourceName := "aws_apigateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -1002,7 +1002,7 @@ func TestAccAPIGatewayRestAPI_Name_overrideBody(t *testing.T) {
 	var conf apigateway.RestApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_api_gateway_rest_api.test"
+	resourceName := "aws_apigateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -1046,7 +1046,7 @@ func TestAccAPIGatewayRestAPI_Name_overrideBody(t *testing.T) {
 func TestAccAPIGatewayRestAPI_parameters(t *testing.T) {
 	var conf apigateway.RestApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_api_gateway_rest_api.test"
+	resourceName := "aws_apigateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -1079,7 +1079,7 @@ func TestAccAPIGatewayRestAPI_parameters(t *testing.T) {
 }
 
 func TestAccAPIGatewayRestAPI_policy(t *testing.T) {
-	resourceName := "aws_api_gateway_rest_api.test"
+	resourceName := "aws_apigateway_rest_api.test"
 	expectedPolicyText := `{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"AWS":"*"},"Action":"execute-api:Invoke","Resource":"*","Condition":{"IpAddress":{"aws:SourceIp":"123.123.123.123/32"}}}]}`
 	expectedUpdatePolicyText := `{"Version":"2012-10-17","Statement":[{"Effect":"Deny","Principal":{"AWS":"*"},"Action":"execute-api:Invoke","Resource":"*"}]}`
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1114,7 +1114,7 @@ func TestAccAPIGatewayRestAPI_policy(t *testing.T) {
 func TestAccAPIGatewayRestAPI_Policy_overrideBody(t *testing.T) {
 	var conf apigateway.RestApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_api_gateway_rest_api.test"
+	resourceName := "aws_apigateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -1161,7 +1161,7 @@ func TestAccAPIGatewayRestAPI_Policy_overrideBody(t *testing.T) {
 func TestAccAPIGatewayRestAPI_Policy_setByBody(t *testing.T) {
 	var conf apigateway.RestApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_api_gateway_rest_api.test"
+	resourceName := "aws_apigateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -1252,7 +1252,7 @@ func testAccCheckRestAPIDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_api_gateway_rest_api" {
+		if rs.Type != "aws_apigateway_rest_api" {
 			continue
 		}
 
@@ -1274,7 +1274,7 @@ func testAccCheckRestAPIDestroy(s *terraform.State) error {
 
 func testAccRestAPIConfig_EndpointConfiguration(rName, endpointType string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name = "%s"
 
   endpoint_configuration {
@@ -1286,7 +1286,7 @@ resource "aws_api_gateway_rest_api" "test" {
 
 func testAccRestAPIDisableExecuteAPIEndpointConfig(rName string, disableExecuteApiEndpoint bool) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   disable_execute_api_endpoint = %[2]t
   name                         = %[1]q
 }
@@ -1295,7 +1295,7 @@ resource "aws_api_gateway_rest_api" "test" {
 
 func testAccRestAPIDisableExecuteAPIEndpointOverrideBodyConfig(rName string, configDisableExecuteApiEndpoint bool, bodyDisableExecuteApiEndpoint bool) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   disable_execute_api_endpoint = %[2]t
   name                         = %[1]q
 
@@ -1337,7 +1337,7 @@ resource "aws_api_gateway_rest_api" "test" {
 
 func testAccRestAPIDisableExecuteAPIEndpointSetByBodyConfig(rName string, bodyDisableExecuteApiEndpoint bool) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name = %[1]q
 
   body = jsonencode({
@@ -1378,7 +1378,7 @@ resource "aws_api_gateway_rest_api" "test" {
 
 func testAccRestAPIConfig_Name(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name = "%s"
 }
 `, rName)
@@ -1423,7 +1423,7 @@ resource "aws_vpc_endpoint" "test" {
   vpc_id              = aws_vpc.test.id
 }
 
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name = %[1]q
 
   endpoint_configuration {
@@ -1482,7 +1482,7 @@ resource "aws_vpc_endpoint" "test2" {
   vpc_id              = aws_vpc.test.id
 }
 
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name = %[1]q
 
   endpoint_configuration {
@@ -1534,7 +1534,7 @@ resource "aws_vpc_endpoint" "test" {
   vpc_id              = aws_vpc.test.id
 }
 
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name = %[1]q
 
   endpoint_configuration {
@@ -1617,7 +1617,7 @@ resource "aws_vpc_endpoint" "test" {
   vpc_id              = aws_vpc.test.id
 }
 
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name = %[1]q
 
   endpoint_configuration {
@@ -1662,7 +1662,7 @@ resource "aws_api_gateway_rest_api" "test" {
 
 func testAccRestAPITags1Config(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name = "%s"
 
   tags = {
@@ -1674,7 +1674,7 @@ resource "aws_api_gateway_rest_api" "test" {
 
 func testAccRestAPITags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name = "%s"
 
   tags = {
@@ -1687,7 +1687,7 @@ resource "aws_api_gateway_rest_api" "test" {
 
 func testAccRestAPIWithPolicyConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name   = %[1]q
   policy = <<EOF
 {
@@ -1715,7 +1715,7 @@ EOF
 
 func testAccRestAPIUpdatePolicyConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name   = %[1]q
   policy = <<EOF
 {
@@ -1738,7 +1738,7 @@ EOF
 
 func testAccRestAPIAPIKeySourceConfig(rName string, apiKeySource string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   api_key_source = %[2]q
   name           = %[1]q
 }
@@ -1747,7 +1747,7 @@ resource "aws_api_gateway_rest_api" "test" {
 
 func testAccRestAPIAPIKeySourceOverrideBodyConfig(rName string, apiKeySource string, bodyApiKeySource string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   api_key_source = %[2]q
   name           = %[1]q
 
@@ -1787,7 +1787,7 @@ resource "aws_api_gateway_rest_api" "test" {
 
 func testAccRestAPIAPIKeySourceSetByBodyConfig(rName string, bodyApiKeySource string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name = %[1]q
 
   body = jsonencode({
@@ -1826,7 +1826,7 @@ resource "aws_api_gateway_rest_api" "test" {
 
 func testAccRestAPIBinaryMediaTypes1Config(rName string, binaryMediaTypes1 string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   binary_media_types = [%[2]q]
   name               = %[1]q
 }
@@ -1835,7 +1835,7 @@ resource "aws_api_gateway_rest_api" "test" {
 
 func testAccRestAPIBinaryMediaTypes1OverrideBodyConfig(rName string, binaryMediaTypes1 string, bodyBinaryMediaTypes1 string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   binary_media_types = [%[2]q]
   name               = %[1]q
 
@@ -1875,7 +1875,7 @@ resource "aws_api_gateway_rest_api" "test" {
 
 func testAccRestAPIBinaryMediaTypes1SetByBodyConfig(rName string, bodyBinaryMediaTypes1 string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name = %[1]q
 
   body = jsonencode({
@@ -1914,7 +1914,7 @@ resource "aws_api_gateway_rest_api" "test" {
 
 func testAccRestAPIBodyConfig(rName string, basePath string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name = %[1]q
 
   body = jsonencode({
@@ -1952,7 +1952,7 @@ resource "aws_api_gateway_rest_api" "test" {
 
 func testAccRestAPIDescriptionConfig(rName string, description string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   description = %[2]q
   name        = %[1]q
 }
@@ -1961,7 +1961,7 @@ resource "aws_api_gateway_rest_api" "test" {
 
 func testAccRestAPIDescriptionOverrideBodyConfig(rName string, description string, bodyDescription string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   description = %[2]q
   name        = %[1]q
 
@@ -2001,7 +2001,7 @@ resource "aws_api_gateway_rest_api" "test" {
 
 func testAccRestAPIDescriptionSetByBodyConfig(rName string, bodyDescription string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name = %[1]q
 
   body = jsonencode({
@@ -2040,7 +2040,7 @@ resource "aws_api_gateway_rest_api" "test" {
 
 func testAccRestAPIMinimumCompressionSizeConfig(rName string, minimumCompressionSize int) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   minimum_compression_size = %[2]d
   name                     = %[1]q
 }
@@ -2049,7 +2049,7 @@ resource "aws_api_gateway_rest_api" "test" {
 
 func testAccRestAPIMinimumCompressionSizeOverrideBodyConfig(rName string, minimumCompressionSize int, bodyMinimumCompressionSize int) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   minimum_compression_size = %[2]d
   name                     = %[1]q
 
@@ -2089,7 +2089,7 @@ resource "aws_api_gateway_rest_api" "test" {
 
 func testAccRestAPIMinimumCompressionSizeSetByBodyConfig(rName string, bodyMinimumCompressionSize int) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name = %[1]q
 
   body = jsonencode({
@@ -2128,7 +2128,7 @@ resource "aws_api_gateway_rest_api" "test" {
 
 func testAccRestAPINameConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name = %[1]q
 }
 `, rName)
@@ -2136,7 +2136,7 @@ resource "aws_api_gateway_rest_api" "test" {
 
 func testAccRestAPINameOverrideBodyConfig(rName string, title string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name = %[1]q
 
   body = jsonencode({
@@ -2174,7 +2174,7 @@ resource "aws_api_gateway_rest_api" "test" {
 
 func testAccRestAPIParameters1Config(rName string, parameterKey1 string, parameterValue1 string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name = %[1]q
 
   body = jsonencode({
@@ -2217,7 +2217,7 @@ resource "aws_api_gateway_rest_api" "test" {
 
 func testAccRestAPIPolicyOverrideBodyConfig(rName string, bodyPath string, policyEffect string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name = %[1]q
 
   body = jsonencode({
@@ -2274,7 +2274,7 @@ resource "aws_api_gateway_rest_api" "test" {
 
 func testAccRestAPIPolicySetByBodyConfig(rName string, bodyPolicyEffect string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name = %[1]q
 
   body = jsonencode({

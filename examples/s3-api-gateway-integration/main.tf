@@ -53,34 +53,34 @@ resource "aws_iam_role_policy_attachment" "s3_policy_attach" {
   policy_arn = aws_iam_policy.s3_policy.arn
 }
 
-resource "aws_api_gateway_rest_api" "MyS3" {
+resource "aws_apigateway_rest_api" "MyS3" {
   name        = "MyS3"
   description = "API for S3 Integration"
 }
 
-resource "aws_api_gateway_resource" "Folder" {
-  rest_api_id = aws_api_gateway_rest_api.MyS3.id
-  parent_id   = aws_api_gateway_rest_api.MyS3.root_resource_id
+resource "aws_apigateway_resource" "Folder" {
+  rest_api_id = aws_apigateway_rest_api.MyS3.id
+  parent_id   = aws_apigateway_rest_api.MyS3.root_resource_id
   path_part   = "{folder}"
 }
 
-resource "aws_api_gateway_resource" "Item" {
-  rest_api_id = aws_api_gateway_rest_api.MyS3.id
-  parent_id   = aws_api_gateway_resource.Folder.id
+resource "aws_apigateway_resource" "Item" {
+  rest_api_id = aws_apigateway_rest_api.MyS3.id
+  parent_id   = aws_apigateway_resource.Folder.id
   path_part   = "{item}"
 }
 
-resource "aws_api_gateway_method" "GetBuckets" {
-  rest_api_id   = aws_api_gateway_rest_api.MyS3.id
-  resource_id   = aws_api_gateway_rest_api.MyS3.root_resource_id
+resource "aws_apigateway_method" "GetBuckets" {
+  rest_api_id   = aws_apigateway_rest_api.MyS3.id
+  resource_id   = aws_apigateway_rest_api.MyS3.root_resource_id
   http_method   = "GET"
   authorization = "AWS_IAM"
 }
 
-resource "aws_api_gateway_integration" "S3Integration" {
-  rest_api_id = aws_api_gateway_rest_api.MyS3.id
-  resource_id = aws_api_gateway_rest_api.MyS3.root_resource_id
-  http_method = aws_api_gateway_method.GetBuckets.http_method
+resource "aws_apigateway_integration" "S3Integration" {
+  rest_api_id = aws_apigateway_rest_api.MyS3.id
+  resource_id = aws_apigateway_rest_api.MyS3.root_resource_id
+  http_method = aws_apigateway_method.GetBuckets.http_method
 
   # Included because of this issue: https://github.com/hashicorp/terraform/issues/10501
   integration_http_method = "GET"
@@ -92,10 +92,10 @@ resource "aws_api_gateway_integration" "S3Integration" {
   credentials = aws_iam_role.s3_api_gateyway_role.arn
 }
 
-resource "aws_api_gateway_method_response" "Status200" {
-  rest_api_id = aws_api_gateway_rest_api.MyS3.id
-  resource_id = aws_api_gateway_rest_api.MyS3.root_resource_id
-  http_method = aws_api_gateway_method.GetBuckets.http_method
+resource "aws_apigateway_method_response" "Status200" {
+  rest_api_id = aws_apigateway_rest_api.MyS3.id
+  resource_id = aws_apigateway_rest_api.MyS3.root_resource_id
+  http_method = aws_apigateway_method.GetBuckets.http_method
   status_code = "200"
 
   response_parameters = {
@@ -109,31 +109,31 @@ resource "aws_api_gateway_method_response" "Status200" {
   }
 }
 
-resource "aws_api_gateway_method_response" "Status400" {
-  depends_on = [aws_api_gateway_integration.S3Integration]
+resource "aws_apigateway_method_response" "Status400" {
+  depends_on = [aws_apigateway_integration.S3Integration]
 
-  rest_api_id = aws_api_gateway_rest_api.MyS3.id
-  resource_id = aws_api_gateway_rest_api.MyS3.root_resource_id
-  http_method = aws_api_gateway_method.GetBuckets.http_method
+  rest_api_id = aws_apigateway_rest_api.MyS3.id
+  resource_id = aws_apigateway_rest_api.MyS3.root_resource_id
+  http_method = aws_apigateway_method.GetBuckets.http_method
   status_code = "400"
 }
 
-resource "aws_api_gateway_method_response" "Status500" {
-  depends_on = [aws_api_gateway_integration.S3Integration]
+resource "aws_apigateway_method_response" "Status500" {
+  depends_on = [aws_apigateway_integration.S3Integration]
 
-  rest_api_id = aws_api_gateway_rest_api.MyS3.id
-  resource_id = aws_api_gateway_rest_api.MyS3.root_resource_id
-  http_method = aws_api_gateway_method.GetBuckets.http_method
+  rest_api_id = aws_apigateway_rest_api.MyS3.id
+  resource_id = aws_apigateway_rest_api.MyS3.root_resource_id
+  http_method = aws_apigateway_method.GetBuckets.http_method
   status_code = "500"
 }
 
-resource "aws_api_gateway_integration_response" "IntegrationResponse200" {
-  depends_on = [aws_api_gateway_integration.S3Integration]
+resource "aws_apigateway_integration_response" "IntegrationResponse200" {
+  depends_on = [aws_apigateway_integration.S3Integration]
 
-  rest_api_id = aws_api_gateway_rest_api.MyS3.id
-  resource_id = aws_api_gateway_rest_api.MyS3.root_resource_id
-  http_method = aws_api_gateway_method.GetBuckets.http_method
-  status_code = aws_api_gateway_method_response.Status200.status_code
+  rest_api_id = aws_apigateway_rest_api.MyS3.id
+  resource_id = aws_apigateway_rest_api.MyS3.root_resource_id
+  http_method = aws_apigateway_method.GetBuckets.http_method
+  status_code = aws_apigateway_method_response.Status200.status_code
 
   response_parameters = {
     "method.response.header.Timestamp"      = "integration.response.header.Date"
@@ -142,30 +142,30 @@ resource "aws_api_gateway_integration_response" "IntegrationResponse200" {
   }
 }
 
-resource "aws_api_gateway_integration_response" "IntegrationResponse400" {
-  depends_on = [aws_api_gateway_integration.S3Integration]
+resource "aws_apigateway_integration_response" "IntegrationResponse400" {
+  depends_on = [aws_apigateway_integration.S3Integration]
 
-  rest_api_id = aws_api_gateway_rest_api.MyS3.id
-  resource_id = aws_api_gateway_rest_api.MyS3.root_resource_id
-  http_method = aws_api_gateway_method.GetBuckets.http_method
-  status_code = aws_api_gateway_method_response.Status400.status_code
+  rest_api_id = aws_apigateway_rest_api.MyS3.id
+  resource_id = aws_apigateway_rest_api.MyS3.root_resource_id
+  http_method = aws_apigateway_method.GetBuckets.http_method
+  status_code = aws_apigateway_method_response.Status400.status_code
 
   selection_pattern = "4\\d{2}"
 }
 
-resource "aws_api_gateway_integration_response" "IntegrationResponse500" {
-  depends_on = [aws_api_gateway_integration.S3Integration]
+resource "aws_apigateway_integration_response" "IntegrationResponse500" {
+  depends_on = [aws_apigateway_integration.S3Integration]
 
-  rest_api_id = aws_api_gateway_rest_api.MyS3.id
-  resource_id = aws_api_gateway_rest_api.MyS3.root_resource_id
-  http_method = aws_api_gateway_method.GetBuckets.http_method
-  status_code = aws_api_gateway_method_response.Status500.status_code
+  rest_api_id = aws_apigateway_rest_api.MyS3.id
+  resource_id = aws_apigateway_rest_api.MyS3.root_resource_id
+  http_method = aws_apigateway_method.GetBuckets.http_method
+  status_code = aws_apigateway_method_response.Status500.status_code
 
   selection_pattern = "5\\d{2}"
 }
 
-resource "aws_api_gateway_deployment" "S3APIDeployment" {
-  depends_on  = [aws_api_gateway_integration.S3Integration]
-  rest_api_id = aws_api_gateway_rest_api.MyS3.id
+resource "aws_apigateway_deployment" "S3APIDeployment" {
+  depends_on  = [aws_apigateway_integration.S3Integration]
+  rest_api_id = aws_apigateway_rest_api.MyS3.id
   stage_name  = "MyS3"
 }

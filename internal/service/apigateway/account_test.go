@@ -19,7 +19,7 @@ func TestAccAPIGatewayAccount_basic(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 	firstName := fmt.Sprintf("tf_acc_api_gateway_cloudwatch_%d", rInt)
 	secondName := fmt.Sprintf("tf_acc_api_gateway_cloudwatch_modified_%d", rInt)
-	resourceName := "aws_api_gateway_account.test"
+	resourceName := "aws_apigateway_account.test"
 	expectedRoleArn_first := regexp.MustCompile("role/" + firstName + "$")
 	expectedRoleArn_second := regexp.MustCompile("role/" + secondName + "$")
 
@@ -118,13 +118,13 @@ func testAccCheckAccountDestroy(s *terraform.State) error {
 }
 
 const testAccAccountConfig_empty = `
-resource "aws_api_gateway_account" "test" {
+resource "aws_apigateway_account" "test" {
 }
 `
 
 func testAccAccountConfig_updated(randName string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_account" "test" {
+resource "aws_apigateway_account" "test" {
   cloudwatch_role_arn = aws_iam_role.cloudwatch.arn
 }
 
@@ -178,7 +178,7 @@ EOF
 
 func testAccAccountConfig_updated2(randName string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_account" "test" {
+resource "aws_apigateway_account" "test" {
   cloudwatch_role_arn = aws_iam_role.second.arn
 }
 

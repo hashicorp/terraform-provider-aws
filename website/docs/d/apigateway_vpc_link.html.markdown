@@ -1,12 +1,12 @@
 ---
 subcategory: "API Gateway (REST APIs)"
 layout: "aws"
-page_title: "AWS: aws_api_gateway_vpc_link"
+page_title: "AWS: aws_apigateway_vpc_link"
 description: |-
   Get information on a API Gateway VPC Link
 ---
 
-# Data Source: aws_api_gateway_vpc_link
+# Data Source: aws_apigateway_vpc_link
 
 Use this data source to get the id of a VPC Link in
 API Gateway. To fetch the VPC Link you must provide a name to match against.
@@ -16,7 +16,7 @@ error if there is more than one match.
 ## Example Usage
 
 ```terraform
-data "aws_api_gateway_vpc_link" "my_api_gateway_vpc_link" {
+data "aws_apigateway_vpc_link" "my_api_gateway_vpc_link" {
   name = "my-vpc-link"
 }
 ```

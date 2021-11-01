@@ -19,7 +19,7 @@ func TestAccAPIGatewayGatewayResponse_basic(t *testing.T) {
 	var conf apigateway.UpdateGatewayResponseOutput
 
 	rName := sdkacctest.RandString(10)
-	resourceName := "aws_api_gateway_gateway_response.test"
+	resourceName := "aws_apigateway_gateway_response.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -62,7 +62,7 @@ func TestAccAPIGatewayGatewayResponse_disappears(t *testing.T) {
 	var conf apigateway.UpdateGatewayResponseOutput
 
 	rName := sdkacctest.RandString(10)
-	resourceName := "aws_api_gateway_gateway_response.test"
+	resourceName := "aws_apigateway_gateway_response.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -96,7 +96,7 @@ func testAccCheckGatewayResponseExists(n string, res *apigateway.UpdateGatewayRe
 		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
 
 		req := &apigateway.GetGatewayResponseInput{
-			RestApiId:    aws.String(s.RootModule().Resources["aws_api_gateway_rest_api.test"].Primary.ID),
+			RestApiId:    aws.String(s.RootModule().Resources["aws_apigateway_rest_api.test"].Primary.ID),
 			ResponseType: aws.String(rs.Primary.Attributes["response_type"]),
 		}
 		describe, err := conn.GetGatewayResponse(req)
@@ -114,12 +114,12 @@ func testAccCheckGatewayResponseDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_api_gateway_gateway_response" {
+		if rs.Type != "aws_apigateway_gateway_response" {
 			continue
 		}
 
 		req := &apigateway.GetGatewayResponseInput{
-			RestApiId:    aws.String(s.RootModule().Resources["aws_api_gateway_rest_api.test"].Primary.ID),
+			RestApiId:    aws.String(s.RootModule().Resources["aws_apigateway_rest_api.test"].Primary.ID),
 			ResponseType: aws.String(rs.Primary.Attributes["response_type"]),
 		}
 		_, err := conn.GetGatewayResponse(req)
@@ -155,12 +155,12 @@ func testAccGatewayResponseImportStateIdFunc(resourceName string) resource.Impor
 
 func testAccGatewayResponseConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name = "%s"
 }
 
-resource "aws_api_gateway_gateway_response" "test" {
-  rest_api_id   = aws_api_gateway_rest_api.test.id
+resource "aws_apigateway_gateway_response" "test" {
+  rest_api_id   = aws_apigateway_rest_api.test.id
   status_code   = "401"
   response_type = "UNAUTHORIZED"
 
@@ -177,12 +177,12 @@ resource "aws_api_gateway_gateway_response" "test" {
 
 func testAccGatewayResponseUpdateConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name = "%s"
 }
 
-resource "aws_api_gateway_gateway_response" "test" {
-  rest_api_id   = aws_api_gateway_rest_api.test.id
+resource "aws_apigateway_gateway_response" "test" {
+  rest_api_id   = aws_apigateway_rest_api.test.id
   status_code   = "477"
   response_type = "UNAUTHORIZED"
 

@@ -1,19 +1,19 @@
 ---
 subcategory: "API Gateway (REST APIs)"
 layout: "aws"
-page_title: "AWS: aws_api_gateway_documentation_part"
+page_title: "AWS: aws_apigateway_documentation_part"
 description: |-
   Provides a settings of an API Gateway Documentation Part.
 ---
 
-# Resource: aws_api_gateway_documentation_part
+# Resource: aws_apigateway_documentation_part
 
 Provides a settings of an API Gateway Documentation Part.
 
 ## Example Usage
 
 ```terraform
-resource "aws_api_gateway_documentation_part" "example" {
+resource "aws_apigateway_documentation_part" "example" {
   location {
     type   = "METHOD"
     method = "GET"
@@ -21,10 +21,10 @@ resource "aws_api_gateway_documentation_part" "example" {
   }
 
   properties  = "{\"description\":\"Example description\"}"
-  rest_api_id = aws_api_gateway_rest_api.example.id
+  rest_api_id = aws_apigateway_rest_api.example.id
 }
 
-resource "aws_api_gateway_rest_api" "example" {
+resource "aws_apigateway_rest_api" "example" {
   name = "example_api"
 }
 ```
@@ -60,5 +60,5 @@ In addition to all arguments above, the following attributes are exported:
 API Gateway documentation_parts can be imported using `REST-API-ID/DOC-PART-ID`, e.g.,
 
 ```
-$ terraform import aws_api_gateway_documentation_part.example 5i4e1ko720/3oyy3t
+$ terraform import aws_apigateway_documentation_part.example 5i4e1ko720/3oyy3t
 ```

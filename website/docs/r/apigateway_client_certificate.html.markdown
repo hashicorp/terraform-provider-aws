@@ -1,19 +1,19 @@
 ---
 subcategory: "API Gateway (REST APIs)"
 layout: "aws"
-page_title: "AWS: aws_api_gateway_client_certificate"
+page_title: "AWS: aws_apigateway_client_certificate"
 description: |-
   Provides an API Gateway Client Certificate.
 ---
 
-# Resource: aws_api_gateway_client_certificate
+# Resource: aws_apigateway_client_certificate
 
 Provides an API Gateway Client Certificate.
 
 ## Example Usage
 
 ```terraform
-resource "aws_api_gateway_client_certificate" "demo" {
+resource "aws_apigateway_client_certificate" "demo" {
   description = "My client certificate"
 }
 ```
@@ -41,5 +41,5 @@ In addition to all arguments above, the following attributes are exported:
 API Gateway Client Certificates can be imported using the id, e.g.,
 
 ```
-$ terraform import aws_api_gateway_client_certificate.demo ab1cqe
+$ terraform import aws_apigateway_client_certificate.demo ab1cqe
 ```

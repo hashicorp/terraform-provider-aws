@@ -1,4 +1,4 @@
-resource "aws_api_gateway_rest_api" "example" {
+resource "aws_apigateway_rest_api" "example" {
   body = jsonencode({
     openapi = "3.0.1"
     info = {
@@ -26,11 +26,11 @@ resource "aws_api_gateway_rest_api" "example" {
   }
 }
 
-resource "aws_api_gateway_deployment" "example" {
-  rest_api_id = aws_api_gateway_rest_api.example.id
+resource "aws_apigateway_deployment" "example" {
+  rest_api_id = aws_apigateway_rest_api.example.id
 
   triggers = {
-    redeployment = sha1(jsonencode(aws_api_gateway_rest_api.example.body))
+    redeployment = sha1(jsonencode(aws_apigateway_rest_api.example.body))
   }
 
   lifecycle {

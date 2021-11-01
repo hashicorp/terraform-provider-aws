@@ -1,19 +1,19 @@
 ---
 subcategory: "API Gateway (REST APIs)"
 layout: "aws"
-page_title: "AWS: aws_api_gateway_domain_name"
+page_title: "AWS: aws_apigateway_domain_name"
 description: |-
  Get information on a custom domain name for use with AWS API Gateway.
 ---
 
-# Data Source: aws_api_gateway_domain_name
+# Data Source: aws_apigateway_domain_name
 
 Use this data source to get the custom domain name for use with AWS API Gateway.
 
 ## Example Usage
 
 ```terraform
-data "aws_api_gateway_domain_name" "example" {
+data "aws_apigateway_domain_name" "example" {
   domain_name = "api.example.com"
 }
 ```

@@ -22,7 +22,7 @@ func TestAccAPIGatewayDocumentationVersion_basic(t *testing.T) {
 	version := fmt.Sprintf("tf-acc-test_version_%s", rString)
 	apiName := fmt.Sprintf("tf-acc-test_api_doc_version_basic_%s", rString)
 
-	resourceName := "aws_api_gateway_documentation_version.test"
+	resourceName := "aws_apigateway_documentation_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -57,7 +57,7 @@ func TestAccAPIGatewayDocumentationVersion_allFields(t *testing.T) {
 	description := fmt.Sprintf("Tf Acc Test description %s", rString)
 	uDescription := fmt.Sprintf("Tf Acc Test description updated %s", rString)
 
-	resourceName := "aws_api_gateway_documentation_version.test"
+	resourceName := "aws_apigateway_documentation_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -99,7 +99,7 @@ func TestAccAPIGatewayDocumentationVersion_disappears(t *testing.T) {
 	version := fmt.Sprintf("tf-acc-test_version_%s", rString)
 	apiName := fmt.Sprintf("tf-acc-test_api_doc_version_basic_%s", rString)
 
-	resourceName := "aws_api_gateway_documentation_version.test"
+	resourceName := "aws_apigateway_documentation_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -156,7 +156,7 @@ func testAccCheckDocumentationVersionDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_api_gateway_documentation_version" {
+		if rs.Type != "aws_apigateway_documentation_version" {
 			continue
 		}
 
@@ -184,22 +184,22 @@ func testAccCheckDocumentationVersionDestroy(s *terraform.State) error {
 
 func testAccDocumentationVersionBasicConfig(version, apiName string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_documentation_version" "test" {
+resource "aws_apigateway_documentation_version" "test" {
   version     = "%s"
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  depends_on  = [aws_api_gateway_documentation_part.test]
+  rest_api_id = aws_apigateway_rest_api.test.id
+  depends_on  = [aws_apigateway_documentation_part.test]
 }
 
-resource "aws_api_gateway_documentation_part" "test" {
+resource "aws_apigateway_documentation_part" "test" {
   location {
     type = "API"
   }
 
   properties  = "{\"description\":\"Terraform Acceptance Test\"}"
-  rest_api_id = aws_api_gateway_rest_api.test.id
+  rest_api_id = aws_apigateway_rest_api.test.id
 }
 
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name = "%s"
 }
 `, version, apiName)
@@ -207,73 +207,73 @@ resource "aws_api_gateway_rest_api" "test" {
 
 func testAccDocumentationVersionAllFieldsConfig(version, apiName, stageName, description string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_documentation_version" "test" {
+resource "aws_apigateway_documentation_version" "test" {
   version     = "%s"
-  rest_api_id = aws_api_gateway_rest_api.test.id
+  rest_api_id = aws_apigateway_rest_api.test.id
   description = "%s"
-  depends_on  = [aws_api_gateway_documentation_part.test]
+  depends_on  = [aws_apigateway_documentation_part.test]
 }
 
-resource "aws_api_gateway_documentation_part" "test" {
+resource "aws_apigateway_documentation_part" "test" {
   location {
     type = "API"
   }
 
   properties  = "{\"description\":\"Terraform Acceptance Test\"}"
-  rest_api_id = aws_api_gateway_rest_api.test.id
+  rest_api_id = aws_apigateway_rest_api.test.id
 }
 
-resource "aws_api_gateway_resource" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
+resource "aws_apigateway_resource" "test" {
+  rest_api_id = aws_apigateway_rest_api.test.id
+  parent_id   = aws_apigateway_rest_api.test.root_resource_id
   path_part   = "test"
 }
 
-resource "aws_api_gateway_method" "test" {
-  rest_api_id   = aws_api_gateway_rest_api.test.id
-  resource_id   = aws_api_gateway_resource.test.id
+resource "aws_apigateway_method" "test" {
+  rest_api_id   = aws_apigateway_rest_api.test.id
+  resource_id   = aws_apigateway_resource.test.id
   http_method   = "GET"
   authorization = "NONE"
 }
 
-resource "aws_api_gateway_method_response" "error" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  resource_id = aws_api_gateway_resource.test.id
-  http_method = aws_api_gateway_method.test.http_method
+resource "aws_apigateway_method_response" "error" {
+  rest_api_id = aws_apigateway_rest_api.test.id
+  resource_id = aws_apigateway_resource.test.id
+  http_method = aws_apigateway_method.test.http_method
   status_code = "400"
 }
 
-resource "aws_api_gateway_integration" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  resource_id = aws_api_gateway_resource.test.id
-  http_method = aws_api_gateway_method.test.http_method
+resource "aws_apigateway_integration" "test" {
+  rest_api_id = aws_apigateway_rest_api.test.id
+  resource_id = aws_apigateway_resource.test.id
+  http_method = aws_apigateway_method.test.http_method
 
   type                    = "HTTP"
   uri                     = "https://www.google.co.uk"
   integration_http_method = "GET"
 }
 
-resource "aws_api_gateway_integration_response" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  resource_id = aws_api_gateway_resource.test.id
-  http_method = aws_api_gateway_integration.test.http_method
-  status_code = aws_api_gateway_method_response.error.status_code
+resource "aws_apigateway_integration_response" "test" {
+  rest_api_id = aws_apigateway_rest_api.test.id
+  resource_id = aws_apigateway_resource.test.id
+  http_method = aws_apigateway_integration.test.http_method
+  status_code = aws_apigateway_method_response.error.status_code
 }
 
-resource "aws_api_gateway_deployment" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
+resource "aws_apigateway_deployment" "test" {
+  rest_api_id = aws_apigateway_rest_api.test.id
   stage_name  = "first"
-  depends_on  = [aws_api_gateway_integration_response.test]
+  depends_on  = [aws_apigateway_integration_response.test]
 }
 
-resource "aws_api_gateway_stage" "test" {
+resource "aws_apigateway_stage" "test" {
   stage_name            = "%s"
-  rest_api_id           = aws_api_gateway_rest_api.test.id
-  deployment_id         = aws_api_gateway_deployment.test.id
-  documentation_version = aws_api_gateway_documentation_version.test.version
+  rest_api_id           = aws_apigateway_rest_api.test.id
+  deployment_id         = aws_apigateway_deployment.test.id
+  documentation_version = aws_apigateway_documentation_version.test.version
 }
 
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name = "%s"
 }
 `, version, description, stageName, apiName)

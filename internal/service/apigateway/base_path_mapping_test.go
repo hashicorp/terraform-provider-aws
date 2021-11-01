@@ -83,11 +83,11 @@ func TestAccAPIGatewayBasePathMapping_basic(t *testing.T) {
 			{
 				Config: testAccBasePathBasePathConfig(name, key, certificate, acctest.ResourcePrefix),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBasePathExists("aws_api_gateway_base_path_mapping.test", &conf),
+					testAccCheckBasePathExists("aws_apigateway_base_path_mapping.test", &conf),
 				),
 			},
 			{
-				ResourceName:      "aws_api_gateway_base_path_mapping.test",
+				ResourceName:      "aws_apigateway_base_path_mapping.test",
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -113,11 +113,11 @@ func TestAccAPIGatewayBasePathMapping_BasePath_empty(t *testing.T) {
 			{
 				Config: testAccBasePathBasePathConfig(name, key, certificate, ""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBasePathExists("aws_api_gateway_base_path_mapping.test", &conf),
+					testAccCheckBasePathExists("aws_apigateway_base_path_mapping.test", &conf),
 				),
 			},
 			{
-				ResourceName:      "aws_api_gateway_base_path_mapping.test",
+				ResourceName:      "aws_apigateway_base_path_mapping.test",
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -127,7 +127,7 @@ func TestAccAPIGatewayBasePathMapping_BasePath_empty(t *testing.T) {
 
 func TestAccAPIGatewayBasePathMapping_updates(t *testing.T) {
 	var confFirst, conf apigateway.BasePathMapping
-	resourceName := "aws_api_gateway_base_path_mapping.test"
+	resourceName := "aws_apigateway_base_path_mapping.test"
 	name := acctest.RandomSubdomain()
 
 	key := acctest.TLSRSAPrivateKeyPEM(2048)
@@ -179,7 +179,7 @@ func TestAccAPIGatewayBasePathMapping_disappears(t *testing.T) {
 	var conf apigateway.BasePathMapping
 
 	name := acctest.RandomSubdomain()
-	resourceName := "aws_api_gateway_base_path_mapping.test"
+	resourceName := "aws_apigateway_base_path_mapping.test"
 
 	key := acctest.TLSRSAPrivateKeyPEM(2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, name)
@@ -240,7 +240,7 @@ func testAccCheckBasePathDestroy(name string) resource.TestCheckFunc {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_api_gateway_base_path_mapping" {
+			if rs.Type != "aws_apigateway_base_path_mapping" {
 				continue
 			}
 
@@ -315,7 +315,7 @@ resource "aws_acm_certificate" "test" {
   private_key      = "%[3]s"
 }
 
-resource "aws_api_gateway_domain_name" "test" {
+resource "aws_apigateway_domain_name" "test" {
   domain_name              = %[1]q
   regional_certificate_arn = aws_acm_certificate.test.arn
 
@@ -324,7 +324,7 @@ resource "aws_api_gateway_domain_name" "test" {
   }
 }
 
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name        = "tf-acc-apigateway-base-path-mapping"
   description = "Terraform Acceptance Tests"
 
@@ -334,41 +334,41 @@ resource "aws_api_gateway_rest_api" "test" {
 }
 
 # API gateway won't let us deploy an empty API
-resource "aws_api_gateway_resource" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
+resource "aws_apigateway_resource" "test" {
+  rest_api_id = aws_apigateway_rest_api.test.id
+  parent_id   = aws_apigateway_rest_api.test.root_resource_id
   path_part   = "tf-acc"
 }
 
-resource "aws_api_gateway_method" "test" {
-  rest_api_id   = aws_api_gateway_rest_api.test.id
-  resource_id   = aws_api_gateway_resource.test.id
+resource "aws_apigateway_method" "test" {
+  rest_api_id   = aws_apigateway_rest_api.test.id
+  resource_id   = aws_apigateway_resource.test.id
   http_method   = "GET"
   authorization = "NONE"
 }
 
-resource "aws_api_gateway_integration" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  resource_id = aws_api_gateway_resource.test.id
-  http_method = aws_api_gateway_method.test.http_method
+resource "aws_apigateway_integration" "test" {
+  rest_api_id = aws_apigateway_rest_api.test.id
+  resource_id = aws_apigateway_resource.test.id
+  http_method = aws_apigateway_method.test.http_method
   type        = "MOCK"
 }
 
-resource "aws_api_gateway_deployment" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
+resource "aws_apigateway_deployment" "test" {
+  rest_api_id = aws_apigateway_rest_api.test.id
   stage_name  = "test"
-  depends_on  = [aws_api_gateway_integration.test]
+  depends_on  = [aws_apigateway_integration.test]
 }
 `, domainName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key))
 }
 
 func testAccBasePathBasePathConfig(domainName, key, certificate, basePath string) string {
 	return testAccBasePathBaseConfig(domainName, key, certificate) + fmt.Sprintf(`
-resource "aws_api_gateway_base_path_mapping" "test" {
-  api_id      = aws_api_gateway_rest_api.test.id
+resource "aws_apigateway_base_path_mapping" "test" {
+  api_id      = aws_apigateway_rest_api.test.id
   base_path   = %[1]q
-  stage_name  = aws_api_gateway_deployment.test.stage_name
-  domain_name = aws_api_gateway_domain_name.test.domain_name
+  stage_name  = aws_apigateway_deployment.test.stage_name
+  domain_name = aws_apigateway_domain_name.test.domain_name
 }
 `, basePath)
 }
@@ -376,7 +376,7 @@ resource "aws_api_gateway_base_path_mapping" "test" {
 func testAccBasePathBasePathAltStageAndAPIConfig(domainName, key, certificate, basePath string) string {
 	return testAccBasePathBaseConfig(domainName, key, certificate) + fmt.Sprintf(`
 
-resource "aws_api_gateway_rest_api" "test2" {
+resource "aws_apigateway_rest_api" "test2" {
   name        = "tf-acc-apigateway-base-path-mapping-alt"
   description = "Terraform Acceptance Tests"
 
@@ -386,49 +386,49 @@ resource "aws_api_gateway_rest_api" "test2" {
 }
 
 
-resource "aws_api_gateway_stage" "test2" {
+resource "aws_apigateway_stage" "test2" {
 
   depends_on = [
-    aws_api_gateway_deployment.test
+    aws_apigateway_deployment.test
   ]
 
   stage_name    = "test2"
-  rest_api_id   = aws_api_gateway_rest_api.test2.id
-  deployment_id = aws_api_gateway_deployment.test2.id
+  rest_api_id   = aws_apigateway_rest_api.test2.id
+  deployment_id = aws_apigateway_deployment.test2.id
 }
 
-resource "aws_api_gateway_resource" "test2" {
-  rest_api_id = aws_api_gateway_rest_api.test2.id
-  parent_id   = aws_api_gateway_rest_api.test2.root_resource_id
+resource "aws_apigateway_resource" "test2" {
+  rest_api_id = aws_apigateway_rest_api.test2.id
+  parent_id   = aws_apigateway_rest_api.test2.root_resource_id
   path_part   = "tf-acc"
 }
 
-resource "aws_api_gateway_method" "test2" {
-  rest_api_id   = aws_api_gateway_rest_api.test2.id
-  resource_id   = aws_api_gateway_resource.test2.id
+resource "aws_apigateway_method" "test2" {
+  rest_api_id   = aws_apigateway_rest_api.test2.id
+  resource_id   = aws_apigateway_resource.test2.id
   http_method   = "GET"
   authorization = "NONE"
 }
 
-resource "aws_api_gateway_integration" "test2" {
-  rest_api_id = aws_api_gateway_rest_api.test2.id
-  resource_id = aws_api_gateway_resource.test2.id
-  http_method = aws_api_gateway_method.test2.http_method
+resource "aws_apigateway_integration" "test2" {
+  rest_api_id = aws_apigateway_rest_api.test2.id
+  resource_id = aws_apigateway_resource.test2.id
+  http_method = aws_apigateway_method.test2.http_method
   type        = "MOCK"
 }
 
 
-resource "aws_api_gateway_deployment" "test2" {
-  rest_api_id = aws_api_gateway_rest_api.test2.id
+resource "aws_apigateway_deployment" "test2" {
+  rest_api_id = aws_apigateway_rest_api.test2.id
   stage_name  = "test"
-  depends_on  = [aws_api_gateway_integration.test2]
+  depends_on  = [aws_apigateway_integration.test2]
 }
 
-resource "aws_api_gateway_base_path_mapping" "test" {
-  api_id      = aws_api_gateway_rest_api.test2.id
+resource "aws_apigateway_base_path_mapping" "test" {
+  api_id      = aws_apigateway_rest_api.test2.id
   base_path   = %[1]q
-  stage_name  = aws_api_gateway_stage.test2.stage_name
-  domain_name = aws_api_gateway_domain_name.test.domain_name
+  stage_name  = aws_apigateway_stage.test2.stage_name
+  domain_name = aws_apigateway_domain_name.test.domain_name
 }
 `, basePath)
 }

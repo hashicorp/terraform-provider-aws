@@ -18,7 +18,7 @@ import (
 
 func TestAccAPIGatewayAPIKey_basic(t *testing.T) {
 	var apiKey1 apigateway.ApiKey
-	resourceName := "aws_api_gateway_api_key.test"
+	resourceName := "aws_apigateway_api_key.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -51,7 +51,7 @@ func TestAccAPIGatewayAPIKey_basic(t *testing.T) {
 
 func TestAccAPIGatewayAPIKey_tags(t *testing.T) {
 	var apiKey1 apigateway.ApiKey
-	resourceName := "aws_api_gateway_api_key.test"
+	resourceName := "aws_apigateway_api_key.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -96,7 +96,7 @@ func TestAccAPIGatewayAPIKey_tags(t *testing.T) {
 
 func TestAccAPIGatewayAPIKey_description(t *testing.T) {
 	var apiKey1, apiKey2 apigateway.ApiKey
-	resourceName := "aws_api_gateway_api_key.test"
+	resourceName := "aws_apigateway_api_key.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -131,7 +131,7 @@ func TestAccAPIGatewayAPIKey_description(t *testing.T) {
 
 func TestAccAPIGatewayAPIKey_enabled(t *testing.T) {
 	var apiKey1, apiKey2 apigateway.ApiKey
-	resourceName := "aws_api_gateway_api_key.test"
+	resourceName := "aws_apigateway_api_key.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -166,7 +166,7 @@ func TestAccAPIGatewayAPIKey_enabled(t *testing.T) {
 
 func TestAccAPIGatewayAPIKey_value(t *testing.T) {
 	var apiKey1 apigateway.ApiKey
-	resourceName := "aws_api_gateway_api_key.test"
+	resourceName := "aws_apigateway_api_key.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -193,7 +193,7 @@ func TestAccAPIGatewayAPIKey_value(t *testing.T) {
 
 func TestAccAPIGatewayAPIKey_disappears(t *testing.T) {
 	var apiKey1 apigateway.ApiKey
-	resourceName := "aws_api_gateway_api_key.test"
+	resourceName := "aws_apigateway_api_key.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -249,7 +249,7 @@ func testAccCheckAPIKeyDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_api_gateway_api_key" {
+		if rs.Type != "aws_apigateway_api_key" {
 			continue
 		}
 
@@ -288,7 +288,7 @@ func testAccCheckAPIKeyNotRecreated(i, j *apigateway.ApiKey) resource.TestCheckF
 
 func testAccAPIKeyConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_api_key" "test" {
+resource "aws_apigateway_api_key" "test" {
   name = %[1]q
 }
 `, rName)
@@ -296,7 +296,7 @@ resource "aws_api_gateway_api_key" "test" {
 
 func testAccAPIKeyTags1Config(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_api_key" "test" {
+resource "aws_apigateway_api_key" "test" {
   name = %[1]q
 
   tags = {
@@ -308,7 +308,7 @@ resource "aws_api_gateway_api_key" "test" {
 
 func testAccAPIKeyTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_api_key" "test" {
+resource "aws_apigateway_api_key" "test" {
   name = %[1]q
 
   tags = {
@@ -321,7 +321,7 @@ resource "aws_api_gateway_api_key" "test" {
 
 func testAccAPIKeyDescriptionConfig(rName, description string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_api_key" "test" {
+resource "aws_apigateway_api_key" "test" {
   description = %[2]q
   name        = %[1]q
 }
@@ -330,7 +330,7 @@ resource "aws_api_gateway_api_key" "test" {
 
 func testAccAPIKeyEnabledConfig(rName string, enabled bool) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_api_key" "test" {
+resource "aws_apigateway_api_key" "test" {
   enabled = %[2]t
   name    = %[1]q
 }
@@ -339,7 +339,7 @@ resource "aws_api_gateway_api_key" "test" {
 
 func testAccAPIKeyValueConfig(rName, value string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_api_key" "test" {
+resource "aws_apigateway_api_key" "test" {
   name  = %[1]q
   value = %[2]q
 }

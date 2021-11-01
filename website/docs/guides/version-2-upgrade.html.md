@@ -24,11 +24,11 @@ Upgrade topics:
 - [Data Source: aws_kms_secret](#data-source-aws_kms_secret)
 - [Data Source: aws_lambda_function](#data-source-aws_lambda_function)
 - [Data Source: aws_region](#data-source-aws_region)
-- [Resource: aws_api_gateway_api_key](#resource-aws_api_gateway_api_key)
-- [Resource: aws_api_gateway_integration](#resource-aws_api_gateway_integration)
-- [Resource: aws_api_gateway_integration_response](#resource-aws_api_gateway_integration_response)
-- [Resource: aws_api_gateway_method](#resource-aws_api_gateway_method)
-- [Resource: aws_api_gateway_method_response](#resource-aws_api_gateway_method_response)
+- [Resource: aws_apigateway_api_key](#resource-aws_apigateway_api_key)
+- [Resource: aws_apigateway_integration](#resource-aws_apigateway_integration)
+- [Resource: aws_apigateway_integration_response](#resource-aws_apigateway_integration_response)
+- [Resource: aws_apigateway_method](#resource-aws_apigateway_method)
+- [Resource: aws_apigateway_method_response](#resource-aws_apigateway_method_response)
 - [Resource: aws_appautoscaling_policy](#resource-aws_appautoscaling_policy)
 - [Resource: aws_autoscaling_policy](#resource-aws_autoscaling_policy)
 - [Resource: aws_batch_compute_environment](#resource-aws_batch_compute_environment)
@@ -196,33 +196,33 @@ The `arn` attribute now always returns the unqualified (no `:QUALIFIER` or `:VER
 
 Simply remove `current = true` from your Terraform configuration. The data source defaults to the current provider region if no other filtering is enabled.
 
-## Resource: aws_api_gateway_api_key
+## Resource: aws_apigateway_api_key
 
 ### stage_key Argument Removal
 
 Since the API Gateway usage plans feature was launched on August 11, 2016, usage plans are now required to associate an API key with an API stage. To migrate your Terraform configuration, the AWS provider implements support for usage plans with the following resources:
 
-* [`aws_api_gateway_usage_plan`](/docs/providers/aws/r/api_gateway_usage_plan.html)
-* [`aws_api_gateway_usage_plan_key`](/docs/providers/aws/r/api_gateway_usage_plan_key.html)
+* [`aws_apigateway_usage_plan`](/docs/providers/aws/r/api_gateway_usage_plan.html)
+* [`aws_apigateway_usage_plan_key`](/docs/providers/aws/r/api_gateway_usage_plan_key.html)
 
 For example, given this previous configuration:
 
 ```terraform
-resource "aws_api_gateway_rest_api" "example" {
+resource "aws_apigateway_rest_api" "example" {
   name = "example"
 }
 
-resource "aws_api_gateway_deployment" "example" {
-  rest_api_id = "${aws_api_gateway_rest_api.example.id}"
+resource "aws_apigateway_deployment" "example" {
+  rest_api_id = "${aws_apigateway_rest_api.example.id}"
   stage_name  = "example"
 }
 
-resource "aws_api_gateway_api_key" "example" {
+resource "aws_apigateway_api_key" "example" {
   name = "example"
 
   stage_key {
-    rest_api_id = "${aws_api_gateway_rest_api.example.id}"
-    stage_name  = "${aws_api_gateway_deployment.example.stage_name}"
+    rest_api_id = "${aws_apigateway_rest_api.example.id}"
+    stage_name  = "${aws_apigateway_deployment.example.stage_name}"
   }
 }
 ```
@@ -230,36 +230,36 @@ resource "aws_api_gateway_api_key" "example" {
 An updated configuration:
 
 ```terraform
-resource "aws_api_gateway_rest_api" "example" {
+resource "aws_apigateway_rest_api" "example" {
   name = "example"
 }
 
-resource "aws_api_gateway_deployment" "example" {
-  rest_api_id = "${aws_api_gateway_rest_api.example.id}"
+resource "aws_apigateway_deployment" "example" {
+  rest_api_id = "${aws_apigateway_rest_api.example.id}"
   stage_name  = "example"
 }
 
-resource "aws_api_gateway_api_key" "example" {
+resource "aws_apigateway_api_key" "example" {
   name = "example"
 }
 
-resource "aws_api_gateway_usage_plan" "example" {
+resource "aws_apigateway_usage_plan" "example" {
   name = "example"
 
   api_stages {
-    api_id = "${aws_api_gateway_rest_api.example.id}"
-    stage  = "${aws_api_gateway_deployment.example.stage_name}"
+    api_id = "${aws_apigateway_rest_api.example.id}"
+    stage  = "${aws_apigateway_deployment.example.stage_name}"
   }
 }
 
-resource "aws_api_gateway_usage_plan_key" "example" {
-  key_id        = "${aws_api_gateway_api_key.example.id}"
+resource "aws_apigateway_usage_plan_key" "example" {
+  key_id        = "${aws_apigateway_api_key.example.id}"
   key_type      = "API_KEY"
-  usage_plan_id = "${aws_api_gateway_usage_plan.example.id}"
+  usage_plan_id = "${aws_apigateway_usage_plan.example.id}"
 }
 ```
 
-## Resource: aws_api_gateway_integration
+## Resource: aws_apigateway_integration
 
 ### request_parameters_in_json Argument Removal
 
@@ -268,7 +268,7 @@ Switch your Terraform configuration to the `request_parameters` argument instead
 For example, given this previous configuration:
 
 ```terraform
-resource "aws_api_gateway_integration" "example" {
+resource "aws_apigateway_integration" "example" {
   # ... other configuration ...
 
   request_parameters_in_json = <<PARAMS
@@ -282,7 +282,7 @@ PARAMS
 An updated configuration:
 
 ```terraform
-resource "aws_api_gateway_integration" "example" {
+resource "aws_apigateway_integration" "example" {
   # ... other configuration ...
 
   request_parameters = {
@@ -291,7 +291,7 @@ resource "aws_api_gateway_integration" "example" {
 }
 ```
 
-## Resource: aws_api_gateway_integration_response
+## Resource: aws_apigateway_integration_response
 
 ### response_parameters_in_json Argument Removal
 
@@ -300,7 +300,7 @@ Switch your Terraform configuration to the `response_parameters` argument instea
 For example, given this previous configuration:
 
 ```terraform
-resource "aws_api_gateway_integration_response" "example" {
+resource "aws_apigateway_integration_response" "example" {
   # ... other configuration ...
 
   response_parameters_in_json = <<PARAMS
@@ -314,7 +314,7 @@ PARAMS
 An updated configuration:
 
 ```terraform
-resource "aws_api_gateway_integration_response" "example" {
+resource "aws_apigateway_integration_response" "example" {
   # ... other configuration ...
 
   response_parameters = {
@@ -323,7 +323,7 @@ resource "aws_api_gateway_integration_response" "example" {
 }
 ```
 
-## Resource: aws_api_gateway_method
+## Resource: aws_apigateway_method
 
 ### request_parameters_in_json Argument Removal
 
@@ -332,7 +332,7 @@ Switch your Terraform configuration to the `request_parameters` argument instead
 For example, given this previous configuration:
 
 ```terraform
-resource "aws_api_gateway_method" "example" {
+resource "aws_apigateway_method" "example" {
   # ... other configuration ...
 
   request_parameters_in_json = <<PARAMS
@@ -347,7 +347,7 @@ PARAMS
 An updated configuration:
 
 ```terraform
-resource "aws_api_gateway_method" "example" {
+resource "aws_apigateway_method" "example" {
   # ... other configuration ...
 
   request_parameters = {
@@ -357,7 +357,7 @@ resource "aws_api_gateway_method" "example" {
 }
 ```
 
-## Resource: aws_api_gateway_method_response
+## Resource: aws_apigateway_method_response
 
 ### response_parameters_in_json Argument Removal
 
@@ -366,7 +366,7 @@ Switch your Terraform configuration to the `response_parameters` argument instea
 For example, given this previous configuration:
 
 ```terraform
-resource "aws_api_gateway_method_response" "example" {
+resource "aws_apigateway_method_response" "example" {
   # ... other configuration ...
 
   response_parameters_in_json = <<PARAMS
@@ -380,7 +380,7 @@ PARAMS
 An updated configuration:
 
 ```terraform
-resource "aws_api_gateway_method_response" "example" {
+resource "aws_apigateway_method_response" "example" {
   # ... other configuration ...
 
   response_parameters = {

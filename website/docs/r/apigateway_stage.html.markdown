@@ -1,21 +1,21 @@
 ---
 subcategory: "API Gateway (REST APIs)"
 layout: "aws"
-page_title: "AWS: aws_api_gateway_stage"
+page_title: "AWS: aws_apigateway_stage"
 description: |-
   Manages an API Gateway Stage.
 ---
 
-# Resource: aws_api_gateway_stage
+# Resource: aws_apigateway_stage
 
-Manages an API Gateway Stage. A stage is a named reference to a deployment, which can be done via the [`aws_api_gateway_deployment` resource](api_gateway_deployment.html). Stages can be optionally managed further with the [`aws_api_gateway_base_path_mapping` resource](api_gateway_base_path_mapping.html), [`aws_api_gateway_domain_name` resource](api_gateway_domain_name.html), and [`aws_api_method_settings` resource](api_gateway_method_settings.html). For more information, see the [API Gateway Developer Guide](https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-stages.html).
+Manages an API Gateway Stage. A stage is a named reference to a deployment, which can be done via the [`aws_apigateway_deployment` resource](api_gateway_deployment.html). Stages can be optionally managed further with the [`aws_apigateway_base_path_mapping` resource](api_gateway_base_path_mapping.html), [`aws_apigateway_domain_name` resource](api_gateway_domain_name.html), and [`aws_api_method_settings` resource](api_gateway_method_settings.html). For more information, see the [API Gateway Developer Guide](https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-stages.html).
 
 ## Example Usage
 
 An end-to-end example of a REST API configured with OpenAPI can be found in the [`/examples/api-gateway-rest-api-openapi` directory within the GitHub repository](https://github.com/hashicorp/terraform-provider-aws/tree/main/examples/api-gateway-rest-api-openapi).
 
 ```terraform
-resource "aws_api_gateway_rest_api" "example" {
+resource "aws_apigateway_rest_api" "example" {
   body = jsonencode({
     openapi = "3.0.1"
     info = {
@@ -39,11 +39,11 @@ resource "aws_api_gateway_rest_api" "example" {
   name = "example"
 }
 
-resource "aws_api_gateway_deployment" "example" {
-  rest_api_id = aws_api_gateway_rest_api.example.id
+resource "aws_apigateway_deployment" "example" {
+  rest_api_id = aws_apigateway_rest_api.example.id
 
   triggers = {
-    redeployment = sha1(jsonencode(aws_api_gateway_rest_api.example.body))
+    redeployment = sha1(jsonencode(aws_apigateway_rest_api.example.body))
   }
 
   lifecycle {
@@ -51,15 +51,15 @@ resource "aws_api_gateway_deployment" "example" {
   }
 }
 
-resource "aws_api_gateway_stage" "example" {
-  deployment_id = aws_api_gateway_deployment.example.id
-  rest_api_id   = aws_api_gateway_rest_api.example.id
+resource "aws_apigateway_stage" "example" {
+  deployment_id = aws_apigateway_deployment.example.id
+  rest_api_id   = aws_apigateway_rest_api.example.id
   stage_name    = "example"
 }
 
-resource "aws_api_gateway_method_settings" "example" {
-  rest_api_id = aws_api_gateway_rest_api.example.id
-  stage_name  = aws_api_gateway_stage.example.stage_name
+resource "aws_apigateway_method_settings" "example" {
+  rest_api_id = aws_apigateway_rest_api.example.id
+  stage_name  = aws_apigateway_stage.example.stage_name
   method_path = "*/*"
 
   settings {
@@ -81,11 +81,11 @@ variable "stage_name" {
   type    = string
 }
 
-resource "aws_api_gateway_rest_api" "example" {
+resource "aws_apigateway_rest_api" "example" {
   # ... other configuration ...
 }
 
-resource "aws_api_gateway_stage" "example" {
+resource "aws_apigateway_stage" "example" {
   depends_on = [aws_cloudwatch_log_group.example]
 
   stage_name = var.stage_name
@@ -93,7 +93,7 @@ resource "aws_api_gateway_stage" "example" {
 }
 
 resource "aws_cloudwatch_log_group" "example" {
-  name              = "API-Gateway-Execution-Logs_${aws_api_gateway_rest_api.example.id}/${var.stage_name}"
+  name              = "API-Gateway-Execution-Logs_${aws_apigateway_rest_api.example.id}/${var.stage_name}"
   retention_in_days = 7
   # ... potentially other configuration ...
 }
@@ -139,8 +139,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_api_gateway_stage` can be imported using `REST-API-ID/STAGE-NAME`, e.g.,
+`aws_apigateway_stage` can be imported using `REST-API-ID/STAGE-NAME`, e.g.,
 
 ```
-$ terraform import aws_api_gateway_stage.example 12345abcde/example
+$ terraform import aws_apigateway_stage.example 12345abcde/example
 ```

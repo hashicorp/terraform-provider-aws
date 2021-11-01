@@ -721,22 +721,22 @@ resource "aws_sns_topic" "test" {
   name = %[1]q
 }
 
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name        = %[1]q
   description = "Terraform Acceptance test for SNS subscription"
 }
 
-resource "aws_api_gateway_method" "test" {
-  rest_api_id   = aws_api_gateway_rest_api.test.id
-  resource_id   = aws_api_gateway_rest_api.test.root_resource_id
+resource "aws_apigateway_method" "test" {
+  rest_api_id   = aws_apigateway_rest_api.test.id
+  resource_id   = aws_apigateway_rest_api.test.root_resource_id
   http_method   = "POST"
   authorization = "NONE"
 }
 
-resource "aws_api_gateway_method_response" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  resource_id = aws_api_gateway_rest_api.test.root_resource_id
-  http_method = aws_api_gateway_method.test.http_method
+resource "aws_apigateway_method_response" "test" {
+  rest_api_id = aws_apigateway_rest_api.test.id
+  resource_id = aws_apigateway_rest_api.test.root_resource_id
+  http_method = aws_apigateway_method.test.http_method
   status_code = "200"
 
   response_parameters = {
@@ -744,21 +744,21 @@ resource "aws_api_gateway_method_response" "test" {
   }
 }
 
-resource "aws_api_gateway_integration" "test" {
-  rest_api_id             = aws_api_gateway_rest_api.test.id
-  resource_id             = aws_api_gateway_rest_api.test.root_resource_id
-  http_method             = aws_api_gateway_method.test.http_method
+resource "aws_apigateway_integration" "test" {
+  rest_api_id             = aws_apigateway_rest_api.test.id
+  resource_id             = aws_apigateway_rest_api.test.root_resource_id
+  http_method             = aws_apigateway_method.test.http_method
   integration_http_method = "POST"
   type                    = "AWS"
   uri                     = aws_lambda_function.lambda.invoke_arn
 }
 
-resource "aws_api_gateway_integration_response" "test" {
-  depends_on  = [aws_api_gateway_integration.test]
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  resource_id = aws_api_gateway_rest_api.test.root_resource_id
-  http_method = aws_api_gateway_method.test.http_method
-  status_code = aws_api_gateway_method_response.test.status_code
+resource "aws_apigateway_integration_response" "test" {
+  depends_on  = [aws_apigateway_integration.test]
+  rest_api_id = aws_apigateway_rest_api.test.id
+  resource_id = aws_apigateway_rest_api.test.root_resource_id
+  http_method = aws_apigateway_method.test.http_method
+  status_code = aws_apigateway_method_response.test.status_code
 
   response_parameters = {
     "method.response.header.Access-Control-Allow-Origin" = "'*'"
@@ -812,7 +812,7 @@ resource "aws_lambda_permission" "apigw_lambda" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.lambda.arn
   principal     = "apigateway.${data.aws_partition.current.dns_suffix}"
-  source_arn    = "${aws_api_gateway_deployment.test.execution_arn}/*"
+  source_arn    = "${aws_apigateway_deployment.test.execution_arn}/*"
 }
 
 resource "aws_lambda_function" "lambda" {
@@ -824,9 +824,9 @@ resource "aws_lambda_function" "lambda" {
   runtime          = "python3.6"
 }
 
-resource "aws_api_gateway_deployment" "test" {
-  depends_on  = [aws_api_gateway_integration_response.test]
-  rest_api_id = aws_api_gateway_rest_api.test.id
+resource "aws_apigateway_deployment" "test" {
+  depends_on  = [aws_apigateway_integration_response.test]
+  rest_api_id = aws_apigateway_rest_api.test.id
   stage_name  = "acctest"
 }
 
@@ -834,7 +834,7 @@ resource "aws_sns_topic_subscription" "test" {
   depends_on             = [aws_lambda_permission.apigw_lambda]
   topic_arn              = aws_sns_topic.test.arn
   protocol               = "https"
-  endpoint               = aws_api_gateway_deployment.test.invoke_url
+  endpoint               = aws_apigateway_deployment.test.invoke_url
   endpoint_auto_confirms = true
 }
 `, rName)
@@ -846,23 +846,23 @@ resource "aws_sns_topic" "test" {
   name = %[1]q
 }
 
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name        = %[1]q
   description = "Terraform Acceptance test for SNS subscription"
 }
 
-resource "aws_api_gateway_method" "test" {
-  rest_api_id   = aws_api_gateway_rest_api.test.id
-  resource_id   = aws_api_gateway_rest_api.test.root_resource_id
+resource "aws_apigateway_method" "test" {
+  rest_api_id   = aws_apigateway_rest_api.test.id
+  resource_id   = aws_apigateway_rest_api.test.root_resource_id
   http_method   = "POST"
   authorization = "CUSTOM"
-  authorizer_id = aws_api_gateway_authorizer.test.id
+  authorizer_id = aws_apigateway_authorizer.test.id
 }
 
-resource "aws_api_gateway_method_response" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  resource_id = aws_api_gateway_rest_api.test.root_resource_id
-  http_method = aws_api_gateway_method.test.http_method
+resource "aws_apigateway_method_response" "test" {
+  rest_api_id = aws_apigateway_rest_api.test.id
+  resource_id = aws_apigateway_rest_api.test.root_resource_id
+  http_method = aws_apigateway_method.test.http_method
   status_code = "200"
 
   response_parameters = {
@@ -870,21 +870,21 @@ resource "aws_api_gateway_method_response" "test" {
   }
 }
 
-resource "aws_api_gateway_integration" "test" {
-  rest_api_id             = aws_api_gateway_rest_api.test.id
-  resource_id             = aws_api_gateway_rest_api.test.root_resource_id
-  http_method             = aws_api_gateway_method.test.http_method
+resource "aws_apigateway_integration" "test" {
+  rest_api_id             = aws_apigateway_rest_api.test.id
+  resource_id             = aws_apigateway_rest_api.test.root_resource_id
+  http_method             = aws_apigateway_method.test.http_method
   integration_http_method = "POST"
   type                    = "AWS"
   uri                     = aws_lambda_function.lambda.invoke_arn
 }
 
-resource "aws_api_gateway_integration_response" "test" {
-  depends_on  = [aws_api_gateway_integration.test]
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  resource_id = aws_api_gateway_rest_api.test.root_resource_id
-  http_method = aws_api_gateway_method.test.http_method
-  status_code = aws_api_gateway_method_response.test.status_code
+resource "aws_apigateway_integration_response" "test" {
+  depends_on  = [aws_apigateway_integration.test]
+  rest_api_id = aws_apigateway_rest_api.test.id
+  resource_id = aws_apigateway_rest_api.test.root_resource_id
+  http_method = aws_apigateway_method.test.http_method
+  status_code = aws_apigateway_method_response.test.status_code
 
   response_parameters = {
     "method.response.header.Access-Control-Allow-Origin" = "'*'"
@@ -938,7 +938,7 @@ resource "aws_lambda_permission" "apigw_lambda" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.lambda.arn
   principal     = "apigateway.${data.aws_partition.current.dns_suffix}"
-  source_arn    = "${aws_api_gateway_deployment.test.execution_arn}/*"
+  source_arn    = "${aws_apigateway_deployment.test.execution_arn}/*"
 }
 
 resource "aws_lambda_function" "lambda" {
@@ -950,9 +950,9 @@ resource "aws_lambda_function" "lambda" {
   runtime          = "python3.6"
 }
 
-resource "aws_api_gateway_deployment" "test" {
-  depends_on  = [aws_api_gateway_integration_response.test]
-  rest_api_id = aws_api_gateway_rest_api.test.id
+resource "aws_apigateway_deployment" "test" {
+  depends_on  = [aws_apigateway_integration_response.test]
+  rest_api_id = aws_apigateway_rest_api.test.id
   stage_name  = "acctest"
 }
 
@@ -995,9 +995,9 @@ resource "aws_iam_role_policy" "invocation_policy" {
 EOF
 }
 
-resource "aws_api_gateway_authorizer" "test" {
+resource "aws_apigateway_authorizer" "test" {
   name                   = %[1]q
-  rest_api_id            = aws_api_gateway_rest_api.test.id
+  rest_api_id            = aws_apigateway_rest_api.test.id
   authorizer_uri         = aws_lambda_function.authorizer.invoke_arn
   authorizer_credentials = aws_iam_role.invocation_role.arn
 }
@@ -1018,8 +1018,8 @@ resource "aws_lambda_function" "authorizer" {
   }
 }
 
-resource "aws_api_gateway_gateway_response" "test" {
-  rest_api_id   = aws_api_gateway_rest_api.test.id
+resource "aws_apigateway_gateway_response" "test" {
+  rest_api_id   = aws_apigateway_rest_api.test.id
   status_code   = "401"
   response_type = "UNAUTHORIZED"
 
@@ -1036,7 +1036,7 @@ resource "aws_sns_topic_subscription" "test" {
   depends_on             = [aws_lambda_permission.apigw_lambda]
   topic_arn              = aws_sns_topic.test.arn
   protocol               = "https"
-  endpoint               = replace(aws_api_gateway_deployment.test.invoke_url, "https://", "https://davematthews:granny@")
+  endpoint               = replace(aws_apigateway_deployment.test.invoke_url, "https://", "https://davematthews:granny@")
   endpoint_auto_confirms = true
 }
 `, rName)

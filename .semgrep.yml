@@ -320,7 +320,7 @@ rules:
     message: Calling `d.SetId("")` should ensure `!d.IsNewResource()` is checked first
     paths:
       exclude:
-        - aws/resource_aws_api_gateway_*.go
+        - aws/resource_aws_apigateway_*.go
         - aws/resource_aws_apigatewayv2_*.go
         - aws/resource_aws_app_cookie_stickiness_policy.go
         - aws/resource_aws_appautoscaling_*.go

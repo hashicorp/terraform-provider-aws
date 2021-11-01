@@ -393,7 +393,7 @@ func TestAccAPIGatewayV2Integration_vpcLinkWebSocket(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetIntegrationOutput
 	resourceName := "aws_apigatewayv2_integration.test"
-	vpcLinkResourceName := "aws_api_gateway_vpc_link.test"
+	vpcLinkResourceName := "aws_apigateway_vpc_link.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1050,7 +1050,7 @@ resource "aws_lb" "test" {
   }
 }
 
-resource "aws_api_gateway_vpc_link" "test" {
+resource "aws_apigateway_vpc_link" "test" {
   name        = %[1]q
   target_arns = [aws_lb.test.arn]
 }
@@ -1059,7 +1059,7 @@ resource "aws_apigatewayv2_integration" "test" {
   api_id           = aws_apigatewayv2_api.test.id
   integration_type = "HTTP_PROXY"
 
-  connection_id             = aws_api_gateway_vpc_link.test.id
+  connection_id             = aws_apigateway_vpc_link.test.id
   connection_type           = "VPC_LINK"
   content_handling_strategy = "CONVERT_TO_TEXT"
   description               = "Test VPC Link"

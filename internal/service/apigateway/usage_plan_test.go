@@ -20,7 +20,7 @@ func TestAccAPIGatewayUsagePlan_basic(t *testing.T) {
 	var conf apigateway.UsagePlan
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	updatedName := sdkacctest.RandomWithPrefix("tf-acc-test-2")
-	resourceName := "aws_api_gateway_usage_plan.test"
+	resourceName := "aws_apigateway_usage_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -60,7 +60,7 @@ func TestAccAPIGatewayUsagePlan_basic(t *testing.T) {
 func TestAccAPIGatewayUsagePlan_tags(t *testing.T) {
 	var conf apigateway.UsagePlan
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_api_gateway_usage_plan.test"
+	resourceName := "aws_apigateway_usage_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -107,7 +107,7 @@ func TestAccAPIGatewayUsagePlan_tags(t *testing.T) {
 func TestAccAPIGatewayUsagePlan_description(t *testing.T) {
 	var conf apigateway.UsagePlan
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_api_gateway_usage_plan.test"
+	resourceName := "aws_apigateway_usage_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -161,7 +161,7 @@ func TestAccAPIGatewayUsagePlan_description(t *testing.T) {
 func TestAccAPIGatewayUsagePlan_productCode(t *testing.T) {
 	var conf apigateway.UsagePlan
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_api_gateway_usage_plan.test"
+	resourceName := "aws_apigateway_usage_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -209,7 +209,7 @@ func TestAccAPIGatewayUsagePlan_productCode(t *testing.T) {
 func TestAccAPIGatewayUsagePlan_throttling(t *testing.T) {
 	var conf apigateway.UsagePlan
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_api_gateway_usage_plan.test"
+	resourceName := "aws_apigateway_usage_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -264,7 +264,7 @@ func TestAccAPIGatewayUsagePlan_throttling(t *testing.T) {
 func TestAccAPIGatewayUsagePlan_throttlingInitialRateLimit(t *testing.T) {
 	var conf apigateway.UsagePlan
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_api_gateway_usage_plan.test"
+	resourceName := "aws_apigateway_usage_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -291,7 +291,7 @@ func TestAccAPIGatewayUsagePlan_throttlingInitialRateLimit(t *testing.T) {
 func TestAccAPIGatewayUsagePlan_quota(t *testing.T) {
 	var conf apigateway.UsagePlan
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_api_gateway_usage_plan.test"
+	resourceName := "aws_apigateway_usage_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -347,7 +347,7 @@ func TestAccAPIGatewayUsagePlan_quota(t *testing.T) {
 func TestAccAPIGatewayUsagePlan_apiStages(t *testing.T) {
 	var conf apigateway.UsagePlan
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_api_gateway_usage_plan.test"
+	resourceName := "aws_apigateway_usage_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -431,7 +431,7 @@ func TestAccAPIGatewayUsagePlan_apiStages(t *testing.T) {
 func TestAccAPIGatewayUsagePlan_APIStages_multiple(t *testing.T) {
 	var conf apigateway.UsagePlan
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_api_gateway_usage_plan.test"
+	resourceName := "aws_apigateway_usage_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -464,7 +464,7 @@ func TestAccAPIGatewayUsagePlan_APIStages_multiple(t *testing.T) {
 func TestAccAPIGatewayUsagePlan_APIStages_throttle(t *testing.T) {
 	var conf apigateway.UsagePlan
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_api_gateway_usage_plan.test"
+	resourceName := "aws_apigateway_usage_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -522,7 +522,7 @@ func TestAccAPIGatewayUsagePlan_APIStages_throttle(t *testing.T) {
 func TestAccAPIGatewayUsagePlan_disappears(t *testing.T) {
 	var conf apigateway.UsagePlan
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_api_gateway_usage_plan.test"
+	resourceName := "aws_apigateway_usage_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -578,7 +578,7 @@ func testAccCheckUsagePlanDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_api_gateway_usage_plan" {
+		if rs.Type != "aws_apigateway_usage_plan" {
 			continue
 		}
 
@@ -605,51 +605,51 @@ func testAccCheckUsagePlanDestroy(s *terraform.State) error {
 
 func testAccUsagePlanConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name = "%s"
 }
 
-resource "aws_api_gateway_resource" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
+resource "aws_apigateway_resource" "test" {
+  rest_api_id = aws_apigateway_rest_api.test.id
+  parent_id   = aws_apigateway_rest_api.test.root_resource_id
   path_part   = "test"
 }
 
-resource "aws_api_gateway_method" "test" {
-  rest_api_id   = aws_api_gateway_rest_api.test.id
-  resource_id   = aws_api_gateway_resource.test.id
+resource "aws_apigateway_method" "test" {
+  rest_api_id   = aws_apigateway_rest_api.test.id
+  resource_id   = aws_apigateway_resource.test.id
   http_method   = "GET"
   authorization = "NONE"
 }
 
-resource "aws_api_gateway_method_response" "error" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  resource_id = aws_api_gateway_resource.test.id
-  http_method = aws_api_gateway_method.test.http_method
+resource "aws_apigateway_method_response" "error" {
+  rest_api_id = aws_apigateway_rest_api.test.id
+  resource_id = aws_apigateway_resource.test.id
+  http_method = aws_apigateway_method.test.http_method
   status_code = "400"
 }
 
-resource "aws_api_gateway_integration" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  resource_id = aws_api_gateway_resource.test.id
-  http_method = aws_api_gateway_method.test.http_method
+resource "aws_apigateway_integration" "test" {
+  rest_api_id = aws_apigateway_rest_api.test.id
+  resource_id = aws_apigateway_resource.test.id
+  http_method = aws_apigateway_method.test.http_method
 
   type                    = "HTTP"
   uri                     = "https://www.google.de"
   integration_http_method = "GET"
 }
 
-resource "aws_api_gateway_integration_response" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  resource_id = aws_api_gateway_resource.test.id
-  http_method = aws_api_gateway_integration.test.http_method
-  status_code = aws_api_gateway_method_response.error.status_code
+resource "aws_apigateway_integration_response" "test" {
+  rest_api_id = aws_apigateway_rest_api.test.id
+  resource_id = aws_apigateway_resource.test.id
+  http_method = aws_apigateway_integration.test.http_method
+  status_code = aws_apigateway_method_response.error.status_code
 }
 
-resource "aws_api_gateway_deployment" "test" {
-  depends_on = [aws_api_gateway_integration.test]
+resource "aws_apigateway_deployment" "test" {
+  depends_on = [aws_apigateway_integration.test]
 
-  rest_api_id = aws_api_gateway_rest_api.test.id
+  rest_api_id = aws_apigateway_rest_api.test.id
   stage_name  = "test"
   description = "This is a test"
 
@@ -658,13 +658,13 @@ resource "aws_api_gateway_deployment" "test" {
   }
 }
 
-resource "aws_api_gateway_deployment" "foo" {
+resource "aws_apigateway_deployment" "foo" {
   depends_on = [
-    aws_api_gateway_deployment.test,
-    aws_api_gateway_integration.test,
+    aws_apigateway_deployment.test,
+    aws_apigateway_integration.test,
   ]
 
-  rest_api_id = aws_api_gateway_rest_api.test.id
+  rest_api_id = aws_apigateway_rest_api.test.id
   stage_name  = "foo"
   description = "This is a prod stage"
 }
@@ -673,7 +673,7 @@ resource "aws_api_gateway_deployment" "foo" {
 
 func testAccUsagePlanBasicConfig(rName string) string {
 	return testAccUsagePlanConfig(rName) + fmt.Sprintf(`
-resource "aws_api_gateway_usage_plan" "test" {
+resource "aws_apigateway_usage_plan" "test" {
   name = "%s"
 }
 `, rName)
@@ -681,7 +681,7 @@ resource "aws_api_gateway_usage_plan" "test" {
 
 func testAccUsagePlanBasicTags1(rName, tagKey1, tagValue1 string) string {
 	return testAccUsagePlanConfig(rName) + fmt.Sprintf(`
-resource "aws_api_gateway_usage_plan" "test" {
+resource "aws_apigateway_usage_plan" "test" {
   name = "%s"
 
   tags = {
@@ -693,7 +693,7 @@ resource "aws_api_gateway_usage_plan" "test" {
 
 func testAccUsagePlanBasicTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return testAccUsagePlanConfig(rName) + fmt.Sprintf(`
-resource "aws_api_gateway_usage_plan" "test" {
+resource "aws_apigateway_usage_plan" "test" {
   name = "%s"
 
   tags = {
@@ -706,7 +706,7 @@ resource "aws_api_gateway_usage_plan" "test" {
 
 func testAccUsagePlanDescriptionConfig(rName, desc string) string {
 	return testAccUsagePlanConfig(rName) + fmt.Sprintf(`
-resource "aws_api_gateway_usage_plan" "test" {
+resource "aws_apigateway_usage_plan" "test" {
   name        = %[1]q
   description = %[2]q
 }
@@ -715,7 +715,7 @@ resource "aws_api_gateway_usage_plan" "test" {
 
 func testAccUsagePlanProductCodeConfig(rName, code string) string {
 	return testAccUsagePlanConfig(rName) + fmt.Sprintf(`
-resource "aws_api_gateway_usage_plan" "test" {
+resource "aws_apigateway_usage_plan" "test" {
   name         = %[1]q
   product_code = %[2]q
 }
@@ -724,7 +724,7 @@ resource "aws_api_gateway_usage_plan" "test" {
 
 func testAccUsagePlanThrottlingConfig(rName string) string {
 	return testAccUsagePlanConfig(rName) + fmt.Sprintf(`
-resource "aws_api_gateway_usage_plan" "test" {
+resource "aws_apigateway_usage_plan" "test" {
   name = "%s"
 
   throttle_settings {
@@ -737,7 +737,7 @@ resource "aws_api_gateway_usage_plan" "test" {
 
 func testAccUsagePlanThrottlingModifiedConfig(rName string) string {
 	return testAccUsagePlanConfig(rName) + fmt.Sprintf(`
-resource "aws_api_gateway_usage_plan" "test" {
+resource "aws_apigateway_usage_plan" "test" {
   name = "%s"
 
   throttle_settings {
@@ -750,7 +750,7 @@ resource "aws_api_gateway_usage_plan" "test" {
 
 func testAccUsagePlanQuotaConfig(rName string) string {
 	return testAccUsagePlanConfig(rName) + fmt.Sprintf(`
-resource "aws_api_gateway_usage_plan" "test" {
+resource "aws_apigateway_usage_plan" "test" {
   name = "%s"
 
   quota_settings {
@@ -764,7 +764,7 @@ resource "aws_api_gateway_usage_plan" "test" {
 
 func testAccUsagePlanQuotaModifiedConfig(rName string) string {
 	return testAccUsagePlanConfig(rName) + fmt.Sprintf(`
-resource "aws_api_gateway_usage_plan" "test" {
+resource "aws_apigateway_usage_plan" "test" {
   name = "%s"
 
   quota_settings {
@@ -778,12 +778,12 @@ resource "aws_api_gateway_usage_plan" "test" {
 
 func testAccUsagePlanAPIStagesConfig(rName string) string {
 	return testAccUsagePlanConfig(rName) + fmt.Sprintf(`
-resource "aws_api_gateway_usage_plan" "test" {
+resource "aws_apigateway_usage_plan" "test" {
   name = "%s"
 
   api_stages {
-    api_id = aws_api_gateway_rest_api.test.id
-    stage  = aws_api_gateway_deployment.test.stage_name
+    api_id = aws_apigateway_rest_api.test.id
+    stage  = aws_apigateway_deployment.test.stage_name
   }
 }
 `, rName)
@@ -791,7 +791,7 @@ resource "aws_api_gateway_usage_plan" "test" {
 
 func testAccUsagePlanAPIStagesConfigThrottle(rName string) string {
 	return testAccUsagePlanConfig(rName) + fmt.Sprintf(`
-resource "aws_api_gateway_usage_plan" "test" {
+resource "aws_apigateway_usage_plan" "test" {
   name = "%s"
 
   throttle_settings {
@@ -800,11 +800,11 @@ resource "aws_api_gateway_usage_plan" "test" {
   }
 
   api_stages {
-    api_id = aws_api_gateway_rest_api.test.id
-    stage  = aws_api_gateway_deployment.test.stage_name
+    api_id = aws_apigateway_rest_api.test.id
+    stage  = aws_apigateway_deployment.test.stage_name
 
     throttle {
-      path        = "${aws_api_gateway_resource.test.path}/${aws_api_gateway_method.test.http_method}"
+      path        = "${aws_apigateway_resource.test.path}/${aws_apigateway_method.test.http_method}"
       burst_limit = 3
       rate_limit  = 6
     }
@@ -815,7 +815,7 @@ resource "aws_api_gateway_usage_plan" "test" {
 
 func testAccUsagePlanAPIStagesConfigThrottleMulti(rName string) string {
 	return testAccUsagePlanConfig(rName) + fmt.Sprintf(`
-resource "aws_api_gateway_usage_plan" "test" {
+resource "aws_apigateway_usage_plan" "test" {
   name = "%s"
 
   throttle_settings {
@@ -824,22 +824,22 @@ resource "aws_api_gateway_usage_plan" "test" {
   }
 
   api_stages {
-    api_id = aws_api_gateway_rest_api.test.id
-    stage  = aws_api_gateway_deployment.test.stage_name
+    api_id = aws_apigateway_rest_api.test.id
+    stage  = aws_apigateway_deployment.test.stage_name
 
     throttle {
-      path        = "${aws_api_gateway_resource.test.path}/${aws_api_gateway_method.test.http_method}"
+      path        = "${aws_apigateway_resource.test.path}/${aws_apigateway_method.test.http_method}"
       burst_limit = 3
       rate_limit  = 6
     }
   }
 
   api_stages {
-    api_id = aws_api_gateway_rest_api.test.id
-    stage  = aws_api_gateway_deployment.foo.stage_name
+    api_id = aws_apigateway_rest_api.test.id
+    stage  = aws_apigateway_deployment.foo.stage_name
 
     throttle {
-      path        = "${aws_api_gateway_resource.test.path}/${aws_api_gateway_method.test.http_method}"
+      path        = "${aws_apigateway_resource.test.path}/${aws_apigateway_method.test.http_method}"
       burst_limit = 3
       rate_limit  = 6
     }
@@ -850,12 +850,12 @@ resource "aws_api_gateway_usage_plan" "test" {
 
 func testAccUsagePlanAPIStagesModifiedConfig(rName string) string {
 	return testAccUsagePlanConfig(rName) + fmt.Sprintf(`
-resource "aws_api_gateway_usage_plan" "test" {
+resource "aws_apigateway_usage_plan" "test" {
   name = "%s"
 
   api_stages {
-    api_id = aws_api_gateway_rest_api.test.id
-    stage  = aws_api_gateway_deployment.foo.stage_name
+    api_id = aws_apigateway_rest_api.test.id
+    stage  = aws_apigateway_deployment.foo.stage_name
   }
 }
 `, rName)
@@ -863,17 +863,17 @@ resource "aws_api_gateway_usage_plan" "test" {
 
 func testAccUsagePlanAPIStagesMultipleConfig(rName string) string {
 	return testAccUsagePlanConfig(rName) + fmt.Sprintf(`
-resource "aws_api_gateway_usage_plan" "test" {
+resource "aws_apigateway_usage_plan" "test" {
   name = "%s"
 
   api_stages {
-    api_id = aws_api_gateway_rest_api.test.id
-    stage  = aws_api_gateway_deployment.foo.stage_name
+    api_id = aws_apigateway_rest_api.test.id
+    stage  = aws_apigateway_deployment.foo.stage_name
   }
 
   api_stages {
-    api_id = aws_api_gateway_rest_api.test.id
-    stage  = aws_api_gateway_deployment.test.stage_name
+    api_id = aws_apigateway_rest_api.test.id
+    stage  = aws_apigateway_deployment.test.stage_name
   }
 }
 `, rName)

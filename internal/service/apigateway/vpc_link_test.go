@@ -18,7 +18,7 @@ import (
 
 func TestAccAPIGatewayVPCLink_basic(t *testing.T) {
 	rName := sdkacctest.RandString(5)
-	resourceName := "aws_api_gateway_vpc_link.test"
+	resourceName := "aws_apigateway_vpc_link.test"
 	vpcLinkName := fmt.Sprintf("tf-apigateway-%s", rName)
 	vpcLinkNameUpdated := fmt.Sprintf("tf-apigateway-update-%s", rName)
 
@@ -59,7 +59,7 @@ func TestAccAPIGatewayVPCLink_basic(t *testing.T) {
 
 func TestAccAPIGatewayVPCLink_tags(t *testing.T) {
 	rName := sdkacctest.RandString(5)
-	resourceName := "aws_api_gateway_vpc_link.test"
+	resourceName := "aws_apigateway_vpc_link.test"
 	vpcLinkName := fmt.Sprintf("tf-apigateway-%s", rName)
 	description := "test"
 
@@ -114,7 +114,7 @@ func TestAccAPIGatewayVPCLink_tags(t *testing.T) {
 
 func TestAccAPIGatewayVPCLink_disappears(t *testing.T) {
 	rName := sdkacctest.RandString(5)
-	resourceName := "aws_api_gateway_vpc_link.test"
+	resourceName := "aws_apigateway_vpc_link.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -138,7 +138,7 @@ func testAccCheckVPCLinkDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_api_gateway_vpc_link" {
+		if rs.Type != "aws_apigateway_vpc_link" {
 			continue
 		}
 
@@ -217,7 +217,7 @@ resource "aws_subnet" "test" {
 
 func testAccAPIGatewayVpcLinkConfig(rName, description string) string {
 	return testAccAPIGatewayVpcLinkConfig_basis(rName) + fmt.Sprintf(`
-resource "aws_api_gateway_vpc_link" "test" {
+resource "aws_apigateway_vpc_link" "test" {
   name        = "tf-apigateway-%s"
   description = %q
   target_arns = [aws_lb.test_a.arn]
@@ -227,7 +227,7 @@ resource "aws_api_gateway_vpc_link" "test" {
 
 func testAccAPIGatewayVpcLinkConfigTags1(rName, description, tagKey1, tagValue1 string) string {
 	return testAccAPIGatewayVpcLinkConfig_basis(rName) + fmt.Sprintf(`
-resource "aws_api_gateway_vpc_link" "test" {
+resource "aws_apigateway_vpc_link" "test" {
   name        = "tf-apigateway-%s"
   description = %q
   target_arns = [aws_lb.test_a.arn]
@@ -241,7 +241,7 @@ resource "aws_api_gateway_vpc_link" "test" {
 
 func testAccAPIGatewayVpcLinkConfigTags2(rName, description, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return testAccAPIGatewayVpcLinkConfig_basis(rName) + fmt.Sprintf(`
-resource "aws_api_gateway_vpc_link" "test" {
+resource "aws_apigateway_vpc_link" "test" {
   name        = "tf-apigateway-%s"
   description = %q
   target_arns = [aws_lb.test_a.arn]
@@ -256,7 +256,7 @@ resource "aws_api_gateway_vpc_link" "test" {
 
 func testAccAPIGatewayVpcLinkConfig_Update(rName, description string) string {
 	return testAccAPIGatewayVpcLinkConfig_basis(rName) + fmt.Sprintf(`
-resource "aws_api_gateway_vpc_link" "test" {
+resource "aws_apigateway_vpc_link" "test" {
   name        = "tf-apigateway-update-%s"
   description = %q
   target_arns = [aws_lb.test_a.arn]

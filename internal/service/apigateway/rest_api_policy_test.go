@@ -19,7 +19,7 @@ import (
 
 func TestAccAPIGatewayRestAPIPolicy_basic(t *testing.T) {
 	var v apigateway.RestApi
-	resourceName := "aws_api_gateway_rest_api_policy.test"
+	resourceName := "aws_apigateway_rest_api_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -52,7 +52,7 @@ func TestAccAPIGatewayRestAPIPolicy_basic(t *testing.T) {
 
 func TestAccAPIGatewayRestAPIPolicy_disappears(t *testing.T) {
 	var v apigateway.RestApi
-	resourceName := "aws_api_gateway_rest_api_policy.test"
+	resourceName := "aws_apigateway_rest_api_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -75,7 +75,7 @@ func TestAccAPIGatewayRestAPIPolicy_disappears(t *testing.T) {
 
 func TestAccAPIGatewayRestAPIPolicy_Disappears_restAPI(t *testing.T) {
 	var v apigateway.RestApi
-	resourceName := "aws_api_gateway_rest_api_policy.test"
+	resourceName := "aws_apigateway_rest_api_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -88,7 +88,7 @@ func TestAccAPIGatewayRestAPIPolicy_Disappears_restAPI(t *testing.T) {
 				Config: testAccRestAPIPolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRestAPIPolicyExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceRestAPI(), "aws_api_gateway_rest_api.test"),
+					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceRestAPI(), "aws_apigateway_rest_api.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -141,7 +141,7 @@ func testAccCheckRestAPIPolicyDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_api_gateway_rest_api_policy" {
+		if rs.Type != "aws_apigateway_rest_api_policy" {
 			continue
 		}
 
@@ -164,12 +164,12 @@ func testAccCheckRestAPIPolicyDestroy(s *terraform.State) error {
 
 func testAccRestAPIPolicyConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name = %[1]q
 }
 
-resource "aws_api_gateway_rest_api_policy" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
+resource "aws_apigateway_rest_api_policy" "test" {
+  rest_api_id = aws_apigateway_rest_api.test.id
 
   policy = <<EOF
 {
@@ -181,7 +181,7 @@ resource "aws_api_gateway_rest_api_policy" "test" {
                "AWS": "*"
            },
            "Action": "execute-api:Invoke",
-           "Resource": "${aws_api_gateway_rest_api.test.arn}"
+           "Resource": "${aws_apigateway_rest_api.test.arn}"
        }
    ]
 }
@@ -192,12 +192,12 @@ EOF
 
 func testAccRestAPIPolicyUpdatedConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_apigateway_rest_api" "test" {
   name = %[1]q
 }
 
-resource "aws_api_gateway_rest_api_policy" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
+resource "aws_apigateway_rest_api_policy" "test" {
+  rest_api_id = aws_apigateway_rest_api.test.id
 
   policy = <<EOF
 {
@@ -209,7 +209,7 @@ resource "aws_api_gateway_rest_api_policy" "test" {
         "AWS": "*"
       },
       "Action": "execute-api:Invoke",
-      "Resource": "${aws_api_gateway_rest_api.test.arn}",
+      "Resource": "${aws_apigateway_rest_api.test.arn}",
       "Condition": {
         "IpAddress": {
           "aws:SourceIp": "123.123.123.123/32"

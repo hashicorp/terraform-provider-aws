@@ -27,7 +27,7 @@ Upgrade topics:
 - [Data Source: aws_route53_resolver_rule](#data-source-aws_route53_resolver_rule)
 - [Data Source: aws_route53_zone](#data-source-aws_route53_zone)
 - [Resource: aws_acm_certificate](#resource-aws_acm_certificate)
-- [Resource: aws_api_gateway_method_settings](#resource-aws_api_gateway_method_settings)
+- [Resource: aws_apigateway_method_settings](#resource-aws_apigateway_method_settings)
 - [Resource: aws_autoscaling_group](#resource-aws_autoscaling_group)
 - [Resource: aws_cloudfront_distribution](#resource-aws_cloudfront_distribution)
 - [Resource: aws_cloudwatch_log_group](#resource-aws_cloudwatch_log_group)
@@ -677,7 +677,7 @@ Previously the `subject_alternative_names` argument was stored in the Terraform 
 
 Previously when the `certificate_body`, `certificate_chain`, and `private_key` arguments were stored in state, they were stored as a hash of the actual value. This prevented Terraform from properly updating the resource when necessary and the hashing has been removed. The Terraform AWS Provider will show an update to these arguments on the first apply after upgrading to version 3.0.0, which is fixing the Terraform state to remove the hash. Since the `private_key` attribute is marked as sensitive, the values in the update will not be visible in the Terraform output. If the non-hashed values have not changed, then no update is occurring other than the Terraform state update. If these arguments are the only updates and they all match the hash removal, the apply will occur without submitting API calls.
 
-## Resource: aws_api_gateway_method_settings
+## Resource: aws_apigateway_method_settings
 
 ### throttling_burst_limit and throttling_rate_limit Arguments Now Default to -1
 

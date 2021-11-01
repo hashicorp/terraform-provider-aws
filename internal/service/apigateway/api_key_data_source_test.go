@@ -12,8 +12,8 @@ import (
 
 func TestAccAPIGatewayAPIKeyDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandString(8)
-	resourceName1 := "aws_api_gateway_api_key.example_key"
-	dataSourceName1 := "data.aws_api_gateway_api_key.test_key"
+	resourceName1 := "aws_apigateway_api_key.example_key"
+	dataSourceName1 := "data.aws_apigateway_api_key.test_key"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
@@ -39,12 +39,12 @@ func TestAccAPIGatewayAPIKeyDataSource_basic(t *testing.T) {
 
 func testAccAPIKeyDataSourceConfig(r string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_api_key" "example_key" {
+resource "aws_apigateway_api_key" "example_key" {
   name = "%s"
 }
 
-data "aws_api_gateway_api_key" "test_key" {
-  id = aws_api_gateway_api_key.example_key.id
+data "aws_apigateway_api_key" "test_key" {
+  id = aws_apigateway_api_key.example_key.id
 }
 `, r)
 }

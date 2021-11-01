@@ -18,13 +18,13 @@ import (
 )
 
 func init() {
-	resource.AddTestSweepers("aws_api_gateway_rest_api", &resource.Sweeper{
-		Name: "aws_api_gateway_rest_api",
+	resource.AddTestSweepers("aws_apigateway_rest_api", &resource.Sweeper{
+		Name: "aws_apigateway_rest_api",
 		F:    sweepRestAPIs,
 	})
 
-	resource.AddTestSweepers("aws_api_gateway_vpc_link", &resource.Sweeper{
-		Name: "aws_api_gateway_vpc_link",
+	resource.AddTestSweepers("aws_apigateway_vpc_link", &resource.Sweeper{
+		Name: "aws_apigateway_vpc_link",
 		F:    sweepVPCLinks,
 	})
 }

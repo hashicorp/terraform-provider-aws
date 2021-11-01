@@ -1,12 +1,12 @@
 ---
 subcategory: "API Gateway (REST APIs)"
 layout: "aws"
-page_title: "AWS: aws_api_gateway_api_key"
+page_title: "AWS: aws_apigateway_api_key"
 description: |-
   Provides an API Gateway API Key.
 ---
 
-# Resource: aws_api_gateway_api_key
+# Resource: aws_apigateway_api_key
 
 Provides an API Gateway API Key.
 
@@ -15,7 +15,7 @@ Provides an API Gateway API Key.
 ## Example Usage
 
 ```terraform
-resource "aws_api_gateway_api_key" "MyDemoApiKey" {
+resource "aws_apigateway_api_key" "MyDemoApiKey" {
   name = "demo"
 }
 ```
@@ -46,5 +46,5 @@ In addition to all arguments above, the following attributes are exported:
 API Gateway Keys can be imported using the `id`, e.g.,
 
 ```
-$ terraform import aws_api_gateway_api_key.my_demo_key 8bklk8bl1k3sB38D9B3l0enyWT8c09B30lkq0blk
+$ terraform import aws_apigateway_api_key.my_demo_key 8bklk8bl1k3sB38D9B3l0enyWT8c09B30lkq0blk
 ```
