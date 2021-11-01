@@ -2154,8 +2154,8 @@ resource "aws_batch_compute_environment" "test" {
     instance_role = aws_iam_instance_profile.ecs_instance.arn
     instance_type = ["optimal"]
     ec2_configuration {
-    	 image_id_override = %[2]q
-    	 image_type =  %[3]q
+      image_id_override = %[2]q
+      image_type        = %[3]q
     }
 
     max_vcpus = 16
