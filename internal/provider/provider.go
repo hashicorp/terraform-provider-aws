@@ -681,7 +681,8 @@ func Provider() *schema.Provider {
 
 			"aws_storagegateway_local_disk": storagegateway.DataSourceLocalDisk(),
 
-			"aws_caller_identity": sts.DataSourceCallerIdentity(),
+			"aws_sts_caller_identity": sts.DataSourceCallerIdentity(),
+			"aws_caller_identity":     sts.DataSourceCallerIdentity(), // backward compatible alias
 
 			"aws_transfer_server": transfer.DataSourceServer(),
 

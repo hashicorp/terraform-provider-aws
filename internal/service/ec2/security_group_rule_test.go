@@ -2095,7 +2095,7 @@ resource "aws_security_group_rule" "allow_self" {
 
 func testAccSecurityGroupRule_Ingress_Source_with_AccountID(rInt int) string {
 	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
@@ -2118,7 +2118,7 @@ resource "aws_security_group_rule" "allow_self" {
   protocol                 = "-1"
   description              = "some description"
   security_group_id        = aws_security_group.web.id
-  source_security_group_id = "${data.aws_caller_identity.current.account_id}/${aws_security_group.web.id}"
+  source_security_group_id = "${data.aws_sts_caller_identity.current.account_id}/${aws_security_group.web.id}"
 }
 `, rInt)
 }

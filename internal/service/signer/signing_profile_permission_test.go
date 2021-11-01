@@ -158,65 +158,65 @@ func TestAccSignerSigningProfilePermission_statementPrefix(t *testing.T) {
 
 func testAccSigningProfilePermissionConfig(profileName string) string {
 	return fmt.Sprintf(testAccSigningProfilePermissionConfig_base(profileName) + `
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 resource "aws_signer_signing_profile_permission" "test_sp_permission" {
   profile_name = aws_signer_signing_profile.test_sp.name
   action       = "signer:StartSigningJob"
-  principal    = data.aws_caller_identity.current.account_id
+  principal    = data.aws_sts_caller_identity.current.account_id
 }`)
 }
 
 func testAccSigningProfilePermissionStartSigningJobGetSP(profileName string) string {
 	return fmt.Sprintf(testAccSigningProfilePermissionConfig_base(profileName) + `
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 resource "aws_signer_signing_profile_permission" "sp1_perm" {
   profile_name = aws_signer_signing_profile.test_sp.name
   action       = "signer:StartSigningJob"
-  principal    = data.aws_caller_identity.current.account_id
+  principal    = data.aws_sts_caller_identity.current.account_id
   statement_id = "statementid1"
 }
 
 resource "aws_signer_signing_profile_permission" "sp2_perm" {
   profile_name = aws_signer_signing_profile.test_sp.name
   action       = "signer:GetSigningProfile"
-  principal    = data.aws_caller_identity.current.account_id
+  principal    = data.aws_sts_caller_identity.current.account_id
   statement_id = "statementid2"
 }`)
 }
 
 func testAccSigningProfilePermissionStatementPrefix(statementNamePrefix, profileName string) string {
 	return fmt.Sprintf(testAccSigningProfilePermissionConfig_base(profileName)+`
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 resource "aws_signer_signing_profile_permission" "sp1_perm" {
   profile_name        = aws_signer_signing_profile.test_sp.name
   action              = "signer:StartSigningJob"
-  principal           = data.aws_caller_identity.current.account_id
+  principal           = data.aws_sts_caller_identity.current.account_id
   statement_id_prefix = %[1]q
 }`, statementNamePrefix)
 }
 
 func testAccSigningProfilePermissionGetSP(profileName string) string {
 	return fmt.Sprintf(testAccSigningProfilePermissionConfig_base(profileName) + `
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 resource "aws_signer_signing_profile_permission" "test_sp_permission" {
   profile_name = aws_signer_signing_profile.test_sp.name
   action       = "signer:GetSigningProfile"
-  principal    = data.aws_caller_identity.current.account_id
+  principal    = data.aws_sts_caller_identity.current.account_id
 }`)
 }
 
 func testAccSigningProfilePermissionRevokeSignature(profileName string) string {
 	return fmt.Sprintf(testAccSigningProfilePermissionConfig_base(profileName) + `
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 resource "aws_signer_signing_profile_permission" "test_sp_permission" {
   profile_name = aws_signer_signing_profile.test_sp.name
   action       = "signer:RevokeSignature"
-  principal    = data.aws_caller_identity.current.account_id
+  principal    = data.aws_sts_caller_identity.current.account_id
 }`)
 }
 

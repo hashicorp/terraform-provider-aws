@@ -195,11 +195,11 @@ resource "aws_ram_resource_share" "test" {
 resource "aws_ram_principal_association" "test" {
   provider = "awsalternate"
 
-  principal          = data.aws_caller_identity.receiver.account_id
+  principal          = data.aws_sts_caller_identity.receiver.account_id
   resource_share_arn = aws_ram_resource_share.test.arn
 }
 
-data "aws_caller_identity" "receiver" {}
+data "aws_sts_caller_identity" "receiver" {}
 `, rName)
 }
 

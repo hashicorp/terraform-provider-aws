@@ -761,7 +761,7 @@ data "aws_availability_zones" "available" {
 
 data "aws_region" "current" {}
 
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 data "aws_partition" "current" {}
 
@@ -776,7 +776,7 @@ resource "aws_eip" "test" {
 
 resource "aws_shield_protection" "test" {
   name         = %[1]q
-  resource_arn = "arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:eip-allocation/${aws_eip.test.id}"
+  resource_arn = "arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.name}:${data.aws_sts_caller_identity.current.account_id}:eip-allocation/${aws_eip.test.id}"
 }
 `, rName)
 }

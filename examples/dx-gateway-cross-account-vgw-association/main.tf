@@ -20,7 +20,7 @@ provider "aws" {
   secret_key = var.aws_second_secret_key
 }
 
-data "aws_caller_identity" "first" {
+data "aws_sts_caller_identity" "first" {
   provider = aws.first
 }
 
@@ -59,7 +59,7 @@ resource "aws_dx_gateway_association" "example" {
 
   proposal_id                         = aws_dx_gateway_association_proposal.example.id
   dx_gateway_id                       = aws_dx_gateway.example.id
-  associated_gateway_owner_account_id = data.aws_caller_identity.first.account_id
+  associated_gateway_owner_account_id = data.aws_sts_caller_identity.first.account_id
 }
 
 resource "aws_dx_gateway" "example" {

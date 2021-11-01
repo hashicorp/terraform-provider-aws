@@ -793,7 +793,7 @@ data "aws_partition" "current" {}
 
 data "aws_region" "current" {}
 
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 resource "aws_sqs_queue" "test" {
   name                       = local.queue_name
@@ -813,7 +813,7 @@ resource "aws_sqs_queue" "test" {
       "Effect": "Allow",
       "Principal": "*",
       "Action": "sqs:SendMessage",
-      "Resource": "arn:${data.aws_partition.current.partition}:sqs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:${local.queue_name}",
+      "Resource": "arn:${data.aws_partition.current.partition}:sqs:${data.aws_region.current.name}:${data.aws_sts_caller_identity.current.account_id}:${local.queue_name}",
       "Condition": {
         "ArnEquals": {
           "aws:SourceArn": "${aws_sns_topic.test.arn}"

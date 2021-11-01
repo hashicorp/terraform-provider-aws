@@ -108,7 +108,7 @@ resource "aws_securityhub_invite_accepter" "test" {
 resource "aws_securityhub_member" "source" {
   provider = awsalternate
 
-  account_id = data.aws_caller_identity.test.account_id
+  account_id = data.aws_sts_caller_identity.test.account_id
   email      = %[1]q
   invite     = true
 
@@ -121,6 +121,6 @@ resource "aws_securityhub_account" "source" {
   provider = awsalternate
 }
 
-data "aws_caller_identity" "test" {}
+data "aws_sts_caller_identity" "test" {}
 `, email))
 }

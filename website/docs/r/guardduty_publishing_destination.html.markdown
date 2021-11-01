@@ -12,7 +12,7 @@ Provides a resource to manage a GuardDuty PublishingDestination. Requires an exi
 ## Example Usage
 
 ```terraform
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 data "aws_region" "current" {}
 
@@ -59,7 +59,7 @@ data "aws_iam_policy_document" "kms_pol" {
     ]
 
     resources = [
-      "arn:aws:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:key/*"
+      "arn:aws:kms:${data.aws_region.current.name}:${data.aws_sts_caller_identity.current.account_id}:key/*"
     ]
 
     principals {
@@ -75,12 +75,12 @@ data "aws_iam_policy_document" "kms_pol" {
     ]
 
     resources = [
-      "arn:aws:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:key/*"
+      "arn:aws:kms:${data.aws_region.current.name}:${data.aws_sts_caller_identity.current.account_id}:key/*"
     ]
 
     principals {
       type        = "AWS"
-      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
+      identifiers = ["arn:aws:iam::${data.aws_sts_caller_identity.current.account_id}:root"]
     }
   }
 

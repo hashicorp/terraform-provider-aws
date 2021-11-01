@@ -77,10 +77,10 @@ resource "aws_default_vpc_dhcp_options" "test" {
 `
 
 const testAccDefaultVPCDHCPOptionsOwnerConfig = `
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 resource "aws_default_vpc_dhcp_options" "test" {
-  owner_id = data.aws_caller_identity.current.account_id
+  owner_id = data.aws_sts_caller_identity.current.account_id
 
   tags = {
     Name = "Default DHCP Option Set"

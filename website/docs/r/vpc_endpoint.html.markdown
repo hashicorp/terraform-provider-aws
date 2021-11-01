@@ -60,11 +60,11 @@ resource "aws_vpc_endpoint" "ec2" {
 ### Gateway Load Balancer Endpoint Type
 
 ```terraform
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 resource "aws_vpc_endpoint_service" "example" {
   acceptance_required        = false
-  allowed_principals         = [data.aws_caller_identity.current.arn]
+  allowed_principals         = [data.aws_sts_caller_identity.current.arn]
   gateway_load_balancer_arns = [aws_lb.example.arn]
 }
 

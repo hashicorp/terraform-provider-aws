@@ -1344,7 +1344,7 @@ Avoid hard coding values in acceptance test checks and configurations for consis
 #### Hardcoded Account IDs
 
 - [ ] __Uses Account Data Sources__: Any hardcoded account numbers in configuration, e.g., `137112412989`, should be replaced with a data source. Depending on the situation, there are several data sources for account IDs including:
-    - [`aws_caller_identity` data source](https://www.terraform.io/docs/providers/aws/d/caller_identity.html),
+    - [`aws_sts_caller_identity` data source](https://www.terraform.io/docs/providers/aws/d/caller_identity.html),
     - [`aws_canonical_user_id` data source](https://www.terraform.io/docs/providers/aws/d/canonical_user_id.html),
     - [`aws_billing_service_account` data source](https://www.terraform.io/docs/providers/aws/d/billing_service_account.html), and
     - [`aws_sagemaker_prebuilt_ecr_image` data source](https://www.terraform.io/docs/providers/aws/d/sagemaker_prebuilt_ecr_image.html).
@@ -1352,15 +1352,15 @@ Avoid hard coding values in acceptance test checks and configurations for consis
     - `acctest.CheckResourceAttrAccountID()`: Validates the state value equals the AWS Account ID of the current account running the test. This is the most common implementation.
     - `acctest.MatchResourceAttrAccountID()`: Validates the state value matches any AWS Account ID (e.g. a 12 digit number). This is typically only used in data source testing of AWS managed components.
 
-Here's an example of using `aws_caller_identity`:
+Here's an example of using `aws_sts_caller_identity`:
 
 ```terraform
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 resource "aws_backup_selection" "test" {
   plan_id      = aws_backup_plan.test.id
   name         = "tf_acc_test_backup_selection_%[1]d"
-  iam_role_arn = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/service-role/AWSBackupDefaultServiceRole"
+  iam_role_arn = "arn:${data.aws_partition.current.partition}:iam::${data.aws_sts_caller_identity.current.account_id}:role/service-role/AWSBackupDefaultServiceRole"
 }
 ```
 

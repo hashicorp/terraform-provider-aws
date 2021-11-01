@@ -1745,7 +1745,7 @@ resource "aws_lambda_function" "lambda_function_test" {
 }
 
 const testAccKinesisFirehoseDeliveryStreamBaseConfig = `
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 data "aws_partition" "current" {}
 
@@ -1765,7 +1765,7 @@ resource "aws_iam_role" "firehose" {
       "Action": "sts:AssumeRole",
       "Condition": {
         "StringEquals": {
-          "sts:ExternalId": "${data.aws_caller_identity.current.account_id}"
+          "sts:ExternalId": "${data.aws_sts_caller_identity.current.account_id}"
         }
       }
     }
@@ -1851,7 +1851,7 @@ resource "aws_iam_role" "kinesis_source" {
       "Action": "sts:AssumeRole",
       "Condition": {
         "StringEquals": {
-          "sts:ExternalId": "${data.aws_caller_identity.current.account_id}"
+          "sts:ExternalId": "${data.aws_sts_caller_identity.current.account_id}"
         }
       }
     }
@@ -1888,7 +1888,7 @@ EOF
 
 func testAccKinesisFirehoseDeliveryStreamConfig_s3WithCloudwatchLogging(rInt int) string {
 	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 data "aws_partition" "current" {}
 
@@ -1908,7 +1908,7 @@ resource "aws_iam_role" "firehose" {
       "Action": "sts:AssumeRole",
       "Condition": {
         "StringEquals": {
-          "sts:ExternalId": "${data.aws_caller_identity.current.account_id}"
+          "sts:ExternalId": "${data.aws_sts_caller_identity.current.account_id}"
         }
       }
     }

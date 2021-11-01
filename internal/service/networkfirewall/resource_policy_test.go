@@ -204,7 +204,7 @@ func testAccNetworkFirewallResourcePolicyFirewallPolicyBaseConfig(rName string) 
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 resource "aws_networkfirewall_firewall_policy" "test" {
   name = %q
@@ -233,7 +233,7 @@ resource "aws_networkfirewall_resource_policy" "test" {
       Effect   = "Allow"
       Resource = aws_networkfirewall_firewall_policy.test.arn
       Principal = {
-        AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
+        AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_sts_caller_identity.current.account_id}:root"
       }
     }]
     Version = "2012-10-17"
@@ -259,7 +259,7 @@ resource "aws_networkfirewall_resource_policy" "test" {
       Effect   = "Allow"
       Resource = aws_networkfirewall_firewall_policy.test.arn
       Principal = {
-        AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
+        AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_sts_caller_identity.current.account_id}:root"
       }
     }]
     Version = "2012-10-17"
@@ -272,7 +272,7 @@ func testAccNetworkFirewallResourcePolicyRuleGroupBaseConfig(rName string) strin
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 resource "aws_networkfirewall_rule_group" "test" {
   capacity = 100
@@ -307,7 +307,7 @@ resource "aws_networkfirewall_resource_policy" "test" {
       Effect   = "Allow"
       Resource = aws_networkfirewall_rule_group.test.arn
       Principal = {
-        AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
+        AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_sts_caller_identity.current.account_id}:root"
       }
     }]
     Version = "2012-10-17"
@@ -332,7 +332,7 @@ resource "aws_networkfirewall_resource_policy" "test" {
       Effect   = "Allow"
       Resource = aws_networkfirewall_rule_group.test.arn
       Principal = {
-        AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
+        AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_sts_caller_identity.current.account_id}:root"
       }
     }]
     Version = "2012-10-17"

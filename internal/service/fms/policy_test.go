@@ -225,7 +225,7 @@ func testAccFmsPolicyConfigBase() string {
 	return acctest.ConfigCompose(
 		testAccFmsAdminRegionProviderConfig(),
 		`
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 data "aws_partition" "current" {}
 
@@ -251,7 +251,7 @@ resource "aws_fms_policy" "test" {
   resource_type_list    = ["AWS::ElasticLoadBalancingV2::LoadBalancer"]
 
   exclude_map {
-    account = [data.aws_caller_identity.current.account_id]
+    account = [data.aws_sts_caller_identity.current.account_id]
   }
 
   security_service_policy_data {
@@ -294,7 +294,7 @@ resource "aws_iam_role" "test" {
       Action = "sts:AssumeRole"
       Condition = {
         StringEquals = {
-          "sts:ExternalId" = "${data.aws_caller_identity.current.account_id}"
+          "sts:ExternalId" = "${data.aws_sts_caller_identity.current.account_id}"
         }
       }
       Effect = "Allow"
@@ -358,7 +358,7 @@ resource "aws_fms_policy" "test" {
   resource_type_list    = ["AWS::ElasticLoadBalancingV2::LoadBalancer"]
 
   exclude_map {
-    account = [data.aws_caller_identity.current.account_id]
+    account = [data.aws_sts_caller_identity.current.account_id]
   }
 
   security_service_policy_data {
@@ -391,7 +391,7 @@ resource "aws_fms_policy" "test" {
   resource_type_list    = ["AWS::ElasticLoadBalancingV2::LoadBalancer"]
 
   include_map {
-    account = [data.aws_caller_identity.current.account_id]
+    account = [data.aws_sts_caller_identity.current.account_id]
   }
 
   security_service_policy_data {

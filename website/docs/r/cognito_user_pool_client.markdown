@@ -46,7 +46,7 @@ resource "aws_cognito_user_pool_client" "client" {
 ### Create a user pool client with pinpoint analytics
 
 ```terraform
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 resource "aws_cognito_user_pool" "test" {
   name = "pool"
@@ -90,7 +90,7 @@ resource "aws_iam_role_policy" "test" {
         "mobiletargeting:PutItems"
       ],
       "Effect": "Allow",
-      "Resource": "arn:aws:mobiletargeting:*:${data.aws_caller_identity.current.account_id}:apps/${aws_pinpoint_app.test.application_id}*"
+      "Resource": "arn:aws:mobiletargeting:*:${data.aws_sts_caller_identity.current.account_id}:apps/${aws_pinpoint_app.test.application_id}*"
     }
   ]
 }

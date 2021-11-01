@@ -213,10 +213,10 @@ resource "aws_quicksight_group" "default" {
 
 func testAccGroupWithDescriptionConfig(rName, description string) string {
 	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 resource "aws_quicksight_group" "default" {
-  aws_account_id = data.aws_caller_identity.current.account_id
+  aws_account_id = data.aws_sts_caller_identity.current.account_id
   group_name     = %[1]q
   description    = %[2]q
 }

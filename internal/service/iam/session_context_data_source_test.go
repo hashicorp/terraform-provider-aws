@@ -222,10 +222,10 @@ resource "aws_iam_role" "test" {
 }
 
 data "aws_partition" "current" {}
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 data "aws_iam_session_context" "test" {
-  arn = "arn:${data.aws_partition.current.partition}:sts::${data.aws_caller_identity.current.account_id}:assumed-role/${aws_iam_role.test.name}/%[3]s"
+  arn = "arn:${data.aws_partition.current.partition}:sts::${data.aws_sts_caller_identity.current.account_id}:assumed-role/${aws_iam_role.test.name}/%[3]s"
 }
 `, rName, path, sessionID)
 }
@@ -260,10 +260,10 @@ data "aws_iam_session_context" "test" {
 func testAccSessionContextUserConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 data "aws_iam_session_context" "test" {
-  arn = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:user/division/extra-division/not-assumed-role/%[1]s"
+  arn = "arn:${data.aws_partition.current.partition}:iam::${data.aws_sts_caller_identity.current.account_id}:user/division/extra-division/not-assumed-role/%[1]s"
 }
 `, rName)
 }

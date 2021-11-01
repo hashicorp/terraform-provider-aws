@@ -337,7 +337,7 @@ func testAccCheckClassificationJobNotRecreated(i, j *macie2.DescribeClassificati
 
 func testAccMacieClassificationJobconfigNameGenerated(bucketName, jobType string) string {
 	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 resource "aws_macie2_account" "test" {}
 
@@ -350,7 +350,7 @@ resource "aws_macie2_classification_job" "test" {
   job_type   = %[2]q
   s3_job_definition {
     bucket_definitions {
-      account_id = data.aws_caller_identity.current.account_id
+      account_id = data.aws_sts_caller_identity.current.account_id
       buckets    = [aws_s3_bucket.test.bucket]
     }
   }
@@ -360,7 +360,7 @@ resource "aws_macie2_classification_job" "test" {
 
 func testAccMacieClassificationJobconfigNamePrefix(nameBucket, namePrefix, jobType string) string {
 	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 resource "aws_macie2_account" "test" {}
 
@@ -373,7 +373,7 @@ resource "aws_macie2_classification_job" "test" {
   job_type    = %[3]q
   s3_job_definition {
     bucket_definitions {
-      account_id = data.aws_caller_identity.current.account_id
+      account_id = data.aws_sts_caller_identity.current.account_id
       buckets    = [aws_s3_bucket.test.bucket]
     }
   }
@@ -384,7 +384,7 @@ resource "aws_macie2_classification_job" "test" {
 
 func testAccMacieClassificationJobconfigComplete(nameBucket, jobStatus, description string) string {
 	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 resource "aws_macie2_account" "test" {}
 
@@ -396,7 +396,7 @@ resource "aws_macie2_classification_job" "test" {
   job_type = "SCHEDULED"
   s3_job_definition {
     bucket_definitions {
-      account_id = data.aws_caller_identity.current.account_id
+      account_id = data.aws_sts_caller_identity.current.account_id
       buckets    = [aws_s3_bucket.test.bucket]
     }
     scoping {
@@ -435,7 +435,7 @@ resource "aws_macie2_classification_job" "test" {
 
 func testAccMacieClassificationJobconfigStatus(nameBucket, jobStatus string) string {
 	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 resource "aws_macie2_account" "test" {}
 
@@ -447,7 +447,7 @@ resource "aws_macie2_classification_job" "test" {
   job_type = "SCHEDULED"
   s3_job_definition {
     bucket_definitions {
-      account_id = data.aws_caller_identity.current.account_id
+      account_id = data.aws_sts_caller_identity.current.account_id
       buckets    = [aws_s3_bucket.test.bucket]
     }
     scoping {
@@ -485,7 +485,7 @@ resource "aws_macie2_classification_job" "test" {
 
 func testAccMacieClassificationJobconfigCompleteWithTags(nameBucket, jobStatus string) string {
 	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 resource "aws_macie2_account" "test" {}
 
@@ -497,7 +497,7 @@ resource "aws_macie2_classification_job" "test" {
   job_type = "SCHEDULED"
   s3_job_definition {
     bucket_definitions {
-      account_id = data.aws_caller_identity.current.account_id
+      account_id = data.aws_sts_caller_identity.current.account_id
       buckets    = [aws_s3_bucket.test.bucket]
     }
     scoping {

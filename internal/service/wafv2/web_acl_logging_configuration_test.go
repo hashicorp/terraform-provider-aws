@@ -670,7 +670,7 @@ func testAccWebACLLoggingConfigurationDependenciesConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 resource "aws_iam_role" "firehose" {
   name = "%[1]s"
@@ -688,7 +688,7 @@ resource "aws_iam_role" "firehose" {
       "Action": "sts:AssumeRole",
       "Condition": {
         "StringEquals": {
-          "sts:ExternalId": "${data.aws_caller_identity.current.account_id}"
+          "sts:ExternalId": "${data.aws_sts_caller_identity.current.account_id}"
         }
       }
     }

@@ -1707,7 +1707,7 @@ func TestAccS3Bucket_Replication_ruleDestinationAccessControlTranslation(t *test
 							{
 								ID: aws.String("foobar"),
 								Destination: &s3.Destination{
-									Account:      aws.String("${data.aws_caller_identity.current.account_id}"),
+									Account:      aws.String("${data.aws_sts_caller_identity.current.account_id}"),
 									Bucket:       aws.String(fmt.Sprintf("arn:%s:s3:::tf-test-bucket-destination-%d", partition, rInt)),
 									StorageClass: aws.String(s3.ObjectStorageClassStandard),
 									AccessControlTranslation: &s3.AccessControlTranslation{
@@ -1741,7 +1741,7 @@ func TestAccS3Bucket_Replication_ruleDestinationAccessControlTranslation(t *test
 							{
 								ID: aws.String("foobar"),
 								Destination: &s3.Destination{
-									Account:      aws.String("${data.aws_caller_identity.current.account_id}"),
+									Account:      aws.String("${data.aws_sts_caller_identity.current.account_id}"),
 									Bucket:       aws.String(fmt.Sprintf("arn:%s:s3:::tf-test-bucket-destination-%d", partition, rInt)),
 									StorageClass: aws.String(s3.ObjectStorageClassStandard),
 									EncryptionConfiguration: &s3.EncryptionConfiguration{
@@ -1800,7 +1800,7 @@ func TestAccS3Bucket_Replication_ruleDestinationAddAccessControlTranslation(t *t
 							{
 								ID: aws.String("foobar"),
 								Destination: &s3.Destination{
-									Account:      aws.String("${data.aws_caller_identity.current.account_id}"),
+									Account:      aws.String("${data.aws_sts_caller_identity.current.account_id}"),
 									Bucket:       aws.String(fmt.Sprintf("arn:%s:s3:::tf-test-bucket-destination-%d", partition, rInt)),
 									StorageClass: aws.String(s3.ObjectStorageClassStandard),
 								},
@@ -1831,7 +1831,7 @@ func TestAccS3Bucket_Replication_ruleDestinationAddAccessControlTranslation(t *t
 							{
 								ID: aws.String("foobar"),
 								Destination: &s3.Destination{
-									Account:      aws.String("${data.aws_caller_identity.current.account_id}"),
+									Account:      aws.String("${data.aws_sts_caller_identity.current.account_id}"),
 									Bucket:       aws.String(fmt.Sprintf("arn:%s:s3:::tf-test-bucket-destination-%d", partition, rInt)),
 									StorageClass: aws.String(s3.ObjectStorageClassStandard),
 									AccessControlTranslation: &s3.AccessControlTranslation{
@@ -4555,7 +4555,7 @@ resource "aws_s3_bucket" "bucket" {
 
 func testAccBucketReplicationWithAccessControlTranslationConfig(randInt int) string {
 	return testAccBucketReplicationBasicConfig(randInt) + fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 resource "aws_s3_bucket" "bucket" {
   bucket = "tf-test-bucket-%[1]d"
@@ -4574,7 +4574,7 @@ resource "aws_s3_bucket" "bucket" {
       status = "Enabled"
 
       destination {
-        account_id    = data.aws_caller_identity.current.account_id
+        account_id    = data.aws_sts_caller_identity.current.account_id
         bucket        = aws_s3_bucket.destination.arn
         storage_class = "STANDARD"
 
@@ -4590,7 +4590,7 @@ resource "aws_s3_bucket" "bucket" {
 
 func testAccBucketReplicationConfigurationRulesDestinationConfig(randInt int) string {
 	return testAccBucketReplicationBasicConfig(randInt) + fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 resource "aws_s3_bucket" "bucket" {
   acl    = "private"
@@ -4605,7 +4605,7 @@ resource "aws_s3_bucket" "bucket" {
       status = "Enabled"
 
       destination {
-        account_id    = data.aws_caller_identity.current.account_id
+        account_id    = data.aws_sts_caller_identity.current.account_id
         bucket        = aws_s3_bucket.destination.arn
         storage_class = "STANDARD"
       }
@@ -4621,7 +4621,7 @@ resource "aws_s3_bucket" "bucket" {
 
 func testAccBucketReplicationWithSseKMSEncryptedObjectsAndAccessControlTranslationConfig(randInt int) string {
 	return testAccBucketReplicationBasicConfig(randInt) + fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 resource "aws_kms_key" "replica" {
   provider                = "awsalternate"
@@ -4646,7 +4646,7 @@ resource "aws_s3_bucket" "bucket" {
       status = "Enabled"
 
       destination {
-        account_id         = data.aws_caller_identity.current.account_id
+        account_id         = data.aws_sts_caller_identity.current.account_id
         bucket             = aws_s3_bucket.destination.arn
         storage_class      = "STANDARD"
         replica_kms_key_id = aws_kms_key.replica.arn

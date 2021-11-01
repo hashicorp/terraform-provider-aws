@@ -2940,7 +2940,7 @@ data "aws_availability_zones" "alternate" {
   }
 }
 
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 data "aws_region" "current" {}
 

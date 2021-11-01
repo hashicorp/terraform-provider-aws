@@ -44,7 +44,7 @@ func TestAccSignerSigningJob_basic(t *testing.T) {
 
 func testAccSigningJobConfig(rName string) string {
 	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 resource "aws_signer_signing_profile" "test" {
   platform_id = "AWSLambda-SHA384-ECDSA"

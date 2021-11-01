@@ -42,7 +42,7 @@ resource "aws_vpc" "peer" {
   cidr_block = "10.1.0.0/16"
 }
 
-data "aws_caller_identity" "peer" {
+data "aws_sts_caller_identity" "peer" {
   provider = aws.peer
 }
 
@@ -50,7 +50,7 @@ data "aws_caller_identity" "peer" {
 resource "aws_vpc_peering_connection" "peer" {
   vpc_id        = aws_vpc.main.id
   peer_vpc_id   = aws_vpc.peer.id
-  peer_owner_id = data.aws_caller_identity.peer.account_id
+  peer_owner_id = data.aws_sts_caller_identity.peer.account_id
   peer_region   = "us-west-2"
   auto_accept   = false
 

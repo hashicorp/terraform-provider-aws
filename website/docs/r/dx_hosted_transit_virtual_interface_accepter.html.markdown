@@ -26,14 +26,14 @@ provider "aws" {
   # Accepter's credentials.
 }
 
-data "aws_caller_identity" "accepter" {
+data "aws_sts_caller_identity" "accepter" {
   provider = aws.accepter
 }
 
 # Creator's side of the VIF
 resource "aws_dx_hosted_transit_virtual_interface" "creator" {
   connection_id    = "dxcon-zzzzzzzz"
-  owner_account_id = data.aws_caller_identity.accepter.account_id
+  owner_account_id = data.aws_sts_caller_identity.accepter.account_id
 
   name           = "tf-transit-vif-example"
   vlan           = 4094

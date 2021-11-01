@@ -129,9 +129,9 @@ resource "aws_macie_member_account_association" "test" {
 }
 
 const testAccMemberAccountAssociationConfig_self = `
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 resource "aws_macie_member_account_association" "test" {
-  member_account_id = data.aws_caller_identity.current.account_id
+  member_account_id = data.aws_sts_caller_identity.current.account_id
 }
 `

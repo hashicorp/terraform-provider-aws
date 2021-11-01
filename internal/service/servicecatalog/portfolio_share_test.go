@@ -19,7 +19,7 @@ func TestAccServiceCatalogPortfolioShare_basic(t *testing.T) {
 	var providers []*schema.Provider
 	resourceName := "aws_servicecatalog_portfolio_share.test"
 	compareName := "aws_servicecatalog_portfolio.test"
-	dataSourceName := "data.aws_caller_identity.alternate"
+	dataSourceName := "data.aws_sts_caller_identity.alternate"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -158,7 +158,7 @@ func testAccCheckPortfolioShareExists(resourceName string) resource.TestCheckFun
 
 func testAccPortfolioShareConfig_basic(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), fmt.Sprintf(`
-data "aws_caller_identity" "alternate" {
+data "aws_sts_caller_identity" "alternate" {
   provider = "awsalternate"
 }
 
@@ -173,7 +173,7 @@ resource "aws_servicecatalog_portfolio_share" "test" {
   portfolio_id        = aws_servicecatalog_portfolio.test.id
   share_tag_options   = true
   type                = "ACCOUNT"
-  principal_id        = data.aws_caller_identity.alternate.account_id
+  principal_id        = data.aws_sts_caller_identity.alternate.account_id
   wait_for_acceptance = false
 }
 `, rName))

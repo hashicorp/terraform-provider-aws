@@ -349,28 +349,28 @@ resource "aws_dx_gateway_association_proposal" "test" {
 
 func testAccDxGatewayAssociationProposalConfig_endOfLifeVpn(rName string, rBgpAsn int) string {
 	return acctest.ConfigCompose(testAccDxGatewayAssociationProposalConfig_basicVpnGateway(rName, rBgpAsn), `
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 resource "aws_dx_gateway_association" "test" {
   provider = "awsalternate"
 
   proposal_id                         = aws_dx_gateway_association_proposal.test.id
   dx_gateway_id                       = aws_dx_gateway.test.id
-  associated_gateway_owner_account_id = data.aws_caller_identity.current.account_id
+  associated_gateway_owner_account_id = data.aws_sts_caller_identity.current.account_id
 }
 `)
 }
 
 func testAccDxGatewayAssociationProposalConfig_endOfLifeTgw(rName string, rBgpAsn int) string {
 	return acctest.ConfigCompose(testAccDxGatewayAssociationProposalConfig_basicTransitGateway(rName, rBgpAsn), `
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 resource "aws_dx_gateway_association" "test" {
   provider = "awsalternate"
 
   proposal_id                         = aws_dx_gateway_association_proposal.test.id
   dx_gateway_id                       = aws_dx_gateway.test.id
-  associated_gateway_owner_account_id = data.aws_caller_identity.current.account_id
+  associated_gateway_owner_account_id = data.aws_sts_caller_identity.current.account_id
 }
 `)
 }

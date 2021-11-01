@@ -190,7 +190,7 @@ func testAccAccountAssignmentBaseConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_ssoadmin_instances" "test" {}
 
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 resource "aws_ssoadmin_permission_set" "test" {
   name         = %q
@@ -215,7 +215,7 @@ resource "aws_ssoadmin_account_assignment" "test" {
   instance_arn       = aws_ssoadmin_permission_set.test.instance_arn
   permission_set_arn = aws_ssoadmin_permission_set.test.arn
   target_type        = "AWS_ACCOUNT"
-  target_id          = data.aws_caller_identity.current.account_id
+  target_id          = data.aws_sts_caller_identity.current.account_id
   principal_type     = "GROUP"
   principal_id       = data.aws_identitystore_group.test.group_id
 }
@@ -238,7 +238,7 @@ resource "aws_ssoadmin_account_assignment" "test" {
   instance_arn       = aws_ssoadmin_permission_set.test.instance_arn
   permission_set_arn = aws_ssoadmin_permission_set.test.arn
   target_type        = "AWS_ACCOUNT"
-  target_id          = data.aws_caller_identity.current.account_id
+  target_id          = data.aws_sts_caller_identity.current.account_id
   principal_type     = "USER"
   principal_id       = data.aws_identitystore_user.test.user_id
 }

@@ -19,7 +19,7 @@ func testAccDelegatedAdministrator_basic(t *testing.T) {
 	var organization organizations.DelegatedAdministrator
 	resourceName := "aws_organizations_delegated_administrator.test"
 	servicePrincipal := "config-multiaccountsetup.amazonaws.com"
-	dataSourceIdentity := "data.aws_caller_identity.delegated"
+	dataSourceIdentity := "data.aws_sts_caller_identity.delegated"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -164,12 +164,12 @@ func testAccCheckDelegatedAdministratorExists(n string, org *organizations.Deleg
 
 func testAccDelegatedAdministratorConfig(servicePrincipal string) string {
 	return acctest.ConfigAlternateAccountProvider() + fmt.Sprintf(`
-data "aws_caller_identity" "delegated" {
+data "aws_sts_caller_identity" "delegated" {
   provider = "awsalternate"
 }
 
 resource "aws_organizations_delegated_administrator" "test" {
-  account_id        = data.aws_caller_identity.delegated.account_id
+  account_id        = data.aws_sts_caller_identity.delegated.account_id
   service_principal = %[1]q
 }
 `, servicePrincipal)

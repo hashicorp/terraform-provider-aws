@@ -195,11 +195,11 @@ resource "aws_s3_bucket" "test" {
   bucket = "tf-test-macie-bucket-%d"
 }
 
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 resource "aws_macie_s3_bucket_association" "test" {
   bucket_name       = aws_s3_bucket.test.id
-  member_account_id = data.aws_caller_identity.current.account_id
+  member_account_id = data.aws_sts_caller_identity.current.account_id
   prefix            = "data"
 }
 `, randInt)
@@ -211,11 +211,11 @@ resource "aws_s3_bucket" "test" {
   bucket = "tf-test-macie-bucket-%d"
 }
 
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 resource "aws_macie_s3_bucket_association" "test" {
   bucket_name       = aws_s3_bucket.test.id
-  member_account_id = data.aws_caller_identity.current.account_id
+  member_account_id = data.aws_sts_caller_identity.current.account_id
   prefix            = "data"
 
   classification_type {

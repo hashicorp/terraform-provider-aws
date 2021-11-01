@@ -179,7 +179,7 @@ resource "aws_dx_hosted_public_virtual_interface" "test" {
   connection_id    = %[1]q
   customer_address = %[4]q
   name             = %[2]q
-  owner_account_id = data.aws_caller_identity.accepter.account_id
+  owner_account_id = data.aws_sts_caller_identity.accepter.account_id
   vlan             = %[6]d
 
   route_filter_prefixes = [
@@ -189,7 +189,7 @@ resource "aws_dx_hosted_public_virtual_interface" "test" {
 }
 
 # Accepter
-data "aws_caller_identity" "accepter" {
+data "aws_sts_caller_identity" "accepter" {
   provider = "awsalternate"
 }
 `, cid, rName, amzAddr, custAddr, bgpAsn, vlan)

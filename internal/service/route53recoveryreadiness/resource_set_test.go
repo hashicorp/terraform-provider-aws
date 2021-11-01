@@ -418,7 +418,7 @@ resource "aws_subnet" "test2" {
   availability_zone = data.aws_availability_zones.available.names[1]
 }
 
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 `, rName)
 }
 

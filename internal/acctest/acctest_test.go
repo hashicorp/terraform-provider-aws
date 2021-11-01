@@ -448,7 +448,7 @@ func TestAccAcctestProvider_AssumeRole_empty(t *testing.T) {
 			{
 				Config: testAccCheckAWSProviderConfigAssumeRoleEmpty,
 				Check: resource.ComposeTestCheckFunc(
-					CheckCallerIdentityAccountID("data.aws_caller_identity.current"),
+					CheckCallerIdentityAccountID("data.aws_sts_caller_identity.current"),
 				),
 			},
 		},

@@ -3263,7 +3263,7 @@ resource "aws_emr_cluster" "test" {
   service_role = aws_iam_role.emr_service.arn
 }
 
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 `, rName))
 }
 
@@ -3332,7 +3332,7 @@ resource "aws_emr_cluster" "test" {
   service_role = aws_iam_role.emr_service.arn
 }
 
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 `, rName))
 }
 

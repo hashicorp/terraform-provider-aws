@@ -111,14 +111,14 @@ func testAccCheckReplicationConfigurationDestroy(s *terraform.State) error {
 
 func testAccReplicationConfiguration(region string) string {
 	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 resource "aws_ecr_replication_configuration" "test" {
   replication_configuration {
     rule {
       destination {
         region      = %[1]q
-        registry_id = data.aws_caller_identity.current.account_id
+        registry_id = data.aws_sts_caller_identity.current.account_id
       }
     }
   }
@@ -128,20 +128,20 @@ resource "aws_ecr_replication_configuration" "test" {
 
 func testAccReplicationMultipleRegionConfiguration(region1, region2 string) string {
 	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 resource "aws_ecr_replication_configuration" "test" {
   replication_configuration {
     rule {
       destination {
         region      = %[1]q
-        registry_id = data.aws_caller_identity.current.account_id
+        registry_id = data.aws_sts_caller_identity.current.account_id
       }
 
 
       destination {
         region      = %[2]q
-        registry_id = data.aws_caller_identity.current.account_id
+        registry_id = data.aws_sts_caller_identity.current.account_id
       }
     }
   }

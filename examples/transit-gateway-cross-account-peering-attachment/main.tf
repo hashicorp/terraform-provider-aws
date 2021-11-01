@@ -20,7 +20,7 @@ provider "aws" {
   secret_key = var.aws_second_secret_key
 }
 
-data "aws_caller_identity" "first" {
+data "aws_sts_caller_identity" "first" {
   provider = aws.first
 }
 
@@ -44,7 +44,7 @@ resource "aws_ec2_transit_gateway" "second" {
 resource "aws_ec2_transit_gateway_peering_attachment" "example" {
   provider = aws.second
 
-  peer_account_id         = data.aws_caller_identity.first.account_id
+  peer_account_id         = data.aws_sts_caller_identity.first.account_id
   peer_region             = var.aws_first_region
   peer_transit_gateway_id = aws_ec2_transit_gateway.first.id
   transit_gateway_id      = aws_ec2_transit_gateway.second.id

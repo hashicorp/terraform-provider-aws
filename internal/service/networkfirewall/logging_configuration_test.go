@@ -769,7 +769,7 @@ resource "aws_cloudwatch_log_group" "test" {
 
 func testAccNetworkFirewallLoggingConfiguration_kinesisDependenciesConfig(rName, streamName string) string {
 	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 data "aws_partition" "current" {}
 
@@ -789,7 +789,7 @@ resource "aws_iam_role" "test" {
       "Action": "sts:AssumeRole",
       "Condition": {
         "StringEquals": {
-          "sts:ExternalId": "${data.aws_caller_identity.current.account_id}"
+          "sts:ExternalId": "${data.aws_sts_caller_identity.current.account_id}"
         }
       }
     }

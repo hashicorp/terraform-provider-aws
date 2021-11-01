@@ -70,7 +70,7 @@ func testAccPublishingDestination_disappears(t *testing.T) {
 func testAccPublishingDestinationConfig_basic(bucketName string) string {
 	return fmt.Sprintf(`
 
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 data "aws_region" "current" {}
 
@@ -119,7 +119,7 @@ data "aws_iam_policy_document" "kms_pol" {
     ]
 
     resources = [
-      "arn:${data.aws_partition.current.partition}:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:key/*"
+      "arn:${data.aws_partition.current.partition}:kms:${data.aws_region.current.name}:${data.aws_sts_caller_identity.current.account_id}:key/*"
     ]
 
     principals {
@@ -135,12 +135,12 @@ data "aws_iam_policy_document" "kms_pol" {
     ]
 
     resources = [
-      "arn:${data.aws_partition.current.partition}:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:key/*"
+      "arn:${data.aws_partition.current.partition}:kms:${data.aws_region.current.name}:${data.aws_sts_caller_identity.current.account_id}:key/*"
     ]
 
     principals {
       type        = "AWS"
-      identifiers = ["arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"]
+      identifiers = ["arn:${data.aws_partition.current.partition}:iam::${data.aws_sts_caller_identity.current.account_id}:root"]
     }
   }
 

@@ -135,7 +135,7 @@ func testAccCheckModelPackageGroupPolicyExists(n string, mpg *sagemaker.GetModel
 
 func testAccModelPackageGroupPolicyBasicConfig(rName string) string {
 	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 data "aws_iam_policy_document" "test" {
   statement {
@@ -143,7 +143,7 @@ data "aws_iam_policy_document" "test" {
     actions   = ["sagemaker:DescribeModelPackage", "sagemaker:ListModelPackages"]
     resources = [aws_sagemaker_model_package_group.test.arn]
     principals {
-      identifiers = [data.aws_caller_identity.current.account_id]
+      identifiers = [data.aws_sts_caller_identity.current.account_id]
       type        = "AWS"
     }
   }

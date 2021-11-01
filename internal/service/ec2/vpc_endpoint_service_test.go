@@ -370,7 +370,7 @@ resource "aws_subnet" "test2" {
   }
 }
 
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 `, rName1, rName2)
 }
 
@@ -440,7 +440,7 @@ resource "aws_vpc_endpoint_service" "test" {
   ]
 
   allowed_principals = [
-    data.aws_caller_identity.current.arn,
+    data.aws_sts_caller_identity.current.arn,
   ]
 
   tags = {

@@ -26,10 +26,10 @@ When using Lake Formation, choose ONE of the following options as they are mutua
 This example shows removing the `IAMAllowedPrincipals` default security settings and making the caller a Lake Formation admin. Since `create_database_default_permissions` and `create_table_default_permissions` are not set in the [`aws_lakeformation_data_lake_settings`](/docs/providers/aws/r/lakeformation_data_lake_settings.html) resource, they are cleared.
 
 ```terraform
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 data "aws_iam_session_context" "current" {
-  arn = data.aws_caller_identity.current.arn
+  arn = data.aws_sts_caller_identity.current.arn
 }
 
 resource "aws_lakeformation_data_lake_settings" "test" {

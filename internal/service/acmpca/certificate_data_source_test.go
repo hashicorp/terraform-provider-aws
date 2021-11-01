@@ -78,11 +78,11 @@ data "aws_partition" "current" {}
 
 const testAccCertificateDataSourceConfig_NonExistent = `
 data "aws_acmpca_certificate" "test" {
-  arn                       = "arn:${data.aws_partition.current.partition}:acm-pca:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:certificate-authority/does-not-exist/certificate/does-not-exist"
-  certificate_authority_arn = "arn:${data.aws_partition.current.partition}:acm-pca:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:certificate-authority/does-not-exist"
+  arn                       = "arn:${data.aws_partition.current.partition}:acm-pca:${data.aws_region.current.name}:${data.aws_sts_caller_identity.current.account_id}:certificate-authority/does-not-exist/certificate/does-not-exist"
+  certificate_authority_arn = "arn:${data.aws_partition.current.partition}:acm-pca:${data.aws_region.current.name}:${data.aws_sts_caller_identity.current.account_id}:certificate-authority/does-not-exist"
 }
 
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 data "aws_partition" "current" {}
 

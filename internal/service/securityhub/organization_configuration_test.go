@@ -69,10 +69,10 @@ resource "aws_organizations_organization" "test" {
 
 resource "aws_securityhub_account" "test" {}
 
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 resource "aws_securityhub_organization_admin_account" "test" {
-  admin_account_id = data.aws_caller_identity.current.account_id
+  admin_account_id = data.aws_sts_caller_identity.current.account_id
 
   depends_on = [aws_organizations_organization.test, aws_securityhub_account.test]
 }

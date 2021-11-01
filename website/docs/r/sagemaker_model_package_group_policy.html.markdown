@@ -15,7 +15,7 @@ Provides a Sagemaker Model Package Group Policy resource.
 ### Basic usage
 
 ```terraform
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 data "aws_iam_policy_document" "example" {
   statement {
@@ -23,7 +23,7 @@ data "aws_iam_policy_document" "example" {
     actions   = ["sagemaker:DescribeModelPackage", "sagemaker:ListModelPackages"]
     resources = [aws_sagemaker_model_package_group.example.arn]
     principals {
-      identifiers = [data.aws_caller_identity.current.account_id]
+      identifiers = [data.aws_sts_caller_identity.current.account_id]
       type        = "AWS"
     }
   }

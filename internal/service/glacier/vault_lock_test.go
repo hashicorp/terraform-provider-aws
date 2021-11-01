@@ -145,7 +145,7 @@ resource "aws_glacier_vault" "test" {
   name = %q
 }
 
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 data "aws_partition" "current" {}
 
 data "aws_iam_policy_document" "test" {
@@ -162,7 +162,7 @@ data "aws_iam_policy_document" "test" {
     }
 
     principals {
-      identifiers = ["arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"]
+      identifiers = ["arn:${data.aws_partition.current.partition}:iam::${data.aws_sts_caller_identity.current.account_id}:root"]
       type        = "AWS"
     }
   }

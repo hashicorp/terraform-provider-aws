@@ -16,12 +16,12 @@ resource "aws_config_configuration_aggregator" "example" {
   name = %[1]q
 
   account_aggregation_source {
-    account_ids = [data.aws_caller_identity.current.account_id]
+    account_ids = [data.aws_sts_caller_identity.current.account_id]
     regions     = ["us-west-2"]
   }
 }
 
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 `, rName)
 ```
 

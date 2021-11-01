@@ -108,7 +108,7 @@ data "aws_appmesh_mesh" "test" {
 
 func testAccCheckMeshDataSourceConfig_meshOwner(rName string) string {
 	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 resource "aws_appmesh_mesh" "test" {
   name = %[1]q
@@ -116,14 +116,14 @@ resource "aws_appmesh_mesh" "test" {
 
 data "aws_appmesh_mesh" "test" {
   name       = aws_appmesh_mesh.test.name
-  mesh_owner = data.aws_caller_identity.current.account_id
+  mesh_owner = data.aws_sts_caller_identity.current.account_id
 }
 `, rName)
 }
 
 func testAccCheckMeshDataSourceConfig_specAndTagsSet(rName string) string {
 	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 resource "aws_appmesh_mesh" "test" {
   name = %[1]q

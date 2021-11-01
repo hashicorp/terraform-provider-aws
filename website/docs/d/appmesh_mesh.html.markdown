@@ -19,11 +19,11 @@ data "aws_appmesh_mesh" "simple" {
 ```
 
 ```hcl
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 data "aws_appmesh_mesh" "simple" {
   name       = "simpleapp"
-  mesh_owner = data.aws_caller_identity.current.account_id
+  mesh_owner = data.aws_sts_caller_identity.current.account_id
 }
 ```
 

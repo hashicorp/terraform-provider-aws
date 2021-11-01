@@ -109,14 +109,14 @@ data "aws_serverlessapplicationrepository_application" "secrets_manager_postgres
 
 func testAccCheckApplicationDataSourceConfig_NonExistent() string {
 	return `
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 data "aws_partition" "current" {}
 
 data "aws_region" "current" {}
 
 data "aws_serverlessapplicationrepository_application" "no_such_function" {
-  application_id = "arn:${data.aws_partition.current.partition}:serverlessrepo:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:applications/ThisFunctionDoesNotExist"
+  application_id = "arn:${data.aws_partition.current.partition}:serverlessrepo:${data.aws_region.current.name}:${data.aws_sts_caller_identity.current.account_id}:applications/ThisFunctionDoesNotExist"
 }
 `
 }

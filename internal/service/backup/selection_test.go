@@ -256,7 +256,7 @@ func testAccSelectionImportStateIDFunc(resourceName string) resource.ImportState
 
 func testAccBackupSelectionConfigBase(rName string) string {
 	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {
+data "aws_sts_caller_identity" "current" {
 }
 
 data "aws_partition" "current" {
@@ -289,7 +289,7 @@ resource "aws_backup_selection" "test" {
   plan_id = aws_backup_plan.test.id
 
   name         = %[1]q
-  iam_role_arn = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/service-role/AWSBackupDefaultServiceRole"
+  iam_role_arn = "arn:${data.aws_partition.current.partition}:iam::${data.aws_sts_caller_identity.current.account_id}:role/service-role/AWSBackupDefaultServiceRole"
 
   selection_tag {
     type  = "STRINGEQUALS"
@@ -298,7 +298,7 @@ resource "aws_backup_selection" "test" {
   }
 
   resources = [
-    "arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:volume/"
+    "arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.name}:${data.aws_sts_caller_identity.current.account_id}:volume/"
   ]
 }
 `, rName))
@@ -312,7 +312,7 @@ resource "aws_backup_selection" "test" {
   plan_id = aws_backup_plan.test.id
 
   name         = %[1]q
-  iam_role_arn = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/service-role/AWSBackupDefaultServiceRole"
+  iam_role_arn = "arn:${data.aws_partition.current.partition}:iam::${data.aws_sts_caller_identity.current.account_id}:role/service-role/AWSBackupDefaultServiceRole"
 
   selection_tag {
     type  = "STRINGEQUALS"
@@ -327,7 +327,7 @@ resource "aws_backup_selection" "test" {
   }
 
   resources = [
-    "arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:volume/"
+    "arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.name}:${data.aws_sts_caller_identity.current.account_id}:volume/"
   ]
 }
 `, rName))
@@ -361,7 +361,7 @@ resource "aws_backup_selection" "test" {
   plan_id = aws_backup_plan.test.id
 
   name         = %[1]q
-  iam_role_arn = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/service-role/AWSBackupDefaultServiceRole"
+  iam_role_arn = "arn:${data.aws_partition.current.partition}:iam::${data.aws_sts_caller_identity.current.account_id}:role/service-role/AWSBackupDefaultServiceRole"
 
   selection_tag {
     type  = "STRINGEQUALS"
@@ -382,7 +382,7 @@ resource "aws_backup_selection" "test" {
   plan_id = aws_backup_plan.test.id
 
   name         = %[1]q
-  iam_role_arn = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/service-role/AWSBackupDefaultServiceRole"
+  iam_role_arn = "arn:${data.aws_partition.current.partition}:iam::${data.aws_sts_caller_identity.current.account_id}:role/service-role/AWSBackupDefaultServiceRole"
 
   selection_tag {
     type  = "STRINGEQUALS"
@@ -391,7 +391,7 @@ resource "aws_backup_selection" "test" {
   }
 
   resources = [
-    "arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:volume/"
+    "arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.name}:${data.aws_sts_caller_identity.current.account_id}:volume/"
   ]
 }
 `, rName))

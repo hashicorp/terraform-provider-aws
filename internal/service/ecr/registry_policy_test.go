@@ -136,7 +136,7 @@ func testAccCheckRegistryPolicyExists(name string, res *ecr.GetRegistryPolicyOut
 
 func testAccRegistryPolicy() string {
 	return `
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 data "aws_region" "current" {}
 
@@ -150,13 +150,13 @@ resource "aws_ecr_registry_policy" "test" {
         "Sid" : "testpolicy",
         "Effect" : "Allow",
         "Principal" : {
-          "AWS" : "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
+          "AWS" : "arn:${data.aws_partition.current.partition}:iam::${data.aws_sts_caller_identity.current.account_id}:root"
         },
         "Action" : [
           "ecr:ReplicateImage"
         ],
         "Resource" : [
-          "arn:${data.aws_partition.current.partition}:ecr:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:repository/*"
+          "arn:${data.aws_partition.current.partition}:ecr:${data.aws_region.current.name}:${data.aws_sts_caller_identity.current.account_id}:repository/*"
         ]
       }
     ]
@@ -167,7 +167,7 @@ resource "aws_ecr_registry_policy" "test" {
 
 func testAccRegistryPolicyUpdated() string {
 	return `
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 data "aws_region" "current" {}
 
@@ -181,14 +181,14 @@ resource "aws_ecr_registry_policy" "test" {
         "Sid" : "testpolicy",
         "Effect" : "Allow",
         "Principal" : {
-          "AWS" : "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
+          "AWS" : "arn:${data.aws_partition.current.partition}:iam::${data.aws_sts_caller_identity.current.account_id}:root"
         },
         "Action" : [
           "ecr:ReplicateImage",
           "ecr:CreateRepository"
         ],
         "Resource" : [
-          "arn:${data.aws_partition.current.partition}:ecr:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:repository/*"
+          "arn:${data.aws_partition.current.partition}:ecr:${data.aws_region.current.name}:${data.aws_sts_caller_identity.current.account_id}:repository/*"
         ]
       }
     ]

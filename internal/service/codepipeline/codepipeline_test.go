@@ -936,7 +936,7 @@ resource "aws_codestarconnections_connection" "test" {
 
 func testAccDeployActionIAMRole(rName string) string {
 	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "codepipeline_action_role" {
@@ -949,7 +949,7 @@ resource "aws_iam_role" "codepipeline_action_role" {
     {
       "Effect": "Allow",
       "Principal": {
-        "AWS": "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
+        "AWS": "arn:${data.aws_partition.current.partition}:iam::${data.aws_sts_caller_identity.current.account_id}:root"
       },
       "Action": "sts:AssumeRole"
     }

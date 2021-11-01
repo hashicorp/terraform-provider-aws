@@ -26,7 +26,7 @@ data "aws_availability_zones" "available" {
   state = "available"
 }
 
-data "aws_caller_identity" "second" {
+data "aws_sts_caller_identity" "second" {
   provider = aws.second
 }
 
@@ -60,7 +60,7 @@ resource "aws_ram_resource_association" "example" {
 resource "aws_ram_principal_association" "example" {
   provider = aws.first
 
-  principal          = data.aws_caller_identity.second.account_id
+  principal          = data.aws_sts_caller_identity.second.account_id
   resource_share_arn = aws_ram_resource_share.example.id
 }
 

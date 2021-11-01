@@ -514,7 +514,7 @@ resource "aws_s3_access_point" "test" {
   }
 }
 
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 data "aws_partition" "current" {}
 data "aws_region" "current" {}
 
@@ -527,7 +527,7 @@ data "aws_iam_policy_document" "test" {
     ]
 
     resources = [
-      "arn:${data.aws_partition.current.partition}:s3:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:accesspoint/%[1]s/object/*",
+      "arn:${data.aws_partition.current.partition}:s3:${data.aws_region.current.name}:${data.aws_sts_caller_identity.current.account_id}:accesspoint/%[1]s/object/*",
     ]
 
     principals {
@@ -558,7 +558,7 @@ resource "aws_s3_access_point" "test" {
   }
 }
 
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 data "aws_partition" "current" {}
 data "aws_region" "current" {}
 
@@ -572,7 +572,7 @@ data "aws_iam_policy_document" "test" {
     ]
 
     resources = [
-      "arn:${data.aws_partition.current.partition}:s3:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:accesspoint/%[1]s/object/*",
+      "arn:${data.aws_partition.current.partition}:s3:${data.aws_region.current.name}:${data.aws_sts_caller_identity.current.account_id}:accesspoint/%[1]s/object/*",
     ]
 
     principals {

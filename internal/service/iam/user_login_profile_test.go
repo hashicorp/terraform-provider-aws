@@ -329,7 +329,7 @@ resource "aws_iam_user" "user" {
   force_destroy = true
 }
 
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 data "aws_partition" "current" {}
 
@@ -343,7 +343,7 @@ data "aws_iam_policy_document" "user" {
   statement {
     effect    = "Allow"
     actions   = ["iam:ChangePassword"]
-    resources = ["arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:user/&{aws:username}"]
+    resources = ["arn:${data.aws_partition.current.partition}:iam::${data.aws_sts_caller_identity.current.account_id}:user/&{aws:username}"]
   }
 }
 

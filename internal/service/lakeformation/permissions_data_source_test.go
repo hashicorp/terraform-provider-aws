@@ -163,10 +163,10 @@ resource "aws_iam_role" "test" {
   })
 }
 
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 data "aws_iam_session_context" "current" {
-  arn = data.aws_caller_identity.current.arn
+  arn = data.aws_sts_caller_identity.current.arn
 }
 
 resource "aws_lakeformation_data_lake_settings" "test" {
@@ -219,10 +219,10 @@ resource "aws_lakeformation_resource" "test" {
   arn = aws_s3_bucket.test.arn
 }
 
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 data "aws_iam_session_context" "current" {
-  arn = data.aws_caller_identity.current.arn
+  arn = data.aws_sts_caller_identity.current.arn
 }
 
 resource "aws_lakeformation_data_lake_settings" "test" {
@@ -279,10 +279,10 @@ resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
 
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 data "aws_iam_session_context" "current" {
-  arn = data.aws_caller_identity.current.arn
+  arn = data.aws_sts_caller_identity.current.arn
 }
 
 resource "aws_lakeformation_data_lake_settings" "test" {
@@ -345,10 +345,10 @@ resource "aws_glue_catalog_table" "test" {
   database_name = aws_glue_catalog_database.test.name
 }
 
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 data "aws_iam_session_context" "current" {
-  arn = data.aws_caller_identity.current.arn
+  arn = data.aws_sts_caller_identity.current.arn
 }
 
 resource "aws_lakeformation_data_lake_settings" "test" {
@@ -423,10 +423,10 @@ resource "aws_glue_catalog_table" "test" {
   }
 }
 
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 data "aws_iam_session_context" "current" {
-  arn = data.aws_caller_identity.current.arn
+  arn = data.aws_sts_caller_identity.current.arn
 }
 
 resource "aws_lakeformation_data_lake_settings" "test" {

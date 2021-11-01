@@ -1,13 +1,13 @@
 ---
 subcategory: ""
 layout: "aws"
-page_title: "AWS: aws_caller_identity"
+page_title: "AWS: aws_sts_caller_identity"
 description: |-
   Get information about the identity of the caller for the provider
   connection to AWS.
 ---
 
-# Data Source: aws_caller_identity
+# Data Source: aws_sts_caller_identity
 
 Use this data source to get the access to the effective Account ID, User ID, and ARN in
 which Terraform is authorized.
@@ -15,18 +15,18 @@ which Terraform is authorized.
 ## Example Usage
 
 ```terraform
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 output "account_id" {
-  value = data.aws_caller_identity.current.account_id
+  value = data.aws_sts_caller_identity.current.account_id
 }
 
 output "caller_arn" {
-  value = data.aws_caller_identity.current.arn
+  value = data.aws_sts_caller_identity.current.arn
 }
 
 output "caller_user" {
-  value = data.aws_caller_identity.current.user_id
+  value = data.aws_sts_caller_identity.current.user_id
 }
 ```
 

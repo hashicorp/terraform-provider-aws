@@ -280,7 +280,7 @@ data "aws_ami" "amzn-ami-minimal-hvm" {
   }
 }
 
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 data "aws_region" "current" {}
 
@@ -292,7 +292,7 @@ resource "aws_ami_copy" "test" {
 }
 
 resource "aws_ami_launch_permission" "test" {
-  account_id = data.aws_caller_identity.current.account_id
+  account_id = data.aws_sts_caller_identity.current.account_id
   image_id   = aws_ami_copy.test.id
 }
 `, rName, rName)

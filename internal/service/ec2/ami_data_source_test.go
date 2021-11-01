@@ -310,10 +310,10 @@ func testAccAmiDataSourceConfigGp3BlockDevice(rName string) string {
 	return acctest.ConfigCompose(
 		testAccAmiConfigGp3BlockDevice(rName),
 		`
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 data "aws_ami" "test" {
-  owners = [data.aws_caller_identity.current.account_id]
+  owners = [data.aws_sts_caller_identity.current.account_id]
 
   filter {
     name   = "image-id"

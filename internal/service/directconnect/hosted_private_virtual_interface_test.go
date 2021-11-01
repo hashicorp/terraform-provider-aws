@@ -172,7 +172,7 @@ resource "aws_dx_hosted_private_virtual_interface" "test" {
   bgp_asn          = %[3]d
   connection_id    = %[1]q
   name             = %[2]q
-  owner_account_id = data.aws_caller_identity.accepter.account_id
+  owner_account_id = data.aws_sts_caller_identity.accepter.account_id
   vlan             = %[4]d
 
   # The aws_dx_hosted_private_virtual_interface
@@ -181,7 +181,7 @@ resource "aws_dx_hosted_private_virtual_interface" "test" {
 }
 
 # Accepter
-data "aws_caller_identity" "accepter" {
+data "aws_sts_caller_identity" "accepter" {
   provider = "awsalternate"
 }
 

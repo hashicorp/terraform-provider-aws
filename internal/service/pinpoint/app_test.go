@@ -262,7 +262,7 @@ resource "aws_iam_role" "test" {
 EOF
 }
 
-data "aws_caller_identity" "aws" {}
+data "aws_sts_caller_identity" "aws" {}
 
 data "aws_region" "current" {}
 
@@ -271,7 +271,7 @@ resource "aws_lambda_permission" "test" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.test.function_name
   principal     = "pinpoint.${data.aws_region.current.name}.${data.aws_partition.current.dns_suffix}"
-  source_arn    = "arn:${data.aws_partition.current.partition}:mobiletargeting:${data.aws_region.current.name}:${data.aws_caller_identity.aws.account_id}:/apps/*"
+  source_arn    = "arn:${data.aws_partition.current.partition}:mobiletargeting:${data.aws_region.current.name}:${data.aws_sts_caller_identity.aws.account_id}:/apps/*"
 }
 `, rName)
 }

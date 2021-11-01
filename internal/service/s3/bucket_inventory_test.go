@@ -207,7 +207,7 @@ resource "aws_s3_bucket" "test" {
 
 func testAccBucketInventoryConfig(bucketName, inventoryName string) string {
 	return testAccBucketInventoryBucketConfig(bucketName) + fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 resource "aws_s3_bucket_inventory" "test" {
   bucket = aws_s3_bucket.test.id
@@ -232,7 +232,7 @@ resource "aws_s3_bucket_inventory" "test" {
     bucket {
       format     = "ORC"
       bucket_arn = aws_s3_bucket.test.arn
-      account_id = data.aws_caller_identity.current.account_id
+      account_id = data.aws_sts_caller_identity.current.account_id
       prefix     = "inventory"
     }
   }

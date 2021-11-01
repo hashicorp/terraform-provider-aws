@@ -115,10 +115,10 @@ resource "aws_iam_role" "test" {
   })
 }
 
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 data "aws_iam_session_context" "current" {
-  arn = data.aws_caller_identity.current.arn
+  arn = data.aws_sts_caller_identity.current.arn
 }
 
 resource "aws_servicecatalog_principal_portfolio_association" "test" {

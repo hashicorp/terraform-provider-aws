@@ -781,7 +781,7 @@ resource "aws_cognito_user_pool_client" "test" {
 
 func testAccUserPoolClientAnalyticsBaseConfig(rName string) string {
 	return testAccUserPoolClientBaseConfig(rName) + fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 data "aws_partition" "current" {}
 
@@ -823,7 +823,7 @@ resource "aws_iam_role_policy" "test" {
         "mobiletargeting:PutItems"
       ],
       "Effect": "Allow",
-      "Resource": "arn:${data.aws_partition.current.partition}:mobiletargeting:*:${data.aws_caller_identity.current.account_id}:apps/${aws_pinpoint_app.test.application_id}*"
+      "Resource": "arn:${data.aws_partition.current.partition}:mobiletargeting:*:${data.aws_sts_caller_identity.current.account_id}:apps/${aws_pinpoint_app.test.application_id}*"
     }
   ]
 }

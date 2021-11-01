@@ -351,7 +351,7 @@ service/ssoadmin:
 service/storagegateway:
   - '((\*|-) ?`?|(data|resource) "?)aws_storagegateway_'
 service/sts:
-  - '((\*|-) ?`?|(data|resource) "?)aws_caller_identity'
+  - '((\*|-) ?`?|(data|resource) "?)aws_sts_caller_identity'
 service/swf:
   - '((\*|-) ?`?|(data|resource) "?)aws_swf_'
 service/synthetics:

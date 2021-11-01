@@ -18,7 +18,7 @@ func testAccTransitGatewayVPCAttachmentAccepter_basic(t *testing.T) {
 	vpcAttachmentName := "aws_ec2_transit_gateway_vpc_attachment.test"
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 	vpcResourceName := "aws_vpc.test"
-	callerIdentityDatasourceName := "data.aws_caller_identity.creator"
+	callerIdentityDatasourceName := "data.aws_sts_caller_identity.creator"
 	rName := fmt.Sprintf("tf-testacc-tgwvpcattach-%s", sdkacctest.RandString(8))
 
 	resource.Test(t, resource.TestCase{
@@ -65,7 +65,7 @@ func testAccTransitGatewayVPCAttachmentAccepter_Tags(t *testing.T) {
 	vpcAttachmentName := "aws_ec2_transit_gateway_vpc_attachment.test"
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 	vpcResourceName := "aws_vpc.test"
-	callerIdentityDatasourceName := "data.aws_caller_identity.creator"
+	callerIdentityDatasourceName := "data.aws_sts_caller_identity.creator"
 	rName := fmt.Sprintf("tf-testacc-tgwvpcattach-%s", sdkacctest.RandString(8))
 
 	resource.Test(t, resource.TestCase{
@@ -218,12 +218,12 @@ resource "aws_ram_resource_association" "test" {
 }
 
 resource "aws_ram_principal_association" "test" {
-  principal          = data.aws_caller_identity.creator.account_id
+  principal          = data.aws_sts_caller_identity.creator.account_id
   resource_share_arn = aws_ram_resource_share.test.id
 }
 
 # VPC attachment creator.
-data "aws_caller_identity" "creator" {
+data "aws_sts_caller_identity" "creator" {
   provider = "awsalternate"
 }
 

@@ -518,7 +518,7 @@ POLICY
 
 func testAccKey_policyBypass(rName string, bypassFlag bool) string {
 	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 resource "aws_kms_key" "test" {
   description             = %[1]q
@@ -535,7 +535,7 @@ resource "aws_kms_key" "test" {
           "Sid": "Enable IAM User Permissions",
           "Effect": "Allow",
           "Principal": {
-            "AWS": "${data.aws_caller_identity.current.arn}"
+            "AWS": "${data.aws_sts_caller_identity.current.arn}"
           },
           "Action": [
             "kms:CreateKey",

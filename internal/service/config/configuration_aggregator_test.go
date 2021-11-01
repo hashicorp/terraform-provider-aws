@@ -248,7 +248,7 @@ func testAccCheckConfigurationAggregatorDestroy(s *terraform.State) error {
 
 func testAccConfigurationAggregatorConfig_account(rName string) string {
 	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 data "aws_region" "current" {}
 
@@ -256,7 +256,7 @@ resource "aws_config_configuration_aggregator" "test" {
   name = %[1]q
 
   account_aggregation_source {
-    account_ids = [data.aws_caller_identity.current.account_id]
+    account_ids = [data.aws_sts_caller_identity.current.account_id]
     regions     = [data.aws_region.current.name]
   }
 }
@@ -311,7 +311,7 @@ resource "aws_iam_role_policy_attachment" "test" {
 
 func testAccConfigurationAggregatorTags1Config(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 data "aws_region" "current" {}
 
@@ -319,7 +319,7 @@ resource "aws_config_configuration_aggregator" "test" {
   name = %[1]q
 
   account_aggregation_source {
-    account_ids = [data.aws_caller_identity.current.account_id]
+    account_ids = [data.aws_sts_caller_identity.current.account_id]
     regions     = [data.aws_region.current.name]
   }
 
@@ -332,7 +332,7 @@ resource "aws_config_configuration_aggregator" "test" {
 
 func testAccConfigurationAggregatorTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 data "aws_region" "current" {}
 
@@ -340,7 +340,7 @@ resource "aws_config_configuration_aggregator" "test" {
   name = %[1]q
 
   account_aggregation_source {
-    account_ids = [data.aws_caller_identity.current.account_id]
+    account_ids = [data.aws_sts_caller_identity.current.account_id]
     regions     = [data.aws_region.current.name]
   }
 

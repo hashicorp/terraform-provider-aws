@@ -27,7 +27,7 @@ func testAccDataLakeSettings_basic(t *testing.T) {
 				Config: testAccDataLakeSettingsConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataLakeSettingsExists(resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "catalog_id", "data.aws_caller_identity.current", "account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "catalog_id", "data.aws_sts_caller_identity.current", "account_id"),
 					resource.TestCheckResourceAttr(resourceName, "admins.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "admins.0", "data.aws_iam_session_context.current", "issuer_arn"),
 				),
@@ -136,14 +136,14 @@ func testAccCheckDataLakeSettingsExists(resourceName string) resource.TestCheckF
 }
 
 const testAccDataLakeSettingsConfig_basic = `
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 data "aws_iam_session_context" "current" {
-  arn = data.aws_caller_identity.current.arn
+  arn = data.aws_sts_caller_identity.current.arn
 }
 
 resource "aws_lakeformation_data_lake_settings" "test" {
-  catalog_id = data.aws_caller_identity.current.account_id
+  catalog_id = data.aws_sts_caller_identity.current.account_id
 
   create_database_default_permissions {
     principal   = "IAM_ALLOWED_PRINCIPALS"
@@ -156,15 +156,15 @@ resource "aws_lakeformation_data_lake_settings" "test" {
   }
 
   admins                  = [data.aws_iam_session_context.current.issuer_arn]
-  trusted_resource_owners = [data.aws_caller_identity.current.account_id]
+  trusted_resource_owners = [data.aws_sts_caller_identity.current.account_id]
 }
 `
 
 const testAccDataLakeSettingsConfig_withoutCatalogID = `
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 data "aws_iam_session_context" "current" {
-  arn = data.aws_caller_identity.current.arn
+  arn = data.aws_sts_caller_identity.current.arn
 }
 
 resource "aws_lakeformation_data_lake_settings" "test" {

@@ -347,13 +347,13 @@ resource "aws_iam_user" "user" {
 
 func testAccPermissionSelf(rName string, allowSsh bool, allowSudo bool) string {
 	return testAccPermissionBase(rName) + fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 resource "aws_opsworks_permission" "test" {
   allow_ssh  = %[1]t
   allow_sudo = %[2]t
   stack_id   = aws_opsworks_stack.test.id
-  user_arn   = data.aws_caller_identity.current.arn
+  user_arn   = data.aws_sts_caller_identity.current.arn
 }
 `, allowSsh, allowSudo)
 }

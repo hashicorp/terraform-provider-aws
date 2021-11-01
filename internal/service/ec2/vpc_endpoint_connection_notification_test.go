@@ -156,7 +156,7 @@ resource "aws_subnet" "nlb_test_2" {
   }
 }
 
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 resource "aws_vpc_endpoint_service" "test" {
   acceptance_required = false
@@ -166,7 +166,7 @@ resource "aws_vpc_endpoint_service" "test" {
   ]
 
   allowed_principals = [
-    data.aws_caller_identity.current.arn
+    data.aws_sts_caller_identity.current.arn
   ]
 }
 
@@ -249,7 +249,7 @@ resource "aws_subnet" "nlb_test_2" {
   }
 }
 
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 resource "aws_vpc_endpoint_service" "test" {
   acceptance_required = false
@@ -259,7 +259,7 @@ resource "aws_vpc_endpoint_service" "test" {
   ]
 
   allowed_principals = [
-    data.aws_caller_identity.current.arn
+    data.aws_sts_caller_identity.current.arn
   ]
 }
 

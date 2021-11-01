@@ -87,7 +87,7 @@ func testAccOrganizationConfiguration_s3logs(t *testing.T) {
 
 func testAccGuardDutyOrganizationConfigurationConfigAutoEnable(autoEnable bool) string {
 	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 data "aws_partition" "current" {}
 
@@ -101,7 +101,7 @@ resource "aws_guardduty_detector" "test" {}
 resource "aws_guardduty_organization_admin_account" "test" {
   depends_on = [aws_organizations_organization.test]
 
-  admin_account_id = data.aws_caller_identity.current.account_id
+  admin_account_id = data.aws_sts_caller_identity.current.account_id
 }
 
 resource "aws_guardduty_organization_configuration" "test" {
@@ -115,7 +115,7 @@ resource "aws_guardduty_organization_configuration" "test" {
 
 func testAccGuardDutyOrganizationConfigurationConfigS3Logs(autoEnable bool) string {
 	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 data "aws_partition" "current" {}
 
@@ -129,7 +129,7 @@ resource "aws_guardduty_detector" "test" {}
 resource "aws_guardduty_organization_admin_account" "test" {
   depends_on = [aws_organizations_organization.test]
 
-  admin_account_id = data.aws_caller_identity.current.account_id
+  admin_account_id = data.aws_sts_caller_identity.current.account_id
 }
 
 resource "aws_guardduty_organization_configuration" "test" {

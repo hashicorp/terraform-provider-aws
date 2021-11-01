@@ -85,7 +85,7 @@ resource "aws_vpc" "peer" {
   enable_dns_hostnames = true
 }
 
-data "aws_caller_identity" "peer" {
+data "aws_sts_caller_identity" "peer" {
   provider = aws.accepter
 }
 
@@ -95,7 +95,7 @@ resource "aws_vpc_peering_connection" "peer" {
 
   vpc_id        = aws_vpc.main.id
   peer_vpc_id   = aws_vpc.peer.id
-  peer_owner_id = data.aws_caller_identity.peer.account_id
+  peer_owner_id = data.aws_sts_caller_identity.peer.account_id
   auto_accept   = false
 
   tags = {

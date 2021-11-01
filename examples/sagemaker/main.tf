@@ -6,7 +6,7 @@ provider "aws" {
   region = "us-west-2"
 }
 
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 data "aws_region" "current" {}
 
@@ -97,7 +97,7 @@ resource "aws_sagemaker_model" "foo" {
   execution_role_arn = aws_iam_role.foo.arn
 
   primary_container {
-    image          = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/foo:latest"
+    image          = "${data.aws_sts_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/foo:latest"
     model_data_url = "https://s3-us-west-2.amazonaws.com/${aws_s3_bucket.foo.bucket}/model.tar.gz"
   }
 

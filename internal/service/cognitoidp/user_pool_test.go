@@ -2252,7 +2252,7 @@ resource "aws_cognito_user_pool" "test" {
 
 func testAccUserPoolConfig_update(name string, mfaconfig, smsAuthMsg string) string {
 	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {
+data "aws_sts_caller_identity" "current" {
 }
 
 resource "aws_iam_role" "test" {
@@ -2272,7 +2272,7 @@ resource "aws_iam_role" "test" {
       "Action": "sts:AssumeRole",
       "Condition": {
         "StringEquals": {
-          "sts:ExternalId": "${data.aws_caller_identity.current.account_id}"
+          "sts:ExternalId": "${data.aws_sts_caller_identity.current.account_id}"
         }
       }
     }
@@ -2333,7 +2333,7 @@ resource "aws_cognito_user_pool" "test" {
   }
 
   sms_configuration {
-    external_id    = data.aws_caller_identity.current.account_id
+    external_id    = data.aws_sts_caller_identity.current.account_id
     sns_caller_arn = aws_iam_role.test.arn
   }
 }

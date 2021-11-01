@@ -333,7 +333,7 @@ func testAccSubscriptionFilterImportStateIDFunc(resourceName string) resource.Im
 
 func testAccSubscriptionFilterKinesisDataFirehoseBaseConfig(rName string) string {
 	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {
+data "aws_sts_caller_identity" "current" {
 }
 
 data "aws_partition" "current" {
@@ -363,7 +363,7 @@ resource "aws_iam_role" "firehose" {
       "Action": "sts:AssumeRole",
       "Condition": {
         "StringEquals": {
-          "sts:ExternalId": "${data.aws_caller_identity.current.account_id}"
+          "sts:ExternalId": "${data.aws_sts_caller_identity.current.account_id}"
         }
       }
     }
@@ -430,7 +430,7 @@ resource "aws_iam_role_policy" "cloudwatchlogs" {
     {
       "Effect": "Allow",
       "Action": "firehose:*",
-      "Resource": "arn:${data.aws_partition.current.partition}:firehose:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"
+      "Resource": "arn:${data.aws_partition.current.partition}:firehose:${data.aws_region.current.name}:${data.aws_sts_caller_identity.current.account_id}:*"
     },
     {
       "Effect": "Allow",

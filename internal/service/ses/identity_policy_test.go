@@ -245,7 +245,7 @@ resource "aws_ses_identity_policy" "test" {
 
 func testAccIdentityPolicyPolicy2Config(domain string) string {
 	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 data "aws_iam_policy_document" "test" {
   statement {
@@ -253,7 +253,7 @@ data "aws_iam_policy_document" "test" {
     resources = [aws_ses_domain_identity.test.arn]
 
     principals {
-      identifiers = [data.aws_caller_identity.current.account_id]
+      identifiers = [data.aws_sts_caller_identity.current.account_id]
       type        = "AWS"
     }
   }

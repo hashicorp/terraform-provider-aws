@@ -488,7 +488,7 @@ func testAccDxGatewayAssociationConfigBase_vpnGatewayCrossAccount(rName string, 
 		acctest.ConfigAlternateAccountProvider(),
 		fmt.Sprintf(`
 # Creator
-data "aws_caller_identity" "creator" {}
+data "aws_sts_caller_identity" "creator" {}
 
 resource "aws_vpc" "test" {
   cidr_block = "10.255.255.0/28"
@@ -547,7 +547,7 @@ resource "aws_dx_gateway_association" "test" {
 
   proposal_id                         = aws_dx_gateway_association_proposal.test.id
   dx_gateway_id                       = aws_dx_gateway.test.id
-  associated_gateway_owner_account_id = data.aws_caller_identity.creator.account_id
+  associated_gateway_owner_account_id = data.aws_sts_caller_identity.creator.account_id
 }
 `)
 }
@@ -575,7 +575,7 @@ resource "aws_dx_gateway_association" "test" {
 
   proposal_id                         = aws_dx_gateway_association_proposal.test2.id
   dx_gateway_id                       = aws_dx_gateway.test.id
-  associated_gateway_owner_account_id = data.aws_caller_identity.creator.account_id
+  associated_gateway_owner_account_id = data.aws_sts_caller_identity.creator.account_id
 }
 `)
 }
@@ -610,7 +610,7 @@ func testAccDxGatewayAssociationConfig_basicTransitGatewayCrossAccount(rName str
 		acctest.ConfigAlternateAccountProvider(),
 		fmt.Sprintf(`
 # Creator
-data "aws_caller_identity" "creator" {}
+data "aws_sts_caller_identity" "creator" {}
 
 # Accepter
 resource "aws_dx_gateway" "test" {
@@ -644,7 +644,7 @@ resource "aws_dx_gateway_association" "test" {
 
   proposal_id                         = aws_dx_gateway_association_proposal.test.id
   dx_gateway_id                       = aws_dx_gateway.test.id
-  associated_gateway_owner_account_id = data.aws_caller_identity.creator.account_id
+  associated_gateway_owner_account_id = data.aws_sts_caller_identity.creator.account_id
 }
 `, rName, rBgpAsn))
 }
@@ -743,7 +743,7 @@ resource "aws_dx_gateway_association" "test" {
 
   proposal_id                         = aws_dx_gateway_association_proposal.test.id
   dx_gateway_id                       = aws_dx_gateway.test.id
-  associated_gateway_owner_account_id = data.aws_caller_identity.creator.account_id
+  associated_gateway_owner_account_id = data.aws_sts_caller_identity.creator.account_id
 
   allowed_prefixes = [
     "10.255.255.8/29",
@@ -769,7 +769,7 @@ resource "aws_dx_gateway_association" "test" {
 
   proposal_id                         = aws_dx_gateway_association_proposal.test.id
   dx_gateway_id                       = aws_dx_gateway.test.id
-  associated_gateway_owner_account_id = data.aws_caller_identity.creator.account_id
+  associated_gateway_owner_account_id = data.aws_sts_caller_identity.creator.account_id
 
   allowed_prefixes = [
     "10.255.255.0/30",

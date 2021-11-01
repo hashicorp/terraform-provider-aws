@@ -8,7 +8,7 @@ provider "aws" {
 
 data "aws_region" "current" {}
 
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 resource "aws_elasticsearch_domain" "test" {
   domain_name           = var.domain
@@ -48,7 +48,7 @@ resource "aws_elasticsearch_domain" "test" {
             "AWS": "*"
           },
           "Action": "es:*",
-          "Resource": "arn:aws:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/${var.domain}/*"
+          "Resource": "arn:aws:es:${data.aws_region.current.name}:${data.aws_sts_caller_identity.current.account_id}:domain/${var.domain}/*"
         }
     ]
 }

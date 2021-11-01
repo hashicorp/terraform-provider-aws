@@ -15,7 +15,7 @@ Provides a MediaStore Container Policy.
 ```terraform
 data "aws_region" "current" {}
 
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 resource "aws_media_store_container" "example" {
   name = "example"
@@ -30,9 +30,9 @@ resource "aws_media_store_container_policy" "example" {
 	"Statement": [{
 		"Sid": "MediaStoreFullAccess",
 		"Action": [ "mediastore:*" ],
-		"Principal": {"AWS" : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"},
+		"Principal": {"AWS" : "arn:aws:iam::${data.aws_sts_caller_identity.current.account_id}:root"},
 		"Effect": "Allow",
-		"Resource": "arn:aws:mediastore:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:container/${aws_media_store_container.example.name}/*",
+		"Resource": "arn:aws:mediastore:${data.aws_region.current.name}:${data.aws_sts_caller_identity.current.account_id}:container/${aws_media_store_container.example.name}/*",
 		"Condition": {
 			"Bool": { "aws:SecureTransport": "true" }
 		}

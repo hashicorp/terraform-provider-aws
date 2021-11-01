@@ -952,7 +952,7 @@ func testAccVpcEndpointConfigVpcEndpointTypeGatewayLoadBalancer(rName string) st
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 resource "aws_vpc" "test" {
   cidr_block = "10.10.10.0/25"
@@ -987,7 +987,7 @@ resource "aws_lb" "test" {
 
 resource "aws_vpc_endpoint_service" "test" {
   acceptance_required        = false
-  allowed_principals         = [data.aws_caller_identity.current.arn]
+  allowed_principals         = [data.aws_sts_caller_identity.current.arn]
   gateway_load_balancer_arns = [aws_lb.test.arn]
 
   tags = {

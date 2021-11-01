@@ -13,7 +13,7 @@ import (
 func TestAccOrganizationsDelegatedServicesDataSource_basic(t *testing.T) {
 	var providers []*schema.Provider
 	dataSourceName := "data.aws_organizations_delegated_services.test"
-	dataSourceIdentity := "data.aws_caller_identity.delegated"
+	dataSourceIdentity := "data.aws_sts_caller_identity.delegated"
 	servicePrincipal := "config-multiaccountsetup.amazonaws.com"
 
 	resource.Test(t, resource.TestCase{
@@ -40,7 +40,7 @@ func TestAccOrganizationsDelegatedServicesDataSource_basic(t *testing.T) {
 func TestAccOrganizationsDelegatedServicesDataSource_empty(t *testing.T) {
 	var providers []*schema.Provider
 	dataSourceName := "data.aws_organizations_delegated_services.test"
-	dataSourceIdentity := "data.aws_caller_identity.delegated"
+	dataSourceIdentity := "data.aws_sts_caller_identity.delegated"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -64,7 +64,7 @@ func TestAccOrganizationsDelegatedServicesDataSource_empty(t *testing.T) {
 func TestAccOrganizationsDelegatedServicesDataSource_multiple(t *testing.T) {
 	var providers []*schema.Provider
 	dataSourceName := "data.aws_organizations_delegated_services.test"
-	dataSourceIdentity := "data.aws_caller_identity.delegated"
+	dataSourceIdentity := "data.aws_sts_caller_identity.delegated"
 	servicePrincipal := "config-multiaccountsetup.amazonaws.com"
 	servicePrincipal2 := "config.amazonaws.com"
 
@@ -93,24 +93,24 @@ func TestAccOrganizationsDelegatedServicesDataSource_multiple(t *testing.T) {
 
 func testAccDelegatedServicesEmptyDataSourceConfig() string {
 	return acctest.ConfigAlternateAccountProvider() + `
-data "aws_caller_identity" "delegated" {
+data "aws_sts_caller_identity" "delegated" {
   provider = "awsalternate"
 }
 
 data "aws_organizations_delegated_services" "test" {
-  account_id = data.aws_caller_identity.delegated.account_id
+  account_id = data.aws_sts_caller_identity.delegated.account_id
 }
 `
 }
 
 func testAccDelegatedServicesDataSourceConfig(servicePrincipal string) string {
 	return acctest.ConfigAlternateAccountProvider() + fmt.Sprintf(`
-data "aws_caller_identity" "delegated" {
+data "aws_sts_caller_identity" "delegated" {
   provider = "awsalternate"
 }
 
 resource "aws_organizations_delegated_administrator" "delegated" {
-  account_id        = data.aws_caller_identity.delegated.account_id
+  account_id        = data.aws_sts_caller_identity.delegated.account_id
   service_principal = %[1]q
 }
 
@@ -122,17 +122,17 @@ data "aws_organizations_delegated_services" "test" {
 
 func testAccDelegatedServicesMultipleDataSourceConfig(servicePrincipal, servicePrincipal2 string) string {
 	return acctest.ConfigAlternateAccountProvider() + fmt.Sprintf(`
-data "aws_caller_identity" "delegated" {
+data "aws_sts_caller_identity" "delegated" {
   provider = "awsalternate"
 }
 
 resource "aws_organizations_delegated_administrator" "delegated" {
-  account_id        = data.aws_caller_identity.delegated.account_id
+  account_id        = data.aws_sts_caller_identity.delegated.account_id
   service_principal = %[1]q
 }
 
 resource "aws_organizations_delegated_administrator" "other_delegated" {
-  account_id        = data.aws_caller_identity.delegated.account_id
+  account_id        = data.aws_sts_caller_identity.delegated.account_id
   service_principal = %[2]q
 }
 

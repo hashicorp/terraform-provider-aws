@@ -294,7 +294,7 @@ resource "aws_macie2_custom_data_identifier" "test" {
 
 func testAccMacieCustomDataIdentifierconfigComplete(bucketName, regex, description string) string {
 	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 resource "aws_macie2_account" "test" {}
 
@@ -317,7 +317,7 @@ resource "aws_macie2_classification_job" "test" {
   job_type                   = "SCHEDULED"
   s3_job_definition {
     bucket_definitions {
-      account_id = data.aws_caller_identity.current.account_id
+      account_id = data.aws_sts_caller_identity.current.account_id
       buckets    = [aws_s3_bucket.test.bucket]
     }
   }
@@ -333,7 +333,7 @@ resource "aws_macie2_classification_job" "test" {
 
 func testAccMacieCustomDataIdentifierconfigCompleteWithTags(bucketName, regex string) string {
 	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 resource "aws_macie2_account" "test" {}
 
@@ -361,7 +361,7 @@ resource "aws_macie2_classification_job" "test" {
   job_type                   = "SCHEDULED"
   s3_job_definition {
     bucket_definitions {
-      account_id = data.aws_caller_identity.current.account_id
+      account_id = data.aws_sts_caller_identity.current.account_id
       buckets    = [aws_s3_bucket.test.bucket]
     }
   }

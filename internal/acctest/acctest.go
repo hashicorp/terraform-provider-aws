@@ -1132,7 +1132,7 @@ provider "aws" {
   }
 }
 
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 ` //lintignore:AT004
 
 const testAccProviderConfigBase = `

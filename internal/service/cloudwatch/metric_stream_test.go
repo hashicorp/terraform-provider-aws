@@ -459,12 +459,12 @@ func testAccMetricStreamUpdateARNConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 data "aws_region" "current" {}
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 resource "aws_cloudwatch_metric_stream" "test" {
   name          = %[1]q
-  role_arn      = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/MyOtherRole"
-  firehose_arn  = "arn:${data.aws_partition.current.partition}:firehose:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:deliverystream/MyOtherFirehose"
+  role_arn      = "arn:${data.aws_partition.current.partition}:iam::${data.aws_sts_caller_identity.current.account_id}:role/MyOtherRole"
+  firehose_arn  = "arn:${data.aws_partition.current.partition}:firehose:${data.aws_region.current.name}:${data.aws_sts_caller_identity.current.account_id}:deliverystream/MyOtherFirehose"
   output_format = "json"
 }
 `, rName)
@@ -474,12 +474,12 @@ func testAccMetricStreamIncludeFiltersConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 data "aws_region" "current" {}
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 resource "aws_cloudwatch_metric_stream" "test" {
   name          = %[1]q
-  role_arn      = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/MyRole"
-  firehose_arn  = "arn:${data.aws_partition.current.partition}:firehose:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:deliverystream/MyFirehose"
+  role_arn      = "arn:${data.aws_partition.current.partition}:iam::${data.aws_sts_caller_identity.current.account_id}:role/MyRole"
+  firehose_arn  = "arn:${data.aws_partition.current.partition}:firehose:${data.aws_region.current.name}:${data.aws_sts_caller_identity.current.account_id}:deliverystream/MyFirehose"
   output_format = "json"
 
   include_filter {
@@ -497,11 +497,11 @@ func testAccMetricStreamNoNameConfig() string {
 	return `
 data "aws_partition" "current" {}
 data "aws_region" "current" {}
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 resource "aws_cloudwatch_metric_stream" "test" {
-  role_arn      = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/MyRole"
-  firehose_arn  = "arn:${data.aws_partition.current.partition}:firehose:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:deliverystream/MyFirehose"
+  role_arn      = "arn:${data.aws_partition.current.partition}:iam::${data.aws_sts_caller_identity.current.account_id}:role/MyRole"
+  firehose_arn  = "arn:${data.aws_partition.current.partition}:firehose:${data.aws_region.current.name}:${data.aws_sts_caller_identity.current.account_id}:deliverystream/MyFirehose"
   output_format = "json"
 }
 `
@@ -511,12 +511,12 @@ func testAccMetricStreamNamePrefixConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 data "aws_region" "current" {}
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 resource "aws_cloudwatch_metric_stream" "test" {
   name_prefix   = %[1]q
-  role_arn      = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/MyRole"
-  firehose_arn  = "arn:${data.aws_partition.current.partition}:firehose:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:deliverystream/MyFirehose"
+  role_arn      = "arn:${data.aws_partition.current.partition}:iam::${data.aws_sts_caller_identity.current.account_id}:role/MyRole"
+  firehose_arn  = "arn:${data.aws_partition.current.partition}:firehose:${data.aws_region.current.name}:${data.aws_sts_caller_identity.current.account_id}:deliverystream/MyFirehose"
   output_format = "json"
 }
 `, rName)
@@ -526,12 +526,12 @@ func testAccMetricStreamExcludeFiltersConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 data "aws_region" "current" {}
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 resource "aws_cloudwatch_metric_stream" "test" {
   name          = %[1]q
-  role_arn      = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/MyRole"
-  firehose_arn  = "arn:${data.aws_partition.current.partition}:firehose:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:deliverystream/MyFirehose"
+  role_arn      = "arn:${data.aws_partition.current.partition}:iam::${data.aws_sts_caller_identity.current.account_id}:role/MyRole"
+  firehose_arn  = "arn:${data.aws_partition.current.partition}:firehose:${data.aws_region.current.name}:${data.aws_sts_caller_identity.current.account_id}:deliverystream/MyFirehose"
   output_format = "json"
 
   exclude_filter {
@@ -549,12 +549,12 @@ func testAccMetricStreamTagsConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 data "aws_region" "current" {}
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 resource "aws_cloudwatch_metric_stream" "test" {
   name          = %[1]q
-  role_arn      = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/MyRole"
-  firehose_arn  = "arn:${data.aws_partition.current.partition}:firehose:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:deliverystream/MyFirehose"
+  role_arn      = "arn:${data.aws_partition.current.partition}:iam::${data.aws_sts_caller_identity.current.account_id}:role/MyRole"
+  firehose_arn  = "arn:${data.aws_partition.current.partition}:firehose:${data.aws_region.current.name}:${data.aws_sts_caller_identity.current.account_id}:deliverystream/MyFirehose"
   output_format = "json"
 
   tags = {

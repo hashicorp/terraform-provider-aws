@@ -37,7 +37,7 @@ func TestAccCloud9EnvironmentEC2_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "cloud9", regexp.MustCompile(`environment:.+$`)),
-					resource.TestCheckResourceAttrPair(resourceName, "owner_arn", "data.aws_caller_identity.current", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "owner_arn", "data.aws_sts_caller_identity.current", "arn"),
 				),
 			},
 			{
@@ -54,7 +54,7 @@ func TestAccCloud9EnvironmentEC2_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "cloud9", regexp.MustCompile(`environment:.+$`)),
-					resource.TestCheckResourceAttrPair(resourceName, "owner_arn", "data.aws_caller_identity.current", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "owner_arn", "data.aws_sts_caller_identity.current", "arn"),
 				),
 			},
 		},
@@ -338,7 +338,7 @@ resource "aws_cloud9_environment_ec2" "test" {
 }
 
 # By default, the Cloud9 environment EC2 is owned by the creator
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 `, name)
 }
 

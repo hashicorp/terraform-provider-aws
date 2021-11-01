@@ -100,11 +100,11 @@ func testAccCheckInvitationAccepterDestroy(s *terraform.State) error {
 
 func testAccMacieInvitationAccepterBasicConfig(email string) string {
 	return acctest.ConfigAlternateAccountProvider() + fmt.Sprintf(`
-data "aws_caller_identity" "admin" {
+data "aws_sts_caller_identity" "admin" {
   provider = "awsalternate"
 }
 
-data "aws_caller_identity" "member" {}
+data "aws_sts_caller_identity" "member" {}
 
 resource "aws_macie2_account" "admin" {
   provider = "awsalternate"
@@ -114,7 +114,7 @@ resource "aws_macie2_account" "member" {}
 
 resource "aws_macie2_member" "member" {
   provider           = "awsalternate"
-  account_id         = data.aws_caller_identity.member.account_id
+  account_id         = data.aws_sts_caller_identity.member.account_id
   email              = %[1]q
   invite             = true
   invitation_message = "This is a message of the invite"
@@ -122,7 +122,7 @@ resource "aws_macie2_member" "member" {
 }
 
 resource "aws_macie2_invitation_accepter" "member" {
-  administrator_account_id = data.aws_caller_identity.admin.account_id
+  administrator_account_id = data.aws_sts_caller_identity.admin.account_id
   depends_on               = [aws_macie2_member.member]
 }
 `, email)

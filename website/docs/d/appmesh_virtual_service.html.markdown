@@ -20,12 +20,12 @@ data "aws_appmesh_virtual_service" "test" {
 ```
 
 ```hcl
-data "aws_caller_identity" "current" {}
+data "aws_sts_caller_identity" "current" {}
 
 data "aws_appmesh_virtual_service" "test" {
   name       = "example.mesh.local"
   mesh_name  = "example-mesh"
-  mesh_owner = data.aws_caller_identity.current.account_id
+  mesh_owner = data.aws_sts_caller_identity.current.account_id
 }
 ```
 
