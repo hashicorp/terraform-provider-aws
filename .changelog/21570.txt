@@ -1,0 +1,115 @@
+```release-note:enhancement
+data-source/aws_api_gateway_api_key: Rename data source to aws_apigateway_api_key (with alias for aws_api_gateway_api_key)
+```
+
+```release-note:enhancement
+data-source/aws_api_gateway_domain_name: Rename data source to aws_apigateway_domain_name (with alias for aws_api_gateway_domain_name)
+```
+
+```release-note:enhancement
+data-source/aws_api_gateway_resource: Rename data source to aws_apigateway_resource (with alias for aws_api_gateway_resource)
+```
+
+```release-note:enhancement
+data-source/aws_api_gateway_rest_api: Rename data source to aws_apigateway_rest_api (with alias for aws_api_gateway_rest_api)
+```
+
+```release-note:enhancement
+data-source/aws_api_gateway_vpc_link: Rename data source to aws_apigateway_vpc_link (with alias for aws_api_gateway_vpc_link)
+```
+
+```release-note:enhancement
+resource/aws_api_gateway_account: Rename resource to aws_apigateway_account (with alias for aws_api_gateway_account)
+```
+
+```release-note:enhancement
+resource/aws_api_gateway_api_key: Rename resource to aws_apigateway_api_key (with alias for aws_api_gateway_api_key)
+```
+
+```release-note:enhancement
+resource/aws_api_gateway_authorizer: Rename resource to aws_apigateway_authorizer (with alias for aws_api_gateway_authorizer)
+```
+
+```release-note:enhancement
+resource/aws_api_gateway_base_path_mapping: Rename resource to aws_apigateway_base_path_mapping (with alias for aws_api_gateway_base_path_mapping)
+```
+
+```release-note:enhancement
+resource/aws_api_gateway_client_certificate: Rename resource to aws_apigateway_client_certificate (with alias for aws_api_gateway_client_certificate)
+```
+
+```release-note:enhancement
+resource/aws_api_gateway_deployment: Rename resource to aws_apigateway_deployment (with alias for aws_api_gateway_deployment)
+```
+
+```release-note:enhancement
+resource/aws_api_gateway_documentation_part: Rename resource to aws_apigateway_documentation_part (with alias for aws_api_gateway_documentation_part)
+```
+
+```release-note:enhancement
+resource/aws_api_gateway_documentation_version: Rename resource to aws_apigateway_documentation_version (with alias for aws_api_gateway_documentation_version)
+```
+
+```release-note:enhancement
+resource/aws_api_gateway_domain_name: Rename resource to aws_apigateway_domain_name (with alias for aws_api_gateway_domain_name)
+```
+
+```release-note:enhancement
+resource/aws_api_gateway_gateway_response: Rename resource to aws_apigateway_gateway_response (with alias for aws_api_gateway_gateway_response)
+```
+
+```release-note:enhancement
+resource/aws_api_gateway_integration_response: Rename resource to aws_apigateway_integration_response (with alias for aws_api_gateway_integration_response)
+```
+
+```release-note:enhancement
+resource/aws_api_gateway_integration: Rename resource to aws_apigateway_integration (with alias for aws_api_gateway_integration)
+```
+
+```release-note:enhancement
+resource/aws_api_gateway_method_response: Rename resource to aws_apigateway_method_response (with alias for aws_api_gateway_method_response)
+```
+
+```release-note:enhancement
+resource/aws_api_gateway_method_settings: Rename resource to aws_apigateway_method_settings (with alias for aws_api_gateway_method_settings)
+```
+
+```release-note:enhancement
+resource/aws_api_gateway_method: Rename resource to aws_apigateway_method (with alias for aws_api_gateway_method)
+```
+
+```release-note:enhancement
+resource/aws_api_gateway_model: Rename resource to aws_apigateway_model (with alias for aws_api_gateway_model)
+```
+
+```release-note:enhancement
+resource/aws_api_gateway_request_validator: Rename resource to aws_apigateway_request_validator (with alias for aws_api_gateway_request_validator)
+```
+
+```release-note:enhancement
+resource/aws_api_gateway_resource: Rename resource to aws_apigateway_resource (with alias for aws_api_gateway_resource)
+```
+
+```release-note:enhancement
+resource/aws_api_gateway_rest_api_policy: Rename resource to aws_apigateway_rest_api_policy (with alias for aws_api_gateway_rest_api_policy)
+```
+
+```release-note:enhancement
+resource/aws_api_gateway_rest_api: Rename resource to aws_apigateway_rest_api (with alias for aws_api_gateway_rest_api)
+```
+
+```release-note:enhancement
+resource/aws_api_gateway_stage: Rename resource to aws_apigateway_stage (with alias for aws_api_gateway_stage)
+```
+
+```release-note:enhancement
+resource/aws_api_gateway_usage_plan_key: Rename resource to aws_apigateway_usage_plan_key (with alias for aws_api_gateway_usage_plan_key)
+```
+
+```release-note:enhancement
+resource/aws_api_gateway_usage_plan: Rename resource to aws_apigateway_usage_plan (with alias for aws_api_gateway_usage_plan)
+```
+
+```release-note:enhancement
+resource/aws_api_gateway_vpc_link: Rename resource to aws_apigateway_vpc_link (with alias for aws_api_gateway_vpc_link)
+```
