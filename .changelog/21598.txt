@@ -1,0 +1,27 @@
+```release-note:enhancement
+data-source/aws_msk_broker_nodes: Rename data source to aws_kafka_broker_nodes (with alias for aws_msk_broker_nodes)
+```
+
+```release-note:enhancement
+data-source/aws_msk_cluster: Rename data source to aws_kafka_cluster (with alias for aws_msk_cluster)
+```
+
+```release-note:enhancement
+data-source/aws_msk_configuration: Rename data source to aws_kafka_configuration (with alias for aws_msk_configuration)
+```
+
+```release-note:enhancement
+data-source/aws_msk_kafka_version: Rename data source to aws_kafka_kafka_version (with alias for aws_msk_kafka_version)
+```
+
+```release-note:enhancement
+resource/aws_msk_cluster: Rename resource to aws_kafka_cluster (with alias for aws_msk_cluster)
+```
+
+```release-note:enhancement
+resource/aws_msk_configuration: Rename resource to aws_kafka_configuration (with alias for aws_msk_configuration)
+```
+
+```release-note:enhancement
+resource/aws_msk_scram_secret_association: Rename resource to aws_kafka_scram_secret_association (with alias for aws_msk_scram_secret_association)
+```
