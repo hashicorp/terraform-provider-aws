@@ -189,17 +189,18 @@ func resourceNetworkInterfaceCreate(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("error waiting for EC2 Network Interface (%s) create: %w", d.Id(), err)
 	}
 
-	//Default value is enabled
+	// Default value is enabled.
 	if !d.Get("source_dest_check").(bool) {
 		input := &ec2.ModifyNetworkInterfaceAttributeInput{
 			NetworkInterfaceId: aws.String(d.Id()),
 			SourceDestCheck:    &ec2.AttributeBooleanValue{Value: aws.Bool(false)},
 		}
 
+		log.Printf("[INFO] Modifying EC2 Network Interface: %s", input)
 		_, err := conn.ModifyNetworkInterfaceAttribute(input)
 
 		if err != nil {
-			return fmt.Errorf("error setting EC2 Network Interface (%s) SourceDestCheck: %w", d.Id(), err)
+			return fmt.Errorf("error modifying EC2 Network Interface (%s) SourceDestCheck: %w", d.Id(), err)
 		}
 	}
 
@@ -315,7 +316,6 @@ func resourceNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) er
 			}
 		}
 
-		// if there is a new attachment, attach it
 		if na != nil && na.(*schema.Set).Len() > 0 {
 			attachment := na.(*schema.Set).List()[0].(map[string]interface{})
 
@@ -339,114 +339,36 @@ func resourceNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) er
 		os := o.(*schema.Set)
 		ns := n.(*schema.Set)
 
-		// Unassign old IP addresses
-		unassignIps := os.Difference(ns)
-		if unassignIps.Len() != 0 {
+		// Unassign old IP addresses.
+		unassignIPs := os.Difference(ns)
+		if unassignIPs.Len() != 0 {
 			input := &ec2.UnassignPrivateIpAddressesInput{
 				NetworkInterfaceId: aws.String(d.Id()),
-				PrivateIpAddresses: flex.ExpandStringSet(unassignIps),
+				PrivateIpAddresses: flex.ExpandStringSet(unassignIPs),
 			}
+
+			log.Printf("[INFO] Unassigning private IPv4 addresses: %s", input)
 			_, err := conn.UnassignPrivateIpAddresses(input)
+
 			if err != nil {
-				return fmt.Errorf("Failure to unassign Private IPs: %s", err)
+				return fmt.Errorf("error unassigning EC2 Network Interface (%s) private IPv4 addresses: %w", d.Id(), err)
 			}
 		}
 
-		// Assign new IP addresses
-		assignIps := ns.Difference(os)
-		if assignIps.Len() != 0 {
+		// Assign new IP addresses.
+		assignIPs := ns.Difference(os)
+		if assignIPs.Len() != 0 {
 			input := &ec2.AssignPrivateIpAddressesInput{
 				NetworkInterfaceId: aws.String(d.Id()),
-				PrivateIpAddresses: flex.ExpandStringSet(assignIps),
+				PrivateIpAddresses: flex.ExpandStringSet(assignIPs),
 			}
+
+			log.Printf("[INFO] Assigning private IPv4 addresses: %s", input)
 			_, err := conn.AssignPrivateIpAddresses(input)
+
 			if err != nil {
-				return fmt.Errorf("Failure to assign Private IPs: %s", err)
+				return fmt.Errorf("error assigning EC2 Network Interface (%s) private IPv4 addresses: %w", d.Id(), err)
 			}
-		}
-	}
-
-	if d.HasChange("ipv6_addresses") {
-		o, n := d.GetChange("ipv6_addresses")
-		if o == nil {
-			o = new(schema.Set)
-		}
-		if n == nil {
-			n = new(schema.Set)
-		}
-
-		os := o.(*schema.Set)
-		ns := n.(*schema.Set)
-
-		// Unassign old IPV6 addresses
-		unassignIps := os.Difference(ns)
-		if unassignIps.Len() != 0 {
-			input := &ec2.UnassignIpv6AddressesInput{
-				NetworkInterfaceId: aws.String(d.Id()),
-				Ipv6Addresses:      flex.ExpandStringSet(unassignIps),
-			}
-			_, err := conn.UnassignIpv6Addresses(input)
-			if err != nil {
-				return fmt.Errorf("failure to unassign IPV6 Addresses: %s", err)
-			}
-		}
-
-		// Assign new IPV6 addresses
-		assignIps := ns.Difference(os)
-		if assignIps.Len() != 0 {
-			input := &ec2.AssignIpv6AddressesInput{
-				NetworkInterfaceId: aws.String(d.Id()),
-				Ipv6Addresses:      flex.ExpandStringSet(assignIps),
-			}
-			_, err := conn.AssignIpv6Addresses(input)
-			if err != nil {
-				return fmt.Errorf("Failure to assign IPV6 Addresses: %s", err)
-			}
-		}
-	}
-
-	if d.HasChange("ipv6_address_count") {
-		o, n := d.GetChange("ipv6_address_count")
-		ipv6Addresses := d.Get("ipv6_addresses").(*schema.Set).List()
-
-		if o != nil && n != nil && n != len(ipv6Addresses) {
-
-			diff := n.(int) - o.(int)
-
-			// Surplus of IPs, add the diff
-			if diff > 0 {
-				input := &ec2.AssignIpv6AddressesInput{
-					NetworkInterfaceId: aws.String(d.Id()),
-					Ipv6AddressCount:   aws.Int64(int64(diff)),
-				}
-				_, err := conn.AssignIpv6Addresses(input)
-				if err != nil {
-					return fmt.Errorf("failure to assign IPV6 Addresses: %s", err)
-				}
-			}
-
-			if diff < 0 {
-				input := &ec2.UnassignIpv6AddressesInput{
-					NetworkInterfaceId: aws.String(d.Id()),
-					Ipv6Addresses:      flex.ExpandStringList(ipv6Addresses[0:int(math.Abs(float64(diff)))]),
-				}
-				_, err := conn.UnassignIpv6Addresses(input)
-				if err != nil {
-					return fmt.Errorf("failure to unassign IPV6 Addresses: %s", err)
-				}
-			}
-		}
-	}
-
-	if d.HasChange("source_dest_check") {
-		request := &ec2.ModifyNetworkInterfaceAttributeInput{
-			NetworkInterfaceId: aws.String(d.Id()),
-			SourceDestCheck:    &ec2.AttributeBooleanValue{Value: aws.Bool(d.Get("source_dest_check").(bool))},
-		}
-
-		_, err := conn.ModifyNetworkInterfaceAttribute(request)
-		if err != nil {
-			return fmt.Errorf("failure updating Source Dest Check on ENI: %s", err)
 		}
 	}
 
@@ -463,55 +385,151 @@ func resourceNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 
 		if o != nil && n != nil && n != len(privateIPsFiltered) {
-
-			diff := n.(int) - o.(int)
-
-			// Surplus of IPs, add the diff
-			if diff > 0 {
+			if diff := n.(int) - o.(int); diff > 0 {
 				input := &ec2.AssignPrivateIpAddressesInput{
 					NetworkInterfaceId:             aws.String(d.Id()),
 					SecondaryPrivateIpAddressCount: aws.Int64(int64(diff)),
 				}
-				_, err := conn.AssignPrivateIpAddresses(input)
-				if err != nil {
-					return fmt.Errorf("Failure to assign Private IPs: %s", err)
-				}
-			}
 
-			if diff < 0 {
+				log.Printf("[INFO] Assigning private IPv4 addresses: %s", input)
+				_, err := conn.AssignPrivateIpAddresses(input)
+
+				if err != nil {
+					return fmt.Errorf("error assigning EC2 Network Interface (%s) private IPv4 addresses: %w", d.Id(), err)
+				}
+			} else if diff < 0 {
 				input := &ec2.UnassignPrivateIpAddressesInput{
 					NetworkInterfaceId: aws.String(d.Id()),
 					PrivateIpAddresses: flex.ExpandStringList(privateIPsFiltered[0:int(math.Abs(float64(diff)))]),
 				}
+
+				log.Printf("[INFO] Unassigning private IPv4 addresses: %s", input)
 				_, err := conn.UnassignPrivateIpAddresses(input)
+
 				if err != nil {
-					return fmt.Errorf("Failure to unassign Private IPs: %s", err)
+					return fmt.Errorf("error unassigning EC2 Network Interface (%s) private IPv4 addresses: %w", d.Id(), err)
 				}
 			}
 		}
 	}
 
+	if d.HasChange("ipv6_addresses") {
+		o, n := d.GetChange("ipv6_addresses")
+		if o == nil {
+			o = new(schema.Set)
+		}
+		if n == nil {
+			n = new(schema.Set)
+		}
+
+		os := o.(*schema.Set)
+		ns := n.(*schema.Set)
+
+		// Unassign old IPV6 addresses.
+		unassignIPs := os.Difference(ns)
+		if unassignIPs.Len() != 0 {
+			input := &ec2.UnassignIpv6AddressesInput{
+				NetworkInterfaceId: aws.String(d.Id()),
+				Ipv6Addresses:      flex.ExpandStringSet(unassignIPs),
+			}
+
+			log.Printf("[INFO] Unassigning IPv6 addresses: %s", input)
+			_, err := conn.UnassignIpv6Addresses(input)
+
+			if err != nil {
+				return fmt.Errorf("error unassigning EC2 Network Interface (%s) IPv6 addresses: %w", d.Id(), err)
+			}
+		}
+
+		// Assign new IPV6 addresses,
+		assignIPs := ns.Difference(os)
+		if assignIPs.Len() != 0 {
+			input := &ec2.AssignIpv6AddressesInput{
+				NetworkInterfaceId: aws.String(d.Id()),
+				Ipv6Addresses:      flex.ExpandStringSet(assignIPs),
+			}
+
+			log.Printf("[INFO] Assigning IPv6 addresses: %s", input)
+			_, err := conn.AssignIpv6Addresses(input)
+
+			if err != nil {
+				return fmt.Errorf("error assigning EC2 Network Interface (%s) IPv6 addresses: %w", d.Id(), err)
+			}
+		}
+	}
+
+	if d.HasChange("ipv6_address_count") {
+		o, n := d.GetChange("ipv6_address_count")
+		ipv6Addresses := d.Get("ipv6_addresses").(*schema.Set).List()
+
+		if o != nil && n != nil && n != len(ipv6Addresses) {
+			if diff := n.(int) - o.(int); diff > 0 {
+				input := &ec2.AssignIpv6AddressesInput{
+					NetworkInterfaceId: aws.String(d.Id()),
+					Ipv6AddressCount:   aws.Int64(int64(diff)),
+				}
+
+				log.Printf("[INFO] Assigning IPv6 addresses: %s", input)
+				_, err := conn.AssignIpv6Addresses(input)
+
+				if err != nil {
+					return fmt.Errorf("error assigning EC2 Network Interface (%s) IPv6 addresses: %w", d.Id(), err)
+				}
+			} else if diff < 0 {
+				input := &ec2.UnassignIpv6AddressesInput{
+					NetworkInterfaceId: aws.String(d.Id()),
+					Ipv6Addresses:      flex.ExpandStringList(ipv6Addresses[0:int(math.Abs(float64(diff)))]),
+				}
+
+				log.Printf("[INFO] Unassigning IPv6 addresses: %s", input)
+				_, err := conn.UnassignIpv6Addresses(input)
+
+				if err != nil {
+					return fmt.Errorf("failure to unassign IPV6 Addresses: %s", err)
+				}
+			}
+		}
+	}
+
+	if d.HasChange("source_dest_check") {
+		input := &ec2.ModifyNetworkInterfaceAttributeInput{
+			NetworkInterfaceId: aws.String(d.Id()),
+			SourceDestCheck:    &ec2.AttributeBooleanValue{Value: aws.Bool(d.Get("source_dest_check").(bool))},
+		}
+
+		log.Printf("[INFO] Modifying EC2 Network Interface: %s", input)
+		_, err := conn.ModifyNetworkInterfaceAttribute(input)
+
+		if err != nil {
+			return fmt.Errorf("error modifying EC2 Network Interface (%s) SourceDestCheck: %w", d.Id(), err)
+		}
+	}
+
 	if d.HasChange("security_groups") {
-		request := &ec2.ModifyNetworkInterfaceAttributeInput{
+		input := &ec2.ModifyNetworkInterfaceAttributeInput{
 			NetworkInterfaceId: aws.String(d.Id()),
 			Groups:             flex.ExpandStringSet(d.Get("security_groups").(*schema.Set)),
 		}
 
-		_, err := conn.ModifyNetworkInterfaceAttribute(request)
+		log.Printf("[INFO] Modifying EC2 Network Interface: %s", input)
+		_, err := conn.ModifyNetworkInterfaceAttribute(input)
+
 		if err != nil {
-			return fmt.Errorf("Failure updating ENI: %s", err)
+			return fmt.Errorf("error modifying EC2 Network Interface (%s) Groups: %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("description") {
-		request := &ec2.ModifyNetworkInterfaceAttributeInput{
+		input := &ec2.ModifyNetworkInterfaceAttributeInput{
 			NetworkInterfaceId: aws.String(d.Id()),
 			Description:        &ec2.AttributeValue{Value: aws.String(d.Get("description").(string))},
 		}
 
-		_, err := conn.ModifyNetworkInterfaceAttribute(request)
+		log.Printf("[INFO] Modifying EC2 Network Interface: %s", input)
+		_, err := conn.ModifyNetworkInterfaceAttribute(input)
+
 		if err != nil {
-			return fmt.Errorf("Failure updating ENI: %s", err)
+			return fmt.Errorf("error modifying EC2 Network Interface (%s) Description: %w", d.Id(), err)
 		}
 	}
 
