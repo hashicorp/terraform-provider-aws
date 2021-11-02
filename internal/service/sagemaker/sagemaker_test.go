@@ -60,6 +60,7 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"tensorboardAppSettingsWithImage": testAccUserProfile_tensorboardAppSettingsWithImage,
 			"kernelGatewayAppSettings":        testAccUserProfile_kernelGatewayAppSettings,
 			"kernelGatewayAppSettings_lifecycleConfig": testAccUserProfile_kernelGatewayAppSettings_lifecycleconfig,
+			"kernelGatewayAppSettings_imageConfig":     testAccUserProfile_kernelGatewayAppSettings_imageconfig,
 			"jupyterServerAppSettings":                 testAccUserProfile_jupyterServerAppSettings,
 		},
 		"Workforce": {
