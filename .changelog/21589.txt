@@ -1,0 +1,39 @@
+```release-note:enhancement
+data-source/aws_cognito_user_pools: Rename data source to aws_cognitoidp_user_pools (with alias for aws_cognito_user_pools)
+```
+
+```release-note:enhancement
+resource/aws_cognito_identity_pool: Rename data source to aws_cognitoidentity_pool (with alias for aws_cognito_identity_pool)
+```
+
+```release-note:enhancement
+resource/aws_cognito_identity_pool_roles_attachment: Rename data source to aws_cognitoidentity_pool_roles_attachment (with alias for aws_cognito_identity_pool_roles_attachment)
+```
+
+```release-note:enhancement
+resource/aws_cognito_identity_provider: Rename data source to aws_cognitoidp_identity_provider (with alias for aws_cognito_identity_provider)
+```
+
+```release-note:enhancement
+resource/aws_cognito_resource_server: Rename data source to aws_cognitoidp_resource_server (with alias for aws_cognito_resource_server)
+```
+
+```release-note:enhancement
+resource/aws_cognito_user_group: Rename data source to aws_cognitoidp_user_group (with alias for aws_cognito_user_group)
+```
+
+```release-note:enhancement
+resource/aws_cognito_user_pool: Rename data source to aws_cognitoidp_user_pool (with alias for aws_cognito_user_pool)
+```
+
+```release-note:enhancement
+resource/aws_cognito_user_pool_client: Rename data source to aws_cognitoidp_user_pool_client (with alias for aws_cognito_user_pool_client)
+```
+
+```release-note:enhancement
+resource/aws_cognito_user_pool_domain: Rename data source to aws_cognitoidp_user_pool_domain (with alias for aws_cognito_user_pool_domain)
+```
+
+```release-note:enhancement
+resource/aws_cognito_user_pool_ui_customization: Rename data source to aws_cognitoidp_user_pool_ui_customization (with alias for aws_cognito_user_pool_ui_customization)
+```
