@@ -102,7 +102,7 @@ func TestAccCloudWatchLogsSubscriptionFilter_Disappears_logGroup(t *testing.T) {
 func TestAccCloudWatchLogsSubscriptionFilter_DestinationARN_kinesisDataFirehose(t *testing.T) {
 	var filter cloudwatchlogs.SubscriptionFilter
 
-	firehoseResourceName := "aws_kinesis_firehose_delivery_stream.test"
+	firehoseResourceName := "aws_firehose_delivery_stream.test"
 	resourceName := "aws_cloudwatch_log_subscription_filter.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -442,7 +442,7 @@ resource "aws_iam_role_policy" "cloudwatchlogs" {
 EOF
 }
 
-resource "aws_kinesis_firehose_delivery_stream" "test" {
+resource "aws_firehose_delivery_stream" "test" {
   destination = "extended_s3"
   name        = %[1]q
 
@@ -574,7 +574,7 @@ resource "aws_lambda_permission" "test" {
 func testAccSubscriptionFilterDestinationARNKinesisDataFirehoseConfig(rName string) string {
 	return testAccSubscriptionFilterKinesisDataFirehoseBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_cloudwatch_log_subscription_filter" "test" {
-  destination_arn = aws_kinesis_firehose_delivery_stream.test.arn
+  destination_arn = aws_firehose_delivery_stream.test.arn
   filter_pattern  = "logtype test"
   log_group_name  = aws_cloudwatch_log_group.test.name
   name            = %[1]q

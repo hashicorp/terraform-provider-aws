@@ -533,7 +533,7 @@ resource "aws_waf_web_acl" "test" {
   }
 
   logging_configuration {
-    log_destination = aws_kinesis_firehose_delivery_stream.test.arn
+    log_destination = aws_firehose_delivery_stream.test.arn
 
     redacted_fields {
       field_to_match {
@@ -574,7 +574,7 @@ EOF
 
 }
 
-resource "aws_kinesis_firehose_delivery_stream" "test" {
+resource "aws_firehose_delivery_stream" "test" {
   # the name must begin with aws-waf-logs-
   name        = "aws-waf-logs-%[1]s"
   destination = "s3"
@@ -615,7 +615,7 @@ resource "aws_waf_web_acl" "test" {
   }
 
   logging_configuration {
-    log_destination = aws_kinesis_firehose_delivery_stream.test.arn
+    log_destination = aws_firehose_delivery_stream.test.arn
   }
 }
 
@@ -645,7 +645,7 @@ EOF
 
 }
 
-resource "aws_kinesis_firehose_delivery_stream" "test" {
+resource "aws_firehose_delivery_stream" "test" {
   # the name must begin with aws-waf-logs-
   name        = "aws-waf-logs-%[1]s"
   destination = "s3"

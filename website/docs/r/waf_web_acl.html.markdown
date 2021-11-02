@@ -68,7 +68,7 @@ resource "aws_waf_web_acl" "waf_acl" {
 resource "aws_waf_web_acl" "example" {
   # ... other configuration ...
   logging_configuration {
-    log_destination = aws_kinesis_firehose_delivery_stream.example.arn
+    log_destination = aws_firehose_delivery_stream.example.arn
 
     redacted_fields {
       field_to_match {

@@ -1389,7 +1389,7 @@ func testAccMskClusterConfigLoggingInfo(rName string, cloudwatchLogsEnabled bool
 		cloudwatchLogsLogGroup = "aws_cloudwatch_log_group.test.name"
 	}
 	if firehoseEnabled {
-		firehoseDeliveryStream = "aws_kinesis_firehose_delivery_stream.test.name"
+		firehoseDeliveryStream = "aws_firehose_delivery_stream.test.name"
 	}
 	if s3Enabled {
 		s3Bucket = "aws_s3_bucket.bucket.id"
@@ -1426,7 +1426,7 @@ resource "aws_iam_role" "firehose_role" {
 EOF
 }
 
-resource "aws_kinesis_firehose_delivery_stream" "test" {
+resource "aws_firehose_delivery_stream" "test" {
   name        = %[1]q
   destination = "s3"
 

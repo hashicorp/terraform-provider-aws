@@ -15,8 +15,8 @@ import (
 )
 
 func init() {
-	resource.AddTestSweepers("aws_kinesis_firehose_delivery_stream", &resource.Sweeper{
-		Name: "aws_kinesis_firehose_delivery_stream",
+	resource.AddTestSweepers("aws_firehose_delivery_stream", &resource.Sweeper{
+		Name: "aws_firehose_delivery_stream",
 		F:    sweepDeliveryStreams,
 	})
 }

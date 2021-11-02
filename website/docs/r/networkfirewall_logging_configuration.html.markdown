@@ -55,7 +55,7 @@ resource "aws_networkfirewall_logging_configuration" "example" {
   logging_configuration {
     log_destination_config {
       log_destination = {
-        deliveryStream = aws_kinesis_firehose_delivery_stream.example.name
+        deliveryStream = aws_firehose_delivery_stream.example.name
       }
       log_destination_type = "KinesisDataFirehose"
       log_type             = "ALERT"

@@ -843,7 +843,7 @@ resource "aws_s3_bucket" "logs" {
   force_destroy = true
 }
 
-resource "aws_kinesis_firehose_delivery_stream" "test" {
+resource "aws_firehose_delivery_stream" "test" {
   depends_on  = [aws_iam_role_policy.test]
   name        = %[2]q
   destination = "s3"
@@ -943,7 +943,7 @@ resource "aws_networkfirewall_logging_configuration" "test" {
   logging_configuration {
     log_destination_config {
       log_destination = {
-        deliveryStream = aws_kinesis_firehose_delivery_stream.test.name
+        deliveryStream = aws_firehose_delivery_stream.test.name
       }
       log_destination_type = %[2]q
       log_type             = %[3]q
@@ -994,7 +994,7 @@ resource "aws_networkfirewall_logging_configuration" "test" {
 
     log_destination_config {
       log_destination = {
-        deliveryStream = aws_kinesis_firehose_delivery_stream.test.name
+        deliveryStream = aws_firehose_delivery_stream.test.name
       }
       log_destination_type = "KinesisDataFirehose"
       log_type             = %[3]q

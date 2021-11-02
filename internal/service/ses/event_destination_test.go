@@ -198,7 +198,7 @@ resource "aws_iam_role" "test" {
 EOF
 }
 
-resource "aws_kinesis_firehose_delivery_stream" "test" {
+resource "aws_firehose_delivery_stream" "test" {
   name        = %[2]q
   destination = "s3"
 
@@ -244,7 +244,7 @@ resource "aws_ses_event_destination" "kinesis" {
   matching_types         = ["bounce", "send"]
 
   kinesis_destination {
-    stream_arn = aws_kinesis_firehose_delivery_stream.test.arn
+    stream_arn = aws_firehose_delivery_stream.test.arn
     role_arn   = aws_iam_role.test.arn
   }
 }

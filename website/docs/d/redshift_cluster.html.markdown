@@ -17,7 +17,7 @@ data "aws_redshift_cluster" "test_cluster" {
   cluster_identifier = "test-cluster"
 }
 
-resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
+resource "aws_firehose_delivery_stream" "test_stream" {
   name        = "terraform-kinesis-firehose-test-stream"
   destination = "redshift"
 

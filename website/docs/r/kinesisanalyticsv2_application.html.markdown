@@ -175,7 +175,7 @@ resource "aws_kinesisanalyticsv2_application" "example" {
         }
 
         kinesis_firehose_output {
-          resource_arn = aws_kinesis_firehose_delivery_stream.example.arn
+          resource_arn = aws_firehose_delivery_stream.example.arn
         }
       }
 

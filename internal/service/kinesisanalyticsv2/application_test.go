@@ -1773,7 +1773,7 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationInput_add(t *testing.T) 
 	var v kinesisanalyticsv2.ApplicationDetail
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
-	firehoseResourceName := "aws_kinesis_firehose_delivery_stream.test"
+	firehoseResourceName := "aws_firehose_delivery_stream.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1883,7 +1883,7 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationInput_update(t *testing.
 	var v kinesisanalyticsv2.ApplicationDetail
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
-	firehoseResourceName := "aws_kinesis_firehose_delivery_stream.test"
+	firehoseResourceName := "aws_firehose_delivery_stream.test"
 	streamsResourceName := "aws_kinesis_stream.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -2024,7 +2024,7 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationInputProcessing_add(t *t
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
 	lambdaResourceName := "aws_lambda_function.test.0"
-	firehoseResourceName := "aws_kinesis_firehose_delivery_stream.test"
+	firehoseResourceName := "aws_firehose_delivery_stream.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -2163,7 +2163,7 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationInputProcessing_delete(t
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
 	lambdaResourceName := "aws_lambda_function.test.0"
-	firehoseResourceName := "aws_kinesis_firehose_delivery_stream.test"
+	firehoseResourceName := "aws_firehose_delivery_stream.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -2303,7 +2303,7 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationInputProcessing_update(t
 	iamRoleResourceName := "aws_iam_role.test.0"
 	lambda1ResourceName := "aws_lambda_function.test.0"
 	lambda2ResourceName := "aws_lambda_function.test.1"
-	firehoseResourceName := "aws_kinesis_firehose_delivery_stream.test"
+	firehoseResourceName := "aws_firehose_delivery_stream.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -2446,7 +2446,7 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationMultiple_update(t *testi
 	iamRole2ResourceName := "aws_iam_role.test.1"
 	cloudWatchLogStreamResourceName := "aws_cloudwatch_log_stream.test"
 	lambdaResourceName := "aws_lambda_function.test.0"
-	firehoseResourceName := "aws_kinesis_firehose_delivery_stream.test"
+	firehoseResourceName := "aws_firehose_delivery_stream.test"
 	streamsResourceName := "aws_kinesis_stream.test"
 	s3BucketResourceName := "aws_s3_bucket.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -2638,7 +2638,7 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationOutput_update(t *testing
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
 	lambdaResourceName := "aws_lambda_function.test.0"
-	firehoseResourceName := "aws_kinesis_firehose_delivery_stream.test"
+	firehoseResourceName := "aws_firehose_delivery_stream.test"
 	streamsResourceName := "aws_kinesis_stream.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -3122,7 +3122,7 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationStartApplication_onCreat
 	var v kinesisanalyticsv2.ApplicationDetail
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
-	firehoseResourceName := "aws_kinesis_firehose_delivery_stream.test"
+	firehoseResourceName := "aws_firehose_delivery_stream.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -3202,7 +3202,7 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationStartApplication_onUpdat
 	var v kinesisanalyticsv2.ApplicationDetail
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
-	firehoseResourceName := "aws_kinesis_firehose_delivery_stream.test"
+	firehoseResourceName := "aws_firehose_delivery_stream.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -3399,7 +3399,7 @@ func TestAccKinesisAnalyticsV2Application_SQLApplication_updateRunning(t *testin
 	iamRole2ResourceName := "aws_iam_role.test.1"
 	cloudWatchLogStreamResourceName := "aws_cloudwatch_log_stream.test"
 	lambdaResourceName := "aws_lambda_function.test.0"
-	firehoseResourceName := "aws_kinesis_firehose_delivery_stream.test"
+	firehoseResourceName := "aws_firehose_delivery_stream.test"
 	streamsResourceName := "aws_kinesis_stream.test"
 	s3BucketResourceName := "aws_s3_bucket.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -4286,7 +4286,7 @@ resource "aws_lambda_function" "test" {
   runtime       = "nodejs12.x"
 }
 
-resource "aws_kinesis_firehose_delivery_stream" "test" {
+resource "aws_firehose_delivery_stream" "test" {
   name        = %[1]q
   destination = "extended_s3"
 
@@ -5075,7 +5075,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
         }
 
         kinesis_firehose_input {
-          resource_arn = aws_kinesis_firehose_delivery_stream.test.arn
+          resource_arn = aws_firehose_delivery_stream.test.arn
         }
       }
     }
@@ -5195,7 +5195,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
         }
 
         kinesis_firehose_input {
-          resource_arn = aws_kinesis_firehose_delivery_stream.test.arn
+          resource_arn = aws_firehose_delivery_stream.test.arn
         }
       }
     }
@@ -5270,7 +5270,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
         }
 
         kinesis_firehose_input {
-          resource_arn = aws_kinesis_firehose_delivery_stream.test.arn
+          resource_arn = aws_firehose_delivery_stream.test.arn
         }
 
         input_starting_position_configuration {
@@ -5286,7 +5286,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
         }
 
         kinesis_firehose_output {
-          resource_arn = aws_kinesis_firehose_delivery_stream.test.arn
+          resource_arn = aws_firehose_delivery_stream.test.arn
         }
       }
     }
@@ -5467,7 +5467,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
         }
 
         kinesis_firehose_output {
-          resource_arn = aws_kinesis_firehose_delivery_stream.test.arn
+          resource_arn = aws_firehose_delivery_stream.test.arn
         }
       }
     }
@@ -5679,7 +5679,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
         }
 
         kinesis_firehose_input {
-          resource_arn = aws_kinesis_firehose_delivery_stream.test.arn
+          resource_arn = aws_firehose_delivery_stream.test.arn
         }
 
         input_starting_position_configuration {

@@ -347,7 +347,7 @@ data "aws_partition" "current" {}
 resource "aws_cloudwatch_metric_stream" "test" {
   name          = %[1]q
   role_arn      = aws_iam_role.metric_stream_to_firehose.arn
-  firehose_arn  = aws_kinesis_firehose_delivery_stream.s3_stream.arn
+  firehose_arn  = aws_firehose_delivery_stream.s3_stream.arn
   output_format = "json"
 }
 
@@ -385,7 +385,7 @@ resource "aws_iam_role_policy" "metric_stream_to_firehose" {
                 "firehose:PutRecord",
                 "firehose:PutRecordBatch"
             ],
-            "Resource": "${aws_kinesis_firehose_delivery_stream.s3_stream.arn}"
+            "Resource": "${aws_firehose_delivery_stream.s3_stream.arn}"
         }
     ]
 }
@@ -443,7 +443,7 @@ resource "aws_iam_role_policy" "firehose_to_s3" {
 EOF
 }
 
-resource "aws_kinesis_firehose_delivery_stream" "s3_stream" {
+resource "aws_firehose_delivery_stream" "s3_stream" {
   name        = %[1]q
   destination = "s3"
 

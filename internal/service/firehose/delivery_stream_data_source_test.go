@@ -12,8 +12,8 @@ import (
 
 func TestAccFirehoseDeliveryStreamDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	dataSourceName := "data.aws_kinesis_firehose_delivery_stream.test"
-	resourceName := "aws_kinesis_firehose_delivery_stream.test"
+	dataSourceName := "data.aws_firehose_delivery_stream.test"
+	resourceName := "aws_firehose_delivery_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -99,7 +99,7 @@ resource "aws_s3_bucket" "bucket" {
   acl    = "private"
 }
 
-resource "aws_kinesis_firehose_delivery_stream" "test" {
+resource "aws_firehose_delivery_stream" "test" {
   name        = %[1]q
   destination = "extended_s3"
 
@@ -109,8 +109,8 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   }
 }
 
-data "aws_kinesis_firehose_delivery_stream" "test" {
-  name = aws_kinesis_firehose_delivery_stream.test.name
+data "aws_firehose_delivery_stream" "test" {
+  name = aws_firehose_delivery_stream.test.name
 }
 `, rName)
 }

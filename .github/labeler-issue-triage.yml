@@ -175,7 +175,7 @@ service/emrcontainers:
 service/eventbridge:
   - '((\*|-) ?`?|(data|resource) "?)aws_cloudwatch_event_'
 service/firehose:
-  - '((\*|-) ?`?|(data|resource) "?)aws_kinesis_firehose_'
+  - '((\*|-) ?`?|(data|resource) "?)aws_firehose_'
 service/fms:
   - '((\*|-) ?`?|(data|resource) "?)aws_fms_'
 service/forecast:

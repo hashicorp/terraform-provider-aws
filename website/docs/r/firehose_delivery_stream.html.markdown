@@ -1,12 +1,12 @@
 ---
 subcategory: "Kinesis Firehose"
 layout: "aws"
-page_title: "AWS: aws_kinesis_firehose_delivery_stream"
+page_title: "AWS: aws_firehose_delivery_stream"
 description: |-
   Provides a AWS Kinesis Firehose Delivery Stream
 ---
 
-# Resource: aws_kinesis_firehose_delivery_stream
+# Resource: aws_firehose_delivery_stream
 
 Provides a Kinesis Firehose Delivery Stream resource. Amazon Kinesis Firehose is a fully managed, elastic service to easily deliver real-time data streams to destinations such as Amazon S3 and Amazon Redshift.
 
@@ -17,7 +17,7 @@ For more details, see the [Amazon Kinesis Firehose Documentation][1].
 ### Extended S3 Destination
 
 ```terraform
-resource "aws_kinesis_firehose_delivery_stream" "extended_s3_stream" {
+resource "aws_firehose_delivery_stream" "extended_s3_stream" {
   name        = "terraform-kinesis-firehose-extended-s3-test-stream"
   destination = "extended_s3"
 
@@ -122,7 +122,7 @@ resource "aws_iam_role" "firehose_role" {
 EOF
 }
 
-resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
+resource "aws_firehose_delivery_stream" "test_stream" {
   name        = "terraform-kinesis-firehose-test-stream"
   destination = "s3"
 
@@ -145,7 +145,7 @@ resource "aws_redshift_cluster" "test_cluster" {
   cluster_type       = "single-node"
 }
 
-resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
+resource "aws_firehose_delivery_stream" "test_stream" {
   name        = "terraform-kinesis-firehose-test-stream"
   destination = "redshift"
 
@@ -185,7 +185,7 @@ resource "aws_elasticsearch_domain" "test_cluster" {
   domain_name = "firehose-es-test"
 }
 
-resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
+resource "aws_firehose_delivery_stream" "test_stream" {
   name        = "terraform-kinesis-firehose-test-stream"
   destination = "elasticsearch"
 
@@ -280,7 +280,7 @@ resource "aws_iam_role_policy" "firehose-elasticsearch" {
 EOF
 }
 
-resource "aws_kinesis_firehose_delivery_stream" "test" {
+resource "aws_firehose_delivery_stream" "test" {
   depends_on = [aws_iam_role_policy.firehose-elasticsearch]
 
   name        = "terraform-kinesis-firehose-es"
@@ -307,7 +307,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 ### Splunk Destination
 
 ```terraform
-resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
+resource "aws_firehose_delivery_stream" "test_stream" {
   name        = "terraform-kinesis-firehose-test-stream"
   destination = "splunk"
 
@@ -332,7 +332,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
 ### HTTP Endpoint (e.g., New Relic) Destination
 
 ```terraform
-resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
+resource "aws_firehose_delivery_stream" "test_stream" {
   name        = "terraform-kinesis-firehose-test-stream"
   destination = "http_endpoint"
 
@@ -523,7 +523,7 @@ The `vpc_config` object supports the following:
 Example:
 
 ```terraform
-resource "aws_kinesis_firehose_delivery_stream" "example" {
+resource "aws_firehose_delivery_stream" "example" {
   # ... other configuration ...
   extended_s3_configuration {
     # Must be at least 64
@@ -635,7 +635,7 @@ In addition to all arguments above, the following attributes are exported:
 Kinesis Firehose Delivery streams can be imported using the stream ARN, e.g.,
 
 ```
-$ terraform import aws_kinesis_firehose_delivery_stream.foo arn:aws:firehose:us-east-1:XXX:deliverystream/example
+$ terraform import aws_firehose_delivery_stream.foo arn:aws:firehose:us-east-1:XXX:deliverystream/example
 ```
 
 Note: Import does not work for stream destination `s3`. Consider using `extended_s3` since `s3` destination is deprecated.

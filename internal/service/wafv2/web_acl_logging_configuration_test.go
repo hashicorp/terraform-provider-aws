@@ -347,7 +347,7 @@ func TestAccWAFV2WebACLLoggingConfiguration_changeLogDestinationsForceNew(t *tes
 	rNameNew := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl_logging_configuration.test"
 	webACLResourceName := "aws_wafv2_web_acl.test"
-	kinesisResourceName := "aws_kinesis_firehose_delivery_stream.test"
+	kinesisResourceName := "aws_firehose_delivery_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
@@ -763,7 +763,7 @@ resource "aws_wafv2_web_acl" "test" {
 
 func testAccWebACLLoggingConfigurationKinesisDependencyConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_kinesis_firehose_delivery_stream" "test" {
+resource "aws_firehose_delivery_stream" "test" {
   depends_on  = [aws_iam_role_policy.test]
   name        = "aws-waf-logs-%s"
   destination = "s3"
@@ -779,14 +779,14 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 const testAccWebACLLoggingConfigurationResourceConfig = `
 resource "aws_wafv2_web_acl_logging_configuration" "test" {
   resource_arn            = aws_wafv2_web_acl.test.arn
-  log_destination_configs = [aws_kinesis_firehose_delivery_stream.test.arn]
+  log_destination_configs = [aws_firehose_delivery_stream.test.arn]
 }
 `
 
 const testAccWebACLLoggingConfigurationResource_emptyRedactedFieldsConfig = `
 resource "aws_wafv2_web_acl_logging_configuration" "test" {
   resource_arn            = aws_wafv2_web_acl.test.arn
-  log_destination_configs = [aws_kinesis_firehose_delivery_stream.test.arn]
+  log_destination_configs = [aws_firehose_delivery_stream.test.arn]
   redacted_fields {}
 }
 `
@@ -794,7 +794,7 @@ resource "aws_wafv2_web_acl_logging_configuration" "test" {
 const testAccWebACLLoggingConfigurationResource_updateTwoSingleHeaderRedactedFieldsConfig = `
 resource "aws_wafv2_web_acl_logging_configuration" "test" {
   resource_arn            = aws_wafv2_web_acl.test.arn
-  log_destination_configs = [aws_kinesis_firehose_delivery_stream.test.arn]
+  log_destination_configs = [aws_firehose_delivery_stream.test.arn]
 
   redacted_fields {
     single_header {
@@ -813,7 +813,7 @@ resource "aws_wafv2_web_acl_logging_configuration" "test" {
 const testAccWebACLLoggingConfigurationResource_updateSingleHeaderRedactedFieldConfig = `
 resource "aws_wafv2_web_acl_logging_configuration" "test" {
   resource_arn            = aws_wafv2_web_acl.test.arn
-  log_destination_configs = [aws_kinesis_firehose_delivery_stream.test.arn]
+  log_destination_configs = [aws_firehose_delivery_stream.test.arn]
 
   redacted_fields {
     single_header {
@@ -836,7 +836,7 @@ func testAccWebACLLoggingConfigurationResource_updateRedactedFieldConfig(field s
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl_logging_configuration" "test" {
   resource_arn            = aws_wafv2_web_acl.test.arn
-  log_destination_configs = [aws_kinesis_firehose_delivery_stream.test.arn]
+  log_destination_configs = [aws_firehose_delivery_stream.test.arn]
 
   redacted_fields {
     %s
@@ -848,7 +848,7 @@ resource "aws_wafv2_web_acl_logging_configuration" "test" {
 const testAccWebACLLoggingConfigurationResource_updateTwoRedactedFieldsConfig = `
 resource "aws_wafv2_web_acl_logging_configuration" "test" {
   resource_arn            = aws_wafv2_web_acl.test.arn
-  log_destination_configs = [aws_kinesis_firehose_delivery_stream.test.arn]
+  log_destination_configs = [aws_firehose_delivery_stream.test.arn]
 
   redacted_fields {
     method {}
@@ -863,7 +863,7 @@ resource "aws_wafv2_web_acl_logging_configuration" "test" {
 const testAccWebACLLoggingConfigurationResource_updateThreeRedactedFieldsConfig = `
 resource "aws_wafv2_web_acl_logging_configuration" "test" {
   resource_arn            = aws_wafv2_web_acl.test.arn
-  log_destination_configs = [aws_kinesis_firehose_delivery_stream.test.arn]
+  log_destination_configs = [aws_firehose_delivery_stream.test.arn]
 
   redacted_fields {
     uri_path {}
@@ -884,7 +884,7 @@ resource "aws_wafv2_web_acl_logging_configuration" "test" {
 const testAccWebACLLoggingConfigurationResource_loggingFilterConfig = `
 resource "aws_wafv2_web_acl_logging_configuration" "test" {
   resource_arn            = aws_wafv2_web_acl.test.arn
-  log_destination_configs = [aws_kinesis_firehose_delivery_stream.test.arn]
+  log_destination_configs = [aws_firehose_delivery_stream.test.arn]
 
   logging_filter {
     default_behavior = "KEEP"
@@ -905,7 +905,7 @@ resource "aws_wafv2_web_acl_logging_configuration" "test" {
 const testAccWebACLLoggingConfigurationResource_loggingFilterConfig_twoFilters = `
 resource "aws_wafv2_web_acl_logging_configuration" "test" {
   resource_arn            = aws_wafv2_web_acl.test.arn
-  log_destination_configs = [aws_kinesis_firehose_delivery_stream.test.arn]
+  log_destination_configs = [aws_firehose_delivery_stream.test.arn]
 
   logging_filter {
     default_behavior = "DROP"
@@ -941,7 +941,7 @@ resource "aws_wafv2_web_acl_logging_configuration" "test" {
 const testAccWebACLLoggingConfigurationResource_loggingFilterConfig_oneFilter = `
 resource "aws_wafv2_web_acl_logging_configuration" "test" {
   resource_arn            = aws_wafv2_web_acl.test.arn
-  log_destination_configs = [aws_kinesis_firehose_delivery_stream.test.arn]
+  log_destination_configs = [aws_firehose_delivery_stream.test.arn]
 
   logging_filter {
     default_behavior = "KEEP"

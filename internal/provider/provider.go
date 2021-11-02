@@ -515,7 +515,8 @@ func Provider() *schema.Provider {
 			"aws_lb_target_group":  elbv2.DataSourceTargetGroup(),
 			"aws_lb":               elbv2.DataSourceLoadBalancer(),
 
-			"aws_kinesis_firehose_delivery_stream": firehose.DataSourceDeliveryStream(),
+			"aws_firehose_delivery_stream":         firehose.DataSourceDeliveryStream(),
+			"aws_kinesis_firehose_delivery_stream": firehose.DataSourceDeliveryStream(), // backward compatible alias
 
 			"aws_globalaccelerator_accelerator": globalaccelerator.DataSourceAccelerator(),
 
@@ -1160,7 +1161,8 @@ func Provider() *schema.Provider {
 			"aws_emr_managed_scaling_policy": emr.ResourceManagedScalingPolicy(),
 			"aws_emr_security_configuration": emr.ResourceSecurityConfiguration(),
 
-			"aws_kinesis_firehose_delivery_stream": firehose.ResourceDeliveryStream(),
+			"aws_firehose_delivery_stream":         firehose.ResourceDeliveryStream(),
+			"aws_kinesis_firehose_delivery_stream": firehose.ResourceDeliveryStream(), // backward compatible alias
 
 			"aws_fms_admin_account": fms.ResourceAdminAccount(),
 			"aws_fms_policy":        fms.ResourcePolicy(),

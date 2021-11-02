@@ -76,7 +76,7 @@ resource "aws_iam_role" "firehose_role" {
 EOF
 }
 
-resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
+resource "aws_firehose_delivery_stream" "test_stream" {
   name        = "terraform-kinesis-firehose-msk-broker-logs-stream"
   destination = "s3"
 
@@ -135,7 +135,7 @@ resource "aws_msk_cluster" "example" {
       }
       firehose {
         enabled         = true
-        delivery_stream = aws_kinesis_firehose_delivery_stream.test_stream.name
+        delivery_stream = aws_firehose_delivery_stream.test_stream.name
       }
       s3 {
         enabled = true

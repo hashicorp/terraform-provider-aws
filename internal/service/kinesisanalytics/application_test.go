@@ -386,7 +386,7 @@ func TestAccKinesisAnalyticsApplication_Input_add(t *testing.T) {
 	var v kinesisanalytics.ApplicationDetail
 	resourceName := "aws_kinesis_analytics_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
-	firehoseResourceName := "aws_kinesis_firehose_delivery_stream.test"
+	firehoseResourceName := "aws_firehose_delivery_stream.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -473,7 +473,7 @@ func TestAccKinesisAnalyticsApplication_Input_update(t *testing.T) {
 	resourceName := "aws_kinesis_analytics_application.test"
 	iamRole1ResourceName := "aws_iam_role.test.0"
 	iamRole2ResourceName := "aws_iam_role.test.1"
-	firehoseResourceName := "aws_kinesis_firehose_delivery_stream.test"
+	firehoseResourceName := "aws_firehose_delivery_stream.test"
 	streamsResourceName := "aws_kinesis_stream.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -588,7 +588,7 @@ func TestAccKinesisAnalyticsApplication_InputProcessing_add(t *testing.T) {
 	resourceName := "aws_kinesis_analytics_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
 	lambdaResourceName := "aws_lambda_function.test.0"
-	firehoseResourceName := "aws_kinesis_firehose_delivery_stream.test"
+	firehoseResourceName := "aws_firehose_delivery_stream.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -702,7 +702,7 @@ func TestAccKinesisAnalyticsApplication_InputProcessing_delete(t *testing.T) {
 	resourceName := "aws_kinesis_analytics_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
 	lambdaResourceName := "aws_lambda_function.test.0"
-	firehoseResourceName := "aws_kinesis_firehose_delivery_stream.test"
+	firehoseResourceName := "aws_firehose_delivery_stream.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -818,7 +818,7 @@ func TestAccKinesisAnalyticsApplication_InputProcessing_update(t *testing.T) {
 	iamRole2ResourceName := "aws_iam_role.test.1"
 	lambda1ResourceName := "aws_lambda_function.test.0"
 	lambda2ResourceName := "aws_lambda_function.test.1"
-	firehoseResourceName := "aws_kinesis_firehose_delivery_stream.test"
+	firehoseResourceName := "aws_firehose_delivery_stream.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -937,7 +937,7 @@ func TestAccKinesisAnalyticsApplication_Multiple_update(t *testing.T) {
 	iamRole2ResourceName := "aws_iam_role.test.1"
 	cloudWatchLogStreamResourceName := "aws_cloudwatch_log_stream.test"
 	lambdaResourceName := "aws_lambda_function.test.0"
-	firehoseResourceName := "aws_kinesis_firehose_delivery_stream.test"
+	firehoseResourceName := "aws_firehose_delivery_stream.test"
 	streamsResourceName := "aws_kinesis_stream.test"
 	s3BucketResourceName := "aws_s3_bucket.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1108,7 +1108,7 @@ func TestAccKinesisAnalyticsApplication_Output_update(t *testing.T) {
 	iamRole1ResourceName := "aws_iam_role.test.0"
 	iamRole2ResourceName := "aws_iam_role.test.1"
 	lambdaResourceName := "aws_lambda_function.test.0"
-	firehoseResourceName := "aws_kinesis_firehose_delivery_stream.test"
+	firehoseResourceName := "aws_firehose_delivery_stream.test"
 	streamsResourceName := "aws_kinesis_stream.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1483,7 +1483,7 @@ func TestAccKinesisAnalyticsApplication_StartApplication_onCreate(t *testing.T) 
 	var v kinesisanalytics.ApplicationDetail
 	resourceName := "aws_kinesis_analytics_application.test"
 	iamRole1ResourceName := "aws_iam_role.test.0"
-	firehoseResourceName := "aws_kinesis_firehose_delivery_stream.test"
+	firehoseResourceName := "aws_firehose_delivery_stream.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1550,7 +1550,7 @@ func TestAccKinesisAnalyticsApplication_StartApplication_onUpdate(t *testing.T) 
 	var v kinesisanalytics.ApplicationDetail
 	resourceName := "aws_kinesis_analytics_application.test"
 	iamRole1ResourceName := "aws_iam_role.test.0"
-	firehoseResourceName := "aws_kinesis_firehose_delivery_stream.test"
+	firehoseResourceName := "aws_firehose_delivery_stream.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1708,7 +1708,7 @@ func TestAccKinesisAnalyticsApplication_StartApplication_update(t *testing.T) {
 	iamRole2ResourceName := "aws_iam_role.test.1"
 	cloudWatchLogStreamResourceName := "aws_cloudwatch_log_stream.test"
 	lambdaResourceName := "aws_lambda_function.test.0"
-	firehoseResourceName := "aws_kinesis_firehose_delivery_stream.test"
+	firehoseResourceName := "aws_firehose_delivery_stream.test"
 	streamsResourceName := "aws_kinesis_stream.test"
 	s3BucketResourceName := "aws_s3_bucket.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -2031,7 +2031,7 @@ resource "aws_lambda_function" "test" {
   runtime       = "nodejs12.x"
 }
 
-resource "aws_kinesis_firehose_delivery_stream" "test" {
+resource "aws_firehose_delivery_stream" "test" {
   name        = %[1]q
   destination = "extended_s3"
 
@@ -2120,7 +2120,7 @@ resource "aws_kinesis_analytics_application" "test" {
     }
 
     kinesis_firehose {
-      resource_arn = aws_kinesis_firehose_delivery_stream.test.arn
+      resource_arn = aws_firehose_delivery_stream.test.arn
       role_arn     = aws_iam_role.test[0].arn
     }
   }
@@ -2211,7 +2211,7 @@ resource "aws_kinesis_analytics_application" "test" {
     }
 
     kinesis_firehose {
-      resource_arn = aws_kinesis_firehose_delivery_stream.test.arn
+      resource_arn = aws_firehose_delivery_stream.test.arn
       role_arn     = aws_iam_role.test[0].arn
     }
   }
@@ -2277,7 +2277,7 @@ resource "aws_kinesis_analytics_application" "test" {
     }
 
     kinesis_firehose {
-      resource_arn = aws_kinesis_firehose_delivery_stream.test.arn
+      resource_arn = aws_firehose_delivery_stream.test.arn
       role_arn     = aws_iam_role.test[0].arn
     }
 
@@ -2294,7 +2294,7 @@ resource "aws_kinesis_analytics_application" "test" {
     }
 
     kinesis_firehose {
-      resource_arn = aws_kinesis_firehose_delivery_stream.test.arn
+      resource_arn = aws_firehose_delivery_stream.test.arn
       role_arn     = aws_iam_role.test[1].arn
     }
   }
@@ -2444,7 +2444,7 @@ resource "aws_kinesis_analytics_application" "test" {
     }
 
     kinesis_firehose {
-      resource_arn = aws_kinesis_firehose_delivery_stream.test.arn
+      resource_arn = aws_firehose_delivery_stream.test.arn
       role_arn     = aws_iam_role.test[0].arn
     }
   }
@@ -2605,7 +2605,7 @@ resource "aws_kinesis_analytics_application" "test" {
     }
 
     kinesis_firehose {
-      resource_arn = aws_kinesis_firehose_delivery_stream.test.arn
+      resource_arn = aws_firehose_delivery_stream.test.arn
       role_arn     = aws_iam_role.test[0].arn
     }
 

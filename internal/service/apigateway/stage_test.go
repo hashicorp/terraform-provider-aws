@@ -566,7 +566,7 @@ resource "aws_iam_role" "test" {
 EOF
 }
 
-resource "aws_kinesis_firehose_delivery_stream" "test" {
+resource "aws_firehose_delivery_stream" "test" {
   destination = "extended_s3"
   name        = "amazon-apigateway-%[1]s"
 
@@ -590,7 +590,7 @@ resource "aws_api_gateway_stage" "test" {
     Name = "tf-test"
   }
   access_log_settings {
-    destination_arn = aws_kinesis_firehose_delivery_stream.test.arn
+    destination_arn = aws_firehose_delivery_stream.test.arn
     format          = %q
   }
 }

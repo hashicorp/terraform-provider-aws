@@ -426,7 +426,7 @@ func TestAccSNSTopicSubscription_firehose(t *testing.T) {
 					testAccCheckTopicSubscriptionExists(resourceName, attributes),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", sns.ServiceName, regexp.MustCompile(fmt.Sprintf("%s:.+", rName))),
 					resource.TestCheckResourceAttr(resourceName, "delivery_policy", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "endpoint", "aws_kinesis_firehose_delivery_stream.test_stream", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "endpoint", "aws_firehose_delivery_stream.test_stream", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "filter_policy", ""),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "firehose"),
 					resource.TestCheckResourceAttr(resourceName, "raw_message_delivery", "false"),
@@ -1063,7 +1063,7 @@ resource "aws_sns_topic" "test" {
 }
 
 resource "aws_sns_topic_subscription" "test" {
-  endpoint              = aws_kinesis_firehose_delivery_stream.test_stream.arn
+  endpoint              = aws_firehose_delivery_stream.test_stream.arn
   protocol              = "firehose"
   topic_arn             = aws_sns_topic.test.arn
   subscription_role_arn = aws_iam_role.firehose_role.arn
@@ -1095,7 +1095,7 @@ resource "aws_iam_role" "firehose_role" {
 EOF
 }
 
-resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
+resource "aws_firehose_delivery_stream" "test_stream" {
   name        = %[1]q
   destination = "s3"
 
