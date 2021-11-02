@@ -11,7 +11,8 @@ import (
 )
 
 func TestAccEC2NetworkInterfacesDataSource_filter(t *testing.T) {
-	rName := sdkacctest.RandString(5)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
@@ -29,7 +30,8 @@ func TestAccEC2NetworkInterfacesDataSource_filter(t *testing.T) {
 }
 
 func TestAccEC2NetworkInterfacesDataSource_tags(t *testing.T) {
-	rName := sdkacctest.RandString(5)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
@@ -52,7 +54,7 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-eni-data-source-basic-%s"
+    Name = %[1]q
   }
 }
 
@@ -61,41 +63,45 @@ resource "aws_subnet" "test" {
   vpc_id     = aws_vpc.test.id
 
   tags = {
-    Name = "terraform-testacc-eni-data-source-basic-%s"
+    Name = %[1]q
   }
-}
-
-resource "aws_network_interface" "test" {
-  subnet_id = aws_subnet.test.id
 }
 
 resource "aws_network_interface" "test1" {
   subnet_id = aws_subnet.test.id
 
   tags = {
-    Name = aws_vpc.test.tags.Name
+    Name = "%[1]s-1"
   }
 }
-`, rName, rName)
+
+resource "aws_network_interface" "test2" {
+  subnet_id = aws_subnet.test.id
+
+  tags = {
+    Name = "%[1]s-2"
+  }
+}
+`, rName)
 }
 
 func testAccNetworkInterfacesDataSourceConfig_Filter(rName string) string {
-	return testAccNetworkInterfacesDataSourceConfig_Base(rName) + `
+	return acctest.ConfigCompose(testAccNetworkInterfacesDataSourceConfig_Base(rName), `
 data "aws_network_interfaces" "test" {
   filter {
     name   = "subnet-id"
-    values = [aws_network_interface.test.subnet_id, aws_network_interface.test1.subnet_id]
+    values = [aws_network_interface.test1.subnet_id, aws_network_interface.test2.subnet_id]
   }
 }
-`
+`)
 }
 
 func testAccNetworkInterfacesDataSourceConfig_Tags(rName string) string {
-	return testAccNetworkInterfacesDataSourceConfig_Base(rName) + `
+	return acctest.ConfigCompose(testAccNetworkInterfacesDataSourceConfig_Base(rName), `
 data "aws_network_interfaces" "test" {
   tags = {
-    Name = aws_network_interface.test1.tags.Name
+    Name = aws_network_interface.test2.tags.Name
   }
 }
-`
+`)
 }
