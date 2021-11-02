@@ -1,38 +1,38 @@
 ---
 subcategory: "Route53 Resolver"
 layout: "aws"
-page_title: "AWS: aws_route53_resolver_firewall_rule"
+page_title: "AWS: aws_route53resolver_firewall_rule"
 description: |-
   Provides a Route 53 Resolver DNS Firewall rule resource.
 ---
 
-# Resource: aws_route53_resolver_firewall_rule
+# Resource: aws_route53resolver_firewall_rule
 
 Provides a Route 53 Resolver DNS Firewall rule resource.
 
 ## Example Usage
 
 ```terraform
-resource "aws_route53_resolver_firewall_domain_list" "example" {
+resource "aws_route53resolver_firewall_domain_list" "example" {
   name    = "example"
   domains = ["example.com"]
   tags    = {}
 }
 
-resource "aws_route53_resolver_firewall_rule_group" "example" {
+resource "aws_route53resolver_firewall_rule_group" "example" {
   name = "example"
   tags = {}
 }
 
-resource "aws_route53_resolver_firewall_rule" "example" {
+resource "aws_route53resolver_firewall_rule" "example" {
   name                    = "example"
   action                  = "BLOCK"
   block_override_dns_type = "CNAME"
   block_override_domain   = "example.com"
   block_override_ttl      = 1
   block_response          = "OVERRIDE"
-  firewall_domain_list_id = aws_route53_resolver_firewall_domain_list.example.id
-  firewall_rule_group_id  = aws_route53_resolver_firewall_rule_group.example.id
+  firewall_domain_list_id = aws_route53resolver_firewall_domain_list.example.id
+  firewall_rule_group_id  = aws_route53resolver_firewall_rule_group.example.id
   priority                = 100
 }
 ```
@@ -62,5 +62,5 @@ In addition to all arguments above, the following attributes are exported:
  Route 53 Resolver DNS Firewall rules can be imported using the Route 53 Resolver DNS Firewall rule group ID and domain list ID separated by ':', e.g.,
 
 ```
-$ terraform import aws_route53_resolver_firewall_rule.example rslvr-frg-0123456789abcdef:rslvr-fdl-0123456789abcdef
+$ terraform import aws_route53resolver_firewall_rule.example rslvr-frg-0123456789abcdef:rslvr-fdl-0123456789abcdef
 ```

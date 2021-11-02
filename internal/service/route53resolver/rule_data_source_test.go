@@ -17,10 +17,10 @@ func init() {
 
 func TestAccRoute53ResolverRuleDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_route53_resolver_rule.example"
-	ds1ResourceName := "data.aws_route53_resolver_rule.by_resolver_rule_id"
-	ds2ResourceName := "data.aws_route53_resolver_rule.by_domain_name"
-	ds3ResourceName := "data.aws_route53_resolver_rule.by_name_and_rule_type"
+	resourceName := "aws_route53resolver_rule.example"
+	ds1ResourceName := "data.aws_route53resolver_rule.by_resolver_rule_id"
+	ds2ResourceName := "data.aws_route53resolver_rule.by_domain_name"
+	ds3ResourceName := "data.aws_route53resolver_rule.by_name_and_rule_type"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -70,8 +70,8 @@ func TestAccRoute53ResolverRuleDataSource_basic(t *testing.T) {
 
 func TestAccRoute53ResolverRuleDataSource_resolverEndpointIdWithTags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_route53_resolver_rule.example"
-	ds1ResourceName := "data.aws_route53_resolver_rule.by_resolver_endpoint_id"
+	resourceName := "aws_route53resolver_rule.example"
+	ds1ResourceName := "data.aws_route53resolver_rule.by_resolver_endpoint_id"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -103,8 +103,8 @@ func TestAccRoute53ResolverRuleDataSource_resolverEndpointIdWithTags(t *testing.
 func TestAccRoute53ResolverRuleDataSource_sharedByMe(t *testing.T) {
 	var providers []*schema.Provider
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_route53_resolver_rule.example"
-	ds1ResourceName := "data.aws_route53_resolver_rule.by_resolver_endpoint_id"
+	resourceName := "aws_route53resolver_rule.example"
+	ds1ResourceName := "data.aws_route53resolver_rule.by_resolver_endpoint_id"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -141,8 +141,8 @@ func TestAccRoute53ResolverRuleDataSource_sharedByMe(t *testing.T) {
 func TestAccRoute53ResolverRuleDataSource_sharedWithMe(t *testing.T) {
 	var providers []*schema.Provider
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_route53_resolver_rule.example"
-	ds1ResourceName := "data.aws_route53_resolver_rule.by_resolver_endpoint_id"
+	resourceName := "aws_route53resolver_rule.example"
+	ds1ResourceName := "data.aws_route53resolver_rule.by_resolver_endpoint_id"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -176,35 +176,35 @@ func TestAccRoute53ResolverRuleDataSource_sharedWithMe(t *testing.T) {
 
 func testAccRuleDataSource_basic(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_route53_resolver_rule" "example" {
+resource "aws_route53resolver_rule" "example" {
   domain_name = "%[1]s.example.com"
   rule_type   = "SYSTEM"
   name        = %[1]q
 }
 
-data "aws_route53_resolver_rule" "by_resolver_rule_id" {
-  resolver_rule_id = aws_route53_resolver_rule.example.id
+data "aws_route53resolver_rule" "by_resolver_rule_id" {
+  resolver_rule_id = aws_route53resolver_rule.example.id
 }
 
-data "aws_route53_resolver_rule" "by_domain_name" {
-  domain_name = aws_route53_resolver_rule.example.domain_name
+data "aws_route53resolver_rule" "by_domain_name" {
+  domain_name = aws_route53resolver_rule.example.domain_name
 }
 
-data "aws_route53_resolver_rule" "by_name_and_rule_type" {
-  name      = aws_route53_resolver_rule.example.name
-  rule_type = aws_route53_resolver_rule.example.rule_type
+data "aws_route53resolver_rule" "by_name_and_rule_type" {
+  name      = aws_route53resolver_rule.example.name
+  rule_type = aws_route53resolver_rule.example.rule_type
 }
 `, rName)
 }
 
 func testAccRuleDataSource_resolverEndpointIdWithTags(rName string) string {
 	return testAccRoute53ResolverRuleConfig_resolverEndpoint(rName) + fmt.Sprintf(`
-resource "aws_route53_resolver_rule" "example" {
+resource "aws_route53resolver_rule" "example" {
   domain_name = "%[1]s.example.com"
   rule_type   = "FORWARD"
   name        = %[1]q
 
-  resolver_endpoint_id = aws_route53_resolver_endpoint.bar.id
+  resolver_endpoint_id = aws_route53resolver_endpoint.bar.id
 
   target_ip {
     ip = "192.0.2.7"
@@ -216,20 +216,20 @@ resource "aws_route53_resolver_rule" "example" {
   }
 }
 
-data "aws_route53_resolver_rule" "by_resolver_endpoint_id" {
-  resolver_endpoint_id = aws_route53_resolver_rule.example.resolver_endpoint_id
+data "aws_route53resolver_rule" "by_resolver_endpoint_id" {
+  resolver_endpoint_id = aws_route53resolver_rule.example.resolver_endpoint_id
 }
 `, rName)
 }
 
 func testAccRuleDataSource_sharedByMe(rName string) string {
 	return acctest.ConfigAlternateAccountProvider() + testAccRoute53ResolverRuleConfig_resolverEndpoint(rName) + fmt.Sprintf(`
-resource "aws_route53_resolver_rule" "example" {
+resource "aws_route53resolver_rule" "example" {
   domain_name = "%[1]s.example.com"
   rule_type   = "FORWARD"
   name        = %[1]q
 
-  resolver_endpoint_id = aws_route53_resolver_endpoint.bar.id
+  resolver_endpoint_id = aws_route53resolver_endpoint.bar.id
 
   target_ip {
     ip = "192.0.2.7"
@@ -247,7 +247,7 @@ resource "aws_ram_resource_share" "test" {
 }
 
 resource "aws_ram_resource_association" "test" {
-  resource_arn       = aws_route53_resolver_rule.example.arn
+  resource_arn       = aws_route53resolver_rule.example.arn
   resource_share_arn = aws_ram_resource_share.test.arn
 }
 
@@ -258,8 +258,8 @@ resource "aws_ram_principal_association" "test" {
   resource_share_arn = aws_ram_resource_share.test.arn
 }
 
-data "aws_route53_resolver_rule" "by_resolver_endpoint_id" {
-  resolver_endpoint_id = aws_route53_resolver_rule.example.resolver_endpoint_id
+data "aws_route53resolver_rule" "by_resolver_endpoint_id" {
+  resolver_endpoint_id = aws_route53resolver_rule.example.resolver_endpoint_id
 
   depends_on = [aws_ram_resource_association.test, aws_ram_principal_association.test]
 }
@@ -268,12 +268,12 @@ data "aws_route53_resolver_rule" "by_resolver_endpoint_id" {
 
 func testAccRuleDataSource_sharedWithMe(rName string) string {
 	return acctest.ConfigAlternateAccountProvider() + testAccRoute53ResolverRuleConfig_resolverEndpoint(rName) + fmt.Sprintf(`
-resource "aws_route53_resolver_rule" "example" {
+resource "aws_route53resolver_rule" "example" {
   domain_name = "%[1]s.example.com"
   rule_type   = "FORWARD"
   name        = %[1]q
 
-  resolver_endpoint_id = aws_route53_resolver_endpoint.bar.id
+  resolver_endpoint_id = aws_route53resolver_endpoint.bar.id
 
   target_ip {
     ip = "192.0.2.7"
@@ -291,7 +291,7 @@ resource "aws_ram_resource_share" "test" {
 }
 
 resource "aws_ram_resource_association" "test" {
-  resource_arn       = aws_route53_resolver_rule.example.arn
+  resource_arn       = aws_route53resolver_rule.example.arn
   resource_share_arn = aws_ram_resource_share.test.arn
 }
 
@@ -302,10 +302,10 @@ resource "aws_ram_principal_association" "test" {
   resource_share_arn = aws_ram_resource_share.test.arn
 }
 
-data "aws_route53_resolver_rule" "by_resolver_endpoint_id" {
+data "aws_route53resolver_rule" "by_resolver_endpoint_id" {
   provider = "awsalternate"
 
-  resolver_endpoint_id = aws_route53_resolver_rule.example.resolver_endpoint_id
+  resolver_endpoint_id = aws_route53resolver_rule.example.resolver_endpoint_id
 
   depends_on = [aws_ram_resource_association.test, aws_ram_principal_association.test]
 }

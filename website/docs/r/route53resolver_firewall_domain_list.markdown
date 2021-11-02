@@ -1,19 +1,19 @@
 ---
 subcategory: "Route53 Resolver"
 layout: "aws"
-page_title: "AWS: aws_route53_resolver_firewall_domain_list"
+page_title: "AWS: aws_route53resolver_firewall_domain_list"
 description: |-
   Provides a Route 53 Resolver DNS Firewall domain list resource.
 ---
 
-# Resource: aws_route53_resolver_firewall_domain_list
+# Resource: aws_route53resolver_firewall_domain_list
 
 Provides a Route 53 Resolver DNS Firewall domain list resource.
 
 ## Example Usage
 
 ```terraform
-resource "aws_route53_resolver_firewall_domain_list" "example" {
+resource "aws_route53resolver_firewall_domain_list" "example" {
   name = "example"
 }
 ```
@@ -39,5 +39,5 @@ In addition to all arguments above, the following attributes are exported:
  Route 53 Resolver DNS Firewall domain lists can be imported using the Route 53 Resolver DNS Firewall domain list ID, e.g.,
 
 ```
-$ terraform import aws_route53_resolver_firewall_domain_list.example rslvr-fdl-0123456789abcdef
+$ terraform import aws_route53resolver_firewall_domain_list.example rslvr-fdl-0123456789abcdef
 ```

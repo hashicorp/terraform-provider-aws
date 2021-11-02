@@ -17,8 +17,8 @@ import (
 func TestAccRoute53ResolverQueryLogConfigAssociation_basic(t *testing.T) {
 	var v route53resolver.ResolverQueryLogConfigAssociation
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_route53_resolver_query_log_config_association.test"
-	queryLogConfigResourceName := "aws_route53_resolver_query_log_config.test"
+	resourceName := "aws_route53resolver_query_log_config_association.test"
+	queryLogConfigResourceName := "aws_route53resolver_query_log_config.test"
 	vpcResourceName := "aws_vpc.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -47,7 +47,7 @@ func TestAccRoute53ResolverQueryLogConfigAssociation_basic(t *testing.T) {
 func TestAccRoute53ResolverQueryLogConfigAssociation_disappears(t *testing.T) {
 	var v route53resolver.ResolverQueryLogConfigAssociation
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_route53_resolver_query_log_config_association.test"
+	resourceName := "aws_route53resolver_query_log_config_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -71,7 +71,7 @@ func testAccCheckRoute53ResolverQueryLogConfigAssociationDestroy(s *terraform.St
 	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_route53_resolver_query_log_config_association" {
+		if rs.Type != "aws_route53resolver_query_log_config_association" {
 			continue
 		}
 
@@ -127,13 +127,13 @@ resource "aws_vpc" "test" {
   }
 }
 
-resource "aws_route53_resolver_query_log_config" "test" {
+resource "aws_route53resolver_query_log_config" "test" {
   name            = %[1]q
   destination_arn = aws_cloudwatch_log_group.test.arn
 }
 
-resource "aws_route53_resolver_query_log_config_association" "test" {
-  resolver_query_log_config_id = aws_route53_resolver_query_log_config.test.id
+resource "aws_route53resolver_query_log_config_association" "test" {
+  resolver_query_log_config_id = aws_route53resolver_query_log_config.test.id
   resource_id                  = aws_vpc.test.id
 }
 `, rName)

@@ -17,7 +17,7 @@ import (
 func TestAccRoute53ResolverFirewallRule_basic(t *testing.T) {
 	var v route53resolver.FirewallRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_route53_resolver_firewall_rule.test"
+	resourceName := "aws_route53resolver_firewall_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -31,8 +31,8 @@ func TestAccRoute53ResolverFirewallRule_basic(t *testing.T) {
 					testAccCheckRoute53ResolverFirewallRuleExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "action", "ALLOW"),
-					resource.TestCheckResourceAttrPair(resourceName, "firewall_rule_group_id", "aws_route53_resolver_firewall_rule_group.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "firewall_domain_list_id", "aws_route53_resolver_firewall_domain_list.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "firewall_rule_group_id", "aws_route53resolver_firewall_rule_group.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "firewall_domain_list_id", "aws_route53resolver_firewall_domain_list.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "priority", "100"),
 				),
 			},
@@ -48,7 +48,7 @@ func TestAccRoute53ResolverFirewallRule_basic(t *testing.T) {
 func TestAccRoute53ResolverFirewallRule_block(t *testing.T) {
 	var v route53resolver.FirewallRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_route53_resolver_firewall_rule.test"
+	resourceName := "aws_route53resolver_firewall_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -77,7 +77,7 @@ func TestAccRoute53ResolverFirewallRule_block(t *testing.T) {
 func TestAccRoute53ResolverFirewallRule_blockOverride(t *testing.T) {
 	var v route53resolver.FirewallRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_route53_resolver_firewall_rule.test"
+	resourceName := "aws_route53resolver_firewall_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -109,7 +109,7 @@ func TestAccRoute53ResolverFirewallRule_blockOverride(t *testing.T) {
 func TestAccRoute53ResolverFirewallRule_disappears(t *testing.T) {
 	var v route53resolver.FirewallRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_route53_resolver_firewall_rule.test"
+	resourceName := "aws_route53resolver_firewall_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -133,7 +133,7 @@ func testAccCheckRoute53ResolverFirewallRuleDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_route53_resolver_firewall_rule" {
+		if rs.Type != "aws_route53resolver_firewall_rule" {
 			continue
 		}
 
@@ -177,19 +177,19 @@ func testAccCheckRoute53ResolverFirewallRuleExists(n string, v *route53resolver.
 
 func testAccRoute53ResolverFirewallRuleConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_route53_resolver_firewall_rule_group" "test" {
+resource "aws_route53resolver_firewall_rule_group" "test" {
   name = %[1]q
 }
 
-resource "aws_route53_resolver_firewall_domain_list" "test" {
+resource "aws_route53resolver_firewall_domain_list" "test" {
   name = %[1]q
 }
 
-resource "aws_route53_resolver_firewall_rule" "test" {
+resource "aws_route53resolver_firewall_rule" "test" {
   name                    = %[1]q
   action                  = "ALLOW"
-  firewall_rule_group_id  = aws_route53_resolver_firewall_rule_group.test.id
-  firewall_domain_list_id = aws_route53_resolver_firewall_domain_list.test.id
+  firewall_rule_group_id  = aws_route53resolver_firewall_rule_group.test.id
+  firewall_domain_list_id = aws_route53resolver_firewall_domain_list.test.id
   priority                = 100
 }
 `, rName)
@@ -197,20 +197,20 @@ resource "aws_route53_resolver_firewall_rule" "test" {
 
 func testAccRoute53ResolverFirewallRuleConfig_block(rName, blockResponse string) string {
 	return fmt.Sprintf(`
-resource "aws_route53_resolver_firewall_rule_group" "test" {
+resource "aws_route53resolver_firewall_rule_group" "test" {
   name = %[1]q
 }
 
-resource "aws_route53_resolver_firewall_domain_list" "test" {
+resource "aws_route53resolver_firewall_domain_list" "test" {
   name = %[1]q
 }
 
-resource "aws_route53_resolver_firewall_rule" "test" {
+resource "aws_route53resolver_firewall_rule" "test" {
   name                    = %[1]q
   action                  = "BLOCK"
   block_response          = %[2]q
-  firewall_rule_group_id  = aws_route53_resolver_firewall_rule_group.test.id
-  firewall_domain_list_id = aws_route53_resolver_firewall_domain_list.test.id
+  firewall_rule_group_id  = aws_route53resolver_firewall_rule_group.test.id
+  firewall_domain_list_id = aws_route53resolver_firewall_domain_list.test.id
   priority                = 100
 }
 `, rName, blockResponse)
@@ -218,23 +218,23 @@ resource "aws_route53_resolver_firewall_rule" "test" {
 
 func testAccRoute53ResolverFirewallRuleConfig_blockOverride(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_route53_resolver_firewall_rule_group" "test" {
+resource "aws_route53resolver_firewall_rule_group" "test" {
   name = %[1]q
 }
 
-resource "aws_route53_resolver_firewall_domain_list" "test" {
+resource "aws_route53resolver_firewall_domain_list" "test" {
   name = %[1]q
 }
 
-resource "aws_route53_resolver_firewall_rule" "test" {
+resource "aws_route53resolver_firewall_rule" "test" {
   name                    = %[1]q
   action                  = "BLOCK"
   block_override_dns_type = "CNAME"
   block_override_domain   = "example.com."
   block_override_ttl      = 60
   block_response          = "OVERRIDE"
-  firewall_rule_group_id  = aws_route53_resolver_firewall_rule_group.test.id
-  firewall_domain_list_id = aws_route53_resolver_firewall_domain_list.test.id
+  firewall_rule_group_id  = aws_route53resolver_firewall_rule_group.test.id
+  firewall_domain_list_id = aws_route53resolver_firewall_domain_list.test.id
   priority                = 100
 }
 `, rName)

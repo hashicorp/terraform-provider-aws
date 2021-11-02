@@ -633,9 +633,12 @@ func Provider() *schema.Provider {
 			"aws_route53_delegation_set": route53.DataSourceDelegationSet(),
 			"aws_route53_zone":           route53.DataSourceZone(),
 
-			"aws_route53_resolver_endpoint": route53resolver.DataSourceEndpoint(),
-			"aws_route53_resolver_rule":     route53resolver.DataSourceRule(),
-			"aws_route53_resolver_rules":    route53resolver.DataSourceRules(),
+			"aws_route53resolver_endpoint":  route53resolver.DataSourceEndpoint(),
+			"aws_route53resolver_rule":      route53resolver.DataSourceRule(),
+			"aws_route53resolver_rules":     route53resolver.DataSourceRules(),
+			"aws_route53_resolver_endpoint": route53resolver.DataSourceEndpoint(), // backward compatible alias
+			"aws_route53_resolver_rule":     route53resolver.DataSourceRule(),     // backward compatible alias
+			"aws_route53_resolver_rules":    route53resolver.DataSourceRules(),    // backward compatible alias
 
 			"aws_canonical_user_id": s3.DataSourceCanonicalUserID(),
 			"aws_s3_bucket":         s3.DataSourceBucket(),
@@ -1447,17 +1450,28 @@ func Provider() *schema.Provider {
 			"aws_route53recoveryreadiness_recovery_group":  route53recoveryreadiness.ResourceRecoveryGroup(),
 			"aws_route53recoveryreadiness_resource_set":    route53recoveryreadiness.ResourceResourceSet(),
 
-			"aws_route53_resolver_dnssec_config":                   route53resolver.ResourceDNSSECConfig(),
-			"aws_route53_resolver_endpoint":                        route53resolver.ResourceEndpoint(),
-			"aws_route53_resolver_firewall_config":                 route53resolver.ResourceFirewallConfig(),
-			"aws_route53_resolver_firewall_domain_list":            route53resolver.ResourceFirewallDomainList(),
-			"aws_route53_resolver_firewall_rule":                   route53resolver.ResourceFirewallRule(),
-			"aws_route53_resolver_firewall_rule_group":             route53resolver.ResourceFirewallRuleGroup(),
-			"aws_route53_resolver_firewall_rule_group_association": route53resolver.ResourceFirewallRuleGroupAssociation(),
-			"aws_route53_resolver_query_log_config":                route53resolver.ResourceQueryLogConfig(),
-			"aws_route53_resolver_query_log_config_association":    route53resolver.ResourceQueryLogConfigAssociation(),
-			"aws_route53_resolver_rule":                            route53resolver.ResourceRule(),
-			"aws_route53_resolver_rule_association":                route53resolver.ResourceRuleAssociation(),
+			"aws_route53resolver_dnssec_config":                    route53resolver.ResourceDNSSECConfig(),
+			"aws_route53resolver_endpoint":                         route53resolver.ResourceEndpoint(),
+			"aws_route53resolver_firewall_config":                  route53resolver.ResourceFirewallConfig(),
+			"aws_route53resolver_firewall_domain_list":             route53resolver.ResourceFirewallDomainList(),
+			"aws_route53resolver_firewall_rule":                    route53resolver.ResourceFirewallRule(),
+			"aws_route53resolver_firewall_rule_group":              route53resolver.ResourceFirewallRuleGroup(),
+			"aws_route53resolver_firewall_rule_group_association":  route53resolver.ResourceFirewallRuleGroupAssociation(),
+			"aws_route53resolver_query_log_config":                 route53resolver.ResourceQueryLogConfig(),
+			"aws_route53resolver_query_log_config_association":     route53resolver.ResourceQueryLogConfigAssociation(),
+			"aws_route53resolver_rule":                             route53resolver.ResourceRule(),
+			"aws_route53resolver_rule_association":                 route53resolver.ResourceRuleAssociation(),
+			"aws_route53_resolver_dnssec_config":                   route53resolver.ResourceDNSSECConfig(),                 // backward compatible alias
+			"aws_route53_resolver_endpoint":                        route53resolver.ResourceEndpoint(),                     // backward compatible alias
+			"aws_route53_resolver_firewall_config":                 route53resolver.ResourceFirewallConfig(),               // backward compatible alias
+			"aws_route53_resolver_firewall_domain_list":            route53resolver.ResourceFirewallDomainList(),           // backward compatible alias
+			"aws_route53_resolver_firewall_rule":                   route53resolver.ResourceFirewallRule(),                 // backward compatible alias
+			"aws_route53_resolver_firewall_rule_group":             route53resolver.ResourceFirewallRuleGroup(),            // backward compatible alias
+			"aws_route53_resolver_firewall_rule_group_association": route53resolver.ResourceFirewallRuleGroupAssociation(), // backward compatible alias
+			"aws_route53_resolver_query_log_config":                route53resolver.ResourceQueryLogConfig(),               // backward compatible alias
+			"aws_route53_resolver_query_log_config_association":    route53resolver.ResourceQueryLogConfigAssociation(),    // backward compatible alias
+			"aws_route53_resolver_rule":                            route53resolver.ResourceRule(),                         // backward compatible alias
+			"aws_route53_resolver_rule_association":                route53resolver.ResourceRuleAssociation(),              // backward compatible alias
 
 			"aws_s3_bucket":                         s3.ResourceBucket(),
 			"aws_s3_bucket_analytics_configuration": s3.ResourceBucketAnalyticsConfiguration(),

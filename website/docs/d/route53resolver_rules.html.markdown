@@ -1,21 +1,21 @@
 ---
 subcategory: "Route53 Resolver"
 layout: "aws"
-page_title: "AWS: aws_route53_resolver_rules"
+page_title: "AWS: aws_route53resolver_rules"
 description: |-
     Provides details about a set of Route53 Resolver rules
 ---
 
-# Data Source: aws_route53_resolver_rules
+# Data Source: aws_route53resolver_rules
 
-`aws_route53_resolver_rules` provides details about a set of Route53 Resolver rules.
+`aws_route53resolver_rules` provides details about a set of Route53 Resolver rules.
 
 ## Example Usage
 
 Retrieving the default resolver rule.
 
 ```terraform
-data "aws_route53_resolver_rules" "example" {
+data "aws_route53resolver_rules" "example" {
   owner_id     = "Route 53 Resolver"
   rule_type    = "RECURSIVE"
   share_status = "NOT_SHARED"
@@ -23,7 +23,7 @@ data "aws_route53_resolver_rules" "example" {
 ```
 
 ```terraform
-data "aws_route53_resolver_rules" "example" {
+data "aws_route53resolver_rules" "example" {
   rule_type    = "FORWARD"
   share_status = "SHARED_WITH_ME"
 }

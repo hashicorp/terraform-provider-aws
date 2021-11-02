@@ -1,19 +1,19 @@
 ---
 subcategory: "Route53 Resolver"
 layout: "aws"
-page_title: "AWS: aws_route53_resolver_endpoint"
+page_title: "AWS: aws_route53resolver_endpoint"
 description: |-
   Provides a Route 53 Resolver endpoint resource.
 ---
 
-# Resource: aws_route53_resolver_endpoint
+# Resource: aws_route53resolver_endpoint
 
 Provides a Route 53 Resolver endpoint resource.
 
 ## Example Usage
 
 ```terraform
-resource "aws_route53_resolver_endpoint" "foo" {
+resource "aws_route53resolver_endpoint" "foo" {
   name      = "foo"
   direction = "INBOUND"
 
@@ -66,7 +66,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_route53_resolver_endpoint` provides the following
+`aws_route53resolver_endpoint` provides the following
 [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
 
 - `create` - (Default `10 minutes`) Used for creating Route 53 Resolver endpoint
@@ -78,5 +78,5 @@ In addition to all arguments above, the following attributes are exported:
  Route 53 Resolver endpoints can be imported using the Route 53 Resolver endpoint ID, e.g.,
 
 ```
-$ terraform import aws_route53_resolver_endpoint.foo rslvr-in-abcdef01234567890
+$ terraform import aws_route53resolver_endpoint.foo rslvr-in-abcdef01234567890
 ```

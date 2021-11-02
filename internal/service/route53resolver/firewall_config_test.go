@@ -17,7 +17,7 @@ import (
 
 func TestAccRoute53ResolverFirewallConfig_basic(t *testing.T) {
 	var v route53resolver.FirewallConfig
-	resourceName := "aws_route53_resolver_firewall_config.test"
+	resourceName := "aws_route53resolver_firewall_config.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -45,7 +45,7 @@ func TestAccRoute53ResolverFirewallConfig_basic(t *testing.T) {
 
 func TestAccRoute53ResolverFirewallConfig_disappears(t *testing.T) {
 	var v route53resolver.FirewallConfig
-	resourceName := "aws_route53_resolver_firewall_config.test"
+	resourceName := "aws_route53resolver_firewall_config.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -70,7 +70,7 @@ func testAccCheckRoute53ResolverFirewallConfigDestroy(s *terraform.State) error 
 	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_route53_resolver_firewall_config" {
+		if rs.Type != "aws_route53resolver_firewall_config" {
 			continue
 		}
 
@@ -129,7 +129,7 @@ resource "aws_vpc" "test" {
   }
 }
 
-resource "aws_route53_resolver_firewall_config" "test" {
+resource "aws_route53resolver_firewall_config" "test" {
   resource_id        = aws_vpc.test.id
   firewall_fail_open = "ENABLED"
 }

@@ -17,7 +17,7 @@ import (
 func TestAccRoute53ResolverFirewallRuleGroup_basic(t *testing.T) {
 	var v route53resolver.FirewallRuleGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_route53_resolver_firewall_rule_group.test"
+	resourceName := "aws_route53resolver_firewall_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -47,7 +47,7 @@ func TestAccRoute53ResolverFirewallRuleGroup_basic(t *testing.T) {
 func TestAccRoute53ResolverFirewallRuleGroup_disappears(t *testing.T) {
 	var v route53resolver.FirewallRuleGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_route53_resolver_firewall_rule_group.test"
+	resourceName := "aws_route53resolver_firewall_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -70,7 +70,7 @@ func TestAccRoute53ResolverFirewallRuleGroup_disappears(t *testing.T) {
 func TestAccRoute53ResolverFirewallRuleGroup_tags(t *testing.T) {
 	var v route53resolver.FirewallRuleGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_route53_resolver_firewall_rule_group.test"
+	resourceName := "aws_route53resolver_firewall_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -125,7 +125,7 @@ func testAccCheckRoute53ResolverFirewallRuleGroupDestroy(s *terraform.State) err
 	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_route53_resolver_firewall_rule_group" {
+		if rs.Type != "aws_route53resolver_firewall_rule_group" {
 			continue
 		}
 
@@ -169,7 +169,7 @@ func testAccCheckRoute53ResolverFirewallRuleGroupExists(n string, v *route53reso
 
 func testAccRoute53ResolverFirewallRuleGroupConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_route53_resolver_firewall_rule_group" "test" {
+resource "aws_route53resolver_firewall_rule_group" "test" {
   name = %[1]q
 }
 `, rName)
@@ -177,7 +177,7 @@ resource "aws_route53_resolver_firewall_rule_group" "test" {
 
 func testAccRoute53ResolverFirewallRuleGroupConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
-resource "aws_route53_resolver_firewall_rule_group" "test" {
+resource "aws_route53resolver_firewall_rule_group" "test" {
   name = %[1]q
   tags = {
     %[2]q = %[3]q
@@ -188,7 +188,7 @@ resource "aws_route53_resolver_firewall_rule_group" "test" {
 
 func testAccRoute53ResolverFirewallRuleGroupConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
-resource "aws_route53_resolver_firewall_rule_group" "test" {
+resource "aws_route53resolver_firewall_rule_group" "test" {
   name = %[1]q
   tags = {
     %[2]q = %[3]q

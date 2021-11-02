@@ -1,12 +1,12 @@
 ---
 subcategory: "Route53 Resolver"
 layout: "aws"
-page_title: "AWS: aws_route53_resolver_rule"
+page_title: "AWS: aws_route53resolver_rule"
 description: |-
   Provides a Route53 Resolver rule.
 ---
 
-# Resource: aws_route53_resolver_rule
+# Resource: aws_route53resolver_rule
 
 Provides a Route53 Resolver rule.
 
@@ -15,7 +15,7 @@ Provides a Route53 Resolver rule.
 ### System rule
 
 ```terraform
-resource "aws_route53_resolver_rule" "sys" {
+resource "aws_route53resolver_rule" "sys" {
   domain_name = "subdomain.example.com"
   rule_type   = "SYSTEM"
 }
@@ -24,11 +24,11 @@ resource "aws_route53_resolver_rule" "sys" {
 ### Forward rule
 
 ```terraform
-resource "aws_route53_resolver_rule" "fwd" {
+resource "aws_route53resolver_rule" "fwd" {
   domain_name          = "example.com"
   name                 = "example"
   rule_type            = "FORWARD"
-  resolver_endpoint_id = aws_route53_resolver_endpoint.foo.id
+  resolver_endpoint_id = aws_route53resolver_endpoint.foo.id
 
   target_ip {
     ip = "123.45.67.89"
@@ -74,5 +74,5 @@ Values are `NOT_SHARED`, `SHARED_BY_ME` or `SHARED_WITH_ME`
 Route53 Resolver rules can be imported using the `id`, e.g.,
 
 ```
-$ terraform import aws_route53_resolver_rule.sys rslvr-rr-0123456789abcdef0
+$ terraform import aws_route53resolver_rule.sys rslvr-rr-0123456789abcdef0
 ```

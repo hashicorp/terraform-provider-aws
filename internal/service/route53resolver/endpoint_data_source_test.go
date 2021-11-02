@@ -15,8 +15,8 @@ func TestAccRoute53ResolverEndpointDataSource_basic(t *testing.T) {
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rInt := sdkacctest.RandInt()
 	direction := "INBOUND"
-	resourceName := "aws_route53_resolver_endpoint.foo"
-	datasourceName := "data.aws_route53_resolver_endpoint.foo"
+	resourceName := "aws_route53resolver_endpoint.foo"
+	datasourceName := "data.aws_route53resolver_endpoint.foo"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
@@ -44,8 +44,8 @@ func TestAccRoute53ResolverEndpointDataSource_filter(t *testing.T) {
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rInt := sdkacctest.RandInt()
 	direction := "OUTBOUND"
-	resourceName := "aws_route53_resolver_endpoint.foo"
-	datasourceName := "data.aws_route53_resolver_endpoint.foo"
+	resourceName := "aws_route53resolver_endpoint.foo"
+	datasourceName := "data.aws_route53resolver_endpoint.foo"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
@@ -133,7 +133,7 @@ resource "aws_security_group" "sg2" {
 
 func testAccDataSourceRoute53ResolverEndpointConfig_initial(rInt int, direction, name string) string {
 	return acctest.ConfigCompose(testAccDataSourceRoute53ResolverEndpointConfig_base(rInt), fmt.Sprintf(`
-resource "aws_route53_resolver_endpoint" "foo" {
+resource "aws_route53resolver_endpoint" "foo" {
   direction = "%s"
   name      = "%s"
 
@@ -157,15 +157,15 @@ resource "aws_route53_resolver_endpoint" "foo" {
   }
 }
 
-data "aws_route53_resolver_endpoint" "foo" {
-  resolver_endpoint_id = aws_route53_resolver_endpoint.foo.id
+data "aws_route53resolver_endpoint" "foo" {
+  resolver_endpoint_id = aws_route53resolver_endpoint.foo.id
 }
 `, direction, name))
 }
 
 func testAccDataSourceRoute53ResolverEndpointConfig_filter(rInt int, direction, name string) string {
 	return acctest.ConfigCompose(testAccDataSourceRoute53ResolverEndpointConfig_base(rInt), fmt.Sprintf(`
-resource "aws_route53_resolver_endpoint" "foo" {
+resource "aws_route53resolver_endpoint" "foo" {
   direction = "%s"
   name      = "%s"
 
@@ -189,10 +189,10 @@ resource "aws_route53_resolver_endpoint" "foo" {
   }
 }
 
-data "aws_route53_resolver_endpoint" "foo" {
+data "aws_route53resolver_endpoint" "foo" {
   filter {
     name   = "Name"
-    values = [aws_route53_resolver_endpoint.foo.name]
+    values = [aws_route53resolver_endpoint.foo.name]
   }
 
   filter {
@@ -204,13 +204,13 @@ data "aws_route53_resolver_endpoint" "foo" {
 }
 
 const testAccEndpointDataSourceConfig_NonExistent = `
-data "aws_route53_resolver_endpoint" "foo" {
+data "aws_route53resolver_endpoint" "foo" {
   resolver_endpoint_id = "rslvr-in-8g85830108dd4c82b"
 }
 `
 
 const testAccEndpointDataSourceConfig_NonExistentFilter = `
-data "aws_route53_resolver_endpoint" "foo" {
+data "aws_route53resolver_endpoint" "foo" {
   filter {
     name   = "Name"
     values = ["None-Existent-Resource"]

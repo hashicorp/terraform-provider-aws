@@ -1,27 +1,27 @@
 ---
 subcategory: "Route53 Resolver"
 layout: "aws"
-page_title: "AWS: aws_route53_resolver_endpoint"
+page_title: "AWS: aws_route53resolver_endpoint"
 description: |-
     Provides details about a specific Route 53 Resolver Endpoint
 ---
 
-# Data Source: aws_route53_resolver_endpoint
+# Data Source: aws_route53resolver_endpoint
 
-`aws_route53_resolver_endpoint` provides details about a specific Route53 Resolver Endpoint.
+`aws_route53resolver_endpoint` provides details about a specific Route53 Resolver Endpoint.
 
 This data source allows to find a list of IPaddresses associated with a specific Route53 Resolver Endpoint.
 
 ## Example Usage
 
 ```terraform
-data "aws_route53_resolver_endpoint" "example" {
+data "aws_route53resolver_endpoint" "example" {
   resolver_endpoint_id = "rslvr-in-1abc2345ef678g91h"
 }
 ```
 
 ```terraform
-data "aws_route53_resolver_endpoint" "example" {
+data "aws_route53resolver_endpoint" "example" {
   filter {
     name   = "NAME"
     values = ["MyResolverExampleName"]

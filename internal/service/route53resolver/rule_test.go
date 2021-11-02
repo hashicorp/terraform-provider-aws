@@ -16,7 +16,7 @@ import (
 
 func TestAccRoute53ResolverRule_basic(t *testing.T) {
 	var rule route53resolver.ResolverRule
-	resourceName := "aws_route53_resolver_rule.example"
+	resourceName := "aws_route53resolver_rule.example"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -46,7 +46,7 @@ func TestAccRoute53ResolverRule_basic(t *testing.T) {
 
 func TestAccRoute53ResolverRule_justDotDomainName(t *testing.T) {
 	var rule route53resolver.ResolverRule
-	resourceName := "aws_route53_resolver_rule.example"
+	resourceName := "aws_route53resolver_rule.example"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -76,7 +76,7 @@ func TestAccRoute53ResolverRule_justDotDomainName(t *testing.T) {
 
 func TestAccRoute53ResolverRule_trailingDotDomainName(t *testing.T) {
 	var rule route53resolver.ResolverRule
-	resourceName := "aws_route53_resolver_rule.example"
+	resourceName := "aws_route53resolver_rule.example"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -106,7 +106,7 @@ func TestAccRoute53ResolverRule_trailingDotDomainName(t *testing.T) {
 
 func TestAccRoute53ResolverRule_tags(t *testing.T) {
 	var rule route53resolver.ResolverRule
-	resourceName := "aws_route53_resolver_rule.example"
+	resourceName := "aws_route53resolver_rule.example"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -157,7 +157,7 @@ func TestAccRoute53ResolverRule_tags(t *testing.T) {
 
 func TestAccRoute53ResolverRule_updateName(t *testing.T) {
 	var rule1, rule2 route53resolver.ResolverRule
-	resourceName := "aws_route53_resolver_rule.example"
+	resourceName := "aws_route53resolver_rule.example"
 	name1 := fmt.Sprintf("terraform-testacc-r53-resolver-%d", sdkacctest.RandInt())
 	name2 := fmt.Sprintf("terraform-testacc-r53-resolver-%d", sdkacctest.RandInt())
 
@@ -197,9 +197,9 @@ func TestAccRoute53ResolverRule_updateName(t *testing.T) {
 
 func TestAccRoute53ResolverRule_forward(t *testing.T) {
 	var rule1, rule2, rule3 route53resolver.ResolverRule
-	resourceName := "aws_route53_resolver_rule.example"
-	resourceNameEp1 := "aws_route53_resolver_endpoint.foo"
-	resourceNameEp2 := "aws_route53_resolver_endpoint.bar"
+	resourceName := "aws_route53resolver_rule.example"
+	resourceNameEp1 := "aws_route53resolver_endpoint.foo"
+	resourceNameEp2 := "aws_route53resolver_endpoint.bar"
 	name := fmt.Sprintf("terraform-testacc-r53-resolver-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -274,8 +274,8 @@ func TestAccRoute53ResolverRule_forward(t *testing.T) {
 
 func TestAccRoute53ResolverRule_forwardEndpointRecreate(t *testing.T) {
 	var rule1, rule2 route53resolver.ResolverRule
-	resourceName := "aws_route53_resolver_rule.example"
-	resourceNameEp := "aws_route53_resolver_endpoint.foo"
+	resourceName := "aws_route53resolver_rule.example"
+	resourceNameEp := "aws_route53resolver_endpoint.foo"
 	name := fmt.Sprintf("terraform-testacc-r53-resolver-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -341,7 +341,7 @@ func testAccCheckRoute53ResolverRuleDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_route53_resolver_rule" {
+		if rs.Type != "aws_route53resolver_rule" {
 			continue
 		}
 
@@ -388,7 +388,7 @@ func testAccCheckRoute53ResolverRuleExists(n string, rule *route53resolver.Resol
 
 func testAccRoute53ResolverRuleConfig(domainName string) string {
 	return fmt.Sprintf(`
-resource "aws_route53_resolver_rule" "example" {
+resource "aws_route53resolver_rule" "example" {
   domain_name = %[1]q
   rule_type   = "SYSTEM"
 }
@@ -396,14 +396,14 @@ resource "aws_route53_resolver_rule" "example" {
 }
 
 const testAccRoute53ResolverRuleConfig_basicNoTags = `
-resource "aws_route53_resolver_rule" "example" {
+resource "aws_route53resolver_rule" "example" {
   domain_name = "example.com"
   rule_type   = "SYSTEM"
 }
 `
 
 const testAccRoute53ResolverRuleConfig_basicTags = `
-resource "aws_route53_resolver_rule" "example" {
+resource "aws_route53resolver_rule" "example" {
   domain_name = "example.com"
   rule_type   = "SYSTEM"
 
@@ -415,7 +415,7 @@ resource "aws_route53_resolver_rule" "example" {
 `
 
 const testAccRoute53ResolverRuleConfig_basicTagsChanged = `
-resource "aws_route53_resolver_rule" "example" {
+resource "aws_route53resolver_rule" "example" {
   domain_name = "example.com"
   rule_type   = "SYSTEM"
 
@@ -427,7 +427,7 @@ resource "aws_route53_resolver_rule" "example" {
 
 func testAccRoute53ResolverRuleConfig_basicName(name string) string {
 	return fmt.Sprintf(`
-resource "aws_route53_resolver_rule" "example" {
+resource "aws_route53resolver_rule" "example" {
   domain_name = "example.com"
   rule_type   = "SYSTEM"
   name        = %q
@@ -439,12 +439,12 @@ func testAccRoute53ResolverRuleConfig_forward(name string) string {
 	return fmt.Sprintf(`
 %s
 
-resource "aws_route53_resolver_rule" "example" {
+resource "aws_route53resolver_rule" "example" {
   domain_name = "example.com"
   rule_type   = "FORWARD"
   name        = %q
 
-  resolver_endpoint_id = aws_route53_resolver_endpoint.foo.id
+  resolver_endpoint_id = aws_route53resolver_endpoint.foo.id
 
   target_ip {
     ip = "192.0.2.6"
@@ -457,12 +457,12 @@ func testAccRoute53ResolverRuleConfig_forwardTargetIpChanged(name string) string
 	return fmt.Sprintf(`
 %s
 
-resource "aws_route53_resolver_rule" "example" {
+resource "aws_route53resolver_rule" "example" {
   domain_name = "example.com"
   rule_type   = "FORWARD"
   name        = %q
 
-  resolver_endpoint_id = aws_route53_resolver_endpoint.foo.id
+  resolver_endpoint_id = aws_route53resolver_endpoint.foo.id
 
   target_ip {
     ip = "192.0.2.7"
@@ -480,12 +480,12 @@ func testAccRoute53ResolverRuleConfig_forwardEndpointChanged(name string) string
 	return fmt.Sprintf(`
 %s
 
-resource "aws_route53_resolver_rule" "example" {
+resource "aws_route53resolver_rule" "example" {
   domain_name = "example.com"
   rule_type   = "FORWARD"
   name        = %q
 
-  resolver_endpoint_id = aws_route53_resolver_endpoint.bar.id
+  resolver_endpoint_id = aws_route53resolver_endpoint.bar.id
 
   target_ip {
     ip = "192.0.2.7"
@@ -503,12 +503,12 @@ func testAccRoute53ResolverRuleConfig_forwardEndpointRecreate(name string) strin
 	return fmt.Sprintf(`
 %s
 
-resource "aws_route53_resolver_rule" "example" {
+resource "aws_route53resolver_rule" "example" {
   domain_name = "example.com"
   rule_type   = "FORWARD"
   name        = %q
 
-  resolver_endpoint_id = aws_route53_resolver_endpoint.foo.id
+  resolver_endpoint_id = aws_route53resolver_endpoint.foo.id
 
   target_ip {
     ip = "192.0.2.6"
@@ -592,7 +592,7 @@ func testAccRoute53ResolverRuleConfig_resolverEndpoint(name string) string {
 	return fmt.Sprintf(`
 %[1]s
 
-resource "aws_route53_resolver_endpoint" "foo" {
+resource "aws_route53resolver_endpoint" "foo" {
   direction = "OUTBOUND"
   name      = "%[2]s_1"
 
@@ -609,7 +609,7 @@ resource "aws_route53_resolver_endpoint" "foo" {
   }
 }
 
-resource "aws_route53_resolver_endpoint" "bar" {
+resource "aws_route53resolver_endpoint" "bar" {
   direction = "OUTBOUND"
   name      = "%[2]s_2"
 
@@ -632,7 +632,7 @@ func testAccRoute53ResolverRuleConfig_resolverEndpointRecreate(name string) stri
 	return fmt.Sprintf(`
 %[1]s
 
-resource "aws_route53_resolver_endpoint" "foo" {
+resource "aws_route53resolver_endpoint" "foo" {
   direction = "OUTBOUND"
   name      = "%[2]s_1"
 
@@ -649,7 +649,7 @@ resource "aws_route53_resolver_endpoint" "foo" {
   }
 }
 
-resource "aws_route53_resolver_endpoint" "bar" {
+resource "aws_route53resolver_endpoint" "bar" {
   direction = "OUTBOUND"
   name      = "%[2]s_2"
 

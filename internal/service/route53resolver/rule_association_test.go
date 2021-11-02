@@ -17,8 +17,8 @@ import (
 func TestAccRoute53ResolverRuleAssociation_basic(t *testing.T) {
 	var assn route53resolver.ResolverRuleAssociation
 	resourceNameVpc := "aws_vpc.example"
-	resourceNameRule := "aws_route53_resolver_rule.example"
-	resourceNameAssoc := "aws_route53_resolver_rule_association.example"
+	resourceNameRule := "aws_route53resolver_rule.example"
+	resourceNameAssoc := "aws_route53resolver_rule_association.example"
 	name := fmt.Sprintf("terraform-testacc-r53-resolver-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -48,7 +48,7 @@ func TestAccRoute53ResolverRuleAssociation_basic(t *testing.T) {
 func testAccCheckRoute53ResolverRuleAssociationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_route53_resolver_rule_association" {
+		if rs.Type != "aws_route53resolver_rule_association" {
 			continue
 		}
 
@@ -105,15 +105,15 @@ resource "aws_vpc" "example" {
   }
 }
 
-resource "aws_route53_resolver_rule" "example" {
+resource "aws_route53resolver_rule" "example" {
   domain_name = "example.com"
   name        = %[1]q
   rule_type   = "SYSTEM"
 }
 
-resource "aws_route53_resolver_rule_association" "example" {
+resource "aws_route53resolver_rule_association" "example" {
   name             = %[1]q
-  resolver_rule_id = aws_route53_resolver_rule.example.id
+  resolver_rule_id = aws_route53resolver_rule.example.id
   vpc_id           = aws_vpc.example.id
 }
 `, name)

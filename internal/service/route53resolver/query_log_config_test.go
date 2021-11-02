@@ -17,7 +17,7 @@ import (
 func TestAccRoute53ResolverQueryLogConfig_basic(t *testing.T) {
 	var v route53resolver.ResolverQueryLogConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_route53_resolver_query_log_config.test"
+	resourceName := "aws_route53resolver_query_log_config.test"
 	s3BucketResourceName := "aws_s3_bucket.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -49,7 +49,7 @@ func TestAccRoute53ResolverQueryLogConfig_basic(t *testing.T) {
 func TestAccRoute53ResolverQueryLogConfig_disappears(t *testing.T) {
 	var v route53resolver.ResolverQueryLogConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_route53_resolver_query_log_config.test"
+	resourceName := "aws_route53resolver_query_log_config.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -72,7 +72,7 @@ func TestAccRoute53ResolverQueryLogConfig_disappears(t *testing.T) {
 func TestAccRoute53ResolverQueryLogConfig_tags(t *testing.T) {
 	var v route53resolver.ResolverQueryLogConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_route53_resolver_query_log_config.test"
+	resourceName := "aws_route53resolver_query_log_config.test"
 	cwLogGroupResourceName := "aws_cloudwatch_log_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -131,7 +131,7 @@ func testAccCheckRoute53ResolverQueryLogConfigDestroy(s *terraform.State) error 
 	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_route53_resolver_query_log_config" {
+		if rs.Type != "aws_route53resolver_query_log_config" {
 			continue
 		}
 
@@ -180,7 +180,7 @@ resource "aws_s3_bucket" "test" {
   force_destroy = true
 }
 
-resource "aws_route53_resolver_query_log_config" "test" {
+resource "aws_route53resolver_query_log_config" "test" {
   name            = %[1]q
   destination_arn = aws_s3_bucket.test.arn
 }
@@ -193,7 +193,7 @@ resource "aws_cloudwatch_log_group" "test" {
   name = %[1]q
 }
 
-resource "aws_route53_resolver_query_log_config" "test" {
+resource "aws_route53resolver_query_log_config" "test" {
   name            = %[1]q
   destination_arn = aws_cloudwatch_log_group.test.arn
 
@@ -210,7 +210,7 @@ resource "aws_cloudwatch_log_group" "test" {
   name = %[1]q
 }
 
-resource "aws_route53_resolver_query_log_config" "test" {
+resource "aws_route53resolver_query_log_config" "test" {
   name            = %[1]q
   destination_arn = aws_cloudwatch_log_group.test.arn
 

@@ -17,80 +17,80 @@ import (
 )
 
 func init() {
-	resource.AddTestSweepers("aws_route53_resolver_dnssec_config", &resource.Sweeper{
-		Name: "aws_route53_resolver_dnssec_config",
+	resource.AddTestSweepers("aws_route53resolver_dnssec_config", &resource.Sweeper{
+		Name: "aws_route53resolver_dnssec_config",
 		F:    sweepDNSSECConfig,
 	})
 
-	resource.AddTestSweepers("aws_route53_resolver_endpoint", &resource.Sweeper{
-		Name: "aws_route53_resolver_endpoint",
+	resource.AddTestSweepers("aws_route53resolver_endpoint", &resource.Sweeper{
+		Name: "aws_route53resolver_endpoint",
 		F:    sweepEndpoints,
 		Dependencies: []string{
-			"aws_route53_resolver_rule",
+			"aws_route53resolver_rule",
 		},
 	})
 
-	resource.AddTestSweepers("aws_route53_resolver_firewall_config", &resource.Sweeper{
-		Name: "aws_route53_resolver_firewall_config",
+	resource.AddTestSweepers("aws_route53resolver_firewall_config", &resource.Sweeper{
+		Name: "aws_route53resolver_firewall_config",
 		F:    sweepFirewallsConfig,
 		Dependencies: []string{
-			"aws_route53_resolver_firewall_config_association",
+			"aws_route53resolver_firewall_config_association",
 		},
 	})
 
-	resource.AddTestSweepers("aws_route53_resolver_firewall_domain_list", &resource.Sweeper{
-		Name: "aws_route53_resolver_firewall_domain_list",
+	resource.AddTestSweepers("aws_route53resolver_firewall_domain_list", &resource.Sweeper{
+		Name: "aws_route53resolver_firewall_domain_list",
 		F:    sweepFirewallDomainLists,
 		Dependencies: []string{
-			"aws_route53_resolver_firewall_rule",
+			"aws_route53resolver_firewall_rule",
 		},
 	})
 
-	resource.AddTestSweepers("aws_route53_resolver_firewall_rule_group_association", &resource.Sweeper{
-		Name: "aws_route53_resolver_firewall_rule_group_association",
+	resource.AddTestSweepers("aws_route53resolver_firewall_rule_group_association", &resource.Sweeper{
+		Name: "aws_route53resolver_firewall_rule_group_association",
 		F:    sweepFirewallRuleGroupAssociations,
 	})
 
-	resource.AddTestSweepers("aws_route53_resolver_firewall_rule_group", &resource.Sweeper{
-		Name: "aws_route53_resolver_firewall_rule_group",
+	resource.AddTestSweepers("aws_route53resolver_firewall_rule_group", &resource.Sweeper{
+		Name: "aws_route53resolver_firewall_rule_group",
 		F:    sweepFirewallRuleGroups,
 		Dependencies: []string{
-			"aws_route53_resolver_firewall_rule",
-			"aws_route53_resolver_firewall_rule_group_association",
+			"aws_route53resolver_firewall_rule",
+			"aws_route53resolver_firewall_rule_group_association",
 		},
 	})
 
-	resource.AddTestSweepers("aws_route53_resolver_firewall_rule", &resource.Sweeper{
-		Name: "aws_route53_resolver_firewall_rule",
+	resource.AddTestSweepers("aws_route53resolver_firewall_rule", &resource.Sweeper{
+		Name: "aws_route53resolver_firewall_rule",
 		F:    sweepFirewallRules,
 		Dependencies: []string{
-			"aws_route53_resolver_firewall_rule_group_association",
+			"aws_route53resolver_firewall_rule_group_association",
 		},
 	})
 
-	resource.AddTestSweepers("aws_route53_resolver_query_log_config_association", &resource.Sweeper{
-		Name: "aws_route53_resolver_query_log_config_association",
+	resource.AddTestSweepers("aws_route53resolver_query_log_config_association", &resource.Sweeper{
+		Name: "aws_route53resolver_query_log_config_association",
 		F:    sweepQueryLogAssociationsConfig,
 	})
 
-	resource.AddTestSweepers("aws_route53_resolver_query_log_config", &resource.Sweeper{
-		Name: "aws_route53_resolver_query_log_config",
+	resource.AddTestSweepers("aws_route53resolver_query_log_config", &resource.Sweeper{
+		Name: "aws_route53resolver_query_log_config",
 		F:    sweepQueryLogsConfig,
 		Dependencies: []string{
-			"aws_route53_resolver_query_log_config_association",
+			"aws_route53resolver_query_log_config_association",
 		},
 	})
 
-	resource.AddTestSweepers("aws_route53_resolver_rule_association", &resource.Sweeper{
-		Name: "aws_route53_resolver_rule_association",
+	resource.AddTestSweepers("aws_route53resolver_rule_association", &resource.Sweeper{
+		Name: "aws_route53resolver_rule_association",
 		F:    sweepRuleAssociations,
 	})
 
-	resource.AddTestSweepers("aws_route53_resolver_rule", &resource.Sweeper{
-		Name: "aws_route53_resolver_rule",
+	resource.AddTestSweepers("aws_route53resolver_rule", &resource.Sweeper{
+		Name: "aws_route53resolver_rule",
 		F:    sweepRules,
 		Dependencies: []string{
-			"aws_route53_resolver_rule_association",
+			"aws_route53resolver_rule_association",
 		},
 	})
 }

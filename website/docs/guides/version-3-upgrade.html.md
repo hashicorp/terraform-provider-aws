@@ -24,7 +24,7 @@ Upgrade topics:
 - [Data Source: aws_availability_zones](#data-source-aws_availability_zones)
 - [Data Source: aws_lambda_invocation](#data-source-aws_lambda_invocation)
 - [Data Source: aws_launch_template](#data-source-aws_launch_template)
-- [Data Source: aws_route53_resolver_rule](#data-source-aws_route53_resolver_rule)
+- [Data Source: aws_route53resolver_rule](#data-source-aws_route53resolver_rule)
 - [Data Source: aws_route53_zone](#data-source-aws_route53_zone)
 - [Resource: aws_acm_certificate](#resource-aws_acm_certificate)
 - [Resource: aws_api_gateway_method_settings](#resource-aws_api_gateway_method_settings)
@@ -49,7 +49,7 @@ Upgrade topics:
 - [Resource: aws_lb_listener_rule](#resource-aws_lb_listener_rule)
 - [Resource: aws_msk_cluster](#resource-aws_msk_cluster)
 - [Resource: aws_rds_cluster](#resource-aws_rds_cluster)
-- [Resource: aws_route53_resolver_rule](#resource-aws_route53_resolver_rule)
+- [Resource: aws_route53resolver_rule](#resource-aws_route53resolver_rule)
 - [Resource: aws_route53_zone](#resource-aws_route53_zone)
 - [Resource: aws_s3_bucket](#resource-aws_s3_bucket)
 - [Resource: aws_s3_bucket_metric](#resource-aws_s3_bucket_metric)
@@ -233,7 +233,7 @@ Error: error reading launch template: empty output
 
 Configuration that depend on the previous behavior will need to be updated.
 
-## Data Source: aws_route53_resolver_rule
+## Data Source: aws_route53resolver_rule
 
 ### Removal of trailing period in domain_name argument
 
@@ -1307,7 +1307,7 @@ resource "aws_msk_cluster" "example" {
 
 Previously when the `min_capacity` argument in a `scaling_configuration` block was not configured, the resource would default to 2. This behavior has been updated to align with the AWS RDS Cluster API default of 1.
 
-## Resource: aws_route53_resolver_rule
+## Resource: aws_route53resolver_rule
 
 ### Removal of trailing period in domain_name argument
 

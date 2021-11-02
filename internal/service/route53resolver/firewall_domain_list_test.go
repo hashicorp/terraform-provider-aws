@@ -17,7 +17,7 @@ import (
 func TestAccRoute53ResolverFirewallDomainList_basic(t *testing.T) {
 	var v route53resolver.FirewallDomainList
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_route53_resolver_firewall_domain_list.test"
+	resourceName := "aws_route53resolver_firewall_domain_list.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -45,7 +45,7 @@ func TestAccRoute53ResolverFirewallDomainList_basic(t *testing.T) {
 func TestAccRoute53ResolverFirewallDomainList_domains(t *testing.T) {
 	var v route53resolver.FirewallDomainList
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_route53_resolver_firewall_domain_list.test"
+	resourceName := "aws_route53resolver_firewall_domain_list.test"
 
 	domainName1 := acctest.RandomFQDomainName()
 	domainName2 := acctest.RandomFQDomainName()
@@ -94,7 +94,7 @@ func TestAccRoute53ResolverFirewallDomainList_domains(t *testing.T) {
 func TestAccRoute53ResolverFirewallDomainList_disappears(t *testing.T) {
 	var v route53resolver.FirewallDomainList
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_route53_resolver_firewall_domain_list.test"
+	resourceName := "aws_route53resolver_firewall_domain_list.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -117,7 +117,7 @@ func TestAccRoute53ResolverFirewallDomainList_disappears(t *testing.T) {
 func TestAccRoute53ResolverFirewallDomainList_tags(t *testing.T) {
 	var v route53resolver.FirewallDomainList
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_route53_resolver_firewall_domain_list.test"
+	resourceName := "aws_route53resolver_firewall_domain_list.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -166,7 +166,7 @@ func testAccCheckRoute53ResolverFirewallDomainListDestroy(s *terraform.State) er
 	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_route53_resolver_firewall_domain_list" {
+		if rs.Type != "aws_route53resolver_firewall_domain_list" {
 			continue
 		}
 
@@ -210,7 +210,7 @@ func testAccCheckRoute53ResolverFirewallDomainListExists(n string, v *route53res
 
 func testAccRoute53ResolverFirewallDomainListConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_route53_resolver_firewall_domain_list" "test" {
+resource "aws_route53resolver_firewall_domain_list" "test" {
   name = %[1]q
 }
 `, rName)
@@ -218,7 +218,7 @@ resource "aws_route53_resolver_firewall_domain_list" "test" {
 
 func testAccRoute53ResolverFirewallDomainListConfigDomains(rName, domain string) string {
 	return fmt.Sprintf(`
-resource "aws_route53_resolver_firewall_domain_list" "test" {
+resource "aws_route53resolver_firewall_domain_list" "test" {
   name    = %[1]q
   domains = [%[2]q]
 }
@@ -227,7 +227,7 @@ resource "aws_route53_resolver_firewall_domain_list" "test" {
 
 func testAccRoute53ResolverFirewallDomainListConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
-resource "aws_route53_resolver_firewall_domain_list" "test" {
+resource "aws_route53resolver_firewall_domain_list" "test" {
   name = %[1]q
   tags = {
     %[2]q = %[3]q
@@ -238,7 +238,7 @@ resource "aws_route53_resolver_firewall_domain_list" "test" {
 
 func testAccRoute53ResolverFirewallDomainListConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
-resource "aws_route53_resolver_firewall_domain_list" "test" {
+resource "aws_route53resolver_firewall_domain_list" "test" {
   name = %[1]q
   tags = {
     %[2]q = %[3]q

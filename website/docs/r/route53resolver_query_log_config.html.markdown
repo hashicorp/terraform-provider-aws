@@ -1,19 +1,19 @@
 ---
 subcategory: "Route53 Resolver"
 layout: "aws"
-page_title: "AWS: aws_route53_resolver_query_log_config"
+page_title: "AWS: aws_route53resolver_query_log_config"
 description: |-
   Provides a Route 53 Resolver query logging configuration resource.
 ---
 
-# Resource: aws_route53_resolver_query_log_config
+# Resource: aws_route53resolver_query_log_config
 
 Provides a Route 53 Resolver query logging configuration resource.
 
 ## Example Usage
 
 ```terraform
-resource "aws_route53_resolver_query_log_config" "example" {
+resource "aws_route53resolver_query_log_config" "example" {
   name            = "example"
   destination_arn = aws_s3_bucket.example.arn
 
@@ -49,5 +49,5 @@ Values are `NOT_SHARED`, `SHARED_BY_ME` or `SHARED_WITH_ME`
  Route 53 Resolver query logging configurations can be imported using the Route 53 Resolver query logging configuration ID, e.g.,
 
 ```
-$ terraform import aws_route53_resolver_query_log_config.example rqlc-92edc3b1838248bf
+$ terraform import aws_route53resolver_query_log_config.example rqlc-92edc3b1838248bf
 ```

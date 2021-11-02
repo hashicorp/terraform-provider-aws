@@ -16,7 +16,7 @@ import (
 
 func TestAccRoute53ResolverEndpoint_basicInbound(t *testing.T) {
 	var ep route53resolver.ResolverEndpoint
-	resourceName := "aws_route53_resolver_endpoint.foo"
+	resourceName := "aws_route53resolver_endpoint.foo"
 	rInt := sdkacctest.RandInt()
 	name := fmt.Sprintf("terraform-testacc-r53-resolver-%d", rInt)
 
@@ -48,7 +48,7 @@ func TestAccRoute53ResolverEndpoint_basicInbound(t *testing.T) {
 
 func TestAccRoute53ResolverEndpoint_updateOutbound(t *testing.T) {
 	var ep route53resolver.ResolverEndpoint
-	resourceName := "aws_route53_resolver_endpoint.foo"
+	resourceName := "aws_route53resolver_endpoint.foo"
 	rInt := sdkacctest.RandInt()
 	initialName := fmt.Sprintf("terraform-testacc-r53-resolver-%d", rInt)
 	updatedName := fmt.Sprintf("terraform-testacc-r53-rupdated-%d", rInt)
@@ -89,7 +89,7 @@ func testAccCheckRoute53ResolverEndpointDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_route53_resolver_endpoint" {
+		if rs.Type != "aws_route53resolver_endpoint" {
 			continue
 		}
 
@@ -226,7 +226,7 @@ func testAccRoute53ResolverEndpointConfig_initial(rInt int, direction, name stri
 	return fmt.Sprintf(`
 %s
 
-resource "aws_route53_resolver_endpoint" "foo" {
+resource "aws_route53resolver_endpoint" "foo" {
   direction = "%s"
   name      = "%s"
 
@@ -256,7 +256,7 @@ func testAccRoute53ResolverEndpointConfig_updated(rInt int, direction, name stri
 	return fmt.Sprintf(`
 %s
 
-resource "aws_route53_resolver_endpoint" "foo" {
+resource "aws_route53resolver_endpoint" "foo" {
   direction = "%s"
   name      = "%s"
 

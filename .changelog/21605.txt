@@ -1,0 +1,55 @@
+```release-note:enhancement
+data-source/aws_route53_resolver_endpoint: Rename data source to aws_route53resolver_endpoint (with alias for aws_route53_resolver_endpoint)
+```
+
+```release-note:enhancement
+data-source/aws_route53_resolver_rule: Rename data source to aws_route53resolver_rule (with alias for aws_route53_resolver_rule)
+```
+
+```release-note:enhancement
+data-source/aws_route53_resolver_rules: Rename data source to aws_route53resolver_rules (with alias for aws_route53_resolver_rules)
+```
+
+```release-note:enhancement
+resource/aws_route53_resolver_dnssec_config: Rename resource to aws_route53resolver_dnssec_config (with alias for aws_route53_resolver_dnssec_config)
+```
+
+```release-note:enhancement
+resource/aws_route53_resolver_endpoint: Rename resource to aws_route53resolver_endpoint (with alias for aws_route53_resolver_endpoint)
+```
+
+```release-note:enhancement
+resource/aws_route53_resolver_firewall_config: Rename resource to aws_route53resolver_firewall_config (with alias for aws_route53_resolver_firewall_config)
+```
+
+```release-note:enhancement
+resource/aws_route53_resolver_firewall_domain_list: Rename resource to aws_route53resolver_firewall_domain_list (with alias for aws_route53_resolver_firewall_domain_list)
+```
+
+```release-note:enhancement
+resource/aws_route53_resolver_firewall_rule: Rename resource to aws_route53resolver_firewall_rule (with alias for aws_route53_resolver_firewall_rule)
+```
+
+```release-note:enhancement
+resource/aws_route53_resolver_firewall_rule_group: Rename resource to aws_route53resolver_firewall_rule_group (with alias for aws_route53_resolver_firewall_rule_group)
+```
+
+```release-note:enhancement
+resource/aws_route53_resolver_firewall_rule_group_association: Rename resource to aws_route53resolver_firewall_rule_group_association (with alias for aws_route53_resolver_firewall_rule_group_association)
+```
+
+```release-note:enhancement
+resource/aws_route53_resolver_query_log_config: Rename resource to aws_route53resolver_query_log_config (with alias for aws_route53_resolver_query_log_config)
+```
+
+```release-note:enhancement
+resource/aws_route53_resolver_query_log_config_association: Rename resource to aws_route53resolver_query_log_config_association (with alias for aws_route53_resolver_query_log_config_association)
+```
+
+```release-note:enhancement
+resource/aws_route53_resolver_rule: Rename resource to aws_route53resolver_rule (with alias for aws_route53_resolver_rule)
+```
+
+```release-note:enhancement
+resource/aws_route53_resolver_rule_association: Rename resource to aws_route53resolver_rule_association (with alias for aws_route53_resolver_rule_association)
+```

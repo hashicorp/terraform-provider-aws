@@ -1,25 +1,25 @@
 ---
 subcategory: "Route53 Resolver"
 layout: "aws"
-page_title: "AWS: aws_route53_resolver_firewall_rule_group_association"
+page_title: "AWS: aws_route53resolver_firewall_rule_group_association"
 description: |-
   Provides a Route 53 Resolver DNS Firewall rule group association resource.
 ---
 
-# Resource: aws_route53_resolver_firewall_rule_group_association
+# Resource: aws_route53resolver_firewall_rule_group_association
 
 Provides a Route 53 Resolver DNS Firewall rule group association resource.
 
 ## Example Usage
 
 ```terraform
-resource "aws_route53_resolver_firewall_rule_group" "example" {
+resource "aws_route53resolver_firewall_rule_group" "example" {
   name = "example"
 }
 
-resource "aws_route53_resolver_firewall_rule_group_association" "example" {
+resource "aws_route53resolver_firewall_rule_group_association" "example" {
   name                   = "example"
-  firewall_rule_group_id = aws_route53_resolver_firewall_rule_group.example.id
+  firewall_rule_group_id = aws_route53resolver_firewall_rule_group.example.id
   priority               = 100
   vpc_id                 = aws_vpc.example.id
 }
@@ -49,5 +49,5 @@ In addition to all arguments above, the following attributes are exported:
 Route 53 Resolver DNS Firewall rule group associations can be imported using the Route 53 Resolver DNS Firewall rule group association ID, e.g.,
 
 ```
-$ terraform import aws_route53_resolver_firewall_rule_group_association.example rslvr-frgassoc-0123456789abcdef
+$ terraform import aws_route53resolver_firewall_rule_group_association.example rslvr-frgassoc-0123456789abcdef
 ```

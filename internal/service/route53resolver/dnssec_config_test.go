@@ -17,7 +17,7 @@ import (
 )
 
 func TestAccRoute53ResolverDNSSECConfig_basic(t *testing.T) {
-	resourceName := "aws_route53_resolver_dnssec_config.test"
+	resourceName := "aws_route53resolver_dnssec_config.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -47,7 +47,7 @@ func TestAccRoute53ResolverDNSSECConfig_basic(t *testing.T) {
 }
 
 func TestAccRoute53ResolverDNSSECConfig_disappear(t *testing.T) {
-	resourceName := "aws_route53_resolver_dnssec_config.test"
+	resourceName := "aws_route53resolver_dnssec_config.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -72,7 +72,7 @@ func testAccCheckRoute53ResolverDnssecConfigDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_route53_resolver_dnssec_config" {
+		if rs.Type != "aws_route53resolver_dnssec_config" {
 			continue
 		}
 
@@ -144,7 +144,7 @@ resource "aws_vpc" "test" {
 
 func testAccRoute53ResolverDnssecConfigConfigBasic(rName string) string {
 	return testAccRoute53ResolverDnssecConfigBase(rName) + `
-resource "aws_route53_resolver_dnssec_config" "test" {
+resource "aws_route53resolver_dnssec_config" "test" {
   resource_id = aws_vpc.test.id
 }
 `

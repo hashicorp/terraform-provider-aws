@@ -1,21 +1,21 @@
 ---
 subcategory: "Route53 Resolver"
 layout: "aws"
-page_title: "AWS: aws_route53_resolver_rule"
+page_title: "AWS: aws_route53resolver_rule"
 description: |-
     Provides details about a specific Route53 Resolver rule
 ---
 
-# Data Source: aws_route53_resolver_rule
+# Data Source: aws_route53resolver_rule
 
-`aws_route53_resolver_rule` provides details about a specific Route53 Resolver rule.
+`aws_route53resolver_rule` provides details about a specific Route53 Resolver rule.
 
 ## Example Usage
 
 The following example shows how to get a Route53 Resolver rule based on its associated domain name and rule type.
 
 ```terraform
-data "aws_route53_resolver_rule" "example" {
+data "aws_route53resolver_rule" "example" {
   domain_name = "subdomain.example.com"
   rule_type   = "SYSTEM"
 }
