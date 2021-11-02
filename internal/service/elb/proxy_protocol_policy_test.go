@@ -75,7 +75,7 @@ func testAccCheckProxyProtocolPolicyDestroy(s *terraform.State) error {
 
 func testAccProxyProtocolPolicyConfig(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_elb_elb" "lb" {
+resource "aws_elb_lb" "lb" {
   name               = "%s"
   availability_zones = [data.aws_availability_zones.available.names[0]]
 
@@ -95,7 +95,7 @@ resource "aws_elb_elb" "lb" {
 }
 
 resource "aws_elb_proxy_protocol_policy" "smtp" {
-  load_balancer  = aws_elb_elb.lb.name
+  load_balancer  = aws_elb_lb.lb.name
   instance_ports = ["25"]
 }
 `, rName))
@@ -103,7 +103,7 @@ resource "aws_elb_proxy_protocol_policy" "smtp" {
 
 func testAccProxyProtocolPolicyConfigUpdate(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_elb_elb" "lb" {
+resource "aws_elb_lb" "lb" {
   name               = "%s"
   availability_zones = [data.aws_availability_zones.available.names[0]]
 
@@ -123,7 +123,7 @@ resource "aws_elb_elb" "lb" {
 }
 
 resource "aws_elb_proxy_protocol_policy" "smtp" {
-  load_balancer  = aws_elb_elb.lb.name
+  load_balancer  = aws_elb_lb.lb.name
   instance_ports = ["25", "587"]
 }
 `, rName))

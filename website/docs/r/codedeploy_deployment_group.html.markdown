@@ -162,7 +162,7 @@ resource "aws_codedeploy_deployment_group" "example" {
 
   load_balancer_info {
     elb_info {
-      name = aws_elb_elb.example.name
+      name = aws_elb_lb.example.name
     }
   }
 

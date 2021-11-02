@@ -65,7 +65,7 @@ TTL for all alias records is [60 seconds](https://aws.amazon.com/route53/faqs/#d
 you cannot change this, therefore `ttl` has to be omitted in alias records.
 
 ```terraform
-resource "aws_elb_elb" "main" {
+resource "aws_elb_lb" "main" {
   name               = "foobar-terraform-elb"
   availability_zones = ["us-east-1c"]
 
@@ -83,8 +83,8 @@ resource "aws_route53_record" "www" {
   type    = "A"
 
   alias {
-    name                   = aws_elb_elb.main.dns_name
-    zone_id                = aws_elb_elb.main.zone_id
+    name                   = aws_elb_lb.main.dns_name
+    zone_id                = aws_elb_lb.main.zone_id
     evaluate_target_health = true
   }
 }

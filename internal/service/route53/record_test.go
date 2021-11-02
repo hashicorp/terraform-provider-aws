@@ -1693,13 +1693,13 @@ resource "aws_route53_record" "alias" {
   type    = "A"
 
   alias {
-    zone_id                = aws_elb_elb.main.zone_id
-    name                   = aws_elb_elb.main.dns_name
+    zone_id                = aws_elb_lb.main.zone_id
+    name                   = aws_elb_lb.main.dns_name
     evaluate_target_health = true
   }
 }
 
-resource "aws_elb_elb" "main" {
+resource "aws_elb_lb" "main" {
   name               = "foobar-terraform-elb-%s"
   availability_zones = slice(data.aws_availability_zones.available.names, 0, 1)
 
@@ -1732,13 +1732,13 @@ resource "aws_route53_record" "alias" {
   type    = "A"
 
   alias {
-    zone_id                = aws_elb_elb.main.zone_id
-    name                   = aws_elb_elb.main.dns_name
+    zone_id                = aws_elb_lb.main.zone_id
+    name                   = aws_elb_lb.main.dns_name
     evaluate_target_health = true
   }
 }
 
-resource "aws_elb_elb" "main" {
+resource "aws_elb_lb" "main" {
   name               = "FOOBAR-TERRAFORM-ELB-%s"
   availability_zones = slice(data.aws_availability_zones.available.names, 0, 1)
 
@@ -1981,7 +1981,7 @@ resource "aws_route53_zone" "main" {
   name = "domain.test"
 }
 
-resource "aws_elb_elb" "live" {
+resource "aws_elb_lb" "live" {
   name               = "foobar-terraform-elb-live"
   availability_zones = slice(data.aws_availability_zones.available.names, 0, 1)
 
@@ -2005,13 +2005,13 @@ resource "aws_route53_record" "elb_weighted_alias_live" {
   set_identifier = "live"
 
   alias {
-    zone_id                = aws_elb_elb.live.zone_id
-    name                   = aws_elb_elb.live.dns_name
+    zone_id                = aws_elb_lb.live.zone_id
+    name                   = aws_elb_lb.live.dns_name
     evaluate_target_health = true
   }
 }
 
-resource "aws_elb_elb" "dev" {
+resource "aws_elb_lb" "dev" {
   name               = "foobar-terraform-elb-dev"
   availability_zones = slice(data.aws_availability_zones.available.names, 0, 1)
 
@@ -2035,8 +2035,8 @@ resource "aws_route53_record" "elb_weighted_alias_dev" {
   set_identifier = "dev"
 
   alias {
-    zone_id                = aws_elb_elb.dev.zone_id
-    name                   = aws_elb_elb.dev.dns_name
+    zone_id                = aws_elb_lb.dev.zone_id
+    name                   = aws_elb_lb.dev.dns_name
     evaluate_target_health = true
   }
 }
@@ -2203,7 +2203,7 @@ resource "aws_route53_zone" "main" {
   name = "domain.test"
 }
 
-resource "aws_elb_elb" "alias_change" {
+resource "aws_elb_lb" "alias_change" {
   name               = "foobar-tf-elb-alias-change"
   availability_zones = slice(data.aws_availability_zones.available.names, 0, 1)
 
@@ -2221,8 +2221,8 @@ resource "aws_route53_record" "elb_alias_change" {
   type    = "A"
 
   alias {
-    zone_id                = aws_elb_elb.alias_change.zone_id
-    name                   = aws_elb_elb.alias_change.dns_name
+    zone_id                = aws_elb_lb.alias_change.zone_id
+    name                   = aws_elb_lb.alias_change.dns_name
     evaluate_target_health = true
   }
 }

@@ -10,7 +10,7 @@ locals {
   availability_zones = split(",", var.availability_zones)
 }
 
-resource "aws_elb_elb" "web-elb" {
+resource "aws_elb_lb" "web-elb" {
   name = "terraform-example-elb"
 
   # The same availability zone as our instances
@@ -40,7 +40,7 @@ resource "aws_autoscaling_group" "web-asg" {
   desired_capacity     = var.asg_desired
   force_delete         = true
   launch_configuration = aws_launch_configuration.web-lc.name
-  load_balancers       = [aws_elb_elb.web-elb.name]
+  load_balancers       = [aws_elb_lb.web-elb.name]
 
   #vpc_zone_identifier = ["${split(",", var.availability_zones)}"]
   tag {

@@ -19,8 +19,8 @@ import (
 
 func TestAccELBPolicy_basic(t *testing.T) {
 	var policy elb.PolicyDescription
-	loadBalancerResourceName := "aws_elb_elb.test-lb"
-	resourceName := "aws_elb_load_balancer_policy.test-policy"
+	loadBalancerResourceName := "aws_elb_lb.test-lb"
+	resourceName := "aws_elb_lb_policy.test-policy"
 	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -43,8 +43,8 @@ func TestAccELBPolicy_basic(t *testing.T) {
 func TestAccELBPolicy_disappears(t *testing.T) {
 	var loadBalancer elb.LoadBalancerDescription
 	var policy elb.PolicyDescription
-	loadBalancerResourceName := "aws_elb_elb.test-lb"
-	resourceName := "aws_elb_load_balancer_policy.test-policy"
+	loadBalancerResourceName := "aws_elb_lb.test-lb"
+	resourceName := "aws_elb_lb_policy.test-policy"
 	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -77,8 +77,8 @@ func TestAccELBPolicy_disappears(t *testing.T) {
 
 func TestAccELBPolicy_updateWhileAssigned(t *testing.T) {
 	var policy elb.PolicyDescription
-	loadBalancerResourceName := "aws_elb_elb.test-lb"
-	resourceName := "aws_elb_load_balancer_policy.test-policy"
+	loadBalancerResourceName := "aws_elb_lb.test-lb"
+	resourceName := "aws_elb_lb_policy.test-policy"
 	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -145,7 +145,7 @@ func testAccCheckPolicyDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_elb_load_balancer_policy" {
+		if rs.Type != "aws_elb_lb_policy" {
 			continue
 		}
 
@@ -244,7 +244,7 @@ func testAccCheckPolicyState(elbResource string, policyResource string) resource
 
 func testAccPolicyConfig_basic(rInt int) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_elb_elb" "test-lb" {
+resource "aws_elb_lb" "test-lb" {
   name               = "test-lb-%[1]d"
   availability_zones = [data.aws_availability_zones.available.names[0]]
 
@@ -260,8 +260,8 @@ resource "aws_elb_elb" "test-lb" {
   }
 }
 
-resource "aws_elb_load_balancer_policy" "test-policy" {
-  load_balancer_name = aws_elb_elb.test-lb.name
+resource "aws_elb_lb_policy" "test-policy" {
+  load_balancer_name = aws_elb_lb.test-lb.name
   policy_name        = "test-policy-%[1]d"
   policy_type_name   = "AppCookieStickinessPolicyType"
 
@@ -275,7 +275,7 @@ resource "aws_elb_load_balancer_policy" "test-policy" {
 
 func testAccPolicyConfig_updateWhileAssigned0(rInt int) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_elb_elb" "test-lb" {
+resource "aws_elb_lb" "test-lb" {
   name               = "test-lb-%[1]d"
   availability_zones = [data.aws_availability_zones.available.names[0]]
 
@@ -291,8 +291,8 @@ resource "aws_elb_elb" "test-lb" {
   }
 }
 
-resource "aws_elb_load_balancer_policy" "test-policy" {
-  load_balancer_name = aws_elb_elb.test-lb.name
+resource "aws_elb_lb_policy" "test-policy" {
+  load_balancer_name = aws_elb_lb.test-lb.name
   policy_name        = "test-policy-%[1]d"
   policy_type_name   = "AppCookieStickinessPolicyType"
 
@@ -302,12 +302,12 @@ resource "aws_elb_load_balancer_policy" "test-policy" {
   }
 }
 
-resource "aws_elb_load_balancer_listener_policy" "test-lb-test-policy-80" {
-  load_balancer_name = aws_elb_elb.test-lb.name
+resource "aws_elb_lb_listener_policy" "test-lb-test-policy-80" {
+  load_balancer_name = aws_elb_lb.test-lb.name
   load_balancer_port = 80
 
   policy_names = [
-    aws_elb_load_balancer_policy.test-policy.policy_name,
+    aws_elb_lb_policy.test-policy.policy_name,
   ]
 }
 `, rInt))
@@ -315,7 +315,7 @@ resource "aws_elb_load_balancer_listener_policy" "test-lb-test-policy-80" {
 
 func testAccPolicyConfig_updateWhileAssigned1(rInt int) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_elb_elb" "test-lb" {
+resource "aws_elb_lb" "test-lb" {
   name               = "test-lb-%[1]d"
   availability_zones = [data.aws_availability_zones.available.names[0]]
 
@@ -331,8 +331,8 @@ resource "aws_elb_elb" "test-lb" {
   }
 }
 
-resource "aws_elb_load_balancer_policy" "test-policy" {
-  load_balancer_name = aws_elb_elb.test-lb.name
+resource "aws_elb_lb_policy" "test-policy" {
+  load_balancer_name = aws_elb_lb.test-lb.name
   policy_name        = "test-policy-%[1]d"
   policy_type_name   = "AppCookieStickinessPolicyType"
 
@@ -342,12 +342,12 @@ resource "aws_elb_load_balancer_policy" "test-policy" {
   }
 }
 
-resource "aws_elb_load_balancer_listener_policy" "test-lb-test-policy-80" {
-  load_balancer_name = aws_elb_elb.test-lb.name
+resource "aws_elb_lb_listener_policy" "test-lb-test-policy-80" {
+  load_balancer_name = aws_elb_lb.test-lb.name
   load_balancer_port = 80
 
   policy_names = [
-    aws_elb_load_balancer_policy.test-policy.policy_name,
+    aws_elb_lb_policy.test-policy.policy_name,
   ]
 }
 `, rInt))

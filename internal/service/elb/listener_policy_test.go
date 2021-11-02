@@ -29,14 +29,14 @@ func TestAccELBListenerPolicy_basic(t *testing.T) {
 			{
 				Config: testAccListenerPolicyConfig_basic0(lbName, mcName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyState("aws_elb_elb.test-lb", "aws_elb_load_balancer_policy.magic-cookie-sticky"),
+					testAccCheckPolicyState("aws_elb_lb.test-lb", "aws_elb_lb_policy.magic-cookie-sticky"),
 					testAccCheckListenerPolicyState(lbName, int64(80), mcName, true),
 				),
 			},
 			{
 				Config: testAccListenerPolicyConfig_basic1(lbName, mcName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyState("aws_elb_elb.test-lb", "aws_elb_load_balancer_policy.magic-cookie-sticky"),
+					testAccCheckPolicyState("aws_elb_lb.test-lb", "aws_elb_lb_policy.magic-cookie-sticky"),
 					testAccCheckListenerPolicyState(lbName, int64(80), mcName, true),
 				),
 			},
@@ -64,7 +64,7 @@ func testAccCheckListenerPolicyDestroy(s *terraform.State) error {
 
 	for _, rs := range s.RootModule().Resources {
 		switch {
-		case rs.Type == "aws_elb_load_balancer_policy":
+		case rs.Type == "aws_elb_lb_policy":
 			loadBalancerName, policyName := tfelb.ListenerPoliciesParseID(rs.Primary.ID)
 			out, err := conn.DescribeLoadBalancerPolicies(
 				&elb.DescribeLoadBalancerPoliciesInput{
@@ -151,7 +151,7 @@ func testAccCheckListenerPolicyState(loadBalancerName string, loadBalancerListen
 
 func testAccListenerPolicyConfig_basic0(lbName, mcName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_elb_elb" "test-lb" {
+resource "aws_elb_lb" "test-lb" {
   name               = "%s"
   availability_zones = [data.aws_availability_zones.available.names[0]]
 
@@ -167,8 +167,8 @@ resource "aws_elb_elb" "test-lb" {
   }
 }
 
-resource "aws_elb_load_balancer_policy" "magic-cookie-sticky" {
-  load_balancer_name = aws_elb_elb.test-lb.name
+resource "aws_elb_lb_policy" "magic-cookie-sticky" {
+  load_balancer_name = aws_elb_lb.test-lb.name
   policy_name        = "%s"
   policy_type_name   = "AppCookieStickinessPolicyType"
 
@@ -178,12 +178,12 @@ resource "aws_elb_load_balancer_policy" "magic-cookie-sticky" {
   }
 }
 
-resource "aws_elb_load_balancer_listener_policy" "test-lb-listener-policies-80" {
-  load_balancer_name = aws_elb_elb.test-lb.name
+resource "aws_elb_lb_listener_policy" "test-lb-listener-policies-80" {
+  load_balancer_name = aws_elb_lb.test-lb.name
   load_balancer_port = 80
 
   policy_names = [
-    aws_elb_load_balancer_policy.magic-cookie-sticky.policy_name,
+    aws_elb_lb_policy.magic-cookie-sticky.policy_name,
   ]
 }
 `, lbName, mcName))
@@ -191,7 +191,7 @@ resource "aws_elb_load_balancer_listener_policy" "test-lb-listener-policies-80" 
 
 func testAccListenerPolicyConfig_basic1(lbName, mcName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_elb_elb" "test-lb" {
+resource "aws_elb_lb" "test-lb" {
   name               = "%s"
   availability_zones = [data.aws_availability_zones.available.names[0]]
 
@@ -207,8 +207,8 @@ resource "aws_elb_elb" "test-lb" {
   }
 }
 
-resource "aws_elb_load_balancer_policy" "magic-cookie-sticky" {
-  load_balancer_name = aws_elb_elb.test-lb.name
+resource "aws_elb_lb_policy" "magic-cookie-sticky" {
+  load_balancer_name = aws_elb_lb.test-lb.name
   policy_name        = "%s"
   policy_type_name   = "AppCookieStickinessPolicyType"
 
@@ -218,12 +218,12 @@ resource "aws_elb_load_balancer_policy" "magic-cookie-sticky" {
   }
 }
 
-resource "aws_elb_load_balancer_listener_policy" "test-lb-listener-policies-80" {
-  load_balancer_name = aws_elb_elb.test-lb.name
+resource "aws_elb_lb_listener_policy" "test-lb-listener-policies-80" {
+  load_balancer_name = aws_elb_lb.test-lb.name
   load_balancer_port = 80
 
   policy_names = [
-    aws_elb_load_balancer_policy.magic-cookie-sticky.policy_name,
+    aws_elb_lb_policy.magic-cookie-sticky.policy_name,
   ]
 }
 `, lbName, mcName))
@@ -231,7 +231,7 @@ resource "aws_elb_load_balancer_listener_policy" "test-lb-listener-policies-80" 
 
 func testAccListenerPolicyConfig_basic2(lbName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_elb_elb" "test-lb" {
+resource "aws_elb_lb" "test-lb" {
   name               = "%s"
   availability_zones = [data.aws_availability_zones.available.names[0]]
 

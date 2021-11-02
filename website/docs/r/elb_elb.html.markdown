@@ -1,12 +1,12 @@
 ---
 subcategory: "Elastic Load Balancing (ELB Classic)"
 layout: "aws"
-page_title: "AWS: aws_elb_elb"
+page_title: "AWS: aws_elb_lb"
 description: |-
   Provides an Elastic Load Balancer resource.
 ---
 
-# Resource: aws_elb_elb
+# Resource: aws_elb_lb
 
 Provides an Elastic Load Balancer resource, also known as a "Classic
 Load Balancer" after the release of
@@ -23,7 +23,7 @@ conflict and will overwrite attachments.
 
 ```terraform
 # Create a new load balancer
-resource "aws_elb_elb" "bar" {
+resource "aws_elb_lb" "bar" {
   name               = "foobar-terraform-elb"
   availability_zones = ["us-west-2a", "us-west-2b", "us-west-2c"]
 
@@ -153,5 +153,5 @@ In addition to all arguments above, the following attributes are exported:
 ELBs can be imported using the `name`, e.g.,
 
 ```
-$ terraform import aws_elb_elb.bar elb-production-12345
+$ terraform import aws_elb_lb.bar elb-production-12345
 ```

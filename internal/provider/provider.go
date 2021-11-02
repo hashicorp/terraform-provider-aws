@@ -503,7 +503,7 @@ func Provider() *schema.Provider {
 
 			"aws_elasticsearch_domain": elasticsearch.DataSourceDomain(),
 
-			"aws_elb_elb":             elb.DataSourceLoadBalancer(),
+			"aws_elb_lb":              elb.DataSourceLoadBalancer(),
 			"aws_elb_hosted_zone_id":  elb.DataSourceHostedZoneID(),
 			"aws_elb_service_account": elb.DataSourceServiceAccount(),
 			"aws_elb":                 elb.DataSourceLoadBalancer(), // backward compatible alias
@@ -1132,24 +1132,24 @@ func Provider() *schema.Provider {
 			"aws_elastictranscoder_pipeline": elastictranscoder.ResourcePipeline(),
 			"aws_elastictranscoder_preset":   elastictranscoder.ResourcePreset(),
 
-			"aws_elb_app_cookie_stickiness_policy":        elb.ResourceAppCookieStickinessPolicy(),
-			"aws_elb_elb":                                 elb.ResourceLoadBalancer(),
-			"aws_elb_elb_attachment":                      elb.ResourceAttachment(),
-			"aws_elb_lb_cookie_stickiness_policy":         elb.ResourceCookieStickinessPolicy(),
-			"aws_elb_lb_ssl_negotiation_policy":           elb.ResourceSSLNegotiationPolicy(),
-			"aws_elb_load_balancer_backend_server_policy": elb.ResourceBackendServerPolicy(),
-			"aws_elb_load_balancer_listener_policy":       elb.ResourceListenerPolicy(),
-			"aws_elb_load_balancer_policy":                elb.ResourcePolicy(),
-			"aws_elb_proxy_protocol_policy":               elb.ResourceProxyProtocolPolicy(),
-			"aws_app_cookie_stickiness_policy":            elb.ResourceAppCookieStickinessPolicy(), // backward compatible alias
-			"aws_elb":                                     elb.ResourceLoadBalancer(),              // backward compatible alias
-			"aws_elb_attachment":                          elb.ResourceAttachment(),                // backward compatible alias
-			"aws_lb_cookie_stickiness_policy":             elb.ResourceCookieStickinessPolicy(),    // backward compatible alias
-			"aws_lb_ssl_negotiation_policy":               elb.ResourceSSLNegotiationPolicy(),      // backward compatible alias
-			"aws_load_balancer_backend_server_policy":     elb.ResourceBackendServerPolicy(),       // backward compatible alias
-			"aws_load_balancer_listener_policy":           elb.ResourceListenerPolicy(),            // backward compatible alias
-			"aws_load_balancer_policy":                    elb.ResourcePolicy(),                    // backward compatible alias
-			"aws_proxy_protocol_policy":                   elb.ResourceProxyProtocolPolicy(),       // backward compatible alias
+			"aws_elb_app_cookie_stickiness_policy":    elb.ResourceAppCookieStickinessPolicy(),
+			"aws_elb_lb":                              elb.ResourceLoadBalancer(),
+			"aws_elb_lb_attachment":                   elb.ResourceAttachment(),
+			"aws_elb_lb_backend_server_policy":        elb.ResourceBackendServerPolicy(),
+			"aws_elb_lb_cookie_stickiness_policy":     elb.ResourceCookieStickinessPolicy(),
+			"aws_elb_lb_listener_policy":              elb.ResourceListenerPolicy(),
+			"aws_elb_lb_policy":                       elb.ResourcePolicy(),
+			"aws_elb_lb_ssl_negotiation_policy":       elb.ResourceSSLNegotiationPolicy(),
+			"aws_elb_proxy_protocol_policy":           elb.ResourceProxyProtocolPolicy(),
+			"aws_app_cookie_stickiness_policy":        elb.ResourceAppCookieStickinessPolicy(), // backward compatible alias
+			"aws_elb":                                 elb.ResourceLoadBalancer(),              // backward compatible alias
+			"aws_elb_attachment":                      elb.ResourceAttachment(),                // backward compatible alias
+			"aws_lb_cookie_stickiness_policy":         elb.ResourceCookieStickinessPolicy(),    // backward compatible alias
+			"aws_lb_ssl_negotiation_policy":           elb.ResourceSSLNegotiationPolicy(),      // backward compatible alias
+			"aws_load_balancer_backend_server_policy": elb.ResourceBackendServerPolicy(),       // backward compatible alias
+			"aws_load_balancer_listener_policy":       elb.ResourceListenerPolicy(),            // backward compatible alias
+			"aws_load_balancer_policy":                elb.ResourcePolicy(),                    // backward compatible alias
+			"aws_proxy_protocol_policy":               elb.ResourceProxyProtocolPolicy(),       // backward compatible alias
 
 			"aws_alb":                         elbv2.ResourceLoadBalancer(),
 			"aws_alb_listener":                elbv2.ResourceListener(),

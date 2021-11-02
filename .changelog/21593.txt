@@ -1,5 +1,5 @@
 ```release-note:enhancement
-data-source/aws_elb: Rename data source to aws_elb_elb (with alias for aws_elb)
+data-source/aws_elb: Rename data source to aws_elb_lb (with alias for aws_elb)
 ```
 
 ```release-note:enhancement
@@ -7,7 +7,7 @@ resource/aws_app_cookie_stickiness_policy: Rename resource to aws_elb_app_cookie
 ```
 
 ```release-note:enhancement
-resource/aws_elb: Rename resource to aws_elb (with alias for aws_elb_elb)
+resource/aws_elb: Rename resource to aws_elb_lb (with alias for aws_elb)
 ```
 
 ```release-note:enhancement
@@ -19,15 +19,15 @@ resource/aws_lb_ssl_negotiation_policy: Rename resource to aws_elb_lb_ssl_negoti
 ```
 
 ```release-note:enhancement
-resource/aws_load_balancer_backend_server_policy: Rename resource to aws_elb_load_balancer_backend_server_policy (with alias for aws_load_balancer_backend_server_policy)
+resource/aws_load_balancer_backend_server_policy: Rename resource to aws_elb_lb_backend_server_policy (with alias for aws_load_balancer_backend_server_policy)
 ```
 
 ```release-note:enhancement
-resource/aws_load_balancer_listener_policy: Rename resource to aws_elb_load_balancer_listener_policy (with alias for aws_load_balancer_listener_policy)
+resource/aws_load_balancer_listener_policy: Rename resource to aws_elb_lb_listener_policy (with alias for aws_load_balancer_listener_policy)
 ```
 
 ```release-note:enhancement
-resource/aws_load_balancer_policy: Rename resource to aws_elb_load_balancer_policy (with alias for aws_load_balancer_policy)
+resource/aws_load_balancer_policy: Rename resource to aws_elb_lb_policy (with alias for aws_load_balancer_policy)
 ```
 
 ```release-note:enhancement

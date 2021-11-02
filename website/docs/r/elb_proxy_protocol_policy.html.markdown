@@ -13,7 +13,7 @@ Provides a proxy protocol policy, which allows an ELB to carry a client connecti
 ## Example Usage
 
 ```terraform
-resource "aws_elb_elb" "lb" {
+resource "aws_elb_lb" "lb" {
   name               = "test-lb"
   availability_zones = ["us-east-1a"]
 
@@ -33,7 +33,7 @@ resource "aws_elb_elb" "lb" {
 }
 
 resource "aws_elb_proxy_protocol_policy" "smtp" {
-  load_balancer  = aws_elb_elb.lb.name
+  load_balancer  = aws_elb_lb.lb.name
   instance_ports = ["25", "587"]
 }
 ```

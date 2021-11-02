@@ -1,12 +1,12 @@
 ---
 subcategory: "Elastic Load Balancing (ELB Classic)"
 layout: "aws"
-page_title: "AWS: aws_elb_elb_attachment"
+page_title: "AWS: aws_elb_lb_attachment"
 description: |-
   Provides an Elastic Load Balancer Attachment resource.
 ---
 
-# Resource: aws_elb_elb_attachment
+# Resource: aws_elb_lb_attachment
 
 Attaches an EC2 instance to an Elastic Load Balancer (ELB). For attaching resources with Application Load Balancer (ALB) or Network Load Balancer (NLB), see the [`aws_lb_target_group_attachment` resource](/docs/providers/aws/r/lb_target_group_attachment.html).
 
@@ -21,8 +21,8 @@ conflict and will overwrite attachments.
 
 ```terraform
 # Create a new load balancer attachment
-resource "aws_elb_elb_attachment" "baz" {
-  elb      = aws_elb_elb.bar.id
+resource "aws_elb_lb_attachment" "baz" {
+  elb      = aws_elb_lb.bar.id
   instance = aws_instance.foo.id
 }
 ```

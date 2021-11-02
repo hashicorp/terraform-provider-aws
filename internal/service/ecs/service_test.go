@@ -2396,7 +2396,7 @@ resource "aws_iam_role_policy" "ecs_service" {
 EOF
 }
 
-resource "aws_elb_elb" "test" {
+resource "aws_elb_lb" "test" {
   internal = true
   subnets  = aws_subnet.test[*].id
 
@@ -2416,7 +2416,7 @@ resource "aws_ecs_service" "test" {
   iam_role        = aws_iam_role.ecs_service.name
 
   load_balancer {
-    elb_name       = aws_elb_elb.test.id
+    elb_name       = aws_elb_lb.test.id
     container_name = "ghost"
     container_port = "2368"
   }
@@ -2556,7 +2556,7 @@ resource "aws_iam_role_policy" "ecs_service" {
 EOF
 }
 
-resource "aws_elb_elb" "test" {
+resource "aws_elb_lb" "test" {
   internal = true
   subnets  = aws_subnet.test[*].id
 
@@ -2576,7 +2576,7 @@ resource "aws_ecs_service" "test" {
   iam_role        = aws_iam_role.ecs_service.name
 
   load_balancer {
-    elb_name       = aws_elb_elb.test.id
+    elb_name       = aws_elb_lb.test.id
     container_name = %[3]q
     container_port = %[4]d
   }

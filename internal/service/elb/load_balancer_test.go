@@ -21,7 +21,7 @@ import (
 
 func TestAccELBLoadBalancer_basic(t *testing.T) {
 	var conf elb.LoadBalancerDescription
-	resourceName := "aws_elb_elb.test"
+	resourceName := "aws_elb_lb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -58,7 +58,7 @@ func TestAccELBLoadBalancer_basic(t *testing.T) {
 
 func TestAccELBLoadBalancer_disappears(t *testing.T) {
 	var loadBalancer elb.LoadBalancerDescription
-	resourceName := "aws_elb_elb.test"
+	resourceName := "aws_elb_lb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -80,7 +80,7 @@ func TestAccELBLoadBalancer_disappears(t *testing.T) {
 
 func TestAccELBLoadBalancer_fullCharacterRange(t *testing.T) {
 	var conf elb.LoadBalancerDescription
-	resourceName := "aws_elb_elb.test"
+	resourceName := "aws_elb_lb.test"
 	lbName := fmt.Sprintf("Tf-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -102,7 +102,7 @@ func TestAccELBLoadBalancer_fullCharacterRange(t *testing.T) {
 
 func TestAccELBLoadBalancer_AccessLogs_enabled(t *testing.T) {
 	var conf elb.LoadBalancerDescription
-	resourceName := "aws_elb_elb.test"
+	resourceName := "aws_elb_lb.test"
 	rName := fmt.Sprintf("tf-test-access-logs-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -142,7 +142,7 @@ func TestAccELBLoadBalancer_AccessLogs_enabled(t *testing.T) {
 
 func TestAccELBLoadBalancer_AccessLogs_disabled(t *testing.T) {
 	var conf elb.LoadBalancerDescription
-	resourceName := "aws_elb_elb.test"
+	resourceName := "aws_elb_lb.test"
 	rName := fmt.Sprintf("tf-test-access-logs-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -182,7 +182,7 @@ func TestAccELBLoadBalancer_AccessLogs_disabled(t *testing.T) {
 func TestAccELBLoadBalancer_namePrefix(t *testing.T) {
 	var conf elb.LoadBalancerDescription
 	nameRegex := regexp.MustCompile("^test-")
-	resourceName := "aws_elb_elb.test"
+	resourceName := "aws_elb_lb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -204,7 +204,7 @@ func TestAccELBLoadBalancer_namePrefix(t *testing.T) {
 func TestAccELBLoadBalancer_generatedName(t *testing.T) {
 	var conf elb.LoadBalancerDescription
 	generatedNameRegexp := regexp.MustCompile("^tf-lb-")
-	resourceName := "aws_elb_elb.test"
+	resourceName := "aws_elb_lb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -226,7 +226,7 @@ func TestAccELBLoadBalancer_generatedName(t *testing.T) {
 func TestAccELBLoadBalancer_generatesNameForZeroValue(t *testing.T) {
 	var conf elb.LoadBalancerDescription
 	generatedNameRegexp := regexp.MustCompile("^tf-lb-")
-	resourceName := "aws_elb_elb.test"
+	resourceName := "aws_elb_lb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -247,7 +247,7 @@ func TestAccELBLoadBalancer_generatesNameForZeroValue(t *testing.T) {
 
 func TestAccELBLoadBalancer_availabilityZones(t *testing.T) {
 	var conf elb.LoadBalancerDescription
-	resourceName := "aws_elb_elb.test"
+	resourceName := "aws_elb_lb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -276,7 +276,7 @@ func TestAccELBLoadBalancer_availabilityZones(t *testing.T) {
 
 func TestAccELBLoadBalancer_tags(t *testing.T) {
 	var conf elb.LoadBalancerDescription
-	resourceName := "aws_elb_elb.test"
+	resourceName := "aws_elb_lb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -326,7 +326,7 @@ func TestAccELBLoadBalancer_ListenerSSLCertificateID_iamServerCertificate(t *tes
 	key := acctest.TLSRSAPrivateKeyPEM(2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
 	rName := fmt.Sprintf("tf-acctest-%s", sdkacctest.RandString(10))
-	resourceName := "aws_elb_elb.test"
+	resourceName := "aws_elb_lb.test"
 
 	testCheck := func(*terraform.State) error {
 		if len(conf.ListenerDescriptions) != 1 {
@@ -364,7 +364,7 @@ func TestAccELBLoadBalancer_ListenerSSLCertificateID_iamServerCertificate(t *tes
 
 func TestAccELBLoadBalancer_Swap_subnets(t *testing.T) {
 	var conf elb.LoadBalancerDescription
-	resourceName := "aws_elb_elb.test"
+	resourceName := "aws_elb_lb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -383,8 +383,8 @@ func TestAccELBLoadBalancer_Swap_subnets(t *testing.T) {
 			{
 				Config: testAccLoadBalancerConfig_subnet_swap,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLoadBalancerExists("aws_elb_elb.test", &conf),
-					resource.TestCheckResourceAttr("aws_elb_elb.test", "subnets.#", "2"),
+					testAccCheckLoadBalancerExists("aws_elb_lb.test", &conf),
+					resource.TestCheckResourceAttr("aws_elb_lb.test", "subnets.#", "2"),
 				),
 			},
 		},
@@ -393,7 +393,7 @@ func TestAccELBLoadBalancer_Swap_subnets(t *testing.T) {
 
 func TestAccELBLoadBalancer_instanceAttaching(t *testing.T) {
 	var conf elb.LoadBalancerDescription
-	resourceName := "aws_elb_elb.test"
+	resourceName := "aws_elb_lb.test"
 
 	testCheckInstanceAttached := func(count int) resource.TestCheckFunc {
 		return func(*terraform.State) error {
@@ -431,7 +431,7 @@ func TestAccELBLoadBalancer_instanceAttaching(t *testing.T) {
 
 func TestAccELBLoadBalancer_listener(t *testing.T) {
 	var conf elb.LoadBalancerDescription
-	resourceName := "aws_elb_elb.test"
+	resourceName := "aws_elb_lb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -557,7 +557,7 @@ func TestAccELBLoadBalancer_listener(t *testing.T) {
 }
 
 func TestAccELBLoadBalancer_healthCheck(t *testing.T) {
-	resourceName := "aws_elb_elb.test"
+	resourceName := "aws_elb_lb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -583,7 +583,7 @@ func TestAccELBLoadBalancer_healthCheck(t *testing.T) {
 }
 
 func TestAccELBLoadBalancer_timeout(t *testing.T) {
-	resourceName := "aws_elb_elb.test"
+	resourceName := "aws_elb_lb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -608,7 +608,7 @@ func TestAccELBLoadBalancer_timeout(t *testing.T) {
 }
 
 func TestAccELBLoadBalancer_connectionDraining(t *testing.T) {
-	resourceName := "aws_elb_elb.test"
+	resourceName := "aws_elb_lb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -641,7 +641,7 @@ func TestAccELBLoadBalancer_connectionDraining(t *testing.T) {
 }
 
 func TestAccELBLoadBalancer_securityGroups(t *testing.T) {
-	resourceName := "aws_elb_elb.test"
+	resourceName := "aws_elb_lb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -876,7 +876,7 @@ func testAccCheckLoadBalancerDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_elb_elb" {
+		if rs.Type != "aws_elb_lb" {
 			continue
 		}
 
@@ -993,7 +993,7 @@ data "aws_availability_zones" "available" {
   }
 }
 
-resource "aws_elb_elb" "test" {
+resource "aws_elb_lb" "test" {
   availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
 
   listener {
@@ -1018,7 +1018,7 @@ data "aws_availability_zones" "available" {
   }
 }
 
-resource "aws_elb_elb" "test" {
+resource "aws_elb_lb" "test" {
   availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
 
   listener {
@@ -1048,7 +1048,7 @@ data "aws_availability_zones" "available" {
   }
 }
 
-resource "aws_elb_elb" "test" {
+resource "aws_elb_lb" "test" {
   availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
 
   listener {
@@ -1078,7 +1078,7 @@ data "aws_availability_zones" "available" {
   }
 }
 
-resource "aws_elb_elb" "test" {
+resource "aws_elb_lb" "test" {
   name               = "%s"
   availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
 
@@ -1101,7 +1101,7 @@ data "aws_availability_zones" "available" {
   }
 }
 
-resource "aws_elb_elb" "test" {
+resource "aws_elb_lb" "test" {
   availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
 
   listener {
@@ -1115,7 +1115,7 @@ resource "aws_elb_elb" "test" {
 
 func testAccLoadBalancerAccessLogsOn(r string) string {
 	return `
-resource "aws_elb_elb" "test" {
+resource "aws_elb_lb" "test" {
   availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
 
   listener {
@@ -1144,7 +1144,7 @@ data "aws_availability_zones" "available" {
 
 func testAccLoadBalancerAccessLogsDisabled(r string) string {
 	return `
-resource "aws_elb_elb" "test" {
+resource "aws_elb_lb" "test" {
   availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
 
   listener {
@@ -1216,7 +1216,7 @@ data "aws_availability_zones" "available" {
   }
 }
 
-resource "aws_elb_elb" "test" {
+resource "aws_elb_lb" "test" {
   name_prefix        = "test-"
   availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
 
@@ -1239,7 +1239,7 @@ data "aws_availability_zones" "available" {
   }
 }
 
-resource "aws_elb_elb" "test" {
+resource "aws_elb_lb" "test" {
   availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
 
   listener {
@@ -1261,7 +1261,7 @@ data "aws_availability_zones" "available" {
   }
 }
 
-resource "aws_elb_elb" "test" {
+resource "aws_elb_lb" "test" {
   name               = ""
   availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
 
@@ -1275,7 +1275,7 @@ resource "aws_elb_elb" "test" {
 
 # See https://github.com/hashicorp/terraform-provider-aws/issues/2498
 output "lb_name" {
-  value = aws_elb_elb.test.name
+  value = aws_elb_lb.test.name
 }
 `
 
@@ -1289,7 +1289,7 @@ data "aws_availability_zones" "available" {
   }
 }
 
-resource "aws_elb_elb" "test" {
+resource "aws_elb_lb" "test" {
   availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1]]
 
   listener {
@@ -1326,7 +1326,7 @@ data "aws_availability_zones" "available" {
   }
 }
 
-resource "aws_elb_elb" "test" {
+resource "aws_elb_lb" "test" {
   availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
 
   listener {
@@ -1355,7 +1355,7 @@ data "aws_availability_zones" "available" {
   }
 }
 
-resource "aws_elb_elb" "test" {
+resource "aws_elb_lb" "test" {
   availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
 
   listener {
@@ -1385,7 +1385,7 @@ data "aws_availability_zones" "available" {
   }
 }
 
-resource "aws_elb_elb" "test" {
+resource "aws_elb_lb" "test" {
   availability_zones = [data.aws_availability_zones.available.names[0]]
 
   listener {
@@ -1415,7 +1415,7 @@ data "aws_availability_zones" "available" {
   }
 }
 
-resource "aws_elb_elb" "test" {
+resource "aws_elb_lb" "test" {
   availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
 
   listener {
@@ -1437,7 +1437,7 @@ data "aws_availability_zones" "available" {
   }
 }
 
-resource "aws_elb_elb" "test" {
+resource "aws_elb_lb" "test" {
   availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
 
   listener {
@@ -1466,7 +1466,7 @@ data "aws_availability_zones" "available" {
   }
 }
 
-resource "aws_elb_elb" "test" {
+resource "aws_elb_lb" "test" {
   availability_zones = [data.aws_availability_zones.available.names[0]]
 
   listener {
@@ -1490,7 +1490,7 @@ data "aws_availability_zones" "available" {
   }
 }
 
-resource "aws_elb_elb" "test" {
+resource "aws_elb_lb" "test" {
   availability_zones = [data.aws_availability_zones.available.names[0]]
 
   listener {
@@ -1514,7 +1514,7 @@ data "aws_availability_zones" "available" {
   }
 }
 
-resource "aws_elb_elb" "test" {
+resource "aws_elb_lb" "test" {
   availability_zones = [data.aws_availability_zones.available.names[0]]
 
   listener {
@@ -1539,7 +1539,7 @@ data "aws_availability_zones" "available" {
   }
 }
 
-resource "aws_elb_elb" "test" {
+resource "aws_elb_lb" "test" {
   availability_zones = [data.aws_availability_zones.available.names[0]]
 
   listener {
@@ -1564,7 +1564,7 @@ data "aws_availability_zones" "available" {
   }
 }
 
-resource "aws_elb_elb" "test" {
+resource "aws_elb_lb" "test" {
   availability_zones = [data.aws_availability_zones.available.names[0]]
 
   listener {
@@ -1588,7 +1588,7 @@ data "aws_availability_zones" "available" {
   }
 }
 
-resource "aws_elb_elb" "test" {
+resource "aws_elb_lb" "test" {
   availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
 
   listener {
@@ -1632,7 +1632,7 @@ resource "aws_iam_server_certificate" "test_cert" {
   private_key      = "%[3]s"
 }
 
-resource "aws_elb_elb" "test" {
+resource "aws_elb_lb" "test" {
   availability_zones = [data.aws_availability_zones.available.names[0]]
 
   listener {
@@ -1663,7 +1663,7 @@ resource "aws_iam_server_certificate" "test_cert" {
   private_key      = "%[3]s"
 }
 
-resource "aws_elb_elb" "test" {
+resource "aws_elb_lb" "test" {
   availability_zones = [data.aws_availability_zones.available.names[0]]
 
   listener {
@@ -1737,7 +1737,7 @@ resource "aws_subnet" "public_a_two" {
   }
 }
 
-resource "aws_elb_elb" "test" {
+resource "aws_elb_lb" "test" {
   name = "terraform-asg-deployment-example"
 
   subnets = [
@@ -1813,7 +1813,7 @@ resource "aws_subnet" "public_a_two" {
   }
 }
 
-resource "aws_elb_elb" "test" {
+resource "aws_elb_lb" "test" {
   name = "terraform-asg-deployment-example"
 
   subnets = [

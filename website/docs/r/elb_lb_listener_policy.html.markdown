@@ -1,12 +1,12 @@
 ---
 subcategory: "Elastic Load Balancing (ELB Classic)"
 layout: "aws"
-page_title: "AWS: aws_elb_load_balancer_listener_policy"
+page_title: "AWS: aws_elb_lb_listener_policy"
 description: |-
   Attaches a load balancer policy to an ELB Listener.
 ---
 
-# Resource: aws_elb_load_balancer_listener_policy
+# Resource: aws_elb_lb_listener_policy
 
 Attaches a load balancer policy to an ELB Listener.
 
@@ -16,7 +16,7 @@ Attaches a load balancer policy to an ELB Listener.
 ### Custom Policy
 
 ```terraform
-resource "aws_elb_elb" "wu-tang" {
+resource "aws_elb_lb" "wu-tang" {
   name               = "wu-tang"
   availability_zones = ["us-east-1a"]
 
@@ -33,8 +33,8 @@ resource "aws_elb_elb" "wu-tang" {
   }
 }
 
-resource "aws_elb_load_balancer_policy" "wu-tang-ssl" {
-  load_balancer_name = aws_elb_elb.wu-tang.name
+resource "aws_elb_lb_policy" "wu-tang-ssl" {
+  load_balancer_name = aws_elb_lb.wu-tang.name
   policy_name        = "wu-tang-ssl"
   policy_type_name   = "SSLNegotiationPolicyType"
 
@@ -49,12 +49,12 @@ resource "aws_elb_load_balancer_policy" "wu-tang-ssl" {
   }
 }
 
-resource "aws_elb_load_balancer_listener_policy" "wu-tang-listener-policies-443" {
-  load_balancer_name = aws_elb_elb.wu-tang.name
+resource "aws_elb_lb_listener_policy" "wu-tang-listener-policies-443" {
+  load_balancer_name = aws_elb_lb.wu-tang.name
   load_balancer_port = 443
 
   policy_names = [
-    aws_elb_load_balancer_policy.wu-tang-ssl.policy_name,
+    aws_elb_lb_policy.wu-tang-ssl.policy_name,
   ]
 }
 ```
@@ -64,7 +64,7 @@ This example shows how to customize the TLS settings of an HTTPS listener.
 ### AWS Predefined Security Policy
 
 ```terraform
-resource "aws_elb_elb" "wu-tang" {
+resource "aws_elb_lb" "wu-tang" {
   name               = "wu-tang"
   availability_zones = ["us-east-1a"]
 
@@ -81,8 +81,8 @@ resource "aws_elb_elb" "wu-tang" {
   }
 }
 
-resource "aws_elb_load_balancer_policy" "wu-tang-ssl-tls-1-1" {
-  load_balancer_name = aws_elb_elb.wu-tang.name
+resource "aws_elb_lb_policy" "wu-tang-ssl-tls-1-1" {
+  load_balancer_name = aws_elb_lb.wu-tang.name
   policy_name        = "wu-tang-ssl"
   policy_type_name   = "SSLNegotiationPolicyType"
 
@@ -92,12 +92,12 @@ resource "aws_elb_load_balancer_policy" "wu-tang-ssl-tls-1-1" {
   }
 }
 
-resource "aws_elb_load_balancer_listener_policy" "wu-tang-listener-policies-443" {
-  load_balancer_name = aws_elb_elb.wu-tang.name
+resource "aws_elb_lb_listener_policy" "wu-tang-listener-policies-443" {
+  load_balancer_name = aws_elb_lb.wu-tang.name
   load_balancer_port = 443
 
   policy_names = [
-    aws_elb_load_balancer_policy.wu-tang-ssl-tls-1-1.policy_name,
+    aws_elb_lb_policy.wu-tang-ssl-tls-1-1.policy_name,
   ]
 }
 ```

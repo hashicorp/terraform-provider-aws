@@ -18,7 +18,7 @@ data "aws_iam_server_certificate" "my-domain" {
   latest      = true
 }
 
-resource "aws_elb_elb" "elb" {
+resource "aws_elb_lb" "elb" {
   name = "my-domain-elb"
 
   listener {

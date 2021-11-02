@@ -418,7 +418,7 @@ resource "aws_subnet" "test" {
   }
 }
 
-resource "aws_elb_elb" "test" {
+resource "aws_elb_lb" "test" {
   name = %[1]q
 
   subnets  = aws_subnet.test[*].id
@@ -441,7 +441,7 @@ resource "aws_elb_elb" "test" {
 
 resource "aws_shield_protection" "test" {
   name         = %[1]q
-  resource_arn = aws_elb_elb.test.arn
+  resource_arn = aws_elb_lb.test.arn
 }
 `, rName)
 }

@@ -6,7 +6,7 @@ provider "aws" {
   region = var.aws_region
 }
 
-resource "aws_elb_elb" "web" {
+resource "aws_elb_lb" "web" {
   name = "terraform-example-elb"
 
   # The same availability zone as our instances

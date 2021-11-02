@@ -13,7 +13,7 @@ Provides a load balancer cookie stickiness policy, which allows an ELB to contro
 ## Example Usage
 
 ```terraform
-resource "aws_elb_elb" "lb" {
+resource "aws_elb_lb" "lb" {
   name               = "test-lb"
   availability_zones = ["us-east-1a"]
 
@@ -27,7 +27,7 @@ resource "aws_elb_elb" "lb" {
 
 resource "aws_elb_lb_cookie_stickiness_policy" "foo" {
   name                     = "foo-policy"
-  load_balancer            = aws_elb_elb.lb.id
+  load_balancer            = aws_elb_lb.lb.id
   lb_port                  = 80
   cookie_expiration_period = 600
 }

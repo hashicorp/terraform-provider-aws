@@ -1,12 +1,12 @@
 ---
 subcategory: "Elastic Load Balancing (ELB Classic)"
 layout: "aws"
-page_title: "AWS: aws_elb_elb"
+page_title: "AWS: aws_elb_lb"
 description: |-
   Provides a classic Elastic Load Balancer data source.
 ---
 
-# aws_elb_elb
+# aws_elb_lb
 
 Provides information about a "classic" Elastic Load Balancer (ELB).
 See [LB Data Source](/docs/providers/aws/d/lb.html) if you are looking for "v2"
@@ -24,7 +24,7 @@ variable "lb_name" {
   default = ""
 }
 
-data "aws_elb_elb" "test" {
+data "aws_elb_lb" "test" {
   name = var.lb_name
 }
 ```
