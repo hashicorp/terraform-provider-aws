@@ -311,8 +311,8 @@ jobs:
         tfproviderdocs check \
           -allowed-resource-subcategories-file website/allowed-subcategories.txt \
           -enable-contents-check \
-          -ignore-file-missing-data-sources aws_alb,aws_alb_listener,aws_alb_target_group \
-          -ignore-file-missing-resources aws_alb,aws_alb_listener,aws_alb_listener_certificate,aws_alb_listener_rule,aws_alb_target_group,aws_alb_target_group_attachment \
+          -ignore-file-missing-data-sources aws_alb,aws_alb_listener,aws_alb_target_group,aws_cloudwatch_event_connection,aws_cloudwatch_event_source \
+          -ignore-file-missing-resources aws_alb,aws_alb_listener,aws_alb_listener_certificate,aws_alb_listener_rule,aws_alb_target_group,aws_alb_target_group_attachment,aws_cloudwatch_event_api_destination,aws_cloudwatch_event_archive,aws_cloudwatch_event_bus,aws_cloudwatch_event_bus_policy,aws_cloudwatch_event_connection,aws_cloudwatch_event_permission,aws_cloudwatch_event_rule,aws_cloudwatch_event_target \
           -provider-source registry.terraform.io/hashicorp/aws \
           -providers-schema-json terraform-providers-schema/schema.json \
           -require-resource-subcategory
