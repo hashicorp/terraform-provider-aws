@@ -19,6 +19,8 @@ func TestAccDirectoryServiceDirectory_basic(t *testing.T) {
 	var ds directoryservice.DirectoryDescription
 	resourceName := "aws_directory_service_directory.test"
 
+	domainName := acctest.RandomDomainName()
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
@@ -30,7 +32,7 @@ func TestAccDirectoryServiceDirectory_basic(t *testing.T) {
 		CheckDestroy: testAccCheckDirectoryServiceDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDirectoryServiceDirectoryConfig,
+				Config: testAccDirectoryServiceDirectoryConfig(domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists(resourceName, &ds),
 					resource.TestCheckResourceAttrSet(resourceName, "security_group_id"),
@@ -52,6 +54,8 @@ func TestAccDirectoryServiceDirectory_tags(t *testing.T) {
 	var ds directoryservice.DirectoryDescription
 	resourceName := "aws_directory_service_directory.test"
 
+	domainName := acctest.RandomDomainName()
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
@@ -63,7 +67,7 @@ func TestAccDirectoryServiceDirectory_tags(t *testing.T) {
 		CheckDestroy: testAccCheckDirectoryServiceDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDirectoryServiceDirectoryTagsConfig,
+				Config: testAccDirectoryServiceDirectoryTagsConfig(domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists(resourceName, &ds),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -80,7 +84,7 @@ func TestAccDirectoryServiceDirectory_tags(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccDirectoryServiceDirectoryUpdateTagsConfig,
+				Config: testAccDirectoryServiceDirectoryUpdateTagsConfig(domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists(resourceName, &ds),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
@@ -90,7 +94,7 @@ func TestAccDirectoryServiceDirectory_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDirectoryServiceDirectoryRemoveTagsConfig,
+				Config: testAccDirectoryServiceDirectoryRemoveTagsConfig(domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists(resourceName, &ds),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -105,6 +109,8 @@ func TestAccDirectoryServiceDirectory_microsoft(t *testing.T) {
 	var ds directoryservice.DirectoryDescription
 	resourceName := "aws_directory_service_directory.test"
 
+	domainName := acctest.RandomDomainName()
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckDirectoryService(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, directoryservice.EndpointsID),
@@ -112,7 +118,7 @@ func TestAccDirectoryServiceDirectory_microsoft(t *testing.T) {
 		CheckDestroy: testAccCheckDirectoryServiceDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDirectoryServiceDirectoryConfig_microsoft,
+				Config: testAccDirectoryServiceDirectoryConfig_microsoft(domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists(resourceName, &ds),
 					resource.TestCheckResourceAttr(resourceName, "edition", directoryservice.DirectoryEditionEnterprise),
@@ -134,6 +140,8 @@ func TestAccDirectoryServiceDirectory_microsoftStandard(t *testing.T) {
 	var ds directoryservice.DirectoryDescription
 	resourceName := "aws_directory_service_directory.test"
 
+	domainName := acctest.RandomDomainName()
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckDirectoryService(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, directoryservice.EndpointsID),
@@ -141,7 +149,7 @@ func TestAccDirectoryServiceDirectory_microsoftStandard(t *testing.T) {
 		CheckDestroy: testAccCheckDirectoryServiceDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDirectoryServiceDirectoryConfig_microsoftStandard,
+				Config: testAccDirectoryServiceDirectoryConfig_microsoftStandard(domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists(resourceName, &ds),
 					resource.TestCheckResourceAttr(resourceName, "edition", directoryservice.DirectoryEditionStandard),
@@ -163,6 +171,8 @@ func TestAccDirectoryServiceDirectory_connector(t *testing.T) {
 	var ds directoryservice.DirectoryDescription
 	resourceName := "aws_directory_service_directory.test"
 
+	domainName := acctest.RandomDomainName()
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
@@ -174,7 +184,7 @@ func TestAccDirectoryServiceDirectory_connector(t *testing.T) {
 		CheckDestroy: testAccCheckDirectoryServiceDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDirectoryServiceDirectoryConfig_connector,
+				Config: testAccDirectoryServiceDirectoryConfig_connector(domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists(resourceName, &ds),
 					resource.TestCheckResourceAttrSet(resourceName, "security_group_id"),
@@ -198,6 +208,8 @@ func TestAccDirectoryServiceDirectory_withAliasAndSSO(t *testing.T) {
 	alias := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_directory_service_directory.test"
 
+	domainName := acctest.RandomDomainName()
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
@@ -209,7 +221,7 @@ func TestAccDirectoryServiceDirectory_withAliasAndSSO(t *testing.T) {
 		CheckDestroy: testAccCheckDirectoryServiceDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDirectoryServiceDirectoryConfig_withAlias(alias),
+				Config: testAccDirectoryServiceDirectoryConfig_withAlias(domainName, alias),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists(resourceName, &ds),
 					testAccCheckServiceDirectoryAlias(resourceName, alias),
@@ -225,7 +237,7 @@ func TestAccDirectoryServiceDirectory_withAliasAndSSO(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccDirectoryServiceDirectoryConfig_withSso(alias),
+				Config: testAccDirectoryServiceDirectoryConfig_withSso(domainName, alias),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists(resourceName, &ds),
 					testAccCheckServiceDirectoryAlias(resourceName, alias),
@@ -233,7 +245,7 @@ func TestAccDirectoryServiceDirectory_withAliasAndSSO(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDirectoryServiceDirectoryConfig_withSso_modified(alias),
+				Config: testAccDirectoryServiceDirectoryConfig_withSso_modified(domainName, alias),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists(resourceName, &ds),
 					testAccCheckServiceDirectoryAlias(resourceName, alias),
@@ -277,6 +289,8 @@ func TestAccDirectoryServiceDirectory_disappears(t *testing.T) {
 	var ds directoryservice.DirectoryDescription
 	resourceName := "aws_directory_service_directory.test"
 
+	domainName := acctest.RandomDomainName()
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
@@ -288,7 +302,7 @@ func TestAccDirectoryServiceDirectory_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckDirectoryServiceDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDirectoryServiceDirectoryConfig,
+				Config: testAccDirectoryServiceDirectoryConfig(domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists(resourceName, &ds),
 					acctest.CheckResourceDisappears(acctest.Provider, tfds.ResourceDirectory(), resourceName),
@@ -392,64 +406,36 @@ func testAccCheckServiceDirectorySso(name string, ssoEnabled bool) resource.Test
 	}
 }
 
-const testAccDirectoryServiceDirectoryConfigBase = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-  tags = {
-    Name = "terraform-testacc-directory-service-directory-tags"
-  }
-}
-
-resource "aws_subnet" "test1" {
-  vpc_id            = aws_vpc.test.id
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = "10.0.1.0/24"
-  tags = {
-    Name = "tf-acc-directory-service-directory-foo"
-  }
-}
-
-resource "aws_subnet" "test2" {
-  vpc_id            = aws_vpc.test.id
-  availability_zone = data.aws_availability_zones.available.names[1]
-  cidr_block        = "10.0.2.0/24"
-  tags = {
-    Name = "tf-acc-directory-service-directory-test"
-  }
-}
-`
-
-const testAccDirectoryServiceDirectoryConfig = testAccDirectoryServiceDirectoryConfigBase + `
+func testAccDirectoryServiceDirectoryConfig(domain string) string {
+	return acctest.ConfigCompose(
+		testAccVpcBase(),
+		fmt.Sprintf(`
 resource "aws_directory_service_directory" "test" {
-  name     = "corp.notexample.com"
+  name     = %[1]q
   password = "SuperSecretPassw0rd"
   size     = "Small"
 
   vpc_settings {
     vpc_id     = aws_vpc.test.id
-    subnet_ids = [aws_subnet.test1.id, aws_subnet.test2.id]
+    subnet_ids = aws_subnet.test[*].id
   }
 }
-`
+`, domain),
+	)
+}
 
-const testAccDirectoryServiceDirectoryTagsConfig = testAccDirectoryServiceDirectoryConfigBase + `
+func testAccDirectoryServiceDirectoryTagsConfig(domain string) string {
+	return acctest.ConfigCompose(
+		testAccVpcBase(),
+		fmt.Sprintf(`
 resource "aws_directory_service_directory" "test" {
-  name     = "corp.notexample.com"
+  name     = %[1]q
   password = "SuperSecretPassw0rd"
   size     = "Small"
 
   vpc_settings {
     vpc_id     = aws_vpc.test.id
-    subnet_ids = [aws_subnet.test1.id, aws_subnet.test2.id]
+    subnet_ids = aws_subnet.test[*].id
   }
 
   tags = {
@@ -457,17 +443,22 @@ resource "aws_directory_service_directory" "test" {
     project = "test"
   }
 }
-`
+`, domain),
+	)
+}
 
-const testAccDirectoryServiceDirectoryUpdateTagsConfig = testAccDirectoryServiceDirectoryConfigBase + `
+func testAccDirectoryServiceDirectoryUpdateTagsConfig(domain string) string {
+	return acctest.ConfigCompose(
+		testAccVpcBase(),
+		fmt.Sprintf(`
 resource "aws_directory_service_directory" "test" {
-  name     = "corp.notexample.com"
+  name     = %[1]q
   password = "SuperSecretPassw0rd"
   size     = "Small"
 
   vpc_settings {
     vpc_id     = aws_vpc.test.id
-    subnet_ids = [aws_subnet.test1.id, aws_subnet.test2.id]
+    subnet_ids = aws_subnet.test[*].id
   }
 
   tags = {
@@ -476,39 +467,38 @@ resource "aws_directory_service_directory" "test" {
     fizz    = "buzz"
   }
 }
-`
+`, domain),
+	)
+}
 
-const testAccDirectoryServiceDirectoryRemoveTagsConfig = testAccDirectoryServiceDirectoryConfigBase + `
+func testAccDirectoryServiceDirectoryRemoveTagsConfig(domain string) string {
+	return acctest.ConfigCompose(
+		testAccVpcBase(),
+		fmt.Sprintf(`
 resource "aws_directory_service_directory" "test" {
-  name     = "corp.notexample.com"
+  name     = %[1]q
   password = "SuperSecretPassw0rd"
   size     = "Small"
 
   vpc_settings {
     vpc_id     = aws_vpc.test.id
-    subnet_ids = [aws_subnet.test1.id, aws_subnet.test2.id]
+    subnet_ids = aws_subnet.test[*].id
   }
 
   tags = {
     foo = "test"
   }
 }
-`
-
-const testAccDirectoryServiceDirectoryConfig_connector = testAccDirectoryServiceDirectoryConfigBase + `
-resource "aws_directory_service_directory" "base" {
-  name     = "corp.notexample.com"
-  password = "SuperSecretPassw0rd"
-  size     = "Small"
-
-  vpc_settings {
-    vpc_id     = aws_vpc.test.id
-    subnet_ids = [aws_subnet.test1.id, aws_subnet.test2.id]
-  }
+`, domain),
+	)
 }
 
+func testAccDirectoryServiceDirectoryConfig_connector(domain string) string {
+	return acctest.ConfigCompose(
+		testAccVpcBase(),
+		fmt.Sprintf(`
 resource "aws_directory_service_directory" "test" {
-  name     = "corp.notexample.com"
+  name     = %[1]q
   password = "SuperSecretPassw0rd"
   size     = "Small"
   type     = "ADConnector"
@@ -517,84 +507,116 @@ resource "aws_directory_service_directory" "test" {
     customer_dns_ips  = aws_directory_service_directory.base.dns_ip_addresses
     customer_username = "Administrator"
     vpc_id            = aws_vpc.test.id
-    subnet_ids        = [aws_subnet.test1.id, aws_subnet.test2.id]
+    subnet_ids        = aws_subnet.test[*].id
   }
 }
-`
 
-const testAccDirectoryServiceDirectoryConfig_microsoft = testAccDirectoryServiceDirectoryConfigBase + `
+resource "aws_directory_service_directory" "base" {
+  name     = %[1]q
+  password = "SuperSecretPassw0rd"
+  size     = "Small"
+
+  vpc_settings {
+    vpc_id     = aws_vpc.test.id
+    subnet_ids = aws_subnet.test[*].id
+  }
+}
+`, domain),
+	)
+}
+
+func testAccDirectoryServiceDirectoryConfig_microsoft(domain string) string {
+	return acctest.ConfigCompose(
+		testAccVpcBase(),
+		fmt.Sprintf(`
 resource "aws_directory_service_directory" "test" {
-  name     = "corp.notexample.com"
+  name     = %[1]q
   password = "SuperSecretPassw0rd"
   type     = "MicrosoftAD"
 
   vpc_settings {
     vpc_id     = aws_vpc.test.id
-    subnet_ids = [aws_subnet.test1.id, aws_subnet.test2.id]
+    subnet_ids = aws_subnet.test[*].id
   }
 }
-`
+`, domain),
+	)
+}
 
-const testAccDirectoryServiceDirectoryConfig_microsoftStandard = testAccDirectoryServiceDirectoryConfigBase + `
+func testAccDirectoryServiceDirectoryConfig_microsoftStandard(domain string) string {
+	return acctest.ConfigCompose(
+		testAccVpcBase(),
+		fmt.Sprintf(`
 resource "aws_directory_service_directory" "test" {
-  name     = "corp.notexample.com"
+  name     = %[1]q
   password = "SuperSecretPassw0rd"
   type     = "MicrosoftAD"
   edition  = "Standard"
 
   vpc_settings {
     vpc_id     = aws_vpc.test.id
-    subnet_ids = [aws_subnet.test1.id, aws_subnet.test2.id]
+    subnet_ids = aws_subnet.test[*].id
   }
 }
-`
+`, domain),
+	)
+}
 
-func testAccDirectoryServiceDirectoryConfig_withAlias(alias string) string {
-	return testAccDirectoryServiceDirectoryConfigBase + fmt.Sprintf(`
+func testAccDirectoryServiceDirectoryConfig_withAlias(domain, alias string) string {
+	return acctest.ConfigCompose(
+		testAccVpcBase(),
+		fmt.Sprintf(`
 resource "aws_directory_service_directory" "test" {
-  name     = "corp.notexample.com"
+  name     = %[1]q
   password = "SuperSecretPassw0rd"
   size     = "Small"
-  alias    = %[1]q
+  alias    = %[2]q
 
   vpc_settings {
     vpc_id     = aws_vpc.test.id
-    subnet_ids = [aws_subnet.test1.id, aws_subnet.test2.id]
+    subnet_ids = aws_subnet.test[*].id
   }
 }
-`, alias)
+`, domain, alias),
+	)
 }
 
-func testAccDirectoryServiceDirectoryConfig_withSso(alias string) string {
-	return testAccDirectoryServiceDirectoryConfigBase + fmt.Sprintf(`
+func testAccDirectoryServiceDirectoryConfig_withSso(domain, alias string) string {
+	return acctest.ConfigCompose(
+		testAccVpcBase(),
+		fmt.Sprintf(`
 resource "aws_directory_service_directory" "test" {
-  name       = "corp.notexample.com"
+  name       = %[1]q
   password   = "SuperSecretPassw0rd"
   size       = "Small"
-  alias      = %[1]q
+  alias      = %[2]q
   enable_sso = true
 
   vpc_settings {
     vpc_id     = aws_vpc.test.id
-    subnet_ids = [aws_subnet.test1.id, aws_subnet.test2.id]
+    subnet_ids = aws_subnet.test[*].id
   }
 }
-`, alias)
+`, domain, alias),
+	)
 }
 
-func testAccDirectoryServiceDirectoryConfig_withSso_modified(alias string) string {
-	return testAccDirectoryServiceDirectoryConfigBase + fmt.Sprintf(`
+func testAccDirectoryServiceDirectoryConfig_withSso_modified(domain, alias string) string {
+	return acctest.ConfigCompose(
+		testAccVpcBase(),
+		fmt.Sprintf(`
 resource "aws_directory_service_directory" "test" {
-  name       = "corp.notexample.com"
+  name       = %[1]q
   password   = "SuperSecretPassw0rd"
   size       = "Small"
-  alias      = %[1]q
+  alias      = %[2]q
   enable_sso = false
 
   vpc_settings {
     vpc_id     = aws_vpc.test.id
-    subnet_ids = [aws_subnet.test1.id, aws_subnet.test2.id]
+    subnet_ids = aws_subnet.test[*].id
   }
 }
-`, alias)
+`, domain, alias),
+	)
 }

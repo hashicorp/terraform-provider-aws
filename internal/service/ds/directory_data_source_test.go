@@ -95,8 +95,8 @@ func TestAccDirectoryServiceDirectoryDataSource_microsoftAD(t *testing.T) {
 }
 
 func TestAccDirectoryServiceDirectoryDataSource_connector(t *testing.T) {
-	resourceName := "aws_directory_service_directory.connector"
-	dataSourceName := "data.aws_directory_service_directory.test-ad-connector"
+	resourceName := "aws_directory_service_directory.test"
+	dataSourceName := "data.aws_directory_service_directory.test"
 
 	domainName := acctest.RandomDomainName()
 
@@ -125,40 +125,14 @@ data "aws_directory_service_directory" "test" {
 }
 `
 
-func testAccDirectoryDataSourceConfig_Prerequisites(adType string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_vpc" "main" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = "tf-testacc-%[1]s"
-  }
-}
-
-resource "aws_subnet" "primary" {
-  vpc_id            = aws_vpc.main.id
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = "10.0.1.0/24"
-
-  tags = {
-    Name = "tf-testacc-%[1]s-primary"
-  }
-}
-
-resource "aws_subnet" "secondary" {
-  vpc_id            = aws_vpc.main.id
-  availability_zone = data.aws_availability_zones.available.names[1]
-  cidr_block        = "10.0.2.0/24"
-
-  tags = {
-    Name = "tf-testacc-%[1]s-secondary"
-  }
-}
-`, adType))
-}
-
 func testAccDirectoryDataSourceConfig_SimpleAD(alias, domain string) string {
-	return acctest.ConfigCompose(testAccDirectoryDataSourceConfig_Prerequisites("simple-ad"), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccVpcBase(),
+		fmt.Sprintf(`
+data "aws_directory_service_directory" "test-simple-ad" {
+  directory_id = aws_directory_service_directory.test-simple-ad.id
+}
+
 resource "aws_directory_service_directory" "test-simple-ad" {
   type        = "SimpleAD"
   size        = "Small"
@@ -171,19 +145,21 @@ resource "aws_directory_service_directory" "test-simple-ad" {
   enable_sso = false
 
   vpc_settings {
-    vpc_id     = aws_vpc.main.id
-    subnet_ids = [aws_subnet.primary.id, aws_subnet.secondary.id]
+    vpc_id     = aws_vpc.test.id
+    subnet_ids = aws_subnet.test[*].id
   }
-}
-
-data "aws_directory_service_directory" "test-simple-ad" {
-  directory_id = aws_directory_service_directory.test-simple-ad.id
 }
 `, alias, domain))
 }
 
 func testAccDirectoryDataSourceConfig_MicrosoftAD(alias, domain string) string {
-	return acctest.ConfigCompose(testAccDirectoryDataSourceConfig_Prerequisites("microsoft-ad"), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccVpcBase(),
+		fmt.Sprintf(`
+data "aws_directory_service_directory" "test-microsoft-ad" {
+  directory_id = aws_directory_service_directory.test-microsoft-ad.id
+}
+
 resource "aws_directory_service_directory" "test-microsoft-ad" {
   type        = "MicrosoftAD"
   edition     = "Standard"
@@ -196,76 +172,44 @@ resource "aws_directory_service_directory" "test-microsoft-ad" {
   enable_sso = false
 
   vpc_settings {
-    vpc_id     = aws_vpc.main.id
-    subnet_ids = [aws_subnet.primary.id, aws_subnet.secondary.id]
+    vpc_id     = aws_vpc.test.id
+    subnet_ids = aws_subnet.test[*].id
   }
-}
-
-data "aws_directory_service_directory" "test-microsoft-ad" {
-  directory_id = aws_directory_service_directory.test-microsoft-ad.id
 }
 `, alias, domain))
 }
 
 func testAccDataSourceDirectoryServiceDirectoryConfig_connector(domain string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptIn(),
+		testAccVpcBase(),
 		fmt.Sprintf(`
-resource "aws_directory_service_directory" "test" {
-  name     = %[1]q
-  password = "SuperSecretPassw0rd"
-  size     = "Small"
-
-  vpc_settings {
-    vpc_id     = aws_vpc.main.id
-    subnet_ids = [aws_subnet.foo.id, aws_subnet.test.id]
-  }
+data "aws_directory_service_directory" "test" {
+  directory_id = aws_directory_service_directory.test.id
 }
 
-resource "aws_directory_service_directory" "connector" {
+resource "aws_directory_service_directory" "test" {
   name     = %[1]q
   password = "SuperSecretPassw0rd"
   size     = "Small"
   type     = "ADConnector"
 
   connect_settings {
-    customer_dns_ips  = aws_directory_service_directory.test.dns_ip_addresses
+    customer_dns_ips  = aws_directory_service_directory.base.dns_ip_addresses
     customer_username = "Administrator"
-    vpc_id            = aws_vpc.main.id
-    subnet_ids        = [aws_subnet.foo.id, aws_subnet.test.id]
+    vpc_id            = aws_vpc.test.id
+    subnet_ids        = aws_subnet.test[*].id
   }
 }
 
-resource "aws_vpc" "main" {
-  cidr_block = "10.0.0.0/16"
+resource "aws_directory_service_directory" "base" {
+  name     = %[1]q
+  password = "SuperSecretPassw0rd"
+  size     = "Small"
 
-  tags = {
-    Name = "terraform-testacc-directory-service-directory-connector"
+  vpc_settings {
+    vpc_id     = aws_vpc.test.id
+    subnet_ids = aws_subnet.test[*].id
   }
-}
-
-resource "aws_subnet" "foo" {
-  vpc_id            = aws_vpc.main.id
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = "10.0.1.0/24"
-
-  tags = {
-    Name = "tf-acc-directory-service-directory-connector-foo"
-  }
-}
-
-resource "aws_subnet" "test" {
-  vpc_id            = aws_vpc.main.id
-  availability_zone = data.aws_availability_zones.available.names[1]
-  cidr_block        = "10.0.2.0/24"
-
-  tags = {
-    Name = "tf-acc-directory-service-directory-connector-test"
-  }
-}
-
-data "aws_directory_service_directory" "test-ad-connector" {
-  directory_id = aws_directory_service_directory.connector.id
 }
 `, domain))
 }

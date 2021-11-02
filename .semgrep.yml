@@ -564,7 +564,6 @@ rules:
         - internal/service/events
         - internal/service/[f-z]*
       exclude:
-        - internal/service/ds
         - internal/service/firehose/delivery_stream_test.go
         - internal/service/fsx/windows_file_system_test.go
         - internal/service/iam/openid_connect_provider_test.go

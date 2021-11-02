@@ -17,6 +17,8 @@ func TestAccDirectoryServiceLogSubscription_basic(t *testing.T) {
 	resourceName := "aws_directory_service_log_subscription.subscription"
 	logGroupName := "ad-service-log-subscription-test"
 
+	domainName := acctest.RandomDomainName()
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckDirectoryService(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, directoryservice.EndpointsID),
@@ -25,7 +27,7 @@ func TestAccDirectoryServiceLogSubscription_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			// test create
 			{
-				Config: testAccDirectoryServiceLogSubscriptionConfig(logGroupName),
+				Config: testAccDirectoryServiceLogSubscriptionConfig(domainName, logGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLogSubscriptionExists(
 						resourceName,
@@ -104,26 +106,24 @@ func testAccCheckLogSubscriptionExists(name string, logGroupName string) resourc
 	}
 }
 
-func testAccDirectoryServiceLogSubscriptionConfig(logGroupName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
+func testAccDirectoryServiceLogSubscriptionConfig(domain, logGroupName string) string {
+	return acctest.ConfigCompose(
+		testAccVpcBase(),
+		fmt.Sprintf(`
+resource "aws_directory_service_log_subscription" "subscription" {
+  directory_id   = aws_directory_service_directory.test.id
+  log_group_name = aws_cloudwatch_log_group.test.name
 }
 
-resource "aws_directory_service_directory" "bar" {
-  name     = "corp.notexample.com"
+resource "aws_directory_service_directory" "test" {
+  name     = %[1]q
   password = "SuperSecretPassw0rd"
   type     = "MicrosoftAD"
   edition  = "Standard"
 
   vpc_settings {
-    vpc_id     = aws_vpc.main.id
-    subnet_ids = [aws_subnet.foo.id, aws_subnet.bar.id]
+    vpc_id     = aws_vpc.test.id
+    subnet_ids = aws_subnet.test[*].id
   }
 
   tags = {
@@ -131,36 +131,8 @@ resource "aws_directory_service_directory" "bar" {
   }
 }
 
-resource "aws_vpc" "main" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = "terraform-testacc-directory-service-log-subscription"
-  }
-}
-
-resource "aws_subnet" "foo" {
-  vpc_id            = aws_vpc.main.id
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = "10.0.1.0/24"
-
-  tags = {
-    Name = "terraform-testacc-directory-service-log-subscription"
-  }
-}
-
-resource "aws_subnet" "bar" {
-  vpc_id            = aws_vpc.main.id
-  availability_zone = data.aws_availability_zones.available.names[1]
-  cidr_block        = "10.0.2.0/24"
-
-  tags = {
-    Name = "terraform-testacc-directory-service-log-subscription"
-  }
-}
-
-resource "aws_cloudwatch_log_group" "logs" {
-  name              = "%s"
+resource "aws_cloudwatch_log_group" "test" {
+  name              = %[2]q
   retention_in_days = 1
 }
 
@@ -176,7 +148,7 @@ data "aws_iam_policy_document" "ad-log-policy" {
       type        = "Service"
     }
 
-    resources = ["${aws_cloudwatch_log_group.logs.arn}:*"]
+    resources = ["${aws_cloudwatch_log_group.test.arn}:*"]
 
     effect = "Allow"
   }
@@ -186,10 +158,6 @@ resource "aws_cloudwatch_log_resource_policy" "ad-log-policy" {
   policy_document = data.aws_iam_policy_document.ad-log-policy.json
   policy_name     = "ad-log-policy"
 }
-
-resource "aws_directory_service_log_subscription" "subscription" {
-  directory_id   = aws_directory_service_directory.bar.id
-  log_group_name = aws_cloudwatch_log_group.logs.name
-}
-`, logGroupName)
+`, domain, logGroupName),
+	)
 }

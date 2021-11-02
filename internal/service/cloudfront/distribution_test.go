@@ -2638,7 +2638,7 @@ resource "aws_cloudfront_cache_policy" "cache_policy" {
 func testAccOrderedCacheBehaviorResponseHeadersPolicy(rInt int) string {
 	return fmt.Sprintf(`
 variable rand_id {
-  default = %d
+  default = %[1]d
 }
 
 resource "aws_cloudfront_distribution" "main" {
@@ -2698,7 +2698,7 @@ resource "aws_cloudfront_distribution" "main" {
     cloudfront_default_certificate = true
   }
 
-  %s
+  %[2]s
 }
 
 resource "aws_cloudfront_cache_policy" "cache_policy" {
