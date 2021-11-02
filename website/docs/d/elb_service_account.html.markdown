@@ -42,7 +42,7 @@ resource "aws_s3_bucket" "elb_logs" {
 POLICY
 }
 
-resource "aws_elb" "bar" {
+resource "aws_elb_elb" "bar" {
   name               = "my-foobar-terraform-elb"
   availability_zones = ["us-west-2a"]
 

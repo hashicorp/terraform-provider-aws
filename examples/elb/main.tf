@@ -111,7 +111,7 @@ resource "aws_security_group" "elb" {
   depends_on = [aws_internet_gateway.gw]
 }
 
-resource "aws_elb" "web" {
+resource "aws_elb_elb" "web" {
   name = "example-elb"
 
   # The same availability zone as our instance
@@ -143,9 +143,9 @@ resource "aws_elb" "web" {
   connection_draining_timeout = 400
 }
 
-resource "aws_lb_cookie_stickiness_policy" "default" {
+resource "aws_elb_lb_cookie_stickiness_policy" "default" {
   name                     = "lbpolicy"
-  load_balancer            = aws_elb.web.id
+  load_balancer            = aws_elb_elb.web.id
   lb_port                  = 80
   cookie_expiration_period = 600
 }

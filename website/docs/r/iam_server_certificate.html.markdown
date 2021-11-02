@@ -74,7 +74,7 @@ resource "aws_iam_server_certificate" "test_cert" {
   }
 }
 
-resource "aws_elb" "ourapp" {
+resource "aws_elb_elb" "ourapp" {
   name                      = "terraform-asg-deployment-example"
   availability_zones        = ["us-west-2a"]
   cross_zone_load_balancing = true

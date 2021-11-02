@@ -22,7 +22,7 @@ resource "aws_route53_record" "www" {
   type    = "A"
 
   alias {
-    name                   = aws_elb.main.dns_name
+    name                   = aws_elb_elb.main.dns_name
     zone_id                = data.aws_elb_hosted_zone_id.main.id
     evaluate_target_health = true
   }

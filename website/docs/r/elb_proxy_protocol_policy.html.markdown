@@ -1,19 +1,19 @@
 ---
 subcategory: "Elastic Load Balancing (ELB Classic)"
 layout: "aws"
-page_title: "AWS: aws_proxy_protocol_policy"
+page_title: "AWS: aws_elb_proxy_protocol_policy"
 description: |-
   Provides a proxy protocol policy, which allows an ELB to carry a client connection information to a backend.
 ---
 
-# Resource: aws_proxy_protocol_policy
+# Resource: aws_elb_proxy_protocol_policy
 
 Provides a proxy protocol policy, which allows an ELB to carry a client connection information to a backend.
 
 ## Example Usage
 
 ```terraform
-resource "aws_elb" "lb" {
+resource "aws_elb_elb" "lb" {
   name               = "test-lb"
   availability_zones = ["us-east-1a"]
 
@@ -32,8 +32,8 @@ resource "aws_elb" "lb" {
   }
 }
 
-resource "aws_proxy_protocol_policy" "smtp" {
-  load_balancer  = aws_elb.lb.name
+resource "aws_elb_proxy_protocol_policy" "smtp" {
+  load_balancer  = aws_elb_elb.lb.name
   instance_ports = ["25", "587"]
 }
 ```

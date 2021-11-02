@@ -26,21 +26,21 @@ func TestAccELBProxyProtocolPolicy_basic(t *testing.T) {
 				Config: testAccProxyProtocolPolicyConfig(lbName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
-						"aws_proxy_protocol_policy.smtp", "load_balancer", lbName),
+						"aws_elb_proxy_protocol_policy.smtp", "load_balancer", lbName),
 					resource.TestCheckResourceAttr(
-						"aws_proxy_protocol_policy.smtp", "instance_ports.#", "1"),
-					resource.TestCheckTypeSetElemAttr("aws_proxy_protocol_policy.smtp", "instance_ports.*", "25"),
+						"aws_elb_proxy_protocol_policy.smtp", "instance_ports.#", "1"),
+					resource.TestCheckTypeSetElemAttr("aws_elb_proxy_protocol_policy.smtp", "instance_ports.*", "25"),
 				),
 			},
 			{
 				Config: testAccProxyProtocolPolicyConfigUpdate(lbName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
-						"aws_proxy_protocol_policy.smtp", "load_balancer", lbName),
+						"aws_elb_proxy_protocol_policy.smtp", "load_balancer", lbName),
 					resource.TestCheckResourceAttr(
-						"aws_proxy_protocol_policy.smtp", "instance_ports.#", "2"),
-					resource.TestCheckTypeSetElemAttr("aws_proxy_protocol_policy.smtp", "instance_ports.*", "25"),
-					resource.TestCheckTypeSetElemAttr("aws_proxy_protocol_policy.smtp", "instance_ports.*", "587"),
+						"aws_elb_proxy_protocol_policy.smtp", "instance_ports.#", "2"),
+					resource.TestCheckTypeSetElemAttr("aws_elb_proxy_protocol_policy.smtp", "instance_ports.*", "25"),
+					resource.TestCheckTypeSetElemAttr("aws_elb_proxy_protocol_policy.smtp", "instance_ports.*", "587"),
 				),
 			},
 		},
@@ -75,7 +75,7 @@ func testAccCheckProxyProtocolPolicyDestroy(s *terraform.State) error {
 
 func testAccProxyProtocolPolicyConfig(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_elb" "lb" {
+resource "aws_elb_elb" "lb" {
   name               = "%s"
   availability_zones = [data.aws_availability_zones.available.names[0]]
 
@@ -94,8 +94,8 @@ resource "aws_elb" "lb" {
   }
 }
 
-resource "aws_proxy_protocol_policy" "smtp" {
-  load_balancer  = aws_elb.lb.name
+resource "aws_elb_proxy_protocol_policy" "smtp" {
+  load_balancer  = aws_elb_elb.lb.name
   instance_ports = ["25"]
 }
 `, rName))
@@ -103,7 +103,7 @@ resource "aws_proxy_protocol_policy" "smtp" {
 
 func testAccProxyProtocolPolicyConfigUpdate(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_elb" "lb" {
+resource "aws_elb_elb" "lb" {
   name               = "%s"
   availability_zones = [data.aws_availability_zones.available.names[0]]
 
@@ -122,8 +122,8 @@ resource "aws_elb" "lb" {
   }
 }
 
-resource "aws_proxy_protocol_policy" "smtp" {
-  load_balancer  = aws_elb.lb.name
+resource "aws_elb_proxy_protocol_policy" "smtp" {
+  load_balancer  = aws_elb_elb.lb.name
   instance_ports = ["25", "587"]
 }
 `, rName))

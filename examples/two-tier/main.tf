@@ -85,7 +85,7 @@ resource "aws_security_group" "default" {
   }
 }
 
-resource "aws_elb" "web" {
+resource "aws_elb_elb" "web" {
   name = "terraform-example-elb"
 
   subnets         = [aws_subnet.default.id]

@@ -13,7 +13,7 @@ import (
 func TestAccELBLoadBalancerDataSource_basic(t *testing.T) {
 	// Must be less than 32 characters for ELB name
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	dataSourceName := "data.aws_elb.test"
+	dataSourceName := "data.aws_elb_elb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
@@ -34,7 +34,7 @@ func TestAccELBLoadBalancerDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "tags.TestName", t.Name()),
 					resource.TestCheckResourceAttrSet(dataSourceName, "dns_name"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "zone_id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", "aws_elb.test", "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "arn", "aws_elb_elb.test", "arn"),
 				),
 			},
 		},
@@ -43,7 +43,7 @@ func TestAccELBLoadBalancerDataSource_basic(t *testing.T) {
 
 func testAccBasicDataSourceConfig(rName, testName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_elb" "test" {
+resource "aws_elb_elb" "test" {
   name            = %[1]q
   internal        = true
   security_groups = [aws_security_group.test.id]
@@ -111,8 +111,8 @@ resource "aws_security_group" "test" {
   }
 }
 
-data "aws_elb" "test" {
-  name = aws_elb.test.name
+data "aws_elb_elb" "test" {
+  name = aws_elb_elb.test.name
 }
 `, rName, testName))
 }

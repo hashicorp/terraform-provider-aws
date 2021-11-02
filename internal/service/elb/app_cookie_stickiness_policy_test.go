@@ -28,13 +28,13 @@ func TestAccELBAppCookieStickinessPolicy_basic(t *testing.T) {
 				Config: testAccAppCookieStickinessPolicyConfig(lbName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppCookieStickinessPolicy(
-						"aws_elb.lb",
-						"aws_app_cookie_stickiness_policy.foo",
+						"aws_elb_elb.lb",
+						"aws_elb_app_cookie_stickiness_policy.foo",
 					),
 				),
 			},
 			{
-				ResourceName:      "aws_app_cookie_stickiness_policy.foo",
+				ResourceName:      "aws_elb_app_cookie_stickiness_policy.foo",
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -42,8 +42,8 @@ func TestAccELBAppCookieStickinessPolicy_basic(t *testing.T) {
 				Config: testAccAppCookieStickinessPolicyConfigUpdate(lbName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppCookieStickinessPolicy(
-						"aws_elb.lb",
-						"aws_app_cookie_stickiness_policy.foo",
+						"aws_elb_elb.lb",
+						"aws_elb_app_cookie_stickiness_policy.foo",
 					),
 				),
 			},
@@ -53,8 +53,8 @@ func TestAccELBAppCookieStickinessPolicy_basic(t *testing.T) {
 
 func TestAccELBAppCookieStickinessPolicy_Disappears_elb(t *testing.T) {
 	lbName := fmt.Sprintf("tf-test-lb-%s", sdkacctest.RandString(5))
-	elbResourceName := "aws_elb.lb"
-	resourceName := "aws_app_cookie_stickiness_policy.foo"
+	elbResourceName := "aws_elb_elb.lb"
+	resourceName := "aws_elb_app_cookie_stickiness_policy.foo"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -78,7 +78,7 @@ func testAccCheckAppCookieStickinessPolicyDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_app_cookie_stickiness_policy" {
+		if rs.Type != "aws_elb_app_cookie_stickiness_policy" {
 			continue
 		}
 
@@ -132,8 +132,8 @@ func testAccCheckAppCookieStickinessPolicy(elbResource string, policyResource st
 
 func TestAccELBAppCookieStickinessPolicy_disappears(t *testing.T) {
 	lbName := fmt.Sprintf("tf-test-lb-%s", sdkacctest.RandString(5))
-	elbResourceName := "aws_elb.lb"
-	resourceName := "aws_app_cookie_stickiness_policy.foo"
+	elbResourceName := "aws_elb_elb.lb"
+	resourceName := "aws_elb_app_cookie_stickiness_policy.foo"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -155,7 +155,7 @@ func TestAccELBAppCookieStickinessPolicy_disappears(t *testing.T) {
 
 func testAccAppCookieStickinessPolicyConfig(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_elb" "lb" {
+resource "aws_elb_elb" "lb" {
   name               = "%s"
   availability_zones = [data.aws_availability_zones.available.names[0]]
 
@@ -167,9 +167,9 @@ resource "aws_elb" "lb" {
   }
 }
 
-resource "aws_app_cookie_stickiness_policy" "foo" {
+resource "aws_elb_app_cookie_stickiness_policy" "foo" {
   name          = "foo-policy"
-  load_balancer = aws_elb.lb.id
+  load_balancer = aws_elb_elb.lb.id
   lb_port       = 80
   cookie_name   = "MyAppCookie"
 }
@@ -179,7 +179,7 @@ resource "aws_app_cookie_stickiness_policy" "foo" {
 // Change the cookie_name to "MyOtherAppCookie".
 func testAccAppCookieStickinessPolicyConfigUpdate(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_elb" "lb" {
+resource "aws_elb_elb" "lb" {
   name               = "%s"
   availability_zones = [data.aws_availability_zones.available.names[0]]
 
@@ -191,9 +191,9 @@ resource "aws_elb" "lb" {
   }
 }
 
-resource "aws_app_cookie_stickiness_policy" "foo" {
+resource "aws_elb_app_cookie_stickiness_policy" "foo" {
   name          = "foo-policy"
-  load_balancer = aws_elb.lb.id
+  load_balancer = aws_elb_elb.lb.id
   lb_port       = 80
   cookie_name   = "MyOtherAppCookie"
 }

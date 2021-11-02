@@ -296,7 +296,7 @@ data "aws_availability_zones" "available" {
   }
 }
 
-resource "aws_elb" "foo" {
+resource "aws_elb_elb" "foo" {
   availability_zones = data.aws_availability_zones.available.names
 
   listener {
@@ -307,7 +307,7 @@ resource "aws_elb" "foo" {
   }
 }
 
-resource "aws_elb" "bar" {
+resource "aws_elb_elb" "bar" {
   availability_zones = data.aws_availability_zones.available.names
 
   listener {
@@ -351,7 +351,7 @@ func testAccAttachment_elb_associated(rInt int) string {
 	return testAccAttachment_elb(rInt) + `
 resource "aws_autoscaling_attachment" "asg_attachment_foo" {
   autoscaling_group_name = aws_autoscaling_group.asg.id
-  elb                    = aws_elb.foo.id
+  elb                    = aws_elb_elb.foo.id
 }`
 }
 
@@ -367,7 +367,7 @@ func testAccAttachment_elb_double_associated(rInt int) string {
 	return testAccAttachment_elb_associated(rInt) + `
 resource "aws_autoscaling_attachment" "asg_attachment_bar" {
   autoscaling_group_name = aws_autoscaling_group.asg.id
-  elb                    = aws_elb.bar.id
+  elb                    = aws_elb_elb.bar.id
 }`
 }
 

@@ -18,8 +18,8 @@ import (
 
 func TestAccELBSSLNegotiationPolicy_basic(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8)) // ELB name cannot be longer than 32 characters
-	elbResourceName := "aws_elb.test"
-	resourceName := "aws_lb_ssl_negotiation_policy.test"
+	elbResourceName := "aws_elb_elb.test"
+	resourceName := "aws_elb_lb_ssl_negotiation_policy.test"
 
 	key := acctest.TLSRSAPrivateKeyPEM(2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
@@ -44,8 +44,8 @@ func TestAccELBSSLNegotiationPolicy_basic(t *testing.T) {
 func TestAccELBSSLNegotiationPolicy_disappears(t *testing.T) {
 	var loadBalancer elb.LoadBalancerDescription
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8)) // ELB name cannot be longer than 32 characters
-	elbResourceName := "aws_elb.test"
-	resourceName := "aws_lb_ssl_negotiation_policy.test"
+	elbResourceName := "aws_elb_elb.test"
+	resourceName := "aws_elb_lb_ssl_negotiation_policy.test"
 
 	key := acctest.TLSRSAPrivateKeyPEM(2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
@@ -73,12 +73,12 @@ func testAccCheckLBSSLNegotiationPolicyDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_elb" && rs.Type != "aws_lb_ssl_negotiation_policy" {
+		if rs.Type != "aws_elb_elb" && rs.Type != "aws_elb_lb_ssl_negotiation_policy" {
 			continue
 		}
 
 		// Check that the ELB is destroyed
-		if rs.Type == "aws_elb" {
+		if rs.Type == "aws_elb_elb" {
 			describe, err := conn.DescribeLoadBalancers(&elb.DescribeLoadBalancersInput{
 				LoadBalancerNames: []*string{aws.String(rs.Primary.ID)},
 			})
@@ -212,7 +212,7 @@ resource "aws_iam_server_certificate" "test" {
   private_key      = "%[3]s"
 }
 
-resource "aws_elb" "test" {
+resource "aws_elb_elb" "test" {
   name               = "%[1]s"
   availability_zones = [data.aws_availability_zones.available.names[0]]
 
@@ -225,9 +225,9 @@ resource "aws_elb" "test" {
   }
 }
 
-resource "aws_lb_ssl_negotiation_policy" "test" {
+resource "aws_elb_lb_ssl_negotiation_policy" "test" {
   name          = "foo-policy"
-  load_balancer = aws_elb.test.id
+  load_balancer = aws_elb_elb.test.id
   lb_port       = 443
 
   attribute {

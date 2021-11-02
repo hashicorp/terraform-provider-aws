@@ -2448,7 +2448,7 @@ func testAccCheckELBDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_elb" {
+		if rs.Type != "aws_elb_elb" {
 			continue
 		}
 

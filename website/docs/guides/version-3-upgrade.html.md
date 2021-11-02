@@ -719,7 +719,7 @@ For example, given this previous configuration:
 ```terraform
 resource "aws_autoscaling_attachment" "example" {
   autoscaling_group_name = aws_autoscaling_group.example.id
-  elb                    = aws_elb.example.id
+  elb                    = aws_elb_elb.example.id
 }
 
 resource "aws_autoscaling_group" "example" {
@@ -732,7 +732,7 @@ An updated configuration:
 ```terraform
 resource "aws_autoscaling_attachment" "example" {
   autoscaling_group_name = aws_autoscaling_group.example.id
-  elb                    = aws_elb.example.id
+  elb                    = aws_elb_elb.example.id
 }
 
 resource "aws_autoscaling_group" "example" {

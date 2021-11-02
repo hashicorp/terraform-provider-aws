@@ -1,19 +1,19 @@
 ---
 subcategory: "Elastic Load Balancing (ELB Classic)"
 layout: "aws"
-page_title: "AWS: aws_lb_ssl_negotiation_policy"
+page_title: "AWS: aws_elb_lb_ssl_negotiation_policy"
 description: |-
   Provides a load balancer SSL negotiation policy, which allows an ELB to control which ciphers and protocols are supported during SSL negotiations between a client and a load balancer.
 ---
 
-# Resource: aws_lb_ssl_negotiation_policy
+# Resource: aws_elb_lb_ssl_negotiation_policy
 
 Provides a load balancer SSL negotiation policy, which allows an ELB to control the ciphers and protocols that are supported during SSL negotiations between a client and a load balancer.
 
 ## Example Usage
 
 ```terraform
-resource "aws_elb" "lb" {
+resource "aws_elb_elb" "lb" {
   name               = "test-lb"
   availability_zones = ["us-east-1a"]
 
@@ -26,9 +26,9 @@ resource "aws_elb" "lb" {
   }
 }
 
-resource "aws_lb_ssl_negotiation_policy" "foo" {
+resource "aws_elb_lb_ssl_negotiation_policy" "foo" {
   name          = "foo-policy"
-  load_balancer = aws_elb.lb.id
+  load_balancer = aws_elb_elb.lb.id
   lb_port       = 443
 
   attribute {

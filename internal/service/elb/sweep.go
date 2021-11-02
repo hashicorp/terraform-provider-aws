@@ -14,8 +14,8 @@ import (
 )
 
 func init() {
-	resource.AddTestSweepers("aws_elb", &resource.Sweeper{
-		Name: "aws_elb",
+	resource.AddTestSweepers("aws_elb_elb", &resource.Sweeper{
+		Name: "aws_elb_elb",
 		F:    sweepLoadBalancers,
 	})
 }

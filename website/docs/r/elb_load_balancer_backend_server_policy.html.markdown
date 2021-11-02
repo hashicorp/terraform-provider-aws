@@ -1,12 +1,12 @@
 ---
 subcategory: "Elastic Load Balancing (ELB Classic)"
 layout: "aws"
-page_title: "AWS: aws_load_balancer_backend_server_policy"
+page_title: "AWS: aws_elb_load_balancer_backend_server_policy"
 description: |-
   Attaches a load balancer policy to an ELB backend server.
 ---
 
-# Resource: aws_load_balancer_backend_server_policy
+# Resource: aws_elb_load_balancer_backend_server_policy
 
 Attaches a load balancer policy to an ELB backend server.
 
@@ -14,7 +14,7 @@ Attaches a load balancer policy to an ELB backend server.
 ## Example Usage
 
 ```terraform
-resource "aws_elb" "wu-tang" {
+resource "aws_elb_elb" "wu-tang" {
   name               = "wu-tang"
   availability_zones = ["us-east-1a"]
 
@@ -31,8 +31,8 @@ resource "aws_elb" "wu-tang" {
   }
 }
 
-resource "aws_load_balancer_policy" "wu-tang-ca-pubkey-policy" {
-  load_balancer_name = aws_elb.wu-tang.name
+resource "aws_elb_load_balancer_policy" "wu-tang-ca-pubkey-policy" {
+  load_balancer_name = aws_elb_elb.wu-tang.name
   policy_name        = "wu-tang-ca-pubkey-policy"
   policy_type_name   = "PublicKeyPolicyType"
 
@@ -44,23 +44,23 @@ resource "aws_load_balancer_policy" "wu-tang-ca-pubkey-policy" {
   }
 }
 
-resource "aws_load_balancer_policy" "wu-tang-root-ca-backend-auth-policy" {
-  load_balancer_name = aws_elb.wu-tang.name
+resource "aws_elb_load_balancer_policy" "wu-tang-root-ca-backend-auth-policy" {
+  load_balancer_name = aws_elb_elb.wu-tang.name
   policy_name        = "wu-tang-root-ca-backend-auth-policy"
   policy_type_name   = "BackendServerAuthenticationPolicyType"
 
   policy_attribute {
     name  = "PublicKeyPolicyName"
-    value = aws_load_balancer_policy.wu-tang-root-ca-pubkey-policy.policy_name
+    value = aws_elb_load_balancer_policy.wu-tang-root-ca-pubkey-policy.policy_name
   }
 }
 
-resource "aws_load_balancer_backend_server_policy" "wu-tang-backend-auth-policies-443" {
-  load_balancer_name = aws_elb.wu-tang.name
+resource "aws_elb_load_balancer_backend_server_policy" "wu-tang-backend-auth-policies-443" {
+  load_balancer_name = aws_elb_elb.wu-tang.name
   instance_port      = 443
 
   policy_names = [
-    aws_load_balancer_policy.wu-tang-root-ca-backend-auth-policy.policy_name,
+    aws_elb_load_balancer_policy.wu-tang-root-ca-backend-auth-policy.policy_name,
   ]
 }
 ```

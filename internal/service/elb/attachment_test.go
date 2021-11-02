@@ -14,7 +14,7 @@ import (
 
 func TestAccELBAttachment_basic(t *testing.T) {
 	var conf elb.LoadBalancerDescription
-	resourceName := "aws_elb.test"
+	resourceName := "aws_elb_elb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -57,7 +57,7 @@ func TestAccELBAttachment_basic(t *testing.T) {
 // remove and instance and check that it's correctly re-attached.
 func TestAccELBAttachment_drift(t *testing.T) {
 	var conf elb.LoadBalancerDescription
-	resourceName := "aws_elb.test"
+	resourceName := "aws_elb_elb.test"
 
 	deregInstance := func() {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
@@ -123,7 +123,7 @@ data "aws_availability_zones" "available" {
   }
 }
 
-resource "aws_elb" "test" {
+resource "aws_elb_elb" "test" {
   availability_zones = data.aws_availability_zones.available.names
 
   listener {
@@ -139,8 +139,8 @@ resource "aws_instance" "foo1" {
   instance_type = "t2.micro"
 }
 
-resource "aws_elb_attachment" "foo1" {
-  elb      = aws_elb.test.id
+resource "aws_elb_elb_attachment" "foo1" {
+  elb      = aws_elb_elb.test.id
   instance = aws_instance.foo1.id
 }
 `)
@@ -158,7 +158,7 @@ data "aws_availability_zones" "available" {
   }
 }
 
-resource "aws_elb" "test" {
+resource "aws_elb_elb" "test" {
   availability_zones = data.aws_availability_zones.available.names
 
   listener {
@@ -179,13 +179,13 @@ resource "aws_instance" "foo2" {
   instance_type = "t2.micro"
 }
 
-resource "aws_elb_attachment" "foo1" {
-  elb      = aws_elb.test.id
+resource "aws_elb_elb_attachment" "foo1" {
+  elb      = aws_elb_elb.test.id
   instance = aws_instance.foo1.id
 }
 
-resource "aws_elb_attachment" "foo2" {
-  elb      = aws_elb.test.id
+resource "aws_elb_elb_attachment" "foo2" {
+  elb      = aws_elb_elb.test.id
   instance = aws_instance.foo2.id
 }
 `)
@@ -203,7 +203,7 @@ data "aws_availability_zones" "available" {
   }
 }
 
-resource "aws_elb" "test" {
+resource "aws_elb_elb" "test" {
   availability_zones = data.aws_availability_zones.available.names
 
   listener {
@@ -224,13 +224,13 @@ resource "aws_instance" "foo2" {
   instance_type = "t2.micro"
 }
 
-resource "aws_elb_attachment" "foo1" {
-  elb      = aws_elb.test.id
+resource "aws_elb_elb_attachment" "foo1" {
+  elb      = aws_elb_elb.test.id
   instance = aws_instance.foo2.id
 }
 
-resource "aws_elb_attachment" "foo2" {
-  elb      = aws_elb.test.id
+resource "aws_elb_elb_attachment" "foo2" {
+  elb      = aws_elb_elb.test.id
   instance = aws_instance.foo1.id
 }
 `)
@@ -248,7 +248,7 @@ data "aws_availability_zones" "available" {
   }
 }
 
-resource "aws_elb" "test" {
+resource "aws_elb_elb" "test" {
   availability_zones = data.aws_availability_zones.available.names
 
   listener {

@@ -41,7 +41,7 @@ func init() {
 			"aws_service_discovery_http_namespace",
 			"aws_service_discovery_public_dns_namespace",
 			"aws_service_discovery_private_dns_namespace",
-			"aws_elb",
+			"aws_elb_elb",
 			"aws_route53_key_signing_key",
 		},
 		F: sweepZones,

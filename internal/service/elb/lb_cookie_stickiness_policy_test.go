@@ -17,7 +17,7 @@ import (
 
 func TestAccELBCookieStickinessPolicy_basic(t *testing.T) {
 	lbName := fmt.Sprintf("tf-test-lb-%s", sdkacctest.RandString(5))
-	resourceName := "aws_lb_cookie_stickiness_policy.foo"
+	resourceName := "aws_elb_lb_cookie_stickiness_policy.foo"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elb.EndpointsID),
@@ -29,8 +29,8 @@ func TestAccELBCookieStickinessPolicy_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "cookie_expiration_period", "300"),
 					testAccCheckLBCookieStickinessPolicy(
-						"aws_elb.lb",
-						"aws_lb_cookie_stickiness_policy.foo",
+						"aws_elb_elb.lb",
+						"aws_elb_lb_cookie_stickiness_policy.foo",
 					),
 				),
 			},
@@ -39,8 +39,8 @@ func TestAccELBCookieStickinessPolicy_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "cookie_expiration_period", "0"),
 					testAccCheckLBCookieStickinessPolicy(
-						"aws_elb.lb",
-						"aws_lb_cookie_stickiness_policy.foo",
+						"aws_elb_elb.lb",
+						"aws_elb_lb_cookie_stickiness_policy.foo",
 					),
 				),
 			},
@@ -52,7 +52,7 @@ func testAccCheckLBCookieStickinessPolicyDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_lb_cookie_stickiness_policy" {
+		if rs.Type != "aws_elb_lb_cookie_stickiness_policy" {
 			continue
 		}
 
@@ -106,8 +106,8 @@ func testAccCheckLBCookieStickinessPolicy(elbResource string, policyResource str
 
 func TestAccELBCookieStickinessPolicy_disappears(t *testing.T) {
 	lbName := fmt.Sprintf("tf-test-lb-%s", sdkacctest.RandString(5))
-	elbResourceName := "aws_elb.lb"
-	resourceName := "aws_lb_cookie_stickiness_policy.foo"
+	elbResourceName := "aws_elb_elb.lb"
+	resourceName := "aws_elb_lb_cookie_stickiness_policy.foo"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -129,8 +129,8 @@ func TestAccELBCookieStickinessPolicy_disappears(t *testing.T) {
 
 func TestAccELBCookieStickinessPolicy_Disappears_elb(t *testing.T) {
 	lbName := fmt.Sprintf("tf-test-lb-%s", sdkacctest.RandString(5))
-	elbResourceName := "aws_elb.lb"
-	resourceName := "aws_lb_cookie_stickiness_policy.foo"
+	elbResourceName := "aws_elb_elb.lb"
+	resourceName := "aws_elb_lb_cookie_stickiness_policy.foo"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -152,7 +152,7 @@ func TestAccELBCookieStickinessPolicy_Disappears_elb(t *testing.T) {
 
 func testAccLBCookieStickinessPolicyConfig(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_elb" "lb" {
+resource "aws_elb_elb" "lb" {
   name               = "%s"
   availability_zones = [data.aws_availability_zones.available.names[0]]
 
@@ -164,9 +164,9 @@ resource "aws_elb" "lb" {
   }
 }
 
-resource "aws_lb_cookie_stickiness_policy" "foo" {
+resource "aws_elb_lb_cookie_stickiness_policy" "foo" {
   name                     = "foo-policy"
-  load_balancer            = aws_elb.lb.id
+  load_balancer            = aws_elb_elb.lb.id
   lb_port                  = 80
   cookie_expiration_period = 300
 }
@@ -176,7 +176,7 @@ resource "aws_lb_cookie_stickiness_policy" "foo" {
 // Sets the cookie_expiration_period to 0s.
 func testAccLBCookieStickinessPolicyConfigUpdate(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_elb" "lb" {
+resource "aws_elb_elb" "lb" {
   name               = "%s"
   availability_zones = [data.aws_availability_zones.available.names[0]]
 
@@ -188,9 +188,9 @@ resource "aws_elb" "lb" {
   }
 }
 
-resource "aws_lb_cookie_stickiness_policy" "foo" {
+resource "aws_elb_lb_cookie_stickiness_policy" "foo" {
   name                     = "foo-policy"
-  load_balancer            = aws_elb.lb.id
+  load_balancer            = aws_elb_elb.lb.id
   lb_port                  = 80
   cookie_expiration_period = 0
 }

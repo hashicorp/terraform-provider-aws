@@ -2267,7 +2267,7 @@ resource "aws_subnet" "bar" {
   }
 }
 
-resource "aws_elb" "elb" {
+resource "aws_elb_elb" "elb" {
   name     = %[1]q
   subnets  = [aws_subnet.test.id, aws_subnet.bar.id]
   internal = true
@@ -2287,7 +2287,7 @@ resource "aws_spot_fleet_request" "test" {
   valid_until                         = %[2]q
   terminate_instances_with_expiration = true
   wait_for_fulfillment                = true
-  load_balancers                      = [aws_elb.elb.name]
+  load_balancers                      = [aws_elb_elb.elb.name]
 
   launch_specification {
     instance_type = "m3.large"

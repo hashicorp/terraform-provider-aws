@@ -25,7 +25,7 @@ to ignore changes to the `load_balancers` and `target_group_arns` arguments with
 # Create a new load balancer attachment
 resource "aws_autoscaling_attachment" "asg_attachment_bar" {
   autoscaling_group_name = aws_autoscaling_group.asg.id
-  elb                    = aws_elb.bar.id
+  elb                    = aws_elb_elb.bar.id
 }
 ```
 
@@ -50,7 +50,7 @@ resource "aws_autoscaling_group" "asg" {
 
 resource "aws_autoscaling_attachment" "asg_attachment_bar" {
   autoscaling_group_name = aws_autoscaling_group.asg.id
-  elb                    = aws_elb.test.id
+  elb                    = aws_elb_elb.test.id
 }
 ```
 

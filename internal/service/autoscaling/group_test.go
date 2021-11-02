@@ -2579,7 +2579,7 @@ resource "aws_security_group" "foo" {
   }
 }
 
-resource "aws_elb" "bar" {
+resource "aws_elb_elb" "bar" {
   subnets         = [aws_subnet.foo.id]
   security_groups = [aws_security_group.foo.id]
 
@@ -2624,7 +2624,7 @@ resource "aws_autoscaling_group" "bar" {
   force_delete              = true
 
   launch_configuration = aws_launch_configuration.foobar.name
-  load_balancers       = [aws_elb.bar.name]
+  load_balancers       = [aws_elb_elb.bar.name]
 }
 `)
 }
@@ -2678,7 +2678,7 @@ resource "aws_lb_target_group" "foo" {
   vpc_id   = aws_vpc.foo.id
 }
 
-resource "aws_elb" "bar" {
+resource "aws_elb_elb" "bar" {
   subnets         = [aws_subnet.foo.id]
   security_groups = [aws_security_group.foo.id]
 
@@ -3921,7 +3921,7 @@ resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
 }
 
-resource "aws_elb" "test" {
+resource "aws_elb_elb" "test" {
   count      = %[2]d
   depends_on = [aws_internet_gateway.test]
 
@@ -3939,7 +3939,7 @@ resource "aws_autoscaling_group" "test" {
   force_delete        = true
   max_size            = 0
   min_size            = 0
-  load_balancers      = length(aws_elb.test) > 0 ? aws_elb.test[*].name : []
+  load_balancers      = length(aws_elb_elb.test) > 0 ? aws_elb_elb.test[*].name : []
   vpc_zone_identifier = [aws_subnet.test.id]
 
   launch_template {
