@@ -13,7 +13,7 @@ import (
 )
 
 func TestAccElasticBeanstalkHostedZoneDataSource_basic(t *testing.T) {
-	dataSourceName := "data.aws_elastic_beanstalk_hosted_zone.test"
+	dataSourceName := "data.aws_elasticbeanstalk_hosted_zone.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
@@ -31,7 +31,7 @@ func TestAccElasticBeanstalkHostedZoneDataSource_basic(t *testing.T) {
 }
 
 func TestAccElasticBeanstalkHostedZoneDataSource_region(t *testing.T) {
-	dataSourceName := "data.aws_elastic_beanstalk_hosted_zone.test"
+	dataSourceName := "data.aws_elasticbeanstalk_hosted_zone.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
@@ -71,12 +71,12 @@ func testAccCheckHostedZone(resourceName string, region string) resource.TestChe
 }
 
 const testAccCheckAWSElasticBeanstalkHostedZoneDataSource_currentRegion = `
-data "aws_elastic_beanstalk_hosted_zone" "test" {}
+data "aws_elasticbeanstalk_hosted_zone" "test" {}
 `
 
 func testAccCheckHostedZoneDataSource_byRegion(r string) string {
 	return fmt.Sprintf(`
-data "aws_elastic_beanstalk_hosted_zone" "test" {
+data "aws_elasticbeanstalk_hosted_zone" "test" {
   region = "%s"
 }
 `, r)

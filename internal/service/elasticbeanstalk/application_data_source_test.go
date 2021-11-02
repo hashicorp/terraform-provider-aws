@@ -16,8 +16,8 @@ import (
 
 func TestAccElasticBeanstalkApplicationDataSource_basic(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(5))
-	dataSourceResourceName := "data.aws_elastic_beanstalk_application.test"
-	resourceName := "aws_elastic_beanstalk_application.tftest"
+	dataSourceResourceName := "data.aws_elasticbeanstalk_application.test"
+	resourceName := "aws_elasticbeanstalk_application.tftest"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -45,8 +45,8 @@ func testAccApplicationDataSourceConfig_Basic(rName string) string {
 	return fmt.Sprintf(`
 %s
 
-data "aws_elastic_beanstalk_application" "test" {
-  name = aws_elastic_beanstalk_application.tftest.name
+data "aws_elasticbeanstalk_application" "test" {
+  name = aws_elasticbeanstalk_application.tftest.name
 }
 `, testAccBeanstalkAppConfigWithMaxAge(rName))
 }

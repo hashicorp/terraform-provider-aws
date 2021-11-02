@@ -22,7 +22,7 @@ func init() {
 		Dependencies: []string{
 			"aws_autoscaling_group",
 			"aws_cloudwatch_event_rule",
-			"aws_elastic_beanstalk_environment",
+			"aws_elasticbeanstalk_environment",
 			"aws_iot_topic_rule",
 			"aws_lambda_function",
 			"aws_s3_bucket",

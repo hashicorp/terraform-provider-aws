@@ -1,12 +1,12 @@
 ---
 subcategory: "Elastic Beanstalk"
 layout: "aws"
-page_title: "AWS: aws_elastic_beanstalk_application_version"
+page_title: "AWS: aws_elasticbeanstalk_application_version"
 description: |-
   Provides an Elastic Beanstalk Application Version Resource
 ---
 
-# Resource: aws_elastic_beanstalk_application_version
+# Resource: aws_elasticbeanstalk_application_version
 
 Provides an Elastic Beanstalk Application Version Resource. Elastic Beanstalk allows
 you to deploy and manage applications in the AWS cloud without worrying about
@@ -18,7 +18,7 @@ Environment.
 ~> **NOTE on Application Version Resource:**  When using the Application Version resource with multiple
 [Elastic Beanstalk Environments](elastic_beanstalk_environment.html) it is possible that an error may be returned
 when attempting to delete an Application Version while it is still in use by a different environment.
-To work around this you can either create each environment in a separate AWS account or create your `aws_elastic_beanstalk_application_version` resources with a unique names in your Elastic Beanstalk Application. For example &lt;revision&gt;-&lt;environment&gt;.
+To work around this you can either create each environment in a separate AWS account or create your `aws_elasticbeanstalk_application_version` resources with a unique names in your Elastic Beanstalk Application. For example &lt;revision&gt;-&lt;environment&gt;.
 
 ## Example Usage
 
@@ -33,12 +33,12 @@ resource "aws_s3_bucket_object" "default" {
   source = "go-v1.zip"
 }
 
-resource "aws_elastic_beanstalk_application" "default" {
+resource "aws_elasticbeanstalk_application" "default" {
   name        = "tf-test-name"
   description = "tf-test-desc"
 }
 
-resource "aws_elastic_beanstalk_application_version" "default" {
+resource "aws_elasticbeanstalk_application_version" "default" {
   name        = "tf-test-version-label"
   application = "tf-test-name"
   description = "application version created by terraform"

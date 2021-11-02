@@ -20,8 +20,8 @@ func TestAccElasticBeanstalkSolutionStackDataSource_basic(t *testing.T) {
 			{
 				Config: testAccCheckAWSElasticBeanstalkSolutionStackDataSourceConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSolutionStackIDDataSource("data.aws_elastic_beanstalk_solution_stack.multi_docker"),
-					resource.TestMatchResourceAttr("data.aws_elastic_beanstalk_solution_stack.multi_docker", "name", regexp.MustCompile("^64bit Amazon Linux (.*) Multi-container Docker (.*)$")),
+					testAccCheckSolutionStackIDDataSource("data.aws_elasticbeanstalk_solution_stack.multi_docker"),
+					resource.TestMatchResourceAttr("data.aws_elasticbeanstalk_solution_stack.multi_docker", "name", regexp.MustCompile("^64bit Amazon Linux (.*) Multi-container Docker (.*)$")),
 				),
 			},
 		},
@@ -44,7 +44,7 @@ func testAccCheckSolutionStackIDDataSource(n string) resource.TestCheckFunc {
 }
 
 const testAccCheckAWSElasticBeanstalkSolutionStackDataSourceConfig = `
-data "aws_elastic_beanstalk_solution_stack" "multi_docker" {
+data "aws_elasticbeanstalk_solution_stack" "multi_docker" {
   most_recent = true
   name_regex  = "^64bit Amazon Linux (.*) Multi-container Docker (.*)$"
 }

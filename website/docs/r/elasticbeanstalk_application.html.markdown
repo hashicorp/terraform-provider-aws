@@ -1,12 +1,12 @@
 ---
 subcategory: "Elastic Beanstalk"
 layout: "aws"
-page_title: "AWS: aws_elastic_beanstalk_application"
+page_title: "AWS: aws_elasticbeanstalk_application"
 description: |-
   Provides an Elastic Beanstalk Application Resource
 ---
 
-# Resource: aws_elastic_beanstalk_application
+# Resource: aws_elasticbeanstalk_application
 
 Provides an Elastic Beanstalk Application Resource. Elastic Beanstalk allows
 you to deploy and manage applications in the AWS cloud without worrying about
@@ -18,7 +18,7 @@ This resource creates an application that has one configuration template named
 ## Example Usage
 
 ```terraform
-resource "aws_elastic_beanstalk_application" "tftest" {
+resource "aws_elasticbeanstalk_application" "tftest" {
   name        = "tf-test-name"
   description = "tf-test-desc"
 
@@ -58,5 +58,5 @@ In addition to all arguments above, the following attributes are exported:
 Elastic Beanstalk Applications can be imported using the `name`, e.g.,
 
 ```
-$ terraform import aws_elastic_beanstalk_application.tf_test tf-test-name
+$ terraform import aws_elasticbeanstalk_application.tf_test tf-test-name
 ```

@@ -1,19 +1,19 @@
 ---
 subcategory: "Elastic Beanstalk"
 layout: "aws"
-page_title: "AWS: aws_elastic_beanstalk_hosted_zone"
+page_title: "AWS: aws_elasticbeanstalk_hosted_zone"
 description: |-
   Get an elastic beanstalk hosted zone.
 ---
 
-# Data Source: aws_elastic_beanstalk_hosted_zone
+# Data Source: aws_elasticbeanstalk_hosted_zone
 
 Use this data source to get the ID of an [elastic beanstalk hosted zone](http://docs.aws.amazon.com/general/latest/gr/rande.html#elasticbeanstalk_region).
 
 ## Example Usage
 
 ```terraform
-data "aws_elastic_beanstalk_hosted_zone" "current" {}
+data "aws_elasticbeanstalk_hosted_zone" "current" {}
 ```
 
 ## Argument Reference

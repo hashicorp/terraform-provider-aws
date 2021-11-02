@@ -1,12 +1,12 @@
 ---
 subcategory: "Elastic Beanstalk"
 layout: "aws"
-page_title: "AWS: aws_elastic_beanstalk_configuration_template"
+page_title: "AWS: aws_elasticbeanstalk_configuration_template"
 description: |-
   Provides an Elastic Beanstalk Configuration Template
 ---
 
-# Resource: aws_elastic_beanstalk_configuration_template
+# Resource: aws_elasticbeanstalk_configuration_template
 
 Provides an Elastic Beanstalk Configuration Template, which are associated with
 a specific application and are used to deploy different versions of the
@@ -15,14 +15,14 @@ application with the same configuration settings.
 ## Example Usage
 
 ```terraform
-resource "aws_elastic_beanstalk_application" "tftest" {
+resource "aws_elasticbeanstalk_application" "tftest" {
   name        = "tf-test-name"
   description = "tf-test-desc"
 }
 
-resource "aws_elastic_beanstalk_configuration_template" "tf_template" {
+resource "aws_elasticbeanstalk_configuration_template" "tf_template" {
   name                = "tf-test-template-config"
-  application         = aws_elastic_beanstalk_application.tftest.name
+  application         = aws_elasticbeanstalk_application.tftest.name
   solution_stack_name = "64bit Amazon Linux 2015.09 v2.0.8 running Go 1.4"
 }
 ```

@@ -1,12 +1,12 @@
 ---
 subcategory: "Elastic Beanstalk"
 layout: "aws"
-page_title: "AWS: aws_elastic_beanstalk_environment"
+page_title: "AWS: aws_elasticbeanstalk_environment"
 description: |-
   Provides an Elastic Beanstalk Environment Resource
 ---
 
-# Resource: aws_elastic_beanstalk_environment
+# Resource: aws_elasticbeanstalk_environment
 
 Provides an Elastic Beanstalk Environment Resource. Elastic Beanstalk allows
 you to deploy and manage applications in the AWS cloud without worrying about
@@ -18,14 +18,14 @@ Environments are often things such as `development`, `integration`, or
 ## Example Usage
 
 ```terraform
-resource "aws_elastic_beanstalk_application" "tftest" {
+resource "aws_elasticbeanstalk_application" "tftest" {
   name        = "tf-test-name"
   description = "tf-test-desc"
 }
 
-resource "aws_elastic_beanstalk_environment" "tfenvtest" {
+resource "aws_elasticbeanstalk_environment" "tfenvtest" {
   name                = "tf-test-name"
-  application         = aws_elastic_beanstalk_application.tftest.name
+  application         = aws_elasticbeanstalk_application.tftest.name
   solution_stack_name = "64bit Amazon Linux 2015.03 v2.0.3 running Go 1.4"
 }
 ```
@@ -80,14 +80,14 @@ The `setting` and `all_settings` mappings support the following format:
 ### Example With Options
 
 ```terraform
-resource "aws_elastic_beanstalk_application" "tftest" {
+resource "aws_elasticbeanstalk_application" "tftest" {
   name        = "tf-test-name"
   description = "tf-test-desc"
 }
 
-resource "aws_elastic_beanstalk_environment" "tfenvtest" {
+resource "aws_elasticbeanstalk_environment" "tfenvtest" {
   name                = "tf-test-name"
-  application         = aws_elastic_beanstalk_application.tftest.name
+  application         = aws_elasticbeanstalk_application.tftest.name
   solution_stack_name = "64bit Amazon Linux 2015.03 v2.0.3 running Go 1.4"
 
   setting {
@@ -138,5 +138,5 @@ In addition to all arguments above, the following attributes are exported:
 Elastic Beanstalk Environments can be imported using the `id`, e.g.,
 
 ```
-$ terraform import aws_elastic_beanstalk_environment.prodenv e-rpqsewtp2j
+$ terraform import aws_elasticbeanstalk_environment.prodenv e-rpqsewtp2j
 ```

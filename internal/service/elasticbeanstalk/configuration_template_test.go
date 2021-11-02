@@ -26,7 +26,7 @@ func TestAccElasticBeanstalkConfigurationTemplate_Beanstalk_basic(t *testing.T) 
 			{
 				Config: testAccBeanstalkConfigurationTemplateConfig(sdkacctest.RandString(5)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBeanstalkConfigurationTemplateExists("aws_elastic_beanstalk_configuration_template.tf_template", &config),
+					testAccCheckBeanstalkConfigurationTemplateExists("aws_elasticbeanstalk_configuration_template.tf_template", &config),
 				),
 			},
 		},
@@ -45,7 +45,7 @@ func TestAccElasticBeanstalkConfigurationTemplate_Beanstalk_vpc(t *testing.T) {
 			{
 				Config: testAccBeanstalkConfigurationTemplateConfig_VPC(sdkacctest.RandString(5)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBeanstalkConfigurationTemplateExists("aws_elastic_beanstalk_configuration_template.tf_template", &config),
+					testAccCheckBeanstalkConfigurationTemplateExists("aws_elasticbeanstalk_configuration_template.tf_template", &config),
 				),
 			},
 		},
@@ -64,10 +64,10 @@ func TestAccElasticBeanstalkConfigurationTemplate_Beanstalk_setting(t *testing.T
 			{
 				Config: testAccBeanstalkConfigurationTemplateConfig_Setting(sdkacctest.RandString(5)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBeanstalkConfigurationTemplateExists("aws_elastic_beanstalk_configuration_template.tf_template", &config),
+					testAccCheckBeanstalkConfigurationTemplateExists("aws_elasticbeanstalk_configuration_template.tf_template", &config),
 					resource.TestCheckResourceAttr(
-						"aws_elastic_beanstalk_configuration_template.tf_template", "setting.#", "1"),
-					resource.TestCheckTypeSetElemNestedAttrs("aws_elastic_beanstalk_configuration_template.tf_template", "setting.*", map[string]string{
+						"aws_elasticbeanstalk_configuration_template.tf_template", "setting.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs("aws_elasticbeanstalk_configuration_template.tf_template", "setting.*", map[string]string{
 						"value": "m1.small",
 					}),
 				),
@@ -80,7 +80,7 @@ func testAccCheckBeanstalkConfigurationTemplateDestroy(s *terraform.State) error
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_elastic_beanstalk_configuration_template" {
+		if rs.Type != "aws_elasticbeanstalk_configuration_template" {
 			continue
 		}
 
@@ -150,14 +150,14 @@ func testAccCheckBeanstalkConfigurationTemplateExists(n string, config *elasticb
 
 func testAccBeanstalkConfigurationTemplateConfig(r string) string {
 	return fmt.Sprintf(`
-resource "aws_elastic_beanstalk_application" "tftest" {
+resource "aws_elasticbeanstalk_application" "tftest" {
   name        = "tf-test-%s"
   description = "tf-test-desc-%s"
 }
 
-resource "aws_elastic_beanstalk_configuration_template" "tf_template" {
+resource "aws_elasticbeanstalk_configuration_template" "tf_template" {
   name                = "tf-test-template-config"
-  application         = aws_elastic_beanstalk_application.tftest.name
+  application         = aws_elasticbeanstalk_application.tftest.name
   solution_stack_name = "64bit Amazon Linux running Python"
 }
 `, r, r)
@@ -182,14 +182,14 @@ resource "aws_subnet" "main" {
   }
 }
 
-resource "aws_elastic_beanstalk_application" "tftest" {
+resource "aws_elasticbeanstalk_application" "tftest" {
   name        = "tf-test-%s"
   description = "tf-test-desc"
 }
 
-resource "aws_elastic_beanstalk_configuration_template" "tf_template" {
+resource "aws_elasticbeanstalk_configuration_template" "tf_template" {
   name        = "tf-test-%s"
-  application = aws_elastic_beanstalk_application.tftest.name
+  application = aws_elasticbeanstalk_application.tftest.name
 
   solution_stack_name = "64bit Amazon Linux running Python"
 
@@ -210,14 +210,14 @@ resource "aws_elastic_beanstalk_configuration_template" "tf_template" {
 
 func testAccBeanstalkConfigurationTemplateConfig_Setting(name string) string {
 	return fmt.Sprintf(`
-resource "aws_elastic_beanstalk_application" "tftest" {
+resource "aws_elasticbeanstalk_application" "tftest" {
   name        = "tf-test-%s"
   description = "tf-test-desc"
 }
 
-resource "aws_elastic_beanstalk_configuration_template" "tf_template" {
+resource "aws_elasticbeanstalk_configuration_template" "tf_template" {
   name        = "tf-test-%s"
-  application = aws_elastic_beanstalk_application.tftest.name
+  application = aws_elasticbeanstalk_application.tftest.name
 
   solution_stack_name = "64bit Amazon Linux running Python"
 

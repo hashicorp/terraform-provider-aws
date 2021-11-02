@@ -161,7 +161,7 @@ elastic-transcoder:
 service/elasticache:
   - '((\*|-) ?`?|(data|resource) "?)aws_elasticache_'
 service/elasticbeanstalk:
-  - '((\*|-) ?`?|(data|resource) "?)aws_elastic_beanstalk_'
+  - '((\*|-) ?`?|(data|resource) "?)aws_elasticbeanstalk_'
 service/elasticsearch:
   - '((\*|-) ?`?|(data|resource) "?)aws_elasticsearch_'
 service/elb:

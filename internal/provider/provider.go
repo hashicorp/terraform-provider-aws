@@ -497,9 +497,12 @@ func Provider() *schema.Provider {
 			"aws_elasticache_replication_group": elasticache.DataSourceReplicationGroup(),
 			"aws_elasticache_user":              elasticache.DataSourceUser(),
 
-			"aws_elastic_beanstalk_application":    elasticbeanstalk.DataSourceApplication(),
-			"aws_elastic_beanstalk_hosted_zone":    elasticbeanstalk.DataSourceHostedZone(),
-			"aws_elastic_beanstalk_solution_stack": elasticbeanstalk.DataSourceSolutionStack(),
+			"aws_elasticbeanstalk_application":     elasticbeanstalk.DataSourceApplication(),
+			"aws_elasticbeanstalk_hosted_zone":     elasticbeanstalk.DataSourceHostedZone(),
+			"aws_elasticbeanstalk_solution_stack":  elasticbeanstalk.DataSourceSolutionStack(),
+			"aws_elastic_beanstalk_application":    elasticbeanstalk.DataSourceApplication(),   // backward compatible alias
+			"aws_elastic_beanstalk_hosted_zone":    elasticbeanstalk.DataSourceHostedZone(),    // backward compatible alias
+			"aws_elastic_beanstalk_solution_stack": elasticbeanstalk.DataSourceSolutionStack(), // backward compatible alias
 
 			"aws_elasticsearch_domain": elasticsearch.DataSourceDomain(),
 
@@ -1119,10 +1122,14 @@ func Provider() *schema.Provider {
 			"aws_elasticache_user":                     elasticache.ResourceUser(),
 			"aws_elasticache_user_group":               elasticache.ResourceUserGroup(),
 
-			"aws_elastic_beanstalk_application":            elasticbeanstalk.ResourceApplication(),
-			"aws_elastic_beanstalk_application_version":    elasticbeanstalk.ResourceApplicationVersion(),
-			"aws_elastic_beanstalk_configuration_template": elasticbeanstalk.ResourceConfigurationTemplate(),
-			"aws_elastic_beanstalk_environment":            elasticbeanstalk.ResourceEnvironment(),
+			"aws_elasticbeanstalk_application":             elasticbeanstalk.ResourceApplication(),
+			"aws_elasticbeanstalk_application_version":     elasticbeanstalk.ResourceApplicationVersion(),
+			"aws_elasticbeanstalk_configuration_template":  elasticbeanstalk.ResourceConfigurationTemplate(),
+			"aws_elasticbeanstalk_environment":             elasticbeanstalk.ResourceEnvironment(),
+			"aws_elastic_beanstalk_application":            elasticbeanstalk.ResourceApplication(),           // backward compatible alias
+			"aws_elastic_beanstalk_application_version":    elasticbeanstalk.ResourceApplicationVersion(),    // backward compatible alias
+			"aws_elastic_beanstalk_configuration_template": elasticbeanstalk.ResourceConfigurationTemplate(), // backward compatible alias
+			"aws_elastic_beanstalk_environment":            elasticbeanstalk.ResourceEnvironment(),           // backward compatible alias
 
 			"aws_elasticsearch_domain":              elasticsearch.ResourceDomain(),
 			"aws_elasticsearch_domain_policy":       elasticsearch.ResourceDomainPolicy(),

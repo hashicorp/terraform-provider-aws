@@ -1,19 +1,19 @@
 ---
 subcategory: "Elastic Beanstalk"
 layout: "aws"
-page_title: "AWS: aws_elastic_beanstalk_solution_stack"
+page_title: "AWS: aws_elasticbeanstalk_solution_stack"
 description: |-
   Get an elastic beanstalk solution stack.
 ---
 
-# Data Source: aws_elastic_beanstalk_solution_stack
+# Data Source: aws_elasticbeanstalk_solution_stack
 
 Use this data source to get the name of a elastic beanstalk solution stack.
 
 ## Example Usage
 
 ```terraform
-data "aws_elastic_beanstalk_solution_stack" "multi_docker" {
+data "aws_elasticbeanstalk_solution_stack" "multi_docker" {
   most_recent = true
 
   name_regex = "^64bit Amazon Linux (.*) Multi-container Docker (.*)$"

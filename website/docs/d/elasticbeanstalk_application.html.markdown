@@ -1,28 +1,28 @@
 ---
 subcategory: "Elastic Beanstalk"
 layout: "aws"
-page_title: "AWS: aws_elastic_beanstalk_application"
+page_title: "AWS: aws_elasticbeanstalk_application"
 description: |-
   Retrieve information about an Elastic Beanstalk Application
 ---
 
-# Data Source: aws_elastic_beanstalk_application
+# Data Source: aws_elasticbeanstalk_application
 
 Retrieve information about an Elastic Beanstalk Application.
 
 ## Example Usage
 
 ```terraform
-data "aws_elastic_beanstalk_application" "example" {
+data "aws_elasticbeanstalk_application" "example" {
   name = "example"
 }
 
 output "arn" {
-  value = data.aws_elastic_beanstalk_application.example.arn
+  value = data.aws_elasticbeanstalk_application.example.arn
 }
 
 output "description" {
-  value = data.aws_elastic_beanstalk_application.example.description
+  value = data.aws_elasticbeanstalk_application.example.description
 }
 ```
 

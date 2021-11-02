@@ -18,14 +18,14 @@ import (
 )
 
 func init() {
-	resource.AddTestSweepers("aws_elastic_beanstalk_application", &resource.Sweeper{
-		Name:         "aws_elastic_beanstalk_application",
-		Dependencies: []string{"aws_elastic_beanstalk_environment"},
+	resource.AddTestSweepers("aws_elasticbeanstalk_application", &resource.Sweeper{
+		Name:         "aws_elasticbeanstalk_application",
+		Dependencies: []string{"aws_elasticbeanstalk_environment"},
 		F:            sweepApplications,
 	})
 
-	resource.AddTestSweepers("aws_elastic_beanstalk_environment", &resource.Sweeper{
-		Name: "aws_elastic_beanstalk_environment",
+	resource.AddTestSweepers("aws_elasticbeanstalk_environment", &resource.Sweeper{
+		Name: "aws_elasticbeanstalk_environment",
 		F:    sweepEnvironments,
 	})
 }

@@ -69,7 +69,7 @@ func dataSourceSolutionStackRead(d *schema.ResourceData, meta interface{}) error
 		solutionStack = filteredSolutionStacks[0]
 	} else {
 		recent := d.Get("most_recent").(bool)
-		log.Printf("[DEBUG] aws_elastic_beanstalk_solution_stack - multiple results found and `most_recent` is set to: %t", recent)
+		log.Printf("[DEBUG] aws_elasticbeanstalk_solution_stack - multiple results found and `most_recent` is set to: %t", recent)
 		if recent {
 			solutionStack = mostRecentSolutionStack(filteredSolutionStacks)
 		} else {
@@ -78,7 +78,7 @@ func dataSourceSolutionStackRead(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	log.Printf("[DEBUG] aws_elastic_beanstalk_solution_stack - Single solution stack found: %s", *solutionStack)
+	log.Printf("[DEBUG] aws_elasticbeanstalk_solution_stack - Single solution stack found: %s", *solutionStack)
 	return solutionStackDescriptionAttributes(d, solutionStack)
 }
 

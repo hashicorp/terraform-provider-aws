@@ -22,7 +22,7 @@ import (
 func TestAccElasticBeanstalkEnvironment_BeanstalkEnv_basic(t *testing.T) {
 	var app elasticbeanstalk.EnvironmentDescription
 
-	resourceName := "aws_elastic_beanstalk_environment.test"
+	resourceName := "aws_elasticbeanstalk_environment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	beanstalkAsgNameRegexp := regexp.MustCompile("awseb.+?AutoScalingGroup[^,]+")
@@ -66,7 +66,7 @@ func TestAccElasticBeanstalkEnvironment_BeanstalkEnv_tier(t *testing.T) {
 	var app elasticbeanstalk.EnvironmentDescription
 	beanstalkQueuesNameRegexp := regexp.MustCompile("https://sqs.+?awseb[^,]+")
 
-	resourceName := "aws_elastic_beanstalk_environment.test"
+	resourceName := "aws_elasticbeanstalk_environment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -98,7 +98,7 @@ func TestAccElasticBeanstalkEnvironment_BeanstalkEnv_tier(t *testing.T) {
 func TestAccElasticBeanstalkEnvironment_BeanstalkEnvCNAME_prefix(t *testing.T) {
 	var app elasticbeanstalk.EnvironmentDescription
 
-	resourceName := "aws_elastic_beanstalk_environment.test"
+	resourceName := "aws_elasticbeanstalk_environment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	beanstalkCnameRegexp := regexp.MustCompile("^" + rName + ".+?elasticbeanstalk.com$")
@@ -132,7 +132,7 @@ func TestAccElasticBeanstalkEnvironment_BeanstalkEnvCNAME_prefix(t *testing.T) {
 func TestAccElasticBeanstalkEnvironment_beanstalkEnv(t *testing.T) {
 	var app elasticbeanstalk.EnvironmentDescription
 
-	resourceName := "aws_elastic_beanstalk_environment.test"
+	resourceName := "aws_elasticbeanstalk_environment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -179,7 +179,7 @@ func TestAccElasticBeanstalkEnvironment_beanstalkEnv(t *testing.T) {
 func TestAccElasticBeanstalkEnvironment_BeanstalkEnv_resource(t *testing.T) {
 	var app elasticbeanstalk.EnvironmentDescription
 
-	resourceName := "aws_elastic_beanstalk_environment.test"
+	resourceName := "aws_elasticbeanstalk_environment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -210,7 +210,7 @@ func TestAccElasticBeanstalkEnvironment_BeanstalkEnv_resource(t *testing.T) {
 func TestAccElasticBeanstalkEnvironment_BeanstalkEnv_tags(t *testing.T) {
 	var app elasticbeanstalk.EnvironmentDescription
 
-	resourceName := "aws_elastic_beanstalk_environment.test"
+	resourceName := "aws_elasticbeanstalk_environment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -256,7 +256,7 @@ func TestAccElasticBeanstalkEnvironment_BeanstalkEnv_tags(t *testing.T) {
 func TestAccElasticBeanstalkEnvironment_BeanstalkEnvTemplate_change(t *testing.T) {
 	var app elasticbeanstalk.EnvironmentDescription
 
-	resourceName := "aws_elastic_beanstalk_environment.test"
+	resourceName := "aws_elasticbeanstalk_environment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -290,7 +290,7 @@ func TestAccElasticBeanstalkEnvironment_BeanstalkEnvTemplate_change(t *testing.T
 func TestAccElasticBeanstalkEnvironment_BeanstalkEnvSettings_update(t *testing.T) {
 	var app elasticbeanstalk.EnvironmentDescription
 
-	resourceName := "aws_elastic_beanstalk_environment.test"
+	resourceName := "aws_elasticbeanstalk_environment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -334,7 +334,7 @@ func TestAccElasticBeanstalkEnvironment_BeanstalkEnvSettings_update(t *testing.T
 func TestAccElasticBeanstalkEnvironment_BeanstalkEnvVersion_label(t *testing.T) {
 	var app elasticbeanstalk.EnvironmentDescription
 
-	resourceName := "aws_elastic_beanstalk_environment.test"
+	resourceName := "aws_elasticbeanstalk_environment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -371,7 +371,7 @@ func TestAccElasticBeanstalkEnvironment_BeanstalkEnvVersion_label(t *testing.T) 
 func TestAccElasticBeanstalkEnvironment_BeanstalkEnv_settingWithJSONValue(t *testing.T) {
 	var app elasticbeanstalk.EnvironmentDescription
 
-	resourceName := "aws_elastic_beanstalk_environment.test"
+	resourceName := "aws_elasticbeanstalk_environment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
@@ -406,7 +406,7 @@ func TestAccElasticBeanstalkEnvironment_BeanstalkEnv_settingWithJSONValue(t *tes
 func TestAccElasticBeanstalkEnvironment_BeanstalkEnv_platformARN(t *testing.T) {
 	var app elasticbeanstalk.EnvironmentDescription
 
-	resourceName := "aws_elastic_beanstalk_environment.test"
+	resourceName := "aws_elasticbeanstalk_environment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -491,7 +491,7 @@ func testAccCheckBeanstalkEnvDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_elastic_beanstalk_environment" {
+		if rs.Type != "aws_elasticbeanstalk_environment" {
 			continue
 		}
 
@@ -700,7 +700,7 @@ data "aws_availability_zones" "available" {
   }
 }
 
-data "aws_elastic_beanstalk_solution_stack" "test" {
+data "aws_elasticbeanstalk_solution_stack" "test" {
   most_recent = true
   name_regex  = "64bit Amazon Linux .* running Python .*"
 }
@@ -742,7 +742,7 @@ resource "aws_security_group" "test" {
   vpc_id = aws_vpc.test.id
 }
 
-resource "aws_elastic_beanstalk_application" "test" {
+resource "aws_elasticbeanstalk_application" "test" {
   description = "tf-test-desc"
   name        = %[1]q
 }
@@ -821,10 +821,10 @@ resource "aws_iam_instance_profile" "test" {
 
 func testAccBeanstalkEnvConfig(rName string) string {
 	return testAccBeanstalkEnvConfigBase(rName) + fmt.Sprintf(`
-resource "aws_elastic_beanstalk_environment" "test" {
-  application         = aws_elastic_beanstalk_application.test.name
+resource "aws_elasticbeanstalk_environment" "test" {
+  application         = aws_elasticbeanstalk_application.test.name
   name                = %[1]q
-  solution_stack_name = data.aws_elastic_beanstalk_solution_stack.test.name
+  solution_stack_name = data.aws_elasticbeanstalk_solution_stack.test.name
 
   setting {
     namespace = "aws:ec2:vpc"
@@ -867,8 +867,8 @@ resource "aws_elastic_beanstalk_environment" "test" {
 
 func testAccBeanstalkEnvConfig_platform_arn(rName string) string {
 	return testAccBeanstalkEnvConfigBase(rName) + fmt.Sprintf(`
-resource "aws_elastic_beanstalk_environment" "test" {
-  application  = aws_elastic_beanstalk_application.test.name
+resource "aws_elasticbeanstalk_environment" "test" {
+  application  = aws_elasticbeanstalk_application.test.name
   name         = %[1]q
   platform_arn = "arn:${data.aws_partition.current.partition}:elasticbeanstalk:${data.aws_region.current.name}::platform/Python 3.6 running on 64bit Amazon Linux/2.9.6"
 
@@ -913,10 +913,10 @@ resource "aws_elastic_beanstalk_environment" "test" {
 
 func testAccBeanstalkEnvConfig_settings(rName string) string {
 	return testAccBeanstalkEnvConfigBase(rName) + fmt.Sprintf(`
-resource "aws_elastic_beanstalk_environment" "test" {
-  application         = aws_elastic_beanstalk_application.test.name
+resource "aws_elasticbeanstalk_environment" "test" {
+  application         = aws_elasticbeanstalk_application.test.name
   name                = %[1]q
-  solution_stack_name = data.aws_elastic_beanstalk_solution_stack.test.name
+  solution_stack_name = data.aws_elasticbeanstalk_solution_stack.test.name
 
   setting {
     namespace = "aws:ec2:vpc"
@@ -998,10 +998,10 @@ resource "aws_elastic_beanstalk_environment" "test" {
 
 func testAccBeanstalkWorkerEnvConfig(rName string) string {
 	return testAccBeanstalkEnvConfigBase(rName) + fmt.Sprintf(`
-resource "aws_elastic_beanstalk_environment" "test" {
-  application         = aws_elastic_beanstalk_application.test.name
+resource "aws_elasticbeanstalk_environment" "test" {
+  application         = aws_elasticbeanstalk_application.test.name
   name                = %[1]q
-  solution_stack_name = data.aws_elastic_beanstalk_solution_stack.test.name
+  solution_stack_name = data.aws_elasticbeanstalk_solution_stack.test.name
   tier                = "Worker"
 
   setting {
@@ -1045,11 +1045,11 @@ resource "aws_elastic_beanstalk_environment" "test" {
 
 func testAccBeanstalkEnvCnamePrefixConfig(rName string) string {
 	return testAccBeanstalkEnvConfigBase(rName) + fmt.Sprintf(`
-resource "aws_elastic_beanstalk_environment" "test" {
-  application         = aws_elastic_beanstalk_application.test.name
+resource "aws_elasticbeanstalk_environment" "test" {
+  application         = aws_elasticbeanstalk_application.test.name
   cname_prefix        = %[1]q
   name                = %[1]q
-  solution_stack_name = data.aws_elastic_beanstalk_solution_stack.test.name
+  solution_stack_name = data.aws_elasticbeanstalk_solution_stack.test.name
 
   setting {
     namespace = "aws:ec2:vpc"
@@ -1092,16 +1092,16 @@ resource "aws_elastic_beanstalk_environment" "test" {
 
 func testAccBeanstalkConfigTemplate(rName string, cfgTplValue int) string {
 	return testAccBeanstalkEnvConfigBase(rName) + fmt.Sprintf(`
-resource "aws_elastic_beanstalk_environment" "test" {
-  application   = aws_elastic_beanstalk_application.test.name
+resource "aws_elasticbeanstalk_environment" "test" {
+  application   = aws_elasticbeanstalk_application.test.name
   name          = %[1]q
-  template_name = aws_elastic_beanstalk_configuration_template.test.name
+  template_name = aws_elasticbeanstalk_configuration_template.test.name
 }
 
-resource "aws_elastic_beanstalk_configuration_template" "test" {
-  application         = aws_elastic_beanstalk_application.test.name
+resource "aws_elasticbeanstalk_configuration_template" "test" {
+  application         = aws_elasticbeanstalk_application.test.name
   name                = %[1]q
-  solution_stack_name = data.aws_elastic_beanstalk_solution_stack.test.name
+  solution_stack_name = data.aws_elasticbeanstalk_solution_stack.test.name
 
   setting {
     namespace = "aws:ec2:vpc"
@@ -1150,10 +1150,10 @@ resource "aws_elastic_beanstalk_configuration_template" "test" {
 
 func testAccBeanstalkResourceOptionSetting(rName string) string {
 	return testAccBeanstalkEnvConfigBase(rName) + fmt.Sprintf(`
-resource "aws_elastic_beanstalk_environment" "test" {
-  application         = aws_elastic_beanstalk_application.test.name
+resource "aws_elasticbeanstalk_environment" "test" {
+  application         = aws_elasticbeanstalk_application.test.name
   name                = %[1]q
-  solution_stack_name = data.aws_elastic_beanstalk_solution_stack.test.name
+  solution_stack_name = data.aws_elasticbeanstalk_solution_stack.test.name
 
   setting {
     namespace = "aws:ec2:vpc"
@@ -1217,10 +1217,10 @@ resource "aws_elastic_beanstalk_environment" "test" {
 
 func testAccBeanstalkTagsTemplate(rName, firstTag, secondTag string) string {
 	return testAccBeanstalkEnvConfigBase(rName) + fmt.Sprintf(`
-resource "aws_elastic_beanstalk_environment" "test" {
-  application         = aws_elastic_beanstalk_application.test.name
+resource "aws_elasticbeanstalk_environment" "test" {
+  application         = aws_elasticbeanstalk_application.test.name
   name                = %[1]q
-  solution_stack_name = data.aws_elastic_beanstalk_solution_stack.test.name
+  solution_stack_name = data.aws_elasticbeanstalk_solution_stack.test.name
 
   setting {
     namespace = "aws:ec2:vpc"
@@ -1268,10 +1268,10 @@ resource "aws_elastic_beanstalk_environment" "test" {
 
 func testAccBeanstalkEnv_TemplateChange_stack(rName string) string {
 	return testAccBeanstalkEnvConfigBase(rName) + fmt.Sprintf(`
-resource "aws_elastic_beanstalk_environment" "test" {
-  application         = aws_elastic_beanstalk_application.test.name
+resource "aws_elasticbeanstalk_environment" "test" {
+  application         = aws_elasticbeanstalk_application.test.name
   name                = %[1]q
-  solution_stack_name = data.aws_elastic_beanstalk_solution_stack.test.name
+  solution_stack_name = data.aws_elasticbeanstalk_solution_stack.test.name
 
   setting {
     namespace = "aws:ec2:vpc"
@@ -1310,20 +1310,20 @@ resource "aws_elastic_beanstalk_environment" "test" {
   }
 }
 
-resource "aws_elastic_beanstalk_configuration_template" "test" {
-  application         = aws_elastic_beanstalk_application.test.name
+resource "aws_elasticbeanstalk_configuration_template" "test" {
+  application         = aws_elasticbeanstalk_application.test.name
   name                = %[1]q
-  solution_stack_name = data.aws_elastic_beanstalk_solution_stack.test.name
+  solution_stack_name = data.aws_elasticbeanstalk_solution_stack.test.name
 }
 `, rName)
 }
 
 func testAccBeanstalkEnv_TemplateChange_temp(rName string) string {
 	return testAccBeanstalkEnvConfigBase(rName) + fmt.Sprintf(`
-resource "aws_elastic_beanstalk_environment" "test" {
-  application   = aws_elastic_beanstalk_application.test.name
+resource "aws_elasticbeanstalk_environment" "test" {
+  application   = aws_elasticbeanstalk_application.test.name
   name          = %[1]q
-  template_name = aws_elastic_beanstalk_configuration_template.test.name
+  template_name = aws_elasticbeanstalk_configuration_template.test.name
 
   setting {
     namespace = "aws:ec2:vpc"
@@ -1362,10 +1362,10 @@ resource "aws_elastic_beanstalk_environment" "test" {
   }
 }
 
-resource "aws_elastic_beanstalk_configuration_template" "test" {
-  application         = aws_elastic_beanstalk_application.test.name
+resource "aws_elasticbeanstalk_configuration_template" "test" {
+  application         = aws_elasticbeanstalk_application.test.name
   name                = %[1]q
-  solution_stack_name = data.aws_elastic_beanstalk_solution_stack.test.name
+  solution_stack_name = data.aws_elasticbeanstalk_solution_stack.test.name
 }
 `, rName)
 }
@@ -1382,18 +1382,18 @@ resource "aws_s3_bucket_object" "test" {
   source = "test-fixtures/python-v1.zip"
 }
 
-resource "aws_elastic_beanstalk_application_version" "test" {
-  application = aws_elastic_beanstalk_application.test.name
+resource "aws_elasticbeanstalk_application_version" "test" {
+  application = aws_elasticbeanstalk_application.test.name
   bucket      = aws_s3_bucket.test.id
   key         = aws_s3_bucket_object.test.id
   name        = "%[1]s-1"
 }
 
-resource "aws_elastic_beanstalk_environment" "test" {
-  application         = aws_elastic_beanstalk_application.test.name
+resource "aws_elasticbeanstalk_environment" "test" {
+  application         = aws_elasticbeanstalk_application.test.name
   name                = %[1]q
-  solution_stack_name = data.aws_elastic_beanstalk_solution_stack.test.name
-  version_label       = aws_elastic_beanstalk_application_version.test.name
+  solution_stack_name = data.aws_elasticbeanstalk_solution_stack.test.name
+  version_label       = aws_elasticbeanstalk_application_version.test.name
 
   setting {
     namespace = "aws:ec2:vpc"
@@ -1446,18 +1446,18 @@ resource "aws_s3_bucket_object" "test" {
   source = "test-fixtures/python-v1.zip"
 }
 
-resource "aws_elastic_beanstalk_application_version" "test" {
-  application = aws_elastic_beanstalk_application.test.name
+resource "aws_elasticbeanstalk_application_version" "test" {
+  application = aws_elasticbeanstalk_application.test.name
   bucket      = aws_s3_bucket.test.id
   key         = aws_s3_bucket_object.test.id
   name        = "%[1]s-2"
 }
 
-resource "aws_elastic_beanstalk_environment" "test" {
-  application         = aws_elastic_beanstalk_application.test.name
+resource "aws_elasticbeanstalk_environment" "test" {
+  application         = aws_elasticbeanstalk_application.test.name
   name                = %[1]q
-  solution_stack_name = data.aws_elastic_beanstalk_solution_stack.test.name
-  version_label       = aws_elastic_beanstalk_application_version.test.name
+  solution_stack_name = data.aws_elasticbeanstalk_solution_stack.test.name
+  version_label       = aws_elasticbeanstalk_application_version.test.name
 
   setting {
     namespace = "aws:ec2:vpc"
@@ -1509,10 +1509,10 @@ resource "aws_key_pair" "test" {
   public_key = %[2]q
 }
 
-resource "aws_elastic_beanstalk_environment" "test" {
-  application         = aws_elastic_beanstalk_application.test.name
+resource "aws_elasticbeanstalk_environment" "test" {
+  application         = aws_elasticbeanstalk_application.test.name
   name                = %[1]q
-  solution_stack_name = data.aws_elastic_beanstalk_solution_stack.test.name
+  solution_stack_name = data.aws_elasticbeanstalk_solution_stack.test.name
   tier                = "Worker"
 
   setting {

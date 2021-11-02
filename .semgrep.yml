@@ -30,7 +30,7 @@ rules:
         # Legacy resource handling
         - aws/resource_aws_autoscaling_group.go
         - aws/resource_aws_efs_mount_target.go
-        - aws/resource_aws_elastic_beanstalk_environment.go
+        - aws/resource_aws_elasticbeanstalk_environment.go
         - aws/resource_aws_elb.go
         - aws/resource_aws_iam_server_certificate.go
         - aws/resource_aws_lambda_event_source_mapping.go
