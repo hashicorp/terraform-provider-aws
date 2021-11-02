@@ -1,12 +1,12 @@
 ---
 subcategory: "S3"
 layout: "aws"
-page_title: "AWS: aws_s3_account_public_access_block"
+page_title: "AWS: aws_s3control_account_public_access_block"
 description: |-
   Manages S3 account-level Public Access Block Configuration
 ---
 
-# Resource: aws_s3_account_public_access_block
+# Resource: aws_s3control_account_public_access_block
 
 Manages S3 account-level Public Access Block configuration. For more information about these settings, see the [AWS S3 Block Public Access documentation](https://docs.aws.amazon.com/AmazonS3/latest/dev/access-control-block-public-access.html).
 
@@ -17,7 +17,7 @@ Manages S3 account-level Public Access Block configuration. For more information
 ## Example Usage
 
 ```terraform
-resource "aws_s3_account_public_access_block" "example" {
+resource "aws_s3control_account_public_access_block" "example" {
   block_public_acls   = true
   block_public_policy = true
 }
@@ -46,8 +46,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_s3_account_public_access_block` can be imported by using the AWS account ID, e.g.,
+`aws_s3control_account_public_access_block` can be imported by using the AWS account ID, e.g.,
 
 ```
-$ terraform import aws_s3_account_public_access_block.example 123456789012
+$ terraform import aws_s3control_account_public_access_block.example 123456789012
 ```

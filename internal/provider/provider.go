@@ -1470,11 +1470,13 @@ func Provider() *schema.Provider {
 			"aws_s3_bucket_public_access_block":     s3.ResourceBucketPublicAccessBlock(),
 			"aws_s3_object_copy":                    s3.ResourceObjectCopy(),
 
-			"aws_s3_access_point":                          s3control.ResourceAccessPoint(),
-			"aws_s3_account_public_access_block":           s3control.ResourceAccountPublicAccessBlock(),
+			"aws_s3control_access_point":                   s3control.ResourceAccessPoint(),
+			"aws_s3control_account_public_access_block":    s3control.ResourceAccountPublicAccessBlock(),
 			"aws_s3control_bucket":                         s3control.ResourceBucket(),
 			"aws_s3control_bucket_lifecycle_configuration": s3control.ResourceBucketLifecycleConfiguration(),
 			"aws_s3control_bucket_policy":                  s3control.ResourceBucketPolicy(),
+			"aws_s3_access_point":                          s3control.ResourceAccessPoint(),              // backward compatible alias
+			"aws_s3_account_public_access_block":           s3control.ResourceAccountPublicAccessBlock(), // backward compatible alias
 
 			"aws_s3outposts_endpoint": s3outposts.ResourceEndpoint(),
 

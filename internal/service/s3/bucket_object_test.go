@@ -456,7 +456,7 @@ func TestAccS3BucketObject_updatesWithVersioningViaAccessPoint(t *testing.T) {
 	var originalObj, modifiedObj s3.GetObjectOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_object.test"
-	accessPointResourceName := "aws_s3_access_point.test"
+	accessPointResourceName := "aws_s3control_access_point.test"
 
 	sourceInitial := testAccBucketObjectCreateTempFile(t, "initial versioned object state")
 	defer os.Remove(sourceInitial)
@@ -1702,13 +1702,13 @@ resource "aws_s3_bucket" "test" {
   }
 }
 
-resource "aws_s3_access_point" "test" {
+resource "aws_s3control_access_point" "test" {
   bucket = aws_s3_bucket.test.bucket
   name   = %[1]q
 }
 
 resource "aws_s3_bucket_object" "test" {
-  bucket = aws_s3_access_point.test.arn
+  bucket = aws_s3control_access_point.test.arn
   key    = "updateable-key"
   source = %[3]q
   etag   = filemd5(%[3]q)

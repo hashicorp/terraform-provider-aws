@@ -57,7 +57,7 @@ func TestAccS3BucketObjectDataSource_basicViaAccessPoint(t *testing.T) {
 
 	dataSourceName := "data.aws_s3_bucket_object.test"
 	resourceName := "aws_s3_bucket_object.test"
-	accessPointResourceName := "aws_s3_access_point.test"
+	accessPointResourceName := "aws_s3control_access_point.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
@@ -482,7 +482,7 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_s3_access_point" "test" {
+resource "aws_s3control_access_point" "test" {
   bucket = aws_s3_bucket.test.bucket
   name   = %[1]q
 }
@@ -494,7 +494,7 @@ resource "aws_s3_bucket_object" "test" {
 }
 
 data "aws_s3_bucket_object" "test" {
-  bucket = aws_s3_access_point.test.arn
+  bucket = aws_s3control_access_point.test.arn
   key    = aws_s3_bucket_object.test.key
 }
 `, rName)

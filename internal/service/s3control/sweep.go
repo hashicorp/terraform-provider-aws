@@ -17,8 +17,8 @@ import (
 )
 
 func init() {
-	resource.AddTestSweepers("aws_s3_access_point", &resource.Sweeper{
-		Name: "aws_s3_access_point",
+	resource.AddTestSweepers("aws_s3control_access_point", &resource.Sweeper{
+		Name: "aws_s3control_access_point",
 		F:    sweepAccessPoints,
 	})
 }

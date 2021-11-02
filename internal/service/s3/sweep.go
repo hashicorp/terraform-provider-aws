@@ -31,7 +31,7 @@ func init() {
 		Name: "aws_s3_bucket",
 		F:    sweepBuckets,
 		Dependencies: []string{
-			"aws_s3_access_point",
+			"aws_s3control_access_point",
 			"aws_s3_bucket_object",
 		},
 	})

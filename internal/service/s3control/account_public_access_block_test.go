@@ -46,7 +46,7 @@ func TestAccS3ControlAccountPublicAccessBlock_serial(t *testing.T) {
 
 func testAccAccountPublicAccessBlock_basic(t *testing.T) {
 	var configuration1 s3control.PublicAccessBlockConfiguration
-	resourceName := "aws_s3_account_public_access_block.test"
+	resourceName := "aws_s3control_account_public_access_block.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -76,7 +76,7 @@ func testAccAccountPublicAccessBlock_basic(t *testing.T) {
 
 func testAccAccountPublicAccessBlock_disappears(t *testing.T) {
 	var configuration1 s3control.PublicAccessBlockConfiguration
-	resourceName := "aws_s3_account_public_access_block.test"
+	resourceName := "aws_s3control_account_public_access_block.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -98,7 +98,7 @@ func testAccAccountPublicAccessBlock_disappears(t *testing.T) {
 
 func testAccAccountPublicAccessBlock_AccountID(t *testing.T) {
 	var configuration1 s3control.PublicAccessBlockConfiguration
-	resourceName := "aws_s3_account_public_access_block.test"
+	resourceName := "aws_s3control_account_public_access_block.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -124,7 +124,7 @@ func testAccAccountPublicAccessBlock_AccountID(t *testing.T) {
 
 func testAccAccountPublicAccessBlock_BlockPublicACLs(t *testing.T) {
 	var configuration1, configuration2, configuration3 s3control.PublicAccessBlockConfiguration
-	resourceName := "aws_s3_account_public_access_block.test"
+	resourceName := "aws_s3control_account_public_access_block.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -164,7 +164,7 @@ func testAccAccountPublicAccessBlock_BlockPublicACLs(t *testing.T) {
 
 func testAccAccountPublicAccessBlock_BlockPublicPolicy(t *testing.T) {
 	var configuration1, configuration2, configuration3 s3control.PublicAccessBlockConfiguration
-	resourceName := "aws_s3_account_public_access_block.test"
+	resourceName := "aws_s3control_account_public_access_block.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -204,7 +204,7 @@ func testAccAccountPublicAccessBlock_BlockPublicPolicy(t *testing.T) {
 
 func testAccAccountPublicAccessBlock_IgnorePublicACLs(t *testing.T) {
 	var configuration1, configuration2, configuration3 s3control.PublicAccessBlockConfiguration
-	resourceName := "aws_s3_account_public_access_block.test"
+	resourceName := "aws_s3control_account_public_access_block.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -244,7 +244,7 @@ func testAccAccountPublicAccessBlock_IgnorePublicACLs(t *testing.T) {
 
 func testAccAccountPublicAccessBlock_RestrictPublicBuckets(t *testing.T) {
 	var configuration1, configuration2, configuration3 s3control.PublicAccessBlockConfiguration
-	resourceName := "aws_s3_account_public_access_block.test"
+	resourceName := "aws_s3control_account_public_access_block.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -334,7 +334,7 @@ func testAccCheckAccountPublicAccessBlockDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_s3_account_public_access_block" {
+		if rs.Type != "aws_s3control_account_public_access_block" {
 			continue
 		}
 
@@ -402,14 +402,14 @@ func testAccCheckAccountPublicAccessBlockDisappears() resource.TestCheckFunc {
 }
 
 func testAccAccountPublicAccessBlockConfig() string {
-	return `resource "aws_s3_account_public_access_block" "test" {}`
+	return `resource "aws_s3control_account_public_access_block" "test" {}`
 }
 
 func testAccAccountPublicAccessBlockAccountIDConfig() string {
 	return `
 data "aws_caller_identity" "test" {}
 
-resource "aws_s3_account_public_access_block" "test" {
+resource "aws_s3control_account_public_access_block" "test" {
   account_id = data.aws_caller_identity.test.account_id
 }
 `
@@ -417,7 +417,7 @@ resource "aws_s3_account_public_access_block" "test" {
 
 func testAccAccountPublicAccessBlockBlockPublicACLsConfig(blockPublicAcls bool) string {
 	return fmt.Sprintf(`
-resource "aws_s3_account_public_access_block" "test" {
+resource "aws_s3control_account_public_access_block" "test" {
   block_public_acls = %t
 }
 `, blockPublicAcls)
@@ -425,7 +425,7 @@ resource "aws_s3_account_public_access_block" "test" {
 
 func testAccAccountPublicAccessBlockBlockPublicPolicyConfig(blockPublicPolicy bool) string {
 	return fmt.Sprintf(`
-resource "aws_s3_account_public_access_block" "test" {
+resource "aws_s3control_account_public_access_block" "test" {
   block_public_policy = %t
 }
 `, blockPublicPolicy)
@@ -433,7 +433,7 @@ resource "aws_s3_account_public_access_block" "test" {
 
 func testAccAccountPublicAccessBlockIgnorePublicACLsConfig(ignorePublicAcls bool) string {
 	return fmt.Sprintf(`
-resource "aws_s3_account_public_access_block" "test" {
+resource "aws_s3control_account_public_access_block" "test" {
   ignore_public_acls = %t
 }
 `, ignorePublicAcls)
@@ -441,7 +441,7 @@ resource "aws_s3_account_public_access_block" "test" {
 
 func testAccAccountPublicAccessBlockRestrictPublicBucketsConfig(restrictPublicBuckets bool) string {
 	return fmt.Sprintf(`
-resource "aws_s3_account_public_access_block" "test" {
+resource "aws_s3control_account_public_access_block" "test" {
   restrict_public_buckets = %t
 }
 `, restrictPublicBuckets)

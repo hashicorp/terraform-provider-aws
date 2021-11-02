@@ -1,12 +1,12 @@
 ---
 subcategory: "S3"
 layout: "aws"
-page_title: "AWS: aws_s3_access_point"
+page_title: "AWS: aws_s3control_access_point"
 description: |-
   Manages an S3 Access Point.
 ---
 
-# Resource: aws_s3_access_point
+# Resource: aws_s3control_access_point
 
 Provides a resource to manage an S3 Access Point.
 
@@ -21,7 +21,7 @@ resource "aws_s3_bucket" "example" {
   bucket = "example"
 }
 
-resource "aws_s3_access_point" "example" {
+resource "aws_s3control_access_point" "example" {
   bucket = aws_s3_bucket.example.id
   name   = "example"
 }
@@ -34,7 +34,7 @@ resource "aws_s3control_bucket" "example" {
   bucket = "example"
 }
 
-resource "aws_s3_access_point" "example" {
+resource "aws_s3control_access_point" "example" {
   bucket = aws_s3control_bucket.example.arn
   name   = "example"
 
@@ -100,11 +100,11 @@ Note: S3 access points only support secure access by HTTPS. HTTP isn't supported
 For Access Points associated with an AWS Partition S3 Bucket, this resource can be imported using the `account_id` and `name` separated by a colon (`:`), e.g.,
 
 ```
-$ terraform import aws_s3_access_point.example 123456789012:example
+$ terraform import aws_s3control_access_point.example 123456789012:example
 ```
 
 For Access Points associated with an S3 on Outposts Bucket, this resource can be imported using the Amazon Resource Name (ARN), e.g.,
 
 ```
-$ terraform import aws_s3_access_point.example arn:aws:s3-outposts:us-east-1:123456789012:outpost/op-1234567890123456/accesspoint/example
+$ terraform import aws_s3control_access_point.example arn:aws:s3-outposts:us-east-1:123456789012:outpost/op-1234567890123456/accesspoint/example
 ```

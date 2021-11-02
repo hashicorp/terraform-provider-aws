@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_s3_access_point: Rename data source to aws_s3control_access_point (with alias for aws_s3_access_point)
+```
+
+```release-note:enhancement
+resource/aws_s3_account_public_access_block: Rename data source to aws_s3control_account_public_access_block (with alias for aws_s3_account_public_access_block)
+```

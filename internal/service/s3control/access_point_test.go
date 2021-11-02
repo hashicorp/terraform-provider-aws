@@ -21,7 +21,7 @@ func TestAccS3ControlAccessPoint_basic(t *testing.T) {
 	var v s3control.GetAccessPointOutput
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	accessPointName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_s3_access_point.test"
+	resourceName := "aws_s3control_access_point.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -62,7 +62,7 @@ func TestAccS3ControlAccessPoint_disappears(t *testing.T) {
 	var v s3control.GetAccessPointOutput
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	accessPointName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_s3_access_point.test"
+	resourceName := "aws_s3control_access_point.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -86,7 +86,7 @@ func TestAccS3ControlAccessPoint_Disappears_bucket(t *testing.T) {
 	var v s3control.GetAccessPointOutput
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	accessPointName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_s3_access_point.test"
+	resourceName := "aws_s3control_access_point.test"
 	bucketResourceName := "aws_s3_bucket.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -110,7 +110,7 @@ func TestAccS3ControlAccessPoint_Disappears_bucket(t *testing.T) {
 func TestAccS3ControlAccessPoint_Bucket_arn(t *testing.T) {
 	var v s3control.GetAccessPointOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_s3_access_point.test"
+	resourceName := "aws_s3control_access_point.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
@@ -151,7 +151,7 @@ func TestAccS3ControlAccessPoint_Bucket_arn(t *testing.T) {
 func TestAccS3ControlAccessPoint_policy(t *testing.T) {
 	var v s3control.GetAccessPointOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_s3_access_point.test"
+	resourceName := "aws_s3control_access_point.test"
 
 	expectedPolicyText1 := func() string {
 		return fmt.Sprintf(`{
@@ -245,7 +245,7 @@ func TestAccS3ControlAccessPoint_policy(t *testing.T) {
 func TestAccS3ControlAccessPoint_publicAccessBlock(t *testing.T) {
 	var v s3control.GetAccessPointOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_s3_access_point.test"
+	resourceName := "aws_s3control_access_point.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -284,7 +284,7 @@ func TestAccS3ControlAccessPoint_publicAccessBlock(t *testing.T) {
 func TestAccS3ControlAccessPoint_vpc(t *testing.T) {
 	var v s3control.GetAccessPointOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_s3_access_point.test"
+	resourceName := "aws_s3control_access_point.test"
 	vpcResourceName := "aws_vpc.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -356,7 +356,7 @@ func testAccCheckAccessPointDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_s3_access_point" {
+		if rs.Type != "aws_s3control_access_point" {
 			continue
 		}
 
@@ -456,7 +456,7 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_s3_access_point" "test" {
+resource "aws_s3control_access_point" "test" {
   bucket = aws_s3_bucket.test.bucket
   name   = %[2]q
 }
@@ -484,7 +484,7 @@ resource "aws_vpc" "test" {
   }
 }
 
-resource "aws_s3_access_point" "test" {
+resource "aws_s3control_access_point" "test" {
   bucket = aws_s3control_bucket.test.arn
   name   = %[1]q
 
@@ -501,7 +501,7 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_s3_access_point" "test" {
+resource "aws_s3control_access_point" "test" {
   bucket = aws_s3_bucket.test.bucket
   name   = %[1]q
   policy = data.aws_iam_policy_document.test.json
@@ -545,7 +545,7 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_s3_access_point" "test" {
+resource "aws_s3control_access_point" "test" {
   bucket = aws_s3_bucket.test.bucket
   name   = %[1]q
   policy = data.aws_iam_policy_document.test.json
@@ -590,7 +590,7 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_s3_access_point" "test" {
+resource "aws_s3control_access_point" "test" {
   bucket = aws_s3_bucket.test.bucket
   name   = %[1]q
 
@@ -610,7 +610,7 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_s3_access_point" "test" {
+resource "aws_s3control_access_point" "test" {
   bucket = aws_s3_bucket.test.bucket
   name   = %[1]q
 
@@ -638,7 +638,7 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_s3_access_point" "test" {
+resource "aws_s3control_access_point" "test" {
   bucket = aws_s3_bucket.test.bucket
   name   = %[1]q
 
