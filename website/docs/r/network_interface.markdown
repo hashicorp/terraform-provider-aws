@@ -38,6 +38,10 @@ The following arguments are supported:
 * `security_groups` - (Optional) List of security group IDs to assign to the ENI.
 * `attachment` - (Optional) Block to define the attachment of the ENI. Documented below.
 * `source_dest_check` - (Optional) Whether to enable source destination checking for the ENI. Default true.
+* `ipv4_prefix` - (Optional) One or more IPv4 prefixes assigned to the network interface. Documented below.
+* `ipv4_prefix_count` - (Optional) The number of IPv4 prefixes that AWS automatically assigns to the network interface.
+* `ipv6_prefix` - (Optional) One or more IPv6 prefixes assigned to the network interface. Documented below.
+* `ipv6_prefix_count` - (Optional) The number of IPv6 prefixes that AWS automatically assigns to the network interface.
 
 -> **NOTE:** Changing `interface_type` will cause the resource to be destroyed and re-created.
 
