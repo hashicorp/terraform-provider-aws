@@ -16,11 +16,11 @@ import (
 	tfcodeartifact "github.com/hashicorp/terraform-provider-aws/internal/service/codeartifact"
 )
 
-func TestAccCodeArtifactDomain_basic(t *testing.T) {
+func testAccCodeArtifactDomain_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codeartifact_domain.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codeartifact.EndpointsID),
 		Providers:    acctest.Providers,
@@ -49,11 +49,11 @@ func TestAccCodeArtifactDomain_basic(t *testing.T) {
 	})
 }
 
-func TestAccCodeArtifactDomain_defaultEncryptionKey(t *testing.T) {
+func testAccCodeArtifactDomain_defaultEncryptionKey(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codeartifact_domain.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService("codeartifact", t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codeartifact.EndpointsID),
 		Providers:    acctest.Providers,
@@ -81,11 +81,11 @@ func TestAccCodeArtifactDomain_defaultEncryptionKey(t *testing.T) {
 	})
 }
 
-func TestAccCodeArtifactDomain_tags(t *testing.T) {
+func testAccCodeArtifactDomain_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codeartifact_domain.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService("codeartifact", t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codeartifact.EndpointsID),
 		Providers:    acctest.Providers,
@@ -124,11 +124,11 @@ func TestAccCodeArtifactDomain_tags(t *testing.T) {
 	})
 }
 
-func TestAccCodeArtifactDomain_disappears(t *testing.T) {
+func testAccCodeArtifactDomain_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codeartifact_domain.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codeartifact.EndpointsID),
 		Providers:    acctest.Providers,

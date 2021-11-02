@@ -15,7 +15,7 @@ import (
 	tfelasticsearch "github.com/hashicorp/terraform-provider-aws/internal/service/elasticsearch"
 )
 
-func TestAccElasticSearchDomainSamlOptions_SAML_basic(t *testing.T) {
+func TestAccElasticsearchDomainSamlOptions_SAML_basic(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 
 	rName := sdkacctest.RandomWithPrefix("acc-test")
@@ -49,7 +49,7 @@ func TestAccElasticSearchDomainSamlOptions_SAML_basic(t *testing.T) {
 	})
 }
 
-func TestAccElasticSearchDomainSamlOptions_SAML_disappears(t *testing.T) {
+func TestAccElasticsearchDomainSamlOptions_SAML_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("acc-test")
 	rUserName := sdkacctest.RandomWithPrefix("es-master-user")
 	resourceName := "aws_elasticsearch_domain_saml_options.main"
@@ -72,7 +72,7 @@ func TestAccElasticSearchDomainSamlOptions_SAML_disappears(t *testing.T) {
 	})
 }
 
-func TestAccElasticSearchDomainSamlOptions_SAMLDisappears_domain(t *testing.T) {
+func TestAccElasticsearchDomainSamlOptions_SAMLDisappears_domain(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("acc-test")
 	rUserName := sdkacctest.RandomWithPrefix("es-master-user")
 	resourceName := "aws_elasticsearch_domain_saml_options.main"
@@ -96,7 +96,7 @@ func TestAccElasticSearchDomainSamlOptions_SAMLDisappears_domain(t *testing.T) {
 	})
 }
 
-func TestAccElasticSearchDomainSamlOptions_SAML_update(t *testing.T) {
+func TestAccElasticsearchDomainSamlOptions_SAML_update(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("acc-test")
 	rUserName := sdkacctest.RandomWithPrefix("es-master-user")
 	resourceName := "aws_elasticsearch_domain_saml_options.main"
@@ -128,7 +128,7 @@ func TestAccElasticSearchDomainSamlOptions_SAML_update(t *testing.T) {
 	})
 }
 
-func TestAccElasticSearchDomainSamlOptions_SAML_disabled(t *testing.T) {
+func TestAccElasticsearchDomainSamlOptions_SAML_disabled(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("acc-test")
 	rUserName := sdkacctest.RandomWithPrefix("es-master-user")
 	resourceName := "aws_elasticsearch_domain_saml_options.main"
@@ -161,7 +161,7 @@ func TestAccElasticSearchDomainSamlOptions_SAML_disabled(t *testing.T) {
 }
 
 func testAccCheckESDomainSAMLOptionsDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticSearchConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_elasticsearch_domain_saml_options" {
@@ -205,7 +205,7 @@ func testAccCheckESDomainSAMLOptions(esResource string, samlOptionsResource stri
 			return fmt.Errorf("Not found: %s", samlOptionsResource)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticSearchConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchConn
 		_, err := conn.DescribeElasticsearchDomain(&elasticsearch.DescribeElasticsearchDomainInput{
 			DomainName: aws.String(options.Primary.Attributes["domain_name"]),
 		})

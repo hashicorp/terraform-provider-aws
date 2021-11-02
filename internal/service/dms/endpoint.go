@@ -452,7 +452,7 @@ func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 		request.DynamoDbSettings = &dms.DynamoDbSettings{
 			ServiceAccessRoleArn: aws.String(d.Get("service_access_role").(string)),
 		}
-	case engineNameElasticSearch:
+	case engineNameElasticsearch:
 		request.ElasticsearchSettings = &dms.ElasticsearchSettings{
 			ServiceAccessRoleArn:    aws.String(d.Get("elasticsearch_settings.0.service_access_role_arn").(string)),
 			EndpointUri:             aws.String(d.Get("elasticsearch_settings.0.endpoint_uri").(string)),
@@ -661,7 +661,7 @@ func resourceEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 			hasChanges = true
 		}
-	case engineNameElasticSearch:
+	case engineNameElasticsearch:
 		if d.HasChanges(
 			"elasticsearch_settings.0.endpoint_uri",
 			"elasticsearch_settings.0.error_retry_duration",
@@ -811,7 +811,7 @@ func resourceEndpointDelete(d *schema.ResourceData, meta interface{}) error {
 
 func resourceEndpointCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 	switch engineName := diff.Get("engine_name").(string); engineName {
-	case engineNameElasticSearch:
+	case engineNameElasticsearch:
 		if v, ok := diff.GetOk("elasticsearch_settings"); !ok || len(v.([]interface{})) == 0 || v.([]interface{})[0] == nil {
 			return fmt.Errorf("elasticsearch_settings must be set when engine_name = %q", engineName)
 		}

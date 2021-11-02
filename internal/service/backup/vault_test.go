@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/backup"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -12,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfbackup "github.com/hashicorp/terraform-provider-aws/internal/service/backup"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccBackupVault_basic(t *testing.T) {
@@ -146,17 +146,17 @@ func testAccCheckVaultDestroy(s *terraform.State) error {
 			continue
 		}
 
-		input := &backup.DescribeBackupVaultInput{
-			BackupVaultName: aws.String(rs.Primary.ID),
+		_, err := tfbackup.FindBackupVaultByName(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
 		}
 
-		resp, err := conn.DescribeBackupVault(input)
-
-		if err == nil {
-			if *resp.BackupVaultName == rs.Primary.ID {
-				return fmt.Errorf("Vault '%s' was not deleted properly", rs.Primary.ID)
-			}
+		if err != nil {
+			return err
 		}
+
+		return fmt.Errorf("Backup Vault %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -169,16 +169,19 @@ func testAccCheckVaultExists(name string, vault *backup.DescribeBackupVaultOutpu
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn
-		params := &backup.DescribeBackupVaultInput{
-			BackupVaultName: aws.String(rs.Primary.ID),
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No Backup Vault ID is set")
 		}
-		resp, err := conn.DescribeBackupVault(params)
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn
+
+		output, err := tfbackup.FindBackupVaultByName(conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		*vault = *resp
+		*vault = *output
 
 		return nil
 	}

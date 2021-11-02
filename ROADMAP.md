@@ -14,7 +14,7 @@ In the period spanning May to July 2021 539 Pull Requests were opened in the pro
 - AWS AppConfig
 - AWS Amplify
 - AWS Service Catalog
-- AWS ElasticSearch Native SAML for Kibana
+- AWS Elasticsearch Native SAML for Kibana
 - Amazon Macie 2
 - Delegated Administrators for Organisations
 - Predictive Autoscaling

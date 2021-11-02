@@ -532,7 +532,6 @@ func init() {
 	awsServiceNames["mq"] = "MQ"
 	awsServiceNames["mturk"] = "MTurk"
 	awsServiceNames["mwaa"] = "MWAA"
-	awsServiceNames["nas"] = "NAS"
 	awsServiceNames["neptune"] = "Neptune"
 	awsServiceNames["networkfirewall"] = "NetworkFirewall"
 	awsServiceNames["networkmanager"] = "NetworkManager"
