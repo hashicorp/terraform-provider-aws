@@ -84,30 +84,6 @@ func TestAccEC2NetworkInterfaceSgAttachment_SG_instance(t *testing.T) {
 	})
 }
 
-func TestAccEC2NetworkInterfaceSgAttachment_SG_dataSource(t *testing.T) {
-	instanceDataSourceName := "data.aws_instance.test"
-	securityGroupResourceName := "aws_security_group.test"
-	resourceName := "aws_network_interface_sg_attachment.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNetworkInterfaceSGAttachmentDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccNetworkInterfaceSGAttachmentViaDataSourceConfig(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNetworkInterfaceSGAttachmentExists(resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "network_interface_id", instanceDataSourceName, "network_interface_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "security_group_id", securityGroupResourceName, "id"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccEC2NetworkInterfaceSgAttachment_SG_multiple(t *testing.T) {
 	networkInterfaceResourceName := "aws_network_interface.test"
 	securityGroupResourceName1 := "aws_security_group.test.0"
@@ -200,7 +176,7 @@ resource "aws_vpc" "test" {
   cidr_block = "172.16.0.0/16"
 
   tags = {
-    Name = %q
+    Name = %[1]q
   }
 }
 
@@ -209,20 +185,24 @@ resource "aws_subnet" "test" {
   vpc_id     = aws_vpc.test.id
 
   tags = {
-    Name = %q
+    Name = %[1]q
   }
 }
 
 resource "aws_security_group" "test" {
-  name   = %q
+  name   = %[1]q
   vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_network_interface" "test" {
   subnet_id = aws_subnet.test.id
 
   tags = {
-    Name = %q
+    Name = %[1]q
   }
 }
 
@@ -230,106 +210,96 @@ resource "aws_network_interface_sg_attachment" "test" {
   network_interface_id = aws_network_interface.test.id
   security_group_id    = aws_security_group.test.id
 }
-`, rName, rName, rName, rName)
+`, rName)
 }
 
 func testAccNetworkInterfaceSGAttachmentViaInstanceConfig(rName string) string {
-	return fmt.Sprintf(`
-data "aws_ami" "ami" {
-  most_recent = true
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-hvm-*"]
-  }
-
-  owners = ["amazon"]
-}
-
-resource "aws_instance" "test" {
-  instance_type = "t2.micro"
-  ami           = data.aws_ami.ami.id
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
+		acctest.ConfigAvailableAZsNoOptIn(),
+		fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "172.16.0.0/16"
 
   tags = {
-    Name = %q
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  cidr_block = "172.16.10.0/24"
+  vpc_id     = aws_vpc.test.id
+
+  availability_zone = data.aws_availability_zones.available.names[0]
+
+  tags = {
+    Name = %[1]q
   }
 }
 
 resource "aws_security_group" "test" {
-  name = %q
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
+
+resource "aws_instance" "test" {
+	ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+	instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+	subnet_id     = aws_subnet.test.id
+  
+	tags = {
+	  Name = %[1]q
+	}
+  }
 
 resource "aws_network_interface_sg_attachment" "test" {
   network_interface_id = aws_instance.test.primary_network_interface_id
   security_group_id    = aws_security_group.test.id
 }
-`, rName, rName)
-}
-
-func testAccNetworkInterfaceSGAttachmentViaDataSourceConfig(rName string) string {
-	return fmt.Sprintf(`
-data "aws_ami" "ami" {
-  most_recent = true
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-hvm-*"]
-  }
-
-  owners = ["amazon"]
-}
-
-resource "aws_instance" "test" {
-  instance_type = "t2.micro"
-  ami           = data.aws_ami.ami.id
-
-  tags = {
-    Name = %q
-  }
-}
-
-data "aws_instance" "test" {
-  instance_id = aws_instance.test.id
-}
-
-resource "aws_security_group" "test" {
-  name = %q
-}
-
-resource "aws_network_interface_sg_attachment" "test" {
-  security_group_id    = aws_security_group.test.id
-  network_interface_id = data.aws_instance.test.network_interface_id
-}
-`, rName, rName)
+`, rName))
 }
 
 func testAccNetworkInterfaceSGAttachmentMultipleConfig(rName string) string {
 	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
+resource "aws_vpc" "test" {
+  cidr_block = "172.16.0.0/16"
 
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
+  tags = {
+    Name = %[1]q
   }
 }
 
-data "aws_subnet" "test" {
-  availability_zone = data.aws_availability_zones.available.names[0]
-  default_for_az    = "true"
+resource "aws_subnet" "test" {
+  cidr_block = "172.16.10.0/24"
+  vpc_id     = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_network_interface" "test" {
-  subnet_id = data.aws_subnet.test.id
+  subnet_id = aws_subnet.test.id
 
   tags = {
-    Name = %q
+    Name = %[1]q
   }
 }
 
 resource "aws_security_group" "test" {
   count = 4
-  name  = "%s-${count.index}"
+
+  name   = "%[1]s-${count.index}"
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_network_interface_sg_attachment" "test" {
@@ -337,5 +307,5 @@ resource "aws_network_interface_sg_attachment" "test" {
   network_interface_id = aws_network_interface.test.id
   security_group_id    = aws_security_group.test.*.id[count.index]
 }
-`, rName, rName)
+`, rName)
 }
