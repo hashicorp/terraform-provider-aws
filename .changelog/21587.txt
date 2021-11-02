@@ -33,3 +33,7 @@ resource/aws_cloudwatch_log_stream: Rename resource to aws_cloudwatchlogs_stream
 ```release-note:enhancement
 resource/aws_cloudwatch_log_subscription_filter: Rename resource to aws_cloudwatchlogs_subscription_filter (with alias for aws_cloudwatch_log_subscription_filter)
 ```
+
+```release-note:enhancement
+resource/aws_cloudwatch_query_definition: Rename resource to aws_cloudwatchlogs_query_definition (with alias for aws_cloudwatch_query_definition)
+```
