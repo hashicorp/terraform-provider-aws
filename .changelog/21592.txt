@@ -1,0 +1,27 @@
+```release-note:enhancement
+data-source/aws_elastic_beanstalk_application: Rename data source to aws_elasticbeanstalk_application (with alias for aws_elastic_beanstalk_application)
+```
+
+```release-note:enhancement
+data-source/aws_elastic_beanstalk_hosted_zone: Rename data source to aws_elasticbeanstalk_hosted_zone (with alias for aws_elastic_beanstalk_hosted_zone)
+```
+
+```release-note:enhancement
+data-source/aws_elastic_beanstalk_solution_stack: Rename data source to aws_elasticbeanstalk_solution_stack (with alias for aws_elastic_beanstalk_solution_stack)
+```
+
+```release-note:enhancement
+resource/aws_elastic_beanstalk_application: Rename resource to aws_elasticbeanstalk_application (with alias for aws_elastic_beanstalk_application)
+```
+
+```release-note:enhancement
+resource/aws_elastic_beanstalk_application_version: Rename resource to aws_elasticbeanstalk_application_version (with alias for aws_elastic_beanstalk_application_version)
+```
+
+```release-note:enhancement
+resource/aws_elastic_beanstalk_configuration_template: Rename resource to aws_elasticbeanstalk_configuration_template (with alias for aws_elastic_beanstalk_configuration_template)
+```
+
+```release-note:enhancement
+resource/aws_elastic_beanstalk_environment: Rename resource to aws_elasticbeanstalk_environment (with alias for aws_elastic_beanstalk_environment)
+```
