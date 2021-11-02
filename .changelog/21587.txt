@@ -1,0 +1,35 @@
+```release-note:enhancement
+data-source/aws_cloudwatch_log_group: Rename data source to aws_cloudwatchlogs_group (with alias for aws_cloudwatch_log_group)
+```
+
+```release-note:enhancement
+data-source/aws_cloudwatch_log_groups: Rename data source to aws_cloudwatchlogs_groups (with alias for aws_cloudwatch_log_groups)
+```
+
+```release-note:enhancement
+resource/aws_cloudwatch_log_destination: Rename resource to aws_cloudwatchlogs_destination (with alias for aws_cloudwatch_log_destination)
+```
+
+```release-note:enhancement
+resource/aws_cloudwatch_log_destination_policy: Rename resource to aws_cloudwatchlogs_destination_policy (with alias for aws_cloudwatch_log_destination_policy)
+```
+
+```release-note:enhancement
+resource/aws_cloudwatch_log_group: Rename resource to aws_cloudwatchlogs_group (with alias for aws_cloudwatch_log_group)
+```
+
+```release-note:enhancement
+resource/aws_cloudwatch_log_metric_filter: Rename resource to aws_cloudwatchlogs_metric_filter (with alias for aws_cloudwatch_log_metric_filter)
+```
+
+```release-note:enhancement
+resource/aws_cloudwatch_log_resource_policy: Rename resource to aws_cloudwatchlogs_resource_policy (with alias for aws_cloudwatch_log_resource_policy)
+```
+
+```release-note:enhancement
+resource/aws_cloudwatch_log_stream: Rename resource to aws_cloudwatchlogs_stream (with alias for aws_cloudwatch_log_stream)
+```
+
+```release-note:enhancement
+resource/aws_cloudwatch_log_subscription_filter: Rename resource to aws_cloudwatchlogs_subscription_filter (with alias for aws_cloudwatch_log_subscription_filter)
+```
