@@ -311,8 +311,8 @@ jobs:
         tfproviderdocs check \
           -allowed-resource-subcategories-file website/allowed-subcategories.txt \
           -enable-contents-check \
-          -ignore-file-missing-data-sources aws_alb,aws_alb_listener,aws_alb_target_group \
-          -ignore-file-missing-resources aws_alb,aws_alb_listener,aws_alb_listener_certificate,aws_alb_listener_rule,aws_alb_target_group,aws_alb_target_group_attachment \
+          -ignore-file-missing-data-sources aws_alb,aws_alb_listener,aws_alb_target_group,aws_dx_connection,aws_dx_gateway,aws_dx_location,aws_dx_locations \
+          -ignore-file-missing-resources aws_alb,aws_alb_listener,aws_alb_listener_certificate,aws_alb_listener_rule,aws_alb_target_group,aws_alb_target_group_attachment,aws_dx_bgp_peer,aws_dx_connection,aws_dx_connection_association,aws_dx_connection_confirmation,aws_dx_gateway,aws_dx_gateway_association,aws_dx_gateway_association_proposal,aws_dx_hosted_connection,aws_dx_hosted_private_virtual_interface,aws_dx_hosted_private_virtual_interface_accepter,aws_dx_hosted_public_virtual_interface,aws_dx_hosted_public_virtual_interface_accepter,aws_dx_hosted_transit_virtual_interface,aws_dx_hosted_transit_virtual_interface_accepter,aws_dx_lag,aws_dx_private_virtual_interface,aws_dx_public_virtual_interface,aws_dx_transit_virtual_interface \
           -provider-source registry.terraform.io/hashicorp/aws \
           -providers-schema-json terraform-providers-schema/schema.json \
           -require-resource-subcategory
