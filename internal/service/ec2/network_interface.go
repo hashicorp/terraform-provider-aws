@@ -208,7 +208,7 @@ func resourceNetworkInterfaceCreate(d *schema.ResourceData, meta interface{}) er
 	if v, ok := d.GetOk("attachment"); ok && v.(*schema.Set).Len() > 0 {
 		attachment := v.(*schema.Set).List()[0].(map[string]interface{})
 
-		err := attachNetworkInterface(conn, d.Id(), attachment["instance"].(string), attachment["device_index"].(int), 5*time.Minute)
+		_, err := attachNetworkInterface(conn, d.Id(), attachment["instance"].(string), attachment["device_index"].(int), 5*time.Minute)
 
 		if err != nil {
 			return err
@@ -341,7 +341,7 @@ func resourceNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) er
 		if na != nil && na.(*schema.Set).Len() > 0 {
 			attachment := na.(*schema.Set).List()[0].(map[string]interface{})
 
-			err := attachNetworkInterface(conn, d.Id(), attachment["instance"].(string), attachment["device_index"].(int), 5*time.Minute)
+			_, err := attachNetworkInterface(conn, d.Id(), attachment["instance"].(string), attachment["device_index"].(int), 5*time.Minute)
 
 			if err != nil {
 				return err
@@ -564,7 +564,7 @@ func resourceNetworkInterfaceDelete(d *schema.ResourceData, meta interface{}) er
 	return deleteNetworkInterface(conn, d.Id())
 }
 
-func attachNetworkInterface(conn *ec2.EC2, networkInterfaceID, instanceID string, deviceIndex int, timeout time.Duration) error {
+func attachNetworkInterface(conn *ec2.EC2, networkInterfaceID, instanceID string, deviceIndex int, timeout time.Duration) (string, error) {
 	input := &ec2.AttachNetworkInterfaceInput{
 		DeviceIndex:        aws.Int64(int64(deviceIndex)),
 		InstanceId:         aws.String(instanceID),
@@ -575,7 +575,7 @@ func attachNetworkInterface(conn *ec2.EC2, networkInterfaceID, instanceID string
 	output, err := conn.AttachNetworkInterface(input)
 
 	if err != nil {
-		return fmt.Errorf("error attaching EC2 Network Interface (%s/%s): %w", networkInterfaceID, instanceID, err)
+		return "", fmt.Errorf("error attaching EC2 Network Interface (%s/%s): %w", networkInterfaceID, instanceID, err)
 	}
 
 	attachmentID := aws.StringValue(output.AttachmentId)
@@ -583,10 +583,10 @@ func attachNetworkInterface(conn *ec2.EC2, networkInterfaceID, instanceID string
 	_, err = WaitNetworkInterfaceAttached(conn, attachmentID, timeout)
 
 	if err != nil {
-		return fmt.Errorf("error waiting for EC2 Network Interface (%s/%s) attach: %w", networkInterfaceID, attachmentID, err)
+		return attachmentID, fmt.Errorf("error waiting for EC2 Network Interface (%s/%s) attach: %w", networkInterfaceID, attachmentID, err)
 	}
 
-	return nil
+	return attachmentID, nil
 }
 
 func deleteNetworkInterface(conn *ec2.EC2, networkInterfaceID string) error {
