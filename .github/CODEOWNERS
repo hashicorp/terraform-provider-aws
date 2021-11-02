@@ -46,5 +46,5 @@
 /aws/*_aws_emr_*.go    @shuheiktgw
 /website/**/emr*       @shuheiktgw
 
-/aws/*aws_cloudwatch_event_*.go    @heitorlessa @sthulb
+/aws/*aws_cloudwatchevents_*.go    @heitorlessa @sthulb
 /website/**/cloudwatch_event*      @heitorlessa @sthulb

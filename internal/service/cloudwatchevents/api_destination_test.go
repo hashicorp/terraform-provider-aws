@@ -27,7 +27,7 @@ func TestAccCloudWatchEventsAPIDestination_basic(t *testing.T) {
 	invocationEndpointModified := "https://www.hashicorp.com/products/terraform"
 	httpMethodModified := "POST"
 
-	resourceName := "aws_cloudwatch_event_api_destination.basic"
+	resourceName := "aws_cloudwatchevents_api_destination.basic"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -100,7 +100,7 @@ func TestAccCloudWatchEventsAPIDestination_optional(t *testing.T) {
 	descriptionModified := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	invocationRateLimitPerSecondModified := 12
 
-	resourceName := "aws_cloudwatch_event_api_destination.optional"
+	resourceName := "aws_cloudwatchevents_api_destination.optional"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -176,7 +176,7 @@ func TestAccCloudWatchEventsAPIDestination_disappears(t *testing.T) {
 	invocationEndpoint := "https://www.hashicorp.com/"
 	httpMethod := "GET"
 
-	resourceName := "aws_cloudwatch_event_api_destination.basic"
+	resourceName := "aws_cloudwatchevents_api_destination.basic"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -204,7 +204,7 @@ func testAccCheckAPIDestinationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchEventsConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_cloudwatch_event_api_destination" {
+		if rs.Type != "aws_cloudwatchevents_api_destination" {
 			continue
 		}
 
@@ -267,14 +267,14 @@ func testAccCheckCloudWatchEventApiDestinationNotRecreated(i, j *events.Describe
 
 func testAccAPIDestinationConfig(name, invocationEndpoint, httpMethod string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_event_api_destination" "basic" {
+resource "aws_cloudwatchevents_api_destination" "basic" {
   name                = %[1]q
   invocation_endpoint = %[2]q
   http_method         = %[3]q
-  connection_arn      = aws_cloudwatch_event_connection.test.arn
+  connection_arn      = aws_cloudwatchevents_connection.test.arn
 }
 
-resource "aws_cloudwatch_event_connection" "test" {
+resource "aws_cloudwatchevents_connection" "test" {
   name               = %[1]q
   authorization_type = "API_KEY"
   auth_parameters {
@@ -289,17 +289,17 @@ resource "aws_cloudwatch_event_connection" "test" {
 
 func testAccAPIDestinationConfig_optional(name, invocationEndpoint, httpMethod, description string, invocationRateLimitPerSecond int64) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_event_api_destination" "optional" {
+resource "aws_cloudwatchevents_api_destination" "optional" {
   name                = %[1]q
   invocation_endpoint = %[2]q
   http_method         = %[3]q
-  connection_arn      = aws_cloudwatch_event_connection.test.arn
+  connection_arn      = aws_cloudwatchevents_connection.test.arn
 
   description                      = %[4]q
   invocation_rate_limit_per_second = %[5]d
 }
 
-resource "aws_cloudwatch_event_connection" "test" {
+resource "aws_cloudwatchevents_connection" "test" {
   name               = %[1]q
   authorization_type = "API_KEY"
   auth_parameters {

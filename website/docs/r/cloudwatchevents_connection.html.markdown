@@ -1,12 +1,12 @@
 ---
 subcategory: "EventBridge (CloudWatch Events)"
 layout: "aws"
-page_title: "AWS: aws_cloudwatch_event_connection"
+page_title: "AWS: aws_cloudwatchevents_connection"
 description: |-
   Provides an EventBridge connection resource.
 ---
 
-# Resource: aws_cloudwatch_event_connection
+# Resource: aws_cloudwatchevents_connection
 
 Provides an EventBridge connection resource.
 
@@ -16,7 +16,7 @@ Provides an EventBridge connection resource.
 ## Example Usage
 
 ```terraform
-resource "aws_cloudwatch_event_connection" "test" {
+resource "aws_cloudwatchevents_connection" "test" {
   name               = "ngrok-connection"
   description        = "A connection description"
   authorization_type = "API_KEY"
@@ -33,7 +33,7 @@ resource "aws_cloudwatch_event_connection" "test" {
 ## Example Usage Basic Authorization
 
 ```terraform
-resource "aws_cloudwatch_event_connection" "test" {
+resource "aws_cloudwatchevents_connection" "test" {
   name               = "ngrok-connection"
   description        = "A connection description"
   authorization_type = "BASIC"
@@ -50,7 +50,7 @@ resource "aws_cloudwatch_event_connection" "test" {
 ## Example Usage OAuth Authorization
 
 ```terraform
-resource "aws_cloudwatch_event_connection" "test" {
+resource "aws_cloudwatchevents_connection" "test" {
   name               = "ngrok-connection"
   description        = "A connection description"
   authorization_type = "OAUTH_CLIENT_CREDENTIALS"
@@ -92,7 +92,7 @@ resource "aws_cloudwatch_event_connection" "test" {
 ## Example Usage Invocation Http Parameters
 
 ```terraform
-resource "aws_cloudwatch_event_connection" "test" {
+resource "aws_cloudwatchevents_connection" "test" {
   name               = "ngrok-connection"
   description        = "A connection description"
   authorization_type = "BASIC"
@@ -197,5 +197,5 @@ In addition to all arguments above, the following attributes are exported:
 EventBridge Connection can be imported using the `name`, e.g.,
 
 ```console
-$ terraform import aws_cloudwatch_event_connection.test ngrok-connection
+$ terraform import aws_cloudwatchevents_connection.test ngrok-connection
 ```

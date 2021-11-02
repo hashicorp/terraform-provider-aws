@@ -380,8 +380,10 @@ func Provider() *schema.Provider {
 
 			"aws_cloudtrail_service_account": cloudtrail.DataSourceServiceAccount(),
 
-			"aws_cloudwatch_event_connection": cloudwatchevents.DataSourceConnection(),
-			"aws_cloudwatch_event_source":     cloudwatchevents.DataSourceSource(),
+			"aws_cloudwatchevents_connection": cloudwatchevents.DataSourceConnection(),
+			"aws_cloudwatchevents_source":     cloudwatchevents.DataSourceSource(),
+			"aws_cloudwatch_event_connection": cloudwatchevents.DataSourceConnection(), // backward compatible alias
+			"aws_cloudwatch_event_source":     cloudwatchevents.DataSourceSource(),     // backward compatible alias
 
 			"aws_cloudwatch_log_group":  cloudwatchlogs.DataSourceGroup(),
 			"aws_cloudwatch_log_groups": cloudwatchlogs.DataSourceGroups(),
@@ -862,14 +864,22 @@ func Provider() *schema.Provider {
 			"aws_cloudwatch_metric_alarm":    cloudwatch.ResourceMetricAlarm(),
 			"aws_cloudwatch_metric_stream":   cloudwatch.ResourceMetricStream(),
 
-			"aws_cloudwatch_event_api_destination": cloudwatchevents.ResourceAPIDestination(),
-			"aws_cloudwatch_event_archive":         cloudwatchevents.ResourceArchive(),
-			"aws_cloudwatch_event_bus":             cloudwatchevents.ResourceBus(),
-			"aws_cloudwatch_event_bus_policy":      cloudwatchevents.ResourceBusPolicy(),
-			"aws_cloudwatch_event_connection":      cloudwatchevents.ResourceConnection(),
-			"aws_cloudwatch_event_permission":      cloudwatchevents.ResourcePermission(),
-			"aws_cloudwatch_event_rule":            cloudwatchevents.ResourceRule(),
-			"aws_cloudwatch_event_target":          cloudwatchevents.ResourceTarget(),
+			"aws_cloudwatchevents_api_destination": cloudwatchevents.ResourceAPIDestination(),
+			"aws_cloudwatchevents_archive":         cloudwatchevents.ResourceArchive(),
+			"aws_cloudwatchevents_bus":             cloudwatchevents.ResourceBus(),
+			"aws_cloudwatchevents_bus_policy":      cloudwatchevents.ResourceBusPolicy(),
+			"aws_cloudwatchevents_connection":      cloudwatchevents.ResourceConnection(),
+			"aws_cloudwatchevents_permission":      cloudwatchevents.ResourcePermission(),
+			"aws_cloudwatchevents_rule":            cloudwatchevents.ResourceRule(),
+			"aws_cloudwatchevents_target":          cloudwatchevents.ResourceTarget(),
+			"aws_cloudwatch_event_api_destination": cloudwatchevents.ResourceAPIDestination(), // backward compatible alias
+			"aws_cloudwatch_event_archive":         cloudwatchevents.ResourceArchive(),        // backward compatible alias
+			"aws_cloudwatch_event_bus":             cloudwatchevents.ResourceBus(),            // backward compatible alias
+			"aws_cloudwatch_event_bus_policy":      cloudwatchevents.ResourceBusPolicy(),      // backward compatible alias
+			"aws_cloudwatch_event_connection":      cloudwatchevents.ResourceConnection(),     // backward compatible alias
+			"aws_cloudwatch_event_permission":      cloudwatchevents.ResourcePermission(),     // backward compatible alias
+			"aws_cloudwatch_event_rule":            cloudwatchevents.ResourceRule(),           // backward compatible alias
+			"aws_cloudwatch_event_target":          cloudwatchevents.ResourceTarget(),         // backward compatible alias
 
 			"aws_cloudwatch_log_destination":         cloudwatchlogs.ResourceDestination(),
 			"aws_cloudwatch_log_destination_policy":  cloudwatchlogs.ResourceDestinationPolicy(),

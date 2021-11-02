@@ -34,7 +34,7 @@ func TestAccCloudWatchEventsRule_basic(t *testing.T) {
 	var v1, v2, v3 events.DescribeRuleOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_cloudwatch_event_rule.test"
+	resourceName := "aws_cloudwatchevents_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -105,7 +105,7 @@ func TestAccCloudWatchEventsRule_eventBusName(t *testing.T) {
 	rName2 := sdkacctest.RandomWithPrefix("tf-acc-test-rule")
 	busName := sdkacctest.RandomWithPrefix("tf-acc-test-bus")
 	busName2 := sdkacctest.RandomWithPrefix("tf-acc-test-bus")
-	resourceName := "aws_cloudwatch_event_rule.test"
+	resourceName := "aws_cloudwatchevents_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -154,7 +154,7 @@ func TestAccCloudWatchEventsRule_role(t *testing.T) {
 	var v events.DescribeRuleOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resourceName := "aws_cloudwatch_event_rule.test"
+	resourceName := "aws_cloudwatchevents_rule.test"
 	iamRoleResourceName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -183,7 +183,7 @@ func TestAccCloudWatchEventsRule_role(t *testing.T) {
 func TestAccCloudWatchEventsRule_description(t *testing.T) {
 	var v1, v2 events.DescribeRuleOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_cloudwatch_event_rule.test"
+	resourceName := "aws_cloudwatchevents_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -219,7 +219,7 @@ func TestAccCloudWatchEventsRule_description(t *testing.T) {
 func TestAccCloudWatchEventsRule_pattern(t *testing.T) {
 	var v1, v2 events.DescribeRuleOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_cloudwatch_event_rule.test"
+	resourceName := "aws_cloudwatchevents_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -256,7 +256,7 @@ func TestAccCloudWatchEventsRule_pattern(t *testing.T) {
 func TestAccCloudWatchEventsRule_scheduleAndPattern(t *testing.T) {
 	var v events.DescribeRuleOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_cloudwatch_event_rule.test"
+	resourceName := "aws_cloudwatchevents_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -285,7 +285,7 @@ func TestAccCloudWatchEventsRule_scheduleAndPattern(t *testing.T) {
 func TestAccCloudWatchEventsRule_namePrefix(t *testing.T) {
 	var v events.DescribeRuleOutput
 	rName := "tf-acc-test-prefix-"
-	resourceName := "aws_cloudwatch_event_rule.test"
+	resourceName := "aws_cloudwatchevents_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -312,7 +312,7 @@ func TestAccCloudWatchEventsRule_namePrefix(t *testing.T) {
 
 func TestAccCloudWatchEventsRule_Name_generated(t *testing.T) {
 	var v events.DescribeRuleOutput
-	resourceName := "aws_cloudwatch_event_rule.test"
+	resourceName := "aws_cloudwatchevents_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -340,7 +340,7 @@ func TestAccCloudWatchEventsRule_Name_generated(t *testing.T) {
 func TestAccCloudWatchEventsRule_tags(t *testing.T) {
 	var v1, v2, v3 events.DescribeRuleOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_cloudwatch_event_rule.test"
+	resourceName := "aws_cloudwatchevents_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -392,7 +392,7 @@ func TestAccCloudWatchEventsRule_tags(t *testing.T) {
 func TestAccCloudWatchEventsRule_isEnabled(t *testing.T) {
 	var v1, v2, v3 events.DescribeRuleOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_cloudwatch_event_rule.test"
+	resourceName := "aws_cloudwatchevents_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -442,7 +442,7 @@ func TestAccCloudWatchEventsRule_partnerEventBus(t *testing.T) {
 
 	var v events.DescribeRuleOutput
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test-rule")
-	resourceName := "aws_cloudwatch_event_rule.test"
+	resourceName := "aws_cloudwatchevents_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -477,7 +477,7 @@ func TestAccCloudWatchEventsRule_partnerEventBus(t *testing.T) {
 func TestAccCloudWatchEventsRule_eventBusARN(t *testing.T) {
 	var v events.DescribeRuleOutput
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test-rule")
-	resourceName := "aws_cloudwatch_event_rule.test"
+	resourceName := "aws_cloudwatchevents_rule.test"
 	eventBusName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -492,7 +492,7 @@ func TestAccCloudWatchEventsRule_eventBusARN(t *testing.T) {
 					testAccCheckCloudWatchEventRuleExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexp.MustCompile(fmt.Sprintf(`rule/%s/%s$`, eventBusName, rName))),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "event_bus_name", "aws_cloudwatch_event_bus.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "event_bus_name", "aws_cloudwatchevents_bus.test", "arn"),
 					acctest.CheckResourceAttrEquivalentJSON(resourceName, "event_pattern", "{\"source\":[\"aws.ec2\"]}"),
 					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -562,7 +562,7 @@ func testAccCheckRuleDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchEventsConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_cloudwatch_event_rule" {
+		if rs.Type != "aws_cloudwatchevents_rule" {
 			continue
 		}
 
@@ -613,7 +613,7 @@ func testAccRuleNoBusNameImportStateIdFunc(resourceName string) resource.ImportS
 
 func testAccRuleConfig(name string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_event_rule" "test" {
+resource "aws_cloudwatchevents_rule" "test" {
   name                = "%s"
   schedule_expression = "rate(1 hour)"
 }
@@ -622,7 +622,7 @@ resource "aws_cloudwatch_event_rule" "test" {
 
 func testAccRuleDefaultEventBusNameConfig(name string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_event_rule" "test" {
+resource "aws_cloudwatchevents_rule" "test" {
   name                = %[1]q
   schedule_expression = "rate(1 hour)"
   event_bus_name      = "default"
@@ -632,9 +632,9 @@ resource "aws_cloudwatch_event_rule" "test" {
 
 func testAccRuleEventBusNameConfig(name, eventBusName, description string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_event_rule" "test" {
+resource "aws_cloudwatchevents_rule" "test" {
   name           = %[1]q
-  event_bus_name = aws_cloudwatch_event_bus.test.name
+  event_bus_name = aws_cloudwatchevents_bus.test.name
   description    = %[2]q
   event_pattern  = <<PATTERN
 {
@@ -645,7 +645,7 @@ resource "aws_cloudwatch_event_rule" "test" {
 PATTERN
 }
 
-resource "aws_cloudwatch_event_bus" "test" {
+resource "aws_cloudwatchevents_bus" "test" {
   name = %[3]q
 }
 `, name, description, eventBusName)
@@ -653,7 +653,7 @@ resource "aws_cloudwatch_event_bus" "test" {
 
 func testAccRulePatternConfig(name, pattern string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_event_rule" "test" {
+resource "aws_cloudwatchevents_rule" "test" {
   name          = "%s"
   event_pattern = <<PATTERN
 	%s
@@ -664,7 +664,7 @@ PATTERN
 
 func testAccRuleScheduleAndPatternConfig(name, pattern string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_event_rule" "test" {
+resource "aws_cloudwatchevents_rule" "test" {
   name                = "%s"
   schedule_expression = "rate(1 hour)"
   event_pattern       = <<PATTERN
@@ -676,7 +676,7 @@ PATTERN
 
 func testAccRuleDescriptionConfig(name, description string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_event_rule" "test" {
+resource "aws_cloudwatchevents_rule" "test" {
   name                = %[1]q
   description         = %[2]q
   schedule_expression = "rate(1 hour)"
@@ -686,7 +686,7 @@ resource "aws_cloudwatch_event_rule" "test" {
 
 func testAccRuleIsEnabledConfig(name string, enabled bool) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_event_rule" "test" {
+resource "aws_cloudwatchevents_rule" "test" {
   name                = "%s"
   schedule_expression = "rate(1 hour)"
   is_enabled          = %t
@@ -696,7 +696,7 @@ resource "aws_cloudwatch_event_rule" "test" {
 
 func testAccRuleNamePrefixConfig(name string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_event_rule" "test" {
+resource "aws_cloudwatchevents_rule" "test" {
   name_prefix         = "%s"
   schedule_expression = "rate(5 minutes)"
 }
@@ -704,14 +704,14 @@ resource "aws_cloudwatch_event_rule" "test" {
 }
 
 const testAccRuleNameGeneratedConfig = `
-resource "aws_cloudwatch_event_rule" "test" {
+resource "aws_cloudwatchevents_rule" "test" {
   schedule_expression = "rate(5 minutes)"
 }
 `
 
 func testAccRuleTags1Config(name, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_event_rule" "test" {
+resource "aws_cloudwatchevents_rule" "test" {
   name                = %[1]q
   schedule_expression = "rate(1 hour)"
 
@@ -724,7 +724,7 @@ resource "aws_cloudwatch_event_rule" "test" {
 
 func testAccRuleTags2Config(name, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_event_rule" "test" {
+resource "aws_cloudwatchevents_rule" "test" {
   name                = %[1]q
   schedule_expression = "rate(1 hour)"
 
@@ -738,7 +738,7 @@ resource "aws_cloudwatch_event_rule" "test" {
 
 func testAccRuleTags0Config(name string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_event_rule" "test" {
+resource "aws_cloudwatchevents_rule" "test" {
   name                = %[1]q
   schedule_expression = "rate(1 hour)"
 }
@@ -767,7 +767,7 @@ resource "aws_iam_role" "test" {
 POLICY
 }
 
-resource "aws_cloudwatch_event_rule" "test" {
+resource "aws_cloudwatchevents_rule" "test" {
   name                = %[1]q
   schedule_expression = "rate(1 hour)"
   role_arn            = aws_iam_role.test.arn
@@ -777,7 +777,7 @@ resource "aws_cloudwatch_event_rule" "test" {
 
 func testAccRulePartnerEventBusConfig(rName, eventBusName string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_event_rule" "test" {
+resource "aws_cloudwatchevents_rule" "test" {
   name           = %[1]q
   event_bus_name = %[2]q
 
@@ -792,13 +792,13 @@ PATTERN
 
 func testAccRuleEventBusARN(rName, eventBusName string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_event_bus" "test" {
+resource "aws_cloudwatchevents_bus" "test" {
   name = %[2]q
 }
 
-resource "aws_cloudwatch_event_rule" "test" {
+resource "aws_cloudwatchevents_rule" "test" {
   name           = %[1]q
-  event_bus_name = aws_cloudwatch_event_bus.test.arn
+  event_bus_name = aws_cloudwatchevents_bus.test.arn
 
   event_pattern = <<PATTERN
 {

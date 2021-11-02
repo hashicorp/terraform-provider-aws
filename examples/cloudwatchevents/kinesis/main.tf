@@ -6,7 +6,7 @@ provider "aws" {
   region = var.aws_region
 }
 
-resource "aws_cloudwatch_event_rule" "foo" {
+resource "aws_cloudwatchevents_rule" "foo" {
   name = var.rule_name
 
   event_pattern = <<PATTERN
@@ -68,8 +68,8 @@ resource "aws_iam_role_policy" "policy" {
 POLICY
 }
 
-resource "aws_cloudwatch_event_target" "foobar" {
-  rule      = aws_cloudwatch_event_rule.foo.name
+resource "aws_cloudwatchevents_target" "foobar" {
+  rule      = aws_cloudwatchevents_rule.foo.name
   target_id = var.target_name
   arn       = aws_kinesis_stream.foo.arn
 }

@@ -1,12 +1,12 @@
 ---
 subcategory: "EventBridge (CloudWatch Events)"
 layout: "aws"
-page_title: "AWS: aws_cloudwatch_event_api_destination"
+page_title: "AWS: aws_cloudwatchevents_api_destination"
 description: |-
   Provides an EventBridge event API Destination resource.
 ---
 
-# Resource: aws_cloudwatch_event_api_destination
+# Resource: aws_cloudwatchevents_api_destination
 
 Provides an EventBridge event API Destination resource.
 
@@ -16,13 +16,13 @@ Provides an EventBridge event API Destination resource.
 ## Example Usage
 
 ```terraform
-resource "aws_cloudwatch_event_api_destination" "test" {
+resource "aws_cloudwatchevents_api_destination" "test" {
   name                             = "api-destination"
   description                      = "An API Destination"
   invocation_endpoint              = "https://api.destination.com/endpoint"
   http_method                      = "POST"
   invocation_rate_limit_per_second = 20
-  connection_arn                   = aws_cloudwatch_event_connection.test.arn
+  connection_arn                   = aws_cloudwatchevents_connection.test.arn
 }
 ```
 
@@ -49,5 +49,5 @@ In addition to all arguments above, the following attributes are exported:
 EventBridge API Destinations can be imported using the `name`, e.g.,
 
 ```console
-$ terraform import aws_cloudwatch_event_api_destination.test api-destination
+$ terraform import aws_cloudwatchevents_api_destination.test api-destination
 ```

@@ -1,12 +1,12 @@
 ---
 subcategory: "CloudWatch"
 layout: "aws"
-page_title: "AWS: aws_cloudwatch_event_source"
+page_title: "AWS: aws_cloudwatchevents_source"
 description: |-
   Get information on an EventBridge (Cloudwatch) Event Source.
 ---
 
-# Data Source: aws_cloudwatch_event_source
+# Data Source: aws_cloudwatchevents_source
 
 Use this data source to get information about an EventBridge Partner Event Source. This data source will only return one partner event source. An error will be returned if multiple sources match the same name prefix.
 
@@ -15,7 +15,7 @@ Use this data source to get information about an EventBridge Partner Event Sourc
 ## Example Usage
 
 ```terraform
-data "aws_cloudwatch_event_source" "examplepartner" {
+data "aws_cloudwatchevents_source" "examplepartner" {
   name_prefix = "aws.partner/examplepartner.com"
 }
 ```

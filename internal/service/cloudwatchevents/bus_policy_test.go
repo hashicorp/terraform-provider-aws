@@ -17,7 +17,7 @@ import (
 )
 
 func TestAccCloudWatchEventsBusPolicy_basic(t *testing.T) {
-	resourceName := "aws_cloudwatch_event_bus_policy.test"
+	resourceName := "aws_cloudwatchevents_bus_policy.test"
 	rstring := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -50,7 +50,7 @@ func TestAccCloudWatchEventsBusPolicy_basic(t *testing.T) {
 }
 
 func TestAccCloudWatchEventsBusPolicy_disappears(t *testing.T) {
-	resourceName := "aws_cloudwatch_event_bus_policy.test"
+	resourceName := "aws_cloudwatchevents_bus_policy.test"
 	rstring := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -151,7 +151,7 @@ func testAccBusPolicyDocument(pr string) resource.TestCheckFunc {
 
 func testAccBusPolicyConfig(name string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_event_bus" "test" {
+resource "aws_cloudwatchevents_bus" "test" {
   name = %[1]q
 }
 
@@ -168,21 +168,21 @@ data "aws_iam_policy_document" "access" {
       "events:PutRule"
     ]
     resources = [
-      aws_cloudwatch_event_bus.test.arn,
+      aws_cloudwatchevents_bus.test.arn,
     ]
   }
 }
 
-resource "aws_cloudwatch_event_bus_policy" "test" {
+resource "aws_cloudwatchevents_bus_policy" "test" {
   policy         = data.aws_iam_policy_document.access.json
-  event_bus_name = aws_cloudwatch_event_bus.test.name
+  event_bus_name = aws_cloudwatchevents_bus.test.name
 }
 `, name)
 }
 
 func testAccBusPolicyUpdateConfig(name string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_event_bus" "test" {
+resource "aws_cloudwatchevents_bus" "test" {
   name = %[1]q
 }
 
@@ -198,7 +198,7 @@ data "aws_iam_policy_document" "access" {
       "events:PutEvents",
     ]
     resources = [
-      aws_cloudwatch_event_bus.test.arn,
+      aws_cloudwatchevents_bus.test.arn,
     ]
   }
   statement {
@@ -212,14 +212,14 @@ data "aws_iam_policy_document" "access" {
       "events:PutRule"
     ]
     resources = [
-      aws_cloudwatch_event_bus.test.arn,
+      aws_cloudwatchevents_bus.test.arn,
     ]
   }
 }
 
-resource "aws_cloudwatch_event_bus_policy" "test" {
+resource "aws_cloudwatchevents_bus_policy" "test" {
   policy         = data.aws_iam_policy_document.access.json
-  event_bus_name = aws_cloudwatch_event_bus.test.name
+  event_bus_name = aws_cloudwatchevents_bus.test.name
 }
 `, name)
 }

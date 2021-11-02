@@ -1,12 +1,12 @@
 ---
 subcategory: "EventBridge (CloudWatch Events)"
 layout: "aws"
-page_title: "AWS: aws_cloudwatch_event_rule"
+page_title: "AWS: aws_cloudwatchevents_rule"
 description: |-
   Provides an EventBridge Rule resource.
 ---
 
-# Resource: aws_cloudwatch_event_rule
+# Resource: aws_cloudwatchevents_rule
 
 Provides an EventBridge Rule resource.
 
@@ -15,7 +15,7 @@ Provides an EventBridge Rule resource.
 ## Example Usage
 
 ```terraform
-resource "aws_cloudwatch_event_rule" "console" {
+resource "aws_cloudwatchevents_rule" "console" {
   name        = "capture-aws-sign-in"
   description = "Capture each AWS Console Sign In"
 
@@ -28,8 +28,8 @@ resource "aws_cloudwatch_event_rule" "console" {
 EOF
 }
 
-resource "aws_cloudwatch_event_target" "sns" {
-  rule      = aws_cloudwatch_event_rule.console.name
+resource "aws_cloudwatchevents_target" "sns" {
+  rule      = aws_cloudwatchevents_rule.console.name
   target_id = "SendToSNS"
   arn       = aws_sns_topic.aws_logins.arn
 }
@@ -85,5 +85,5 @@ In addition to all arguments above, the following attributes are exported:
 EventBridge Rules can be imported using the `event_bus_name/rule_name` (if you omit `event_bus_name`, the `default` event bus will be used), e.g.,
 
 ```
-$ terraform import aws_cloudwatch_event_rule.console example-event-bus/capture-console-sign-in
+$ terraform import aws_cloudwatchevents_rule.console example-event-bus/capture-console-sign-in
 ```

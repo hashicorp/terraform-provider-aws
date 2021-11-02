@@ -1,7 +1,7 @@
 ---
 subcategory: "EventBridge (CloudWatch Events)"
 layout: "aws"
-page_title: "AWS: aws_cloudwatch_event_connection"
+page_title: "AWS: aws_cloudwatchevents_connection"
 description: |-
   Provides an EventBridge connection data source.
 ---
@@ -16,7 +16,7 @@ Use this data source to retrieve information about a EventBridge connection.
 ## Example Usage
 
 ```terraform
-data "aws_cloudwatch_event_connection" "test" {
+data "aws_cloudwatchevents_connection" "test" {
   name = "test"
 }
 ```

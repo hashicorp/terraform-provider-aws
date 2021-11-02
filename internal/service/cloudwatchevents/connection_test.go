@@ -30,7 +30,7 @@ func TestAccCloudWatchEventsConnection_apiKey(t *testing.T) {
 	keyModified := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	valueModified := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resourceName := "aws_cloudwatch_event_connection.api_key"
+	resourceName := "aws_cloudwatchevents_connection.api_key"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -112,7 +112,7 @@ func TestAccCloudWatchEventsConnection_basic(t *testing.T) {
 	usernameModified := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	passwordModified := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resourceName := "aws_cloudwatch_event_connection.basic"
+	resourceName := "aws_cloudwatchevents_connection.basic"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -231,7 +231,7 @@ func TestAccCloudWatchEventsConnection_oAuth(t *testing.T) {
 	queryStringValueModified := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	queryStringIsSecretValueModified := false
 
-	resourceName := "aws_cloudwatch_event_connection.oauth"
+	resourceName := "aws_cloudwatchevents_connection.oauth"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -396,7 +396,7 @@ func TestAccCloudWatchEventsConnection_invocationHTTPParameters(t *testing.T) {
 	queryStringValueModified := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	queryStringIsSecretValueModified := false
 
-	resourceName := "aws_cloudwatch_event_connection.invocation_http_parameters"
+	resourceName := "aws_cloudwatchevents_connection.invocation_http_parameters"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -542,7 +542,7 @@ func TestAccCloudWatchEventsConnection_disappears(t *testing.T) {
 	description := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	key := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	value := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_cloudwatch_event_connection.api_key"
+	resourceName := "aws_cloudwatchevents_connection.api_key"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -572,7 +572,7 @@ func testAccCheckConnectionDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchEventsConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_cloudwatch_event_connection" {
+		if rs.Type != "aws_cloudwatchevents_connection" {
 			continue
 		}
 
@@ -633,7 +633,7 @@ func testAccCheckCloudWatchEventConnectionNotRecreated(i, j *events.DescribeConn
 
 func testAccConnectionConfig_apiKey(name, description, authorizationType, key, value string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_event_connection" "api_key" {
+resource "aws_cloudwatchevents_connection" "api_key" {
   name               = %[1]q
   description        = %[2]q
   authorization_type = %[3]q
@@ -653,7 +653,7 @@ resource "aws_cloudwatch_event_connection" "api_key" {
 
 func testAccConnectionConfig_basic(name, description, authorizationType, username, password string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_event_connection" "basic" {
+resource "aws_cloudwatchevents_connection" "basic" {
   name               = %[1]q
   description        = %[2]q
   authorization_type = %[3]q
@@ -689,7 +689,7 @@ func testAccConnectionConfig_oauth(
 	queryStringValue string,
 	queryStringIsSecretValue bool) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_event_connection" "oauth" {
+resource "aws_cloudwatchevents_connection" "oauth" {
   name               = %[1]q
   description        = %[2]q
   authorization_type = %[3]q
@@ -758,7 +758,7 @@ func testAccConnectionConfig_invocationHTTPParameters(
 	queryStringValue string,
 	queryStringIsSecretValue bool) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_event_connection" "invocation_http_parameters" {
+resource "aws_cloudwatchevents_connection" "invocation_http_parameters" {
   name               = %[1]q
   description        = %[2]q
   authorization_type = %[3]q

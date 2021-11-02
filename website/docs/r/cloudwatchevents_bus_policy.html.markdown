@@ -1,12 +1,12 @@
 ---
 subcategory: "EventBridge (CloudWatch Events)"
 layout: "aws"
-page_title: "AWS: aws_cloudwatch_event_bus_policy"
+page_title: "AWS: aws_cloudwatchevents_bus_policy"
 description: |-
   Provides a resource to create an EventBridge policy to support cross-account events.
 ---
 
-# Resource: aws_cloudwatch_event_bus_policy
+# Resource: aws_cloudwatchevents_bus_policy
 
 Provides a resource to create an EventBridge resource policy to support cross-account events.
 
@@ -37,9 +37,9 @@ data "aws_iam_policy_document" "test" {
   }
 }
 
-resource "aws_cloudwatch_event_bus_policy" "test" {
+resource "aws_cloudwatchevents_bus_policy" "test" {
   policy         = data.aws_iam_policy_document.test.json
-  event_bus_name = aws_cloudwatch_event_bus.test.name
+  event_bus_name = aws_cloudwatchevents_bus.test.name
 }
 ```
 
@@ -74,9 +74,9 @@ data "aws_iam_policy_document" "test" {
   }
 }
 
-resource "aws_cloudwatch_event_bus_policy" "test" {
+resource "aws_cloudwatchevents_bus_policy" "test" {
   policy         = data.aws_iam_policy_document.test.json
-  event_bus_name = aws_cloudwatch_event_bus.test.name
+  event_bus_name = aws_cloudwatchevents_bus.test.name
 }
 ```
 
@@ -128,9 +128,9 @@ data "aws_iam_policy_document" "test" {
   }
 }
 
-resource "aws_cloudwatch_event_bus_policy" "test" {
+resource "aws_cloudwatchevents_bus_policy" "test" {
   policy         = data.aws_iam_policy_document.test.json
-  event_bus_name = aws_cloudwatch_event_bus.test.name
+  event_bus_name = aws_cloudwatchevents_bus.test.name
 }
 ```
 
@@ -152,5 +152,5 @@ In addition to all arguments above, the following attributes are exported:
 EventBridge permissions can be imported using the `event_bus_name`, e.g.,
 
 ```shell
-$ terraform import aws_cloudwatch_event_bus_policy.DevAccountAccess example-event-bus
+$ terraform import aws_cloudwatchevents_bus_policy.DevAccountAccess example-event-bus
 ```

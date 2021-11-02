@@ -203,24 +203,24 @@ func testAccCheckSchemasDiscovererExists(n string, v *schemas.DescribeDiscoverer
 
 func testAccDiscovererConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_event_bus" "test" {
+resource "aws_cloudwatchevents_bus" "test" {
   name = %[1]q
 }
 
 resource "aws_schemas_discoverer" "test" {
-  source_arn = aws_cloudwatch_event_bus.test.arn
+  source_arn = aws_cloudwatchevents_bus.test.arn
 }
 `, rName)
 }
 
 func testAccDiscovererDescriptionConfig(rName, description string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_event_bus" "test" {
+resource "aws_cloudwatchevents_bus" "test" {
   name = %[1]q
 }
 
 resource "aws_schemas_discoverer" "test" {
-  source_arn = aws_cloudwatch_event_bus.test.arn
+  source_arn = aws_cloudwatchevents_bus.test.arn
 
   description = %[2]q
 }
@@ -229,12 +229,12 @@ resource "aws_schemas_discoverer" "test" {
 
 func testAccDiscovererTags1Config(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_event_bus" "test" {
+resource "aws_cloudwatchevents_bus" "test" {
   name = %[1]q
 }
 
 resource "aws_schemas_discoverer" "test" {
-  source_arn = aws_cloudwatch_event_bus.test.arn
+  source_arn = aws_cloudwatchevents_bus.test.arn
 
   tags = {
     %[2]q = %[3]q
@@ -245,12 +245,12 @@ resource "aws_schemas_discoverer" "test" {
 
 func testAccDiscovererTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_event_bus" "test" {
+resource "aws_cloudwatchevents_bus" "test" {
   name = %[1]q
 }
 
 resource "aws_schemas_discoverer" "test" {
-  source_arn = aws_cloudwatch_event_bus.test.arn
+  source_arn = aws_cloudwatchevents_bus.test.arn
 
   tags = {
     %[2]q = %[3]q

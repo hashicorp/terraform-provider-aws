@@ -16,12 +16,12 @@ Provides an EventBridge Schema Discoverer resource.
 ## Example Usage
 
 ```terraform
-resource "aws_cloudwatch_event_bus" "messenger" {
+resource "aws_cloudwatchevents_bus" "messenger" {
   name = "chat-messages"
 }
 
 resource "aws_schemas_discoverer" "test" {
-  source_arn  = aws_cloudwatch_event_bus.messenger.arn
+  source_arn  = aws_cloudwatchevents_bus.messenger.arn
   description = "Auto discover event schemas"
 }
 ```

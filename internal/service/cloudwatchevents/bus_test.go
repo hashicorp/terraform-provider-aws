@@ -21,7 +21,7 @@ func TestAccCloudWatchEventsBus_basic(t *testing.T) {
 	busName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	busNameModified := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resourceName := "aws_cloudwatch_event_bus.test"
+	resourceName := "aws_cloudwatchevents_bus.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -72,7 +72,7 @@ func TestAccCloudWatchEventsBus_tags(t *testing.T) {
 	var v1, v2, v3, v4 events.DescribeEventBusOutput
 	busName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resourceName := "aws_cloudwatch_event_bus.test"
+	resourceName := "aws_cloudwatchevents_bus.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -143,7 +143,7 @@ func TestAccCloudWatchEventsBus_disappears(t *testing.T) {
 	var v events.DescribeEventBusOutput
 	busName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resourceName := "aws_cloudwatch_event_bus.test"
+	resourceName := "aws_cloudwatchevents_bus.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -171,7 +171,7 @@ func TestAccCloudWatchEventsBus_partnerEventSource(t *testing.T) {
 	}
 
 	var busOutput events.DescribeEventBusOutput
-	resourceName := "aws_cloudwatch_event_bus.test"
+	resourceName := "aws_cloudwatchevents_bus.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -197,7 +197,7 @@ func testAccCheckBusDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchEventsConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_cloudwatch_event_bus" {
+		if rs.Type != "aws_cloudwatchevents_bus" {
 			continue
 		}
 
@@ -260,7 +260,7 @@ func testAccCheckCloudWatchEventBusNotRecreated(i, j *events.DescribeEventBusOut
 
 func testAccBusConfig(name string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_event_bus" "test" {
+resource "aws_cloudwatchevents_bus" "test" {
   name = %[1]q
 }
 `, name)
@@ -268,7 +268,7 @@ resource "aws_cloudwatch_event_bus" "test" {
 
 func testAccBusConfig_Tags1(name, key, value string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_event_bus" "test" {
+resource "aws_cloudwatchevents_bus" "test" {
   name = %[1]q
 
   tags = {
@@ -280,7 +280,7 @@ resource "aws_cloudwatch_event_bus" "test" {
 
 func testAccBusConfig_Tags2(name, key1, value1, key2, value2 string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_event_bus" "test" {
+resource "aws_cloudwatchevents_bus" "test" {
   name = %[1]q
 
   tags = {
@@ -293,7 +293,7 @@ resource "aws_cloudwatch_event_bus" "test" {
 
 func testAccBusPartnerEventSourceConfig(name string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_event_bus" "test" {
+resource "aws_cloudwatchevents_bus" "test" {
   name              = %[1]q
   event_source_name = %[1]q
 }

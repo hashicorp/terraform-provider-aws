@@ -24,7 +24,7 @@ func TestAccCloudWatchEventsSourceDataSource_basic(t *testing.T) {
 	}
 	createdBy := parts[0] + "/" + parts[1]
 
-	dataSourceName := "data.aws_cloudwatch_event_source.test"
+	dataSourceName := "data.aws_cloudwatchevents_source.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
@@ -45,7 +45,7 @@ func TestAccCloudWatchEventsSourceDataSource_basic(t *testing.T) {
 
 func testAccPartnerEventSourceDataSourceConfig(namePrefix string) string {
 	return fmt.Sprintf(`
-data "aws_cloudwatch_event_source" "test" {
+data "aws_cloudwatchevents_source" "test" {
   name_prefix = "%s"
 }
 `, namePrefix)
