@@ -594,7 +594,7 @@ EOF
 
 func testAccStateMachineExpressLogConfigurationConfig(rName string, rLevel string) string {
 	return acctest.ConfigCompose(testAccStateMachineBaseConfig(rName), fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test" {
+resource "aws_cloudwatchlogs_group" "test" {
   name = %[1]q
 }
 
@@ -628,7 +628,7 @@ resource "aws_sfn_state_machine" "test" {
 EOF
 
   logging_configuration {
-    log_destination        = "${aws_cloudwatch_log_group.test.arn}:*"
+    log_destination        = "${aws_cloudwatchlogs_group.test.arn}:*"
     include_execution_data = false
     level                  = %[2]q
   }

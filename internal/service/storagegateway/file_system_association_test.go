@@ -156,10 +156,10 @@ func TestAccStorageGatewayFileSystemAssociation_auditDestination(t *testing.T) {
 		CheckDestroy: testAccCheckFileSystemAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFileSystemAssociationConfig_Audit(rName, domainName, username, "aws_cloudwatch_log_group.test.arn"),
+				Config: testAccFileSystemAssociationConfig_Audit(rName, domainName, username, "aws_cloudwatchlogs_group.test.arn"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystemAssociationExists(resourceName, &fileSystemAssociation),
-					resource.TestCheckResourceAttrPair(resourceName, "audit_destination_arn", "aws_cloudwatch_log_group.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "audit_destination_arn", "aws_cloudwatchlogs_group.test", "arn"),
 				),
 			}, {
 				ResourceName:            resourceName,
@@ -175,10 +175,10 @@ func TestAccStorageGatewayFileSystemAssociation_auditDestination(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccFileSystemAssociationConfig_Audit(rName, domainName, username, "aws_cloudwatch_log_group.test2.arn"),
+				Config: testAccFileSystemAssociationConfig_Audit(rName, domainName, username, "aws_cloudwatchlogs_group.test2.arn"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystemAssociationExists(resourceName, &fileSystemAssociation),
-					resource.TestCheckResourceAttrPair(resourceName, "audit_destination_arn", "aws_cloudwatch_log_group.test2", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "audit_destination_arn", "aws_cloudwatchlogs_group.test2", "arn"),
 				),
 			},
 		},
@@ -405,8 +405,8 @@ resource "aws_storagegateway_file_system_association" "test" {
   audit_destination_arn = %[2]s
 }
 
-resource "aws_cloudwatch_log_group" "test" {}
-resource "aws_cloudwatch_log_group" "test2" {}
+resource "aws_cloudwatchlogs_group" "test" {}
+resource "aws_cloudwatchlogs_group" "test2" {}
 `, username, loggingDestination)
 }
 func testAccFileSystemAssociationConfig_AuditDisabled(rName, domainName, username string) string {
@@ -419,8 +419,8 @@ resource "aws_storagegateway_file_system_association" "test" {
   audit_destination_arn = ""
 }
 
-resource "aws_cloudwatch_log_group" "test" {}
-resource "aws_cloudwatch_log_group" "test2" {}
+resource "aws_cloudwatchlogs_group" "test" {}
+resource "aws_cloudwatchlogs_group" "test2" {}
 `, username)
 }
 

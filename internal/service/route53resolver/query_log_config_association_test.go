@@ -115,7 +115,7 @@ func testAccCheckRoute53ResolverQueryLogConfigAssociationExists(n string, v *rou
 
 func testAccRoute53ResolverQueryLogConfigAssociationConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test" {
+resource "aws_cloudwatchlogs_group" "test" {
   name = %[1]q
 }
 
@@ -129,7 +129,7 @@ resource "aws_vpc" "test" {
 
 resource "aws_route53_resolver_query_log_config" "test" {
   name            = %[1]q
-  destination_arn = aws_cloudwatch_log_group.test.arn
+  destination_arn = aws_cloudwatchlogs_group.test.arn
 }
 
 resource "aws_route53_resolver_query_log_config_association" "test" {

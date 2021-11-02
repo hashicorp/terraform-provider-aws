@@ -70,8 +70,8 @@ func TestAccStorageGatewayNFSFileShare_audit(t *testing.T) {
 	var nfsFileShare storagegateway.NFSFileShareInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_nfs_file_share.test"
-	logResourceName := "aws_cloudwatch_log_group.test"
-	logResourceNameSecond := "aws_cloudwatch_log_group.test2"
+	logResourceName := "aws_cloudwatchlogs_group.test"
+	logResourceNameSecond := "aws_cloudwatchlogs_group.test2"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -1034,7 +1034,7 @@ resource "aws_storagegateway_nfs_file_share" "test" {
 
 func testAccNFSFileShareAuditConfig(rName string) string {
 	return testAcc_S3FileShareBase(rName) + fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test" {
+resource "aws_cloudwatchlogs_group" "test" {
   name = %[1]q
 }
 
@@ -1043,18 +1043,18 @@ resource "aws_storagegateway_nfs_file_share" "test" {
   gateway_arn           = aws_storagegateway_gateway.test.arn
   location_arn          = aws_s3_bucket.test.arn
   role_arn              = aws_iam_role.test.arn
-  audit_destination_arn = aws_cloudwatch_log_group.test.arn
+  audit_destination_arn = aws_cloudwatchlogs_group.test.arn
 }
 `, rName)
 }
 
 func testAccNFSFileShareAuditUpdatedConfig(rName string) string {
 	return testAcc_S3FileShareBase(rName) + fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test" {
+resource "aws_cloudwatchlogs_group" "test" {
   name = %[1]q
 }
 
-resource "aws_cloudwatch_log_group" "test2" {
+resource "aws_cloudwatchlogs_group" "test2" {
   name = "%[1]s-updated"
 }
 
@@ -1063,7 +1063,7 @@ resource "aws_storagegateway_nfs_file_share" "test" {
   gateway_arn           = aws_storagegateway_gateway.test.arn
   location_arn          = aws_s3_bucket.test.arn
   role_arn              = aws_iam_role.test.arn
-  audit_destination_arn = aws_cloudwatch_log_group.test2.arn
+  audit_destination_arn = aws_cloudwatchlogs_group.test2.arn
 }
 `, rName)
 }

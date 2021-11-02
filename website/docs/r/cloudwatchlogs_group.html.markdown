@@ -1,19 +1,19 @@
 ---
 subcategory: "CloudWatch"
 layout: "aws"
-page_title: "AWS: aws_cloudwatch_log_group"
+page_title: "AWS: aws_cloudwatchlogs_group"
 description: |-
   Provides a CloudWatch Log Group resource.
 ---
 
-# Resource: aws_cloudwatch_log_group
+# Resource: aws_cloudwatchlogs_group
 
 Provides a CloudWatch Log Group resource.
 
 ## Example Usage
 
 ```terraform
-resource "aws_cloudwatch_log_group" "yada" {
+resource "aws_cloudwatchlogs_group" "yada" {
   name = "Yada"
 
   tags = {
@@ -49,5 +49,5 @@ In addition to all arguments above, the following attributes are exported:
 Cloudwatch Log Groups can be imported using the `name`, e.g.,
 
 ```
-$ terraform import aws_cloudwatch_log_group.test_group yada
+$ terraform import aws_cloudwatchlogs_group.test_group yada
 ```

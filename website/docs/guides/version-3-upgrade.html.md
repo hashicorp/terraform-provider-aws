@@ -30,7 +30,7 @@ Upgrade topics:
 - [Resource: aws_api_gateway_method_settings](#resource-aws_api_gateway_method_settings)
 - [Resource: aws_autoscaling_group](#resource-aws_autoscaling_group)
 - [Resource: aws_cloudfront_distribution](#resource-aws_cloudfront_distribution)
-- [Resource: aws_cloudwatch_log_group](#resource-aws_cloudwatch_log_group)
+- [Resource: aws_cloudwatchlogs_group](#resource-aws_cloudwatchlogs_group)
 - [Resource: aws_codepipeline](#resource-aws_codepipeline)
 - [Resource: aws_cognito_user_pool](#resource-aws_cognito_user_pool)
 - [Resource: aws_dx_gateway](#resource-aws_dx_gateway)
@@ -767,7 +767,7 @@ aws_cloudfront_distribution.example.trusted_signers[0].enabled
 aws_cloudfront_distribution.example.trusted_signers[0].items
 ```
 
-## Resource: aws_cloudwatch_log_group
+## Resource: aws_cloudwatchlogs_group
 
 ### Removal of arn Wildcard Suffix
 
@@ -776,12 +776,12 @@ Previously, the resource returned the Amazon Resource Name (ARN) directly from t
 Workarounds, such as using `replace()` as shown below, should be removed:
 
 ```terraform
-resource "aws_cloudwatch_log_group" "example" {
+resource "aws_cloudwatchlogs_group" "example" {
   name = "example"
 }
 resource "aws_datasync_task" "example" {
   # ... other configuration ...
-  cloudwatch_log_group_arn = replace(aws_cloudwatch_log_group.example.arn, ":*", "")
+  cloudwatch_log_group_arn = replace(aws_cloudwatchlogs_group.example.arn, ":*", "")
 }
 ```
 
@@ -798,7 +798,7 @@ data "aws_iam_policy_document" "ad-log-policy" {
       identifiers = ["ds.amazonaws.com"]
       type        = "Service"
     }
-    resources = [aws_cloudwatch_log_group.example.arn]
+    resources = [aws_cloudwatchlogs_group.example.arn]
     effect = "Allow"
   }
 }
@@ -817,7 +817,7 @@ data "aws_iam_policy_document" "ad-log-policy" {
       identifiers = ["ds.amazonaws.com"]
       type        = "Service"
     }
-    resources = ["${aws_cloudwatch_log_group.example.arn}:*"]
+    resources = ["${aws_cloudwatchlogs_group.example.arn}:*"]
     effect = "Allow"
   }
 }

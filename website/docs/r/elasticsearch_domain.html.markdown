@@ -69,11 +69,11 @@ POLICY
 ### Log Publishing to CloudWatch Logs
 
 ```terraform
-resource "aws_cloudwatch_log_group" "example" {
+resource "aws_cloudwatchlogs_group" "example" {
   name = "example"
 }
 
-resource "aws_cloudwatch_log_resource_policy" "example" {
+resource "aws_cloudwatchlogs_resource_policy" "example" {
   policy_name = "example"
 
   policy_document = <<CONFIG
@@ -101,7 +101,7 @@ resource "aws_elasticsearch_domain" "example" {
   # .. other configuration ...
 
   log_publishing_options {
-    cloudwatch_log_group_arn = aws_cloudwatch_log_group.example.arn
+    cloudwatch_log_group_arn = aws_cloudwatchlogs_group.example.arn
     log_type                 = "INDEX_SLOW_LOGS"
   }
 }

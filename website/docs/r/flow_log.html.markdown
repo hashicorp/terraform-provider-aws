@@ -18,12 +18,12 @@ interface, subnet, or VPC. Logs are sent to a CloudWatch Log Group or a S3 Bucke
 ```terraform
 resource "aws_flow_log" "example" {
   iam_role_arn    = aws_iam_role.example.arn
-  log_destination = aws_cloudwatch_log_group.example.arn
+  log_destination = aws_cloudwatchlogs_group.example.arn
   traffic_type    = "ALL"
   vpc_id          = aws_vpc.example.id
 }
 
-resource "aws_cloudwatch_log_group" "example" {
+resource "aws_cloudwatchlogs_group" "example" {
   name = "example"
 }
 

@@ -757,7 +757,7 @@ resource "aws_s3_bucket" "test" {
 
 func testAccNetworkFirewallLoggingConfigurationCloudWatchDependencyConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test" {
+resource "aws_cloudwatchlogs_group" "test" {
   name = %q
 
   lifecycle {
@@ -964,7 +964,7 @@ resource "aws_networkfirewall_logging_configuration" "test" {
   logging_configuration {
     log_destination_config {
       log_destination = {
-        logGroup = aws_cloudwatch_log_group.test.name
+        logGroup = aws_cloudwatchlogs_group.test.name
       }
       log_destination_type = %[2]q
       log_type             = %[3]q
@@ -1024,7 +1024,7 @@ resource "aws_networkfirewall_logging_configuration" "test" {
 
     log_destination_config {
       log_destination = {
-        logGroup = aws_cloudwatch_log_group.test.name
+        logGroup = aws_cloudwatchlogs_group.test.name
       }
       log_destination_type = "CloudWatchLogs"
       log_type             = %[3]q

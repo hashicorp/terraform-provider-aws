@@ -61,7 +61,7 @@ data "template_file" "cloud_config" {
     ecs_cluster_name   = aws_ecs_cluster.main.name
     ecs_log_level      = "info"
     ecs_agent_version  = "latest"
-    ecs_log_group_name = aws_cloudwatch_log_group.ecs.name
+    ecs_log_group_name = aws_cloudwatchlogs_group.ecs.name
   }
 }
 
@@ -175,7 +175,7 @@ data "template_file" "task_definition" {
     image_url        = "ghost:latest"
     container_name   = "ghost"
     log_group_region = var.aws_region
-    log_group_name   = aws_cloudwatch_log_group.app.name
+    log_group_name   = aws_cloudwatchlogs_group.app.name
   }
 }
 
@@ -279,8 +279,8 @@ data "template_file" "instance_profile" {
   template = file("${path.module}/instance-profile-policy.json")
 
   vars = {
-    app_log_group_arn = aws_cloudwatch_log_group.app.arn
-    ecs_log_group_arn = aws_cloudwatch_log_group.ecs.arn
+    app_log_group_arn = aws_cloudwatchlogs_group.app.arn
+    ecs_log_group_arn = aws_cloudwatchlogs_group.ecs.arn
   }
 }
 
@@ -318,10 +318,10 @@ resource "aws_alb_listener" "front_end" {
 
 ## CloudWatch Logs
 
-resource "aws_cloudwatch_log_group" "ecs" {
+resource "aws_cloudwatchlogs_group" "ecs" {
   name = "tf-ecs-group/ecs-agent"
 }
 
-resource "aws_cloudwatch_log_group" "app" {
+resource "aws_cloudwatchlogs_group" "app" {
   name = "tf-ecs-group/app-ghost"
 }

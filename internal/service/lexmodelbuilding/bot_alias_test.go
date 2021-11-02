@@ -119,7 +119,7 @@ func TestAccLexModelBuildingBotAlias_conversationLogsText(t *testing.T) {
 
 	resourceName := "aws_lex_bot_alias.test"
 	iamRoleResourceName := "aws_iam_role.test"
-	cloudwatchLogGroupResourceName := "aws_cloudwatch_log_group.test"
+	cloudwatchLogGroupResourceName := "aws_cloudwatchlogs_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -218,7 +218,7 @@ func TestAccLexModelBuildingBotAlias_conversationLogsBoth(t *testing.T) {
 
 	resourceName := "aws_lex_bot_alias.test"
 	iamRoleResourceName := "aws_iam_role.test"
-	cloudwatchLogGroupResourceName := "aws_cloudwatch_log_group.test"
+	cloudwatchLogGroupResourceName := "aws_cloudwatchlogs_group.test"
 	s3BucketResourceName := "aws_s3_bucket.test"
 	kmsKeyResourceName := "aws_kms_key.test"
 
@@ -433,12 +433,12 @@ resource "aws_lex_bot_alias" "test" {
     log_settings {
       destination  = "CLOUDWATCH_LOGS"
       log_type     = "TEXT"
-      resource_arn = aws_cloudwatch_log_group.test.arn
+      resource_arn = aws_cloudwatchlogs_group.test.arn
     }
   }
 }
 
-resource "aws_cloudwatch_log_group" "test" {
+resource "aws_cloudwatchlogs_group" "test" {
   name = "%[1]s"
 }
 
@@ -466,7 +466,7 @@ data "aws_iam_policy_document" "lex_cloud_watch_logs_policy" {
       "logs:PutLogEvents",
     ]
     resources = [
-      aws_cloudwatch_log_group.test.arn,
+      aws_cloudwatchlogs_group.test.arn,
     ]
   }
 }
@@ -551,7 +551,7 @@ resource "aws_lex_bot_alias" "test" {
     log_settings {
       destination  = "CLOUDWATCH_LOGS"
       log_type     = "TEXT"
-      resource_arn = aws_cloudwatch_log_group.test.arn
+      resource_arn = aws_cloudwatchlogs_group.test.arn
     }
     log_settings {
       destination  = "S3"
@@ -562,7 +562,7 @@ resource "aws_lex_bot_alias" "test" {
   }
 }
 
-resource "aws_cloudwatch_log_group" "test" {
+resource "aws_cloudwatchlogs_group" "test" {
   name = "%[1]s"
 }
 
@@ -596,7 +596,7 @@ data "aws_iam_policy_document" "lex_cloud_watch_logs_policy" {
       "logs:PutLogEvents",
     ]
     resources = [
-      aws_cloudwatch_log_group.test.arn,
+      aws_cloudwatchlogs_group.test.arn,
     ]
   }
 }

@@ -21,7 +21,7 @@ resource "aws_cloudformation_type" "example" {
   type_name              = "ExampleCompany::ExampleService::ExampleResource"
 
   logging_config {
-    log_group_name = aws_cloudwatch_log_group.example.name
+    log_group_name = aws_cloudwatchlogs_group.example.name
     log_role_arn   = aws_iam_role.example.arn
   }
 

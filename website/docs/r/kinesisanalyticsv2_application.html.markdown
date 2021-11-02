@@ -93,13 +93,13 @@ resource "aws_kinesisanalyticsv2_application" "example" {
 ### SQL Application
 
 ```terraform
-resource "aws_cloudwatch_log_group" "example" {
+resource "aws_cloudwatchlogs_group" "example" {
   name = "example-sql-application"
 }
 
-resource "aws_cloudwatch_log_stream" "example" {
+resource "aws_cloudwatchlogs_stream" "example" {
   name           = "example-sql-application"
-  log_group_name = aws_cloudwatch_log_group.example.name
+  log_group_name = aws_cloudwatchlogs_group.example.name
 }
 
 resource "aws_kinesisanalyticsv2_application" "example" {
@@ -208,7 +208,7 @@ resource "aws_kinesisanalyticsv2_application" "example" {
   }
 
   cloudwatch_logging_options {
-    log_stream_arn = aws_cloudwatch_log_stream.example.arn
+    log_stream_arn = aws_cloudwatchlogs_stream.example.arn
   }
 }
 ```

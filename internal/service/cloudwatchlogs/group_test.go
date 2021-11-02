@@ -17,7 +17,7 @@ import (
 func TestAccCloudWatchLogsGroup_basic(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
 	rInt := sdkacctest.RandInt()
-	resourceName := "aws_cloudwatch_log_group.test"
+	resourceName := "aws_cloudwatchlogs_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -47,7 +47,7 @@ func TestAccCloudWatchLogsGroup_basic(t *testing.T) {
 
 func TestAccCloudWatchLogsGroup_namePrefix(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
-	resourceName := "aws_cloudwatch_log_group.test"
+	resourceName := "aws_cloudwatchlogs_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -75,7 +75,7 @@ func TestAccCloudWatchLogsGroup_namePrefix(t *testing.T) {
 func TestAccCloudWatchLogsGroup_NamePrefix_retention(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
 	rName := sdkacctest.RandString(5)
-	resourceName := "aws_cloudwatch_log_group.test"
+	resourceName := "aws_cloudwatchlogs_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -111,7 +111,7 @@ func TestAccCloudWatchLogsGroup_NamePrefix_retention(t *testing.T) {
 
 func TestAccCloudWatchLogsGroup_generatedName(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
-	resourceName := "aws_cloudwatch_log_group.test"
+	resourceName := "aws_cloudwatchlogs_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -138,7 +138,7 @@ func TestAccCloudWatchLogsGroup_generatedName(t *testing.T) {
 func TestAccCloudWatchLogsGroup_retentionPolicy(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
 	rInt := sdkacctest.RandInt()
-	resourceName := "aws_cloudwatch_log_group.test"
+	resourceName := "aws_cloudwatchlogs_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -173,7 +173,7 @@ func TestAccCloudWatchLogsGroup_retentionPolicy(t *testing.T) {
 func TestAccCloudWatchLogsGroup_multiple(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
 	rInt := sdkacctest.RandInt()
-	resourceName := "aws_cloudwatch_log_group.alpha"
+	resourceName := "aws_cloudwatchlogs_group.alpha"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -184,12 +184,12 @@ func TestAccCloudWatchLogsGroup_multiple(t *testing.T) {
 			{
 				Config: testAccGroupConfig_multiple(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchLogGroupExists("aws_cloudwatch_log_group.alpha", &lg),
-					resource.TestCheckResourceAttr("aws_cloudwatch_log_group.alpha", "retention_in_days", "14"),
-					testAccCheckCloudWatchLogGroupExists("aws_cloudwatch_log_group.beta", &lg),
-					resource.TestCheckResourceAttr("aws_cloudwatch_log_group.beta", "retention_in_days", "0"),
-					testAccCheckCloudWatchLogGroupExists("aws_cloudwatch_log_group.charlie", &lg),
-					resource.TestCheckResourceAttr("aws_cloudwatch_log_group.charlie", "retention_in_days", "3653"),
+					testAccCheckCloudWatchLogGroupExists("aws_cloudwatchlogs_group.alpha", &lg),
+					resource.TestCheckResourceAttr("aws_cloudwatchlogs_group.alpha", "retention_in_days", "14"),
+					testAccCheckCloudWatchLogGroupExists("aws_cloudwatchlogs_group.beta", &lg),
+					resource.TestCheckResourceAttr("aws_cloudwatchlogs_group.beta", "retention_in_days", "0"),
+					testAccCheckCloudWatchLogGroupExists("aws_cloudwatchlogs_group.charlie", &lg),
+					resource.TestCheckResourceAttr("aws_cloudwatchlogs_group.charlie", "retention_in_days", "3653"),
 				),
 			},
 			{
@@ -205,7 +205,7 @@ func TestAccCloudWatchLogsGroup_multiple(t *testing.T) {
 func TestAccCloudWatchLogsGroup_disappears(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
 	rInt := sdkacctest.RandInt()
-	resourceName := "aws_cloudwatch_log_group.test"
+	resourceName := "aws_cloudwatchlogs_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -228,7 +228,7 @@ func TestAccCloudWatchLogsGroup_disappears(t *testing.T) {
 func TestAccCloudWatchLogsGroup_tagging(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
 	rInt := sdkacctest.RandInt()
-	resourceName := "aws_cloudwatch_log_group.test"
+	resourceName := "aws_cloudwatchlogs_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -291,7 +291,7 @@ func TestAccCloudWatchLogsGroup_tagging(t *testing.T) {
 func TestAccCloudWatchLogsGroup_kmsKey(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
 	rInt := sdkacctest.RandInt()
-	resourceName := "aws_cloudwatch_log_group.test"
+	resourceName := "aws_cloudwatchlogs_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -359,7 +359,7 @@ func testAccCheckGroupDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchLogsConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_cloudwatch_log_group" {
+		if rs.Type != "aws_cloudwatchlogs_group" {
 			continue
 		}
 		logGroup, err := tfcloudwatchlogs.LookupGroup(conn, rs.Primary.ID)
@@ -379,7 +379,7 @@ func testAccCheckGroupDestroy(s *terraform.State) error {
 
 func testAccGroupConfig(rInt int) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test" {
+resource "aws_cloudwatchlogs_group" "test" {
   name = "foo-bar-%d"
 }
 `, rInt)
@@ -387,7 +387,7 @@ resource "aws_cloudwatch_log_group" "test" {
 
 func testAccGroupWithTagsConfig(rInt int) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test" {
+resource "aws_cloudwatchlogs_group" "test" {
   name = "foo-bar-%d"
 
   tags = {
@@ -401,7 +401,7 @@ resource "aws_cloudwatch_log_group" "test" {
 
 func testAccGroupWithTagsAddedConfig(rInt int) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test" {
+resource "aws_cloudwatchlogs_group" "test" {
   name = "foo-bar-%d"
 
   tags = {
@@ -416,7 +416,7 @@ resource "aws_cloudwatch_log_group" "test" {
 
 func testAccGroupWithTagsUpdatedConfig(rInt int) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test" {
+resource "aws_cloudwatchlogs_group" "test" {
   name = "foo-bar-%d"
 
   tags = {
@@ -431,7 +431,7 @@ resource "aws_cloudwatch_log_group" "test" {
 
 func testAccGroupConfig_withRetention(rInt int) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test" {
+resource "aws_cloudwatchlogs_group" "test" {
   name              = "foo-bar-%d"
   retention_in_days = 365
 }
@@ -440,7 +440,7 @@ resource "aws_cloudwatch_log_group" "test" {
 
 func testAccGroupModifiedConfig_withRetention(rInt int) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test" {
+resource "aws_cloudwatchlogs_group" "test" {
   name = "foo-bar-%d"
 }
 `, rInt)
@@ -448,16 +448,16 @@ resource "aws_cloudwatch_log_group" "test" {
 
 func testAccGroupConfig_multiple(rInt int) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "alpha" {
+resource "aws_cloudwatchlogs_group" "alpha" {
   name              = "foo-bar-%d"
   retention_in_days = 14
 }
 
-resource "aws_cloudwatch_log_group" "beta" {
+resource "aws_cloudwatchlogs_group" "beta" {
   name = "foo-bar-%d"
 }
 
-resource "aws_cloudwatch_log_group" "charlie" {
+resource "aws_cloudwatchlogs_group" "charlie" {
   name              = "foo-bar-%d"
   retention_in_days = 3653
 }
@@ -489,7 +489,7 @@ resource "aws_kms_key" "foo" {
 POLICY
 }
 
-resource "aws_cloudwatch_log_group" "test" {
+resource "aws_cloudwatchlogs_group" "test" {
   name       = "foo-bar-%d"
   kms_key_id = aws_kms_key.foo.arn
 }
@@ -497,14 +497,14 @@ resource "aws_cloudwatch_log_group" "test" {
 }
 
 const testAccGroup_namePrefix = `
-resource "aws_cloudwatch_log_group" "test" {
+resource "aws_cloudwatchlogs_group" "test" {
   name_prefix = "tf-test-"
 }
 `
 
 func testAccGroup_namePrefix_retention(rName string, retention int) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test" {
+resource "aws_cloudwatchlogs_group" "test" {
   name_prefix       = "tf-test-%s"
   retention_in_days = %d
 }
@@ -512,5 +512,5 @@ resource "aws_cloudwatch_log_group" "test" {
 }
 
 const testAccGroup_generatedName = `
-resource "aws_cloudwatch_log_group" "test" {}
+resource "aws_cloudwatchlogs_group" "test" {}
 `

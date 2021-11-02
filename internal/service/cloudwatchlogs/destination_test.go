@@ -16,7 +16,7 @@ import (
 
 func TestAccCloudWatchLogsDestination_basic(t *testing.T) {
 	var destination cloudwatchlogs.Destination
-	resourceName := "aws_cloudwatch_log_destination.test"
+	resourceName := "aws_cloudwatchlogs_destination.test"
 	streamResourceName := "aws_kinesis_stream.test"
 	roleResourceName := "aws_iam_role.test"
 	rstring := sdkacctest.RandString(5)
@@ -47,7 +47,7 @@ func TestAccCloudWatchLogsDestination_basic(t *testing.T) {
 
 func TestAccCloudWatchLogsDestination_disappears(t *testing.T) {
 	var destination cloudwatchlogs.Destination
-	resourceName := "aws_cloudwatch_log_destination.test"
+	resourceName := "aws_cloudwatchlogs_destination.test"
 
 	rstring := sdkacctest.RandString(5)
 
@@ -73,7 +73,7 @@ func testAccCheckDestinationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchLogsConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_cloudwatch_log_destination" {
+		if rs.Type != "aws_cloudwatchlogs_destination" {
 			continue
 		}
 		_, exists, err := tfcloudwatchlogs.LookupDestination(conn, rs.Primary.ID, nil)
@@ -178,7 +178,7 @@ resource "aws_iam_role_policy" "test" {
   policy = data.aws_iam_policy_document.policy.json
 }
 
-resource "aws_cloudwatch_log_destination" "test" {
+resource "aws_cloudwatchlogs_destination" "test" {
   name       = "testDestination_%[1]s"
   target_arn = aws_kinesis_stream.test.arn
   role_arn   = aws_iam_role.test.arn
@@ -202,13 +202,13 @@ data "aws_iam_policy_document" "access" {
     ]
 
     resources = [
-      aws_cloudwatch_log_destination.test.arn,
+      aws_cloudwatchlogs_destination.test.arn,
     ]
   }
 }
 
-resource "aws_cloudwatch_log_destination_policy" "test" {
-  destination_name = aws_cloudwatch_log_destination.test.name
+resource "aws_cloudwatchlogs_destination_policy" "test" {
+  destination_name = aws_cloudwatchlogs_destination.test.name
   access_policy    = data.aws_iam_policy_document.access.json
 }
 `, rstring)

@@ -2269,11 +2269,11 @@ func testAccESDomain_LogPublishingOptions_BaseConfig(randInt int) string {
 data "aws_partition" "current" {
 }
 
-resource "aws_cloudwatch_log_group" "test" {
+resource "aws_cloudwatchlogs_group" "test" {
   name = "tf-test-%[1]d"
 }
 
-resource "aws_cloudwatch_log_resource_policy" "example" {
+resource "aws_cloudwatchlogs_resource_policy" "example" {
   policy_name = "tf-cwlp-%[1]d"
 
   policy_document = <<CONFIG
@@ -2339,7 +2339,7 @@ resource "aws_elasticsearch_domain" "test" {
 
   log_publishing_options {
     log_type                 = "%s"
-    cloudwatch_log_group_arn = aws_cloudwatch_log_group.test.arn
+    cloudwatch_log_group_arn = aws_cloudwatchlogs_group.test.arn
   }
 }
 `, randInt, auditLogsConfig, logType))

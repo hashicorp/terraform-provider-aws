@@ -115,7 +115,7 @@ func TestAccCloudFormationType_logging(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	typeName := fmt.Sprintf("HashiCorp::TerraformAwsProvider::TfAccTest%s", sdkacctest.RandString(8))
 	zipPath := testAccTypeZipGenerator(t, typeName)
-	cloudwatchLogGroupResourceName := "aws_cloudwatch_log_group.test"
+	cloudwatchLogGroupResourceName := "aws_cloudwatchlogs_group.test"
 	iamRoleResourceName := "aws_iam_role.test"
 	resourceName := "aws_cloudformation_type.test"
 
@@ -417,7 +417,7 @@ func testAccCloudformationTypeConfigLoggingConfig(rName string, zipPath string, 
 	return acctest.ConfigCompose(
 		testAccCloudformationTypeConfigBase(rName, zipPath),
 		fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test" {
+resource "aws_cloudwatchlogs_group" "test" {
   name = %[1]q
 }
 
@@ -442,7 +442,7 @@ resource "aws_cloudformation_type" "test" {
   type_name              = %[2]q
 
   logging_config {
-    log_group_name = aws_cloudwatch_log_group.test.name
+    log_group_name = aws_cloudwatchlogs_group.test.name
     log_role_arn   = aws_iam_role.test.arn
   }
 }

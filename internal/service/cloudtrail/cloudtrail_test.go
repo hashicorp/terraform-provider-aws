@@ -818,11 +818,11 @@ resource "aws_cloudtrail" "test" {
   name           = %[1]q
   s3_bucket_name = aws_s3_bucket.test.id
 
-  cloud_watch_logs_group_arn = "${aws_cloudwatch_log_group.test.arn}:*"
+  cloud_watch_logs_group_arn = "${aws_cloudwatchlogs_group.test.arn}:*"
   cloud_watch_logs_role_arn  = aws_iam_role.test.arn
 }
 
-resource "aws_cloudwatch_log_group" "test" {
+resource "aws_cloudwatchlogs_group" "test" {
   name = %[1]q
 }
 
@@ -854,7 +854,7 @@ resource "aws_iam_role_policy" "test" {
     Statement = [{
       Sid      = "AWSCloudTrailCreateLogStream"
       Effect   = "Allow"
-      Resource = "${aws_cloudwatch_log_group.test.arn}:*"
+      Resource = "${aws_cloudwatchlogs_group.test.arn}:*"
 
       Action = [
         "logs:CreateLogStream",
@@ -872,15 +872,15 @@ resource "aws_cloudtrail" "test" {
   name           = %[1]q
   s3_bucket_name = aws_s3_bucket.test.id
 
-  cloud_watch_logs_group_arn = "${aws_cloudwatch_log_group.test2.arn}:*"
+  cloud_watch_logs_group_arn = "${aws_cloudwatchlogs_group.test2.arn}:*"
   cloud_watch_logs_role_arn  = aws_iam_role.test.arn
 }
 
-resource "aws_cloudwatch_log_group" "test" {
+resource "aws_cloudwatchlogs_group" "test" {
   name = %[1]q
 }
 
-resource "aws_cloudwatch_log_group" "test2" {
+resource "aws_cloudwatchlogs_group" "test2" {
   name = "%[1]s-2"
 }
 
@@ -912,7 +912,7 @@ resource "aws_iam_role_policy" "test" {
     Statement = [{
       Sid      = "AWSCloudTrailCreateLogStream"
       Effect   = "Allow"
-      Resource = "${aws_cloudwatch_log_group.test2.arn}:*"
+      Resource = "${aws_cloudwatchlogs_group.test2.arn}:*"
 
       Action = [
         "logs:CreateLogStream",

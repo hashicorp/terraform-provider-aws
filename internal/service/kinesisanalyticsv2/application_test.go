@@ -403,7 +403,7 @@ func TestAccKinesisAnalyticsV2Application_CloudWatchLoggingOptions_add(t *testin
 	var v kinesisanalyticsv2.ApplicationDetail
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
-	cloudWatchLogStreamResourceName := "aws_cloudwatch_log_stream.test.0"
+	cloudWatchLogStreamResourceName := "aws_cloudwatchlogs_stream.test.0"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -466,7 +466,7 @@ func TestAccKinesisAnalyticsV2Application_CloudWatchLoggingOptions_delete(t *tes
 	var v kinesisanalyticsv2.ApplicationDetail
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
-	cloudWatchLogStreamResourceName := "aws_cloudwatch_log_stream.test.0"
+	cloudWatchLogStreamResourceName := "aws_cloudwatchlogs_stream.test.0"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -529,8 +529,8 @@ func TestAccKinesisAnalyticsV2Application_CloudWatchLoggingOptions_update(t *tes
 	var v kinesisanalyticsv2.ApplicationDetail
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
-	cloudWatchLogStream1ResourceName := "aws_cloudwatch_log_stream.test.0"
-	cloudWatchLogStream2ResourceName := "aws_cloudwatch_log_stream.test.1"
+	cloudWatchLogStream1ResourceName := "aws_cloudwatchlogs_stream.test.0"
+	cloudWatchLogStream2ResourceName := "aws_cloudwatchlogs_stream.test.1"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -2444,7 +2444,7 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationMultiple_update(t *testi
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	iamRole1ResourceName := "aws_iam_role.test.0"
 	iamRole2ResourceName := "aws_iam_role.test.1"
-	cloudWatchLogStreamResourceName := "aws_cloudwatch_log_stream.test"
+	cloudWatchLogStreamResourceName := "aws_cloudwatchlogs_stream.test"
 	lambdaResourceName := "aws_lambda_function.test.0"
 	firehoseResourceName := "aws_kinesis_firehose_delivery_stream.test"
 	streamsResourceName := "aws_kinesis_stream.test"
@@ -3397,7 +3397,7 @@ func TestAccKinesisAnalyticsV2Application_SQLApplication_updateRunning(t *testin
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	iamRole1ResourceName := "aws_iam_role.test.0"
 	iamRole2ResourceName := "aws_iam_role.test.1"
-	cloudWatchLogStreamResourceName := "aws_cloudwatch_log_stream.test"
+	cloudWatchLogStreamResourceName := "aws_cloudwatchlogs_stream.test"
 	lambdaResourceName := "aws_lambda_function.test.0"
 	firehoseResourceName := "aws_kinesis_firehose_delivery_stream.test"
 	streamsResourceName := "aws_kinesis_stream.test"
@@ -4415,15 +4415,15 @@ func testAccApplicationConfigCloudWatchLoggingOptions(rName string, streamIndex 
 	return acctest.ConfigCompose(
 		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
 		fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test" {
+resource "aws_cloudwatchlogs_group" "test" {
   name = %[1]q
 }
 
-resource "aws_cloudwatch_log_stream" "test" {
+resource "aws_cloudwatchlogs_stream" "test" {
   count = 2
 
   name           = "%[1]s.${count.index}"
-  log_group_name = aws_cloudwatch_log_group.test.name
+  log_group_name = aws_cloudwatchlogs_group.test.name
 }
 
 resource "aws_kinesisanalyticsv2_application" "test" {
@@ -4432,7 +4432,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
   service_execution_role = aws_iam_role.test[0].arn
 
   cloudwatch_logging_options {
-    log_stream_arn = aws_cloudwatch_log_stream.test.%[2]d.arn
+    log_stream_arn = aws_cloudwatchlogs_stream.test.%[2]d.arn
   }
 }
 `, rName, streamIndex))
@@ -5218,13 +5218,13 @@ func testAccApplicationConfigSQLApplicationConfigurationMultiple(rName, startApp
 		testAccApplicationConfigBaseServiceExecutionIamRole(rName),
 		testAccApplicationConfigBaseSQLApplication(rName),
 		fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test" {
+resource "aws_cloudwatchlogs_group" "test" {
   name = %[1]q
 }
 
-resource "aws_cloudwatch_log_stream" "test" {
+resource "aws_cloudwatchlogs_stream" "test" {
   name           = %[1]q
-  log_group_name = aws_cloudwatch_log_group.test.name
+  log_group_name = aws_cloudwatchlogs_group.test.name
 }
 
 resource "aws_kinesisanalyticsv2_application" "test" {
@@ -5293,7 +5293,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
   }
 
   cloudwatch_logging_options {
-    log_stream_arn = aws_cloudwatch_log_stream.test.arn
+    log_stream_arn = aws_cloudwatchlogs_stream.test.arn
   }
 
   tags = {

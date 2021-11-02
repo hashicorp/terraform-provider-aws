@@ -263,7 +263,7 @@ func TestAccSSMMaintenanceWindowTask_taskInvocationRunCommandParametersCloudWatc
 	var task ssm.MaintenanceWindowTask
 	resourceName := "aws_ssm_maintenance_window_task.test"
 	serviceRoleResourceName := "aws_iam_role.test"
-	cwResourceName := "aws_cloudwatch_log_group.test"
+	cwResourceName := "aws_cloudwatchlogs_group.test"
 
 	name := sdkacctest.RandString(10)
 	resource.ParallelTest(t, resource.TestCase{
@@ -941,7 +941,7 @@ resource "aws_ssm_maintenance_window_task" "test" {
 
 func testAccMaintenanceWindowTaskRunCommandCloudWatchConfig(rName string, enabled bool) string {
 	return fmt.Sprintf(testAccMaintenanceWindowTaskBaseConfig(rName)+`
-resource "aws_cloudwatch_log_group" "test" {
+resource "aws_cloudwatchlogs_group" "test" {
   name = %[1]q
 }
 
@@ -971,7 +971,7 @@ resource "aws_ssm_maintenance_window_task" "test" {
       }
 
       cloudwatch_config {
-        cloudwatch_log_group_name = aws_cloudwatch_log_group.test.name
+        cloudwatch_log_group_name = aws_cloudwatchlogs_group.test.name
         cloudwatch_output_enabled = %[2]t
       }
     }

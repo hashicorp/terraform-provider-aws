@@ -22,7 +22,7 @@ func init() {
 		Dependencies: []string{
 			"aws_lambda_function",
 			"aws_lambda_layer",
-			"aws_cloudwatch_log_group",
+			"aws_cloudwatchlogs_group",
 		},
 	})
 }

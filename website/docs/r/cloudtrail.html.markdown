@@ -278,14 +278,14 @@ resource "aws_cloudtrail" "example" {
 #### Sending Events to CloudWatch Logs
 
 ```terraform
-resource "aws_cloudwatch_log_group" "example" {
+resource "aws_cloudwatchlogs_group" "example" {
   name = "Example"
 }
 
 resource "aws_cloudtrail" "example" {
   # ... other configuration ...
 
-  cloud_watch_logs_group_arn = "${aws_cloudwatch_log_group.example.arn}:*" # CloudTrail requires the Log Stream wildcard
+  cloud_watch_logs_group_arn = "${aws_cloudwatchlogs_group.example.arn}:*" # CloudTrail requires the Log Stream wildcard
 }
 ```
 

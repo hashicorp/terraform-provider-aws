@@ -79,7 +79,7 @@ resource "aws_iam_role_policy_attachment" "example-AmazonEKSVPCResourceControlle
 
 ### Enabling Control Plane Logging
 
-[EKS Control Plane Logging](https://docs.aws.amazon.com/eks/latest/userguide/control-plane-logs.html) can be enabled via the `enabled_cluster_log_types` argument. To manage the CloudWatch Log Group retention period, the [`aws_cloudwatch_log_group` resource](/docs/providers/aws/r/cloudwatch_log_group.html) can be used.
+[EKS Control Plane Logging](https://docs.aws.amazon.com/eks/latest/userguide/control-plane-logs.html) can be enabled via the `enabled_cluster_log_types` argument. To manage the CloudWatch Log Group retention period, the [`aws_cloudwatchlogs_group` resource](/docs/providers/aws/r/cloudwatch_log_group.html) can be used.
 
 -> The below configuration uses [`depends_on`](https://www.terraform.io/docs/configuration/meta-arguments/depends_on.html) to prevent ordering issues with EKS automatically creating the log group first and a variable for naming consistency. Other ordering and naming methodologies may be more appropriate for your environment.
 
@@ -90,7 +90,7 @@ variable "cluster_name" {
 }
 
 resource "aws_eks_cluster" "example" {
-  depends_on = [aws_cloudwatch_log_group.example]
+  depends_on = [aws_cloudwatchlogs_group.example]
 
   enabled_cluster_log_types = ["api", "audit"]
   name                      = var.cluster_name
@@ -98,7 +98,7 @@ resource "aws_eks_cluster" "example" {
   # ... other configuration ...
 }
 
-resource "aws_cloudwatch_log_group" "example" {
+resource "aws_cloudwatchlogs_group" "example" {
   # The log group name format is /aws/eks/<cluster-name>/cluster
   # Reference: https://docs.aws.amazon.com/eks/latest/userguide/control-plane-logs.html
   name              = "/aws/eks/${var.cluster_name}/cluster"

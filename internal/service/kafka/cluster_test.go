@@ -1386,7 +1386,7 @@ func testAccMskClusterConfigLoggingInfo(rName string, cloudwatchLogsEnabled bool
 	s3Bucket := "\"\""
 
 	if cloudwatchLogsEnabled {
-		cloudwatchLogsLogGroup = "aws_cloudwatch_log_group.test.name"
+		cloudwatchLogsLogGroup = "aws_cloudwatchlogs_group.test.name"
 	}
 	if firehoseEnabled {
 		firehoseDeliveryStream = "aws_kinesis_firehose_delivery_stream.test.name"
@@ -1396,7 +1396,7 @@ func testAccMskClusterConfigLoggingInfo(rName string, cloudwatchLogsEnabled bool
 	}
 
 	return acctest.ConfigCompose(testAccMskClusterBaseConfig(rName), fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test" {
+resource "aws_cloudwatchlogs_group" "test" {
   name = %[1]q
 }
 

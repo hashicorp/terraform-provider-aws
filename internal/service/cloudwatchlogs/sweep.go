@@ -16,8 +16,8 @@ import (
 )
 
 func init() {
-	resource.AddTestSweepers("aws_cloudwatch_log_group", &resource.Sweeper{
-		Name: "aws_cloudwatch_log_group",
+	resource.AddTestSweepers("aws_cloudwatchlogs_group", &resource.Sweeper{
+		Name: "aws_cloudwatchlogs_group",
 		F:    sweepGroups,
 		Dependencies: []string{
 			"aws_api_gateway_rest_api",
@@ -48,8 +48,8 @@ func init() {
 		F:    sweeplogQueryDefinitions,
 	})
 
-	resource.AddTestSweepers("aws_cloudwatch_log_resource_policy", &resource.Sweeper{
-		Name: "aws_cloudwatch_log_resource_policy",
+	resource.AddTestSweepers("aws_cloudwatchlogs_resource_policy", &resource.Sweeper{
+		Name: "aws_cloudwatchlogs_resource_policy",
 		F:    sweepResourcePolicies,
 	})
 }

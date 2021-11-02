@@ -47,7 +47,7 @@ resource "aws_kms_key" "kms" {
   description = "example"
 }
 
-resource "aws_cloudwatch_log_group" "test" {
+resource "aws_cloudwatchlogs_group" "test" {
   name = "msk_broker_logs"
 }
 
@@ -131,7 +131,7 @@ resource "aws_msk_cluster" "example" {
     broker_logs {
       cloudwatch_logs {
         enabled   = true
-        log_group = aws_cloudwatch_log_group.test.name
+        log_group = aws_cloudwatchlogs_group.test.name
       }
       firehose {
         enabled         = true

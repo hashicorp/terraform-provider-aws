@@ -73,7 +73,7 @@ func TestAccRoute53ResolverQueryLogConfig_tags(t *testing.T) {
 	var v route53resolver.ResolverQueryLogConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_route53_resolver_query_log_config.test"
-	cwLogGroupResourceName := "aws_cloudwatch_log_group.test"
+	cwLogGroupResourceName := "aws_cloudwatchlogs_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -189,13 +189,13 @@ resource "aws_route53_resolver_query_log_config" "test" {
 
 func testAccRoute53ResolverQueryLogConfigConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test" {
+resource "aws_cloudwatchlogs_group" "test" {
   name = %[1]q
 }
 
 resource "aws_route53_resolver_query_log_config" "test" {
   name            = %[1]q
-  destination_arn = aws_cloudwatch_log_group.test.arn
+  destination_arn = aws_cloudwatchlogs_group.test.arn
 
   tags = {
     %[2]q = %[3]q
@@ -206,13 +206,13 @@ resource "aws_route53_resolver_query_log_config" "test" {
 
 func testAccRoute53ResolverQueryLogConfigConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test" {
+resource "aws_cloudwatchlogs_group" "test" {
   name = %[1]q
 }
 
 resource "aws_route53_resolver_query_log_config" "test" {
   name            = %[1]q
-  destination_arn = aws_cloudwatch_log_group.test.arn
+  destination_arn = aws_cloudwatchlogs_group.test.arn
 
   tags = {
     %[2]q = %[3]q

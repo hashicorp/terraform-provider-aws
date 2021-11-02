@@ -23,7 +23,7 @@ import (
 )
 
 func TestAccRoute53QueryLog_basic(t *testing.T) {
-	cloudwatchLogGroupResourceName := "aws_cloudwatch_log_group.test"
+	cloudwatchLogGroupResourceName := "aws_cloudwatchlogs_group.test"
 	resourceName := "aws_route53_query_log.test"
 	route53ZoneResourceName := "aws_route53_zone.test"
 
@@ -166,7 +166,7 @@ func testAccCheckQueryLogResourceBasic1Config(rName, domainName string) string {
 	return acctest.ConfigCompose(
 		testAccRoute53QueryLogRegionProviderConfig(),
 		fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test" {
+resource "aws_cloudwatchlogs_group" "test" {
   name              = "/aws/route53/${aws_route53_zone.test.name}"
   retention_in_days = 1
 }
@@ -189,7 +189,7 @@ data "aws_iam_policy_document" "test" {
   }
 }
 
-resource "aws_cloudwatch_log_resource_policy" "test" {
+resource "aws_cloudwatchlogs_resource_policy" "test" {
   policy_name     = %[1]q
   policy_document = data.aws_iam_policy_document.test.json
 }
@@ -199,9 +199,9 @@ resource "aws_route53_zone" "test" {
 }
 
 resource "aws_route53_query_log" "test" {
-  depends_on = [aws_cloudwatch_log_resource_policy.test]
+  depends_on = [aws_cloudwatchlogs_resource_policy.test]
 
-  cloudwatch_log_group_arn = aws_cloudwatch_log_group.test.arn
+  cloudwatch_log_group_arn = aws_cloudwatchlogs_group.test.arn
   zone_id                  = aws_route53_zone.test.zone_id
 }
 `, rName, domainName))

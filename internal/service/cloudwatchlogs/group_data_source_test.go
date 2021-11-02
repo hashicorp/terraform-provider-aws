@@ -12,7 +12,7 @@ import (
 
 func TestAccCloudWatchLogsGroupDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "data.aws_cloudwatch_log_group.test"
+	resourceName := "data.aws_cloudwatchlogs_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
@@ -34,7 +34,7 @@ func TestAccCloudWatchLogsGroupDataSource_basic(t *testing.T) {
 
 func TestAccCloudWatchLogsGroupDataSource_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "data.aws_cloudwatch_log_group.test"
+	resourceName := "data.aws_cloudwatchlogs_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
@@ -59,7 +59,7 @@ func TestAccCloudWatchLogsGroupDataSource_tags(t *testing.T) {
 
 func TestAccCloudWatchLogsGroupDataSource_kms(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "data.aws_cloudwatch_log_group.test"
+	resourceName := "data.aws_cloudwatchlogs_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
@@ -82,7 +82,7 @@ func TestAccCloudWatchLogsGroupDataSource_kms(t *testing.T) {
 
 func TestAccCloudWatchLogsGroupDataSource_retention(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "data.aws_cloudwatch_log_group.test"
+	resourceName := "data.aws_cloudwatchlogs_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
@@ -105,19 +105,19 @@ func TestAccCloudWatchLogsGroupDataSource_retention(t *testing.T) {
 
 func testAccCheckGroupDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
-resource aws_cloudwatch_log_group "test" {
+resource aws_cloudwatchlogs_group "test" {
   name = "%s"
 }
 
-data aws_cloudwatch_log_group "test" {
-  name = aws_cloudwatch_log_group.test.name
+data aws_cloudwatchlogs_group "test" {
+  name = aws_cloudwatchlogs_group.test.name
 }
 `, rName)
 }
 
 func testAccCheckGroupTagsDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
-resource aws_cloudwatch_log_group "test" {
+resource aws_cloudwatchlogs_group "test" {
   name = "%s"
 
   tags = {
@@ -127,8 +127,8 @@ resource aws_cloudwatch_log_group "test" {
   }
 }
 
-data aws_cloudwatch_log_group "test" {
-  name = aws_cloudwatch_log_group.test.name
+data aws_cloudwatchlogs_group "test" {
+  name = aws_cloudwatchlogs_group.test.name
 }
 `, rName)
 }
@@ -158,26 +158,26 @@ resource "aws_kms_key" "foo" {
 POLICY
 }
 
-resource aws_cloudwatch_log_group "test" {
+resource aws_cloudwatchlogs_group "test" {
   name       = "%s"
   kms_key_id = aws_kms_key.foo.arn
 }
 
-data aws_cloudwatch_log_group "test" {
-  name = aws_cloudwatch_log_group.test.name
+data aws_cloudwatchlogs_group "test" {
+  name = aws_cloudwatchlogs_group.test.name
 }
 `, rName, rName)
 }
 
 func testAccCheckGroupRetentionDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
-resource aws_cloudwatch_log_group "test" {
+resource aws_cloudwatchlogs_group "test" {
   name              = "%s"
   retention_in_days = 365
 }
 
-data aws_cloudwatch_log_group "test" {
-  name = aws_cloudwatch_log_group.test.name
+data aws_cloudwatchlogs_group "test" {
+  name = aws_cloudwatchlogs_group.test.name
 }
 `, rName)
 }

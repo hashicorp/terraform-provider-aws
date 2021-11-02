@@ -1,19 +1,19 @@
 ---
 subcategory: "CloudWatch"
 layout: "aws"
-page_title: "AWS: aws_cloudwatch_log_destination"
+page_title: "AWS: aws_cloudwatchlogs_destination"
 description: |-
   Provides a CloudWatch Logs destination.
 ---
 
-# Resource: aws_cloudwatch_log_destination
+# Resource: aws_cloudwatchlogs_destination
 
 Provides a CloudWatch Logs destination resource.
 
 ## Example Usage
 
 ```terraform
-resource "aws_cloudwatch_log_destination" "test_destination" {
+resource "aws_cloudwatchlogs_destination" "test_destination" {
   name       = "test_destination"
   role_arn   = aws_iam_role.iam_for_cloudwatch.arn
   target_arn = aws_kinesis_stream.kinesis_for_cloudwatch.arn
@@ -39,5 +39,5 @@ In addition to all arguments above, the following attributes are exported:
 CloudWatch Logs destinations can be imported using the `name`, e.g.,
 
 ```
-$ terraform import aws_cloudwatch_log_destination.test_destination test_destination
+$ terraform import aws_cloudwatchlogs_destination.test_destination test_destination
 ```

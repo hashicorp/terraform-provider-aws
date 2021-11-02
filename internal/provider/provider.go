@@ -383,8 +383,10 @@ func Provider() *schema.Provider {
 			"aws_cloudwatch_event_connection": cloudwatchevents.DataSourceConnection(),
 			"aws_cloudwatch_event_source":     cloudwatchevents.DataSourceSource(),
 
-			"aws_cloudwatch_log_group":  cloudwatchlogs.DataSourceGroup(),
-			"aws_cloudwatch_log_groups": cloudwatchlogs.DataSourceGroups(),
+			"aws_cloudwatchlogs_group":  cloudwatchlogs.DataSourceGroup(),
+			"aws_cloudwatchlogs_groups": cloudwatchlogs.DataSourceGroups(),
+			"aws_cloudwatch_log_group":  cloudwatchlogs.DataSourceGroup(),  // backward compatible alias
+			"aws_cloudwatch_log_groups": cloudwatchlogs.DataSourceGroups(), // backward compatible alias
 
 			"aws_codeartifact_authorization_token": codeartifact.DataSourceAuthorizationToken(),
 			"aws_codeartifact_repository_endpoint": codeartifact.DataSourceRepositoryEndpoint(),
@@ -871,14 +873,22 @@ func Provider() *schema.Provider {
 			"aws_cloudwatch_event_rule":            cloudwatchevents.ResourceRule(),
 			"aws_cloudwatch_event_target":          cloudwatchevents.ResourceTarget(),
 
-			"aws_cloudwatch_log_destination":         cloudwatchlogs.ResourceDestination(),
-			"aws_cloudwatch_log_destination_policy":  cloudwatchlogs.ResourceDestinationPolicy(),
-			"aws_cloudwatch_log_group":               cloudwatchlogs.ResourceGroup(),
-			"aws_cloudwatch_log_metric_filter":       cloudwatchlogs.ResourceMetricFilter(),
-			"aws_cloudwatch_log_resource_policy":     cloudwatchlogs.ResourceResourcePolicy(),
-			"aws_cloudwatch_log_stream":              cloudwatchlogs.ResourceStream(),
-			"aws_cloudwatch_log_subscription_filter": cloudwatchlogs.ResourceSubscriptionFilter(),
-			"aws_cloudwatch_query_definition":        cloudwatchlogs.ResourceQueryDefinition(),
+			"aws_cloudwatchlogs_destination":         cloudwatchlogs.ResourceDestination(),
+			"aws_cloudwatchlogs_destination_policy":  cloudwatchlogs.ResourceDestinationPolicy(),
+			"aws_cloudwatchlogs_group":               cloudwatchlogs.ResourceGroup(),
+			"aws_cloudwatchlogs_metric_filter":       cloudwatchlogs.ResourceMetricFilter(),
+			"aws_cloudwatchlogs_resource_policy":     cloudwatchlogs.ResourceResourcePolicy(),
+			"aws_cloudwatchlogs_stream":              cloudwatchlogs.ResourceStream(),
+			"aws_cloudwatchlogs_subscription_filter": cloudwatchlogs.ResourceSubscriptionFilter(),
+			"aws_cloudwatchlogs_query_definition":    cloudwatchlogs.ResourceQueryDefinition(),
+			"aws_cloudwatch_log_destination":         cloudwatchlogs.ResourceDestination(),        // backward compatible alias
+			"aws_cloudwatch_log_destination_policy":  cloudwatchlogs.ResourceDestinationPolicy(),  // backward compatible alias
+			"aws_cloudwatch_log_group":               cloudwatchlogs.ResourceGroup(),              // backward compatible alias
+			"aws_cloudwatch_log_metric_filter":       cloudwatchlogs.ResourceMetricFilter(),       // backward compatible alias
+			"aws_cloudwatch_log_resource_policy":     cloudwatchlogs.ResourceResourcePolicy(),     // backward compatible alias
+			"aws_cloudwatch_log_stream":              cloudwatchlogs.ResourceStream(),             // backward compatible alias
+			"aws_cloudwatch_log_subscription_filter": cloudwatchlogs.ResourceSubscriptionFilter(), // backward compatible alias
+			"aws_cloudwatch_query_definition":        cloudwatchlogs.ResourceQueryDefinition(),    // backward compatible alias
 
 			"aws_codeartifact_domain":                        codeartifact.ResourceDomain(),
 			"aws_codeartifact_domain_permissions_policy":     codeartifact.ResourceDomainPermissionsPolicy(),

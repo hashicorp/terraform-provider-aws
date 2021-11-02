@@ -135,18 +135,18 @@ resource "aws_lambda_permission" "logging" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.logging.function_name
   principal     = "logs.eu-west-1.amazonaws.com"
-  source_arn    = "${aws_cloudwatch_log_group.default.arn}:*"
+  source_arn    = "${aws_cloudwatchlogs_group.default.arn}:*"
 }
 
-resource "aws_cloudwatch_log_group" "default" {
+resource "aws_cloudwatchlogs_group" "default" {
   name = "/default"
 }
 
-resource "aws_cloudwatch_log_subscription_filter" "logging" {
+resource "aws_cloudwatchlogs_subscription_filter" "logging" {
   depends_on      = [aws_lambda_permission.logging]
   destination_arn = aws_lambda_function.logging.arn
   filter_pattern  = ""
-  log_group_name  = aws_cloudwatch_log_group.default.name
+  log_group_name  = aws_cloudwatchlogs_group.default.name
   name            = "logging_default"
 }
 

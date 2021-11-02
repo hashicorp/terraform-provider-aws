@@ -17,7 +17,7 @@ import (
 
 func TestAccEC2FlowLog_vpcID(t *testing.T) {
 	var flowLog ec2.FlowLog
-	cloudwatchLogGroupResourceName := "aws_cloudwatch_log_group.test"
+	cloudwatchLogGroupResourceName := "aws_cloudwatchlogs_group.test"
 	iamRoleResourceName := "aws_iam_role.test"
 	resourceName := "aws_flow_log.test"
 	vpcResourceName := "aws_vpc.test"
@@ -90,7 +90,7 @@ func TestAccEC2FlowLog_logFormat(t *testing.T) {
 
 func TestAccEC2FlowLog_subnetID(t *testing.T) {
 	var flowLog ec2.FlowLog
-	cloudwatchLogGroupResourceName := "aws_cloudwatch_log_group.test"
+	cloudwatchLogGroupResourceName := "aws_cloudwatchlogs_group.test"
 	iamRoleResourceName := "aws_iam_role.test"
 	resourceName := "aws_flow_log.test"
 	subnetResourceName := "aws_subnet.test"
@@ -126,7 +126,7 @@ func TestAccEC2FlowLog_subnetID(t *testing.T) {
 
 func TestAccEC2FlowLog_LogDestinationType_cloudWatchLogs(t *testing.T) {
 	var flowLog ec2.FlowLog
-	cloudwatchLogGroupResourceName := "aws_cloudwatch_log_group.test"
+	cloudwatchLogGroupResourceName := "aws_cloudwatchlogs_group.test"
 	resourceName := "aws_flow_log.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -545,13 +545,13 @@ resource "aws_iam_role" "test" {
 EOF
 }
 
-resource "aws_cloudwatch_log_group" "test" {
+resource "aws_cloudwatchlogs_group" "test" {
   name = %[1]q
 }
 
 resource "aws_flow_log" "test" {
   iam_role_arn         = aws_iam_role.test.arn
-  log_destination      = aws_cloudwatch_log_group.test.arn
+  log_destination      = aws_cloudwatchlogs_group.test.arn
   log_destination_type = "cloud-watch-logs"
   traffic_type         = "ALL"
   vpc_id               = aws_vpc.test.id
@@ -724,13 +724,13 @@ resource "aws_iam_role" "test" {
 EOF
 }
 
-resource "aws_cloudwatch_log_group" "test" {
+resource "aws_cloudwatchlogs_group" "test" {
   name = %[1]q
 }
 
 resource "aws_flow_log" "test" {
   iam_role_arn   = aws_iam_role.test.arn
-  log_group_name = aws_cloudwatch_log_group.test.name
+  log_group_name = aws_cloudwatchlogs_group.test.name
   subnet_id      = aws_subnet.test.id
   traffic_type   = "ALL"
 }
@@ -764,13 +764,13 @@ resource "aws_iam_role" "test" {
 EOF
 }
 
-resource "aws_cloudwatch_log_group" "test" {
+resource "aws_cloudwatchlogs_group" "test" {
   name = %[1]q
 }
 
 resource "aws_flow_log" "test" {
   iam_role_arn   = aws_iam_role.test.arn
-  log_group_name = aws_cloudwatch_log_group.test.name
+  log_group_name = aws_cloudwatchlogs_group.test.name
   traffic_type   = "ALL"
   vpc_id         = aws_vpc.test.id
 }
@@ -804,7 +804,7 @@ resource "aws_iam_role" "test" {
 EOF
 }
 
-resource "aws_cloudwatch_log_group" "test" {
+resource "aws_cloudwatchlogs_group" "test" {
   name = %[1]q
 }
 
@@ -850,13 +850,13 @@ resource "aws_iam_role" "test" {
 EOF
 }
 
-resource "aws_cloudwatch_log_group" "test" {
+resource "aws_cloudwatchlogs_group" "test" {
   name = %[1]q
 }
 
 resource "aws_flow_log" "test" {
   iam_role_arn   = aws_iam_role.test.arn
-  log_group_name = aws_cloudwatch_log_group.test.name
+  log_group_name = aws_cloudwatchlogs_group.test.name
   traffic_type   = "ALL"
   vpc_id         = aws_vpc.test.id
 
@@ -894,13 +894,13 @@ resource "aws_iam_role" "test" {
 EOF
 }
 
-resource "aws_cloudwatch_log_group" "test" {
+resource "aws_cloudwatchlogs_group" "test" {
   name = %[1]q
 }
 
 resource "aws_flow_log" "test" {
   iam_role_arn   = aws_iam_role.test.arn
-  log_group_name = aws_cloudwatch_log_group.test.name
+  log_group_name = aws_cloudwatchlogs_group.test.name
   traffic_type   = "ALL"
   vpc_id         = aws_vpc.test.id
 
@@ -939,13 +939,13 @@ resource "aws_iam_role" "test" {
 EOF
 }
 
-resource "aws_cloudwatch_log_group" "test" {
+resource "aws_cloudwatchlogs_group" "test" {
   name = %[1]q
 }
 
 resource "aws_flow_log" "test" {
   iam_role_arn   = aws_iam_role.test.arn
-  log_group_name = aws_cloudwatch_log_group.test.name
+  log_group_name = aws_cloudwatchlogs_group.test.name
   traffic_type   = "ALL"
   vpc_id         = aws_vpc.test.id
 
