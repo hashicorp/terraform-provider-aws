@@ -32,8 +32,8 @@ func TestAccDirectConnectBGPPeer_basic(t *testing.T) {
 			{
 				Config: testAccDxBgpPeerConfig(vifId, bgpAsn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBGPPeerExists("aws_dx_bgp_peer.foo"),
-					resource.TestCheckResourceAttr("aws_dx_bgp_peer.foo", "address_family", "ipv6"),
+					testAccCheckBGPPeerExists("aws_directconnect_bgp_peer.foo"),
+					resource.TestCheckResourceAttr("aws_directconnect_bgp_peer.foo", "address_family", "ipv6"),
 				),
 			},
 		},
@@ -44,7 +44,7 @@ func testAccCheckBGPPeerDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_dx_bgp_peer" {
+		if rs.Type != "aws_directconnect_bgp_peer" {
 			continue
 		}
 		input := &directconnect.DescribeVirtualInterfacesInput{
@@ -79,7 +79,7 @@ func testAccCheckBGPPeerExists(name string) resource.TestCheckFunc {
 
 func testAccDxBgpPeerConfig(vifId string, bgpAsn int) string {
 	return fmt.Sprintf(`
-resource "aws_dx_bgp_peer" "foo" {
+resource "aws_directconnect_bgp_peer" "foo" {
   virtual_interface_id = "%s"
 
   address_family = "ipv6"

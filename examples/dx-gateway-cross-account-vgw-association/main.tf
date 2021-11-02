@@ -45,24 +45,24 @@ resource "aws_vpn_gateway" "example" {
 }
 
 # Create the association proposal in the first account...
-resource "aws_dx_gateway_association_proposal" "example" {
+resource "aws_directconnect_gateway_association_proposal" "example" {
   provider = aws.first
 
-  dx_gateway_id               = aws_dx_gateway.example.id
-  dx_gateway_owner_account_id = aws_dx_gateway.example.owner_account_id
+  dx_gateway_id               = aws_directconnect_gateway.example.id
+  dx_gateway_owner_account_id = aws_directconnect_gateway.example.owner_account_id
   associated_gateway_id       = aws_vpn_gateway.example.id
 }
 
 # ...and accept it in the second account, creating the association.
-resource "aws_dx_gateway_association" "example" {
+resource "aws_directconnect_gateway_association" "example" {
   provider = aws.second
 
-  proposal_id                         = aws_dx_gateway_association_proposal.example.id
-  dx_gateway_id                       = aws_dx_gateway.example.id
+  proposal_id                         = aws_directconnect_gateway_association_proposal.example.id
+  dx_gateway_id                       = aws_directconnect_gateway.example.id
   associated_gateway_owner_account_id = data.aws_caller_identity.first.account_id
 }
 
-resource "aws_dx_gateway" "example" {
+resource "aws_directconnect_gateway" "example" {
   provider = aws.second
 
   name            = "terraform-example"

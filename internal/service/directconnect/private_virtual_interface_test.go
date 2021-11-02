@@ -23,7 +23,7 @@ func TestAccDirectConnectPrivateVirtualInterface_basic(t *testing.T) {
 	}
 
 	var vif directconnect.VirtualInterface
-	resourceName := "aws_dx_private_virtual_interface.test"
+	resourceName := "aws_directconnect_private_virtual_interface.test"
 	vpnGatewayResourceName := "aws_vpn_gateway.test"
 	rName := fmt.Sprintf("tf-testacc-private-vif-%s", sdkacctest.RandString(9))
 	bgpAsn := sdkacctest.RandIntRange(64512, 65534)
@@ -95,7 +95,7 @@ func TestAccDirectConnectPrivateVirtualInterface_tags(t *testing.T) {
 	}
 
 	var vif directconnect.VirtualInterface
-	resourceName := "aws_dx_private_virtual_interface.test"
+	resourceName := "aws_directconnect_private_virtual_interface.test"
 	vpnGatewayResourceName := "aws_vpn_gateway.test"
 	rName := fmt.Sprintf("tf-testacc-private-vif-%s", sdkacctest.RandString(9))
 	bgpAsn := sdkacctest.RandIntRange(64512, 65534)
@@ -173,8 +173,8 @@ func TestAccDirectConnectPrivateVirtualInterface_dxGateway(t *testing.T) {
 	}
 
 	var vif directconnect.VirtualInterface
-	resourceName := "aws_dx_private_virtual_interface.test"
-	dxGatewayResourceName := "aws_dx_gateway.test"
+	resourceName := "aws_directconnect_private_virtual_interface.test"
+	dxGatewayResourceName := "aws_directconnect_gateway.test"
 	rName := fmt.Sprintf("tf-testacc-private-vif-%s", sdkacctest.RandString(9))
 	amzAsn := sdkacctest.RandIntRange(64512, 65534)
 	bgpAsn := sdkacctest.RandIntRange(64512, 65534)
@@ -218,7 +218,7 @@ func TestAccDirectConnectPrivateVirtualInterface_dxGateway(t *testing.T) {
 }
 
 func testAccCheckPrivateVirtualInterfaceDestroy(s *terraform.State) error {
-	return testAccCheckDxVirtualInterfaceDestroy(s, "aws_dx_private_virtual_interface")
+	return testAccCheckDxVirtualInterfaceDestroy(s, "aws_directconnect_private_virtual_interface")
 }
 
 func testAccCheckPrivateVirtualInterfaceExists(name string, vif *directconnect.VirtualInterface) resource.TestCheckFunc {
@@ -236,7 +236,7 @@ resource "aws_vpn_gateway" "test" {
 
 func testAccDxPrivateVirtualInterfaceConfig_basic(cid, rName string, bgpAsn, vlan int) string {
 	return testAccDxPrivateVirtualInterfaceConfig_vpnGateway(rName) + fmt.Sprintf(`
-resource "aws_dx_private_virtual_interface" "test" {
+resource "aws_directconnect_private_virtual_interface" "test" {
   address_family = "ipv4"
   bgp_asn        = %[3]d
   connection_id  = %[1]q
@@ -249,7 +249,7 @@ resource "aws_dx_private_virtual_interface" "test" {
 
 func testAccDxPrivateVirtualInterfaceConfig_updated(cid, rName string, bgpAsn, vlan int) string {
 	return testAccDxPrivateVirtualInterfaceConfig_vpnGateway(rName) + fmt.Sprintf(`
-resource "aws_dx_private_virtual_interface" "test" {
+resource "aws_directconnect_private_virtual_interface" "test" {
   address_family = "ipv4"
   bgp_asn        = %[3]d
   connection_id  = %[1]q
@@ -263,7 +263,7 @@ resource "aws_dx_private_virtual_interface" "test" {
 
 func testAccDxPrivateVirtualInterfaceConfig_tags(cid, rName string, bgpAsn, vlan int) string {
 	return testAccDxPrivateVirtualInterfaceConfig_vpnGateway(rName) + fmt.Sprintf(`
-resource "aws_dx_private_virtual_interface" "test" {
+resource "aws_directconnect_private_virtual_interface" "test" {
   address_family = "ipv4"
   bgp_asn        = %[3]d
   connection_id  = %[1]q
@@ -282,7 +282,7 @@ resource "aws_dx_private_virtual_interface" "test" {
 
 func testAccDxPrivateVirtualInterfaceConfig_tagsUpdated(cid, rName string, bgpAsn, vlan int) string {
 	return testAccDxPrivateVirtualInterfaceConfig_vpnGateway(rName) + fmt.Sprintf(`
-resource "aws_dx_private_virtual_interface" "test" {
+resource "aws_directconnect_private_virtual_interface" "test" {
   address_family = "ipv4"
   bgp_asn        = %[3]d
   connection_id  = %[1]q
@@ -301,15 +301,15 @@ resource "aws_dx_private_virtual_interface" "test" {
 
 func testAccDxPrivateVirtualInterfaceConfig_dxGateway(cid, rName string, amzAsn, bgpAsn, vlan int) string {
 	return fmt.Sprintf(`
-resource "aws_dx_gateway" "test" {
+resource "aws_directconnect_gateway" "test" {
   amazon_side_asn = %[3]d
   name            = %[2]q
 }
 
-resource "aws_dx_private_virtual_interface" "test" {
+resource "aws_directconnect_private_virtual_interface" "test" {
   address_family = "ipv4"
   bgp_asn        = %[4]d
-  dx_gateway_id  = aws_dx_gateway.test.id
+  dx_gateway_id  = aws_directconnect_gateway.test.id
   connection_id  = %[1]q
   name           = %[2]q
   vlan           = %[5]d

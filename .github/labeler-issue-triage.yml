@@ -135,7 +135,7 @@ service/detective:
 service/devicefarm:
   - '((\*|-) ?`?|(data|resource) "?)aws_devicefarm_'
 service/directconnect:
-  - '((\*|-) ?`?|(data|resource) "?)aws_dx_'
+  - '((\*|-) ?`?|(data|resource) "?)aws_directconnect_'
 service/directoryservice:
   - '((\*|-) ?`?|(data|resource) "?)aws_directory_service_'
 service/dlm:

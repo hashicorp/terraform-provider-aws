@@ -1,19 +1,19 @@
 ---
 subcategory: "Direct Connect"
 layout: "aws"
-page_title: "AWS: aws_dx_gateway"
+page_title: "AWS: aws_directconnect_gateway"
 description: |-
   Retrieve information about a Direct Connect Gateway
 ---
 
-# Data Source: aws_dx_gateway
+# Data Source: aws_directconnect_gateway
 
 Retrieve information about a Direct Connect Gateway.
 
 ## Example Usage
 
 ```terraform
-data "aws_dx_gateway" "example" {
+data "aws_directconnect_gateway" "example" {
   name = "example"
 }
 ```

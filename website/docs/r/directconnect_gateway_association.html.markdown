@@ -1,25 +1,25 @@
 ---
 subcategory: "Direct Connect"
 layout: "aws"
-page_title: "AWS: aws_dx_gateway_association"
+page_title: "AWS: aws_directconnect_gateway_association"
 description: |-
   Associates a Direct Connect Gateway with a VGW or transit gateway.
 ---
 
-# Resource: aws_dx_gateway_association
+# Resource: aws_directconnect_gateway_association
 
 Associates a Direct Connect Gateway with a VGW or transit gateway.
 
-To create a cross-account association, create an [`aws_dx_gateway_association_proposal` resource](/docs/providers/aws/r/dx_gateway_association_proposal.html)
+To create a cross-account association, create an [`aws_directconnect_gateway_association_proposal` resource](/docs/providers/aws/r/dx_gateway_association_proposal.html)
 in the AWS account that owns the VGW or transit gateway and then accept the proposal in the AWS account that owns the Direct Connect Gateway
-by creating an `aws_dx_gateway_association` resource with the `proposal_id` and `associated_gateway_owner_account_id` attributes set.
+by creating an `aws_directconnect_gateway_association` resource with the `proposal_id` and `associated_gateway_owner_account_id` attributes set.
 
 ## Example Usage
 
 ### VPN Gateway Association
 
 ```terraform
-resource "aws_dx_gateway" "example" {
+resource "aws_directconnect_gateway" "example" {
   name            = "example"
   amazon_side_asn = "64512"
 }
@@ -32,8 +32,8 @@ resource "aws_vpn_gateway" "example" {
   vpc_id = aws_vpc.example.id
 }
 
-resource "aws_dx_gateway_association" "example" {
-  dx_gateway_id         = aws_dx_gateway.example.id
+resource "aws_directconnect_gateway_association" "example" {
+  dx_gateway_id         = aws_directconnect_gateway.example.id
   associated_gateway_id = aws_vpn_gateway.example.id
 }
 ```
@@ -41,7 +41,7 @@ resource "aws_dx_gateway_association" "example" {
 ### Transit Gateway Association
 
 ```terraform
-resource "aws_dx_gateway" "example" {
+resource "aws_directconnect_gateway" "example" {
   name            = "example"
   amazon_side_asn = "64512"
 }
@@ -49,8 +49,8 @@ resource "aws_dx_gateway" "example" {
 resource "aws_ec2_transit_gateway" "example" {
 }
 
-resource "aws_dx_gateway_association" "example" {
-  dx_gateway_id         = aws_dx_gateway.example.id
+resource "aws_directconnect_gateway_association" "example" {
+  dx_gateway_id         = aws_directconnect_gateway.example.id
   associated_gateway_id = aws_ec2_transit_gateway.example.id
 
   allowed_prefixes = [
@@ -63,7 +63,7 @@ resource "aws_dx_gateway_association" "example" {
 ### Allowed Prefixes
 
 ```terraform
-resource "aws_dx_gateway" "example" {
+resource "aws_directconnect_gateway" "example" {
   name            = "example"
   amazon_side_asn = "64512"
 }
@@ -76,8 +76,8 @@ resource "aws_vpn_gateway" "example" {
   vpc_id = aws_vpc.example.id
 }
 
-resource "aws_dx_gateway_association" "example" {
-  dx_gateway_id         = aws_dx_gateway.example.id
+resource "aws_directconnect_gateway_association" "example" {
+  dx_gateway_id         = aws_directconnect_gateway.example.id
   associated_gateway_id = aws_vpn_gateway.example.id
 
   allowed_prefixes = [
@@ -87,7 +87,7 @@ resource "aws_dx_gateway_association" "example" {
 }
 ```
 
-A full example of how to create a VPN Gateway in one AWS account, create a Direct Connect Gateway in a second AWS account, and associate the VPN Gateway with the Direct Connect Gateway via the `aws_dx_gateway_association_proposal` and `aws_dx_gateway_association` resources can be found in [the `./examples/dx-gateway-cross-account-vgw-association` directory within the Github Repository](https://github.com/hashicorp/terraform-provider-aws/tree/main/examples/dx-gateway-cross-account-vgw-association).
+A full example of how to create a VPN Gateway in one AWS account, create a Direct Connect Gateway in a second AWS account, and associate the VPN Gateway with the Direct Connect Gateway via the `aws_directconnect_gateway_association_proposal` and `aws_directconnect_gateway_association` resources can be found in [the `./examples/dx-gateway-cross-account-vgw-association` directory within the Github Repository](https://github.com/hashicorp/terraform-provider-aws/tree/main/examples/dx-gateway-cross-account-vgw-association).
 
 ## Argument Reference
 
@@ -115,7 +115,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_dx_gateway_association` provides the following
+`aws_directconnect_gateway_association` provides the following
 [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
 
 - `create` - (Default `30 minutes`) Used for creating the association
@@ -128,5 +128,5 @@ Direct Connect gateway associations can be imported using `dx_gateway_id` togeth
 e.g.,
 
 ```
-$ terraform import aws_dx_gateway_association.example 345508c3-7215-4aef-9832-07c125d5bd0f/vgw-98765432
+$ terraform import aws_directconnect_gateway_association.example 345508c3-7215-4aef-9832-07c125d5bd0f/vgw-98765432
 ```

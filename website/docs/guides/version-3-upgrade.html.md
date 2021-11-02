@@ -33,9 +33,9 @@ Upgrade topics:
 - [Resource: aws_cloudwatch_log_group](#resource-aws_cloudwatch_log_group)
 - [Resource: aws_codepipeline](#resource-aws_codepipeline)
 - [Resource: aws_cognito_user_pool](#resource-aws_cognito_user_pool)
-- [Resource: aws_dx_gateway](#resource-aws_dx_gateway)
-- [Resource: aws_dx_gateway_association](#resource-aws_dx_gateway_association)
-- [Resource: aws_dx_gateway_association_proposal](#resource-aws_dx_gateway_association_proposal)
+- [Resource: aws_directconnect_gateway](#resource-aws_directconnect_gateway)
+- [Resource: aws_directconnect_gateway_association](#resource-aws_directconnect_gateway_association)
+- [Resource: aws_directconnect_gateway_association_proposal](#resource-aws_directconnect_gateway_association_proposal)
 - [Resource: aws_ebs_volume](#resource-aws_ebs_volume)
 - [Resource: aws_elastic_transcoder_preset](#resource-aws_elastic_transcoder_preset)
 - [Resource: aws_emr_cluster](#resource-aws_emr_cluster)
@@ -928,13 +928,13 @@ resource "aws_cognito_user_pool" "example" {
 }
 ```
 
-## Resource: aws_dx_gateway
+## Resource: aws_directconnect_gateway
 
-### Removal of Automatic aws_dx_gateway_association Import
+### Removal of Automatic aws_directconnect_gateway_association Import
 
-Previously when importing the `aws_dx_gateway` resource with the [`terraform import` command](https://www.terraform.io/docs/commands/import.html), the Terraform AWS Provider would automatically attempt to import an associated `aws_dx_gateway_association` resource(s) as well. This automatic resource import has been removed. Use the [`aws_dx_gateway_association` resource import](/docs/providers/aws/r/dx_gateway_association.html#import) to import those resources separately.
+Previously when importing the `aws_directconnect_gateway` resource with the [`terraform import` command](https://www.terraform.io/docs/commands/import.html), the Terraform AWS Provider would automatically attempt to import an associated `aws_directconnect_gateway_association` resource(s) as well. This automatic resource import has been removed. Use the [`aws_directconnect_gateway_association` resource import](/docs/providers/aws/r/dx_gateway_association.html#import) to import those resources separately.
 
-## Resource: aws_dx_gateway_association
+## Resource: aws_directconnect_gateway_association
 
 ### vpn_gateway_id Argument Removal
 
@@ -943,7 +943,7 @@ Switch your Terraform configuration to the `associated_gateway_id` argument inst
 For example, given this previous configuration:
 
 ```terraform
-resource "aws_dx_gateway_association" "example" {
+resource "aws_directconnect_gateway_association" "example" {
   # ... other configuration ...
   vpn_gateway_id = aws_vpn_gateway.example.id
 }
@@ -952,13 +952,13 @@ resource "aws_dx_gateway_association" "example" {
 An updated configuration:
 
 ```terraform
-resource "aws_dx_gateway_association" "example" {
+resource "aws_directconnect_gateway_association" "example" {
   # ... other configuration ...
   associated_gateway_id = aws_vpn_gateway.example.id
 }
 ```
 
-## Resource: aws_dx_gateway_association_proposal
+## Resource: aws_directconnect_gateway_association_proposal
 
 ### vpn_gateway_id Argument Removal
 
@@ -967,7 +967,7 @@ Switch your Terraform configuration to the `associated_gateway_id` argument inst
 For example, given this previous configuration:
 
 ```terraform
-resource "aws_dx_gateway_association_proposal" "example" {
+resource "aws_directconnect_gateway_association_proposal" "example" {
   # ... other configuration ...
   vpn_gateway_id = aws_vpn_gateway.example.id
 }
@@ -976,7 +976,7 @@ resource "aws_dx_gateway_association_proposal" "example" {
 An updated configuration:
 
 ```terraform
-resource "aws_dx_gateway_association_proposal" "example" {
+resource "aws_directconnect_gateway_association_proposal" "example" {
   # ... other configuration ...
   associated_gateway_id = aws_vpn_gateway.example.id
 }

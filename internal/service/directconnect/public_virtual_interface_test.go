@@ -23,7 +23,7 @@ func TestAccDirectConnectPublicVirtualInterface_basic(t *testing.T) {
 	}
 
 	var vif directconnect.VirtualInterface
-	resourceName := "aws_dx_public_virtual_interface.test"
+	resourceName := "aws_directconnect_public_virtual_interface.test"
 	rName := fmt.Sprintf("tf-testacc-public-vif-%s", sdkacctest.RandString(10))
 	// DirectConnectClientException: Amazon Address is not allowed to contain a private IP
 	// DirectConnectClientException: Amazon Address and Customer Address must be in the same CIDR
@@ -79,7 +79,7 @@ func TestAccDirectConnectPublicVirtualInterface_tags(t *testing.T) {
 	}
 
 	var vif directconnect.VirtualInterface
-	resourceName := "aws_dx_public_virtual_interface.test"
+	resourceName := "aws_directconnect_public_virtual_interface.test"
 	rName := fmt.Sprintf("tf-testacc-public-vif-%s", sdkacctest.RandString(10))
 	amazonAddress := "175.45.176.3/28"
 	customerAddress := "175.45.176.4/28"
@@ -151,7 +151,7 @@ func TestAccDirectConnectPublicVirtualInterface_tags(t *testing.T) {
 }
 
 func testAccCheckPublicVirtualInterfaceDestroy(s *terraform.State) error {
-	return testAccCheckDxVirtualInterfaceDestroy(s, "aws_dx_public_virtual_interface")
+	return testAccCheckDxVirtualInterfaceDestroy(s, "aws_directconnect_public_virtual_interface")
 }
 
 func testAccCheckPublicVirtualInterfaceExists(name string, vif *directconnect.VirtualInterface) resource.TestCheckFunc {
@@ -160,7 +160,7 @@ func testAccCheckPublicVirtualInterfaceExists(name string, vif *directconnect.Vi
 
 func testAccDxPublicVirtualInterfaceConfig_basic(cid, rName, amzAddr, custAddr string, bgpAsn, vlan int) string {
 	return fmt.Sprintf(`
-resource "aws_dx_public_virtual_interface" "test" {
+resource "aws_directconnect_public_virtual_interface" "test" {
   address_family   = "ipv4"
   amazon_address   = %[3]q
   bgp_asn          = %[5]d
@@ -179,7 +179,7 @@ resource "aws_dx_public_virtual_interface" "test" {
 
 func testAccDxPublicVirtualInterfaceConfig_tags(cid, rName, amzAddr, custAddr string, bgpAsn, vlan int) string {
 	return fmt.Sprintf(`
-resource "aws_dx_public_virtual_interface" "test" {
+resource "aws_directconnect_public_virtual_interface" "test" {
   address_family   = "ipv4"
   amazon_address   = %[3]q
   bgp_asn          = %[5]d
@@ -204,7 +204,7 @@ resource "aws_dx_public_virtual_interface" "test" {
 
 func testAccDxPublicVirtualInterfaceConfig_tagsUpdated(cid, rName, amzAddr, custAddr string, bgpAsn, vlan int) string {
 	return fmt.Sprintf(`
-resource "aws_dx_public_virtual_interface" "test" {
+resource "aws_directconnect_public_virtual_interface" "test" {
   address_family   = "ipv4"
   amazon_address   = %[3]q
   bgp_asn          = %[5]d

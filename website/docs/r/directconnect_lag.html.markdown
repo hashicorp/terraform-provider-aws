@@ -1,21 +1,21 @@
 ---
 subcategory: "Direct Connect"
 layout: "aws"
-page_title: "AWS: aws_dx_lag"
+page_title: "AWS: aws_directconnect_lag"
 description: |-
   Provides a Direct Connect LAG.
 ---
 
-# Resource: aws_dx_lag
+# Resource: aws_directconnect_lag
 
-Provides a Direct Connect LAG. Connections can be added to the LAG via the [`aws_dx_connection`](/docs/providers/aws/r/dx_connection.html) and [`aws_dx_connection_association`](/docs/providers/aws/r/dx_connection_association.html) resources.
+Provides a Direct Connect LAG. Connections can be added to the LAG via the [`aws_directconnect_connection`](/docs/providers/aws/r/dx_connection.html) and [`aws_directconnect_connection_association`](/docs/providers/aws/r/dx_connection_association.html) resources.
 
 ~> *NOTE:* When creating a LAG, if no existing connection is specified, Direct Connect will create a connection and Terraform will remove this unmanaged connection during resource creation.
 
 ## Example Usage
 
 ```terraform
-resource "aws_dx_lag" "hoge" {
+resource "aws_directconnect_lag" "hoge" {
   name                  = "tf-dx-lag"
   connections_bandwidth = "1Gbps"
   location              = "EqDC2"
@@ -51,5 +51,5 @@ In addition to all arguments above, the following attributes are exported:
 Direct Connect LAGs can be imported using the `lag id`, e.g.,
 
 ```
-$ terraform import aws_dx_lag.test_lag dxlag-fgnsp5rq
+$ terraform import aws_directconnect_lag.test_lag dxlag-fgnsp5rq
 ```

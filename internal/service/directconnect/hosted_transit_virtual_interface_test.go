@@ -39,9 +39,9 @@ func testAccHostedTransitVirtualInterface_basic(t *testing.T) {
 
 	var providers []*schema.Provider
 	var vif directconnect.VirtualInterface
-	resourceName := "aws_dx_hosted_transit_virtual_interface.test"
-	accepterResourceName := "aws_dx_hosted_transit_virtual_interface_accepter.test"
-	dxGatewayResourceName := "aws_dx_gateway.test"
+	resourceName := "aws_directconnect_hosted_transit_virtual_interface.test"
+	accepterResourceName := "aws_directconnect_hosted_transit_virtual_interface_accepter.test"
+	dxGatewayResourceName := "aws_directconnect_gateway.test"
 	rName := fmt.Sprintf("tf-testacc-transit-vif-%s", sdkacctest.RandString(9))
 	amzAsn := sdkacctest.RandIntRange(64512, 65534)
 	bgpAsn := sdkacctest.RandIntRange(64512, 65534)
@@ -99,9 +99,9 @@ func testAccHostedTransitVirtualInterface_accepterTags(t *testing.T) {
 
 	var providers []*schema.Provider
 	var vif directconnect.VirtualInterface
-	resourceName := "aws_dx_hosted_transit_virtual_interface.test"
-	accepterResourceName := "aws_dx_hosted_transit_virtual_interface_accepter.test"
-	dxGatewayResourceName := "aws_dx_gateway.test"
+	resourceName := "aws_directconnect_hosted_transit_virtual_interface.test"
+	accepterResourceName := "aws_directconnect_hosted_transit_virtual_interface_accepter.test"
+	dxGatewayResourceName := "aws_directconnect_gateway.test"
 	rName := fmt.Sprintf("tf-testacc-transit-vif-%s", sdkacctest.RandString(9))
 	amzAsn := sdkacctest.RandIntRange(64512, 65534)
 	bgpAsn := sdkacctest.RandIntRange(64512, 65534)
@@ -177,13 +177,13 @@ func testAccCheckHostedTransitVirtualInterfaceExists(name string, vif *directcon
 }
 
 func testAccCheckHostedTransitVirtualInterfaceDestroy(s *terraform.State) error {
-	return testAccCheckDxVirtualInterfaceDestroy(s, "aws_dx_hosted_transit_virtual_interface")
+	return testAccCheckDxVirtualInterfaceDestroy(s, "aws_directconnect_hosted_transit_virtual_interface")
 }
 
 func testAccDxHostedTransitVirtualInterfaceConfig_base(cid, rName string, amzAsn, bgpAsn, vlan int) string {
 	return acctest.ConfigAlternateAccountProvider() + fmt.Sprintf(`
 # Creator
-resource "aws_dx_hosted_transit_virtual_interface" "test" {
+resource "aws_directconnect_hosted_transit_virtual_interface" "test" {
   address_family   = "ipv4"
   bgp_asn          = %[4]d
   connection_id    = %[1]q
@@ -191,9 +191,9 @@ resource "aws_dx_hosted_transit_virtual_interface" "test" {
   owner_account_id = data.aws_caller_identity.accepter.account_id
   vlan             = %[5]d
 
-  # The aws_dx_hosted_transit_virtual_interface
-  # must be destroyed before the aws_dx_gateway.
-  depends_on = [aws_dx_gateway.test]
+  # The aws_directconnect_hosted_transit_virtual_interface
+  # must be destroyed before the aws_directconnect_gateway.
+  depends_on = [aws_directconnect_gateway.test]
 }
 
 # Accepter
@@ -201,7 +201,7 @@ data "aws_caller_identity" "accepter" {
   provider = "awsalternate"
 }
 
-resource "aws_dx_gateway" "test" {
+resource "aws_directconnect_gateway" "test" {
   provider = "awsalternate"
 
   amazon_side_asn = %[3]d
@@ -212,22 +212,22 @@ resource "aws_dx_gateway" "test" {
 
 func testAccDxHostedTransitVirtualInterfaceConfig_basic(cid, rName string, amzAsn, bgpAsn, vlan int) string {
 	return testAccDxHostedTransitVirtualInterfaceConfig_base(cid, rName, amzAsn, bgpAsn, vlan) + `
-resource "aws_dx_hosted_transit_virtual_interface_accepter" "test" {
+resource "aws_directconnect_hosted_transit_virtual_interface_accepter" "test" {
   provider = "awsalternate"
 
-  dx_gateway_id        = aws_dx_gateway.test.id
-  virtual_interface_id = aws_dx_hosted_transit_virtual_interface.test.id
+  dx_gateway_id        = aws_directconnect_gateway.test.id
+  virtual_interface_id = aws_directconnect_hosted_transit_virtual_interface.test.id
 }
 `
 }
 
 func testAccDxHostedTransitVirtualInterfaceConfig_accepterTags(cid, rName string, amzAsn, bgpAsn, vlan int) string {
 	return testAccDxHostedTransitVirtualInterfaceConfig_base(cid, rName, amzAsn, bgpAsn, vlan) + fmt.Sprintf(`
-resource "aws_dx_hosted_transit_virtual_interface_accepter" "test" {
+resource "aws_directconnect_hosted_transit_virtual_interface_accepter" "test" {
   provider = "awsalternate"
 
-  dx_gateway_id        = aws_dx_gateway.test.id
-  virtual_interface_id = aws_dx_hosted_transit_virtual_interface.test.id
+  dx_gateway_id        = aws_directconnect_gateway.test.id
+  virtual_interface_id = aws_directconnect_hosted_transit_virtual_interface.test.id
 
   tags = {
     Name = %[1]q
@@ -240,11 +240,11 @@ resource "aws_dx_hosted_transit_virtual_interface_accepter" "test" {
 
 func testAccDxHostedTransitVirtualInterfaceConfig_accepterTagsUpdated(cid, rName string, amzAsn, bgpAsn, vlan int) string {
 	return testAccDxHostedTransitVirtualInterfaceConfig_base(cid, rName, amzAsn, bgpAsn, vlan) + fmt.Sprintf(`
-resource "aws_dx_hosted_transit_virtual_interface_accepter" "test" {
+resource "aws_directconnect_hosted_transit_virtual_interface_accepter" "test" {
   provider = "awsalternate"
 
-  dx_gateway_id        = aws_dx_gateway.test.id
-  virtual_interface_id = aws_dx_hosted_transit_virtual_interface.test.id
+  dx_gateway_id        = aws_directconnect_gateway.test.id
+  virtual_interface_id = aws_directconnect_hosted_transit_virtual_interface.test.id
 
   tags = {
     Name = %[1]q

@@ -34,7 +34,7 @@ Upgrade topics:
 - [Resource: aws_batch_compute_environment](#resource-aws_batch_compute_environment)
 - [Resource: aws_cloudfront_distribution](#resource-aws_cloudfront_distribution)
 - [Resource: aws_cognito_user_pool](#resource-aws_cognito_user_pool)
-- [Resource: aws_dx_lag](#resource-aws_dx_lag)
+- [Resource: aws_directconnect_lag](#resource-aws_directconnect_lag)
 - [Resource: aws_ecs_service](#resource-aws_ecs_service)
 - [Resource: aws_efs_file_system](#resource-aws_efs_file_system)
 - [Resource: aws_elasticache_cluster](#resource-aws_elasticache_cluster)
@@ -521,19 +521,19 @@ Choose one argument or the other. These arguments update the same underlying inf
 
 Choose one argument or the other. These arguments update the same underlying information in Cognito and the selection is indeterminate if differing values are provided.
 
-## Resource: aws_dx_lag
+## Resource: aws_directconnect_lag
 
 ### number_of_connections Argument Removal
 
 Default connections have been removed as part of LAG creation. To migrate your Terraform configuration, the AWS provider implements the following resources:
 
-* [`aws_dx_connection`](/docs/providers/aws/r/dx_connection.html)
-* [`aws_dx_connection_association`](/docs/providers/aws/r/dx_connection_association.html)
+* [`aws_directconnect_connection`](/docs/providers/aws/r/dx_connection.html)
+* [`aws_directconnect_connection_association`](/docs/providers/aws/r/dx_connection_association.html)
 
 For example, given this previous configuration:
 
 ```terraform
-resource "aws_dx_lag" "example" {
+resource "aws_directconnect_lag" "example" {
   name                  = "example"
   connections_bandwidth = "1Gbps"
   location              = "EqSe2-EQ"
@@ -544,21 +544,21 @@ resource "aws_dx_lag" "example" {
 An updated configuration:
 
 ```terraform
-resource "aws_dx_connection" "example" {
+resource "aws_directconnect_connection" "example" {
   name      = "example"
   bandwidth = "1Gbps"
   location  = "EqSe2-EQ"
 }
 
-resource "aws_dx_lag" "example" {
+resource "aws_directconnect_lag" "example" {
   name                  = "example"
   connections_bandwidth = "1Gbps"
   location              = "EqSe2-EQ"
 }
 
-resource "aws_dx_connection_association" "example" {
-  connection_id = "${aws_dx_connection.example.id}"
-  lag_id        = "${aws_dx_lag.example.id}"
+resource "aws_directconnect_connection_association" "example" {
+  connection_id = "${aws_directconnect_connection.example.id}"
+  lag_id        = "${aws_directconnect_lag.example.id}"
 }
 ```
 

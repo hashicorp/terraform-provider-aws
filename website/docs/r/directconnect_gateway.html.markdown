@@ -1,19 +1,19 @@
 ---
 subcategory: "Direct Connect"
 layout: "aws"
-page_title: "AWS: aws_dx_gateway"
+page_title: "AWS: aws_directconnect_gateway"
 description: |-
   Provides a Direct Connect Gateway.
 ---
 
-# Resource: aws_dx_gateway
+# Resource: aws_directconnect_gateway
 
 Provides a Direct Connect Gateway.
 
 ## Example Usage
 
 ```terraform
-resource "aws_dx_gateway" "example" {
+resource "aws_directconnect_gateway" "example" {
   name            = "tf-dxg-example"
   amazon_side_asn = "64512"
 }
@@ -35,7 +35,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_dx_gateway` provides the following
+`aws_directconnect_gateway` provides the following
 [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
 
 - `create` - (Default `10 minutes`) Used for creating the gateway
@@ -46,5 +46,5 @@ In addition to all arguments above, the following attributes are exported:
 Direct Connect Gateways can be imported using the `gateway id`, e.g.,
 
 ```
-$ terraform import aws_dx_gateway.test abcd1234-dcba-5678-be23-cdef9876ab45
+$ terraform import aws_directconnect_gateway.test abcd1234-dcba-5678-be23-cdef9876ab45
 ```

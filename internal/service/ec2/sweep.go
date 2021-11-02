@@ -205,7 +205,7 @@ func init() {
 		Name: "aws_ec2_transit_gateway",
 		F:    sweepTransitGateways,
 		Dependencies: []string{
-			"aws_dx_gateway_association",
+			"aws_directconnect_gateway_association",
 			"aws_ec2_transit_gateway_vpc_attachment",
 			"aws_ec2_transit_gateway_peering_attachment",
 			"aws_vpn_connection",
@@ -269,7 +269,7 @@ func init() {
 		Name: "aws_vpn_gateway",
 		F:    sweepVPNGateways,
 		Dependencies: []string{
-			"aws_dx_gateway_association",
+			"aws_directconnect_gateway_association",
 		},
 	})
 }

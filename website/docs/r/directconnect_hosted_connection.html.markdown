@@ -1,19 +1,19 @@
 ---
 subcategory: "Direct Connect"
 layout: "aws"
-page_title: "AWS: aws_dx_hosted_connection"
+page_title: "AWS: aws_directconnect_hosted_connection"
 description: |-
   Provides a hosted connection on the specified interconnect or a link aggregation group (LAG) of interconnects. Intended for use by AWS Direct Connect Partners only.
 ---
 
-# Resource: aws_dx_hosted_connection
+# Resource: aws_directconnect_hosted_connection
 
 Provides a hosted connection on the specified interconnect or a link aggregation group (LAG) of interconnects. Intended for use by AWS Direct Connect Partners only.
 
 ## Example Usage
 
 ```terraform
-resource "aws_dx_hosted_connection" "hosted" {
+resource "aws_directconnect_hosted_connection" "hosted" {
   connection_id    = "dxcon-ffabc123"
   bandwidth        = "100Mbps"
   name             = "tf-dx-hosted-connection"

@@ -1,33 +1,33 @@
 ---
 subcategory: "Direct Connect"
 layout: "aws"
-page_title: "AWS: aws_dx_connection_association"
+page_title: "AWS: aws_directconnect_connection_association"
 description: |-
   Associates a Direct Connect Connection with a LAG.
 ---
 
-# Resource: aws_dx_connection_association
+# Resource: aws_directconnect_connection_association
 
 Associates a Direct Connect Connection with a LAG.
 
 ## Example Usage
 
 ```terraform
-resource "aws_dx_connection" "example" {
+resource "aws_directconnect_connection" "example" {
   name      = "example"
   bandwidth = "1Gbps"
   location  = "EqSe2-EQ"
 }
 
-resource "aws_dx_lag" "example" {
+resource "aws_directconnect_lag" "example" {
   name                  = "example"
   connections_bandwidth = "1Gbps"
   location              = "EqSe2-EQ"
 }
 
-resource "aws_dx_connection_association" "example" {
-  connection_id = aws_dx_connection.example.id
-  lag_id        = aws_dx_lag.example.id
+resource "aws_directconnect_connection_association" "example" {
+  connection_id = aws_directconnect_connection.example.id
+  lag_id        = aws_directconnect_lag.example.id
 }
 ```
 
