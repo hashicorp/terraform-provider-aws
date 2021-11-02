@@ -3,7 +3,6 @@ package ec2
 import (
 	"errors"
 	"fmt"
-	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -16,17 +15,14 @@ func DataSourceNetworkInterfaces() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceNetworkInterfacesRead,
 		Schema: map[string]*schema.Schema{
-
 			"filter": CustomFiltersSchema(),
-
-			"tags": tftags.TagsSchemaComputed(),
-
 			"ids": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -34,47 +30,49 @@ func DataSourceNetworkInterfaces() *schema.Resource {
 func dataSourceNetworkInterfacesRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	req := &ec2.DescribeNetworkInterfacesInput{}
+	input := &ec2.DescribeNetworkInterfacesInput{}
 
-	filters, filtersOk := d.GetOk("filter")
-	tags, tagsOk := d.GetOk("tags")
-
-	if tagsOk {
-		req.Filters = BuildTagFilterList(
-			Tags(tftags.New(tags.(map[string]interface{}))),
+	if v, ok := d.GetOk("tags"); ok {
+		input.Filters = BuildTagFilterList(
+			Tags(tftags.New(v.(map[string]interface{}))),
 		)
 	}
 
-	if filtersOk {
-		req.Filters = append(req.Filters, BuildCustomFilterList(
-			filters.(*schema.Set),
+	if v, ok := d.GetOk("filter"); ok {
+		input.Filters = append(input.Filters, BuildCustomFilterList(
+			v.(*schema.Set),
 		)...)
 	}
 
-	if len(req.Filters) == 0 {
-		req.Filters = nil
+	if len(input.Filters) == 0 {
+		input.Filters = nil
 	}
 
-	log.Printf("[DEBUG] DescribeNetworkInterfaces %s\n", req)
-	resp, err := conn.DescribeNetworkInterfaces(req)
+	networkInterfaceIDs := []string{}
+	err := conn.DescribeNetworkInterfacesPages(input, func(page *ec2.DescribeNetworkInterfacesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, networkInterface := range page.NetworkInterfaces {
+			networkInterfaceIDs = append(networkInterfaceIDs, aws.StringValue(networkInterface.NetworkInterfaceId))
+		}
+
+		return !lastPage
+	})
+
 	if err != nil {
-		return err
+		return fmt.Errorf("error reading EC2 Network Interfaces: %w", err)
 	}
 
-	if resp == nil || len(resp.NetworkInterfaces) == 0 {
+	if len(networkInterfaceIDs) == 0 {
 		return errors.New("no matching network interfaces found")
-	}
-
-	networkInterfaces := make([]string, 0)
-
-	for _, networkInterface := range resp.NetworkInterfaces {
-		networkInterfaces = append(networkInterfaces, aws.StringValue(networkInterface.NetworkInterfaceId))
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
 
-	if err := d.Set("ids", networkInterfaces); err != nil {
-		return fmt.Errorf("Error setting network interfaces ids: %w", err)
+	if err := d.Set("ids", networkInterfaceIDs); err != nil {
+		return fmt.Errorf("error setting ids: %w", err)
 	}
 
 	return nil

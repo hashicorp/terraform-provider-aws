@@ -12,7 +12,8 @@ import (
 
 func TestAccEC2NetworkInterfaceAttachment_basic(t *testing.T) {
 	var conf ec2.NetworkInterface
-	rInt := sdkacctest.RandInt()
+	resourceName := "aws_network_interface_attachment.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -21,58 +22,47 @@ func TestAccEC2NetworkInterfaceAttachment_basic(t *testing.T) {
 		CheckDestroy: testAccCheckENIDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNetworkInterfaceAttachmentConfig_basic(rInt),
+				Config: testAccNetworkInterfaceAttachmentConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExists("aws_network_interface.bar", &conf),
-					resource.TestCheckResourceAttr(
-						"aws_network_interface_attachment.test", "device_index", "1"),
-					resource.TestCheckResourceAttrSet(
-						"aws_network_interface_attachment.test", "instance_id"),
-					resource.TestCheckResourceAttrSet(
-						"aws_network_interface_attachment.test", "network_interface_id"),
-					resource.TestCheckResourceAttrSet(
-						"aws_network_interface_attachment.test", "attachment_id"),
-					resource.TestCheckResourceAttrSet(
-						"aws_network_interface_attachment.test", "status"),
+					testAccCheckENIExists("aws_network_interface.test", &conf),
+					resource.TestCheckResourceAttrSet(resourceName, "attachment_id"),
+					resource.TestCheckResourceAttr(resourceName, "device_index", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "network_interface_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "status"),
 				),
 			},
 		},
 	})
 }
 
-func testAccNetworkInterfaceAttachmentConfig_basic(rInt int) string {
-	return acctest.ConfigLatestAmazonLinuxHvmEbsAmi() + fmt.Sprintf(`
-resource "aws_vpc" "foo" {
+func testAccNetworkInterfaceAttachmentConfig(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
+		acctest.ConfigAvailableAZsNoOptIn(),
+		fmt.Sprintf(`
+resource "aws_vpc" "test" {
   cidr_block = "172.16.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-network-iface-attachment-basic"
+    Name = %[1]q
   }
 }
 
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_subnet" "foo" {
-  vpc_id            = aws_vpc.foo.id
+resource "aws_subnet" "test" {
+  vpc_id            = aws_vpc.test.id
   cidr_block        = "172.16.10.0/24"
   availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
-    Name = "tf-acc-network-iface-attachment-basic"
+    Name = %[1]q
   }
 }
 
-resource "aws_security_group" "foo" {
-  vpc_id      = aws_vpc.foo.id
-  description = "foo"
-  name        = "foo-%d"
+resource "aws_security_group" "test" {
+  vpc_id = aws_vpc.test.id
+  name   = %[1]q
 
   egress {
     from_port   = 0
@@ -82,31 +72,30 @@ resource "aws_security_group" "foo" {
   }
 }
 
-resource "aws_network_interface" "bar" {
-  subnet_id       = aws_subnet.foo.id
+resource "aws_network_interface" "test" {
+  subnet_id       = aws_subnet.test.id
   private_ips     = ["172.16.10.100"]
-  security_groups = [aws_security_group.foo.id]
-  description     = "Managed by Terraform"
+  security_groups = [aws_security_group.test.id]
 
   tags = {
-    Name = "bar_interface"
+    Name = %[1]q
   }
 }
 
-resource "aws_instance" "foo" {
+resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = "t2.micro"
-  subnet_id     = aws_subnet.foo.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+  subnet_id     = aws_subnet.test.id
 
   tags = {
-    Name = "foo-%d"
+    Name = %[1]q
   }
 }
 
 resource "aws_network_interface_attachment" "test" {
   device_index         = 1
-  instance_id          = aws_instance.foo.id
-  network_interface_id = aws_network_interface.bar.id
+  instance_id          = aws_instance.test.id
+  network_interface_id = aws_network_interface.test.id
 }
-`, rInt, rInt)
+`, rName))
 }

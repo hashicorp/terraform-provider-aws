@@ -33,6 +33,8 @@ func TestAccEC2NetworkInterfaceDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "subnet_id", resourceName, "subnet_id"),
 					resource.TestCheckResourceAttr(datasourceName, "outpost_arn", ""),
 					resource.TestCheckResourceAttrSet(datasourceName, "vpc_id"),
+					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, "owner_id", resourceName, "owner_id"),
 				),
 			},
 		},
@@ -181,6 +183,10 @@ resource "aws_subnet" "test" {
 resource "aws_security_group" "test" {
   name   = %[1]q
   vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_network_interface" "test" {
@@ -230,6 +236,10 @@ resource "aws_subnet" "test" {
 resource "aws_security_group" "test" {
   name   = %[1]q
   vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_network_interface" "test" {
