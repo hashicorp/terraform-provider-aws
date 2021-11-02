@@ -113,7 +113,7 @@ func TestAccRoute53ZoneDataSource_vpc(t *testing.T) {
 
 func TestAccRoute53ZoneDataSource_serviceDiscovery(t *testing.T) {
 	rInt := sdkacctest.RandInt()
-	resourceName := "aws_service_discovery_private_dns_namespace.test"
+	resourceName := "aws_servicediscovery_private_dns_namespace.test"
 	dataSourceName := "data.aws_route53_zone.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -229,13 +229,13 @@ resource "aws_vpc" "test" {
   }
 }
 
-resource "aws_service_discovery_private_dns_namespace" "test" {
+resource "aws_servicediscovery_private_dns_namespace" "test" {
   name = "test.acc-sd-%[1]d"
   vpc  = aws_vpc.test.id
 }
 
 data "aws_route53_zone" "test" {
-  name   = aws_service_discovery_private_dns_namespace.test.name
+  name   = aws_servicediscovery_private_dns_namespace.test.name
   vpc_id = aws_vpc.test.id
 }
 `, rInt)

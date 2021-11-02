@@ -17,7 +17,7 @@ import (
 )
 
 func TestAccServiceDiscoveryPublicDNSNamespace_basic(t *testing.T) {
-	resourceName := "aws_service_discovery_public_dns_namespace.test"
+	resourceName := "aws_servicediscovery_public_dns_namespace.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -50,7 +50,7 @@ func TestAccServiceDiscoveryPublicDNSNamespace_basic(t *testing.T) {
 }
 
 func TestAccServiceDiscoveryPublicDNSNamespace_disappears(t *testing.T) {
-	resourceName := "aws_service_discovery_public_dns_namespace.test"
+	resourceName := "aws_servicediscovery_public_dns_namespace.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -76,7 +76,7 @@ func TestAccServiceDiscoveryPublicDNSNamespace_disappears(t *testing.T) {
 }
 
 func TestAccServiceDiscoveryPublicDNSNamespace_description(t *testing.T) {
-	resourceName := "aws_service_discovery_public_dns_namespace.test"
+	resourceName := "aws_servicediscovery_public_dns_namespace.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -101,7 +101,7 @@ func TestAccServiceDiscoveryPublicDNSNamespace_description(t *testing.T) {
 }
 
 func TestAccServiceDiscoveryPublicDNSNamespace_tags(t *testing.T) {
-	resourceName := "aws_service_discovery_public_dns_namespace.test"
+	resourceName := "aws_servicediscovery_public_dns_namespace.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -152,7 +152,7 @@ func testAccCheckPublicDNSNamespaceDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_service_discovery_public_dns_namespace" {
+		if rs.Type != "aws_servicediscovery_public_dns_namespace" {
 			continue
 		}
 
@@ -191,7 +191,7 @@ func testAccCheckPublicDNSNamespaceExists(name string) resource.TestCheckFunc {
 
 func testAccServiceDiscoveryPublicDnsNamespaceConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_service_discovery_public_dns_namespace" "test" {
+resource "aws_servicediscovery_public_dns_namespace" "test" {
   name = "%[1]s.tf"
 }
 `, rName)
@@ -199,7 +199,7 @@ resource "aws_service_discovery_public_dns_namespace" "test" {
 
 func testAccServiceDiscoveryPublicDnsNamespaceConfigDescription(rName, description string) string {
 	return fmt.Sprintf(`
-resource "aws_service_discovery_public_dns_namespace" "test" {
+resource "aws_servicediscovery_public_dns_namespace" "test" {
   description = %[1]q
   name        = "%[2]s.tf"
 }
@@ -208,7 +208,7 @@ resource "aws_service_discovery_public_dns_namespace" "test" {
 
 func testAccServiceDiscoveryPublicDnsNamespaceConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
-resource "aws_service_discovery_public_dns_namespace" "test" {
+resource "aws_servicediscovery_public_dns_namespace" "test" {
   name = "%[1]s.tf"
 
   tags = {
@@ -220,7 +220,7 @@ resource "aws_service_discovery_public_dns_namespace" "test" {
 
 func testAccServiceDiscoveryPublicDnsNamespaceConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
-resource "aws_service_discovery_public_dns_namespace" "test" {
+resource "aws_servicediscovery_public_dns_namespace" "test" {
   name = "%[1]s.tf"
 
   tags = {

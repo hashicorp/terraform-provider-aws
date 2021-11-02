@@ -3128,17 +3128,17 @@ resource "aws_security_group" "test" {
   }
 }
 
-resource "aws_service_discovery_private_dns_namespace" "test" {
+resource "aws_servicediscovery_private_dns_namespace" "test" {
   name        = "%[1]s.terraform.local"
   description = "test"
   vpc         = aws_vpc.test.id
 }
 
-resource "aws_service_discovery_service" "test" {
+resource "aws_servicediscovery_service" "test" {
   name = %[1]q
 
   dns_config {
-    namespace_id = aws_service_discovery_private_dns_namespace.test.id
+    namespace_id = aws_servicediscovery_private_dns_namespace.test.id
 
     dns_records {
       ttl  = 5
@@ -3176,7 +3176,7 @@ resource "aws_ecs_service" "test" {
 
   service_registries {
     port         = 34567
-    registry_arn = aws_service_discovery_service.test.arn
+    registry_arn = aws_servicediscovery_service.test.arn
   }
 
   network_configuration {
@@ -3229,17 +3229,17 @@ resource "aws_security_group" "test" {
   }
 }
 
-resource "aws_service_discovery_private_dns_namespace" "test" {
+resource "aws_servicediscovery_private_dns_namespace" "test" {
   name        = "%[1]s.terraform.local"
   description = "test"
   vpc         = aws_vpc.test.id
 }
 
-resource "aws_service_discovery_service" "test" {
+resource "aws_servicediscovery_service" "test" {
   name = %[1]q
 
   dns_config {
-    namespace_id = aws_service_discovery_private_dns_namespace.test.id
+    namespace_id = aws_servicediscovery_private_dns_namespace.test.id
 
     dns_records {
       ttl  = 5
@@ -3285,7 +3285,7 @@ resource "aws_ecs_service" "test" {
   service_registries {
     container_name = "mongodb"
     container_port = 27017
-    registry_arn   = aws_service_discovery_service.test.arn
+    registry_arn   = aws_servicediscovery_service.test.arn
   }
 }
 `, rName)
@@ -3333,17 +3333,17 @@ resource "aws_security_group" "test" {
   }
 }
 
-resource "aws_service_discovery_private_dns_namespace" "test" {
+resource "aws_servicediscovery_private_dns_namespace" "test" {
   name        = "%[2]s.terraform.local"
   description = "test"
   vpc         = aws_vpc.test.id
 }
 
-resource "aws_service_discovery_service" "test" {
+resource "aws_servicediscovery_service" "test" {
   name = %[2]q
 
   dns_config {
-    namespace_id = aws_service_discovery_private_dns_namespace.test.id
+    namespace_id = aws_servicediscovery_private_dns_namespace.test.id
 
     dns_records {
       ttl  = 5
@@ -3381,7 +3381,7 @@ resource "aws_ecs_service" "test" {
 
   service_registries {
     port         = 34567
-    registry_arn = aws_service_discovery_service.test.arn
+    registry_arn = aws_servicediscovery_service.test.arn
   }
 
   network_configuration {

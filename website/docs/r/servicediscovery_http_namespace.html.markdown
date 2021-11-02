@@ -1,18 +1,18 @@
 ---
 subcategory: "Service Discovery"
 layout: "aws"
-page_title: "AWS: aws_service_discovery_http_namespace"
+page_title: "AWS: aws_servicediscovery_http_namespace"
 description: |-
   Provides a Service Discovery HTTP Namespace resource.
 ---
 
-# Resource: aws_service_discovery_http_namespace
+# Resource: aws_servicediscovery_http_namespace
 
 
 ## Example Usage
 
 ```terraform
-resource "aws_service_discovery_http_namespace" "example" {
+resource "aws_servicediscovery_http_namespace" "example" {
   name        = "development"
   description = "example"
 }
@@ -39,5 +39,5 @@ In addition to all arguments above, the following attributes are exported:
 Service Discovery HTTP Namespace can be imported using the namespace ID, e.g.,
 
 ```
-$ terraform import aws_service_discovery_http_namespace.example ns-1234567890
+$ terraform import aws_servicediscovery_http_namespace.example ns-1234567890
 ```

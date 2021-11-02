@@ -16,32 +16,32 @@ import (
 )
 
 func init() {
-	resource.AddTestSweepers("aws_service_discovery_http_namespace", &resource.Sweeper{
-		Name: "aws_service_discovery_http_namespace",
+	resource.AddTestSweepers("aws_servicediscovery_http_namespace", &resource.Sweeper{
+		Name: "aws_servicediscovery_http_namespace",
 		F:    sweepHTTPNamespaces,
 		Dependencies: []string{
-			"aws_service_discovery_service",
+			"aws_servicediscovery_service",
 		},
 	})
 
-	resource.AddTestSweepers("aws_service_discovery_private_dns_namespace", &resource.Sweeper{
-		Name: "aws_service_discovery_private_dns_namespace",
+	resource.AddTestSweepers("aws_servicediscovery_private_dns_namespace", &resource.Sweeper{
+		Name: "aws_servicediscovery_private_dns_namespace",
 		F:    sweepPrivateDNSNamespaces,
 		Dependencies: []string{
-			"aws_service_discovery_service",
+			"aws_servicediscovery_service",
 		},
 	})
 
-	resource.AddTestSweepers("aws_service_discovery_public_dns_namespace", &resource.Sweeper{
-		Name: "aws_service_discovery_public_dns_namespace",
+	resource.AddTestSweepers("aws_servicediscovery_public_dns_namespace", &resource.Sweeper{
+		Name: "aws_servicediscovery_public_dns_namespace",
 		F:    sweepPublicDNSNamespaces,
 		Dependencies: []string{
-			"aws_service_discovery_service",
+			"aws_servicediscovery_service",
 		},
 	})
 
-	resource.AddTestSweepers("aws_service_discovery_service", &resource.Sweeper{
-		Name: "aws_service_discovery_service",
+	resource.AddTestSweepers("aws_servicediscovery_service", &resource.Sweeper{
+		Name: "aws_servicediscovery_service",
 		F:    sweepServices,
 	})
 }

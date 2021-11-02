@@ -1,12 +1,12 @@
 ---
 subcategory: "Service Discovery"
 layout: "aws"
-page_title: "AWS: aws_service_discovery_service"
+page_title: "AWS: aws_servicediscovery_service"
 description: |-
   Provides a Service Discovery Service resource.
 ---
 
-# Resource: aws_service_discovery_service
+# Resource: aws_servicediscovery_service
 
 Provides a Service Discovery Service resource.
 
@@ -19,17 +19,17 @@ resource "aws_vpc" "example" {
   enable_dns_hostnames = true
 }
 
-resource "aws_service_discovery_private_dns_namespace" "example" {
+resource "aws_servicediscovery_private_dns_namespace" "example" {
   name        = "example.terraform.local"
   description = "example"
   vpc         = aws_vpc.example.id
 }
 
-resource "aws_service_discovery_service" "example" {
+resource "aws_servicediscovery_service" "example" {
   name = "example"
 
   dns_config {
-    namespace_id = aws_service_discovery_private_dns_namespace.example.id
+    namespace_id = aws_servicediscovery_private_dns_namespace.example.id
 
     dns_records {
       ttl  = 10
@@ -46,16 +46,16 @@ resource "aws_service_discovery_service" "example" {
 ```
 
 ```terraform
-resource "aws_service_discovery_public_dns_namespace" "example" {
+resource "aws_servicediscovery_public_dns_namespace" "example" {
   name        = "example.terraform.com"
   description = "example"
 }
 
-resource "aws_service_discovery_service" "example" {
+resource "aws_servicediscovery_service" "example" {
   name = "example"
 
   dns_config {
-    namespace_id = aws_service_discovery_public_dns_namespace.example.id
+    namespace_id = aws_servicediscovery_public_dns_namespace.example.id
 
     dns_records {
       ttl  = 10
@@ -126,5 +126,5 @@ In addition to all arguments above, the following attributes are exported:
 Service Discovery Service can be imported using the service ID, e.g.,
 
 ```
-$ terraform import aws_service_discovery_service.example 0123456789
+$ terraform import aws_servicediscovery_service.example 0123456789
 ```

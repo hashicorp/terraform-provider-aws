@@ -12,8 +12,8 @@ import (
 
 func TestAccServiceDiscoveryDNSNamespaceDataSource_private(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	dataSourceName := "data.aws_service_discovery_dns_namespace.test"
-	resourceName := "aws_service_discovery_private_dns_namespace.test"
+	dataSourceName := "data.aws_servicediscovery_dns_namespace.test"
+	resourceName := "aws_servicediscovery_private_dns_namespace.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -39,8 +39,8 @@ func TestAccServiceDiscoveryDNSNamespaceDataSource_private(t *testing.T) {
 
 func TestAccServiceDiscoveryDNSNamespaceDataSource_public(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	dataSourceName := "data.aws_service_discovery_dns_namespace.test"
-	resourceName := "aws_service_discovery_public_dns_namespace.test"
+	dataSourceName := "data.aws_servicediscovery_dns_namespace.test"
+	resourceName := "aws_servicediscovery_public_dns_namespace.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -70,13 +70,13 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 }
 
-resource "aws_service_discovery_private_dns_namespace" "test" {
+resource "aws_servicediscovery_private_dns_namespace" "test" {
   name = "%[1]s.tf"
   vpc  = aws_vpc.test.id
 }
 
-data "aws_service_discovery_dns_namespace" "test" {
-  name = aws_service_discovery_private_dns_namespace.test.name
+data "aws_servicediscovery_dns_namespace" "test" {
+  name = aws_servicediscovery_private_dns_namespace.test.name
   type = "DNS_PRIVATE"
 }
 `, rName)
@@ -84,12 +84,12 @@ data "aws_service_discovery_dns_namespace" "test" {
 
 func testAccCheckPublicDNSNamespaceConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_service_discovery_public_dns_namespace" "test" {
+resource "aws_servicediscovery_public_dns_namespace" "test" {
   name = "%[1]s.tf"
 }
 
-data "aws_service_discovery_dns_namespace" "test" {
-  name = aws_service_discovery_public_dns_namespace.test.name
+data "aws_servicediscovery_dns_namespace" "test" {
+  name = aws_servicediscovery_public_dns_namespace.test.name
   type = "DNS_PUBLIC"
 }
 `, rName)

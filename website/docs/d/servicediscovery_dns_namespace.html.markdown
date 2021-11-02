@@ -1,19 +1,19 @@
 ---
 subcategory: "Service Discovery"
 layout: "aws"
-page_title: "AWS: aws_service_discovery_dns_namespace"
+page_title: "AWS: aws_servicediscovery_dns_namespace"
 description: |-
   Retrieves information about a Service Discovery private or public DNS namespace.
 ---
 
-# Data Source: aws_service_discovery_dns_namespace
+# Data Source: aws_servicediscovery_dns_namespace
 
 Retrieves information about a Service Discovery private or public DNS namespace.
 
 ## Example Usage
 
 ```hcl
-data "aws_service_discovery_dns_namespace" "test" {
+data "aws_servicediscovery_dns_namespace" "test" {
   name = "example.terraform.local"
   type = "DNS_PRIVATE"
 }

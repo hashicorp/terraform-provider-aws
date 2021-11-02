@@ -15,7 +15,7 @@ import (
 )
 
 func TestAccServiceDiscoveryInstance_private(t *testing.T) {
-	resourceName := "aws_service_discovery_instance.instance"
+	resourceName := "aws_servicediscovery_instance.instance"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName()
 
@@ -68,7 +68,7 @@ func TestAccServiceDiscoveryInstance_private(t *testing.T) {
 }
 
 func TestAccServiceDiscoveryInstance_public(t *testing.T) {
-	resourceName := "aws_service_discovery_instance.instance"
+	resourceName := "aws_servicediscovery_instance.instance"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName()
 
@@ -121,7 +121,7 @@ func TestAccServiceDiscoveryInstance_public(t *testing.T) {
 }
 
 func TestAccServiceDiscoveryInstance_http(t *testing.T) {
-	resourceName := "aws_service_discovery_instance.instance"
+	resourceName := "aws_servicediscovery_instance.instance"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName()
 
@@ -186,17 +186,17 @@ resource "aws_vpc" "sd_register_instance" {
 
 func testAccInstancePrivateNamespaceConfig(rName, domainName string) string {
 	return fmt.Sprintf(`
-resource "aws_service_discovery_private_dns_namespace" "sd_register_instance" {
+resource "aws_servicediscovery_private_dns_namespace" "sd_register_instance" {
   name        = %[2]q
   description = %[1]q
   vpc         = aws_vpc.sd_register_instance.id
 }
 
-resource "aws_service_discovery_service" "sd_register_instance" {
+resource "aws_servicediscovery_service" "sd_register_instance" {
   name = %[1]q
 
   dns_config {
-    namespace_id = aws_service_discovery_private_dns_namespace.sd_register_instance.id
+    namespace_id = aws_servicediscovery_private_dns_namespace.sd_register_instance.id
 
     dns_records {
       ttl  = 10
@@ -214,15 +214,15 @@ resource "aws_service_discovery_service" "sd_register_instance" {
 
 func testAccInstancePublicNamespaceConfig(rName, domainName string) string {
 	return fmt.Sprintf(`
-resource "aws_service_discovery_public_dns_namespace" "sd_register_instance" {
+resource "aws_servicediscovery_public_dns_namespace" "sd_register_instance" {
   name = %[2]q
 }
 
-resource "aws_service_discovery_service" "sd_register_instance" {
+resource "aws_servicediscovery_service" "sd_register_instance" {
   name = %[1]q
 
   dns_config {
-    namespace_id = aws_service_discovery_public_dns_namespace.sd_register_instance.id
+    namespace_id = aws_servicediscovery_public_dns_namespace.sd_register_instance.id
 
     dns_records {
       ttl  = 10
@@ -249,20 +249,20 @@ resource "aws_instance" "test_instance" {
   }
 }
 
-resource "aws_service_discovery_http_namespace" "sd_register_instance" {
+resource "aws_servicediscovery_http_namespace" "sd_register_instance" {
   name = %[2]q
 }
 
-resource "aws_service_discovery_service" "sd_register_instance" {
+resource "aws_servicediscovery_service" "sd_register_instance" {
   name         = %[1]q
-  namespace_id = aws_service_discovery_http_namespace.sd_register_instance.id
+  namespace_id = aws_servicediscovery_http_namespace.sd_register_instance.id
 }`, rName, domainName))
 }
 
 func testAccInstanceConfig(instanceID string, attributes string) string {
 	return fmt.Sprintf(`
-resource "aws_service_discovery_instance" "instance" {
-  service_id  = aws_service_discovery_service.sd_register_instance.id
+resource "aws_servicediscovery_instance" "instance" {
+  service_id  = aws_servicediscovery_service.sd_register_instance.id
   instance_id = %[1]q
 
   attributes = {
@@ -309,7 +309,7 @@ func testAccCheckInstanceDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_service_discovery_instance" {
+		if rs.Type != "aws_servicediscovery_instance" {
 			continue
 		}
 

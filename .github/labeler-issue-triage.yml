@@ -325,7 +325,7 @@ service/serverlessapplicationrepository:
 service/servicecatalog:
   - '((\*|-) ?`?|(data|resource) "?)aws_servicecatalog_'
 service/servicediscovery:
-  - '((\*|-) ?`?|(data|resource) "?)aws_service_discovery_'
+  - '((\*|-) ?`?|(data|resource) "?)aws_servicediscovery_'
 service/servicequotas:
   - '((\*|-) ?`?|(data|resource) "?)aws_servicequotas_'
 service/ses:

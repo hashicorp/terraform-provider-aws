@@ -433,10 +433,10 @@ func testAccVirtualNode_backendDefaultsCertificate(t *testing.T) {
 func testAccVirtualNode_cloudMapServiceDiscovery(t *testing.T) {
 	var vn appmesh.VirtualNodeData
 	resourceName := "aws_appmesh_virtual_node.test"
-	nsResourceName := "aws_service_discovery_http_namespace.test"
+	nsResourceName := "aws_servicediscovery_http_namespace.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	vnName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	// Avoid 'config is invalid: last character of "name" must be a letter' for aws_service_discovery_http_namespace.
+	// Avoid 'config is invalid: last character of "name" must be a letter' for aws_servicediscovery_http_namespace.
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandStringFromCharSet(20, sdkacctest.CharSetAlpha))
 
 	resource.Test(t, resource.TestCase{
@@ -1549,7 +1549,7 @@ resource "aws_appmesh_virtual_node" "test" {
 
 func testAccAppmeshVirtualNodeConfig_cloudMapServiceDiscovery(meshName, vnName, rName, attrKey, attrValue string) string {
 	return acctest.ConfigCompose(testAccAppmeshVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
-resource "aws_service_discovery_http_namespace" "test" {
+resource "aws_servicediscovery_http_namespace" "test" {
   name = %[2]q
 }
 
@@ -1578,7 +1578,7 @@ resource "aws_appmesh_virtual_node" "test" {
         }
 
         service_name   = %[2]q
-        namespace_name = aws_service_discovery_http_namespace.test.name
+        namespace_name = aws_servicediscovery_http_namespace.test.name
       }
     }
   }

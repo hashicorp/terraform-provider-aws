@@ -17,7 +17,7 @@ import (
 )
 
 func TestAccServiceDiscoveryPrivateDNSNamespace_basic(t *testing.T) {
-	resourceName := "aws_service_discovery_private_dns_namespace.test"
+	resourceName := "aws_servicediscovery_private_dns_namespace.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -51,7 +51,7 @@ func TestAccServiceDiscoveryPrivateDNSNamespace_basic(t *testing.T) {
 }
 
 func TestAccServiceDiscoveryPrivateDNSNamespace_disappears(t *testing.T) {
-	resourceName := "aws_service_discovery_private_dns_namespace.test"
+	resourceName := "aws_servicediscovery_private_dns_namespace.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -77,7 +77,7 @@ func TestAccServiceDiscoveryPrivateDNSNamespace_disappears(t *testing.T) {
 }
 
 func TestAccServiceDiscoveryPrivateDNSNamespace_description(t *testing.T) {
-	resourceName := "aws_service_discovery_private_dns_namespace.test"
+	resourceName := "aws_servicediscovery_private_dns_namespace.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -126,7 +126,7 @@ func TestAccServiceDiscoveryPrivateDNSNamespace_Error_overlap(t *testing.T) {
 }
 
 func TestAccServiceDiscoveryPrivateDNSNamespace_tags(t *testing.T) {
-	resourceName := "aws_service_discovery_private_dns_namespace.test"
+	resourceName := "aws_servicediscovery_private_dns_namespace.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -178,7 +178,7 @@ func testAccCheckPrivateDNSNamespaceDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_service_discovery_private_dns_namespace" {
+		if rs.Type != "aws_servicediscovery_private_dns_namespace" {
 			continue
 		}
 
@@ -234,7 +234,7 @@ resource "aws_vpc" "test" {
   }
 }
 
-resource "aws_service_discovery_private_dns_namespace" "test" {
+resource "aws_servicediscovery_private_dns_namespace" "test" {
   name = "%[1]s.tf"
   vpc  = aws_vpc.test.id
 }
@@ -251,7 +251,7 @@ resource "aws_vpc" "test" {
   }
 }
 
-resource "aws_service_discovery_private_dns_namespace" "test" {
+resource "aws_servicediscovery_private_dns_namespace" "test" {
   description = %[1]q
   name        = "%[2]s.tf"
   vpc         = aws_vpc.test.id
@@ -269,15 +269,15 @@ resource "aws_vpc" "test" {
   }
 }
 
-resource "aws_service_discovery_private_dns_namespace" "top" {
+resource "aws_servicediscovery_private_dns_namespace" "top" {
   name = "%[1]s.tf"
   vpc  = aws_vpc.test.id
 }
 
 # Ensure ordering after first namespace
-resource "aws_service_discovery_private_dns_namespace" "subdomain" {
-  name = aws_service_discovery_private_dns_namespace.top.name
-  vpc  = aws_service_discovery_private_dns_namespace.top.vpc
+resource "aws_servicediscovery_private_dns_namespace" "subdomain" {
+  name = aws_servicediscovery_private_dns_namespace.top.name
+  vpc  = aws_servicediscovery_private_dns_namespace.top.vpc
 }
 `, rName)
 }
@@ -292,7 +292,7 @@ resource "aws_vpc" "test" {
   }
 }
 
-resource "aws_service_discovery_private_dns_namespace" "test" {
+resource "aws_servicediscovery_private_dns_namespace" "test" {
   name = "%[1]s.tf"
   vpc  = aws_vpc.test.id
 
@@ -313,7 +313,7 @@ resource "aws_vpc" "test" {
   }
 }
 
-resource "aws_service_discovery_private_dns_namespace" "test" {
+resource "aws_servicediscovery_private_dns_namespace" "test" {
   name = "%[1]s.tf"
   vpc  = aws_vpc.test.id
 

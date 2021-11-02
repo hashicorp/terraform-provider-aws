@@ -38,9 +38,9 @@ func init() {
 	resource.AddTestSweepers("aws_route53_zone", &resource.Sweeper{
 		Name: "aws_route53_zone",
 		Dependencies: []string{
-			"aws_service_discovery_http_namespace",
-			"aws_service_discovery_public_dns_namespace",
-			"aws_service_discovery_private_dns_namespace",
+			"aws_servicediscovery_http_namespace",
+			"aws_servicediscovery_public_dns_namespace",
+			"aws_servicediscovery_private_dns_namespace",
 			"aws_elb",
 			"aws_route53_key_signing_key",
 		},

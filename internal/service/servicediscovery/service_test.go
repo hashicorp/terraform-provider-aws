@@ -16,7 +16,7 @@ import (
 )
 
 func TestAccServiceDiscoveryService_private(t *testing.T) {
-	resourceName := "aws_service_discovery_service.test"
+	resourceName := "aws_servicediscovery_service.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -71,7 +71,7 @@ func TestAccServiceDiscoveryService_private(t *testing.T) {
 
 func TestAccServiceDiscoveryService_public(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_service_discovery_service.test"
+	resourceName := "aws_servicediscovery_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -130,7 +130,7 @@ func TestAccServiceDiscoveryService_public(t *testing.T) {
 
 func TestAccServiceDiscoveryService_http(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha))
-	resourceName := "aws_service_discovery_service.test"
+	resourceName := "aws_servicediscovery_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t) },
@@ -159,7 +159,7 @@ func TestAccServiceDiscoveryService_http(t *testing.T) {
 
 func TestAccServiceDiscoveryService_disappears(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha))
-	resourceName := "aws_service_discovery_service.test"
+	resourceName := "aws_servicediscovery_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t) },
@@ -181,7 +181,7 @@ func TestAccServiceDiscoveryService_disappears(t *testing.T) {
 
 func TestAccServiceDiscoveryService_tags(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha))
-	resourceName := "aws_service_discovery_service.test"
+	resourceName := "aws_servicediscovery_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t) },
@@ -228,7 +228,7 @@ func testAccCheckServiceDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_service_discovery_service" {
+		if rs.Type != "aws_servicediscovery_service" {
 			continue
 		}
 
@@ -281,16 +281,16 @@ resource "aws_vpc" "test" {
   }
 }
 
-resource "aws_service_discovery_private_dns_namespace" "test" {
+resource "aws_servicediscovery_private_dns_namespace" "test" {
   name = "%[1]s.tf"
   vpc  = aws_vpc.test.id
 }
 
-resource "aws_service_discovery_service" "test" {
+resource "aws_servicediscovery_service" "test" {
   name = %[1]q
 
   dns_config {
-    namespace_id = aws_service_discovery_private_dns_namespace.test.id
+    namespace_id = aws_servicediscovery_private_dns_namespace.test.id
 
     dns_records {
       ttl  = 5
@@ -315,18 +315,18 @@ resource "aws_vpc" "test" {
   }
 }
 
-resource "aws_service_discovery_private_dns_namespace" "test" {
+resource "aws_servicediscovery_private_dns_namespace" "test" {
   name = "%[1]s.tf"
   vpc  = aws_vpc.test.id
 }
 
-resource "aws_service_discovery_service" "test" {
+resource "aws_servicediscovery_service" "test" {
   name = %[1]q
 
   description = "test"
 
   dns_config {
-    namespace_id = aws_service_discovery_private_dns_namespace.test.id
+    namespace_id = aws_servicediscovery_private_dns_namespace.test.id
 
     dns_records {
       ttl  = 10
@@ -350,17 +350,17 @@ resource "aws_service_discovery_service" "test" {
 
 func testAccServiceDiscoveryServiceConfig_public(rName string, th int, path string) string {
 	return fmt.Sprintf(`
-resource "aws_service_discovery_public_dns_namespace" "test" {
+resource "aws_servicediscovery_public_dns_namespace" "test" {
   name = "%[1]s.tf"
 }
 
-resource "aws_service_discovery_service" "test" {
+resource "aws_servicediscovery_service" "test" {
   name = %[1]q
 
   description = "test"
 
   dns_config {
-    namespace_id = aws_service_discovery_public_dns_namespace.test.id
+    namespace_id = aws_servicediscovery_public_dns_namespace.test.id
 
     dns_records {
       ttl  = 5
@@ -381,15 +381,15 @@ resource "aws_service_discovery_service" "test" {
 
 func testAccServiceDiscoveryServiceConfig_public_update_noHealthCheckConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_service_discovery_public_dns_namespace" "test" {
+resource "aws_servicediscovery_public_dns_namespace" "test" {
   name = "%[1]s.tf"
 }
 
-resource "aws_service_discovery_service" "test" {
+resource "aws_servicediscovery_service" "test" {
   name = %[1]q
 
   dns_config {
-    namespace_id = aws_service_discovery_public_dns_namespace.test.id
+    namespace_id = aws_servicediscovery_public_dns_namespace.test.id
 
     dns_records {
       ttl  = 5
@@ -404,26 +404,26 @@ resource "aws_service_discovery_service" "test" {
 
 func testAccServiceDiscoveryServiceConfig_http(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_service_discovery_http_namespace" "test" {
+resource "aws_servicediscovery_http_namespace" "test" {
   name = %[1]q
 }
 
-resource "aws_service_discovery_service" "test" {
+resource "aws_servicediscovery_service" "test" {
   name         = %[1]q
-  namespace_id = aws_service_discovery_http_namespace.test.id
+  namespace_id = aws_servicediscovery_http_namespace.test.id
 }
 `, rName)
 }
 
 func testAccServiceDiscoveryServiceConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
-resource "aws_service_discovery_http_namespace" "test" {
+resource "aws_servicediscovery_http_namespace" "test" {
   name = %[1]q
 }
 
-resource "aws_service_discovery_service" "test" {
+resource "aws_servicediscovery_service" "test" {
   name         = %[1]q
-  namespace_id = aws_service_discovery_http_namespace.test.id
+  namespace_id = aws_servicediscovery_http_namespace.test.id
 
   tags = {
     %[2]q = %[3]q
@@ -434,13 +434,13 @@ resource "aws_service_discovery_service" "test" {
 
 func testAccServiceDiscoveryServiceConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
-resource "aws_service_discovery_http_namespace" "test" {
+resource "aws_servicediscovery_http_namespace" "test" {
   name = %[1]q
 }
 
-resource "aws_service_discovery_service" "test" {
+resource "aws_servicediscovery_service" "test" {
   name         = %[1]q
-  namespace_id = aws_service_discovery_http_namespace.test.id
+  namespace_id = aws_servicediscovery_http_namespace.test.id
 
   tags = {
     %[2]q = %[3]q

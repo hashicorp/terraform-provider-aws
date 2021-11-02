@@ -1,12 +1,12 @@
 ---
 subcategory: "Service Discovery"
 layout: "aws"
-page_title: "AWS: aws_service_discovery_private_dns_namespace"
+page_title: "AWS: aws_servicediscovery_private_dns_namespace"
 description: |-
   Provides a Service Discovery Private DNS Namespace resource.
 ---
 
-# Resource: aws_service_discovery_private_dns_namespace
+# Resource: aws_servicediscovery_private_dns_namespace
 
 Provides a Service Discovery Private DNS Namespace resource.
 
@@ -17,7 +17,7 @@ resource "aws_vpc" "example" {
   cidr_block = "10.0.0.0/16"
 }
 
-resource "aws_service_discovery_private_dns_namespace" "example" {
+resource "aws_servicediscovery_private_dns_namespace" "example" {
   name        = "hoge.example.local"
   description = "example"
   vpc         = aws_vpc.example.id
@@ -47,5 +47,5 @@ In addition to all arguments above, the following attributes are exported:
 Service Discovery Private DNS Namespace can be imported using the namespace ID and VPC ID, e.g.,
 
 ```
-$ terraform import aws_service_discovery_private_dns_namespace.example 0123456789:vpc-123345
+$ terraform import aws_servicediscovery_private_dns_namespace.example 0123456789:vpc-123345
 ```

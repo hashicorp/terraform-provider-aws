@@ -17,7 +17,7 @@ import (
 )
 
 func TestAccServiceDiscoveryHTTPNamespace_basic(t *testing.T) {
-	resourceName := "aws_service_discovery_http_namespace.test"
+	resourceName := "aws_servicediscovery_http_namespace.test"
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -51,7 +51,7 @@ func TestAccServiceDiscoveryHTTPNamespace_basic(t *testing.T) {
 }
 
 func TestAccServiceDiscoveryHTTPNamespace_disappears(t *testing.T) {
-	resourceName := "aws_service_discovery_http_namespace.test"
+	resourceName := "aws_servicediscovery_http_namespace.test"
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -77,7 +77,7 @@ func TestAccServiceDiscoveryHTTPNamespace_disappears(t *testing.T) {
 }
 
 func TestAccServiceDiscoveryHTTPNamespace_description(t *testing.T) {
-	resourceName := "aws_service_discovery_http_namespace.test"
+	resourceName := "aws_servicediscovery_http_namespace.test"
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -107,7 +107,7 @@ func TestAccServiceDiscoveryHTTPNamespace_description(t *testing.T) {
 }
 
 func TestAccServiceDiscoveryHTTPNamespace_tags(t *testing.T) {
-	resourceName := "aws_service_discovery_http_namespace.test"
+	resourceName := "aws_servicediscovery_http_namespace.test"
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -158,7 +158,7 @@ func testAccCheckHTTPNamespaceDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_service_discovery_http_namespace" {
+		if rs.Type != "aws_servicediscovery_http_namespace" {
 			continue
 		}
 
@@ -197,7 +197,7 @@ func testAccCheckHTTPNamespaceExists(name string) resource.TestCheckFunc {
 
 func testAccServiceDiscoveryHttpNamespaceConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_service_discovery_http_namespace" "test" {
+resource "aws_servicediscovery_http_namespace" "test" {
   name = %[1]q
 }
 `, rName)
@@ -205,7 +205,7 @@ resource "aws_service_discovery_http_namespace" "test" {
 
 func testAccServiceDiscoveryHttpNamespaceConfigDescription(rName, description string) string {
 	return fmt.Sprintf(`
-resource "aws_service_discovery_http_namespace" "test" {
+resource "aws_servicediscovery_http_namespace" "test" {
   description = %[1]q
   name        = %[2]q
 }
@@ -214,7 +214,7 @@ resource "aws_service_discovery_http_namespace" "test" {
 
 func testAccServiceDiscoveryHttpNamespaceConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
-resource "aws_service_discovery_http_namespace" "test" {
+resource "aws_servicediscovery_http_namespace" "test" {
   name = %[1]q
 
   tags = {
@@ -226,7 +226,7 @@ resource "aws_service_discovery_http_namespace" "test" {
 
 func testAccServiceDiscoveryHttpNamespaceConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
-resource "aws_service_discovery_http_namespace" "test" {
+resource "aws_servicediscovery_http_namespace" "test" {
   name = %[1]q
 
   tags = {

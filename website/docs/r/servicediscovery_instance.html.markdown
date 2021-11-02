@@ -1,12 +1,12 @@
 ---
 subcategory: "Service Discovery"
 layout: "aws"
-page_title: "AWS: aws_service_discovery_instance"
+page_title: "AWS: aws_servicediscovery_instance"
 description: |-
   Provides a Service Discovery Instance resource.
 ---
 
-# Resource: aws_service_discovery_instance
+# Resource: aws_servicediscovery_instance
 
 Provides a Service Discovery Instance resource.
 
@@ -19,17 +19,17 @@ resource "aws_vpc" "example" {
   enable_dns_hostnames = true
 }
 
-resource "aws_service_discovery_private_dns_namespace" "example" {
+resource "aws_servicediscovery_private_dns_namespace" "example" {
   name        = "example.terraform.local"
   description = "example"
   vpc         = aws_vpc.example.id
 }
 
-resource "aws_service_discovery_service" "example" {
+resource "aws_servicediscovery_service" "example" {
   name = "example"
 
   dns_config {
-    namespace_id = aws_service_discovery_private_dns_namespace.example.id
+    namespace_id = aws_servicediscovery_private_dns_namespace.example.id
 
     dns_records {
       ttl  = 10
@@ -44,9 +44,9 @@ resource "aws_service_discovery_service" "example" {
   }
 }
 
-resource "aws_service_discovery_instance" "example" {
+resource "aws_servicediscovery_instance" "example" {
   instance_id = "example-instance-id"
-  service_id  = aws_service_discovery_service.example.id
+  service_id  = aws_servicediscovery_service.example.id
 
   attributes = {
     AWS_INSTANCE_IPV4 = "172.18.0.1"
@@ -56,19 +56,19 @@ resource "aws_service_discovery_instance" "example" {
 ```
 
 ```terraform
-resource "aws_service_discovery_http_namespace" "example" {
+resource "aws_servicediscovery_http_namespace" "example" {
   name        = "example.terraform.com"
   description = "example"
 }
 
-resource "aws_service_discovery_service" "example" {
+resource "aws_servicediscovery_service" "example" {
   name         = "example"
-  namespace_id = aws_service_discovery_http_namespace.example.id
+  namespace_id = aws_servicediscovery_http_namespace.example.id
 }
 
-resource "aws_service_discovery_instance" "example" {
+resource "aws_servicediscovery_instance" "example" {
   instance_id = "example-instance-id"
-  service_id  = aws_service_discovery_service.example.id
+  service_id  = aws_servicediscovery_service.example.id
 
   attributes = {
     AWS_EC2_INSTANCE_ID = "i-0abdg374kd892cj6dl"
@@ -95,5 +95,5 @@ In addition to all arguments above, the following attributes are exported:
 Service Discovery Instance can be imported using the service ID and instance ID, e.g.,
 
 ```
-$ terraform import aws_service_discovery_instance.example 0123456789/i-0123
+$ terraform import aws_servicediscovery_instance.example 0123456789/i-0123
 ```

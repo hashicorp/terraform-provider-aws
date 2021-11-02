@@ -1,19 +1,19 @@
 ---
 subcategory: "Service Discovery"
 layout: "aws"
-page_title: "AWS: aws_service_discovery_public_dns_namespace"
+page_title: "AWS: aws_servicediscovery_public_dns_namespace"
 description: |-
   Provides a Service Discovery Public DNS Namespace resource.
 ---
 
-# Resource: aws_service_discovery_public_dns_namespace
+# Resource: aws_servicediscovery_public_dns_namespace
 
 Provides a Service Discovery Public DNS Namespace resource.
 
 ## Example Usage
 
 ```terraform
-resource "aws_service_discovery_public_dns_namespace" "example" {
+resource "aws_servicediscovery_public_dns_namespace" "example" {
   name        = "hoge.example.com"
   description = "example"
 }
@@ -41,5 +41,5 @@ In addition to all arguments above, the following attributes are exported:
 Service Discovery Public DNS Namespace can be imported using the namespace ID, e.g.,
 
 ```
-$ terraform import aws_service_discovery_public_dns_namespace.example 0123456789
+$ terraform import aws_servicediscovery_public_dns_namespace.example 0123456789
 ```
