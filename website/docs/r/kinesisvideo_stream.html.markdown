@@ -1,12 +1,12 @@
 ---
 subcategory: "Kinesis Video"
 layout: "aws"
-page_title: "AWS: aws_kinesis_video_stream"
+page_title: "AWS: aws_kinesisvideo_stream"
 description: |-
   Provides a AWS Kinesis Video Stream
 ---
 
-# Resource: aws_kinesis_video_stream
+# Resource: aws_kinesisvideo_stream
 
 Provides a Kinesis Video Stream resource. Amazon Kinesis Video Streams makes it easy to securely stream video from connected devices to AWS for analytics, machine learning (ML), playback, and other processing.
 
@@ -15,7 +15,7 @@ For more details, see the [Amazon Kinesis Documentation][1].
 ## Example Usage
 
 ```terraform
-resource "aws_kinesis_video_stream" "default" {
+resource "aws_kinesisvideo_stream" "default" {
   name                    = "terraform-kinesis-video-stream"
   data_retention_in_hours = 1
   device_name             = "kinesis-video-device-name"
@@ -51,7 +51,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_kinesis_video_stream` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+`aws_kinesisvideo_stream` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
 
 - `create` - (Default `5 minutes`)  Used for Creating a Kinesis Stream
 - `update` - (Default `120 minutes`) Used for Updating a Kinesis Stream
@@ -62,7 +62,7 @@ In addition to all arguments above, the following attributes are exported:
 Kinesis Streams can be imported using the `arn`, e.g.,
 
 ```
-$ terraform import aws_kinesis_video_stream.test_stream arn:aws:kinesisvideo:us-west-2:123456789012:stream/terraform-kinesis-test/1554978910975
+$ terraform import aws_kinesisvideo_stream.test_stream arn:aws:kinesisvideo:us-west-2:123456789012:stream/terraform-kinesis-test/1554978910975
 ```
 
 [1]: https://aws.amazon.com/documentation/kinesis/

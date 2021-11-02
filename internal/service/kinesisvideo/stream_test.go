@@ -19,7 +19,7 @@ import (
 func TestAccKinesisVideoStream_basic(t *testing.T) {
 	var stream kinesisvideo.StreamInfo
 
-	resourceName := "aws_kinesis_video_stream.default"
+	resourceName := "aws_kinesisvideo_stream.default"
 	rInt1 := sdkacctest.RandInt()
 	rInt2 := sdkacctest.RandInt()
 
@@ -59,7 +59,7 @@ func TestAccKinesisVideoStream_basic(t *testing.T) {
 func TestAccKinesisVideoStream_options(t *testing.T) {
 	var stream kinesisvideo.StreamInfo
 
-	resourceName := "aws_kinesis_video_stream.default"
+	resourceName := "aws_kinesisvideo_stream.default"
 	kmsResourceName := "aws_kms_key.default"
 	rInt := sdkacctest.RandInt()
 	rName1 := sdkacctest.RandString(8)
@@ -104,7 +104,7 @@ func TestAccKinesisVideoStream_options(t *testing.T) {
 func TestAccKinesisVideoStream_tags(t *testing.T) {
 	var stream kinesisvideo.StreamInfo
 
-	resourceName := "aws_kinesis_video_stream.default"
+	resourceName := "aws_kinesisvideo_stream.default"
 	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -150,7 +150,7 @@ func TestAccKinesisVideoStream_tags(t *testing.T) {
 func TestAccKinesisVideoStream_disappears(t *testing.T) {
 	var stream kinesisvideo.StreamInfo
 
-	resourceName := "aws_kinesis_video_stream.default"
+	resourceName := "aws_kinesisvideo_stream.default"
 	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -238,7 +238,7 @@ func testAccCheckKinesisVideoStreamExists(n string, stream *kinesisvideo.StreamI
 
 func testAccCheckKinesisVideoStreamDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_kinesis_video_stream" {
+		if rs.Type != "aws_kinesisvideo_stream" {
 			continue
 		}
 		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisVideoConn
@@ -261,7 +261,7 @@ func testAccCheckKinesisVideoStreamDestroy(s *terraform.State) error {
 
 func testAccKinesisVideoStreamConfig(rInt int) string {
 	return fmt.Sprintf(`
-resource "aws_kinesis_video_stream" "default" {
+resource "aws_kinesisvideo_stream" "default" {
   name = "terraform-kinesis-video-stream-test-%d"
 }
 `, rInt)
@@ -274,7 +274,7 @@ resource "aws_kms_key" "default" {
   deletion_window_in_days = 7
 }
 
-resource "aws_kinesis_video_stream" "default" {
+resource "aws_kinesisvideo_stream" "default" {
   name = "terraform-kinesis-video-stream-test-%[1]d"
 
   data_retention_in_hours = 1
@@ -287,7 +287,7 @@ resource "aws_kinesis_video_stream" "default" {
 
 func testAccKinesisVideoStreamConfig_Tags1(rInt int, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
-resource "aws_kinesis_video_stream" "default" {
+resource "aws_kinesisvideo_stream" "default" {
   name = "terraform-kinesis-video-stream-test-%d"
 
   tags = {
@@ -299,7 +299,7 @@ resource "aws_kinesis_video_stream" "default" {
 
 func testAccKinesisVideoStreamConfig_Tags2(rInt int, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
-resource "aws_kinesis_video_stream" "default" {
+resource "aws_kinesisvideo_stream" "default" {
   name = "terraform-kinesis-video-stream-test-%d"
 
   tags = {
