@@ -180,26 +180,30 @@ func dataSourceNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) er
 	}.String()
 	d.Set("arn", arn)
 	if eni.Association != nil {
-		if err := d.Set("association", flattenNetworkInterfaceAssociation(eni.Association)); err != nil {
+		if err := d.Set("association", []interface{}{flattenNetworkInterfaceAssociation(eni.Association)}); err != nil {
 			return fmt.Errorf("error setting association: %w", err)
 		}
+	} else {
+		d.Set("association", nil)
 	}
 	if eni.Attachment != nil {
-		if err := d.Set("attachment", []interface{}{FlattenAttachment(eni.Attachment)}); err != nil {
+		if err := d.Set("attachment", []interface{}{flattenNetworkInterfaceAttachment(eni.Attachment)}); err != nil {
 			return fmt.Errorf("error setting attachment: %w", err)
 		}
+	} else {
+		d.Set("attachment", nil)
 	}
 	d.Set("availability_zone", eni.AvailabilityZone)
 	d.Set("description", eni.Description)
 	d.Set("security_groups", FlattenGroupIdentifiers(eni.Groups))
 	d.Set("interface_type", eni.InterfaceType)
-	d.Set("ipv6_addresses", flattenNetworkInterfaceIPv6Address(eni.Ipv6Addresses))
+	d.Set("ipv6_addresses", flattenNetworkInterfaceIPv6Addresses(eni.Ipv6Addresses))
 	d.Set("mac_address", eni.MacAddress)
 	d.Set("outpost_arn", eni.OutpostArn)
 	d.Set("owner_id", ownerID)
 	d.Set("private_dns_name", eni.PrivateDnsName)
 	d.Set("private_ip", eni.PrivateIpAddress)
-	d.Set("private_ips", FlattenNetworkInterfacesPrivateIPAddresses(eni.PrivateIpAddresses))
+	d.Set("private_ips", flattenNetworkInterfacePrivateIpAddresses(eni.PrivateIpAddresses))
 	d.Set("requester_id", eni.RequesterId)
 	d.Set("subnet_id", eni.SubnetId)
 	d.Set("vpc_id", eni.VpcId)

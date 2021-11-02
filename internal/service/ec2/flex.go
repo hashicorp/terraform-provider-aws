@@ -9,21 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-//Flattens network interface attachment into a map[string]interface
-func FlattenAttachment(a *ec2.NetworkInterfaceAttachment) map[string]interface{} {
-	att := make(map[string]interface{})
-	if a.InstanceId != nil {
-		att["instance"] = *a.InstanceId
-	}
-	if a.DeviceIndex != nil {
-		att["device_index"] = *a.DeviceIndex
-	}
-	if a.AttachmentId != nil {
-		att["attachment_id"] = *a.AttachmentId
-	}
-	return att
-}
-
 func flattenAttributeValues(l []*ec2.AttributeValue) []string {
 	values := make([]string, 0, len(l))
 	for _, v := range l {
@@ -161,34 +146,6 @@ func ExpandIPPerms(
 	}
 
 	return perms, nil
-}
-
-func flattenNetworkInterfaceAssociation(a *ec2.NetworkInterfaceAssociation) []interface{} {
-	tfMap := map[string]interface{}{}
-
-	if a.AllocationId != nil {
-		tfMap["allocation_id"] = aws.StringValue(a.AllocationId)
-	}
-	if a.AssociationId != nil {
-		tfMap["association_id"] = aws.StringValue(a.AssociationId)
-	}
-	if a.CarrierIp != nil {
-		tfMap["carrier_ip"] = aws.StringValue(a.CarrierIp)
-	}
-	if a.CustomerOwnedIp != nil {
-		tfMap["customer_owned_ip"] = aws.StringValue(a.CustomerOwnedIp)
-	}
-	if a.IpOwnerId != nil {
-		tfMap["ip_owner_id"] = aws.StringValue(a.IpOwnerId)
-	}
-	if a.PublicDnsName != nil {
-		tfMap["public_dns_name"] = aws.StringValue(a.PublicDnsName)
-	}
-	if a.PublicIp != nil {
-		tfMap["public_ip"] = aws.StringValue(a.PublicIp)
-	}
-
-	return []interface{}{tfMap}
 }
 
 // Flattens an array of UserSecurityGroups into a []*GroupIdentifier

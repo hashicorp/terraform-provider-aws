@@ -203,7 +203,7 @@ func resourceNetworkInterfaceCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if v, ok := d.GetOk("ipv6_addresses"); ok && v.(*schema.Set).Len() > 0 {
-		input.Ipv6Addresses = expandIP6Addresses(v.(*schema.Set).List())
+		input.Ipv6Addresses = expandInstanceIpv6Addresses(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("ipv6_prefixes"); ok && v.(*schema.Set).Len() > 0 {
@@ -216,7 +216,7 @@ func resourceNetworkInterfaceCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if v, ok := d.GetOk("private_ips"); ok && v.(*schema.Set).Len() > 0 {
-		input.PrivateIpAddresses = ExpandPrivateIPAddresses(v.(*schema.Set).List())
+		input.PrivateIpAddresses = expandPrivateIpAddressSpecifications(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("private_ips_count"); ok {
@@ -301,16 +301,6 @@ func resourceNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) erro
 
 	eni := outputRaw.(*ec2.NetworkInterface)
 
-	attachment := []map[string]interface{}{}
-
-	if eni.Attachment != nil {
-		attachment = []map[string]interface{}{FlattenAttachment(eni.Attachment)}
-	}
-
-	if err := d.Set("attachment", attachment); err != nil {
-		return fmt.Errorf("error setting attachment: %w", err)
-	}
-
 	ownerID := aws.StringValue(eni.OwnerId)
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
@@ -320,6 +310,14 @@ func resourceNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) erro
 		Resource:  fmt.Sprintf("network-interface/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)
+
+	if eni.Attachment != nil {
+		if err := d.Set("attachment", []interface{}{flattenNetworkInterfaceAttachment(eni.Attachment)}); err != nil {
+			return fmt.Errorf("error setting attachment: %w", err)
+		}
+	} else {
+		d.Set("attachment", nil)
+	}
 
 	d.Set("description", eni.Description)
 	d.Set("interface_type", eni.InterfaceType)
@@ -332,7 +330,7 @@ func resourceNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) erro
 
 	d.Set("ipv6_address_count", len(eni.Ipv6Addresses))
 
-	if err := d.Set("ipv6_addresses", flattenNetworkInterfaceIPv6Address(eni.Ipv6Addresses)); err != nil {
+	if err := d.Set("ipv6_addresses", flattenNetworkInterfaceIPv6Addresses(eni.Ipv6Addresses)); err != nil {
 		return fmt.Errorf("error setting ipv6_addresses: %w", err)
 	}
 
@@ -348,7 +346,7 @@ func resourceNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("private_dns_name", eni.PrivateDnsName)
 	d.Set("private_ip", eni.PrivateIpAddress)
 
-	if err := d.Set("private_ips", FlattenNetworkInterfacesPrivateIPAddresses(eni.PrivateIpAddresses)); err != nil {
+	if err := d.Set("private_ips", flattenNetworkInterfacePrivateIpAddresses(eni.PrivateIpAddresses)); err != nil {
 		return fmt.Errorf("error setting private_ips: %w", err)
 	}
 
@@ -863,49 +861,208 @@ func detachNetworkInterface(conn *ec2.EC2, networkInterfaceID, attachmentID stri
 	return nil
 }
 
-//Expands an array of IPs into a ec2 Private IP Address Spec
-func ExpandPrivateIPAddresses(ips []interface{}) []*ec2.PrivateIpAddressSpecification {
-	dtos := make([]*ec2.PrivateIpAddressSpecification, 0, len(ips))
-	for i, v := range ips {
-		new_private_ip := &ec2.PrivateIpAddressSpecification{
-			PrivateIpAddress: aws.String(v.(string)),
+func flattenNetworkInterfaceAssociation(apiObject *ec2.NetworkInterfaceAssociation) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.AllocationId; v != nil {
+		tfMap["allocation_id"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.AssociationId; v != nil {
+		tfMap["association_id"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.CarrierIp; v != nil {
+		tfMap["carrier_ip"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.CustomerOwnedIp; v != nil {
+		tfMap["customer_owned_ip"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.IpOwnerId; v != nil {
+		tfMap["ip_owner_id"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.PublicDnsName; v != nil {
+		tfMap["public_dns_name"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.PublicIp; v != nil {
+		tfMap["public_ip"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenNetworkInterfaceAttachment(apiObject *ec2.NetworkInterfaceAttachment) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.AttachmentId; v != nil {
+		tfMap["attachment_id"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.DeviceIndex; v != nil {
+		tfMap["device_index"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.InstanceId; v != nil {
+		tfMap["instance"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func expandPrivateIpAddressSpecification(tfString string) *ec2.PrivateIpAddressSpecification {
+	if tfString == "" {
+		return nil
+	}
+
+	apiObject := &ec2.PrivateIpAddressSpecification{
+		PrivateIpAddress: aws.String(tfString),
+	}
+
+	return apiObject
+}
+
+func expandPrivateIpAddressSpecifications(tfList []interface{}) []*ec2.PrivateIpAddressSpecification {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []*ec2.PrivateIpAddressSpecification
+
+	for i, tfMapRaw := range tfList {
+		tfString, ok := tfMapRaw.(string)
+
+		if !ok {
+			continue
 		}
 
-		new_private_ip.Primary = aws.Bool(i == 0)
+		apiObject := expandPrivateIpAddressSpecification(tfString)
 
-		dtos = append(dtos, new_private_ip)
-	}
-	return dtos
-}
-
-func expandIP6Addresses(ips []interface{}) []*ec2.InstanceIpv6Address {
-	dtos := make([]*ec2.InstanceIpv6Address, 0, len(ips))
-	for _, v := range ips {
-		ipv6Address := &ec2.InstanceIpv6Address{
-			Ipv6Address: aws.String(v.(string)),
+		if apiObject == nil {
+			continue
 		}
 
-		dtos = append(dtos, ipv6Address)
+		if i == 0 {
+			apiObject.Primary = aws.Bool(true)
+		}
+
+		apiObjects = append(apiObjects, apiObject)
 	}
-	return dtos
+
+	return apiObjects
 }
 
-//Flattens an array of private ip addresses into a []string, where the elements returned are the IP strings e.g. "192.168.0.0"
-func FlattenNetworkInterfacesPrivateIPAddresses(dtos []*ec2.NetworkInterfacePrivateIpAddress) []string {
-	ips := make([]string, 0, len(dtos))
-	for _, v := range dtos {
-		ip := *v.PrivateIpAddress
-		ips = append(ips, ip)
+func expandInstanceIpv6Address(tfString string) *ec2.InstanceIpv6Address {
+	if tfString == "" {
+		return nil
 	}
-	return ips
+
+	apiObject := &ec2.InstanceIpv6Address{
+		Ipv6Address: aws.String(tfString),
+	}
+
+	return apiObject
 }
 
-func flattenNetworkInterfaceIPv6Address(niia []*ec2.NetworkInterfaceIpv6Address) []string {
-	ips := make([]string, 0, len(niia))
-	for _, v := range niia {
-		ips = append(ips, *v.Ipv6Address)
+func expandInstanceIpv6Addresses(tfList []interface{}) []*ec2.InstanceIpv6Address {
+	if len(tfList) == 0 {
+		return nil
 	}
-	return ips
+
+	var apiObjects []*ec2.InstanceIpv6Address
+
+	for _, tfMapRaw := range tfList {
+		tfString, ok := tfMapRaw.(string)
+
+		if !ok {
+			continue
+		}
+
+		apiObject := expandInstanceIpv6Address(tfString)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func flattenNetworkInterfacePrivateIpAddress(apiObject *ec2.NetworkInterfacePrivateIpAddress) string {
+	if apiObject == nil {
+		return ""
+	}
+
+	tfString := ""
+
+	if v := apiObject.PrivateIpAddress; v != nil {
+		tfString = aws.StringValue(v)
+	}
+
+	return tfString
+}
+
+func flattenNetworkInterfacePrivateIpAddresses(apiObjects []*ec2.NetworkInterfacePrivateIpAddress) []string {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []string
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenNetworkInterfacePrivateIpAddress(apiObject))
+	}
+
+	return tfList
+}
+
+func flattenNetworkInterfaceIPv6Address(apiObject *ec2.NetworkInterfaceIpv6Address) string {
+	if apiObject == nil {
+		return ""
+	}
+
+	tfString := ""
+
+	if v := apiObject.Ipv6Address; v != nil {
+		tfString = aws.StringValue(v)
+	}
+
+	return tfString
+}
+
+func flattenNetworkInterfaceIPv6Addresses(apiObjects []*ec2.NetworkInterfaceIpv6Address) []string {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []string
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenNetworkInterfaceIPv6Address(apiObject))
+	}
+
+	return tfList
 }
 
 func expandIpv4PrefixSpecificationRequest(tfString string) *ec2.Ipv4PrefixSpecificationRequest {
