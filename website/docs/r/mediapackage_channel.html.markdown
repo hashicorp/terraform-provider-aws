@@ -1,19 +1,19 @@
 ---
 subcategory: "MediaPackage"
 layout: "aws"
-page_title: "AWS: aws_media_package_channel"
+page_title: "AWS: aws_mediapackage_channel"
 description: |-
   Provides an AWS Elemental MediaPackage Channel.
 ---
 
-# Resource: aws_media_package_channel
+# Resource: aws_mediapackage_channel
 
 Provides an AWS Elemental MediaPackage Channel.
 
 ## Example Usage
 
 ```terraform
-resource "aws_media_package_channel" "kittens" {
+resource "aws_mediapackage_channel" "kittens" {
   channel_id  = "kitten-channel"
   description = "A channel dedicated to amusing videos of kittens."
 }
@@ -45,5 +45,5 @@ In addition to all arguments above, the following attributes are exported:
 Media Package Channels can be imported via the channel ID, e.g.,
 
 ```
-$ terraform import aws_media_package_channel.kittens kittens-channel
+$ terraform import aws_mediapackage_channel.kittens kittens-channel
 ```

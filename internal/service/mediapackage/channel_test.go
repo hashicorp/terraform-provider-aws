@@ -16,7 +16,7 @@ import (
 )
 
 func TestAccMediaPackageChannel_basic(t *testing.T) {
-	resourceName := "aws_media_package_channel.test"
+	resourceName := "aws_mediapackage_channel.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -47,7 +47,7 @@ func TestAccMediaPackageChannel_basic(t *testing.T) {
 }
 
 func TestAccMediaPackageChannel_description(t *testing.T) {
-	resourceName := "aws_media_package_channel.test"
+	resourceName := "aws_mediapackage_channel.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -80,7 +80,7 @@ func TestAccMediaPackageChannel_description(t *testing.T) {
 }
 
 func TestAccMediaPackageChannel_tags(t *testing.T) {
-	resourceName := "aws_media_package_channel.test"
+	resourceName := "aws_mediapackage_channel.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -127,7 +127,7 @@ func testAccCheckChannelDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaPackageConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_media_package_channel" {
+		if rs.Type != "aws_mediapackage_channel" {
 			continue
 		}
 
@@ -185,7 +185,7 @@ func testAccPreCheck(t *testing.T) {
 
 func testAccMediaPackageChannelConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_media_package_channel" "test" {
+resource "aws_mediapackage_channel" "test" {
   channel_id = "tf_mediachannel_%s"
 }
 `, rName)
@@ -193,7 +193,7 @@ resource "aws_media_package_channel" "test" {
 
 func testAccMediaPackageChannelConfigDescription(rName, description string) string {
 	return fmt.Sprintf(`
-resource "aws_media_package_channel" "test" {
+resource "aws_mediapackage_channel" "test" {
   channel_id  = %q
   description = %q
 }
@@ -202,7 +202,7 @@ resource "aws_media_package_channel" "test" {
 
 func testAccMediaPackageChannelConfigWithTags(rName, key, value string) string {
 	return fmt.Sprintf(`
-resource "aws_media_package_channel" "test" {
+resource "aws_mediapackage_channel" "test" {
   channel_id = "%[1]s"
 
   tags = {

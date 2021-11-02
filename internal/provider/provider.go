@@ -1318,7 +1318,8 @@ func Provider() *schema.Provider {
 
 			"aws_media_convert_queue": mediaconvert.ResourceQueue(),
 
-			"aws_media_package_channel": mediapackage.ResourceChannel(),
+			"aws_mediapackage_channel":  mediapackage.ResourceChannel(),
+			"aws_media_package_channel": mediapackage.ResourceChannel(), // backward compatible alias
 
 			"aws_media_store_container":        mediastore.ResourceContainer(),
 			"aws_media_store_container_policy": mediastore.ResourceContainerPolicy(),
