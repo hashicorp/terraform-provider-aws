@@ -1316,7 +1316,8 @@ func Provider() *schema.Provider {
 			"aws_macie2_member":                     macie2.ResourceMember(),
 			"aws_macie2_organization_admin_account": macie2.ResourceOrganizationAdminAccount(),
 
-			"aws_media_convert_queue": mediaconvert.ResourceQueue(),
+			"aws_mediaconvert_queue":  mediaconvert.ResourceQueue(),
+			"aws_media_convert_queue": mediaconvert.ResourceQueue(), // backward compatible alias
 
 			"aws_media_package_channel": mediapackage.ResourceChannel(),
 

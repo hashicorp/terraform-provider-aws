@@ -18,7 +18,7 @@ import (
 
 func TestAccMediaConvertQueue_basic(t *testing.T) {
 	var queue mediaconvert.Queue
-	resourceName := "aws_media_convert_queue.test"
+	resourceName := "aws_mediaconvert_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -50,7 +50,7 @@ func TestAccMediaConvertQueue_reservationPlanSettings(t *testing.T) {
 	acctest.Skip(t, "MediaConvert Reserved Queues are $400/month and cannot be deleted for 1 year.")
 
 	var queue mediaconvert.Queue
-	resourceName := "aws_media_convert_queue.test"
+	resourceName := "aws_mediaconvert_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -92,7 +92,7 @@ func TestAccMediaConvertQueue_reservationPlanSettings(t *testing.T) {
 
 func TestAccMediaConvertQueue_withStatus(t *testing.T) {
 	var queue mediaconvert.Queue
-	resourceName := "aws_media_convert_queue.test"
+	resourceName := "aws_mediaconvert_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -126,7 +126,7 @@ func TestAccMediaConvertQueue_withStatus(t *testing.T) {
 
 func TestAccMediaConvertQueue_withTags(t *testing.T) {
 	var queue mediaconvert.Queue
-	resourceName := "aws_media_convert_queue.test"
+	resourceName := "aws_mediaconvert_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -171,7 +171,7 @@ func TestAccMediaConvertQueue_withTags(t *testing.T) {
 
 func TestAccMediaConvertQueue_disappears(t *testing.T) {
 	var queue mediaconvert.Queue
-	resourceName := "aws_media_convert_queue.test"
+	resourceName := "aws_mediaconvert_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -194,7 +194,7 @@ func TestAccMediaConvertQueue_disappears(t *testing.T) {
 
 func TestAccMediaConvertQueue_withDescription(t *testing.T) {
 	var queue mediaconvert.Queue
-	resourceName := "aws_media_convert_queue.test"
+	resourceName := "aws_mediaconvert_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	description1 := sdkacctest.RandomWithPrefix("Description: ")
 	description2 := sdkacctest.RandomWithPrefix("Description: ")
@@ -225,7 +225,7 @@ func TestAccMediaConvertQueue_withDescription(t *testing.T) {
 
 func testAccCheckQueueDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_media_convert_queue" {
+		if rs.Type != "aws_mediaconvert_queue" {
 			continue
 		}
 		conn, err := tfmediaconvert.GetAccountClient(acctest.Provider.Meta().(*conns.AWSClient))
@@ -306,7 +306,7 @@ func testAccPreCheck(t *testing.T) {
 
 func testAccMediaConvertQueueConfig_Basic(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_media_convert_queue" "test" {
+resource "aws_mediaconvert_queue" "test" {
   name = %[1]q
 }
 `, rName)
@@ -314,7 +314,7 @@ resource "aws_media_convert_queue" "test" {
 
 func testAccMediaConvertQueueConfig_withStatus(rName, status string) string {
 	return fmt.Sprintf(`
-resource "aws_media_convert_queue" "test" {
+resource "aws_mediaconvert_queue" "test" {
   name   = %[1]q
   status = %[2]q
 }
@@ -323,7 +323,7 @@ resource "aws_media_convert_queue" "test" {
 
 func testAccMediaConvertQueueConfig_withDescription(rName, description string) string {
 	return fmt.Sprintf(`
-resource "aws_media_convert_queue" "test" {
+resource "aws_mediaconvert_queue" "test" {
   name        = %[1]q
   description = %[2]q
 }
@@ -332,7 +332,7 @@ resource "aws_media_convert_queue" "test" {
 
 func testAccMediaConvertQueueConfig_withTags(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
-resource "aws_media_convert_queue" "test" {
+resource "aws_mediaconvert_queue" "test" {
   name = %[1]q
 
   tags = {
@@ -345,7 +345,7 @@ resource "aws_media_convert_queue" "test" {
 
 func testAccMediaConvertQueueConfig_ReservedQueue(rName, commitment, renewalType string, reservedSlots int) string {
 	return fmt.Sprintf(`
-resource "aws_media_convert_queue" "test" {
+resource "aws_mediaconvert_queue" "test" {
   name         = %[1]q
   pricing_plan = %[2]q
 

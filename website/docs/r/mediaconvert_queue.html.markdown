@@ -1,19 +1,19 @@
 ---
 subcategory: "MediaConvert"
 layout: "aws"
-page_title: "AWS: aws_media_convert_queue"
+page_title: "AWS: aws_mediaconvert_queue"
 description: |-
   Provides an AWS Elemental MediaConvert Queue.
 ---
 
-# Resource: aws_media_convert_queue
+# Resource: aws_mediaconvert_queue
 
 Provides an AWS Elemental MediaConvert Queue.
 
 ## Example Usage
 
 ```terraform
-resource "aws_media_convert_queue" "test" {
+resource "aws_mediaconvert_queue" "test" {
   name = "tf-test-queue"
 }
 ```
@@ -50,5 +50,5 @@ In addition to all arguments above, the following attributes are exported:
 Media Convert Queue can be imported via the queue name, e.g.,
 
 ```
-$ terraform import aws_media_convert_queue.test tf-test-queue
+$ terraform import aws_mediaconvert_queue.test tf-test-queue
 ```
