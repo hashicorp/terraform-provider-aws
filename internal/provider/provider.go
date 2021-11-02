@@ -628,7 +628,8 @@ func Provider() *schema.Provider {
 			"aws_redshift_orderable_cluster": redshift.DataSourceOrderableCluster(),
 			"aws_redshift_service_account":   redshift.DataSourceServiceAccount(),
 
-			"aws_resourcegroupstaggingapi_resources": resourcegroupstagging.DataSourceResources(),
+			"aws_resourcegroupstagging_resources":    resourcegroupstagging.DataSourceResources(),
+			"aws_resourcegroupstaggingapi_resources": resourcegroupstagging.DataSourceResources(), // backward compatible alias
 
 			"aws_route53_delegation_set": route53.DataSourceDelegationSet(),
 			"aws_route53_zone":           route53.DataSourceZone(),

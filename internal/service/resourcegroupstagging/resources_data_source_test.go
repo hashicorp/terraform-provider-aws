@@ -11,7 +11,7 @@ import (
 )
 
 func TestAccResourceGroupsTaggingResourcesDataSource_tagFilter(t *testing.T) {
-	dataSourceName := "data.aws_resourcegroupstaggingapi_resources.test"
+	dataSourceName := "data.aws_resourcegroupstagging_resources.test"
 	resourceName := "aws_vpc.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -34,7 +34,7 @@ func TestAccResourceGroupsTaggingResourcesDataSource_tagFilter(t *testing.T) {
 }
 
 func TestAccResourceGroupsTaggingResourcesDataSource_includeComplianceDetails(t *testing.T) {
-	dataSourceName := "data.aws_resourcegroupstaggingapi_resources.test"
+	dataSourceName := "data.aws_resourcegroupstagging_resources.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -54,7 +54,7 @@ func TestAccResourceGroupsTaggingResourcesDataSource_includeComplianceDetails(t 
 }
 
 func TestAccResourceGroupsTaggingResourcesDataSource_resourceTypeFilters(t *testing.T) {
-	dataSourceName := "data.aws_resourcegroupstaggingapi_resources.test"
+	dataSourceName := "data.aws_resourcegroupstagging_resources.test"
 	resourceName := "aws_vpc.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -77,7 +77,7 @@ func TestAccResourceGroupsTaggingResourcesDataSource_resourceTypeFilters(t *test
 }
 
 func TestAccResourceGroupsTaggingResourcesDataSource_resourceARNList(t *testing.T) {
-	dataSourceName := "data.aws_resourcegroupstaggingapi_resources.test"
+	dataSourceName := "data.aws_resourcegroupstagging_resources.test"
 	resourceName := "aws_vpc.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -109,7 +109,7 @@ resource "aws_vpc" "test" {
   }
 }
 
-data "aws_resourcegroupstaggingapi_resources" "test" {
+data "aws_resourcegroupstagging_resources" "test" {
   tag_filter {
     key    = "Key"
     values = [aws_vpc.test.tags["Key"]]
@@ -128,7 +128,7 @@ resource "aws_vpc" "test" {
   }
 }
 
-data "aws_resourcegroupstaggingapi_resources" "test" {
+data "aws_resourcegroupstagging_resources" "test" {
   resource_type_filters = ["ec2:vpc"]
 
   depends_on = [aws_vpc.test]
@@ -146,7 +146,7 @@ resource "aws_vpc" "test" {
   }
 }
 
-data "aws_resourcegroupstaggingapi_resources" "test" {
+data "aws_resourcegroupstagging_resources" "test" {
   resource_arn_list = [aws_vpc.test.arn]
 }
 `, rName)
@@ -162,7 +162,7 @@ resource "aws_vpc" "test" {
   }
 }
 
-data "aws_resourcegroupstaggingapi_resources" "test" {
+data "aws_resourcegroupstagging_resources" "test" {
   include_compliance_details  = true
   exclude_compliant_resources = false
   resource_arn_list           = [aws_vpc.test.arn]

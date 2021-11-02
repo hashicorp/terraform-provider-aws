@@ -1,12 +1,12 @@
 ---
 subcategory: "Resource Groups Tagging API"
 layout: "aws"
-page_title: "AWS: aws_resourcegroupstaggingapi_resources"
+page_title: "AWS: aws_resourcegroupstagging_resources"
 description: |-
   Provides details about resource tagging.
 ---
 
-# Data Source: aws_resourcegroupstaggingapi_resources
+# Data Source: aws_resourcegroupstagging_resources
 
 Provides details about resource tagging.
 
@@ -15,13 +15,13 @@ Provides details about resource tagging.
 ### Get All Resource Tag Mappings
 
 ```terraform
-data "aws_resourcegroupstaggingapi_resources" "test" {}
+data "aws_resourcegroupstagging_resources" "test" {}
 ```
 
 ### Filter By Tag Key and Value
 
 ```terraform
-data "aws_resourcegroupstaggingapi_resources" "test" {
+data "aws_resourcegroupstagging_resources" "test" {
   tag_filter {
     key    = "tag-key"
     values = ["tag-value-1", "tag-value-2"]
@@ -32,7 +32,7 @@ data "aws_resourcegroupstaggingapi_resources" "test" {
 ### Filter By Resource Type
 
 ```terraform
-data "aws_resourcegroupstaggingapi_resources" "test" {
+data "aws_resourcegroupstagging_resources" "test" {
   resource_type_filters = ["ec2:instance"]
 }
 ```
