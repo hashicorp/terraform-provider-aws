@@ -1,0 +1,87 @@
+```release-note:enhancement
+data-source/aws_dx_connection: Rename data source to aws_directconnect_connection (with alias for aws_dx_connection)
+```
+
+```release-note:enhancement
+data-source/aws_dx_gateway: Rename data source to aws_directconnect_gateway (with alias for aws_dx_gateway)
+```
+
+```release-note:enhancement
+data-source/aws_dx_location: Rename data source to aws_directconnect_location (with alias for aws_dx_location)
+```
+
+```release-note:enhancement
+data-source/aws_dx_locations: Rename data source to aws_directconnect_locations (with alias for aws_dx_locations)
+```
+
+```release-note:enhancement
+resource/aws_dx_bgp_peer: Rename resource to aws_directconnect_bgp_peer (with alias for aws_dx_bgp_peer)
+```
+
+```release-note:enhancement
+resource/aws_dx_connection: Rename resource to aws_directconnect_connection (with alias for aws_dx_connection)
+```
+
+```release-note:enhancement
+resource/aws_dx_connection_association: Rename resource to aws_directconnect_connection_association (with alias for aws_dx_connection_association)
+```
+
+```release-note:enhancement
+resource/aws_dx_connection_confirmation: Rename resource to aws_directconnect_connection_confirmation (with alias for aws_dx_connection_confirmation)
+```
+
+```release-note:enhancement
+resource/aws_dx_gateway: Rename resource to aws_directconnect_gateway (with alias for aws_dx_gateway)
+```
+
+```release-note:enhancement
+resource/aws_dx_gateway_association: Rename resource to aws_directconnect_gateway_association (with alias for aws_dx_gateway_association)
+```
+
+```release-note:enhancement
+resource/aws_dx_gateway_association_proposal: Rename resource to aws_directconnect_gateway_association_proposal (with alias for aws_dx_gateway_association_proposal)
+```
+
+```release-note:enhancement
+resource/aws_dx_hosted_connection: Rename resource to aws_directconnect_hosted_connection (with alias for aws_dx_hosted_connection)
+```
+
+```release-note:enhancement
+resource/aws_dx_hosted_private_virtual_interface: Rename resource to aws_directconnect_hosted_private_virtual_interface (with alias for aws_dx_hosted_private_virtual_interface)
+```
+
+```release-note:enhancement
+resource/aws_dx_hosted_private_virtual_interface_accepter: Rename resource to aws_directconnect_hosted_private_virtual_interface_accepter (with alias for aws_dx_hosted_private_virtual_interface_accepter)
+```
+
+```release-note:enhancement
+resource/aws_dx_hosted_public_virtual_interface: Rename resource to aws_directconnect_hosted_public_virtual_interface (with alias for aws_dx_hosted_public_virtual_interface)
+```
+
+```release-note:enhancement
+resource/aws_dx_hosted_public_virtual_interface_accepter: Rename resource to aws_directconnect_hosted_public_virtual_interface_accepter (with alias for aws_dx_hosted_public_virtual_interface_accepter)
+```
+
+```release-note:enhancement
+resource/aws_dx_hosted_transit_virtual_interface: Rename resource to aws_directconnect_hosted_transit_virtual_interface (with alias for aws_dx_hosted_transit_virtual_interface)
+```
+
+```release-note:enhancement
+resource/aws_dx_hosted_transit_virtual_interface_accepter: Rename resource to aws_directconnect_hosted_transit_virtual_interface_accepter (with alias for aws_dx_hosted_transit_virtual_interface_accepter)
+```
+
+```release-note:enhancement
+resource/aws_dx_lag: Rename resource to aws_directconnect_lag (with alias for aws_dx_lag)
+```
+
+```release-note:enhancement
+resource/aws_dx_private_virtual_interface: Rename resource to aws_directconnect_private_virtual_interface (with alias for aws_dx_private_virtual_interface)
+```
+
+```release-note:enhancement
+resource/aws_dx_public_virtual_interface: Rename resource to aws_directconnect_public_virtual_interface (with alias for aws_dx_public_virtual_interface)
+```
+
+```release-note:enhancement
+resource/aws_dx_transit_virtual_interface: Rename resource to aws_directconnect_transit_virtual_interface (with alias for aws_dx_transit_virtual_interface)
+```
