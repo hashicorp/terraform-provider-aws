@@ -1,0 +1,23 @@
+```release-note:enhancement
+data-source/aws_service_discovery_dns_namespace: Rename data source to aws_servicediscovery_dns_namespace (with alias for aws_service_discovery_dns_namespace)
+```
+
+```release-note:enhancement
+resource/aws_service_discovery_http_namespace: Rename resource to aws_servicediscovery_http_namespace (with alias for aws_service_discovery_http_namespace)
+```
+
+```release-note:enhancement
+resource/aws_service_discovery_instance: Rename resource to aws_servicediscovery_instance (with alias for aws_service_discovery_instance)
+```
+
+```release-note:enhancement
+resource/aws_service_discovery_private_dns_namespace: Rename resource to aws_servicediscovery_private_dns_namespace (with alias for aws_service_discovery_private_dns_namespace)
+```
+
+```release-note:enhancement
+resource/aws_service_discovery_public_dns_namespace: Rename resource to aws_servicediscovery_public_dns_namespace (with alias for aws_service_discovery_public_dns_namespace)
+```
+
+```release-note:enhancement
+resource/aws_service_discovery_service: Rename resource to aws_servicediscovery_service (with alias for aws_service_discovery_service)
+```

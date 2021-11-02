@@ -656,7 +656,8 @@ func Provider() *schema.Provider {
 			"aws_servicecatalog_portfolio":             servicecatalog.DataSourcePortfolio(),
 			"aws_servicecatalog_product":               servicecatalog.DataSourceProduct(),
 
-			"aws_service_discovery_dns_namespace": servicediscovery.DataSourceDNSNamespace(),
+			"aws_servicediscovery_dns_namespace":  servicediscovery.DataSourceDNSNamespace(),
+			"aws_service_discovery_dns_namespace": servicediscovery.DataSourceDNSNamespace(), // backward compatible alias
 
 			"aws_servicequotas_service":       servicequotas.DataSourceService(),
 			"aws_servicequotas_service_quota": servicequotas.DataSourceServiceQuota(),
@@ -1536,11 +1537,16 @@ func Provider() *schema.Provider {
 			"aws_servicecatalog_tag_option":                      servicecatalog.ResourceTagOption(),
 			"aws_servicecatalog_tag_option_resource_association": servicecatalog.ResourceTagOptionResourceAssociation(),
 
-			"aws_service_discovery_http_namespace":        servicediscovery.ResourceHTTPNamespace(),
-			"aws_service_discovery_instance":              servicediscovery.ResourceInstance(),
-			"aws_service_discovery_private_dns_namespace": servicediscovery.ResourcePrivateDNSNamespace(),
-			"aws_service_discovery_public_dns_namespace":  servicediscovery.ResourcePublicDNSNamespace(),
-			"aws_service_discovery_service":               servicediscovery.ResourceService(),
+			"aws_servicediscovery_http_namespace":         servicediscovery.ResourceHTTPNamespace(),
+			"aws_servicediscovery_instance":               servicediscovery.ResourceInstance(),
+			"aws_servicediscovery_private_dns_namespace":  servicediscovery.ResourcePrivateDNSNamespace(),
+			"aws_servicediscovery_public_dns_namespace":   servicediscovery.ResourcePublicDNSNamespace(),
+			"aws_servicediscovery_service":                servicediscovery.ResourceService(),
+			"aws_service_discovery_http_namespace":        servicediscovery.ResourceHTTPNamespace(),       // backward compatible alias
+			"aws_service_discovery_instance":              servicediscovery.ResourceInstance(),            // backward compatible alias
+			"aws_service_discovery_private_dns_namespace": servicediscovery.ResourcePrivateDNSNamespace(), // backward compatible alias
+			"aws_service_discovery_public_dns_namespace":  servicediscovery.ResourcePublicDNSNamespace(),  // backward compatible alias
+			"aws_service_discovery_service":               servicediscovery.ResourceService(),             // backward compatible alias
 
 			"aws_servicequotas_service_quota": servicequotas.ResourceServiceQuota(),
 
