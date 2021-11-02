@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_media_store_container: Rename data source to aws_mediastore_container (with alias for aws_media_store_container)
+```
+
+```release-note:enhancement
+resource/aws_media_store_container_policy: Rename data source to aws_mediastore_container_policy (with alias for aws_media_store_container_policy)
+```
