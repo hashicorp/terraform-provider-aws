@@ -1,0 +1,7 @@
+```release-note:enhancement
+data-source/aws_kinesis_firehose_delivery_stream: Rename data source to aws_firehose_delivery_stream (with alias for aws_kinesis_firehose_delivery_stream)
+```
+
+```release-note:enhancement
+resource/aws_kinesis_firehose_delivery_stream: Rename resource to aws_firehose_delivery_stream (with alias for aws_kinesis_firehose_delivery_stream)
+```
