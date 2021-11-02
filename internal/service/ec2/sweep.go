@@ -167,7 +167,7 @@ func init() {
 			"aws_autoscaling_group",
 			"aws_batch_compute_environment",
 			"aws_elastic_beanstalk_environment",
-			"aws_cloudhsm_v2_cluster",
+			"aws_cloudhsmv2_cluster",
 			"aws_db_subnet_group",
 			"aws_directory_service_directory",
 			"aws_ec2_client_vpn_endpoint",

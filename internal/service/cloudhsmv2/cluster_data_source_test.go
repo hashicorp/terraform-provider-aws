@@ -11,8 +11,8 @@ import (
 )
 
 func testAccDataSourceCloudHsmV2Cluster_basic(t *testing.T) {
-	resourceName := "aws_cloudhsm_v2_cluster.cluster"
-	dataSourceName := "data.aws_cloudhsm_v2_cluster.default"
+	resourceName := "aws_cloudhsmv2_cluster.cluster"
+	dataSourceName := "data.aws_cloudhsmv2_cluster.default"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
@@ -44,7 +44,7 @@ resource "aws_vpc" "cloudhsm_v2_test_vpc" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-aws_cloudhsm_v2_cluster-data-source-basic"
+    Name = "terraform-testacc-aws_cloudhsmv2_cluster-data-source-basic"
   }
 }
 
@@ -56,20 +56,20 @@ resource "aws_subnet" "cloudhsm_v2_test_subnets" {
   availability_zone       = element(data.aws_availability_zones.available.names, count.index)
 
   tags = {
-    Name = "tf-acc-aws_cloudhsm_v2_cluster-data-source-basic"
+    Name = "tf-acc-aws_cloudhsmv2_cluster-data-source-basic"
   }
 }
 
-resource "aws_cloudhsm_v2_cluster" "cluster" {
+resource "aws_cloudhsmv2_cluster" "cluster" {
   hsm_type   = "hsm1.medium"
   subnet_ids = aws_subnet.cloudhsm_v2_test_subnets[*].id
 
   tags = {
-    Name = "tf-acc-aws_cloudhsm_v2_cluster-data-source-basic-%d"
+    Name = "tf-acc-aws_cloudhsmv2_cluster-data-source-basic-%d"
   }
 }
 
-data "aws_cloudhsm_v2_cluster" "default" {
-  cluster_id = aws_cloudhsm_v2_cluster.cluster.cluster_id
+data "aws_cloudhsmv2_cluster" "default" {
+  cluster_id = aws_cloudhsmv2_cluster.cluster.cluster_id
 }
 `, sdkacctest.RandInt()))

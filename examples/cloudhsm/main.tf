@@ -12,7 +12,7 @@ resource "aws_vpc" "cloudhsm_v2_vpc" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "example-aws_cloudhsm_v2_cluster"
+    Name = "example-aws_cloudhsmv2_cluster"
   }
 }
 
@@ -24,25 +24,25 @@ resource "aws_subnet" "cloudhsm_v2_subnets" {
   availability_zone       = element(data.aws_availability_zones.available.names, count.index)
 
   tags = {
-    Name = "example-aws_cloudhsm_v2_cluster"
+    Name = "example-aws_cloudhsmv2_cluster"
   }
 }
 
-resource "aws_cloudhsm_v2_cluster" "cloudhsm_v2_cluster" {
+resource "aws_cloudhsmv2_cluster" "cloudhsm_v2_cluster" {
   hsm_type   = "hsm1.medium"
   subnet_ids = aws_subnet.cloudhsm_v2_subnets.*.id
 
   tags = {
-    Name = "example-aws_cloudhsm_v2_cluster"
+    Name = "example-aws_cloudhsmv2_cluster"
   }
 }
 
-resource "aws_cloudhsm_v2_hsm" "cloudhsm_v2_hsm" {
+resource "aws_cloudhsmv2_hsm" "cloudhsm_v2_hsm" {
   subnet_id  = aws_subnet.cloudhsm_v2_subnets[0].id
-  cluster_id = aws_cloudhsm_v2_cluster.cloudhsm_v2_cluster.cluster_id
+  cluster_id = aws_cloudhsmv2_cluster.cloudhsm_v2_cluster.cluster_id
 }
 
-data "aws_cloudhsm_v2_cluster" "cluster" {
-  cluster_id = aws_cloudhsm_v2_cluster.cloudhsm_v2_cluster.cluster_id
-  depends_on = [aws_cloudhsm_v2_hsm.cloudhsm_v2_hsm]
+data "aws_cloudhsmv2_cluster" "cluster" {
+  cluster_id = aws_cloudhsmv2_cluster.cloudhsm_v2_cluster.cluster_id
+  depends_on = [aws_cloudhsmv2_hsm.cloudhsm_v2_hsm]
 }

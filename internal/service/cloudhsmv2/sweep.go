@@ -15,14 +15,14 @@ import (
 )
 
 func init() {
-	resource.AddTestSweepers("aws_cloudhsm_v2_cluster", &resource.Sweeper{
-		Name:         "aws_cloudhsm_v2_cluster",
+	resource.AddTestSweepers("aws_cloudhsmv2_cluster", &resource.Sweeper{
+		Name:         "aws_cloudhsmv2_cluster",
 		F:            sweepCloudhsmv2Clusters,
-		Dependencies: []string{"aws_cloudhsm_v2_hsm"},
+		Dependencies: []string{"aws_cloudhsmv2_hsm"},
 	})
 
-	resource.AddTestSweepers("aws_cloudhsm_v2_hsm", &resource.Sweeper{
-		Name: "aws_cloudhsm_v2_hsm",
+	resource.AddTestSweepers("aws_cloudhsmv2_hsm", &resource.Sweeper{
+		Name: "aws_cloudhsmv2_hsm",
 		F:    sweepCloudhsmv2HSMs,
 	})
 }

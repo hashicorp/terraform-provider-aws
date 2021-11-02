@@ -1,19 +1,19 @@
 ---
 subcategory: "CloudHSM v2"
 layout: "aws"
-page_title: "AWS: aws_cloudhsm_v2_cluster"
+page_title: "AWS: aws_cloudhsmv2_cluster"
 description: |-
   Get information on a CloudHSM v2 cluster.
 ---
 
-# Data Source: aws_cloudhsm_v2_cluster
+# Data Source: aws_cloudhsmv2_cluster
 
 Use this data source to get information about a CloudHSM v2 cluster
 
 ## Example Usage
 
 ```terraform
-data "aws_cloudhsm_v2_cluster" "cluster" {
+data "aws_cloudhsmv2_cluster" "cluster" {
   cluster_id = "cluster-testclusterid"
 }
 ```

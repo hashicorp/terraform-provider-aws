@@ -1,12 +1,12 @@
 ---
 subcategory: "CloudHSM v2"
 layout: "aws"
-page_title: "AWS: aws_cloudhsm_v2_cluster"
+page_title: "AWS: aws_cloudhsmv2_cluster"
 description: |-
   Provides a CloudHSM v2 resource.
 ---
 
-# Resource: aws_cloudhsm_v2_cluster
+# Resource: aws_cloudhsmv2_cluster
 
 Creates an Amazon CloudHSM v2 cluster.
 
@@ -34,7 +34,7 @@ resource "aws_vpc" "cloudhsm_v2_vpc" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "example-aws_cloudhsm_v2_cluster"
+    Name = "example-aws_cloudhsmv2_cluster"
   }
 }
 
@@ -46,16 +46,16 @@ resource "aws_subnet" "cloudhsm_v2_subnets" {
   availability_zone       = element(data.aws_availability_zones.available.names, count.index)
 
   tags = {
-    Name = "example-aws_cloudhsm_v2_cluster"
+    Name = "example-aws_cloudhsmv2_cluster"
   }
 }
 
-resource "aws_cloudhsm_v2_cluster" "cloudhsm_v2_cluster" {
+resource "aws_cloudhsmv2_cluster" "cloudhsm_v2_cluster" {
   hsm_type   = "hsm1.medium"
   subnet_ids = aws_subnet.cloudhsm_v2_subnets.*.id
 
   tags = {
-    Name = "example-aws_cloudhsm_v2_cluster"
+    Name = "example-aws_cloudhsmv2_cluster"
   }
 }
 ```
@@ -93,5 +93,5 @@ In addition to all arguments above, the following attributes are exported:
 CloudHSM v2 Clusters can be imported using the `cluster id`, e.g.,
 
 ```
-$ terraform import aws_cloudhsm_v2_cluster.test_cluster cluster-aeb282a201
+$ terraform import aws_cloudhsmv2_cluster.test_cluster cluster-aeb282a201
 ```
