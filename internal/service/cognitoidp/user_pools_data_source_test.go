@@ -21,8 +21,8 @@ func TestAccCognitoIDPUserPoolsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccUserPoolsDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_cognito_user_pools.selected", "ids.#", "2"),
-					resource.TestCheckResourceAttr("data.aws_cognito_user_pools.selected", "arns.#", "2"),
+					resource.TestCheckResourceAttr("data.aws_cognitoidp_user_pools.selected", "ids.#", "2"),
+					resource.TestCheckResourceAttr("data.aws_cognitoidp_user_pools.selected", "arns.#", "2"),
 				),
 			},
 			{
@@ -35,20 +35,20 @@ func TestAccCognitoIDPUserPoolsDataSource_basic(t *testing.T) {
 
 func testAccUserPoolsDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "main" {
+resource "aws_cognitoidp_user_pool" "main" {
   count = 2
   name  = "%s"
 }
 
-data "aws_cognito_user_pools" "selected" {
-  name = aws_cognito_user_pool.main.*.name[0]
+data "aws_cognitoidp_user_pools" "selected" {
+  name = aws_cognitoidp_user_pool.main.*.name[0]
 }
 `, rName)
 }
 
 func testAccUserPoolsDataSourceConfig_notFound(rName string) string {
 	return fmt.Sprintf(`
-data "aws_cognito_user_pools" "selected" {
+data "aws_cognitoidp_user_pools" "selected" {
   name = "%s-not-found"
 }
 `, rName)

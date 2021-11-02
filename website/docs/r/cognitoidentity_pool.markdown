@@ -1,12 +1,12 @@
 ---
 subcategory: "Cognito"
 layout: "aws"
-page_title: "AWS: aws_cognito_identity_pool"
+page_title: "AWS: aws_cognitoidentity_pool"
 description: |-
   Provides an AWS Cognito Identity Pool.
 ---
 
-# Resource: aws_cognito_identity_pool
+# Resource: aws_cognitoidentity_pool
 
 Provides an AWS Cognito Identity Pool.
 
@@ -18,7 +18,7 @@ resource "aws_iam_saml_provider" "default" {
   saml_metadata_document = file("saml-metadata.xml")
 }
 
-resource "aws_cognito_identity_pool" "main" {
+resource "aws_cognitoidentity_pool" "main" {
   identity_pool_name               = "identity pool"
   allow_unauthenticated_identities = false
   allow_classic_flow               = false
@@ -79,5 +79,5 @@ In addition to all arguments above, the following attributes are exported:
 Cognito Identity Pool can be imported using the name, e.g.,
 
 ```
-$ terraform import aws_cognito_identity_pool.mypool <identity-pool-id>
+$ terraform import aws_cognitoidentity_pool.mypool <identity-pool-id>
 ```

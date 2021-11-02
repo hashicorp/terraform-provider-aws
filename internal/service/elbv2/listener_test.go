@@ -1411,7 +1411,7 @@ resource "aws_internet_gateway" "test" {
   }
 }
 
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   name = %[1]q
 
   tags = {
@@ -1419,9 +1419,9 @@ resource "aws_cognito_user_pool" "test" {
   }
 }
 
-resource "aws_cognito_user_pool_client" "test" {
+resource "aws_cognitoidp_user_pool_client" "test" {
   name                                 = %[1]q
-  user_pool_id                         = aws_cognito_user_pool.test.id
+  user_pool_id                         = aws_cognitoidp_user_pool.test.id
   generate_secret                      = true
   allowed_oauth_flows_user_pool_client = true
   allowed_oauth_flows                  = ["code", "implicit"]
@@ -1431,9 +1431,9 @@ resource "aws_cognito_user_pool_client" "test" {
   logout_urls                          = ["https://www.example.com/login"]
 }
 
-resource "aws_cognito_user_pool_domain" "test" {
+resource "aws_cognitoidp_user_pool_domain" "test" {
   domain       = %[1]q
-  user_pool_id = aws_cognito_user_pool.test.id
+  user_pool_id = aws_cognitoidp_user_pool.test.id
 }
 
 resource "aws_iam_server_certificate" "test" {
@@ -1453,9 +1453,9 @@ resource "aws_lb_listener" "test" {
     type = "authenticate-cognito"
 
     authenticate_cognito {
-      user_pool_arn       = aws_cognito_user_pool.test.arn
-      user_pool_client_id = aws_cognito_user_pool_client.test.id
-      user_pool_domain    = aws_cognito_user_pool_domain.test.domain
+      user_pool_arn       = aws_cognitoidp_user_pool.test.arn
+      user_pool_client_id = aws_cognitoidp_user_pool_client.test.id
+      user_pool_domain    = aws_cognitoidp_user_pool_domain.test.domain
 
       authentication_request_extra_params = {
         param = "test"

@@ -503,7 +503,7 @@ func testAccAuthorizerConfig_jwt(rName string) string {
 		testAccAuthorizerConfig_apiHTTP(rName),
 		testAccAuthorizerConfig_baseLambda(rName),
 		fmt.Sprintf(`
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   name = %[1]q
 }
 
@@ -515,7 +515,7 @@ resource "aws_apigatewayv2_authorizer" "test" {
 
   jwt_configuration {
     audience = ["test"]
-    issuer   = "https://${aws_cognito_user_pool.test.endpoint}"
+    issuer   = "https://${aws_cognitoidp_user_pool.test.endpoint}"
   }
 }
 `, rName))
@@ -526,7 +526,7 @@ func testAccAuthorizerConfig_jwtUpdated(rName string) string {
 		testAccAuthorizerConfig_apiHTTP(rName),
 		testAccAuthorizerConfig_baseLambda(rName),
 		fmt.Sprintf(`
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   name = %[1]q
 }
 
@@ -538,7 +538,7 @@ resource "aws_apigatewayv2_authorizer" "test" {
 
   jwt_configuration {
     audience = ["test", "testing"]
-    issuer   = "https://${aws_cognito_user_pool.test.endpoint}"
+    issuer   = "https://${aws_cognitoidp_user_pool.test.endpoint}"
   }
 }
 `, rName))

@@ -393,7 +393,8 @@ func Provider() *schema.Provider {
 
 			"aws_codestarconnections_connection": codestarconnections.DataSourceConnection(),
 
-			"aws_cognito_user_pools": cognitoidp.DataSourceUserPools(),
+			"aws_cognitoidp_user_pools": cognitoidp.DataSourceUserPools(),
+			"aws_cognito_user_pools":    cognitoidp.DataSourceUserPools(), // backward compatible alias
 
 			"aws_connect_contact_flow": connect.DataSourceContactFlow(),
 			"aws_connect_instance":     connect.DataSourceInstance(),
@@ -905,16 +906,25 @@ func Provider() *schema.Provider {
 
 			"aws_codestarnotifications_notification_rule": codestarnotifications.ResourceNotificationRule(),
 
-			"aws_cognito_identity_pool":                  cognitoidentity.ResourcePool(),
-			"aws_cognito_identity_pool_roles_attachment": cognitoidentity.ResourcePoolRolesAttachment(),
+			"aws_cognitoidentity_pool":                   cognitoidentity.ResourcePool(),
+			"aws_cognitoidentity_pool_roles_attachment":  cognitoidentity.ResourcePoolRolesAttachment(),
+			"aws_cognito_identity_pool":                  cognitoidentity.ResourcePool(),                // backward compatible alias
+			"aws_cognito_identity_pool_roles_attachment": cognitoidentity.ResourcePoolRolesAttachment(), // backward compatible alias
 
-			"aws_cognito_identity_provider":          cognitoidp.ResourceIdentityProvider(),
-			"aws_cognito_resource_server":            cognitoidp.ResourceResourceServer(),
-			"aws_cognito_user_group":                 cognitoidp.ResourceUserGroup(),
-			"aws_cognito_user_pool":                  cognitoidp.ResourceUserPool(),
-			"aws_cognito_user_pool_client":           cognitoidp.ResourceUserPoolClient(),
-			"aws_cognito_user_pool_domain":           cognitoidp.ResourceUserPoolDomain(),
-			"aws_cognito_user_pool_ui_customization": cognitoidp.ResourceUserPoolUICustomization(),
+			"aws_cognitoidp_identity_provider":          cognitoidp.ResourceIdentityProvider(),
+			"aws_cognitoidp_resource_server":            cognitoidp.ResourceResourceServer(),
+			"aws_cognitoidp_user_group":                 cognitoidp.ResourceUserGroup(),
+			"aws_cognitoidp_user_pool":                  cognitoidp.ResourceUserPool(),
+			"aws_cognitoidp_user_pool_client":           cognitoidp.ResourceUserPoolClient(),
+			"aws_cognitoidp_user_pool_domain":           cognitoidp.ResourceUserPoolDomain(),
+			"aws_cognitoidp_user_pool_ui_customization": cognitoidp.ResourceUserPoolUICustomization(),
+			"aws_cognito_identity_provider":             cognitoidp.ResourceIdentityProvider(),        // backward compatible alias
+			"aws_cognito_resource_server":               cognitoidp.ResourceResourceServer(),          // backward compatible alias
+			"aws_cognito_user_group":                    cognitoidp.ResourceUserGroup(),               // backward compatible alias
+			"aws_cognito_user_pool":                     cognitoidp.ResourceUserPool(),                // backward compatible alias
+			"aws_cognito_user_pool_client":              cognitoidp.ResourceUserPoolClient(),          // backward compatible alias
+			"aws_cognito_user_pool_domain":              cognitoidp.ResourceUserPoolDomain(),          // backward compatible alias
+			"aws_cognito_user_pool_ui_customization":    cognitoidp.ResourceUserPoolUICustomization(), // backward compatible alias
 
 			"aws_config_aggregate_authorization":       config.ResourceAggregateAuthorization(),
 			"aws_config_config_rule":                   config.ResourceConfigRule(),

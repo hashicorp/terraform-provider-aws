@@ -1,19 +1,19 @@
 ---
 subcategory: "Cognito"
 layout: "aws"
-page_title: "AWS: aws_cognito_user_group"
+page_title: "AWS: aws_cognitoidp_user_group"
 description: |-
   Provides a Cognito User Group resource.
 ---
 
-# Resource: aws_cognito_user_group
+# Resource: aws_cognitoidp_user_group
 
 Provides a Cognito User Group resource.
 
 ## Example Usage
 
 ```terraform
-resource "aws_cognito_user_pool" "main" {
+resource "aws_cognitoidp_user_pool" "main" {
   name = "identity pool"
 }
 
@@ -45,9 +45,9 @@ resource "aws_iam_role" "group_role" {
 EOF
 }
 
-resource "aws_cognito_user_group" "main" {
+resource "aws_cognitoidp_user_group" "main" {
   name         = "user-group"
-  user_pool_id = aws_cognito_user_pool.main.id
+  user_pool_id = aws_cognitoidp_user_pool.main.id
   description  = "Managed by Terraform"
   precedence   = 42
   role_arn     = aws_iam_role.group_role.arn
@@ -73,5 +73,5 @@ No additional attributes are exported.
 Cognito User Groups can be imported using the `user_pool_id`/`name` attributes concatenated, e.g.,
 
 ```
-$ terraform import aws_cognito_user_group.group us-east-1_vG78M4goG/user-group
+$ terraform import aws_cognitoidp_user_group.group us-east-1_vG78M4goG/user-group
 ```

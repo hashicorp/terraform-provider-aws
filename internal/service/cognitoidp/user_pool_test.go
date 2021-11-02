@@ -32,7 +32,7 @@ func testAccErrorCheckSkipCognitoIdentityProvider(t *testing.T) resource.ErrorCh
 
 func TestAccCognitoIDPUserPool_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_cognito_user_pool.test"
+	resourceName := "aws_cognitoidp_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
@@ -82,7 +82,7 @@ func TestAccCognitoIDPUserPool_basic(t *testing.T) {
 
 func TestAccCognitoIDPUserPool_recovery(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_cognito_user_pool.test"
+	resourceName := "aws_cognitoidp_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
@@ -128,7 +128,7 @@ func TestAccCognitoIDPUserPool_recovery(t *testing.T) {
 
 func TestAccCognitoIDPUserPool_withAdminCreateUser(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_cognito_user_pool.test"
+	resourceName := "aws_cognitoidp_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
@@ -167,7 +167,7 @@ func TestAccCognitoIDPUserPool_withAdminCreateUser(t *testing.T) {
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/11858
 func TestAccCognitoIDPUserPool_withAdminCreateUserAndPasswordPolicy(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_cognito_user_pool.test"
+	resourceName := "aws_cognitoidp_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
@@ -194,7 +194,7 @@ func TestAccCognitoIDPUserPool_withAdminCreateUserAndPasswordPolicy(t *testing.T
 
 func TestAccCognitoIDPUserPool_withAdvancedSecurityMode(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_cognito_user_pool.test"
+	resourceName := "aws_cognitoidp_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
@@ -232,7 +232,7 @@ func TestAccCognitoIDPUserPool_withAdvancedSecurityMode(t *testing.T) {
 
 func TestAccCognitoIDPUserPool_withDevice(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_cognito_user_pool.test"
+	resourceName := "aws_cognitoidp_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
@@ -270,7 +270,7 @@ func TestAccCognitoIDPUserPool_withEmailVerificationMessage(t *testing.T) {
 	updatedSubject := sdkacctest.RandString(10)
 	message := fmt.Sprintf("%s {####}", sdkacctest.RandString(10))
 	upatedMessage := fmt.Sprintf("%s {####}", sdkacctest.RandString(10))
-	resourceName := "aws_cognito_user_pool.test"
+	resourceName := "aws_cognitoidp_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
@@ -305,7 +305,7 @@ func TestAccCognitoIDPUserPool_withEmailVerificationMessage(t *testing.T) {
 func TestAccCognitoIDPUserPool_MFA_sms(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	iamRoleResourceName := "aws_iam_role.test"
-	resourceName := "aws_cognito_user_pool.test"
+	resourceName := "aws_cognitoidp_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
@@ -353,7 +353,7 @@ func TestAccCognitoIDPUserPool_MFA_sms(t *testing.T) {
 func TestAccCognitoIDPUserPool_MFA_smsAndSoftwareTokenMFA(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	iamRoleResourceName := "aws_iam_role.test"
-	resourceName := "aws_cognito_user_pool.test"
+	resourceName := "aws_cognitoidp_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
@@ -403,7 +403,7 @@ func TestAccCognitoIDPUserPool_MFA_smsAndSoftwareTokenMFA(t *testing.T) {
 func TestAccCognitoIDPUserPool_MFA_smsToSoftwareTokenMFA(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	iamRoleResourceName := "aws_iam_role.test"
-	resourceName := "aws_cognito_user_pool.test"
+	resourceName := "aws_cognitoidp_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
@@ -441,7 +441,7 @@ func TestAccCognitoIDPUserPool_MFA_smsToSoftwareTokenMFA(t *testing.T) {
 
 func TestAccCognitoIDPUserPool_MFA_softwareTokenMFA(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_cognito_user_pool.test"
+	resourceName := "aws_cognitoidp_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
@@ -487,7 +487,7 @@ func TestAccCognitoIDPUserPool_MFA_softwareTokenMFA(t *testing.T) {
 func TestAccCognitoIDPUserPool_MFA_softwareTokenMFAToSMS(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	iamRoleResourceName := "aws_iam_role.test"
-	resourceName := "aws_cognito_user_pool.test"
+	resourceName := "aws_cognitoidp_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
@@ -527,7 +527,7 @@ func TestAccCognitoIDPUserPool_smsAuthenticationMessage(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	smsAuthenticationMessage1 := "test authentication message {####}"
 	smsAuthenticationMessage2 := "test authentication message updated {####}"
-	resourceName := "aws_cognito_user_pool.test"
+	resourceName := "aws_cognitoidp_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
@@ -561,7 +561,7 @@ func TestAccCognitoIDPUserPool_smsAuthenticationMessage(t *testing.T) {
 func TestAccCognitoIDPUserPool_sms(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	iamRoleResourceName := "aws_iam_role.test"
-	resourceName := "aws_cognito_user_pool.test"
+	resourceName := "aws_cognitoidp_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
@@ -606,7 +606,7 @@ func TestAccCognitoIDPUserPool_sms(t *testing.T) {
 func TestAccCognitoIDPUserPool_SMS_externalID(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	iamRoleResourceName := "aws_iam_role.test"
-	resourceName := "aws_cognito_user_pool.test"
+	resourceName := "aws_cognitoidp_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
@@ -644,7 +644,7 @@ func TestAccCognitoIDPUserPool_SMS_externalID(t *testing.T) {
 func TestAccCognitoIDPUserPool_SMS_snsCallerARN(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	iamRoleResourceName := "aws_iam_role.test"
-	resourceName := "aws_cognito_user_pool.test"
+	resourceName := "aws_cognitoidp_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
@@ -683,7 +683,7 @@ func TestAccCognitoIDPUserPool_smsVerificationMessage(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	smsVerificationMessage1 := "test verification message {####}"
 	smsVerificationMessage2 := "test verification message updated {####}"
-	resourceName := "aws_cognito_user_pool.test"
+	resourceName := "aws_cognitoidp_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
@@ -716,7 +716,7 @@ func TestAccCognitoIDPUserPool_smsVerificationMessage(t *testing.T) {
 
 func TestAccCognitoIDPUserPool_withEmail(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_cognito_user_pool.test"
+	resourceName := "aws_cognitoidp_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
@@ -745,7 +745,7 @@ func TestAccCognitoIDPUserPool_withEmail(t *testing.T) {
 func TestAccCognitoIDPUserPool_withEmailSource(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	replyTo := acctest.DefaultEmailAddress
-	resourceName := "aws_cognito_user_pool.test"
+	resourceName := "aws_cognitoidp_user_pool.test"
 	resourceName2 := "aws_ses_configuration_set.test"
 
 	sourceARN, ok := os.LookupEnv("TEST_AWS_SES_VERIFIED_EMAIL_ARN")
@@ -777,7 +777,7 @@ func TestAccCognitoIDPUserPool_withEmailSource(t *testing.T) {
 
 func TestAccCognitoIDPUserPool_withTags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_cognito_user_pool.test"
+	resourceName := "aws_cognitoidp_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
@@ -820,7 +820,7 @@ func TestAccCognitoIDPUserPool_withTags(t *testing.T) {
 
 func TestAccCognitoIDPUserPool_withAliasAttributes(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_cognito_user_pool.test"
+	resourceName := "aws_cognitoidp_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
@@ -858,7 +858,7 @@ func TestAccCognitoIDPUserPool_withAliasAttributes(t *testing.T) {
 
 func TestAccCognitoIDPUserPool_withUsernameAttributes(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_cognito_user_pool.test"
+	resourceName := "aws_cognitoidp_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
@@ -896,7 +896,7 @@ func TestAccCognitoIDPUserPool_withUsernameAttributes(t *testing.T) {
 
 func TestAccCognitoIDPUserPool_withPasswordPolicy(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_cognito_user_pool.test"
+	resourceName := "aws_cognitoidp_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
@@ -940,7 +940,7 @@ func TestAccCognitoIDPUserPool_withPasswordPolicy(t *testing.T) {
 
 func TestAccCognitoIDPUserPool_withUsername(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_cognito_user_pool.test"
+	resourceName := "aws_cognitoidp_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
@@ -975,7 +975,7 @@ func TestAccCognitoIDPUserPool_withUsername(t *testing.T) {
 
 func TestAccCognitoIDPUserPool_withLambda(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_cognito_user_pool.test"
+	resourceName := "aws_cognitoidp_user_pool.test"
 	lambdaResourceName := "aws_lambda_function.test"
 	lambdaUpdatedResourceName := "aws_lambda_function.second"
 
@@ -1045,7 +1045,7 @@ func testAccCheckUserPoolNotRecreated(pool1, pool2 *cognitoidentityprovider.Desc
 
 func TestAccCognitoIDPUserPool_WithLambda_email(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_cognito_user_pool.test"
+	resourceName := "aws_cognitoidp_user_pool.test"
 	lambdaResourceName := "aws_lambda_function.test"
 	lambdaUpdatedResourceName := "aws_lambda_function.second"
 
@@ -1085,7 +1085,7 @@ func TestAccCognitoIDPUserPool_WithLambda_email(t *testing.T) {
 
 func TestAccCognitoIDPUserPool_WithLambda_sms(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_cognito_user_pool.test"
+	resourceName := "aws_cognitoidp_user_pool.test"
 	lambdaResourceName := "aws_lambda_function.test"
 	lambdaUpdatedResourceName := "aws_lambda_function.second"
 
@@ -1126,7 +1126,7 @@ func TestAccCognitoIDPUserPool_WithLambda_sms(t *testing.T) {
 func TestAccCognitoIDPUserPool_schemaAttributes(t *testing.T) {
 	var pool1, pool2 cognitoidentityprovider.DescribeUserPoolOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_cognito_user_pool.test"
+	resourceName := "aws_cognitoidp_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
@@ -1251,7 +1251,7 @@ func TestAccCognitoIDPUserPool_schemaAttributesModified(t *testing.T) {
 
 func TestAccCognitoIDPUserPool_withVerificationMessageTemplate(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_cognito_user_pool.test"
+	resourceName := "aws_cognitoidp_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
@@ -1309,7 +1309,7 @@ func TestAccCognitoIDPUserPool_update(t *testing.T) {
 	offMfa := "OFF"
 	authenticationMessage := fmt.Sprintf("%s {####}", sdkacctest.RandString(10))
 	updatedAuthenticationMessage := fmt.Sprintf("%s {####}", sdkacctest.RandString(10))
-	resourceName := "aws_cognito_user_pool.test"
+	resourceName := "aws_cognitoidp_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
@@ -1394,7 +1394,7 @@ func TestAccCognitoIDPUserPool_update(t *testing.T) {
 
 func TestAccCognitoIDPUserPool_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_cognito_user_pool.test"
+	resourceName := "aws_cognitoidp_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
@@ -1418,7 +1418,7 @@ func testAccCheckUserPoolDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_cognito_user_pool" {
+		if rs.Type != "aws_cognitoidp_user_pool" {
 			continue
 		}
 
@@ -1529,7 +1529,7 @@ resource "aws_iam_role_policy" "test" {
 
 func testAccUserPoolConfig_Name(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   name = %[1]q
 }
 `, rName)
@@ -1537,7 +1537,7 @@ resource "aws_cognito_user_pool" "test" {
 
 func testAccUserPoolAccountRecoverySingleConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   name = %[1]q
 
   account_recovery_setting {
@@ -1552,7 +1552,7 @@ resource "aws_cognito_user_pool" "test" {
 
 func testAccUserPoolAccountRecoveryMultiConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   name = %[1]q
 
   account_recovery_setting {
@@ -1572,7 +1572,7 @@ resource "aws_cognito_user_pool" "test" {
 
 func testAccUserPoolAccountRecoveryUpdateConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   name = %[1]q
 
   account_recovery_setting {
@@ -1587,7 +1587,7 @@ resource "aws_cognito_user_pool" "test" {
 
 func testAccUserPoolConfig_withAdminCreateUserConfiguration(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   name = %[1]q
 
   admin_create_user_config {
@@ -1605,7 +1605,7 @@ resource "aws_cognito_user_pool" "test" {
 
 func testAccUserPoolConfig_withAdminCreateUserConfigurationUpdated(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   name = %[1]q
 
   admin_create_user_config {
@@ -1623,7 +1623,7 @@ resource "aws_cognito_user_pool" "test" {
 
 func testAccUserPoolConfig_AdvancedSecurityMode(rName string, advancedSecurityMode string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   name = %[1]q
 
   user_pool_add_ons {
@@ -1635,7 +1635,7 @@ resource "aws_cognito_user_pool" "test" {
 
 func testAccUserPoolConfig_withDeviceConfiguration(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   name = %[1]q
 
   device_configuration {
@@ -1648,7 +1648,7 @@ resource "aws_cognito_user_pool" "test" {
 
 func testAccUserPoolConfig_withDeviceConfigurationUpdated(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   name = %[1]q
 
   device_configuration {
@@ -1661,7 +1661,7 @@ resource "aws_cognito_user_pool" "test" {
 
 func testAccUserPoolConfig_withEmailVerificationMessage(rName, subject, message string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   name                       = %[1]q
   email_verification_subject = "%[2]s"
   email_verification_message = "%[3]s"
@@ -1675,7 +1675,7 @@ resource "aws_cognito_user_pool" "test" {
 
 func testAccUserPoolConfig_MFAConfiguration(rName string, mfaConfiguration string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   mfa_configuration = %[2]q
   name              = %[1]q
 }
@@ -1684,7 +1684,7 @@ resource "aws_cognito_user_pool" "test" {
 
 func testAccUserPoolConfig_MFAConfiguration_SMSConfiguration(rName string) string {
 	return testAccUserPoolSMSConfigurationBaseConfig(rName, "test") + fmt.Sprintf(`
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   mfa_configuration = "ON"
   name              = %[1]q
 
@@ -1698,7 +1698,7 @@ resource "aws_cognito_user_pool" "test" {
 
 func testAccUserPoolConfig_MFAConfiguration_SMSConfigurationAndSoftwareTokenMfaConfigurationEnabled(rName string, enabled bool) string {
 	return testAccUserPoolSMSConfigurationBaseConfig(rName, "test") + fmt.Sprintf(`
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   mfa_configuration = "ON"
   name              = %[1]q
 
@@ -1716,7 +1716,7 @@ resource "aws_cognito_user_pool" "test" {
 
 func testAccUserPoolConfig_MFAConfiguration_SoftwareTokenMfaConfigurationEnabled(rName string, enabled bool) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   mfa_configuration = "ON"
   name              = %[1]q
 
@@ -1729,7 +1729,7 @@ resource "aws_cognito_user_pool" "test" {
 
 func testAccUserPoolConfig_SMSAuthenticationMessage(rName, smsAuthenticationMessage string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   name                       = %[1]q
   sms_authentication_message = %[2]q
 }
@@ -1738,7 +1738,7 @@ resource "aws_cognito_user_pool" "test" {
 
 func testAccUserPoolConfig_SMSConfiguration_ExternalID(rName string, externalID string) string {
 	return testAccUserPoolSMSConfigurationBaseConfig(rName, externalID) + fmt.Sprintf(`
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   name = %[1]q
 
   sms_configuration {
@@ -1751,7 +1751,7 @@ resource "aws_cognito_user_pool" "test" {
 
 func testAccUserPoolConfig_SMSConfiguration_SNSCallerARN2(rName string) string {
 	return testAccUserPoolSMSConfigurationBaseConfig(rName+"-2", "test") + fmt.Sprintf(`
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   name = %[1]q
 
   sms_configuration {
@@ -1764,7 +1764,7 @@ resource "aws_cognito_user_pool" "test" {
 
 func testAccUserPoolConfig_SMSVerificationMessage(rName, smsVerificationMessage string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   name                     = %[1]q
   sms_verification_message = %[2]q
 }
@@ -1773,7 +1773,7 @@ resource "aws_cognito_user_pool" "test" {
 
 func testAccUserPoolConfig_Tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   name = %[1]q
 
   tags = {
@@ -1785,7 +1785,7 @@ resource "aws_cognito_user_pool" "test" {
 
 func testAccUserPoolConfig_Tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   name = %[1]q
 
   tags = {
@@ -1798,7 +1798,7 @@ resource "aws_cognito_user_pool" "test" {
 
 func testAccUserPoolConfig_withEmailConfiguration(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   name = %[1]q
 
   email_configuration {
@@ -1818,7 +1818,7 @@ resource "aws_ses_configuration_set" "test" {
   }
 }
 
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   name = %[1]q
 
   email_configuration {
@@ -1834,7 +1834,7 @@ resource "aws_cognito_user_pool" "test" {
 
 func testAccUserPoolConfig_withAliasAttributes(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   name = %[1]q
 
   alias_attributes = ["preferred_username"]
@@ -1844,7 +1844,7 @@ resource "aws_cognito_user_pool" "test" {
 
 func testAccUserPoolConfig_withAliasAttributesUpdated(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   name = %[1]q
 
   alias_attributes         = ["email", "preferred_username"]
@@ -1855,7 +1855,7 @@ resource "aws_cognito_user_pool" "test" {
 
 func testAccUserPoolConfig_withUsernameAttributes(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   name = %[1]q
 
   username_attributes = ["phone_number"]
@@ -1865,7 +1865,7 @@ resource "aws_cognito_user_pool" "test" {
 
 func testAccUserPoolConfig_withUsernameAttributesUpdated(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   name = %[1]q
 
   username_attributes      = ["email", "phone_number"]
@@ -1876,7 +1876,7 @@ resource "aws_cognito_user_pool" "test" {
 
 func testAccUserPoolConfig_withAdminCreateUserConfigAndPasswordPolicy(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   name = %[1]q
 
   admin_create_user_config {
@@ -1897,7 +1897,7 @@ resource "aws_cognito_user_pool" "test" {
 
 func testAccUserPoolConfig_withPasswordPolicy(name string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   name = %[1]q
 
   password_policy {
@@ -1914,7 +1914,7 @@ resource "aws_cognito_user_pool" "test" {
 
 func testAccUserPoolConfig_withPasswordPolicyUpdated(name string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   name = %[1]q
 
   password_policy {
@@ -1931,7 +1931,7 @@ resource "aws_cognito_user_pool" "test" {
 
 func testAccUserPoolConfig_withUsernameConfiguration(name string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   name = %[1]q
 
   username_configuration {
@@ -1943,7 +1943,7 @@ resource "aws_cognito_user_pool" "test" {
 
 func testAccUserPoolConfig_withUsernameConfigurationUpdated(name string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   name = %[1]q
 
   username_configuration {
@@ -2010,7 +2010,7 @@ POLICY
 
 func testAccUserPoolConfig_withLambdaConfig(name string) string {
 	return testAccUserPoolLambdaBaseConfig(name) + fmt.Sprintf(`
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   name = %[1]q
 
   lambda_config {
@@ -2039,7 +2039,7 @@ resource "aws_lambda_function" "second" {
   runtime       = "nodejs12.x"
 }
 
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   name = %[1]q
 
   lambda_config {
@@ -2060,7 +2060,7 @@ resource "aws_cognito_user_pool" "test" {
 
 func testAccUserPoolLambdaEmailSenderConfig(name string) string {
 	return testAccUserPoolLambdaBaseConfig(name) + fmt.Sprintf(`
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   name = %[1]q
 
   lambda_config {
@@ -2085,7 +2085,7 @@ resource "aws_lambda_function" "second" {
   runtime       = "nodejs12.x"
 }
 
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   name = %[1]q
 
   lambda_config {
@@ -2102,7 +2102,7 @@ resource "aws_cognito_user_pool" "test" {
 
 func testAccUserPoolLambdaSMSSenderConfig(name string) string {
 	return testAccUserPoolLambdaBaseConfig(name) + fmt.Sprintf(`
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   name = %[1]q
 
   lambda_config {
@@ -2127,7 +2127,7 @@ resource "aws_lambda_function" "second" {
   runtime       = "nodejs12.x"
 }
 
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   name = %[1]q
 
   lambda_config {
@@ -2144,7 +2144,7 @@ resource "aws_cognito_user_pool" "test" {
 
 func testAccUserPoolConfig_withSchemaAttributes(name string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   name = "%[1]s"
 
   schema {
@@ -2173,7 +2173,7 @@ resource "aws_cognito_user_pool" "test" {
 
 func testAccUserPoolConfig_withSchemaAttributesUpdated(name string, boolname string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   name = "%[1]s"
 
   schema {
@@ -2215,7 +2215,7 @@ resource "aws_cognito_user_pool" "test" {
 
 func testAccUserPoolConfig_withVerificationMessageTemplate(name string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   name = %[1]q
 
   # Setting Verification template attributes like EmailMessage, EmailSubject or SmsMessage
@@ -2236,7 +2236,7 @@ resource "aws_cognito_user_pool" "test" {
 
 func testAccUserPoolConfig_withVerificationMessageTemplate_DefaultEmailOption(name string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   name = %[1]q
 
   email_verification_message = "{####} Baz"
@@ -2303,7 +2303,7 @@ resource "aws_iam_role_policy" "test" {
 EOF
 }
 
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   name                     = %[1]q
   auto_verified_attributes = ["email"]
   mfa_configuration        = "%[2]s"

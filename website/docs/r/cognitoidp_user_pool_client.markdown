@@ -1,12 +1,12 @@
 ---
 subcategory: "Cognito"
 layout: "aws"
-page_title: "AWS: aws_cognito_user_pool_client"
+page_title: "AWS: aws_cognitoidp_user_pool_client"
 description: |-
   Provides a Cognito User Pool Client resource.
 ---
 
-# Resource: aws_cognito_user_pool_client
+# Resource: aws_cognitoidp_user_pool_client
 
 Provides a Cognito User Pool Client resource.
 
@@ -15,28 +15,28 @@ Provides a Cognito User Pool Client resource.
 ### Create a basic user pool client
 
 ```terraform
-resource "aws_cognito_user_pool" "pool" {
+resource "aws_cognitoidp_user_pool" "pool" {
   name = "pool"
 }
 
-resource "aws_cognito_user_pool_client" "client" {
+resource "aws_cognitoidp_user_pool_client" "client" {
   name = "client"
 
-  user_pool_id = aws_cognito_user_pool.pool.id
+  user_pool_id = aws_cognitoidp_user_pool.pool.id
 }
 ```
 
 ### Create a user pool client with no SRP authentication
 
 ```terraform
-resource "aws_cognito_user_pool" "pool" {
+resource "aws_cognitoidp_user_pool" "pool" {
   name = "pool"
 }
 
-resource "aws_cognito_user_pool_client" "client" {
+resource "aws_cognitoidp_user_pool_client" "client" {
   name = "client"
 
-  user_pool_id = aws_cognito_user_pool.pool.id
+  user_pool_id = aws_cognitoidp_user_pool.pool.id
 
   generate_secret     = true
   explicit_auth_flows = ["ADMIN_NO_SRP_AUTH"]
@@ -48,7 +48,7 @@ resource "aws_cognito_user_pool_client" "client" {
 ```terraform
 data "aws_caller_identity" "current" {}
 
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   name = "pool"
 }
 
@@ -97,9 +97,9 @@ resource "aws_iam_role_policy" "test" {
 EOF
 }
 
-resource "aws_cognito_user_pool_client" "test" {
+resource "aws_cognitoidp_user_pool_client" "test" {
   name         = "pool_client"
-  user_pool_id = aws_cognito_user_pool.test.id
+  user_pool_id = aws_cognitoidp_user_pool.test.id
 
   analytics_configuration {
     application_id   = aws_pinpoint_app.test.application_id
@@ -134,7 +134,7 @@ The following arguments are optional:
 * `prevent_user_existence_errors` - (Optional) Choose which errors and responses are returned by Cognito APIs during authentication, account confirmation, and password recovery when the user does not exist in the user pool. When set to `ENABLED` and the user does not exist, authentication returns an error indicating either the username or password was incorrect, and account confirmation and password recovery return a response indicating a code was sent to a simulated destination. When set to `LEGACY`, those APIs will return a `UserNotFoundException` exception if the user does not exist in the user pool.
 * `read_attributes` - (Optional) List of user pool attributes the application client can read from.
 * `refresh_token_validity` - (Optional) Time limit in days refresh tokens are valid for.
-* `supported_identity_providers` - (Optional) List of provider names for the identity providers that are supported on this client. Uses the `provider_name` attribute of `aws_cognito_identity_provider` resource(s), or the equivalent string(s).
+* `supported_identity_providers` - (Optional) List of provider names for the identity providers that are supported on this client. Uses the `provider_name` attribute of `aws_cognitoidp_identity_provider` resource(s), or the equivalent string(s).
 * `token_validity_units` - (Optional) Configuration block for units in which the validity times are represented in. [Detailed below](#token_validity_units).
 * `write_attributes` - (Optional) List of user pool attributes the application client can write to.
 
@@ -168,5 +168,5 @@ In addition to all arguments above, the following attributes are exported:
 Cognito User Pool Clients can be imported using the `id` of the Cognito User Pool, and the `id` of the Cognito User Pool Client, e.g.,
 
 ```
-$ terraform import aws_cognito_user_pool_client.client <user_pool_id>/<user_pool_client_id>
+$ terraform import aws_cognitoidp_user_pool_client.client <user_pool_id>/<user_pool_client_id>
 ```

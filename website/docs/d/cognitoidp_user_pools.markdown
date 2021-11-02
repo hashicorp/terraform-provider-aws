@@ -1,12 +1,12 @@
 ---
 subcategory: "Cognito"
 layout: "aws"
-page_title: "AWS: aws_cognito_user_pools"
+page_title: "AWS: aws_cognitoidp_user_pools"
 description: |-
   Get list of cognito user pools.
 ---
 
-# Data Source: aws_cognito_user_pools
+# Data Source: aws_cognitoidp_user_pools
 
 Use this data source to get a list of cognito user pools.
 
@@ -17,7 +17,7 @@ data "aws_api_gateway_rest_api" "selected" {
   name = var.api_gateway_name
 }
 
-data "aws_cognito_user_pools" "selected" {
+data "aws_cognitoidp_user_pools" "selected" {
   name = var.cognito_user_pool_name
 }
 
@@ -25,7 +25,7 @@ resource "aws_api_gateway_authorizer" "cognito" {
   name          = "cognito"
   type          = "COGNITO_USER_POOLS"
   rest_api_id   = data.aws_api_gateway_rest_api.selected.id
-  provider_arns = data.aws_cognito_user_pools.selected.arns
+  provider_arns = data.aws_cognitoidp_user_pools.selected.arns
 }
 ```
 

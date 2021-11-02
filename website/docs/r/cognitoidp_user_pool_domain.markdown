@@ -1,12 +1,12 @@
 ---
 subcategory: "Cognito"
 layout: "aws"
-page_title: "AWS: aws_cognito_user_pool_domain"
+page_title: "AWS: aws_cognitoidp_user_pool_domain"
 description: |-
   Provides a Cognito User Pool Domain resource.
 ---
 
-# Resource: aws_cognito_user_pool_domain
+# Resource: aws_cognitoidp_user_pool_domain
 
 Provides a Cognito User Pool Domain resource.
 
@@ -15,12 +15,12 @@ Provides a Cognito User Pool Domain resource.
 ### Amazon Cognito domain
 
 ```terraform
-resource "aws_cognito_user_pool_domain" "main" {
+resource "aws_cognitoidp_user_pool_domain" "main" {
   domain       = "example-domain"
-  user_pool_id = aws_cognito_user_pool.example.id
+  user_pool_id = aws_cognitoidp_user_pool.example.id
 }
 
-resource "aws_cognito_user_pool" "example" {
+resource "aws_cognitoidp_user_pool" "example" {
   name = "example-pool"
 }
 ```
@@ -28,13 +28,13 @@ resource "aws_cognito_user_pool" "example" {
 ### Custom Cognito domain
 
 ```terraform
-resource "aws_cognito_user_pool_domain" "main" {
+resource "aws_cognitoidp_user_pool_domain" "main" {
   domain          = "example-domain.example.com"
   certificate_arn = aws_acm_certificate.cert.arn
-  user_pool_id    = aws_cognito_user_pool.example.id
+  user_pool_id    = aws_cognitoidp_user_pool.example.id
 }
 
-resource "aws_cognito_user_pool" "example" {
+resource "aws_cognitoidp_user_pool" "example" {
   name = "example-pool"
 }
 
@@ -43,12 +43,12 @@ data "aws_route53_zone" "example" {
 }
 
 resource "aws_route53_record" "auth-cognito-A" {
-  name    = aws_cognito_user_pool_domain.main.domain
+  name    = aws_cognitoidp_user_pool_domain.main.domain
   type    = "A"
   zone_id = data.aws_route53_zone.example.zone_id
   alias {
     evaluate_target_health = false
-    name                   = aws_cognito_user_pool_domain.main.cloudfront_distribution_arn
+    name                   = aws_cognitoidp_user_pool_domain.main.cloudfront_distribution_arn
     # This zone_id is fixed
     zone_id = "Z2FDTNDATAQYW2"
   }
@@ -77,5 +77,5 @@ In addition to all arguments above, the following attributes are exported:
 Cognito User Pool Domains can be imported using the `domain`, e.g.,
 
 ```
-$ terraform import aws_cognito_user_pool_domain.main <domain>
+$ terraform import aws_cognitoidp_user_pool_domain.main <domain>
 ```

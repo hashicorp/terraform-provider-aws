@@ -19,7 +19,7 @@ import (
 func TestAccCognitoIdentityPool_basic(t *testing.T) {
 	name := sdkacctest.RandString(10)
 	updatedName := sdkacctest.RandString(10)
-	resourceName := "aws_cognito_identity_pool.main"
+	resourceName := "aws_cognitoidentity_pool.main"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -54,7 +54,7 @@ func TestAccCognitoIdentityPool_basic(t *testing.T) {
 
 func TestAccCognitoIdentityPool_supportedLoginProviders(t *testing.T) {
 	name := sdkacctest.RandString(10)
-	resourceName := "aws_cognito_identity_pool.main"
+	resourceName := "aws_cognitoidentity_pool.main"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -97,7 +97,7 @@ func TestAccCognitoIdentityPool_supportedLoginProviders(t *testing.T) {
 
 func TestAccCognitoIdentityPool_openidConnectProviderARNs(t *testing.T) {
 	name := sdkacctest.RandString(10)
-	resourceName := "aws_cognito_identity_pool.main"
+	resourceName := "aws_cognitoidentity_pool.main"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -139,7 +139,7 @@ func TestAccCognitoIdentityPool_openidConnectProviderARNs(t *testing.T) {
 
 func TestAccCognitoIdentityPool_samlProviderARNs(t *testing.T) {
 	name := sdkacctest.RandString(10)
-	resourceName := "aws_cognito_identity_pool.main"
+	resourceName := "aws_cognitoidentity_pool.main"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -182,7 +182,7 @@ func TestAccCognitoIdentityPool_samlProviderARNs(t *testing.T) {
 
 func TestAccCognitoIdentityPool_cognitoIdentityProviders(t *testing.T) {
 	name := sdkacctest.RandString(10)
-	resourceName := "aws_cognito_identity_pool.main"
+	resourceName := "aws_cognitoidentity_pool.main"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -237,7 +237,7 @@ func TestAccCognitoIdentityPool_cognitoIdentityProviders(t *testing.T) {
 
 func TestAccCognitoIdentityPool_addingNewProviderKeepsOldProvider(t *testing.T) {
 	name := sdkacctest.RandString(10)
-	resourceName := "aws_cognito_identity_pool.main"
+	resourceName := "aws_cognitoidentity_pool.main"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -282,7 +282,7 @@ func TestAccCognitoIdentityPool_addingNewProviderKeepsOldProvider(t *testing.T) 
 
 func TestAccCognitoIdentityPool_tags(t *testing.T) {
 	name := sdkacctest.RandString(10)
-	resourceName := "aws_cognito_identity_pool.main"
+	resourceName := "aws_cognitoidentity_pool.main"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -349,7 +349,7 @@ func testAccCheckPoolDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIdentityConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_cognito_identity_pool" {
+		if rs.Type != "aws_cognitoidentity_pool" {
 			continue
 		}
 
@@ -388,7 +388,7 @@ func testAccPreCheck(t *testing.T) {
 
 func testAccPoolConfig_basic(name string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_identity_pool" "main" {
+resource "aws_cognitoidentity_pool" "main" {
   identity_pool_name               = "identity pool %s"
   allow_unauthenticated_identities = false
   developer_provider_name          = "my.developer"
@@ -398,7 +398,7 @@ resource "aws_cognito_identity_pool" "main" {
 
 func testAccPoolConfig_supportedLoginProviders(name string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_identity_pool" "main" {
+resource "aws_cognitoidentity_pool" "main" {
   identity_pool_name               = "identity pool %s"
   allow_unauthenticated_identities = false
 
@@ -411,7 +411,7 @@ resource "aws_cognito_identity_pool" "main" {
 
 func testAccPoolConfig_supportedLoginProvidersModified(name string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_identity_pool" "main" {
+resource "aws_cognitoidentity_pool" "main" {
   identity_pool_name               = "identity pool %s"
   allow_unauthenticated_identities = false
 
@@ -427,7 +427,7 @@ func testAccPoolConfig_openidConnectProviderARNs(name string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
-resource "aws_cognito_identity_pool" "main" {
+resource "aws_cognitoidentity_pool" "main" {
   identity_pool_name               = "identity pool %s"
   allow_unauthenticated_identities = false
 
@@ -440,7 +440,7 @@ func testAccPoolConfig_openidConnectProviderARNsModified(name string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
-resource "aws_cognito_identity_pool" "main" {
+resource "aws_cognitoidentity_pool" "main" {
   identity_pool_name               = "identity pool %s"
   allow_unauthenticated_identities = false
 
@@ -456,7 +456,7 @@ resource "aws_iam_saml_provider" "default" {
   saml_metadata_document = file("./test-fixtures/saml-metadata.xml")
 }
 
-resource "aws_cognito_identity_pool" "main" {
+resource "aws_cognitoidentity_pool" "main" {
   identity_pool_name               = "identity pool %[1]s"
   allow_unauthenticated_identities = false
 
@@ -477,7 +477,7 @@ resource "aws_iam_saml_provider" "secondary" {
   saml_metadata_document = file("./test-fixtures/saml-metadata.xml")
 }
 
-resource "aws_cognito_identity_pool" "main" {
+resource "aws_cognitoidentity_pool" "main" {
   identity_pool_name               = "identity pool %[1]s"
   allow_unauthenticated_identities = false
 
@@ -492,7 +492,7 @@ data "aws_partition" "current" {}
 
 data "aws_region" "current" {}
 
-resource "aws_cognito_identity_pool" "main" {
+resource "aws_cognitoidentity_pool" "main" {
   identity_pool_name               = "identity pool %s"
   allow_unauthenticated_identities = false
 
@@ -517,7 +517,7 @@ data "aws_partition" "current" {}
 
 data "aws_region" "current" {}
 
-resource "aws_cognito_identity_pool" "main" {
+resource "aws_cognitoidentity_pool" "main" {
   identity_pool_name               = "identity pool %s"
   allow_unauthenticated_identities = false
 
@@ -536,7 +536,7 @@ data "aws_partition" "current" {}
 
 data "aws_region" "current" {}
 
-resource "aws_cognito_identity_pool" "main" {
+resource "aws_cognitoidentity_pool" "main" {
   identity_pool_name               = "identity pool %s"
   allow_unauthenticated_identities = false
 
@@ -559,7 +559,7 @@ resource "aws_cognito_identity_pool" "main" {
 
 func testAccPoolConfig_Tags1(name, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_identity_pool" "main" {
+resource "aws_cognitoidentity_pool" "main" {
   identity_pool_name               = %q
   allow_unauthenticated_identities = false
 
@@ -572,7 +572,7 @@ resource "aws_cognito_identity_pool" "main" {
 
 func testAccPoolConfig_Tags2(name, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_identity_pool" "main" {
+resource "aws_cognitoidentity_pool" "main" {
   identity_pool_name               = %q
   allow_unauthenticated_identities = false
 

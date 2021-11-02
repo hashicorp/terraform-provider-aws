@@ -15,16 +15,16 @@ import (
 )
 
 func init() {
-	resource.AddTestSweepers("aws_cognito_user_pool_domain", &resource.Sweeper{
-		Name: "aws_cognito_user_pool_domain",
+	resource.AddTestSweepers("aws_cognitoidp_user_pool_domain", &resource.Sweeper{
+		Name: "aws_cognitoidp_user_pool_domain",
 		F:    sweepUserPoolDomains,
 	})
 
-	resource.AddTestSweepers("aws_cognito_user_pool", &resource.Sweeper{
-		Name: "aws_cognito_user_pool",
+	resource.AddTestSweepers("aws_cognitoidp_user_pool", &resource.Sweeper{
+		Name: "aws_cognitoidp_user_pool",
 		F:    sweepUserPools,
 		Dependencies: []string{
-			"aws_cognito_user_pool_domain",
+			"aws_cognitoidp_user_pool_domain",
 		},
 	})
 }

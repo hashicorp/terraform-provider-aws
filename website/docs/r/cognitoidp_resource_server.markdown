@@ -1,13 +1,13 @@
 ---
 subcategory: "Cognito"
 layout: "aws"
-page_title: "AWS: aws_cognito_resource_server"
+page_title: "AWS: aws_cognitoidp_resource_server"
 side_bar_current: "docs-aws-resource-cognito-resource-server"
 description: |-
   Provides a Cognito Resource Server.
 ---
 
-# Resource: aws_cognito_resource_server
+# Resource: aws_cognitoidp_resource_server
 
 Provides a Cognito Resource Server.
 
@@ -16,26 +16,26 @@ Provides a Cognito Resource Server.
 ### Create a basic resource server
 
 ```terraform
-resource "aws_cognito_user_pool" "pool" {
+resource "aws_cognitoidp_user_pool" "pool" {
   name = "pool"
 }
 
-resource "aws_cognito_resource_server" "resource" {
+resource "aws_cognitoidp_resource_server" "resource" {
   identifier = "https://example.com"
   name       = "example"
 
-  user_pool_id = aws_cognito_user_pool.pool.id
+  user_pool_id = aws_cognitoidp_user_pool.pool.id
 }
 ```
 
 ### Create a resource server with sample-scope
 
 ```terraform
-resource "aws_cognito_user_pool" "pool" {
+resource "aws_cognitoidp_user_pool" "pool" {
   name = "pool"
 }
 
-resource "aws_cognito_resource_server" "resource" {
+resource "aws_cognitoidp_resource_server" "resource" {
   identifier = "https://example.com"
   name       = "example"
 
@@ -44,7 +44,7 @@ resource "aws_cognito_resource_server" "resource" {
     scope_description = "a Sample Scope Description"
   }
 
-  user_pool_id = aws_cognito_user_pool.pool.id
+  user_pool_id = aws_cognitoidp_user_pool.pool.id
 }
 ```
 
@@ -69,8 +69,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_cognito_resource_server` can be imported using their User Pool ID and Identifier, e.g.,
+`aws_cognitoidp_resource_server` can be imported using their User Pool ID and Identifier, e.g.,
 
 ```
-$ terraform import aws_cognito_resource_server.example xxx_yyyyy|https://example.com
+$ terraform import aws_cognitoidp_resource_server.example xxx_yyyyy|https://example.com
 ```

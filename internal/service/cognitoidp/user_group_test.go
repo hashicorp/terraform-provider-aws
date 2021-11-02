@@ -19,7 +19,7 @@ func TestAccCognitoIDPUserGroup_basic(t *testing.T) {
 	poolName := fmt.Sprintf("tf-acc-%s", sdkacctest.RandString(10))
 	groupName := fmt.Sprintf("tf-acc-%s", sdkacctest.RandString(10))
 	updatedGroupName := fmt.Sprintf("tf-acc-%s", sdkacctest.RandString(10))
-	resourceName := "aws_cognito_user_group.main"
+	resourceName := "aws_cognitoidp_user_group.main"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
@@ -54,7 +54,7 @@ func TestAccCognitoIDPUserGroup_complex(t *testing.T) {
 	poolName := fmt.Sprintf("tf-acc-%s", sdkacctest.RandString(10))
 	groupName := fmt.Sprintf("tf-acc-%s", sdkacctest.RandString(10))
 	updatedGroupName := fmt.Sprintf("tf-acc-%s", sdkacctest.RandString(10))
-	resourceName := "aws_cognito_user_group.main"
+	resourceName := "aws_cognitoidp_user_group.main"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
@@ -93,7 +93,7 @@ func TestAccCognitoIDPUserGroup_complex(t *testing.T) {
 
 func TestAccCognitoIDPUserGroup_roleARN(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
-	resourceName := "aws_cognito_user_group.main"
+	resourceName := "aws_cognitoidp_user_group.main"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
@@ -163,7 +163,7 @@ func testAccCheckUserGroupDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_cognito_user_group" {
+		if rs.Type != "aws_cognitoidp_user_group" {
 			continue
 		}
 
@@ -187,20 +187,20 @@ func testAccCheckUserGroupDestroy(s *terraform.State) error {
 
 func testAccUserGroupConfig_basic(poolName, groupName string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "main" {
+resource "aws_cognitoidp_user_pool" "main" {
   name = "%s"
 }
 
-resource "aws_cognito_user_group" "main" {
+resource "aws_cognitoidp_user_group" "main" {
   name         = "%s"
-  user_pool_id = aws_cognito_user_pool.main.id
+  user_pool_id = aws_cognitoidp_user_pool.main.id
 }
 `, poolName, groupName)
 }
 
 func testAccUserGroupConfig_complex(poolName, groupName, groupDescription string, precedence int) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "main" {
+resource "aws_cognitoidp_user_pool" "main" {
   name = "%[1]s"
 }
 
@@ -234,9 +234,9 @@ resource "aws_iam_role" "group_role" {
 EOF
 }
 
-resource "aws_cognito_user_group" "main" {
+resource "aws_cognitoidp_user_group" "main" {
   name         = "%[2]s"
-  user_pool_id = aws_cognito_user_pool.main.id
+  user_pool_id = aws_cognitoidp_user_pool.main.id
   description  = "%[3]s"
   precedence   = %[4]d
   role_arn     = aws_iam_role.group_role.arn
@@ -246,7 +246,7 @@ resource "aws_cognito_user_group" "main" {
 
 func testAccUserGroupConfig_RoleARN(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "main" {
+resource "aws_cognitoidp_user_pool" "main" {
   name = "%[1]s"
 }
 
@@ -270,9 +270,9 @@ resource "aws_iam_role" "group_role" {
 EOF
 }
 
-resource "aws_cognito_user_group" "main" {
+resource "aws_cognitoidp_user_group" "main" {
   name         = "%[1]s"
-  user_pool_id = aws_cognito_user_pool.main.id
+  user_pool_id = aws_cognitoidp_user_pool.main.id
   role_arn     = aws_iam_role.group_role.arn
 }
 `, rName)
@@ -280,7 +280,7 @@ resource "aws_cognito_user_group" "main" {
 
 func testAccUserGroupConfig_RoleARN_Updated(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "main" {
+resource "aws_cognitoidp_user_pool" "main" {
   name = "%[1]s"
 }
 
@@ -304,9 +304,9 @@ resource "aws_iam_role" "group_role_updated" {
 EOF
 }
 
-resource "aws_cognito_user_group" "main" {
+resource "aws_cognitoidp_user_group" "main" {
   name         = "%[1]s"
-  user_pool_id = aws_cognito_user_pool.main.id
+  user_pool_id = aws_cognitoidp_user_pool.main.id
   role_arn     = aws_iam_role.group_role_updated.arn
 }
 `, rName)

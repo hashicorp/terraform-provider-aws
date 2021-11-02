@@ -17,8 +17,8 @@ import (
 
 func TestAccCognitoIDPUserPoolUICustomization_AllClients_cSS(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_cognito_user_pool_ui_customization.test"
-	userPoolResourceName := "aws_cognito_user_pool.test"
+	resourceName := "aws_cognitoidp_user_pool_ui_customization.test"
+	userPoolResourceName := "aws_cognitoidp_user_pool.test"
 
 	css := ".label-customizable {font-weight: 400;}"
 	cssUpdated := ".label-customizable {font-weight: 100;}"
@@ -69,7 +69,7 @@ func TestAccCognitoIDPUserPoolUICustomization_AllClients_cSS(t *testing.T) {
 
 func TestAccCognitoIDPUserPoolUICustomization_AllClients_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_cognito_user_pool_ui_customization.test"
+	resourceName := "aws_cognitoidp_user_pool_ui_customization.test"
 
 	css := ".label-customizable {font-weight: 400;}"
 
@@ -93,8 +93,8 @@ func TestAccCognitoIDPUserPoolUICustomization_AllClients_disappears(t *testing.T
 
 func TestAccCognitoIDPUserPoolUICustomization_AllClients_imageFile(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_cognito_user_pool_ui_customization.test"
-	userPoolResourceName := "aws_cognito_user_pool.test"
+	resourceName := "aws_cognitoidp_user_pool_ui_customization.test"
+	userPoolResourceName := "aws_cognitoidp_user_pool.test"
 
 	filename := "testdata/logo.png"
 	updatedFilename := "testdata/logo_modified.png"
@@ -145,8 +145,8 @@ func TestAccCognitoIDPUserPoolUICustomization_AllClients_imageFile(t *testing.T)
 
 func TestAccCognitoIDPUserPoolUICustomization_AllClients_cSSAndImageFile(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_cognito_user_pool_ui_customization.test"
-	userPoolResourceName := "aws_cognito_user_pool.test"
+	resourceName := "aws_cognitoidp_user_pool_ui_customization.test"
+	userPoolResourceName := "aws_cognitoidp_user_pool.test"
 
 	css := ".label-customizable {font-weight: 400;}"
 	filename := "testdata/logo.png"
@@ -212,9 +212,9 @@ func TestAccCognitoIDPUserPoolUICustomization_AllClients_cSSAndImageFile(t *test
 
 func TestAccCognitoIDPUserPoolUICustomization_Client_cSS(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_cognito_user_pool_ui_customization.test"
-	clientResourceName := "aws_cognito_user_pool_client.test"
-	userPoolResourceName := "aws_cognito_user_pool.test"
+	resourceName := "aws_cognitoidp_user_pool_ui_customization.test"
+	clientResourceName := "aws_cognitoidp_user_pool_client.test"
+	userPoolResourceName := "aws_cognitoidp_user_pool.test"
 
 	css := ".label-customizable {font-weight: 400;}"
 	cssUpdated := ".label-customizable {font-weight: 100;}"
@@ -265,7 +265,7 @@ func TestAccCognitoIDPUserPoolUICustomization_Client_cSS(t *testing.T) {
 
 func TestAccCognitoIDPUserPoolUICustomization_Client_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_cognito_user_pool_ui_customization.test"
+	resourceName := "aws_cognitoidp_user_pool_ui_customization.test"
 
 	css := ".label-customizable {font-weight: 400;}"
 
@@ -289,9 +289,9 @@ func TestAccCognitoIDPUserPoolUICustomization_Client_disappears(t *testing.T) {
 
 func TestAccCognitoIDPUserPoolUICustomization_Client_image(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_cognito_user_pool_ui_customization.test"
-	clientResourceName := "aws_cognito_user_pool_client.test"
-	userPoolResourceName := "aws_cognito_user_pool.test"
+	resourceName := "aws_cognitoidp_user_pool_ui_customization.test"
+	clientResourceName := "aws_cognitoidp_user_pool_client.test"
+	userPoolResourceName := "aws_cognitoidp_user_pool.test"
 
 	filename := "testdata/logo.png"
 	updatedFilename := "testdata/logo_modified.png"
@@ -342,11 +342,11 @@ func TestAccCognitoIDPUserPoolUICustomization_Client_image(t *testing.T) {
 
 func TestAccCognitoIDPUserPoolUICustomization_ClientAndAll_cSS(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_cognito_user_pool_ui_customization.ui_all"
-	clientUIResourceName := "aws_cognito_user_pool_ui_customization.ui_client"
+	resourceName := "aws_cognitoidp_user_pool_ui_customization.ui_all"
+	clientUIResourceName := "aws_cognitoidp_user_pool_ui_customization.ui_client"
 
-	clientResourceName := "aws_cognito_user_pool_client.test"
-	userPoolResourceName := "aws_cognito_user_pool.test"
+	clientResourceName := "aws_cognitoidp_user_pool_client.test"
+	userPoolResourceName := "aws_cognitoidp_user_pool.test"
 
 	allCSS := ".label-customizable {font-weight: 400;}"
 	clientCSS := ".label-customizable {font-weight: 100;}"
@@ -417,8 +417,8 @@ func TestAccCognitoIDPUserPoolUICustomization_ClientAndAll_cSS(t *testing.T) {
 
 func TestAccCognitoIDPUserPoolUICustomization_UpdateClientToAll_cSS(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_cognito_user_pool_ui_customization.test"
-	clientResourceName := "aws_cognito_user_pool_client.test"
+	resourceName := "aws_cognitoidp_user_pool_ui_customization.test"
+	clientResourceName := "aws_cognitoidp_user_pool_client.test"
 
 	css := ".label-customizable {font-weight: 100;}"
 	cssUpdated := ".label-customizable {font-weight: 400;}"
@@ -456,8 +456,8 @@ func TestAccCognitoIDPUserPoolUICustomization_UpdateClientToAll_cSS(t *testing.T
 
 func TestAccCognitoIDPUserPoolUICustomization_UpdateAllToClient_cSS(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_cognito_user_pool_ui_customization.test"
-	clientResourceName := "aws_cognito_user_pool_client.test"
+	resourceName := "aws_cognitoidp_user_pool_ui_customization.test"
+	clientResourceName := "aws_cognitoidp_user_pool_client.test"
 
 	css := ".label-customizable {font-weight: 100;}"
 	cssUpdated := ".label-customizable {font-weight: 400;}"
@@ -497,7 +497,7 @@ func testAccCheckUserPoolUICustomizationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_cognito_user_pool_ui_customization" {
+		if rs.Type != "aws_cognitoidp_user_pool_ui_customization" {
 			continue
 		}
 
@@ -566,153 +566,153 @@ func testAccCheckUserPoolUICustomizationExists(name string) resource.TestCheckFu
 
 func testAccUserPoolUICustomizationConfig_AllClients_CSS(rName, css string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   name = %[1]q
 }
 
-resource "aws_cognito_user_pool_domain" "test" {
+resource "aws_cognitoidp_user_pool_domain" "test" {
   domain       = %[1]q
-  user_pool_id = aws_cognito_user_pool.test.id
+  user_pool_id = aws_cognitoidp_user_pool.test.id
 }
 
-resource "aws_cognito_user_pool_ui_customization" "test" {
+resource "aws_cognitoidp_user_pool_ui_customization" "test" {
   css = %q
 
-  # Refer to the aws_cognito_user_pool_domain resource's
+  # Refer to the aws_cognitoidp_user_pool_domain resource's
   # user_pool_id attribute to ensure it is in an 'Active' state 
-  user_pool_id = aws_cognito_user_pool_domain.test.user_pool_id
+  user_pool_id = aws_cognitoidp_user_pool_domain.test.user_pool_id
 }
 `, rName, css)
 }
 
 func testAccUserPoolUICustomizationConfig_AllClients_Image(rName, filename string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   name = %[1]q
 }
 
-resource "aws_cognito_user_pool_domain" "test" {
+resource "aws_cognitoidp_user_pool_domain" "test" {
   domain       = %[1]q
-  user_pool_id = aws_cognito_user_pool.test.id
+  user_pool_id = aws_cognitoidp_user_pool.test.id
 }
 
-resource "aws_cognito_user_pool_ui_customization" "test" {
+resource "aws_cognitoidp_user_pool_ui_customization" "test" {
   image_file = filebase64(%q)
 
-  # Refer to the aws_cognito_user_pool_domain resource's
+  # Refer to the aws_cognitoidp_user_pool_domain resource's
   # user_pool_id attribute to ensure it is in an 'Active' state 
-  user_pool_id = aws_cognito_user_pool_domain.test.user_pool_id
+  user_pool_id = aws_cognitoidp_user_pool_domain.test.user_pool_id
 }
 `, rName, filename)
 }
 
 func testAccUserPoolUICustomizationConfig_AllClients_CSSAndImage(rName, css, filename string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   name = %[1]q
 }
 
-resource "aws_cognito_user_pool_domain" "test" {
+resource "aws_cognitoidp_user_pool_domain" "test" {
   domain       = %[1]q
-  user_pool_id = aws_cognito_user_pool.test.id
+  user_pool_id = aws_cognitoidp_user_pool.test.id
 }
 
-resource "aws_cognito_user_pool_ui_customization" "test" {
+resource "aws_cognitoidp_user_pool_ui_customization" "test" {
   css        = %q
   image_file = filebase64(%q)
 
-  # Refer to the aws_cognito_user_pool_domain resource's
+  # Refer to the aws_cognitoidp_user_pool_domain resource's
   # user_pool_id attribute to ensure it is in an 'Active' state 
-  user_pool_id = aws_cognito_user_pool_domain.test.user_pool_id
+  user_pool_id = aws_cognitoidp_user_pool_domain.test.user_pool_id
 }
 `, rName, css, filename)
 }
 
 func testAccUserPoolUICustomizationConfig_Client_CSS(rName, css string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   name = %[1]q
 }
 
-resource "aws_cognito_user_pool_domain" "test" {
+resource "aws_cognitoidp_user_pool_domain" "test" {
   domain       = %[1]q
-  user_pool_id = aws_cognito_user_pool.test.id
+  user_pool_id = aws_cognitoidp_user_pool.test.id
 }
 
-resource "aws_cognito_user_pool_client" "test" {
+resource "aws_cognitoidp_user_pool_client" "test" {
   name         = %[1]q
-  user_pool_id = aws_cognito_user_pool.test.id
+  user_pool_id = aws_cognitoidp_user_pool.test.id
 }
 
-resource "aws_cognito_user_pool_ui_customization" "test" {
-  client_id = aws_cognito_user_pool_client.test.id
+resource "aws_cognitoidp_user_pool_ui_customization" "test" {
+  client_id = aws_cognitoidp_user_pool_client.test.id
   css       = %q
 
-  # Refer to the aws_cognito_user_pool_domain resource's
+  # Refer to the aws_cognitoidp_user_pool_domain resource's
   # user_pool_id attribute to ensure it is in an 'Active' state 
-  user_pool_id = aws_cognito_user_pool_domain.test.user_pool_id
+  user_pool_id = aws_cognitoidp_user_pool_domain.test.user_pool_id
 }
 `, rName, css)
 }
 
 func testAccUserPoolUICustomizationConfig_Client_Image(rName, filename string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   name = %[1]q
 }
 
-resource "aws_cognito_user_pool_domain" "test" {
+resource "aws_cognitoidp_user_pool_domain" "test" {
   domain       = %[1]q
-  user_pool_id = aws_cognito_user_pool.test.id
+  user_pool_id = aws_cognitoidp_user_pool.test.id
 }
 
-resource "aws_cognito_user_pool_client" "test" {
+resource "aws_cognitoidp_user_pool_client" "test" {
   name         = %[1]q
-  user_pool_id = aws_cognito_user_pool.test.id
+  user_pool_id = aws_cognitoidp_user_pool.test.id
 }
 
-resource "aws_cognito_user_pool_ui_customization" "test" {
-  client_id  = aws_cognito_user_pool_client.test.id
+resource "aws_cognitoidp_user_pool_ui_customization" "test" {
+  client_id  = aws_cognitoidp_user_pool_client.test.id
   image_file = filebase64(%q)
 
-  # Refer to the aws_cognito_user_pool_domain resource's
+  # Refer to the aws_cognitoidp_user_pool_domain resource's
   # user_pool_id attribute to ensure it is in an 'Active' state
-  user_pool_id = aws_cognito_user_pool_domain.test.user_pool_id
+  user_pool_id = aws_cognitoidp_user_pool_domain.test.user_pool_id
 }
 `, rName, filename)
 }
 
 func testAccUserPoolUICustomizationConfig_ClientAndAllCustomizations_CSS(rName, allCSS, clientCSS string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   name = %[1]q
 }
 
-resource "aws_cognito_user_pool_domain" "test" {
+resource "aws_cognitoidp_user_pool_domain" "test" {
   domain       = %[1]q
-  user_pool_id = aws_cognito_user_pool.test.id
+  user_pool_id = aws_cognitoidp_user_pool.test.id
 }
 
-resource "aws_cognito_user_pool_client" "test" {
+resource "aws_cognitoidp_user_pool_client" "test" {
   name         = %[1]q
-  user_pool_id = aws_cognito_user_pool.test.id
+  user_pool_id = aws_cognitoidp_user_pool.test.id
 }
 
-resource "aws_cognito_user_pool_ui_customization" "ui_all" {
+resource "aws_cognitoidp_user_pool_ui_customization" "ui_all" {
   css = %q
 
-  # Refer to the aws_cognito_user_pool_domain resource's
+  # Refer to the aws_cognitoidp_user_pool_domain resource's
   # user_pool_id attribute to ensure it is in an 'Active' state
-  user_pool_id = aws_cognito_user_pool_domain.test.user_pool_id
+  user_pool_id = aws_cognitoidp_user_pool_domain.test.user_pool_id
 }
 
-resource "aws_cognito_user_pool_ui_customization" "ui_client" {
-  client_id = aws_cognito_user_pool_client.test.id
+resource "aws_cognitoidp_user_pool_ui_customization" "ui_client" {
+  client_id = aws_cognitoidp_user_pool_client.test.id
   css       = %q
 
-  # Refer to the aws_cognito_user_pool_domain resource's
+  # Refer to the aws_cognitoidp_user_pool_domain resource's
   # user_pool_id attribute to ensure it is in an 'Active' state
-  user_pool_id = aws_cognito_user_pool_domain.test.user_pool_id
+  user_pool_id = aws_cognitoidp_user_pool_domain.test.user_pool_id
 }
 `, rName, allCSS, clientCSS)
 }

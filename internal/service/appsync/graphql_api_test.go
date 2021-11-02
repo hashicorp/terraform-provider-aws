@@ -216,7 +216,7 @@ func testAccAppSyncGraphQLAPI_AuthenticationType_awsIAM(t *testing.T) {
 func testAccAppSyncGraphQLAPI_AuthenticationType_amazonCognitoUserPools(t *testing.T) {
 	var api1 appsync.GraphqlApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	cognitoUserPoolResourceName := "aws_cognito_user_pool.test"
+	cognitoUserPoolResourceName := "aws_cognitoidp_user_pool.test"
 	resourceName := "aws_appsync_graphql_api.test"
 
 	resource.Test(t, resource.TestCase{
@@ -589,7 +589,7 @@ func testAccAppSyncGraphQLAPI_name(t *testing.T) {
 func testAccAppSyncGraphQLAPI_UserPool_awsRegion(t *testing.T) {
 	var api1, api2 appsync.GraphqlApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	cognitoUserPoolResourceName := "aws_cognito_user_pool.test"
+	cognitoUserPoolResourceName := "aws_cognitoidp_user_pool.test"
 	resourceName := "aws_appsync_graphql_api.test"
 
 	resource.Test(t, resource.TestCase{
@@ -632,7 +632,7 @@ func testAccAppSyncGraphQLAPI_UserPool_awsRegion(t *testing.T) {
 func testAccAppSyncGraphQLAPI_UserPool_defaultAction(t *testing.T) {
 	var api1, api2 appsync.GraphqlApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	cognitoUserPoolResourceName := "aws_cognito_user_pool.test"
+	cognitoUserPoolResourceName := "aws_cognitoidp_user_pool.test"
 	resourceName := "aws_appsync_graphql_api.test"
 
 	resource.Test(t, resource.TestCase{
@@ -782,7 +782,7 @@ func testAccAppSyncGraphQLAPI_AdditionalAuthentication_awsIAM(t *testing.T) {
 func testAccAppSyncGraphQLAPI_AdditionalAuthentication_cognitoUserPools(t *testing.T) {
 	var api1 appsync.GraphqlApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	cognitoUserPoolResourceName := "aws_cognito_user_pool.test"
+	cognitoUserPoolResourceName := "aws_cognitoidp_user_pool.test"
 	resourceName := "aws_appsync_graphql_api.test"
 
 	resource.Test(t, resource.TestCase{
@@ -851,7 +851,7 @@ func testAccAppSyncGraphQLAPI_AdditionalAuthentication_openIDConnect(t *testing.
 func testAccAppSyncGraphQLAPI_AdditionalAuthentication_multiple(t *testing.T) {
 	var api1 appsync.GraphqlApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	cognitoUserPoolResourceName := "aws_cognito_user_pool.test"
+	cognitoUserPoolResourceName := "aws_cognitoidp_user_pool.test"
 	resourceName := "aws_appsync_graphql_api.test"
 
 	resource.Test(t, resource.TestCase{
@@ -1137,7 +1137,7 @@ resource "aws_appsync_graphql_api" "test" {
 
 func testAccAppsyncGraphqlApiConfig_UserPoolConfig_AwsRegion(rName, awsRegion string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   name = %q
 }
 
@@ -1148,7 +1148,7 @@ resource "aws_appsync_graphql_api" "test" {
   user_pool_config {
     aws_region     = %q
     default_action = "ALLOW"
-    user_pool_id   = aws_cognito_user_pool.test.id
+    user_pool_id   = aws_cognitoidp_user_pool.test.id
   }
 }
 `, rName, rName, awsRegion)
@@ -1156,7 +1156,7 @@ resource "aws_appsync_graphql_api" "test" {
 
 func testAccAppsyncGraphqlApiConfig_UserPoolConfig_DefaultAction(rName, defaultAction string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   name = %q
 }
 
@@ -1166,7 +1166,7 @@ resource "aws_appsync_graphql_api" "test" {
 
   user_pool_config {
     default_action = %q
-    user_pool_id   = aws_cognito_user_pool.test.id
+    user_pool_id   = aws_cognitoidp_user_pool.test.id
   }
 }
 `, rName, rName, defaultAction)
@@ -1235,7 +1235,7 @@ resource "aws_appsync_graphql_api" "test" {
 
 func testAccAppsyncGraphqlApiConfig_AdditionalAuth_UserPoolConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   name = %q
 }
 
@@ -1247,7 +1247,7 @@ resource "aws_appsync_graphql_api" "test" {
     authentication_type = "AMAZON_COGNITO_USER_POOLS"
 
     user_pool_config {
-      user_pool_id = aws_cognito_user_pool.test.id
+      user_pool_id = aws_cognitoidp_user_pool.test.id
     }
   }
 }
@@ -1273,7 +1273,7 @@ resource "aws_appsync_graphql_api" "test" {
 
 func testAccAppsyncGraphqlApiConfig_AdditionalAuth_Multiple(rName, issuer string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognitoidp_user_pool" "test" {
   name = %q
 }
 
@@ -1289,7 +1289,7 @@ resource "aws_appsync_graphql_api" "test" {
     authentication_type = "AMAZON_COGNITO_USER_POOLS"
 
     user_pool_config {
-      user_pool_id = aws_cognito_user_pool.test.id
+      user_pool_id = aws_cognitoidp_user_pool.test.id
     }
   }
 

@@ -82,7 +82,7 @@ resource "aws_iam_role_policy" "main" {
 EOF
 }
 
-resource "aws_cognito_user_pool" "pool" {
+resource "aws_cognitoidp_user_pool" "pool" {
   name                       = "terraform-example"
   email_verification_subject = "Device Verification Code"
   email_verification_message = "Please use the following code {####}"

@@ -18,7 +18,7 @@ import (
 )
 
 func TestAccCognitoIdentityPoolRolesAttachment_basic(t *testing.T) {
-	resourceName := "aws_cognito_identity_pool_roles_attachment.test"
+	resourceName := "aws_cognitoidentity_pool_roles_attachment.test"
 	name := sdkacctest.RandString(10)
 	updatedName := sdkacctest.RandString(10)
 
@@ -54,7 +54,7 @@ func TestAccCognitoIdentityPoolRolesAttachment_basic(t *testing.T) {
 }
 
 func TestAccCognitoIdentityPoolRolesAttachment_roleMappings(t *testing.T) {
-	resourceName := "aws_cognito_identity_pool_roles_attachment.test"
+	resourceName := "aws_cognitoidentity_pool_roles_attachment.test"
 	name := sdkacctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -109,7 +109,7 @@ func TestAccCognitoIdentityPoolRolesAttachment_roleMappings(t *testing.T) {
 }
 
 func TestAccCognitoIdentityPoolRolesAttachment_disappears(t *testing.T) {
-	resourceName := "aws_cognito_identity_pool_roles_attachment.test"
+	resourceName := "aws_cognitoidentity_pool_roles_attachment.test"
 	name := sdkacctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -206,7 +206,7 @@ func testAccCheckPoolRolesAttachmentDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIdentityConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_cognito_identity_pool_roles_attachment" {
+		if rs.Type != "aws_cognitoidentity_pool_roles_attachment" {
 			continue
 		}
 
@@ -227,7 +227,7 @@ func testAccCheckPoolRolesAttachmentDestroy(s *terraform.State) error {
 
 func testAccPoolRolesAttachmentConfig(name string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_identity_pool" "main" {
+resource "aws_cognitoidentity_pool" "main" {
   identity_pool_name               = "identity pool %[1]s"
   allow_unauthenticated_identities = false
 
@@ -252,7 +252,7 @@ resource "aws_iam_role" "unauthenticated" {
       "Action": "sts:AssumeRoleWithWebIdentity",
       "Condition": {
         "StringEquals": {
-          "cognito-identity.amazonaws.com:aud": "${aws_cognito_identity_pool.main.id}"
+          "cognito-identity.amazonaws.com:aud": "${aws_cognitoidentity_pool.main.id}"
         },
         "ForAnyValue:StringLike": {
           "cognito-identity.amazonaws.com:amr": "unauthenticated"
@@ -303,7 +303,7 @@ resource "aws_iam_role" "authenticated" {
       "Action": "sts:AssumeRoleWithWebIdentity",
       "Condition": {
         "StringEquals": {
-          "cognito-identity.amazonaws.com:aud": "${aws_cognito_identity_pool.main.id}"
+          "cognito-identity.amazonaws.com:aud": "${aws_cognitoidentity_pool.main.id}"
         },
         "ForAnyValue:StringLike": {
           "cognito-identity.amazonaws.com:amr": "authenticated"
@@ -343,8 +343,8 @@ EOF
 
 func testAccPoolRolesAttachmentConfig_basic(name string) string {
 	return fmt.Sprintf(testAccPoolRolesAttachmentConfig(name) + `
-resource "aws_cognito_identity_pool_roles_attachment" "test" {
-  identity_pool_id = aws_cognito_identity_pool.main.id
+resource "aws_cognitoidentity_pool_roles_attachment" "test" {
+  identity_pool_id = aws_cognitoidentity_pool.main.id
 
   roles = {
     "authenticated" = aws_iam_role.authenticated.arn
@@ -355,8 +355,8 @@ resource "aws_cognito_identity_pool_roles_attachment" "test" {
 
 func testAccPoolRolesAttachmentConfig_roleMappings(name string) string {
 	return fmt.Sprintf(testAccPoolRolesAttachmentConfig(name) + `
-resource "aws_cognito_identity_pool_roles_attachment" "test" {
-  identity_pool_id = aws_cognito_identity_pool.main.id
+resource "aws_cognitoidentity_pool_roles_attachment" "test" {
+  identity_pool_id = aws_cognitoidentity_pool.main.id
 
   role_mapping {
     identity_provider         = "graph.facebook.com"
@@ -380,8 +380,8 @@ resource "aws_cognito_identity_pool_roles_attachment" "test" {
 
 func testAccPoolRolesAttachmentConfig_roleMappingsUpdated(name string) string {
 	return fmt.Sprintf(testAccPoolRolesAttachmentConfig(name) + `
-resource "aws_cognito_identity_pool_roles_attachment" "test" {
-  identity_pool_id = aws_cognito_identity_pool.main.id
+resource "aws_cognitoidentity_pool_roles_attachment" "test" {
+  identity_pool_id = aws_cognitoidentity_pool.main.id
 
   role_mapping {
     identity_provider         = "graph.facebook.com"
@@ -412,8 +412,8 @@ resource "aws_cognito_identity_pool_roles_attachment" "test" {
 
 func testAccPoolRolesAttachmentConfig_roleMappingsWithAmbiguousRoleResolutionError(name string) string {
 	return fmt.Sprintf(testAccPoolRolesAttachmentConfig(name) + `
-resource "aws_cognito_identity_pool_roles_attachment" "test" {
-  identity_pool_id = aws_cognito_identity_pool.main.id
+resource "aws_cognitoidentity_pool_roles_attachment" "test" {
+  identity_pool_id = aws_cognitoidentity_pool.main.id
 
   role_mapping {
     identity_provider = "graph.facebook.com"
@@ -436,8 +436,8 @@ resource "aws_cognito_identity_pool_roles_attachment" "test" {
 
 func testAccPoolRolesAttachmentConfig_roleMappingsWithRulesTypeError(name string) string {
 	return fmt.Sprintf(testAccPoolRolesAttachmentConfig(name) + `
-resource "aws_cognito_identity_pool_roles_attachment" "test" {
-  identity_pool_id = aws_cognito_identity_pool.main.id
+resource "aws_cognitoidentity_pool_roles_attachment" "test" {
+  identity_pool_id = aws_cognitoidentity_pool.main.id
 
   role_mapping {
     identity_provider         = "graph.facebook.com"
@@ -454,8 +454,8 @@ resource "aws_cognito_identity_pool_roles_attachment" "test" {
 
 func testAccPoolRolesAttachmentConfig_roleMappingsWithTokenTypeError(name string) string {
 	return fmt.Sprintf(testAccPoolRolesAttachmentConfig(name) + `
-resource "aws_cognito_identity_pool_roles_attachment" "test" {
-  identity_pool_id = aws_cognito_identity_pool.main.id
+resource "aws_cognitoidentity_pool_roles_attachment" "test" {
+  identity_pool_id = aws_cognitoidentity_pool.main.id
 
   role_mapping {
     identity_provider         = "graph.facebook.com"

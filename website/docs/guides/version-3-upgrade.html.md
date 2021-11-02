@@ -32,7 +32,7 @@ Upgrade topics:
 - [Resource: aws_cloudfront_distribution](#resource-aws_cloudfront_distribution)
 - [Resource: aws_cloudwatch_log_group](#resource-aws_cloudwatch_log_group)
 - [Resource: aws_codepipeline](#resource-aws_codepipeline)
-- [Resource: aws_cognito_user_pool](#resource-aws_cognito_user_pool)
+- [Resource: aws_cognitoidp_user_pool](#resource-aws_cognitoidp_user_pool)
 - [Resource: aws_dx_gateway](#resource-aws_dx_gateway)
 - [Resource: aws_dx_gateway_association](#resource-aws_dx_gateway_association)
 - [Resource: aws_dx_gateway_association_proposal](#resource-aws_dx_gateway_association_proposal)
@@ -894,7 +894,7 @@ resource "aws_codepipeline" "example" {
 }
 ```
 
-## Resource: aws_cognito_user_pool
+## Resource: aws_cognitoidp_user_pool
 
 ### Removal of admin_create_user_config.unused_account_validity_days Argument
 
@@ -903,7 +903,7 @@ The Cognito API previously deprecated the `admin_create_user_config` configurati
 For example, given this previous configuration:
 
 ```terraform
-resource "aws_cognito_user_pool" "example" {
+resource "aws_cognitoidp_user_pool" "example" {
   # ... other configuration ...
 
   admin_create_user_config {
@@ -917,7 +917,7 @@ resource "aws_cognito_user_pool" "example" {
 An updated configuration:
 
 ```terraform
-resource "aws_cognito_user_pool" "example" {
+resource "aws_cognitoidp_user_pool" "example" {
   # ... other configuration ...
 
   password_policy {
