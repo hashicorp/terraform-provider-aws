@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_kinesis_analytics_application: Rename data source to aws_kinesisanalytics_application (with alias for aws_kinesis_analytics_application)
+```
