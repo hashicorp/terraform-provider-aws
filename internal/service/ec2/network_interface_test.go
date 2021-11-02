@@ -1093,7 +1093,7 @@ resource "aws_network_interface" "test" {
 func testAccENIIPV4PrefixCountConfig(rName string, ipv4PrefixCount int) string {
 	return acctest.ConfigCompose(testAccENIIPV4BaseConfig(rName) + fmt.Sprintf(`
 resource "aws_network_interface" "test" {
-  subnet_id        = aws_subnet.test.id
+  subnet_id         = aws_subnet.test.id
   ipv4_prefix_count = %[2]d
   security_groups   = [aws_security_group.test.id]
 
@@ -1137,8 +1137,8 @@ resource "aws_network_interface" "test" {
 func testAccENIIPV6PrefixCountConfig(rName string, ipv6PrefixCount int) string {
 	return acctest.ConfigCompose(testAccENIIPV6BaseConfig(rName) + fmt.Sprintf(`
 resource "aws_network_interface" "test" {
-  subnet_id        = aws_subnet.test.id
-  private_ips      = ["172.16.10.100"]
+  subnet_id         = aws_subnet.test.id
+  private_ips       = ["172.16.10.100"]
   ipv6_prefix_count = %[2]d
   security_groups   = [aws_security_group.test.id]
 

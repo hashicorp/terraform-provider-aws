@@ -248,14 +248,14 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_instance" "test" {
-	ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-	instance_type = data.aws_ec2_instance_type_offering.available.instance_type
-	subnet_id     = aws_subnet.test.id
-  
-	tags = {
-	  Name = %[1]q
-	}
+  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+  subnet_id     = aws_subnet.test.id
+
+  tags = {
+    Name = %[1]q
   }
+}
 
 resource "aws_network_interface_sg_attachment" "test" {
   network_interface_id = aws_instance.test.primary_network_interface_id
