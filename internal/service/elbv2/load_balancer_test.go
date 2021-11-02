@@ -64,7 +64,7 @@ func TestLBCloudwatchSuffixFromARN(t *testing.T) {
 func TestAccELBV2LoadBalancer_ALB_basic(t *testing.T) {
 	var conf elbv2.LoadBalancer
 	lbName := fmt.Sprintf("testAccAWSlb-basic-%s", sdkacctest.RandString(10))
-	resourceName := "aws_lb.lb_test"
+	resourceName := "aws_elbv2_lb.lb_test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -101,7 +101,7 @@ func TestAccELBV2LoadBalancer_ALB_basic(t *testing.T) {
 func TestAccELBV2LoadBalancer_NLB_basic(t *testing.T) {
 	var conf elbv2.LoadBalancer
 	lbName := fmt.Sprintf("testAccAWSlb-basic-%s", sdkacctest.RandString(10))
-	resourceName := "aws_lb.lb_test"
+	resourceName := "aws_elbv2_lb.lb_test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -134,7 +134,7 @@ func TestAccELBV2LoadBalancer_NLB_basic(t *testing.T) {
 func TestAccELBV2LoadBalancer_LoadBalancerType_gateway(t *testing.T) {
 	var conf elbv2.LoadBalancer
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_lb.test"
+	resourceName := "aws_elbv2_lb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckElbv2GatewayLoadBalancer(t) },
@@ -167,7 +167,7 @@ func TestAccELBV2LoadBalancer_LoadBalancerType_gateway(t *testing.T) {
 func TestAccELBV2LoadBalancer_ipv6SubnetMapping(t *testing.T) {
 	var conf elbv2.LoadBalancer
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_lb.test"
+	resourceName := "aws_elbv2_lb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -201,7 +201,7 @@ func TestAccELBV2LoadBalancer_ipv6SubnetMapping(t *testing.T) {
 func TestAccELBV2LoadBalancer_LoadBalancerTypeGateway_enableCrossZoneLoadBalancing(t *testing.T) {
 	var conf elbv2.LoadBalancer
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_lb.test"
+	resourceName := "aws_elbv2_lb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckElbv2GatewayLoadBalancer(t) },
@@ -244,7 +244,7 @@ func TestAccELBV2LoadBalancer_LoadBalancerTypeGateway_enableCrossZoneLoadBalanci
 func TestAccELBV2LoadBalancer_ALB_outpost(t *testing.T) {
 	var conf elbv2.LoadBalancer
 	lbName := fmt.Sprintf("testAccAWSlb-outpost-%s", sdkacctest.RandString(10))
-	resourceName := "aws_lb.lb_test"
+	resourceName := "aws_elbv2_lb.lb_test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
@@ -282,7 +282,7 @@ func TestAccELBV2LoadBalancer_ALB_outpost(t *testing.T) {
 
 func TestAccELBV2LoadBalancer_networkLoadBalancerEIP(t *testing.T) {
 	var conf elbv2.LoadBalancer
-	resourceName := "aws_lb.lb_test"
+	resourceName := "aws_elbv2_lb.lb_test"
 	lbName := fmt.Sprintf("testAccAWSlb-basic-%s", sdkacctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -313,7 +313,7 @@ func TestAccELBV2LoadBalancer_networkLoadBalancerEIP(t *testing.T) {
 func TestAccELBV2LoadBalancer_NLB_privateIPv4Address(t *testing.T) {
 	var conf elbv2.LoadBalancer
 	lbName := fmt.Sprintf("testAccAWSlb-pipv4a-%s", sdkacctest.RandString(10))
-	resourceName := "aws_lb.test"
+	resourceName := "aws_elbv2_lb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -342,7 +342,7 @@ func TestAccELBV2LoadBalancer_NLB_privateIPv4Address(t *testing.T) {
 func TestAccELBV2LoadBalancer_backwardsCompatibility(t *testing.T) {
 	var conf elbv2.LoadBalancer
 	lbName := fmt.Sprintf("testAccAWSlb-basic-%s", sdkacctest.RandString(10))
-	resourceName := "aws_alb.lb_test"
+	resourceName := "aws_elbv2_lb.lb_test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -376,7 +376,7 @@ func TestAccELBV2LoadBalancer_backwardsCompatibility(t *testing.T) {
 
 func TestAccELBV2LoadBalancer_generatedName(t *testing.T) {
 	var conf elbv2.LoadBalancer
-	resourceName := "aws_lb.lb_test"
+	resourceName := "aws_elbv2_lb.lb_test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -397,7 +397,7 @@ func TestAccELBV2LoadBalancer_generatedName(t *testing.T) {
 
 func TestAccELBV2LoadBalancer_generatesNameForZeroValue(t *testing.T) {
 	var conf elbv2.LoadBalancer
-	resourceName := "aws_lb.lb_test"
+	resourceName := "aws_elbv2_lb.lb_test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -418,7 +418,7 @@ func TestAccELBV2LoadBalancer_generatesNameForZeroValue(t *testing.T) {
 
 func TestAccELBV2LoadBalancer_namePrefix(t *testing.T) {
 	var conf elbv2.LoadBalancer
-	resourceName := "aws_lb.lb_test"
+	resourceName := "aws_elbv2_lb.lb_test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -442,7 +442,7 @@ func TestAccELBV2LoadBalancer_namePrefix(t *testing.T) {
 func TestAccELBV2LoadBalancer_tags(t *testing.T) {
 	var conf elbv2.LoadBalancer
 	lbName := fmt.Sprintf("testAccAWSlb-basic-%s", sdkacctest.RandString(10))
-	resourceName := "aws_lb.lb_test"
+	resourceName := "aws_elbv2_lb.lb_test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -482,7 +482,7 @@ func TestAccELBV2LoadBalancer_tags(t *testing.T) {
 func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updateCrossZone(t *testing.T) {
 	var pre, mid, post elbv2.LoadBalancer
 	lbName := fmt.Sprintf("testAccAWSlb-nlbcz-%s", sdkacctest.RandString(10))
-	resourceName := "aws_lb.lb_test"
+	resourceName := "aws_elbv2_lb.lb_test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -523,7 +523,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updateCrossZone(t *testing.T) 
 func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateHTTP2(t *testing.T) {
 	var pre, mid, post elbv2.LoadBalancer
 	lbName := fmt.Sprintf("testAccAWSalb-http2-%s", sdkacctest.RandString(10))
-	resourceName := "aws_lb.lb_test"
+	resourceName := "aws_elbv2_lb.lb_test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -574,26 +574,26 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateDropInvalidHeaderFie
 			{
 				Config: testAccLoadBalancerConfig_enableDropInvalidHeaderFields(lbName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists("aws_lb.lb_test", &pre),
-					testAccCheckLoadBalancerAttribute("aws_lb.lb_test", "routing.http.drop_invalid_header_fields.enabled", "false"),
-					resource.TestCheckResourceAttr("aws_lb.lb_test", "drop_invalid_header_fields", "false"),
+					testAccCheckLoadBalancerExists("aws_elbv2_lb.lb_test", &pre),
+					testAccCheckLoadBalancerAttribute("aws_elbv2_lb.lb_test", "routing.http.drop_invalid_header_fields.enabled", "false"),
+					resource.TestCheckResourceAttr("aws_elbv2_lb.lb_test", "drop_invalid_header_fields", "false"),
 				),
 			},
 			{
 				Config: testAccLoadBalancerConfig_enableDropInvalidHeaderFields(lbName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists("aws_lb.lb_test", &mid),
-					testAccCheckLoadBalancerAttribute("aws_lb.lb_test", "routing.http.drop_invalid_header_fields.enabled", "true"),
-					resource.TestCheckResourceAttr("aws_lb.lb_test", "drop_invalid_header_fields", "true"),
+					testAccCheckLoadBalancerExists("aws_elbv2_lb.lb_test", &mid),
+					testAccCheckLoadBalancerAttribute("aws_elbv2_lb.lb_test", "routing.http.drop_invalid_header_fields.enabled", "true"),
+					resource.TestCheckResourceAttr("aws_elbv2_lb.lb_test", "drop_invalid_header_fields", "true"),
 					testAccChecklbARNs(&pre, &mid),
 				),
 			},
 			{
 				Config: testAccLoadBalancerConfig_enableDropInvalidHeaderFields(lbName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists("aws_lb.lb_test", &post),
-					testAccCheckLoadBalancerAttribute("aws_lb.lb_test", "routing.http.drop_invalid_header_fields.enabled", "false"),
-					resource.TestCheckResourceAttr("aws_lb.lb_test", "drop_invalid_header_fields", "false"),
+					testAccCheckLoadBalancerExists("aws_elbv2_lb.lb_test", &post),
+					testAccCheckLoadBalancerAttribute("aws_elbv2_lb.lb_test", "routing.http.drop_invalid_header_fields.enabled", "false"),
+					resource.TestCheckResourceAttr("aws_elbv2_lb.lb_test", "drop_invalid_header_fields", "false"),
 					testAccChecklbARNs(&mid, &post),
 				),
 			},
@@ -604,7 +604,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateDropInvalidHeaderFie
 func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateDeletionProtection(t *testing.T) {
 	var pre, mid, post elbv2.LoadBalancer
 	lbName := fmt.Sprintf("testAccAWSalb-basic-%s", sdkacctest.RandString(10))
-	resourceName := "aws_lb.lb_test"
+	resourceName := "aws_elbv2_lb.lb_test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -645,7 +645,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateDeletionProtection(t
 func TestAccELBV2LoadBalancer_updatedSecurityGroups(t *testing.T) {
 	var pre, post elbv2.LoadBalancer
 	lbName := fmt.Sprintf("testAccAWSlb-basic-%s", sdkacctest.RandString(10))
-	resourceName := "aws_lb.lb_test"
+	resourceName := "aws_elbv2_lb.lb_test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -675,7 +675,7 @@ func TestAccELBV2LoadBalancer_updatedSecurityGroups(t *testing.T) {
 func TestAccELBV2LoadBalancer_updatedSubnets(t *testing.T) {
 	var pre, post elbv2.LoadBalancer
 	lbName := fmt.Sprintf("testAccAWSlb-basic-%s", sdkacctest.RandString(10))
-	resourceName := "aws_lb.lb_test"
+	resourceName := "aws_elbv2_lb.lb_test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -705,7 +705,7 @@ func TestAccELBV2LoadBalancer_updatedSubnets(t *testing.T) {
 func TestAccELBV2LoadBalancer_updatedIPAddressType(t *testing.T) {
 	var pre, post elbv2.LoadBalancer
 	lbName := fmt.Sprintf("testAccAWSlb-basic-%s", sdkacctest.RandString(10))
-	resourceName := "aws_lb.lb_test"
+	resourceName := "aws_elbv2_lb.lb_test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -737,7 +737,7 @@ func TestAccELBV2LoadBalancer_updatedIPAddressType(t *testing.T) {
 func TestAccELBV2LoadBalancer_noSecurityGroup(t *testing.T) {
 	var conf elbv2.LoadBalancer
 	lbName := fmt.Sprintf("testAccAWSlb-nosg-%s", sdkacctest.RandString(10))
-	resourceName := "aws_lb.lb_test"
+	resourceName := "aws_elbv2_lb.lb_test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -770,7 +770,7 @@ func TestAccELBV2LoadBalancer_ALB_accessLogs(t *testing.T) {
 	var conf elbv2.LoadBalancer
 	bucketName := fmt.Sprintf("tf-test-access-logs-%s", sdkacctest.RandString(6))
 	lbName := fmt.Sprintf("testAccAWSlbaccesslog-%s", sdkacctest.RandString(4))
-	resourceName := "aws_lb.test"
+	resourceName := "aws_elbv2_lb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -858,7 +858,7 @@ func TestAccELBV2LoadBalancer_ALBAccessLogs_prefix(t *testing.T) {
 	var conf elbv2.LoadBalancer
 	bucketName := fmt.Sprintf("tf-test-access-logs-%s", sdkacctest.RandString(6))
 	lbName := fmt.Sprintf("testAccAWSlbaccesslog-%s", sdkacctest.RandString(4))
-	resourceName := "aws_lb.test"
+	resourceName := "aws_elbv2_lb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -928,7 +928,7 @@ func TestAccELBV2LoadBalancer_NLB_accessLogs(t *testing.T) {
 	var conf elbv2.LoadBalancer
 	bucketName := fmt.Sprintf("tf-test-access-logs-%s", sdkacctest.RandString(6))
 	lbName := fmt.Sprintf("testAccAWSlbaccesslog-%s", sdkacctest.RandString(4))
-	resourceName := "aws_lb.test"
+	resourceName := "aws_elbv2_lb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -1016,7 +1016,7 @@ func TestAccELBV2LoadBalancer_NLBAccessLogs_prefix(t *testing.T) {
 	var conf elbv2.LoadBalancer
 	bucketName := fmt.Sprintf("tf-test-access-logs-%s", sdkacctest.RandString(6))
 	lbName := fmt.Sprintf("testAccAWSlbaccesslog-%s", sdkacctest.RandString(4))
-	resourceName := "aws_lb.test"
+	resourceName := "aws_elbv2_lb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -1085,7 +1085,7 @@ func TestAccELBV2LoadBalancer_NLBAccessLogs_prefix(t *testing.T) {
 func TestAccELBV2LoadBalancer_NetworkLoadBalancerSubnet_change(t *testing.T) {
 	var conf elbv2.LoadBalancer
 	lbName := fmt.Sprintf("testAccAWSlb-basic-%s", sdkacctest.RandString(10))
-	resourceName := "aws_lb.lb_test"
+	resourceName := "aws_elbv2_lb.lb_test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -1181,7 +1181,7 @@ func testAccCheckLoadBalancerDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_lb" && rs.Type != "aws_alb" {
+		if rs.Type != "aws_elbv2_lb" && rs.Type != "aws_elbv2_lb" {
 			continue
 		}
 
@@ -1237,7 +1237,7 @@ func testAccPreCheckElbv2GatewayLoadBalancer(t *testing.T) {
 
 func testAccLoadBalancerWithIPAddressTypeUpdatedConfig(lbName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_lb" "lb_test" {
+resource "aws_elbv2_lb" "lb_test" {
   name            = "%s"
   security_groups = [aws_security_group.alb_test.id]
   subnets         = [aws_subnet.alb_test_1.id, aws_subnet.alb_test_2.id]
@@ -1252,18 +1252,18 @@ resource "aws_lb" "lb_test" {
   }
 }
 
-resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.lb_test.id
+resource "aws_elbv2_lb_listener" "test" {
+  load_balancer_arn = aws_elbv2_lb.lb_test.id
   protocol          = "HTTP"
   port              = "80"
 
   default_action {
-    target_group_arn = aws_lb_target_group.test.id
+    target_group_arn = aws_elbv2_lb_target_group.test.id
     type             = "forward"
   }
 }
 
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = "%s"
   port     = 80
   protocol = "HTTP"
@@ -1350,7 +1350,7 @@ resource "aws_security_group" "alb_test" {
 
 func testAccLoadBalancerWithIPAddressTypeConfig(lbName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_lb" "lb_test" {
+resource "aws_elbv2_lb" "lb_test" {
   name            = "%s"
   security_groups = [aws_security_group.alb_test.id]
   subnets         = [aws_subnet.alb_test_1.id, aws_subnet.alb_test_2.id]
@@ -1365,18 +1365,18 @@ resource "aws_lb" "lb_test" {
   }
 }
 
-resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.lb_test.id
+resource "aws_elbv2_lb_listener" "test" {
+  load_balancer_arn = aws_elbv2_lb.lb_test.id
   protocol          = "HTTP"
   port              = "80"
 
   default_action {
-    target_group_arn = aws_lb_target_group.test.id
+    target_group_arn = aws_elbv2_lb_target_group.test.id
     type             = "forward"
   }
 }
 
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = "%s"
   port     = 80
   protocol = "HTTP"
@@ -1463,7 +1463,7 @@ resource "aws_security_group" "alb_test" {
 
 func testAccLoadBalancerConfig_basic(lbName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_lb" "lb_test" {
+resource "aws_elbv2_lb" "lb_test" {
   name            = "%s"
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
@@ -1557,7 +1557,7 @@ resource "aws_route_table_association" "a" {
   route_table_id = aws_route_table.test.id
 }
 
-resource "aws_lb" "lb_test" {
+resource "aws_elbv2_lb" "lb_test" {
   name                       = "%s"
   security_groups            = [aws_security_group.alb_test.id]
   customer_owned_ipv4_pool   = tolist(data.aws_ec2_coip_pools.test.pool_ids)[0]
@@ -1617,7 +1617,7 @@ resource "aws_security_group" "alb_test" {
 
 func testAccLoadBalancerConfig_enableHTTP2(lbName string, http2 bool) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_lb" "lb_test" {
+resource "aws_elbv2_lb" "lb_test" {
   name            = "%s"
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
@@ -1686,7 +1686,7 @@ resource "aws_security_group" "alb_test" {
 
 func testAccLoadBalancerConfig_enableDropInvalidHeaderFields(lbName string, dropInvalid bool) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_lb" "lb_test" {
+resource "aws_elbv2_lb" "lb_test" {
   name            = "%s"
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
@@ -1755,7 +1755,7 @@ resource "aws_security_group" "alb_test" {
 
 func testAccLoadBalancerConfig_enableDeletionProtection(lbName string, deletion_protection bool) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_lb" "lb_test" {
+resource "aws_elbv2_lb" "lb_test" {
   name            = "%s"
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
@@ -1830,7 +1830,7 @@ resource "aws_vpc" "alb_test" {
   }
 }
 
-resource "aws_lb" "lb_test" {
+resource "aws_elbv2_lb" "lb_test" {
   name = "%s"
 
   subnets = [
@@ -1884,7 +1884,7 @@ resource "aws_subnet" "alb_test_3" {
 
 func testAccLoadBalancerConfig_networkLoadbalancer(lbName string, cz bool) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_lb" "lb_test" {
+resource "aws_elbv2_lb" "lb_test" {
   name               = "%s"
   internal           = true
   load_balancer_type = "network"
@@ -1944,7 +1944,7 @@ resource "aws_subnet" "test" {
   }
 }
 
-resource "aws_lb" "test" {
+resource "aws_elbv2_lb" "test" {
   load_balancer_type = "gateway"
   name               = %[1]q
 
@@ -1987,7 +1987,7 @@ resource "aws_subnet" "test" {
   }
 }
 
-resource "aws_lb" "test" {
+resource "aws_elbv2_lb" "test" {
   name                       = %[1]q
   load_balancer_type         = "network"
   enable_deletion_protection = false
@@ -2028,7 +2028,7 @@ resource "aws_subnet" "test" {
   }
 }
 
-resource "aws_lb" "test" {
+resource "aws_elbv2_lb" "test" {
   enable_cross_zone_load_balancing = %[2]t
   load_balancer_type               = "gateway"
   name                             = %[1]q
@@ -2080,7 +2080,7 @@ resource "aws_route_table_association" "a" {
   route_table_id = aws_route_table.public.id
 }
 
-resource "aws_lb" "lb_test" {
+resource "aws_elbv2_lb" "lb_test" {
   name               = "%s"
   load_balancer_type = "network"
 
@@ -2105,7 +2105,7 @@ resource "aws_eip" "lb" {
 
 func testAccLoadBalancerConfig_networkLoadBalancerPrivateIPV4Address(lbName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_lb" "test" {
+resource "aws_elbv2_lb" "test" {
   name                       = "%s"
   internal                   = true
   load_balancer_type         = "network"
@@ -2144,7 +2144,7 @@ resource "aws_subnet" "test" {
 
 func testAccLoadBalancerBackwardsCompatibilityConfig(lbName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_alb" "lb_test" {
+resource "aws_elbv2_lb" "lb_test" {
   name            = "%s"
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
@@ -2211,7 +2211,7 @@ resource "aws_security_group" "alb_test" {
 
 func testAccLoadBalancerConfig_updateSubnets(lbName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_lb" "lb_test" {
+resource "aws_elbv2_lb" "lb_test" {
   name            = "%s"
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
@@ -2278,7 +2278,7 @@ resource "aws_security_group" "alb_test" {
 
 func testAccLoadBalancerConfig_generatedName() string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
-resource "aws_lb" "lb_test" {
+resource "aws_elbv2_lb" "lb_test" {
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
   subnets         = aws_subnet.alb_test.*.id
@@ -2352,7 +2352,7 @@ resource "aws_security_group" "alb_test" {
 
 func testAccLoadBalancerConfig_zeroValueName() string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
-resource "aws_lb" "lb_test" {
+resource "aws_elbv2_lb" "lb_test" {
   name            = ""
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
@@ -2368,7 +2368,7 @@ resource "aws_lb" "lb_test" {
 
 # See https://github.com/hashicorp/terraform-provider-aws/issues/2498
 output "lb_name" {
-  value = aws_lb.lb_test.name
+  value = aws_elbv2_lb.lb_test.name
 }
 
 variable "subnets" {
@@ -2432,7 +2432,7 @@ resource "aws_security_group" "alb_test" {
 
 func testAccLoadBalancerConfig_namePrefix() string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
-resource "aws_lb" "lb_test" {
+resource "aws_elbv2_lb" "lb_test" {
   name_prefix     = "tf-lb-"
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
@@ -2499,7 +2499,7 @@ resource "aws_security_group" "alb_test" {
 
 func testAccLoadBalancerConfig_updatedTags(lbName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_lb" "lb_test" {
+resource "aws_elbv2_lb" "lb_test" {
   name            = "%s"
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
@@ -2616,7 +2616,7 @@ resource "aws_s3_bucket_policy" "test" {
 
 func testAccLoadBalancerALBAccessLogsConfig(enabled bool, lbName, bucketName, bucketPrefix string) string {
 	return acctest.ConfigCompose(testAccLoadBalancerALBAccessLogsBaseConfig(bucketName), fmt.Sprintf(`
-resource "aws_lb" "test" {
+resource "aws_elbv2_lb" "test" {
   internal = true
   name     = %[1]q
   subnets  = aws_subnet.alb_test.*.id
@@ -2632,7 +2632,7 @@ resource "aws_lb" "test" {
 
 func testAccLoadBalancerALBAccessLogsNoBlocksConfig(lbName, bucketName string) string {
 	return acctest.ConfigCompose(testAccLoadBalancerALBAccessLogsBaseConfig(bucketName), fmt.Sprintf(`
-resource "aws_lb" "test" {
+resource "aws_elbv2_lb" "test" {
   internal = true
   name     = %[1]q
   subnets  = aws_subnet.alb_test.*.id
@@ -2702,7 +2702,7 @@ resource "aws_s3_bucket_policy" "test" {
 
 func testAccLoadBalancerNLBAccessLogsConfig(enabled bool, lbName, bucketName, bucketPrefix string) string {
 	return acctest.ConfigCompose(testAccLoadBalancerNLBAccessLogsBaseConfig(bucketName), fmt.Sprintf(`
-resource "aws_lb" "test" {
+resource "aws_elbv2_lb" "test" {
   internal           = true
   load_balancer_type = "network"
   name               = %[1]q
@@ -2719,7 +2719,7 @@ resource "aws_lb" "test" {
 
 func testAccLoadBalancerNLBAccessLogsNoBlocksConfig(lbName, bucketName string) string {
 	return acctest.ConfigCompose(testAccLoadBalancerNLBAccessLogsBaseConfig(bucketName), fmt.Sprintf(`
-resource "aws_lb" "test" {
+resource "aws_elbv2_lb" "test" {
   internal           = true
   load_balancer_type = "network"
   name               = %[1]q
@@ -2730,7 +2730,7 @@ resource "aws_lb" "test" {
 
 func testAccLoadBalancerConfig_nosg(lbName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_lb" "lb_test" {
+resource "aws_elbv2_lb" "lb_test" {
   name     = "%s"
   internal = true
   subnets  = aws_subnet.alb_test.*.id
@@ -2772,7 +2772,7 @@ resource "aws_subnet" "alb_test" {
 
 func testAccLoadBalancerConfig_updateSecurityGroups(lbName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_lb" "lb_test" {
+resource "aws_elbv2_lb" "lb_test" {
   name            = "%s"
   internal        = true
   security_groups = [aws_security_group.alb_test.id, aws_security_group.alb_test_2.id]

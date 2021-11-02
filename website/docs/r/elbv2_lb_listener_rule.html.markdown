@@ -1,35 +1,35 @@
 ---
 subcategory: "Elastic Load Balancing v2 (ALB/NLB)"
 layout: "aws"
-page_title: "AWS: aws_lb_listener_rule"
+page_title: "AWS: aws_elbv2_lb_listener_rule"
 description: |-
   Provides a Load Balancer Listener Rule resource.
 ---
 
-# Resource: aws_lb_listener_rule
+# Resource: aws_elbv2_lb_listener_rule
 
 Provides a Load Balancer Listener Rule resource.
 
-~> **Note:** `aws_alb_listener_rule` is known as `aws_lb_listener_rule`. The functionality is identical.
+~> **Note:** `aws_elbv2_lb_listener_rule` is known as `aws_elbv2_lb_listener_rule`. The functionality is identical.
 
 ## Example Usage
 
 ```terraform
-resource "aws_lb" "front_end" {
+resource "aws_elbv2_lb" "front_end" {
   # ...
 }
 
-resource "aws_lb_listener" "front_end" {
+resource "aws_elbv2_lb_listener" "front_end" {
   # Other parameters
 }
 
-resource "aws_lb_listener_rule" "static" {
-  listener_arn = aws_lb_listener.front_end.arn
+resource "aws_elbv2_lb_listener_rule" "static" {
+  listener_arn = aws_elbv2_lb_listener.front_end.arn
   priority     = 100
 
   action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.static.arn
+    target_group_arn = aws_elbv2_lb_target_group.static.arn
   }
 
   condition {
@@ -47,13 +47,13 @@ resource "aws_lb_listener_rule" "static" {
 
 # Forward action
 
-resource "aws_lb_listener_rule" "host_based_weighted_routing" {
-  listener_arn = aws_lb_listener.front_end.arn
+resource "aws_elbv2_lb_listener_rule" "host_based_weighted_routing" {
+  listener_arn = aws_elbv2_lb_listener.front_end.arn
   priority     = 99
 
   action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.static.arn
+    target_group_arn = aws_elbv2_lb_target_group.static.arn
   }
 
   condition {
@@ -65,20 +65,20 @@ resource "aws_lb_listener_rule" "host_based_weighted_routing" {
 
 # Weighted Forward action
 
-resource "aws_lb_listener_rule" "host_based_routing" {
-  listener_arn = aws_lb_listener.front_end.arn
+resource "aws_elbv2_lb_listener_rule" "host_based_routing" {
+  listener_arn = aws_elbv2_lb_listener.front_end.arn
   priority     = 99
 
   action {
     type = "forward"
     forward {
       target_group {
-        arn    = aws_lb_target_group.main.arn
+        arn    = aws_elbv2_lb_target_group.main.arn
         weight = 80
       }
 
       target_group {
-        arn    = aws_lb_target_group.canary.arn
+        arn    = aws_elbv2_lb_target_group.canary.arn
         weight = 20
       }
 
@@ -98,8 +98,8 @@ resource "aws_lb_listener_rule" "host_based_routing" {
 
 # Redirect action
 
-resource "aws_lb_listener_rule" "redirect_http_to_https" {
-  listener_arn = aws_lb_listener.front_end.arn
+resource "aws_elbv2_lb_listener_rule" "redirect_http_to_https" {
+  listener_arn = aws_elbv2_lb_listener.front_end.arn
 
   action {
     type = "redirect"
@@ -121,8 +121,8 @@ resource "aws_lb_listener_rule" "redirect_http_to_https" {
 
 # Fixed-response action
 
-resource "aws_lb_listener_rule" "health_check" {
-  listener_arn = aws_lb_listener.front_end.arn
+resource "aws_elbv2_lb_listener_rule" "health_check" {
+  listener_arn = aws_elbv2_lb_listener.front_end.arn
 
   action {
     type = "fixed-response"
@@ -160,8 +160,8 @@ resource "aws_cognito_user_pool_domain" "domain" {
   # ...
 }
 
-resource "aws_lb_listener_rule" "admin" {
-  listener_arn = aws_lb_listener.front_end.arn
+resource "aws_elbv2_lb_listener_rule" "admin" {
+  listener_arn = aws_elbv2_lb_listener.front_end.arn
 
   action {
     type = "authenticate-cognito"
@@ -175,14 +175,14 @@ resource "aws_lb_listener_rule" "admin" {
 
   action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.static.arn
+    target_group_arn = aws_elbv2_lb_target_group.static.arn
   }
 }
 
 # Authenticate-oidc Action
 
-resource "aws_lb_listener_rule" "oidc" {
-  listener_arn = aws_lb_listener.front_end.arn
+resource "aws_elbv2_lb_listener_rule" "oidc" {
+  listener_arn = aws_elbv2_lb_listener.front_end.arn
 
   action {
     type = "authenticate-oidc"
@@ -199,7 +199,7 @@ resource "aws_lb_listener_rule" "oidc" {
 
   action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.static.arn
+    target_group_arn = aws_elbv2_lb_target_group.static.arn
   }
 }
 ```
@@ -334,5 +334,5 @@ In addition to all arguments above, the following attributes are exported:
 Rules can be imported using their ARN, e.g.,
 
 ```
-$ terraform import aws_lb_listener_rule.front_end arn:aws:elasticloadbalancing:us-west-2:187416307283:listener-rule/app/test/8e4497da625e2d8a/9ab28ade35828f96/67b3d2d36dd7c26b
+$ terraform import aws_elbv2_lb_listener_rule.front_end arn:aws:elasticloadbalancing:us-west-2:187416307283:listener-rule/app/test/8e4497da625e2d8a/9ab28ade35828f96/67b3d2d36dd7c26b
 ```

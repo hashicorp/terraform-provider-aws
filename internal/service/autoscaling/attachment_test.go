@@ -190,7 +190,7 @@ data "aws_availability_zones" "available" {
   }
 }
 
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = "test-alb-%d"
   port     = 443
   protocol = "HTTPS"
@@ -219,7 +219,7 @@ resource "aws_lb_target_group" "test" {
   }
 }
 
-resource "aws_lb_target_group" "another_test" {
+resource "aws_elbv2_lb_target_group" "another_test" {
   name     = "atest-alb-%d"
   port     = 443
   protocol = "HTTPS"
@@ -359,7 +359,7 @@ func testAccAttachment_alb_associated(rInt int) string {
 	return testAccAttachment_alb(rInt) + `
 resource "aws_autoscaling_attachment" "asg_attachment_foo" {
   autoscaling_group_name = aws_autoscaling_group.asg.id
-  alb_target_group_arn   = aws_lb_target_group.test.arn
+  alb_target_group_arn   = aws_elbv2_lb_target_group.test.arn
 }`
 }
 
@@ -375,6 +375,6 @@ func testAccAttachment_alb_double_associated(rInt int) string {
 	return testAccAttachment_alb_associated(rInt) + `
 resource "aws_autoscaling_attachment" "asg_attachment_bar" {
   autoscaling_group_name = aws_autoscaling_group.asg.id
-  alb_target_group_arn   = aws_lb_target_group.another_test.arn
+  alb_target_group_arn   = aws_elbv2_lb_target_group.another_test.arn
 }`
 }

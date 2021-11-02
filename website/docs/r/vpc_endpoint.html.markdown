@@ -65,7 +65,7 @@ data "aws_caller_identity" "current" {}
 resource "aws_vpc_endpoint_service" "example" {
   acceptance_required        = false
   allowed_principals         = [data.aws_caller_identity.current.arn]
-  gateway_load_balancer_arns = [aws_lb.example.arn]
+  gateway_load_balancer_arns = [aws_elbv2_lb.example.arn]
 }
 
 resource "aws_vpc_endpoint" "example" {

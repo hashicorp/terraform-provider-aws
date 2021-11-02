@@ -83,7 +83,7 @@ func TestAccGlobalAcceleratorEndpointGroup_ALBEndpoint_clientIP(t *testing.T) {
 	var v globalaccelerator.EndpointGroup
 	var vpc ec2.Vpc
 	resourceName := "aws_globalaccelerator_endpoint_group.test"
-	albResourceName := "aws_lb.test"
+	albResourceName := "aws_elbv2_lb.test"
 	vpcResourceName := "aws_vpc.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -533,7 +533,7 @@ func testAccGlobalAcceleratorEndpointGroupConfigALBEndpointClientIP(rName string
 		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
 		testAccGlobalAcceleratorEndpointGroupConfigBaseVpc(rName),
 		fmt.Sprintf(`
-resource "aws_lb" "test" {
+resource "aws_elbv2_lb" "test" {
   name            = %[1]q
   internal        = false
   security_groups = [aws_security_group.test.id]
@@ -614,7 +614,7 @@ resource "aws_globalaccelerator_endpoint_group" "test" {
   listener_arn = aws_globalaccelerator_listener.test.id
 
   endpoint_configuration {
-    endpoint_id                    = aws_lb.test.id
+    endpoint_id                    = aws_elbv2_lb.test.id
     weight                         = 20
     client_ip_preservation_enabled = %[2]t
   }

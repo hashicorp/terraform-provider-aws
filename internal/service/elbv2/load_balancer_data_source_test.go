@@ -12,10 +12,10 @@ import (
 
 func TestAccELBV2LoadBalancerDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	dataSourceName := "data.aws_lb.alb_test_with_arn"
-	dataSourceName2 := "data.aws_lb.alb_test_with_name"
-	dataSourceName3 := "data.aws_lb.alb_test_with_tags"
-	resourceName := "aws_lb.test"
+	dataSourceName := "data.aws_elbv2_lb.alb_test_with_arn"
+	dataSourceName2 := "data.aws_elbv2_lb.alb_test_with_name"
+	dataSourceName3 := "data.aws_elbv2_lb.alb_test_with_tags"
+	resourceName := "aws_elbv2_lb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
@@ -78,8 +78,8 @@ func TestAccELBV2LoadBalancerDataSource_basic(t *testing.T) {
 
 func TestAccELBV2LoadBalancerDataSource_outpost(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	dataSourceName := "data.aws_lb.alb_test_with_arn"
-	resourceName := "aws_lb.test"
+	dataSourceName := "data.aws_elbv2_lb.alb_test_with_arn"
+	resourceName := "aws_elbv2_lb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
@@ -113,10 +113,10 @@ func TestAccELBV2LoadBalancerDataSource_outpost(t *testing.T) {
 
 func TestAccELBV2LoadBalancerDataSource_backwardsCompatibility(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	dataSourceName1 := "data.aws_alb.alb_test_with_arn"
-	dataSourceName2 := "data.aws_alb.alb_test_with_name"
-	dataSourceName3 := "data.aws_alb.alb_test_with_tags"
-	resourceName := "aws_alb.test"
+	dataSourceName1 := "data.aws_elbv2_lb.alb_test_with_arn"
+	dataSourceName2 := "data.aws_elbv2_lb.alb_test_with_name"
+	dataSourceName3 := "data.aws_elbv2_lb.alb_test_with_tags"
+	resourceName := "aws_elbv2_lb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
@@ -188,7 +188,7 @@ func TestAccELBV2LoadBalancerDataSource_backwardsCompatibility(t *testing.T) {
 
 func testAcclbBasicDataSourceConfig(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_lb" "test" {
+resource "aws_elbv2_lb" "test" {
   name            = %[1]q
   internal        = true
   security_groups = [aws_security_group.test.id]
@@ -252,16 +252,16 @@ resource "aws_security_group" "test" {
   }
 }
 
-data "aws_lb" "alb_test_with_arn" {
-  arn = aws_lb.test.arn
+data "aws_elbv2_lb" "alb_test_with_arn" {
+  arn = aws_elbv2_lb.test.arn
 }
 
-data "aws_lb" "alb_test_with_name" {
-  name = aws_lb.test.name
+data "aws_elbv2_lb" "alb_test_with_name" {
+  name = aws_elbv2_lb.test.name
 }
 
-data "aws_lb" "alb_test_with_tags" {
-  tags = aws_lb.test.tags
+data "aws_elbv2_lb" "alb_test_with_tags" {
+  tags = aws_elbv2_lb.test.tags
 }
 `, rName))
 }
@@ -274,7 +274,7 @@ data "aws_outposts_outpost" "test" {
   id = tolist(data.aws_outposts_outposts.test.ids)[0]
 }
 
-resource "aws_lb" "test" {
+resource "aws_elbv2_lb" "test" {
   name            = %[1]q
   internal        = true
   security_groups = [aws_security_group.test.id]
@@ -332,15 +332,15 @@ resource "aws_security_group" "test" {
   }
 }
 
-data "aws_lb" "alb_test_with_arn" {
-  arn = aws_lb.test.arn
+data "aws_elbv2_lb" "alb_test_with_arn" {
+  arn = aws_elbv2_lb.test.arn
 }
 `, rName)
 }
 
 func testAcclbBackwardsCompatibilityDataSourceConfig(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_alb" "test" {
+resource "aws_elbv2_lb" "test" {
   name            = %[1]q
   internal        = true
   security_groups = [aws_security_group.test.id]
@@ -404,16 +404,16 @@ resource "aws_security_group" "test" {
   }
 }
 
-data "aws_alb" "alb_test_with_arn" {
-  arn = aws_alb.test.arn
+data "aws_elbv2_lb" "alb_test_with_arn" {
+  arn = aws_elbv2_lb.test.arn
 }
 
-data "aws_alb" "alb_test_with_name" {
-  name = aws_alb.test.name
+data "aws_elbv2_lb" "alb_test_with_name" {
+  name = aws_elbv2_lb.test.name
 }
 
-data "aws_alb" "alb_test_with_tags" {
-  tags = aws_alb.test.tags
+data "aws_elbv2_lb" "alb_test_with_tags" {
+  tags = aws_elbv2_lb.test.tags
 }
 `, rName))
 }

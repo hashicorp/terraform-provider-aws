@@ -1694,8 +1694,8 @@ func TestAccCodeDeployDeploymentGroup_ECS_blueGreen(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(5))
 	ecsClusterResourceName := "aws_ecs_cluster.test"
 	ecsServiceResourceName := "aws_ecs_service.test"
-	lbTargetGroupBlueResourceName := "aws_lb_target_group.blue"
-	lbTargetGroupGreenResourceName := "aws_lb_target_group.green"
+	lbTargetGroupBlueResourceName := "aws_elbv2_lb_target_group.blue"
+	lbTargetGroupGreenResourceName := "aws_elbv2_lb_target_group.green"
 	resourceName := "aws_codedeploy_deployment_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -3367,35 +3367,35 @@ resource "aws_security_group" "test" {
   }
 }
 
-resource "aws_lb_target_group" "blue" {
-  name        = "${aws_lb.test.name}-blue"
+resource "aws_elbv2_lb_target_group" "blue" {
+  name        = "${aws_elbv2_lb.test.name}-blue"
   port        = 80
   protocol    = "HTTP"
   target_type = "ip"
   vpc_id      = aws_vpc.test.id
 }
 
-resource "aws_lb_target_group" "green" {
-  name        = "${aws_lb.test.name}-green"
+resource "aws_elbv2_lb_target_group" "green" {
+  name        = "${aws_elbv2_lb.test.name}-green"
   port        = 80
   protocol    = "HTTP"
   target_type = "ip"
   vpc_id      = aws_vpc.test.id
 }
 
-resource "aws_lb" "test" {
+resource "aws_elbv2_lb" "test" {
   internal = true
   name     = %[1]q
   subnets  = aws_subnet.test[*].id
 }
 
-resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.arn
+resource "aws_elbv2_lb_listener" "test" {
+  load_balancer_arn = aws_elbv2_lb.test.arn
   port              = "80"
   protocol          = "HTTP"
 
   default_action {
-    target_group_arn = aws_lb_target_group.blue.arn
+    target_group_arn = aws_elbv2_lb_target_group.blue.arn
     type             = "forward"
   }
 }
@@ -3445,7 +3445,7 @@ resource "aws_ecs_service" "test" {
   load_balancer {
     container_name   = "test"
     container_port   = "80"
-    target_group_arn = aws_lb_target_group.blue.id
+    target_group_arn = aws_elbv2_lb_target_group.blue.id
   }
 
   network_configuration {
@@ -3556,15 +3556,15 @@ resource "aws_codedeploy_deployment_group" "test" {
   load_balancer_info {
     target_group_pair_info {
       prod_traffic_route {
-        listener_arns = [aws_lb_listener.test.arn]
+        listener_arns = [aws_elbv2_lb_listener.test.arn]
       }
 
       target_group {
-        name = aws_lb_target_group.blue.name
+        name = aws_elbv2_lb_target_group.blue.name
       }
 
       target_group {
-        name = aws_lb_target_group.green.name
+        name = aws_elbv2_lb_target_group.green.name
       }
     }
   }
@@ -3610,15 +3610,15 @@ resource "aws_codedeploy_deployment_group" "test" {
   load_balancer_info {
     target_group_pair_info {
       prod_traffic_route {
-        listener_arns = [aws_lb_listener.test.arn]
+        listener_arns = [aws_elbv2_lb_listener.test.arn]
       }
 
       target_group {
-        name = aws_lb_target_group.blue.name
+        name = aws_elbv2_lb_target_group.blue.name
       }
 
       target_group {
-        name = aws_lb_target_group.green.name
+        name = aws_elbv2_lb_target_group.green.name
       }
     }
   }

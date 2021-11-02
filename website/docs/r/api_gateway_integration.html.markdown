@@ -139,7 +139,7 @@ POLICY
 variable "name" {}
 variable "subnet_id" {}
 
-resource "aws_lb" "test" {
+resource "aws_elbv2_lb" "test" {
   name               = var.name
   internal           = true
   load_balancer_type = "network"
@@ -148,7 +148,7 @@ resource "aws_lb" "test" {
 
 resource "aws_api_gateway_vpc_link" "test" {
   name        = var.name
-  target_arns = [aws_lb.test.arn]
+  target_arns = [aws_elbv2_lb.test.arn]
 }
 
 resource "aws_api_gateway_rest_api" "test" {

@@ -128,15 +128,15 @@ resource "aws_codedeploy_deployment_group" "example" {
   load_balancer_info {
     target_group_pair_info {
       prod_traffic_route {
-        listener_arns = [aws_lb_listener.example.arn]
+        listener_arns = [aws_elbv2_lb_listener.example.arn]
       }
 
       target_group {
-        name = aws_lb_target_group.blue.name
+        name = aws_elbv2_lb_target_group.blue.name
       }
 
       target_group {
-        name = aws_lb_target_group.green.name
+        name = aws_elbv2_lb_target_group.green.name
       }
     }
   }

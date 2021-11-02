@@ -107,7 +107,7 @@ resource "aws_vpc" "nlb_test" {
   }
 }
 
-resource "aws_lb" "nlb_test_1" {
+resource "aws_elbv2_lb" "nlb_test_1" {
   name = "%s"
 
   subnets = [
@@ -151,7 +151,7 @@ resource "aws_vpc_endpoint_service" "foo" {
   acceptance_required = false
 
   network_load_balancer_arns = [
-    aws_lb.nlb_test_1.id,
+    aws_elbv2_lb.nlb_test_1.id,
   ]
 }
 

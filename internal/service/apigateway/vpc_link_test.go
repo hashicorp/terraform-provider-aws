@@ -180,7 +180,7 @@ func testAccCheckVPCLinkExists(name string) resource.TestCheckFunc {
 
 func testAccAPIGatewayVpcLinkConfig_basis(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lb" "test_a" {
+resource "aws_elbv2_lb" "test_a" {
   name               = "tf-lb-%s"
   internal           = true
   load_balancer_type = "network"
@@ -220,7 +220,7 @@ func testAccAPIGatewayVpcLinkConfig(rName, description string) string {
 resource "aws_api_gateway_vpc_link" "test" {
   name        = "tf-apigateway-%s"
   description = %q
-  target_arns = [aws_lb.test_a.arn]
+  target_arns = [aws_elbv2_lb.test_a.arn]
 }
 `, rName, description)
 }
@@ -230,7 +230,7 @@ func testAccAPIGatewayVpcLinkConfigTags1(rName, description, tagKey1, tagValue1 
 resource "aws_api_gateway_vpc_link" "test" {
   name        = "tf-apigateway-%s"
   description = %q
-  target_arns = [aws_lb.test_a.arn]
+  target_arns = [aws_elbv2_lb.test_a.arn]
 
   tags = {
     %q = %q
@@ -244,7 +244,7 @@ func testAccAPIGatewayVpcLinkConfigTags2(rName, description, tagKey1, tagValue1,
 resource "aws_api_gateway_vpc_link" "test" {
   name        = "tf-apigateway-%s"
   description = %q
-  target_arns = [aws_lb.test_a.arn]
+  target_arns = [aws_elbv2_lb.test_a.arn]
 
   tags = {
     %q = %q
@@ -259,7 +259,7 @@ func testAccAPIGatewayVpcLinkConfig_Update(rName, description string) string {
 resource "aws_api_gateway_vpc_link" "test" {
   name        = "tf-apigateway-update-%s"
   description = %q
-  target_arns = [aws_lb.test_a.arn]
+  target_arns = [aws_elbv2_lb.test_a.arn]
 }
 `, rName, description)
 }

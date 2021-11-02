@@ -31,7 +31,7 @@ resource "aws_ecs_service" "mongo" {
   }
 
   load_balancer {
-    target_group_arn = aws_lb_target_group.foo.arn
+    target_group_arn = aws_elbv2_lb_target_group.foo.arn
     container_name   = "mongo"
     container_port   = 8080
   }

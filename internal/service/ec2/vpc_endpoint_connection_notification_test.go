@@ -118,7 +118,7 @@ resource "aws_vpc" "nlb_test" {
   }
 }
 
-resource "aws_lb" "nlb_test" {
+resource "aws_elbv2_lb" "nlb_test" {
   name = "%s"
 
   subnets = [
@@ -162,7 +162,7 @@ resource "aws_vpc_endpoint_service" "test" {
   acceptance_required = false
 
   network_load_balancer_arns = [
-    aws_lb.nlb_test.id,
+    aws_elbv2_lb.nlb_test.id,
   ]
 
   allowed_principals = [
@@ -211,7 +211,7 @@ resource "aws_vpc" "nlb_test" {
   }
 }
 
-resource "aws_lb" "nlb_test" {
+resource "aws_elbv2_lb" "nlb_test" {
   name = "%s"
 
   subnets = [
@@ -255,7 +255,7 @@ resource "aws_vpc_endpoint_service" "test" {
   acceptance_required = false
 
   network_load_balancer_arns = [
-    aws_lb.nlb_test.id,
+    aws_elbv2_lb.nlb_test.id,
   ]
 
   allowed_principals = [

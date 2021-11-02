@@ -38,7 +38,7 @@ func TestAccEC2TrafficMirrorTarget_nlb(t *testing.T) {
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`traffic-mirror-target/tmt-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
-					resource.TestCheckResourceAttrPair(resourceName, "network_load_balancer_arn", "aws_lb.lb", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "network_load_balancer_arn", "aws_elbv2_lb.lb", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -234,7 +234,7 @@ resource "aws_subnet" "sub2" {
 
 func testAccTrafficMirrorTargetConfigNlb(rName, description string) string {
 	return acctest.ConfigCompose(testAccTrafficMirrorTargetConfigBase(rName), fmt.Sprintf(`
-resource "aws_lb" "lb" {
+resource "aws_elbv2_lb" "lb" {
   name               = %[1]q
   internal           = true
   load_balancer_type = "network"
@@ -250,7 +250,7 @@ resource "aws_lb" "lb" {
 
 resource "aws_ec2_traffic_mirror_target" "test" {
   description               = %[2]q
-  network_load_balancer_arn = aws_lb.lb.arn
+  network_load_balancer_arn = aws_elbv2_lb.lb.arn
 }
 `, rName, description))
 }
@@ -279,7 +279,7 @@ resource "aws_ec2_traffic_mirror_target" "test" {
 
 func testAccTrafficMirrorTargetConfigTags1(rName, description, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccTrafficMirrorTargetConfigBase(rName), fmt.Sprintf(`
-resource "aws_lb" "lb" {
+resource "aws_elbv2_lb" "lb" {
   name               = %[1]q
   internal           = true
   load_balancer_type = "network"
@@ -295,7 +295,7 @@ resource "aws_lb" "lb" {
 
 resource "aws_ec2_traffic_mirror_target" "test" {
   description               = %[2]q
-  network_load_balancer_arn = aws_lb.lb.arn
+  network_load_balancer_arn = aws_elbv2_lb.lb.arn
 
   tags = {
     %[3]q = %[4]q
@@ -306,7 +306,7 @@ resource "aws_ec2_traffic_mirror_target" "test" {
 
 func testAccTrafficMirrorTargetConfigTags2(rName, description, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(testAccTrafficMirrorTargetConfigBase(rName), fmt.Sprintf(`
-resource "aws_lb" "lb" {
+resource "aws_elbv2_lb" "lb" {
   name               = %[1]q
   internal           = true
   load_balancer_type = "network"
@@ -322,7 +322,7 @@ resource "aws_lb" "lb" {
 
 resource "aws_ec2_traffic_mirror_target" "test" {
   description               = %[2]q
-  network_load_balancer_arn = aws_lb.lb.arn
+  network_load_balancer_arn = aws_elbv2_lb.lb.arn
 
   tags = {
     %[3]q = %[4]q

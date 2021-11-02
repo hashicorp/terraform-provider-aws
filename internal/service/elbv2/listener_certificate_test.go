@@ -20,8 +20,8 @@ func TestAccELBV2ListenerCertificate_basic(t *testing.T) {
 	key := acctest.TLSRSAPrivateKeyPEM(2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
 	iamServerCertificateResourceName := "aws_iam_server_certificate.test"
-	lbListenerResourceName := "aws_lb_listener.test"
-	resourceName := "aws_lb_listener_certificate.test"
+	lbListenerResourceName := "aws_elbv2_lb_listener.test"
+	resourceName := "aws_elbv2_lb_listener_certificate.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -52,8 +52,8 @@ func TestAccELBV2ListenerCertificate_CertificateARN_underscores(t *testing.T) {
 	key := acctest.TLSRSAPrivateKeyPEM(2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
 	iamServerCertificateResourceName := "aws_iam_server_certificate.test"
-	lbListenerResourceName := "aws_lb_listener.test"
-	resourceName := "aws_lb_listener_certificate.test"
+	lbListenerResourceName := "aws_elbv2_lb_listener.test"
+	resourceName := "aws_elbv2_lb_listener_certificate.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -88,7 +88,7 @@ func TestAccELBV2ListenerCertificate_multiple(t *testing.T) {
 	}
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_lb_listener_certificate.default"
+	resourceName := "aws_elbv2_lb_listener_certificate.default"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -99,15 +99,15 @@ func TestAccELBV2ListenerCertificate_multiple(t *testing.T) {
 			{
 				Config: testAccLbListenerCertificateConfigMultiple(rName, keys, certificates),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckListenerCertificateExists("aws_lb_listener_certificate.default"),
-					testAccCheckListenerCertificateExists("aws_lb_listener_certificate.additional_1"),
-					testAccCheckListenerCertificateExists("aws_lb_listener_certificate.additional_2"),
-					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.default", "listener_arn"),
-					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.default", "certificate_arn"),
-					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.additional_1", "listener_arn"),
-					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.additional_1", "certificate_arn"),
-					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.additional_2", "listener_arn"),
-					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.additional_2", "certificate_arn"),
+					testAccCheckListenerCertificateExists("aws_elbv2_lb_listener_certificate.default"),
+					testAccCheckListenerCertificateExists("aws_elbv2_lb_listener_certificate.additional_1"),
+					testAccCheckListenerCertificateExists("aws_elbv2_lb_listener_certificate.additional_2"),
+					resource.TestCheckResourceAttrSet("aws_elbv2_lb_listener_certificate.default", "listener_arn"),
+					resource.TestCheckResourceAttrSet("aws_elbv2_lb_listener_certificate.default", "certificate_arn"),
+					resource.TestCheckResourceAttrSet("aws_elbv2_lb_listener_certificate.additional_1", "listener_arn"),
+					resource.TestCheckResourceAttrSet("aws_elbv2_lb_listener_certificate.additional_1", "certificate_arn"),
+					resource.TestCheckResourceAttrSet("aws_elbv2_lb_listener_certificate.additional_2", "listener_arn"),
+					resource.TestCheckResourceAttrSet("aws_elbv2_lb_listener_certificate.additional_2", "certificate_arn"),
 				),
 			},
 			{
@@ -118,33 +118,33 @@ func TestAccELBV2ListenerCertificate_multiple(t *testing.T) {
 			{
 				Config: testAccLbListenerCertificateConfigMultipleAddNew(rName, keys, certificates),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckListenerCertificateExists("aws_lb_listener_certificate.default"),
-					testAccCheckListenerCertificateExists("aws_lb_listener_certificate.additional_1"),
-					testAccCheckListenerCertificateExists("aws_lb_listener_certificate.additional_2"),
-					testAccCheckListenerCertificateExists("aws_lb_listener_certificate.additional_3"),
-					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.default", "listener_arn"),
-					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.default", "certificate_arn"),
-					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.additional_1", "listener_arn"),
-					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.additional_1", "certificate_arn"),
-					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.additional_2", "listener_arn"),
-					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.additional_2", "certificate_arn"),
-					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.additional_3", "listener_arn"),
-					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.additional_3", "certificate_arn"),
+					testAccCheckListenerCertificateExists("aws_elbv2_lb_listener_certificate.default"),
+					testAccCheckListenerCertificateExists("aws_elbv2_lb_listener_certificate.additional_1"),
+					testAccCheckListenerCertificateExists("aws_elbv2_lb_listener_certificate.additional_2"),
+					testAccCheckListenerCertificateExists("aws_elbv2_lb_listener_certificate.additional_3"),
+					resource.TestCheckResourceAttrSet("aws_elbv2_lb_listener_certificate.default", "listener_arn"),
+					resource.TestCheckResourceAttrSet("aws_elbv2_lb_listener_certificate.default", "certificate_arn"),
+					resource.TestCheckResourceAttrSet("aws_elbv2_lb_listener_certificate.additional_1", "listener_arn"),
+					resource.TestCheckResourceAttrSet("aws_elbv2_lb_listener_certificate.additional_1", "certificate_arn"),
+					resource.TestCheckResourceAttrSet("aws_elbv2_lb_listener_certificate.additional_2", "listener_arn"),
+					resource.TestCheckResourceAttrSet("aws_elbv2_lb_listener_certificate.additional_2", "certificate_arn"),
+					resource.TestCheckResourceAttrSet("aws_elbv2_lb_listener_certificate.additional_3", "listener_arn"),
+					resource.TestCheckResourceAttrSet("aws_elbv2_lb_listener_certificate.additional_3", "certificate_arn"),
 				),
 			},
 			{
 				Config: testAccLbListenerCertificateConfigMultiple(rName, keys, certificates),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckListenerCertificateExists("aws_lb_listener_certificate.default"),
-					testAccCheckListenerCertificateExists("aws_lb_listener_certificate.additional_1"),
-					testAccCheckListenerCertificateExists("aws_lb_listener_certificate.additional_2"),
-					testAccCheckListenerCertificateNotExists("aws_lb_listener_certificate.additional_3"),
-					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.default", "listener_arn"),
-					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.default", "certificate_arn"),
-					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.additional_1", "listener_arn"),
-					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.additional_1", "certificate_arn"),
-					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.additional_2", "listener_arn"),
-					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.additional_2", "certificate_arn"),
+					testAccCheckListenerCertificateExists("aws_elbv2_lb_listener_certificate.default"),
+					testAccCheckListenerCertificateExists("aws_elbv2_lb_listener_certificate.additional_1"),
+					testAccCheckListenerCertificateExists("aws_elbv2_lb_listener_certificate.additional_2"),
+					testAccCheckListenerCertificateNotExists("aws_elbv2_lb_listener_certificate.additional_3"),
+					resource.TestCheckResourceAttrSet("aws_elbv2_lb_listener_certificate.default", "listener_arn"),
+					resource.TestCheckResourceAttrSet("aws_elbv2_lb_listener_certificate.default", "certificate_arn"),
+					resource.TestCheckResourceAttrSet("aws_elbv2_lb_listener_certificate.additional_1", "listener_arn"),
+					resource.TestCheckResourceAttrSet("aws_elbv2_lb_listener_certificate.additional_1", "certificate_arn"),
+					resource.TestCheckResourceAttrSet("aws_elbv2_lb_listener_certificate.additional_2", "listener_arn"),
+					resource.TestCheckResourceAttrSet("aws_elbv2_lb_listener_certificate.additional_2", "certificate_arn"),
 				),
 			},
 		},
@@ -154,7 +154,7 @@ func TestAccELBV2ListenerCertificate_multiple(t *testing.T) {
 func TestAccELBV2ListenerCertificate_disappears(t *testing.T) {
 	key := acctest.TLSRSAPrivateKeyPEM(2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
-	resourceName := "aws_lb_listener_certificate.test"
+	resourceName := "aws_elbv2_lb_listener_certificate.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -179,7 +179,7 @@ func testAccCheckListenerCertificateDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_lb_listener_certificate" {
+		if rs.Type != "aws_elbv2_lb_listener_certificate" {
 			continue
 		}
 
@@ -264,13 +264,13 @@ resource "aws_subnet" "test" {
   }
 }
 
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   port     = 80
   protocol = "HTTP"
   vpc_id   = aws_vpc.test.id
 }
 
-resource "aws_lb" "test" {
+resource "aws_elbv2_lb" "test" {
   internal = true
   name     = "%[1]s"
   subnets  = aws_subnet.test[*].id
@@ -282,15 +282,15 @@ resource "aws_iam_server_certificate" "test" {
   private_key      = "%[3]s"
 }
 
-resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.arn
+resource "aws_elbv2_lb_listener" "test" {
+  load_balancer_arn = aws_elbv2_lb.test.arn
   port              = "443"
   protocol          = "HTTPS"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
   certificate_arn   = aws_iam_server_certificate.test.arn
 
   default_action {
-    target_group_arn = aws_lb_target_group.test.arn
+    target_group_arn = aws_elbv2_lb_target_group.test.arn
     type             = "forward"
   }
 }
@@ -299,9 +299,9 @@ resource "aws_lb_listener" "test" {
 
 func testAccLbListenerCertificateConfig(rName, key, certificate string) string {
 	return testAccLbListenerCertificateConfigLbListenerBase(rName, key, certificate) + `
-resource "aws_lb_listener_certificate" "test" {
+resource "aws_elbv2_lb_listener_certificate" "test" {
   certificate_arn = aws_iam_server_certificate.test.arn
-  listener_arn    = aws_lb_listener.test.arn
+  listener_arn    = aws_elbv2_lb_listener.test.arn
 }
 `
 }
@@ -337,13 +337,13 @@ resource "aws_subnet" "test" {
   }
 }
 
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   port     = 80
   protocol = "HTTP"
   vpc_id   = aws_vpc.test.id
 }
 
-resource "aws_lb" "test" {
+resource "aws_elbv2_lb" "test" {
   internal = true
   name     = %[1]q
   subnets  = aws_subnet.test[*].id
@@ -355,40 +355,40 @@ resource "aws_iam_server_certificate" "test" {
   private_key      = "%[3]s"
 }
 
-resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.arn
+resource "aws_elbv2_lb_listener" "test" {
+  load_balancer_arn = aws_elbv2_lb.test.arn
   port              = "443"
   protocol          = "HTTPS"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
   certificate_arn   = aws_iam_server_certificate.test.arn
 
   default_action {
-    target_group_arn = aws_lb_target_group.test.arn
+    target_group_arn = aws_elbv2_lb_target_group.test.arn
     type             = "forward"
   }
 }
 
-resource "aws_lb_listener_certificate" "test" {
+resource "aws_elbv2_lb_listener_certificate" "test" {
   certificate_arn = aws_iam_server_certificate.test.arn
-  listener_arn    = aws_lb_listener.test.arn
+  listener_arn    = aws_elbv2_lb_listener.test.arn
 }
 `, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key))
 }
 
 func testAccLbListenerCertificateConfigMultiple(rName string, keys, certificates []string) string {
 	return testAccLbListenerCertificateConfigLbListenerBase(rName, keys[0], certificates[0]) + fmt.Sprintf(`
-resource "aws_lb_listener_certificate" "default" {
-  listener_arn    = aws_lb_listener.test.arn
+resource "aws_elbv2_lb_listener_certificate" "default" {
+  listener_arn    = aws_elbv2_lb_listener.test.arn
   certificate_arn = aws_iam_server_certificate.test.arn
 }
 
-resource "aws_lb_listener_certificate" "additional_1" {
-  listener_arn    = aws_lb_listener.test.arn
+resource "aws_elbv2_lb_listener_certificate" "additional_1" {
+  listener_arn    = aws_elbv2_lb_listener.test.arn
   certificate_arn = aws_iam_server_certificate.additional_1.arn
 }
 
-resource "aws_lb_listener_certificate" "additional_2" {
-  listener_arn    = aws_lb_listener.test.arn
+resource "aws_elbv2_lb_listener_certificate" "additional_2" {
+  listener_arn    = aws_elbv2_lb_listener.test.arn
   certificate_arn = aws_iam_server_certificate.additional_2.arn
 }
 
@@ -414,8 +414,8 @@ resource "aws_iam_server_certificate" "additional_3" {
   private_key      = "%[3]s"
 }
 
-resource "aws_lb_listener_certificate" "additional_3" {
-  listener_arn    = aws_lb_listener.test.arn
+resource "aws_elbv2_lb_listener_certificate" "additional_3" {
+  listener_arn    = aws_elbv2_lb_listener.test.arn
   certificate_arn = aws_iam_server_certificate.additional_3.arn
 }
 `, rName, acctest.TLSPEMEscapeNewlines(certificates[3]), acctest.TLSPEMEscapeNewlines(keys[3]))

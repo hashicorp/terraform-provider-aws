@@ -82,7 +82,7 @@ func TestALBTargetGroupCloudwatchSuffixFromARN(t *testing.T) {
 func TestAccELBV2TargetGroup_backwardsCompatibility(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_alb_target_group.test"
+	resourceName := "aws_elbv2_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -125,7 +125,7 @@ func TestAccELBV2TargetGroup_backwardsCompatibility(t *testing.T) {
 func TestAccELBV2TargetGroup_protocolVersion(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_lb_target_group.test"
+	resourceName := "aws_elbv2_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -170,7 +170,7 @@ func TestAccELBV2TargetGroup_protocolVersion(t *testing.T) {
 func TestAccELBV2TargetGroup_ProtocolVersionGRPC_healthCheck(t *testing.T) {
 	var targetGroup1 elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_lb_target_group.test"
+	resourceName := "aws_elbv2_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -194,7 +194,7 @@ func TestAccELBV2TargetGroup_ProtocolVersionGRPC_healthCheck(t *testing.T) {
 func TestAccELBV2TargetGroup_ProtocolVersionHTTPGRPC_update(t *testing.T) {
 	var targetGroup1 elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_lb_target_group.test"
+	resourceName := "aws_elbv2_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -225,7 +225,7 @@ func TestAccELBV2TargetGroup_ProtocolVersionHTTPGRPC_update(t *testing.T) {
 func TestAccELBV2TargetGroup_ProtocolTCPHealthCheck_protocol(t *testing.T) {
 	var targetGroup1, targetGroup2 elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_lb_target_group.test"
+	resourceName := "aws_elbv2_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -257,7 +257,7 @@ func TestAccELBV2TargetGroup_ProtocolTCPHealthCheck_protocol(t *testing.T) {
 func TestAccELBV2TargetGroup_Protocol_tls(t *testing.T) {
 	var targetGroup1 elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_lb_target_group.test"
+	resourceName := "aws_elbv2_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -279,7 +279,7 @@ func TestAccELBV2TargetGroup_Protocol_tls(t *testing.T) {
 func TestAccELBV2TargetGroup_TCP_httpHealthCheck(t *testing.T) {
 	var confBefore, confAfter elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_lb_target_group.test"
+	resourceName := "aws_elbv2_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -338,7 +338,7 @@ func TestAccELBV2TargetGroup_TCP_httpHealthCheck(t *testing.T) {
 func TestAccELBV2TargetGroup_attrsOnCreate(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_lb_target_group.test"
+	resourceName := "aws_elbv2_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -371,7 +371,7 @@ func TestAccELBV2TargetGroup_attrsOnCreate(t *testing.T) {
 func TestAccELBV2TargetGroup_basic(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_lb_target_group.test"
+	resourceName := "aws_elbv2_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -416,7 +416,7 @@ func TestAccELBV2TargetGroup_basic(t *testing.T) {
 func TestAccELBV2TargetGroup_basicUdp(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_lb_target_group.test"
+	resourceName := "aws_elbv2_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -448,7 +448,7 @@ func TestAccELBV2TargetGroup_changeNameForceNew(t *testing.T) {
 	var before, after elbv2.TargetGroup
 	rNameBefore := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rNameAfter := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_lb_target_group.test"
+	resourceName := "aws_elbv2_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -477,7 +477,7 @@ func TestAccELBV2TargetGroup_changeNameForceNew(t *testing.T) {
 func TestAccELBV2TargetGroup_changePortForceNew(t *testing.T) {
 	var before, after elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_lb_target_group.test"
+	resourceName := "aws_elbv2_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -506,7 +506,7 @@ func TestAccELBV2TargetGroup_changePortForceNew(t *testing.T) {
 func TestAccELBV2TargetGroup_changeProtocolForceNew(t *testing.T) {
 	var before, after elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_lb_target_group.test"
+	resourceName := "aws_elbv2_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -535,7 +535,7 @@ func TestAccELBV2TargetGroup_changeProtocolForceNew(t *testing.T) {
 func TestAccELBV2TargetGroup_changeVPCForceNew(t *testing.T) {
 	var before, after elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_lb_target_group.test"
+	resourceName := "aws_elbv2_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -562,7 +562,7 @@ func TestAccELBV2TargetGroup_changeVPCForceNew(t *testing.T) {
 func TestAccELBV2TargetGroup_Defaults_application(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_lb_target_group.test"
+	resourceName := "aws_elbv2_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -600,7 +600,7 @@ func TestAccELBV2TargetGroup_Defaults_application(t *testing.T) {
 func TestAccELBV2TargetGroup_Defaults_network(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_lb_target_group.test"
+	resourceName := "aws_elbv2_lb_target_group.test"
 	healthCheckInvalid1 := `
 path     = "/health"
 interval = 10
@@ -672,7 +672,7 @@ protocol = "TCP"
 func TestAccELBV2TargetGroup_enableHealthCheck(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_lb_target_group.test"
+	resourceName := "aws_elbv2_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -707,7 +707,7 @@ func TestAccELBV2TargetGroup_enableHealthCheck(t *testing.T) {
 func TestAccELBV2TargetGroup_generatedName(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_lb_target_group.test"
+	resourceName := "aws_elbv2_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -728,7 +728,7 @@ func TestAccELBV2TargetGroup_generatedName(t *testing.T) {
 func TestAccELBV2TargetGroup_namePrefix(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_lb_target_group.test"
+	resourceName := "aws_elbv2_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -750,7 +750,7 @@ func TestAccELBV2TargetGroup_namePrefix(t *testing.T) {
 func TestAccELBV2TargetGroup_NetworkLB_targetGroup(t *testing.T) {
 	var targetGroup1, targetGroup2, targetGroup3 elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_lb_target_group.test"
+	resourceName := "aws_elbv2_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -822,7 +822,7 @@ func TestAccELBV2TargetGroup_NetworkLB_targetGroup(t *testing.T) {
 func TestAccELBV2TargetGroup_NetworkLB_targetGroupWithProxy(t *testing.T) {
 	var confBefore, confAfter elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_lb_target_group.test"
+	resourceName := "aws_elbv2_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -850,7 +850,7 @@ func TestAccELBV2TargetGroup_NetworkLB_targetGroupWithProxy(t *testing.T) {
 
 func TestAccELBV2TargetGroup_preserveClientIPValid(t *testing.T) {
 	var conf elbv2.TargetGroup
-	resourceName := "aws_lb_target_group.test"
+	resourceName := "aws_elbv2_lb_target_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -880,7 +880,7 @@ func TestAccELBV2TargetGroup_preserveClientIPValid(t *testing.T) {
 func TestAccELBV2TargetGroup_protocolGeneve(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_lb_target_group.test"
+	resourceName := "aws_elbv2_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckElbv2GatewayLoadBalancer(t) },
@@ -913,7 +913,7 @@ func TestAccELBV2TargetGroup_protocolGeneve(t *testing.T) {
 func TestAccELBV2TargetGroup_protocolGeneveNotSticky(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_lb_target_group.test"
+	resourceName := "aws_elbv2_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckElbv2GatewayLoadBalancer(t) },
@@ -953,7 +953,7 @@ func TestAccELBV2TargetGroup_protocolGeneveNotSticky(t *testing.T) {
 func TestAccELBV2TargetGroup_stickinessDefaultALB(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_lb_target_group.test"
+	resourceName := "aws_elbv2_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -977,7 +977,7 @@ func TestAccELBV2TargetGroup_stickinessDefaultALB(t *testing.T) {
 func TestAccELBV2TargetGroup_stickinessDefaultNLB(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_lb_target_group.test"
+	resourceName := "aws_elbv2_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -1074,7 +1074,7 @@ func TestAccELBV2TargetGroup_stickinessInvalidNLB(t *testing.T) {
 func TestAccELBV2TargetGroup_stickinessValidALB(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_lb_target_group.test"
+	resourceName := "aws_elbv2_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -1109,7 +1109,7 @@ func TestAccELBV2TargetGroup_stickinessValidALB(t *testing.T) {
 func TestAccELBV2TargetGroup_stickinessValidNLB(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_lb_target_group.test"
+	resourceName := "aws_elbv2_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -1169,7 +1169,7 @@ func TestAccELBV2TargetGroup_stickinessValidNLB(t *testing.T) {
 func TestAccELBV2TargetGroup_tags(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_lb_target_group.test"
+	resourceName := "aws_elbv2_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -1209,7 +1209,7 @@ func TestAccELBV2TargetGroup_tags(t *testing.T) {
 func TestAccELBV2TargetGroup_updateAppStickinessEnabled(t *testing.T) {
 	var conf elbv2.TargetGroup
 	targetGroupName := fmt.Sprintf("test-target-group-%s", sdkacctest.RandString(10))
-	resourceName := "aws_lb_target_group.test"
+	resourceName := "aws_elbv2_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -1297,7 +1297,7 @@ func TestAccELBV2TargetGroup_updateAppStickinessEnabled(t *testing.T) {
 func TestAccELBV2TargetGroup_updateHealthCheck(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_lb_target_group.test"
+	resourceName := "aws_elbv2_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -1362,7 +1362,7 @@ func TestAccELBV2TargetGroup_updateHealthCheck(t *testing.T) {
 func TestAccELBV2TargetGroup_updateStickinessEnabled(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_lb_target_group.test"
+	resourceName := "aws_elbv2_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -1448,7 +1448,7 @@ func TestAccELBV2TargetGroup_updateStickinessEnabled(t *testing.T) {
 func TestAccELBV2TargetGroup_withoutHealthCheck(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_lb_target_group.test"
+	resourceName := "aws_elbv2_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -1473,7 +1473,7 @@ func TestAccELBV2TargetGroup_withoutHealthCheck(t *testing.T) {
 func TestAccELBV2TargetGroup_A_basic(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_alb_target_group.test"
+	resourceName := "aws_elbv2_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -1518,7 +1518,7 @@ func TestAccELBV2TargetGroup_A_changeNameForceNew(t *testing.T) {
 	var before, after elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rNameAfter := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_alb_target_group.test"
+	resourceName := "aws_elbv2_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -1547,7 +1547,7 @@ func TestAccELBV2TargetGroup_A_changeNameForceNew(t *testing.T) {
 func TestAccELBV2TargetGroup_A_changePortForceNew(t *testing.T) {
 	var before, after elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_alb_target_group.test"
+	resourceName := "aws_elbv2_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -1576,7 +1576,7 @@ func TestAccELBV2TargetGroup_A_changePortForceNew(t *testing.T) {
 func TestAccELBV2TargetGroup_A_changeProtocolForceNew(t *testing.T) {
 	var before, after elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_alb_target_group.test"
+	resourceName := "aws_elbv2_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -1605,7 +1605,7 @@ func TestAccELBV2TargetGroup_A_changeProtocolForceNew(t *testing.T) {
 func TestAccELBV2TargetGroup_A_changeVPCForceNew(t *testing.T) {
 	var before, after elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_alb_target_group.test"
+	resourceName := "aws_elbv2_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -1632,7 +1632,7 @@ func TestAccELBV2TargetGroup_A_changeVPCForceNew(t *testing.T) {
 func TestAccELBV2TargetGroup_A_generatedName(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_alb_target_group.test"
+	resourceName := "aws_elbv2_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -1653,7 +1653,7 @@ func TestAccELBV2TargetGroup_A_generatedName(t *testing.T) {
 func TestAccELBV2TargetGroup_A_lambda(t *testing.T) {
 	var targetGroup1 elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_alb_target_group.test"
+	resourceName := "aws_elbv2_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -1687,7 +1687,7 @@ func TestAccELBV2TargetGroup_A_lambda(t *testing.T) {
 func TestAccELBV2TargetGroup_A_lambdaMultiValueHeadersEnabled(t *testing.T) {
 	var targetGroup1 elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_alb_target_group.test"
+	resourceName := "aws_elbv2_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -1762,7 +1762,7 @@ func TestAccELBV2TargetGroup_A_missingPortProtocolVPC(t *testing.T) {
 func TestAccELBV2TargetGroup_A_namePrefix(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_alb_target_group.test"
+	resourceName := "aws_elbv2_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -1784,7 +1784,7 @@ func TestAccELBV2TargetGroup_A_namePrefix(t *testing.T) {
 func TestAccELBV2TargetGroup_A_setAndUpdateSlowStart(t *testing.T) {
 	var before, after elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_alb_target_group.test"
+	resourceName := "aws_elbv2_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -1813,7 +1813,7 @@ func TestAccELBV2TargetGroup_A_setAndUpdateSlowStart(t *testing.T) {
 func TestAccELBV2TargetGroup_A_tags(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_alb_target_group.test"
+	resourceName := "aws_elbv2_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -1845,7 +1845,7 @@ func TestAccELBV2TargetGroup_A_tags(t *testing.T) {
 func TestAccELBV2TargetGroup_A_updateHealthCheck(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_alb_target_group.test"
+	resourceName := "aws_elbv2_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -1908,7 +1908,7 @@ func TestAccELBV2TargetGroup_A_updateHealthCheck(t *testing.T) {
 func TestAccELBV2TargetGroup_A_updateLoadBalancingAlgorithmType(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_alb_target_group.test"
+	resourceName := "aws_elbv2_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -1950,7 +1950,7 @@ func TestAccELBV2TargetGroup_A_updateLoadBalancingAlgorithmType(t *testing.T) {
 func TestAccELBV2TargetGroup_A_updateStickinessEnabled(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_alb_target_group.test"
+	resourceName := "aws_elbv2_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -2035,7 +2035,7 @@ func TestAccELBV2TargetGroup_A_updateStickinessEnabled(t *testing.T) {
 
 func testAccALB_defaults(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = %[1]q
   port     = 443
   protocol = "HTTP"
@@ -2076,7 +2076,7 @@ resource "aws_vpc" "test" {
 
 func testAccTargetGroupBackwardsCompatibilityConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_alb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = %[1]q
   port     = 443
   protocol = "HTTPS"
@@ -2126,7 +2126,7 @@ resource "aws_vpc" "test" {
   }
 }
 
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = %[1]q
   port     = 6081
   protocol = "GENEVE"
@@ -2142,7 +2142,7 @@ resource "aws_lb_target_group" "test" {
 
 func testAccTargetGroupTags1Config(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = %[1]q
   port     = 443
   protocol = "HTTPS"
@@ -2184,7 +2184,7 @@ resource "aws_vpc" "test" {
 
 func testAccTargetGroupTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = %[1]q
   port     = 443
   protocol = "HTTPS"
@@ -2227,7 +2227,7 @@ resource "aws_vpc" "test" {
 
 func testAccTargetGroupConfig_GRPC_ProtocolVersion(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name             = %[1]q
   port             = 80
   protocol         = "HTTP"
@@ -2277,7 +2277,7 @@ resource "aws_vpc" "test" {
 
 func testAccTargetGroupConfig_ProtocolVersion(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name             = %[1]q
   port             = 443
   protocol         = "HTTPS"
@@ -2328,7 +2328,7 @@ resource "aws_vpc" "test" {
   }
 }
 
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = %[1]q
   port     = 443
   protocol = "TLS"
@@ -2364,7 +2364,7 @@ stickiness {
 	}
 
 	return fmt.Sprintf(`
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = %[1]q
   port     = 443
   protocol = "HTTPS"
@@ -2398,7 +2398,7 @@ resource "aws_vpc" "test" {
 
 func testAccTargetGroupConfig_basic(rName string, deregDelay int) string {
 	return fmt.Sprintf(`
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = %[1]q
   port     = 443
   protocol = "HTTPS"
@@ -2440,7 +2440,7 @@ resource "aws_vpc" "test" {
 
 func testAccTargetGroupConfig_basicUdp(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = %[1]q
   port     = 514
   protocol = "UDP"
@@ -2468,7 +2468,7 @@ resource "aws_vpc" "test" {
 
 func testAccTargetGroupConfig_enableHealthcheck(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name        = %[1]q
   target_type = "lambda"
 
@@ -2482,7 +2482,7 @@ resource "aws_lb_target_group" "test" {
 
 func testAccTargetGroupConfig_generatedName(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   port     = 80
   protocol = "HTTP"
   vpc_id   = aws_vpc.test.id
@@ -2500,7 +2500,7 @@ resource "aws_vpc" "test" {
 
 func testAccTargetGroupConfig_namePrefix(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name_prefix = "tf-"
   port        = 80
   protocol    = "HTTP"
@@ -2519,7 +2519,7 @@ resource "aws_vpc" "test" {
 
 func testAccTargetGroupConfig_preserveClientIP(rName string, preserveClientIP bool) string {
 	return fmt.Sprintf(`
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = %[1]q
   port     = 443
   protocol = "TCP"
@@ -2558,7 +2558,7 @@ stickiness {
 	}
 
 	return fmt.Sprintf(`
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = %[1]q
   port     = 443
   protocol = "HTTPS"
@@ -2600,7 +2600,7 @@ resource "aws_vpc" "test" {
   }
 }
 
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name_prefix = "tf-"
   port        = 25
   protocol    = %[2]q
@@ -2611,7 +2611,7 @@ resource "aws_lb_target_group" "test" {
 
 func testAccTargetGroupConfig_stickinessValidity(rName, protocol, stickyType string, enabled bool) string {
 	return fmt.Sprintf(`
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name_prefix = "tf-"
   port        = 25
   protocol    = %[1]q
@@ -2635,7 +2635,7 @@ resource "aws_vpc" "test" {
 
 func testAccTargetGroupConfig_typeTCP(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = %[1]q
   port     = 8082
   protocol = "TCP"
@@ -2668,7 +2668,7 @@ resource "aws_vpc" "test" {
 
 func testAccTargetGroupConfig_typeTCPIntervalUpdated(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = %[1]q
   port     = 8082
   protocol = "TCP"
@@ -2701,7 +2701,7 @@ resource "aws_vpc" "test" {
 
 func testAccTargetGroupConfig_typeTCPInvalidThreshold(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = %[1]q
   port     = 8082
   protocol = "TCP"
@@ -2734,7 +2734,7 @@ resource "aws_vpc" "test" {
 
 func testAccTargetGroupConfig_typeTCPThresholdUpdated(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = %[1]q
   port     = 8082
   protocol = "TCP"
@@ -2767,7 +2767,7 @@ resource "aws_vpc" "test" {
 
 func testAccTargetGroupConfig_typeTCP_HTTPHealthCheck(rName, path string, threshold int) string {
 	return fmt.Sprintf(`
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = "%[1]s"
   port     = 8082
   protocol = "TCP"
@@ -2801,7 +2801,7 @@ resource "aws_vpc" "test" {
 
 func testAccTargetGroupConfig_typeTCP_withProxyProtocol(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = %[1]q
   port     = 8082
   protocol = "TCP"
@@ -2835,7 +2835,7 @@ resource "aws_vpc" "test" {
 
 func testAccTargetGroupConfig_updateHealthCheck(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = %[1]q
   port     = 443
   protocol = "HTTPS"
@@ -2872,7 +2872,7 @@ resource "aws_vpc" "test" {
 
 func testAccTargetGroupConfig_updatedPort(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = %[1]q
   port     = 442
   protocol = "HTTPS"
@@ -2913,7 +2913,7 @@ resource "aws_vpc" "test" {
 
 func testAccTargetGroupConfig_updatedProtocol(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = %[1]q
   port     = 443
   protocol = "HTTP"
@@ -2962,7 +2962,7 @@ resource "aws_vpc" "test" {
 
 func testAccTargetGroupConfig_updatedVPC(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = %[1]q
   port     = 443
   protocol = "HTTPS"
@@ -3003,7 +3003,7 @@ resource "aws_vpc" "test" {
 
 func testAccTargetGroupConfig_withoutHealthcheck(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name        = %[1]q
   target_type = "lambda"
 }
@@ -3020,7 +3020,7 @@ resource "aws_vpc" "test" {
   }
 }
 
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = %[1]q
   port     = 6081
   protocol = "GENEVE"
@@ -3043,7 +3043,7 @@ func testAccCheckTargetGroupDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_lb_target_group" && rs.Type != "aws_alb_target_group" {
+		if rs.Type != "aws_elbv2_lb_target_group" && rs.Type != "aws_elbv2_lb_target_group" {
 			continue
 		}
 
@@ -3117,7 +3117,7 @@ func testAccCheckTargetGroupRecreated(i, j *elbv2.TargetGroup) resource.TestChec
 
 func testAccNLB_defaults(rName, healthCheckBlock string) string {
 	return fmt.Sprintf(`
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = %[1]q
   port     = 443
   protocol = "TCP"
@@ -3147,7 +3147,7 @@ resource "aws_vpc" "test" {
 
 func testAccATargetGroupConfig_basic(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_alb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = %[1]q
   port     = 443
   protocol = "HTTPS"
@@ -3187,7 +3187,7 @@ resource "aws_vpc" "test" {
 
 func testAccATargetGroupConfig_generatedName(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_alb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   port     = 80
   protocol = "HTTP"
   vpc_id   = aws_vpc.test.id
@@ -3213,7 +3213,7 @@ resource "aws_vpc" "test" {
 
 func testAccATargetGroupConfig_lambda(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_alb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name        = %[1]q
   target_type = "lambda"
 }`, rName)
@@ -3221,7 +3221,7 @@ resource "aws_alb_target_group" "test" {
 
 func testAccATargetGroupConfig_lambdaMultiValueHeadersEnabled(rName string, lambdaMultiValueHadersEnabled bool) string {
 	return fmt.Sprintf(`
-resource "aws_alb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   lambda_multi_value_headers_enabled = %[1]t
   name                               = %[2]q
   target_type                        = "lambda"
@@ -3237,7 +3237,7 @@ func testAccATargetGroupConfig_loadBalancingAlgorithm(rName string, nonDefault b
 	}
 
 	return fmt.Sprintf(`
-resource "aws_alb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = %[1]q
   port     = 443
   protocol = "HTTPS"
@@ -3257,7 +3257,7 @@ resource "aws_vpc" "test" {
 
 func testAccATargetGroupConfig_missing_port(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_alb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = %[1]q
   protocol = "HTTPS"
   vpc_id   = aws_vpc.test.id
@@ -3270,7 +3270,7 @@ resource "aws_vpc" "test" {
 
 func testAccATargetGroupConfig_missing_protocol(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_alb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name   = %[1]q
   port   = 443
   vpc_id = aws_vpc.test.id
@@ -3283,7 +3283,7 @@ resource "aws_vpc" "test" {
 
 func testAccATargetGroupConfig_missing_vpc(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_alb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = %[1]q
   port     = 443
   protocol = "HTTPS"
@@ -3293,7 +3293,7 @@ resource "aws_alb_target_group" "test" {
 
 func testAccATargetGroupConfig_namePrefix(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_alb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name_prefix = "tf-"
   port        = 80
   protocol    = "HTTP"
@@ -3322,7 +3322,7 @@ func testAccATargetGroupConfig_stickiness(rName string, addStickinessBlock bool,
 	}
 
 	return fmt.Sprintf(`
-resource "aws_alb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = %[1]q
   port     = 443
   protocol = "HTTPS"
@@ -3355,7 +3355,7 @@ resource "aws_vpc" "test" {
 
 func testAccATargetGroupConfig_updateHealthCheck(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_alb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = %[1]q
   port     = 443
   protocol = "HTTPS"
@@ -3391,7 +3391,7 @@ resource "aws_vpc" "test" {
 
 func testAccATargetGroupConfig_updateSlowStart(rName string, slowStartDuration int) string {
 	return fmt.Sprintf(`
-resource "aws_alb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = %[1]q
   port     = 443
   protocol = "HTTP"
@@ -3432,7 +3432,7 @@ resource "aws_vpc" "test" {
 
 func testAccATargetGroupConfig_updateTags(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_alb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = %[1]q
   port     = 443
   protocol = "HTTPS"
@@ -3473,7 +3473,7 @@ resource "aws_vpc" "test" {
 
 func testAccATargetGroupConfig_updatedPort(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_alb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = %[1]q
   port     = 442
   protocol = "HTTPS"
@@ -3513,7 +3513,7 @@ resource "aws_vpc" "test" {
 
 func testAccATargetGroupConfig_updatedProtocol(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_alb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = %[1]q
   port     = 443
   protocol = "HTTP"
@@ -3561,7 +3561,7 @@ resource "aws_vpc" "test" {
 
 func testAccATargetGroupConfig_updatedVPC(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_alb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = %[1]q
   port     = 443
   protocol = "HTTPS"
@@ -3603,7 +3603,7 @@ func testAccCheckATargetGroupDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_alb_target_group" {
+		if rs.Type != "aws_elbv2_lb_target_group" {
 			continue
 		}
 

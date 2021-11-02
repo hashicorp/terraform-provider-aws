@@ -12,8 +12,8 @@ import (
 
 func TestAccELBV2TargetGroupDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceNameArn := "data.aws_lb_target_group.alb_tg_test_with_arn"
-	resourceName := "data.aws_lb_target_group.alb_tg_test_with_name"
+	resourceNameArn := "data.aws_elbv2_lb_target_group.alb_tg_test_with_arn"
+	resourceName := "data.aws_elbv2_lb_target_group.alb_tg_test_with_name"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
@@ -73,7 +73,7 @@ func TestAccELBV2TargetGroupDataSource_basic(t *testing.T) {
 
 func TestAccELBV2TargetGroupDataSource_appCookie(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceNameArn := "data.aws_lb_target_group.alb_tg_test_with_arn"
+	resourceNameArn := "data.aws_elbv2_lb_target_group.alb_tg_test_with_arn"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
@@ -114,8 +114,8 @@ func TestAccELBV2TargetGroupDataSource_appCookie(t *testing.T) {
 
 func TestAccELBV2TargetGroupDataSource_backwardsCompatibility(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceNameArn := "data.aws_alb_target_group.alb_tg_test_with_arn"
-	resourceName := "data.aws_alb_target_group.alb_tg_test_with_name"
+	resourceNameArn := "data.aws_elbv2_lb_target_group.alb_tg_test_with_arn"
+	resourceName := "data.aws_elbv2_lb_target_group.alb_tg_test_with_name"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
@@ -173,18 +173,18 @@ func TestAccELBV2TargetGroupDataSource_backwardsCompatibility(t *testing.T) {
 
 func testAcclbTargetGroupBasicDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lb_listener" "front_end" {
-  load_balancer_arn = aws_lb.alb_test.id
+resource "aws_elbv2_lb_listener" "front_end" {
+  load_balancer_arn = aws_elbv2_lb.alb_test.id
   protocol          = "HTTP"
   port              = "80"
 
   default_action {
-    target_group_arn = aws_lb_target_group.test.id
+    target_group_arn = aws_elbv2_lb_target_group.test.id
     type             = "forward"
   }
 }
 
-resource "aws_lb" "alb_test" {
+resource "aws_elbv2_lb" "alb_test" {
   name            = %[1]q
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
@@ -198,7 +198,7 @@ resource "aws_lb" "alb_test" {
   }
 }
 
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = %[1]q
   port     = 8080
   protocol = "HTTP"
@@ -278,30 +278,30 @@ resource "aws_security_group" "alb_test" {
   }
 }
 
-data "aws_lb_target_group" "alb_tg_test_with_arn" {
-  arn = aws_lb_target_group.test.arn
+data "aws_elbv2_lb_target_group" "alb_tg_test_with_arn" {
+  arn = aws_elbv2_lb_target_group.test.arn
 }
 
-data "aws_lb_target_group" "alb_tg_test_with_name" {
-  name = aws_lb_target_group.test.name
+data "aws_elbv2_lb_target_group" "alb_tg_test_with_name" {
+  name = aws_elbv2_lb_target_group.test.name
 }
 `, rName)
 }
 
 func testAcclbTargetGroupAppCookieDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lb_listener" "front_end" {
-  load_balancer_arn = aws_lb.alb_test.id
+resource "aws_elbv2_lb_listener" "front_end" {
+  load_balancer_arn = aws_elbv2_lb.alb_test.id
   protocol          = "HTTP"
   port              = "80"
 
   default_action {
-    target_group_arn = aws_lb_target_group.test.id
+    target_group_arn = aws_elbv2_lb_target_group.test.id
     type             = "forward"
   }
 }
 
-resource "aws_lb" "alb_test" {
+resource "aws_elbv2_lb" "alb_test" {
   name            = %[1]q
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
@@ -315,7 +315,7 @@ resource "aws_lb" "alb_test" {
   }
 }
 
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = %[1]q
   port     = 8080
   protocol = "HTTP"
@@ -401,26 +401,26 @@ resource "aws_security_group" "alb_test" {
   }
 }
 
-data "aws_lb_target_group" "alb_tg_test_with_arn" {
-  arn = aws_lb_target_group.test.arn
+data "aws_elbv2_lb_target_group" "alb_tg_test_with_arn" {
+  arn = aws_elbv2_lb_target_group.test.arn
 }
 `, rName)
 }
 
 func testAcclbTargetGroupBackwardsCompatibilityDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_alb_listener" "front_end" {
-  load_balancer_arn = aws_alb.alb_test.id
+resource "aws_elbv2_lb_listener" "front_end" {
+  load_balancer_arn = aws_elbv2_lb.alb_test.id
   protocol          = "HTTP"
   port              = "80"
 
   default_action {
-    target_group_arn = aws_alb_target_group.test.id
+    target_group_arn = aws_elbv2_lb_target_group.test.id
     type             = "forward"
   }
 }
 
-resource "aws_alb" "alb_test" {
+resource "aws_elbv2_lb" "alb_test" {
   name            = %[1]q
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
@@ -434,7 +434,7 @@ resource "aws_alb" "alb_test" {
   }
 }
 
-resource "aws_alb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = %[1]q
   port     = 8080
   protocol = "HTTP"
@@ -514,12 +514,12 @@ resource "aws_security_group" "alb_test" {
   }
 }
 
-data "aws_alb_target_group" "alb_tg_test_with_arn" {
-  arn = aws_alb_target_group.test.arn
+data "aws_elbv2_lb_target_group" "alb_tg_test_with_arn" {
+  arn = aws_elbv2_lb_target_group.test.arn
 }
 
-data "aws_alb_target_group" "alb_tg_test_with_name" {
-  name = aws_alb_target_group.test.name
+data "aws_elbv2_lb_target_group" "alb_tg_test_with_name" {
+  name = aws_elbv2_lb_target_group.test.name
 }
 `, rName)
 }

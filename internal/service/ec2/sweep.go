@@ -183,7 +183,7 @@ func init() {
 			"aws_fsx_ontap_file_system",
 			"aws_fsx_windows_file_system",
 			"aws_lambda_function",
-			"aws_lb",
+			"aws_elbv2_lb",
 			"aws_mq_broker",
 			"aws_msk_cluster",
 			"aws_network_interface",

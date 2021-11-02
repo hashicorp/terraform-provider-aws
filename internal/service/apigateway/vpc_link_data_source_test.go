@@ -45,7 +45,7 @@ resource "aws_vpc" "apigateway_vpclink_test" {
   }
 }
 
-resource "aws_lb" "apigateway_vpclink_test" {
+resource "aws_elbv2_lb" "apigateway_vpclink_test" {
   name = "%s"
 
   subnets = [
@@ -63,7 +63,7 @@ resource "aws_lb" "apigateway_vpclink_test" {
   }
 }
 
-resource "aws_lb" "apigateway_vpclink_test2" {
+resource "aws_elbv2_lb" "apigateway_vpclink_test2" {
   name = "%s-wrong"
 
   subnets = [
@@ -92,12 +92,12 @@ resource "aws_subnet" "apigateway_vpclink_test_subnet1" {
 
 resource "aws_api_gateway_vpc_link" "vpc_link" {
   name        = "%s"
-  target_arns = [aws_lb.apigateway_vpclink_test.arn]
+  target_arns = [aws_elbv2_lb.apigateway_vpclink_test.arn]
 }
 
 resource "aws_api_gateway_vpc_link" "vpc_link2" {
   name        = "%s-wrong"
-  target_arns = [aws_lb.apigateway_vpclink_test2.arn]
+  target_arns = [aws_elbv2_lb.apigateway_vpclink_test2.arn]
 }
 
 data "aws_api_gateway_vpc_link" "vpc_link" {

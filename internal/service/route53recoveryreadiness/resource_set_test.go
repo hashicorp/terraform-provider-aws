@@ -383,7 +383,7 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 }
 
-resource "aws_lb" "test" {
+resource "aws_elbv2_lb" "test" {
   name = %[1]q
 
   subnets = [
@@ -521,7 +521,7 @@ resource "aws_route53recoveryreadiness_resource_set" "test" {
 
       target_resource {
         nlb_resource {
-          arn = aws_lb.test.arn
+          arn = aws_elbv2_lb.test.arn
         }
       }
     }

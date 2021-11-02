@@ -1,14 +1,14 @@
 ---
 subcategory: "Elastic Load Balancing v2 (ALB/NLB)"
 layout: "aws"
-page_title: "AWS: aws_lb_target_group"
+page_title: "AWS: aws_elbv2_lb_target_group"
 description: |-
   Provides a Load Balancer Target Group data source.
 ---
 
-# Data Source: aws_lb_target_group
+# Data Source: aws_elbv2_lb_target_group
 
-~> **Note:** `aws_alb_target_group` is known as `aws_lb_target_group`. The functionality is identical.
+~> **Note:** `aws_elbv2_lb_target_group` is known as `aws_elbv2_lb_target_group`. The functionality is identical.
 
 Provides information about a Load Balancer Target Group.
 
@@ -29,7 +29,7 @@ variable "lb_tg_name" {
   default = ""
 }
 
-data "aws_lb_target_group" "test" {
+data "aws_elbv2_lb_target_group" "test" {
   arn  = var.lb_tg_arn
   name = var.lb_tg_name
 }

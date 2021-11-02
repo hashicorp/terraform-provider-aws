@@ -12,8 +12,8 @@ import (
 
 func TestAccELBV2ListenerDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	dataSourceName := "data.aws_lb_listener.test"
-	dataSourceName2 := "data.aws_lb_listener.from_lb_and_port"
+	dataSourceName := "data.aws_elbv2_lb_listener.test"
+	dataSourceName2 := "data.aws_elbv2_lb_listener.from_lb_and_port"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
@@ -47,8 +47,8 @@ func TestAccELBV2ListenerDataSource_basic(t *testing.T) {
 
 func TestAccELBV2ListenerDataSource_backwardsCompatibility(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	dataSourceName := "data.aws_alb_listener.test"
-	dataSourceName2 := "data.aws_alb_listener.from_lb_and_port"
+	dataSourceName := "data.aws_elbv2_lb_listener.test"
+	dataSourceName2 := "data.aws_elbv2_lb_listener.from_lb_and_port"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
@@ -82,8 +82,8 @@ func TestAccELBV2ListenerDataSource_https(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	key := acctest.TLSRSAPrivateKeyPEM(2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
-	dataSourceName := "data.aws_lb_listener.test"
-	dataSourceName2 := "data.aws_lb_listener.from_lb_and_port"
+	dataSourceName := "data.aws_elbv2_lb_listener.test"
+	dataSourceName2 := "data.aws_elbv2_lb_listener.from_lb_and_port"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
@@ -119,8 +119,8 @@ func TestAccELBV2ListenerDataSource_https(t *testing.T) {
 
 func TestAccELBV2ListenerDataSource_DefaultAction_forward(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	dataSourceName := "data.aws_lb_listener.test"
-	resourceName := "aws_lb_listener.test"
+	dataSourceName := "data.aws_elbv2_lb_listener.test"
+	resourceName := "aws_elbv2_lb_listener.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
@@ -140,18 +140,18 @@ func TestAccELBV2ListenerDataSource_DefaultAction_forward(t *testing.T) {
 
 func testAcclbListenerBasicDataSourceConfig(rName string) string {
 	return acctest.ConfigCompose(testAccListenerBaseConfig(rName), fmt.Sprintf(`
-resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+resource "aws_elbv2_lb_listener" "test" {
+  load_balancer_arn = aws_elbv2_lb.test.id
   protocol          = "HTTP"
   port              = "80"
 
   default_action {
-    target_group_arn = aws_lb_target_group.test.id
+    target_group_arn = aws_elbv2_lb_target_group.test.id
     type             = "forward"
   }
 }
 
-resource "aws_lb" "test" {
+resource "aws_elbv2_lb" "test" {
   name            = %[1]q
   internal        = true
   security_groups = [aws_security_group.test.id]
@@ -165,7 +165,7 @@ resource "aws_lb" "test" {
   }
 }
 
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = %[1]q
   port     = 8080
   protocol = "HTTP"
@@ -183,31 +183,31 @@ resource "aws_lb_target_group" "test" {
   }
 }
 
-data "aws_lb_listener" "test" {
-  arn = aws_lb_listener.test.arn
+data "aws_elbv2_lb_listener" "test" {
+  arn = aws_elbv2_lb_listener.test.arn
 }
 
-data "aws_lb_listener" "from_lb_and_port" {
-  load_balancer_arn = aws_lb.test.arn
-  port              = aws_lb_listener.test.port
+data "aws_elbv2_lb_listener" "from_lb_and_port" {
+  load_balancer_arn = aws_elbv2_lb.test.arn
+  port              = aws_elbv2_lb_listener.test.port
 }
 `, rName))
 }
 
 func testAcclbListenerBackwardsCompatibilityDataSourceConfig(rName string) string {
 	return acctest.ConfigCompose(testAccListenerBaseConfig(rName), fmt.Sprintf(`
-resource "aws_alb_listener" "test" {
-  load_balancer_arn = aws_alb.test.id
+resource "aws_elbv2_lb_listener" "test" {
+  load_balancer_arn = aws_elbv2_lb.test.id
   protocol          = "HTTP"
   port              = "80"
 
   default_action {
-    target_group_arn = aws_alb_target_group.test.id
+    target_group_arn = aws_elbv2_lb_target_group.test.id
     type             = "forward"
   }
 }
 
-resource "aws_alb" "test" {
+resource "aws_elbv2_lb" "test" {
   name            = %[1]q
   internal        = true
   security_groups = [aws_security_group.test.id]
@@ -221,7 +221,7 @@ resource "aws_alb" "test" {
   }
 }
 
-resource "aws_alb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = %[1]q
   port     = 8080
   protocol = "HTTP"
@@ -239,33 +239,33 @@ resource "aws_alb_target_group" "test" {
   }
 }
 
-data "aws_alb_listener" "test" {
-  arn = aws_alb_listener.test.arn
+data "aws_elbv2_lb_listener" "test" {
+  arn = aws_elbv2_lb_listener.test.arn
 }
 
-data "aws_alb_listener" "from_lb_and_port" {
-  load_balancer_arn = aws_alb.test.arn
-  port              = aws_alb_listener.test.port
+data "aws_elbv2_lb_listener" "from_lb_and_port" {
+  load_balancer_arn = aws_elbv2_lb.test.arn
+  port              = aws_elbv2_lb_listener.test.port
 }
 `, rName))
 }
 
 func testAcclbListenerHTTPSDataSourceConfig(rName, certificate, key string) string {
 	return acctest.ConfigCompose(testAccListenerBaseConfig(rName), fmt.Sprintf(`
-resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+resource "aws_elbv2_lb_listener" "test" {
+  load_balancer_arn = aws_elbv2_lb.test.id
   protocol          = "HTTPS"
   port              = "443"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
   certificate_arn   = aws_iam_server_certificate.test.arn
 
   default_action {
-    target_group_arn = aws_lb_target_group.test.id
+    target_group_arn = aws_elbv2_lb_target_group.test.id
     type             = "forward"
   }
 }
 
-resource "aws_lb" "test" {
+resource "aws_elbv2_lb" "test" {
   name            = %[1]q
   internal        = false
   security_groups = [aws_security_group.test.id]
@@ -281,7 +281,7 @@ resource "aws_lb" "test" {
   depends_on = [aws_internet_gateway.gw]
 }
 
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = %[1]q
   port     = 8080
   protocol = "HTTP"
@@ -314,13 +314,13 @@ resource "aws_iam_server_certificate" "test" {
   private_key      = "%[3]s"
 }
 
-data "aws_lb_listener" "test" {
-  arn = aws_lb_listener.test.arn
+data "aws_elbv2_lb_listener" "test" {
+  arn = aws_elbv2_lb_listener.test.arn
 }
 
-data "aws_lb_listener" "from_lb_and_port" {
-  load_balancer_arn = aws_lb.test.arn
-  port              = aws_lb_listener.test.port
+data "aws_elbv2_lb_listener" "from_lb_and_port" {
+  load_balancer_arn = aws_elbv2_lb.test.arn
+  port              = aws_elbv2_lb_listener.test.port
 }
 `, rName, certificate, key))
 }
@@ -349,7 +349,7 @@ resource "aws_subnet" "test" {
   }
 }
 
-resource "aws_lb" "test" {
+resource "aws_elbv2_lb" "test" {
   internal = true
   name     = %[1]q
 
@@ -362,7 +362,7 @@ resource "aws_lb" "test" {
   }
 }
 
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   count = 2
 
   port     = 80
@@ -370,8 +370,8 @@ resource "aws_lb_target_group" "test" {
   vpc_id   = aws_vpc.test.id
 }
 
-resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+resource "aws_elbv2_lb_listener" "test" {
+  load_balancer_arn = aws_elbv2_lb.test.id
   port              = 80
   protocol          = "HTTP"
 
@@ -380,20 +380,20 @@ resource "aws_lb_listener" "test" {
 
     forward {
       target_group {
-        arn    = aws_lb_target_group.test[0].arn
+        arn    = aws_elbv2_lb_target_group.test[0].arn
         weight = 1
       }
 
       target_group {
-        arn    = aws_lb_target_group.test[1].arn
+        arn    = aws_elbv2_lb_target_group.test[1].arn
         weight = 2
       }
     }
   }
 }
 
-data "aws_lb_listener" "test" {
-  arn = aws_lb_listener.test.arn
+data "aws_elbv2_lb_listener" "test" {
+  arn = aws_elbv2_lb_listener.test.arn
 }
 `, rName))
 }

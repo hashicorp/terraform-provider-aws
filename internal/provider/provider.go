@@ -507,13 +507,15 @@ func Provider() *schema.Provider {
 			"aws_elb_hosted_zone_id":  elb.DataSourceHostedZoneID(),
 			"aws_elb_service_account": elb.DataSourceServiceAccount(),
 
-			// Adding the Aliases for the ALB -> LB Rename
-			"aws_alb_listener":     elbv2.DataSourceListener(),
-			"aws_alb_target_group": elbv2.DataSourceTargetGroup(),
-			"aws_alb":              elbv2.DataSourceLoadBalancer(),
-			"aws_lb_listener":      elbv2.DataSourceListener(),
-			"aws_lb_target_group":  elbv2.DataSourceTargetGroup(),
-			"aws_lb":               elbv2.DataSourceLoadBalancer(),
+			"aws_elbv2_lb_listener":     elbv2.DataSourceListener(),
+			"aws_elbv2_lb_target_group": elbv2.DataSourceTargetGroup(),
+			"aws_elbv2_lb":              elbv2.DataSourceLoadBalancer(),
+			"aws_alb_listener":          elbv2.DataSourceListener(),     // backward compatible alias // Adding the Aliases for the ALB -> LB Rename
+			"aws_alb_target_group":      elbv2.DataSourceTargetGroup(),  // backward compatible alias // Adding the Aliases for the ALB -> LB Rename
+			"aws_alb":                   elbv2.DataSourceLoadBalancer(), // backward compatible alias // Adding the Aliases for the ALB -> LB Rename
+			"aws_lb_listener":           elbv2.DataSourceListener(),     // backward compatible alias
+			"aws_lb_target_group":       elbv2.DataSourceTargetGroup(),  // backward compatible alias
+			"aws_lb":                    elbv2.DataSourceLoadBalancer(), // backward compatible alias
 
 			"aws_kinesis_firehose_delivery_stream": firehose.DataSourceDeliveryStream(),
 
@@ -1141,18 +1143,24 @@ func Provider() *schema.Provider {
 			"aws_load_balancer_policy":                elb.ResourcePolicy(),
 			"aws_proxy_protocol_policy":               elb.ResourceProxyProtocolPolicy(),
 
-			"aws_alb":                         elbv2.ResourceLoadBalancer(),
-			"aws_alb_listener":                elbv2.ResourceListener(),
-			"aws_alb_listener_certificate":    elbv2.ResourceListenerCertificate(),
-			"aws_alb_listener_rule":           elbv2.ResourceListenerRule(),
-			"aws_alb_target_group":            elbv2.ResourceTargetGroup(),
-			"aws_alb_target_group_attachment": elbv2.ResourceTargetGroupAttachment(),
-			"aws_lb":                          elbv2.ResourceLoadBalancer(),
-			"aws_lb_listener":                 elbv2.ResourceListener(),
-			"aws_lb_listener_certificate":     elbv2.ResourceListenerCertificate(),
-			"aws_lb_listener_rule":            elbv2.ResourceListenerRule(),
-			"aws_lb_target_group":             elbv2.ResourceTargetGroup(),
-			"aws_lb_target_group_attachment":  elbv2.ResourceTargetGroupAttachment(),
+			"aws_elbv2_lb":                         elbv2.ResourceLoadBalancer(),
+			"aws_elbv2_lb_listener":                elbv2.ResourceListener(),
+			"aws_elbv2_lb_listener_certificate":    elbv2.ResourceListenerCertificate(),
+			"aws_elbv2_lb_listener_rule":           elbv2.ResourceListenerRule(),
+			"aws_elbv2_lb_target_group":            elbv2.ResourceTargetGroup(),
+			"aws_elbv2_lb_target_group_attachment": elbv2.ResourceTargetGroupAttachment(),
+			"aws_alb":                              elbv2.ResourceLoadBalancer(),          // backward compatible alias // Adding the Aliases for the ALB -> LB Rename
+			"aws_alb_listener":                     elbv2.ResourceListener(),              // backward compatible alias // Adding the Aliases for the ALB -> LB Rename
+			"aws_alb_listener_certificate":         elbv2.ResourceListenerCertificate(),   // backward compatible alias // Adding the Aliases for the ALB -> LB Rename
+			"aws_alb_listener_rule":                elbv2.ResourceListenerRule(),          // backward compatible alias // Adding the Aliases for the ALB -> LB Rename
+			"aws_alb_target_group":                 elbv2.ResourceTargetGroup(),           // backward compatible alias // Adding the Aliases for the ALB -> LB Rename
+			"aws_alb_target_group_attachment":      elbv2.ResourceTargetGroupAttachment(), // backward compatible alias // Adding the Aliases for the ALB -> LB Rename
+			"aws_lb":                               elbv2.ResourceLoadBalancer(),          // backward compatible alias
+			"aws_lb_listener":                      elbv2.ResourceListener(),              // backward compatible alias
+			"aws_lb_listener_certificate":          elbv2.ResourceListenerCertificate(),   // backward compatible alias
+			"aws_lb_listener_rule":                 elbv2.ResourceListenerRule(),          // backward compatible alias
+			"aws_lb_target_group":                  elbv2.ResourceTargetGroup(),           // backward compatible alias
+			"aws_lb_target_group_attachment":       elbv2.ResourceTargetGroupAttachment(), // backward compatible alias
 
 			"aws_emr_cluster":                emr.ResourceCluster(),
 			"aws_emr_instance_fleet":         emr.ResourceInstanceFleet(),

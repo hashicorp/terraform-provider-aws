@@ -28,7 +28,7 @@ func TestAccELBV2TargetGroupAttachment_basic(t *testing.T) {
 			{
 				Config: testAccTargetGroupAttachmentTargetIdInstanceConfig(targetGroupName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupAttachmentExists("aws_lb_target_group_attachment.test"),
+					testAccCheckTargetGroupAttachmentExists("aws_elbv2_lb_target_group_attachment.test"),
 				),
 			},
 		},
@@ -46,8 +46,8 @@ func TestAccELBV2TargetGroupAttachment_disappears(t *testing.T) {
 			{
 				Config: testAccTargetGroupAttachmentTargetIdInstanceConfig(targetGroupName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTargetGroupAttachmentExists("aws_lb_target_group_attachment.test"),
-					testAccCheckTargetGroupAttachmentDisappears("aws_lb_target_group_attachment.test"),
+					testAccCheckTargetGroupAttachmentExists("aws_elbv2_lb_target_group_attachment.test"),
+					testAccCheckTargetGroupAttachmentDisappears("aws_elbv2_lb_target_group_attachment.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -67,7 +67,7 @@ func TestAccELBV2TargetGroupAttachment_backwardsCompatibility(t *testing.T) {
 			{
 				Config: testAccTargetGroupAttachmentBackwardsCompatibilityConfig(targetGroupName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupAttachmentExists("aws_alb_target_group_attachment.test"),
+					testAccCheckTargetGroupAttachmentExists("aws_elbv2_lb_target_group_attachment.test"),
 				),
 			},
 		},
@@ -86,7 +86,7 @@ func TestAccELBV2TargetGroupAttachment_port(t *testing.T) {
 			{
 				Config: testAccTargetGroupAttachmentPortConfig(targetGroupName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupAttachmentExists("aws_lb_target_group_attachment.test"),
+					testAccCheckTargetGroupAttachmentExists("aws_elbv2_lb_target_group_attachment.test"),
 				),
 			},
 		},
@@ -105,7 +105,7 @@ func TestAccELBV2TargetGroupAttachment_ipAddress(t *testing.T) {
 			{
 				Config: testAccTargetGroupAttachmentTargetIdIPAddressConfig(targetGroupName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupAttachmentExists("aws_lb_target_group_attachment.test"),
+					testAccCheckTargetGroupAttachmentExists("aws_elbv2_lb_target_group_attachment.test"),
 				),
 			},
 		},
@@ -124,7 +124,7 @@ func TestAccELBV2TargetGroupAttachment_lambda(t *testing.T) {
 			{
 				Config: testAccTargetGroupAttachmentTargetIdLambdaConfig(targetGroupName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupAttachmentExists("aws_lb_target_group_attachment.test"),
+					testAccCheckTargetGroupAttachmentExists("aws_elbv2_lb_target_group_attachment.test"),
 				),
 			},
 		},
@@ -210,7 +210,7 @@ func testAccCheckTargetGroupAttachmentDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_lb_target_group_attachment" && rs.Type != "aws_alb_target_group_attachment" {
+		if rs.Type != "aws_elbv2_lb_target_group_attachment" && rs.Type != "aws_elbv2_lb_target_group_attachment" {
 			continue
 		}
 
@@ -302,15 +302,15 @@ resource "aws_vpc" "test" {
 
 func testAccTargetGroupAttachmentTargetIdInstanceConfig(rName string) string {
 	return testAccTargetGroupAttachmentInstanceBaseConfig() + fmt.Sprintf(`
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = %[1]q
   port     = 443
   protocol = "HTTPS"
   vpc_id   = aws_vpc.test.id
 }
 
-resource "aws_lb_target_group_attachment" "test" {
-  target_group_arn = aws_lb_target_group.test.arn
+resource "aws_elbv2_lb_target_group_attachment" "test" {
+  target_group_arn = aws_elbv2_lb_target_group.test.arn
   target_id        = aws_instance.test.id
 }
 `, rName)
@@ -318,15 +318,15 @@ resource "aws_lb_target_group_attachment" "test" {
 
 func testAccTargetGroupAttachmentPortConfig(rName string) string {
 	return testAccTargetGroupAttachmentInstanceBaseConfig() + fmt.Sprintf(`
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = %[1]q
   port     = 443
   protocol = "HTTPS"
   vpc_id   = aws_vpc.test.id
 }
 
-resource "aws_lb_target_group_attachment" "test" {
-  target_group_arn = aws_lb_target_group.test.arn
+resource "aws_elbv2_lb_target_group_attachment" "test" {
+  target_group_arn = aws_elbv2_lb_target_group.test.arn
   target_id        = aws_instance.test.id
   port             = 80
 }
@@ -335,15 +335,15 @@ resource "aws_lb_target_group_attachment" "test" {
 
 func testAccTargetGroupAttachmentBackwardsCompatibilityConfig(rName string) string {
 	return testAccTargetGroupAttachmentInstanceBaseConfig() + fmt.Sprintf(`
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = %[1]q
   port     = 443
   protocol = "HTTPS"
   vpc_id   = aws_vpc.test.id
 }
 
-resource "aws_alb_target_group_attachment" "test" {
-  target_group_arn = aws_lb_target_group.test.arn
+resource "aws_elbv2_lb_target_group_attachment" "test" {
+  target_group_arn = aws_elbv2_lb_target_group.test.arn
   target_id        = aws_instance.test.id
   port             = 80
 }
@@ -352,7 +352,7 @@ resource "aws_alb_target_group_attachment" "test" {
 
 func testAccTargetGroupAttachmentTargetIdIPAddressConfig(rName string) string {
 	return testAccTargetGroupAttachmentInstanceBaseConfig() + fmt.Sprintf(`
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name        = %[1]q
   port        = 443
   protocol    = "HTTPS"
@@ -360,9 +360,9 @@ resource "aws_lb_target_group" "test" {
   vpc_id      = aws_vpc.test.id
 }
 
-resource "aws_lb_target_group_attachment" "test" {
+resource "aws_elbv2_lb_target_group_attachment" "test" {
   availability_zone = aws_instance.test.availability_zone
-  target_group_arn  = aws_lb_target_group.test.arn
+  target_group_arn  = aws_elbv2_lb_target_group.test.arn
   target_id         = aws_instance.test.private_ip
 }
 `, rName)
@@ -377,11 +377,11 @@ resource "aws_lambda_permission" "test" {
   function_name = aws_lambda_function.test.arn
   principal     = "elasticloadbalancing.${data.aws_partition.current.dns_suffix}"
   qualifier     = aws_lambda_alias.test.name
-  source_arn    = aws_lb_target_group.test.arn
+  source_arn    = aws_elbv2_lb_target_group.test.arn
   statement_id  = "AllowExecutionFromlb"
 }
 
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name        = %[1]q
   target_type = "lambda"
 }
@@ -420,10 +420,10 @@ resource "aws_iam_role" "test" {
 
 }
 
-resource "aws_lb_target_group_attachment" "test" {
+resource "aws_elbv2_lb_target_group_attachment" "test" {
   depends_on = [aws_lambda_permission.test]
 
-  target_group_arn = aws_lb_target_group.test.arn
+  target_group_arn = aws_elbv2_lb_target_group.test.arn
   target_id        = aws_lambda_alias.test.arn
 }
 `, rName)

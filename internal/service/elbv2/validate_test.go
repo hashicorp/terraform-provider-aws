@@ -82,7 +82,7 @@ func TestValidTargetGroupName(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
-		_, errors := validTargetGroupName(tc.Value, "aws_lb_target_group")
+		_, errors := validTargetGroupName(tc.Value, "aws_elbv2_lb_target_group")
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("Expected the AWS LB Target Group Name to trigger a validation error for %q", tc.Value)
 		}
@@ -108,7 +108,7 @@ func TestValidTargetGroupNamePrefix(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
-		_, errors := validTargetGroupNamePrefix(tc.Value, "aws_lb_target_group")
+		_, errors := validTargetGroupNamePrefix(tc.Value, "aws_elbv2_lb_target_group")
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("Expected the AWS LB Target Group Name to trigger a validation error for %q", tc.Value)
 		}

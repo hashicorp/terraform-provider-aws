@@ -1895,7 +1895,7 @@ resource "aws_subnet" "test" {
   }
 }
 
-resource "aws_lb" "test" {
+resource "aws_elbv2_lb" "test" {
   internal           = true
   load_balancer_type = "network"
   name               = %[1]q
@@ -1913,7 +1913,7 @@ resource "aws_security_group" "test" {
 
 resource "aws_vpc_endpoint_service" "test" {
   acceptance_required        = false
-  network_load_balancer_arns = [aws_lb.test.id]
+  network_load_balancer_arns = [aws_elbv2_lb.test.id]
 }
 
 resource "aws_vpc_endpoint" "test" {

@@ -2254,26 +2254,26 @@ resource "aws_iam_role_policy" "ecs_service" {
 EOF
 }
 
-resource "aws_lb_target_group" "test" {
-  name     = aws_lb.test.name
+resource "aws_elbv2_lb_target_group" "test" {
+  name     = aws_elbv2_lb.test.name
   port     = 80
   protocol = "HTTP"
   vpc_id   = aws_vpc.test.id
 }
 
-resource "aws_lb" "test" {
+resource "aws_elbv2_lb" "test" {
   name     = %[1]q
   internal = true
   subnets  = aws_subnet.test[*].id
 }
 
-resource "aws_lb_listener" "front_end" {
-  load_balancer_arn = aws_lb.test.id
+resource "aws_elbv2_lb_listener" "front_end" {
+  load_balancer_arn = aws_elbv2_lb.test.id
   port              = "80"
   protocol          = "HTTP"
 
   default_action {
-    target_group_arn = aws_lb_target_group.test.id
+    target_group_arn = aws_elbv2_lb_target_group.test.id
     type             = "forward"
   }
 }
@@ -2287,7 +2287,7 @@ resource "aws_ecs_service" "test" {
   iam_role                          = aws_iam_role.ecs_service.name
 
   load_balancer {
-    target_group_arn = aws_lb_target_group.test.id
+    target_group_arn = aws_elbv2_lb_target_group.test.id
     container_name   = "ghost"
     container_port   = "2368"
   }
@@ -2819,26 +2819,26 @@ resource "aws_iam_role_policy" "ecs_service" {
 EOF
 }
 
-resource "aws_lb_target_group" "test" {
-  name     = aws_lb.test.name
+resource "aws_elbv2_lb_target_group" "test" {
+  name     = aws_elbv2_lb.test.name
   port     = 80
   protocol = "HTTP"
   vpc_id   = aws_vpc.test.id
 }
 
-resource "aws_lb" "test" {
+resource "aws_elbv2_lb" "test" {
   name     = %[1]q
   internal = true
   subnets  = aws_subnet.test[*].id
 }
 
-resource "aws_lb_listener" "front_end" {
-  load_balancer_arn = aws_lb.test.id
+resource "aws_elbv2_lb_listener" "front_end" {
+  load_balancer_arn = aws_elbv2_lb.test.id
   port              = "80"
   protocol          = "HTTP"
 
   default_action {
-    target_group_arn = aws_lb_target_group.test.id
+    target_group_arn = aws_elbv2_lb_target_group.test.id
     type             = "forward"
   }
 }
@@ -2851,7 +2851,7 @@ resource "aws_ecs_service" "test" {
   iam_role        = aws_iam_role.ecs_service.name
 
   load_balancer {
-    target_group_arn = aws_lb_target_group.test.id
+    target_group_arn = aws_elbv2_lb_target_group.test.id
     container_name   = "ghost"
     container_port   = "2368"
   }
@@ -2921,44 +2921,44 @@ resource "aws_ecs_task_definition" "test" {
 DEFINITION
 }
 
-resource "aws_lb_target_group" "test" {
-  name     = "${aws_lb.test.name}1"
+resource "aws_elbv2_lb_target_group" "test" {
+  name     = "${aws_elbv2_lb.test.name}1"
   port     = 80
   protocol = "HTTP"
   vpc_id   = aws_vpc.test.id
 }
 
-resource "aws_lb_target_group" "static" {
-  name     = "${aws_lb.test.name}2"
+resource "aws_elbv2_lb_target_group" "static" {
+  name     = "${aws_elbv2_lb.test.name}2"
   port     = 80
   protocol = "HTTP"
   vpc_id   = aws_vpc.test.id
 }
 
-resource "aws_lb" "test" {
+resource "aws_elbv2_lb" "test" {
   name     = %[1]q
   internal = true
   subnets  = aws_subnet.test[*].id
 }
 
-resource "aws_lb_listener" "front_end" {
-  load_balancer_arn = aws_lb.test.id
+resource "aws_elbv2_lb_listener" "front_end" {
+  load_balancer_arn = aws_elbv2_lb.test.id
   port              = "80"
   protocol          = "HTTP"
 
   default_action {
-    target_group_arn = aws_lb_target_group.test.id
+    target_group_arn = aws_elbv2_lb_target_group.test.id
     type             = "forward"
   }
 }
 
-resource "aws_lb_listener_rule" "static" {
-  listener_arn = aws_lb_listener.front_end.arn
+resource "aws_elbv2_lb_listener_rule" "static" {
+  listener_arn = aws_elbv2_lb_listener.front_end.arn
   priority     = 100
 
   action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.static.arn
+    target_group_arn = aws_elbv2_lb_target_group.static.arn
   }
 
   condition {
@@ -2975,13 +2975,13 @@ resource "aws_ecs_service" "test" {
   desired_count   = 1
 
   load_balancer {
-    target_group_arn = aws_lb_target_group.test.id
+    target_group_arn = aws_elbv2_lb_target_group.test.id
     container_name   = "ghost"
     container_port   = "2368"
   }
 
   load_balancer {
-    target_group_arn = aws_lb_target_group.static.id
+    target_group_arn = aws_elbv2_lb_target_group.static.id
     container_name   = "ghost"
     container_port   = "4501"
   }
@@ -3486,25 +3486,25 @@ resource "aws_subnet" "test" {
   }
 }
 
-resource "aws_lb" "test" {
+resource "aws_elbv2_lb" "test" {
   internal = true
   name     = %[1]q
   subnets  = aws_subnet.test[*].id
 }
 
-resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+resource "aws_elbv2_lb_listener" "test" {
+  load_balancer_arn = aws_elbv2_lb.test.id
   port              = "80"
   protocol          = "HTTP"
 
   default_action {
-    target_group_arn = aws_lb_target_group.test.id
+    target_group_arn = aws_elbv2_lb_target_group.test.id
     type             = "forward"
   }
 }
 
-resource "aws_lb_target_group" "test" {
-  name     = aws_lb.test.name
+resource "aws_elbv2_lb_target_group" "test" {
+  name     = aws_elbv2_lb.test.name
   port     = 80
   protocol = "HTTP"
   vpc_id   = aws_vpc.test.id
@@ -3549,7 +3549,7 @@ resource "aws_ecs_service" "test" {
   load_balancer {
     container_name   = "test"
     container_port   = "80"
-    target_group_arn = aws_lb_target_group.test.id
+    target_group_arn = aws_elbv2_lb_target_group.test.id
   }
 }
 `, rName)

@@ -64,9 +64,9 @@ func TestAccELBV2ListenerRule_basic(t *testing.T) {
 	lbName := fmt.Sprintf("testrule-basic-%s", sdkacctest.RandString(13))
 	targetGroupName := fmt.Sprintf("testtargetgroup-%s", sdkacctest.RandString(10))
 
-	resourceName := "aws_lb_listener_rule.static"
-	frontEndListenerResourceName := "aws_lb_listener.front_end"
-	targetGroupResourceName := "aws_lb_target_group.test"
+	resourceName := "aws_elbv2_lb_listener_rule.static"
+	frontEndListenerResourceName := "aws_elbv2_lb_listener.front_end"
+	targetGroupResourceName := "aws_elbv2_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -112,7 +112,7 @@ func TestAccELBV2ListenerRule_tags(t *testing.T) {
 	lbName := fmt.Sprintf("testrule-basic-%s", sdkacctest.RandString(13))
 	targetGroupName := fmt.Sprintf("testtargetgroup-%s", sdkacctest.RandString(10))
 
-	resourceName := "aws_lb_listener_rule.static"
+	resourceName := "aws_elbv2_lb_listener_rule.static"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -155,9 +155,9 @@ func TestAccELBV2ListenerRule_forwardWeighted(t *testing.T) {
 	targetGroupName1 := fmt.Sprintf("testtargetgroup-%s", sdkacctest.RandString(10))
 	targetGroupName2 := fmt.Sprintf("testtargetgroup-%s", sdkacctest.RandString(10))
 
-	resourceName := "aws_lb_listener_rule.weighted"
-	frontEndListenerResourceName := "aws_lb_listener.front_end"
-	targetGroup1ResourceName := "aws_lb_target_group.test1"
+	resourceName := "aws_elbv2_lb_listener_rule.weighted"
+	frontEndListenerResourceName := "aws_elbv2_lb_listener.front_end"
+	targetGroup1ResourceName := "aws_elbv2_lb_target_group.test1"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -234,9 +234,9 @@ func TestAccELBV2ListenerRule_backwardsCompatibility(t *testing.T) {
 	lbName := fmt.Sprintf("testrule-basic-%s", sdkacctest.RandString(13))
 	targetGroupName := fmt.Sprintf("testtargetgroup-%s", sdkacctest.RandString(10))
 
-	resourceName := "aws_alb_listener_rule.static"
-	frontEndListenerResourceName := "aws_alb_listener.front_end"
-	targetGroupResourceName := "aws_alb_target_group.test"
+	resourceName := "aws_elbv2_lb_listener_rule.static"
+	frontEndListenerResourceName := "aws_elbv2_lb_listener.front_end"
+	targetGroupResourceName := "aws_elbv2_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -280,8 +280,8 @@ func TestAccELBV2ListenerRule_redirect(t *testing.T) {
 	var conf elbv2.Rule
 	lbName := fmt.Sprintf("testrule-redirect-%s", sdkacctest.RandString(14))
 
-	resourceName := "aws_lb_listener_rule.static"
-	frontEndListenerResourceName := "aws_lb_listener.front_end"
+	resourceName := "aws_elbv2_lb_listener_rule.static"
+	frontEndListenerResourceName := "aws_elbv2_lb_listener.front_end"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -369,8 +369,8 @@ func TestAccELBV2ListenerRule_fixedResponse(t *testing.T) {
 	var conf elbv2.Rule
 	lbName := fmt.Sprintf("testrule-fixedresponse-%s", sdkacctest.RandString(9))
 
-	resourceName := "aws_lb_listener_rule.static"
-	frontEndListenerResourceName := "aws_lb_listener.front_end"
+	resourceName := "aws_elbv2_lb_listener_rule.static"
+	frontEndListenerResourceName := "aws_elbv2_lb_listener.front_end"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -408,7 +408,7 @@ func TestAccELBV2ListenerRule_updateFixedResponse(t *testing.T) {
 	var rule elbv2.Rule
 	lbName := fmt.Sprintf("testrule-basic-%s", sdkacctest.RandString(13))
 
-	resourceName := "aws_lb_listener_rule.static"
+	resourceName := "aws_elbv2_lb_listener_rule.static"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -439,7 +439,7 @@ func TestAccELBV2ListenerRule_updateRulePriority(t *testing.T) {
 	lbName := fmt.Sprintf("testrule-basic-%s", sdkacctest.RandString(13))
 	targetGroupName := fmt.Sprintf("testtargetgroup-%s", sdkacctest.RandString(10))
 
-	resourceName := "aws_lb_listener_rule.static"
+	resourceName := "aws_elbv2_lb_listener_rule.static"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -470,7 +470,7 @@ func TestAccELBV2ListenerRule_changeListenerRuleARNForcesNew(t *testing.T) {
 	lbName := fmt.Sprintf("testrule-basic-%s", sdkacctest.RandString(13))
 	targetGroupName := fmt.Sprintf("testtargetgroup-%s", sdkacctest.RandString(10))
 
-	resourceName := "aws_lb_listener_rule.static"
+	resourceName := "aws_elbv2_lb_listener_rule.static"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -509,52 +509,52 @@ func TestAccELBV2ListenerRule_priority(t *testing.T) {
 			{
 				Config: testAccListenerRuleConfig_priorityFirst(lbName, targetGroupName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckListenerRuleExists("aws_lb_listener_rule.first", &rule),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.first", "priority", "1"),
+					testAccCheckListenerRuleExists("aws_elbv2_lb_listener_rule.first", &rule),
+					resource.TestCheckResourceAttr("aws_elbv2_lb_listener_rule.first", "priority", "1"),
 				),
 			},
 			{
 				Config: testAccListenerRuleConfig_priorityLast(lbName, targetGroupName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckListenerRuleExists("aws_lb_listener_rule.last", &rule),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.last", "priority", "4"),
+					testAccCheckListenerRuleExists("aws_elbv2_lb_listener_rule.last", &rule),
+					resource.TestCheckResourceAttr("aws_elbv2_lb_listener_rule.last", "priority", "4"),
 				),
 			},
 			{
 				Config: testAccListenerRuleConfig_priorityStatic(lbName, targetGroupName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckListenerRuleExists("aws_lb_listener_rule.last", &rule),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.last", "priority", "7"),
+					testAccCheckListenerRuleExists("aws_elbv2_lb_listener_rule.last", &rule),
+					resource.TestCheckResourceAttr("aws_elbv2_lb_listener_rule.last", "priority", "7"),
 				),
 			},
 			{
 				Config: testAccListenerRuleConfig_priorityLast(lbName, targetGroupName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckListenerRuleExists("aws_lb_listener_rule.last", &rule),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.last", "priority", "7"),
+					testAccCheckListenerRuleExists("aws_elbv2_lb_listener_rule.last", &rule),
+					resource.TestCheckResourceAttr("aws_elbv2_lb_listener_rule.last", "priority", "7"),
 				),
 			},
 			{
 				Config: testAccListenerRuleConfig_priorityParallelism(lbName, targetGroupName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckListenerRuleExists("aws_lb_listener_rule.last", &rule),
-					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.parallelism.0", "priority"),
-					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.parallelism.1", "priority"),
-					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.parallelism.2", "priority"),
-					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.parallelism.3", "priority"),
-					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.parallelism.4", "priority"),
-					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.parallelism.5", "priority"),
-					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.parallelism.6", "priority"),
-					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.parallelism.7", "priority"),
-					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.parallelism.8", "priority"),
-					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.parallelism.9", "priority"),
+					testAccCheckListenerRuleExists("aws_elbv2_lb_listener_rule.last", &rule),
+					resource.TestCheckResourceAttrSet("aws_elbv2_lb_listener_rule.parallelism.0", "priority"),
+					resource.TestCheckResourceAttrSet("aws_elbv2_lb_listener_rule.parallelism.1", "priority"),
+					resource.TestCheckResourceAttrSet("aws_elbv2_lb_listener_rule.parallelism.2", "priority"),
+					resource.TestCheckResourceAttrSet("aws_elbv2_lb_listener_rule.parallelism.3", "priority"),
+					resource.TestCheckResourceAttrSet("aws_elbv2_lb_listener_rule.parallelism.4", "priority"),
+					resource.TestCheckResourceAttrSet("aws_elbv2_lb_listener_rule.parallelism.5", "priority"),
+					resource.TestCheckResourceAttrSet("aws_elbv2_lb_listener_rule.parallelism.6", "priority"),
+					resource.TestCheckResourceAttrSet("aws_elbv2_lb_listener_rule.parallelism.7", "priority"),
+					resource.TestCheckResourceAttrSet("aws_elbv2_lb_listener_rule.parallelism.8", "priority"),
+					resource.TestCheckResourceAttrSet("aws_elbv2_lb_listener_rule.parallelism.9", "priority"),
 				),
 			},
 			{
 				Config: testAccListenerRuleConfig_priority50000(lbName, targetGroupName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckListenerRuleExists("aws_lb_listener_rule.priority50000", &rule),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.priority50000", "priority", "50000"),
+					testAccCheckListenerRuleExists("aws_elbv2_lb_listener_rule.priority50000", &rule),
+					resource.TestCheckResourceAttr("aws_elbv2_lb_listener_rule.priority50000", "priority", "50000"),
 				),
 			},
 			{
@@ -575,9 +575,9 @@ func TestAccELBV2ListenerRule_cognito(t *testing.T) {
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
 	lbName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resourceName := "aws_lb_listener_rule.cognito"
-	frontEndListenerResourceName := "aws_lb_listener.front_end"
-	targetGroupResourceName := "aws_lb_target_group.test"
+	resourceName := "aws_elbv2_lb_listener_rule.cognito"
+	frontEndListenerResourceName := "aws_elbv2_lb_listener.front_end"
+	targetGroupResourceName := "aws_elbv2_lb_target_group.test"
 	cognitoPoolResourceName := "aws_cognito_user_pool.test"
 	cognitoPoolClientResourceName := "aws_cognito_user_pool_client.test"
 	cognitoPoolDomainResourceName := "aws_cognito_user_pool_domain.test"
@@ -619,9 +619,9 @@ func TestAccELBV2ListenerRule_oidc(t *testing.T) {
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
 	lbName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resourceName := "aws_lb_listener_rule.oidc"
-	frontEndListenerResourceName := "aws_lb_listener.front_end"
-	targetGroupResourceName := "aws_lb_target_group.test"
+	resourceName := "aws_elbv2_lb_listener_rule.oidc"
+	frontEndListenerResourceName := "aws_elbv2_lb_listener.front_end"
+	targetGroupResourceName := "aws_elbv2_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -662,7 +662,7 @@ func TestAccELBV2ListenerRule_Action_order(t *testing.T) {
 	key := acctest.TLSRSAPrivateKeyPEM(2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_lb_listener_rule.test"
+	resourceName := "aws_elbv2_lb_listener_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -689,7 +689,7 @@ func TestAccELBV2ListenerRule_ActionOrder_recreates(t *testing.T) {
 	key := acctest.TLSRSAPrivateKeyPEM(2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_lb_listener_rule.test"
+	resourceName := "aws_elbv2_lb_listener_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -749,8 +749,8 @@ func TestAccELBV2ListenerRule_conditionHostHeader(t *testing.T) {
 	var conf elbv2.Rule
 	lbName := fmt.Sprintf("testrule-hostHeader-%s", sdkacctest.RandString(12))
 
-	resourceName := "aws_lb_listener_rule.static"
-	frontEndListenerResourceName := "aws_lb_listener.front_end"
+	resourceName := "aws_elbv2_lb_listener_rule.static"
+	frontEndListenerResourceName := "aws_elbv2_lb_listener.front_end"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -788,8 +788,8 @@ func TestAccELBV2ListenerRule_conditionHTTPHeader(t *testing.T) {
 	var conf elbv2.Rule
 	lbName := fmt.Sprintf("testrule-httpHeader-%s", sdkacctest.RandString(12))
 
-	resourceName := "aws_lb_listener_rule.static"
-	frontEndListenerResourceName := "aws_lb_listener.front_end"
+	resourceName := "aws_elbv2_lb_listener_rule.static"
+	frontEndListenerResourceName := "aws_elbv2_lb_listener.front_end"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -854,8 +854,8 @@ func TestAccELBV2ListenerRule_conditionHTTPRequestMethod(t *testing.T) {
 	var conf elbv2.Rule
 	lbName := fmt.Sprintf("testrule-httpRequest-%s", sdkacctest.RandString(11))
 
-	resourceName := "aws_lb_listener_rule.static"
-	frontEndListenerResourceName := "aws_lb_listener.front_end"
+	resourceName := "aws_elbv2_lb_listener_rule.static"
+	frontEndListenerResourceName := "aws_elbv2_lb_listener.front_end"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -893,8 +893,8 @@ func TestAccELBV2ListenerRule_conditionPathPattern(t *testing.T) {
 	var conf elbv2.Rule
 	lbName := fmt.Sprintf("testrule-pathPattern-%s", sdkacctest.RandString(11))
 
-	resourceName := "aws_lb_listener_rule.static"
-	frontEndListenerResourceName := "aws_lb_listener.front_end"
+	resourceName := "aws_elbv2_lb_listener_rule.static"
+	frontEndListenerResourceName := "aws_elbv2_lb_listener.front_end"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -932,8 +932,8 @@ func TestAccELBV2ListenerRule_conditionQueryString(t *testing.T) {
 	var conf elbv2.Rule
 	lbName := fmt.Sprintf("testrule-queryString-%s", sdkacctest.RandString(11))
 
-	resourceName := "aws_lb_listener_rule.static"
-	frontEndListenerResourceName := "aws_lb_listener.front_end"
+	resourceName := "aws_elbv2_lb_listener_rule.static"
+	frontEndListenerResourceName := "aws_elbv2_lb_listener.front_end"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -995,8 +995,8 @@ func TestAccELBV2ListenerRule_conditionSourceIP(t *testing.T) {
 	var conf elbv2.Rule
 	lbName := fmt.Sprintf("testrule-sourceIp-%s", sdkacctest.RandString(14))
 
-	resourceName := "aws_lb_listener_rule.static"
-	frontEndListenerResourceName := "aws_lb_listener.front_end"
+	resourceName := "aws_elbv2_lb_listener_rule.static"
+	frontEndListenerResourceName := "aws_elbv2_lb_listener.front_end"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -1034,8 +1034,8 @@ func TestAccELBV2ListenerRule_conditionUpdateMixed(t *testing.T) {
 	var conf elbv2.Rule
 	lbName := fmt.Sprintf("testrule-mixed-%s", sdkacctest.RandString(17))
 
-	resourceName := "aws_lb_listener_rule.static"
-	frontEndListenerResourceName := "aws_lb_listener.front_end"
+	resourceName := "aws_elbv2_lb_listener_rule.static"
+	frontEndListenerResourceName := "aws_elbv2_lb_listener.front_end"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -1108,8 +1108,8 @@ func TestAccELBV2ListenerRule_conditionMultiple(t *testing.T) {
 	var conf elbv2.Rule
 	lbName := fmt.Sprintf("testrule-condMulti-%s", sdkacctest.RandString(13))
 
-	resourceName := "aws_lb_listener_rule.static"
-	frontEndListenerResourceName := "aws_lb_listener.front_end"
+	resourceName := "aws_elbv2_lb_listener_rule.static"
+	frontEndListenerResourceName := "aws_elbv2_lb_listener.front_end"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -1191,8 +1191,8 @@ func TestAccELBV2ListenerRule_conditionUpdateMultiple(t *testing.T) {
 	var conf elbv2.Rule
 	lbName := fmt.Sprintf("testrule-condMulti-%s", sdkacctest.RandString(13))
 
-	resourceName := "aws_lb_listener_rule.static"
-	frontEndListenerResourceName := "aws_lb_listener.front_end"
+	resourceName := "aws_elbv2_lb_listener_rule.static"
+	frontEndListenerResourceName := "aws_elbv2_lb_listener.front_end"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -1357,7 +1357,7 @@ func testAccCheckListenerRuleDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_lb_listener_rule" && rs.Type != "aws_alb_listener_rule" {
+		if rs.Type != "aws_elbv2_lb_listener_rule" && rs.Type != "aws_elbv2_lb_listener_rule" {
 			continue
 		}
 
@@ -1385,13 +1385,13 @@ func testAccCheckListenerRuleDestroy(s *terraform.State) error {
 
 func testAccListenerRuleConfig_basic(lbName, targetGroupName string) string {
 	return fmt.Sprintf(`
-resource "aws_lb_listener_rule" "static" {
-  listener_arn = aws_lb_listener.front_end.arn
+resource "aws_elbv2_lb_listener_rule" "static" {
+  listener_arn = aws_elbv2_lb_listener.front_end.arn
   priority     = 100
 
   action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.test.arn
+    target_group_arn = aws_elbv2_lb_target_group.test.arn
   }
 
   condition {
@@ -1401,18 +1401,18 @@ resource "aws_lb_listener_rule" "static" {
   }
 }
 
-resource "aws_lb_listener" "front_end" {
-  load_balancer_arn = aws_lb.alb_test.id
+resource "aws_elbv2_lb_listener" "front_end" {
+  load_balancer_arn = aws_elbv2_lb.alb_test.id
   protocol          = "HTTP"
   port              = "80"
 
   default_action {
-    target_group_arn = aws_lb_target_group.test.id
+    target_group_arn = aws_elbv2_lb_target_group.test.id
     type             = "forward"
   }
 }
 
-resource "aws_lb" "alb_test" {
+resource "aws_elbv2_lb" "alb_test" {
   name            = "%s"
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
@@ -1426,7 +1426,7 @@ resource "aws_lb" "alb_test" {
   }
 }
 
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = "%s"
   port     = 8080
   protocol = "HTTP"
@@ -1506,8 +1506,8 @@ resource "aws_security_group" "alb_test" {
 
 func testAccListenerRuleConfig_forwardWeighted(lbName, targetGroupName1 string, targetGroupName2 string) string {
 	return fmt.Sprintf(`
-resource "aws_lb_listener_rule" "weighted" {
-  listener_arn = aws_lb_listener.front_end.arn
+resource "aws_elbv2_lb_listener_rule" "weighted" {
+  listener_arn = aws_elbv2_lb_listener.front_end.arn
   priority     = 100
 
   action {
@@ -1515,12 +1515,12 @@ resource "aws_lb_listener_rule" "weighted" {
 
     forward {
       target_group {
-        arn    = aws_lb_target_group.test1.arn
+        arn    = aws_elbv2_lb_target_group.test1.arn
         weight = 1
       }
 
       target_group {
-        arn    = aws_lb_target_group.test2.arn
+        arn    = aws_elbv2_lb_target_group.test2.arn
         weight = 1
       }
     }
@@ -1533,18 +1533,18 @@ resource "aws_lb_listener_rule" "weighted" {
   }
 }
 
-resource "aws_lb_listener" "front_end" {
-  load_balancer_arn = aws_lb.alb_test.id
+resource "aws_elbv2_lb_listener" "front_end" {
+  load_balancer_arn = aws_elbv2_lb.alb_test.id
   protocol          = "HTTP"
   port              = "80"
 
   default_action {
-    target_group_arn = aws_lb_target_group.test1.arn
+    target_group_arn = aws_elbv2_lb_target_group.test1.arn
     type             = "forward"
   }
 }
 
-resource "aws_lb" "alb_test" {
+resource "aws_elbv2_lb" "alb_test" {
   name            = "%s"
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
@@ -1558,7 +1558,7 @@ resource "aws_lb" "alb_test" {
   }
 }
 
-resource "aws_lb_target_group" "test1" {
+resource "aws_elbv2_lb_target_group" "test1" {
   name     = "%s"
   port     = 8080
   protocol = "HTTP"
@@ -1576,7 +1576,7 @@ resource "aws_lb_target_group" "test1" {
   }
 }
 
-resource "aws_lb_target_group" "test2" {
+resource "aws_elbv2_lb_target_group" "test2" {
   name     = "%s"
   port     = 8080
   protocol = "HTTP"
@@ -1656,8 +1656,8 @@ resource "aws_security_group" "alb_test" {
 
 func testAccListenerRuleConfig_changeForwardWeightedStickiness(lbName, targetGroupName1 string, targetGroupName2 string) string {
 	return fmt.Sprintf(`
-resource "aws_lb_listener_rule" "weighted" {
-  listener_arn = aws_lb_listener.front_end.arn
+resource "aws_elbv2_lb_listener_rule" "weighted" {
+  listener_arn = aws_elbv2_lb_listener.front_end.arn
   priority     = 100
 
   action {
@@ -1665,12 +1665,12 @@ resource "aws_lb_listener_rule" "weighted" {
 
     forward {
       target_group {
-        arn    = aws_lb_target_group.test1.arn
+        arn    = aws_elbv2_lb_target_group.test1.arn
         weight = 1
       }
 
       target_group {
-        arn    = aws_lb_target_group.test2.arn
+        arn    = aws_elbv2_lb_target_group.test2.arn
         weight = 1
       }
 
@@ -1688,18 +1688,18 @@ resource "aws_lb_listener_rule" "weighted" {
   }
 }
 
-resource "aws_lb_listener" "front_end" {
-  load_balancer_arn = aws_lb.alb_test.id
+resource "aws_elbv2_lb_listener" "front_end" {
+  load_balancer_arn = aws_elbv2_lb.alb_test.id
   protocol          = "HTTP"
   port              = "80"
 
   default_action {
-    target_group_arn = aws_lb_target_group.test1.arn
+    target_group_arn = aws_elbv2_lb_target_group.test1.arn
     type             = "forward"
   }
 }
 
-resource "aws_lb" "alb_test" {
+resource "aws_elbv2_lb" "alb_test" {
   name            = "%s"
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
@@ -1713,7 +1713,7 @@ resource "aws_lb" "alb_test" {
   }
 }
 
-resource "aws_lb_target_group" "test1" {
+resource "aws_elbv2_lb_target_group" "test1" {
   name     = "%s"
   port     = 8080
   protocol = "HTTP"
@@ -1731,7 +1731,7 @@ resource "aws_lb_target_group" "test1" {
   }
 }
 
-resource "aws_lb_target_group" "test2" {
+resource "aws_elbv2_lb_target_group" "test2" {
   name     = "%s"
   port     = 8080
   protocol = "HTTP"
@@ -1811,13 +1811,13 @@ resource "aws_security_group" "alb_test" {
 
 func testAccListenerRuleConfig_changeForwardWeightedToBasic(lbName, targetGroupName1 string, targetGroupName2 string) string {
 	return fmt.Sprintf(`
-resource "aws_lb_listener_rule" "weighted" {
-  listener_arn = aws_lb_listener.front_end.arn
+resource "aws_elbv2_lb_listener_rule" "weighted" {
+  listener_arn = aws_elbv2_lb_listener.front_end.arn
   priority     = 100
 
   action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.test1.arn
+    target_group_arn = aws_elbv2_lb_target_group.test1.arn
   }
 
   condition {
@@ -1827,18 +1827,18 @@ resource "aws_lb_listener_rule" "weighted" {
   }
 }
 
-resource "aws_lb_listener" "front_end" {
-  load_balancer_arn = aws_lb.alb_test.id
+resource "aws_elbv2_lb_listener" "front_end" {
+  load_balancer_arn = aws_elbv2_lb.alb_test.id
   protocol          = "HTTP"
   port              = "80"
 
   default_action {
-    target_group_arn = aws_lb_target_group.test1.arn
+    target_group_arn = aws_elbv2_lb_target_group.test1.arn
     type             = "forward"
   }
 }
 
-resource "aws_lb" "alb_test" {
+resource "aws_elbv2_lb" "alb_test" {
   name            = "%s"
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
@@ -1852,7 +1852,7 @@ resource "aws_lb" "alb_test" {
   }
 }
 
-resource "aws_lb_target_group" "test1" {
+resource "aws_elbv2_lb_target_group" "test1" {
   name     = "%s"
   port     = 8080
   protocol = "HTTP"
@@ -1870,7 +1870,7 @@ resource "aws_lb_target_group" "test1" {
   }
 }
 
-resource "aws_lb_target_group" "test2" {
+resource "aws_elbv2_lb_target_group" "test2" {
   name     = "%s"
   port     = 8080
   protocol = "HTTP"
@@ -1950,13 +1950,13 @@ resource "aws_security_group" "alb_test" {
 
 func testAccListenerRuleBackwardsCompatibilityConfig(lbName, targetGroupName string) string {
 	return fmt.Sprintf(`
-resource "aws_alb_listener_rule" "static" {
-  listener_arn = aws_alb_listener.front_end.arn
+resource "aws_elbv2_lb_listener_rule" "static" {
+  listener_arn = aws_elbv2_lb_listener.front_end.arn
   priority     = 100
 
   action {
     type             = "forward"
-    target_group_arn = aws_alb_target_group.test.arn
+    target_group_arn = aws_elbv2_lb_target_group.test.arn
   }
 
   condition {
@@ -1966,18 +1966,18 @@ resource "aws_alb_listener_rule" "static" {
   }
 }
 
-resource "aws_alb_listener" "front_end" {
-  load_balancer_arn = aws_alb.alb_test.id
+resource "aws_elbv2_lb_listener" "front_end" {
+  load_balancer_arn = aws_elbv2_lb.alb_test.id
   protocol          = "HTTP"
   port              = "80"
 
   default_action {
-    target_group_arn = aws_alb_target_group.test.id
+    target_group_arn = aws_elbv2_lb_target_group.test.id
     type             = "forward"
   }
 }
 
-resource "aws_alb" "alb_test" {
+resource "aws_elbv2_lb" "alb_test" {
   name            = "%s"
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
@@ -1991,7 +1991,7 @@ resource "aws_alb" "alb_test" {
   }
 }
 
-resource "aws_alb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = "%s"
   port     = 8080
   protocol = "HTTP"
@@ -2075,8 +2075,8 @@ func testAccListenerRuleConfig_redirect(lbName, query string) string {
 	}
 
 	return fmt.Sprintf(`
-resource "aws_lb_listener_rule" "static" {
-  listener_arn = aws_lb_listener.front_end.arn
+resource "aws_elbv2_lb_listener_rule" "static" {
+  listener_arn = aws_elbv2_lb_listener.front_end.arn
   priority     = 100
 
   action {
@@ -2097,8 +2097,8 @@ resource "aws_lb_listener_rule" "static" {
   }
 }
 
-resource "aws_lb_listener" "front_end" {
-  load_balancer_arn = aws_lb.alb_test.id
+resource "aws_elbv2_lb_listener" "front_end" {
+  load_balancer_arn = aws_elbv2_lb.alb_test.id
   protocol          = "HTTP"
   port              = "80"
 
@@ -2113,7 +2113,7 @@ resource "aws_lb_listener" "front_end" {
   }
 }
 
-resource "aws_lb" "alb_test" {
+resource "aws_elbv2_lb" "alb_test" {
   name            = %[1]q
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
@@ -2189,8 +2189,8 @@ resource "aws_security_group" "alb_test" {
 
 func testAccListenerRuleConfig_fixedResponse(lbName, response string) string {
 	return fmt.Sprintf(`
-resource "aws_lb_listener_rule" "static" {
-  listener_arn = aws_lb_listener.front_end.arn
+resource "aws_elbv2_lb_listener_rule" "static" {
+  listener_arn = aws_elbv2_lb_listener.front_end.arn
   priority     = 100
 
   action {
@@ -2210,8 +2210,8 @@ resource "aws_lb_listener_rule" "static" {
   }
 }
 
-resource "aws_lb_listener" "front_end" {
-  load_balancer_arn = aws_lb.alb_test.id
+resource "aws_elbv2_lb_listener" "front_end" {
+  load_balancer_arn = aws_elbv2_lb.alb_test.id
   protocol          = "HTTP"
   port              = "80"
 
@@ -2226,7 +2226,7 @@ resource "aws_lb_listener" "front_end" {
   }
 }
 
-resource "aws_lb" "alb_test" {
+resource "aws_elbv2_lb" "alb_test" {
   name            = "%s"
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
@@ -2302,13 +2302,13 @@ resource "aws_security_group" "alb_test" {
 
 func testAccListenerRuleConfig_updateRulePriority(lbName, targetGroupName string) string {
 	return fmt.Sprintf(`
-resource "aws_lb_listener_rule" "static" {
-  listener_arn = aws_lb_listener.front_end.arn
+resource "aws_elbv2_lb_listener_rule" "static" {
+  listener_arn = aws_elbv2_lb_listener.front_end.arn
   priority     = 101
 
   action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.test.arn
+    target_group_arn = aws_elbv2_lb_target_group.test.arn
   }
 
   condition {
@@ -2318,18 +2318,18 @@ resource "aws_lb_listener_rule" "static" {
   }
 }
 
-resource "aws_lb_listener" "front_end" {
-  load_balancer_arn = aws_lb.alb_test.id
+resource "aws_elbv2_lb_listener" "front_end" {
+  load_balancer_arn = aws_elbv2_lb.alb_test.id
   protocol          = "HTTP"
   port              = "80"
 
   default_action {
-    target_group_arn = aws_lb_target_group.test.id
+    target_group_arn = aws_elbv2_lb_target_group.test.id
     type             = "forward"
   }
 }
 
-resource "aws_lb" "alb_test" {
+resource "aws_elbv2_lb" "alb_test" {
   name            = "%s"
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
@@ -2343,7 +2343,7 @@ resource "aws_lb" "alb_test" {
   }
 }
 
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = "%s"
   port     = 8080
   protocol = "HTTP"
@@ -2423,13 +2423,13 @@ resource "aws_security_group" "alb_test" {
 
 func testAccListenerRuleConfig_changeRuleARN(lbName, targetGroupName string) string {
 	return fmt.Sprintf(`
-resource "aws_lb_listener_rule" "static" {
-  listener_arn = aws_lb_listener.front_end_ruleupdate.arn
+resource "aws_elbv2_lb_listener_rule" "static" {
+  listener_arn = aws_elbv2_lb_listener.front_end_ruleupdate.arn
   priority     = 101
 
   action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.test.arn
+    target_group_arn = aws_elbv2_lb_target_group.test.arn
   }
 
   condition {
@@ -2439,29 +2439,29 @@ resource "aws_lb_listener_rule" "static" {
   }
 }
 
-resource "aws_lb_listener" "front_end" {
-  load_balancer_arn = aws_lb.alb_test.id
+resource "aws_elbv2_lb_listener" "front_end" {
+  load_balancer_arn = aws_elbv2_lb.alb_test.id
   protocol          = "HTTP"
   port              = "80"
 
   default_action {
-    target_group_arn = aws_lb_target_group.test.id
+    target_group_arn = aws_elbv2_lb_target_group.test.id
     type             = "forward"
   }
 }
 
-resource "aws_lb_listener" "front_end_ruleupdate" {
-  load_balancer_arn = aws_lb.alb_test.id
+resource "aws_elbv2_lb_listener" "front_end_ruleupdate" {
+  load_balancer_arn = aws_elbv2_lb.alb_test.id
   protocol          = "HTTP"
   port              = "8080"
 
   default_action {
-    target_group_arn = aws_lb_target_group.test.id
+    target_group_arn = aws_elbv2_lb_target_group.test.id
     type             = "forward"
   }
 }
 
-resource "aws_lb" "alb_test" {
+resource "aws_elbv2_lb" "alb_test" {
   name            = "%s"
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
@@ -2475,7 +2475,7 @@ resource "aws_lb" "alb_test" {
   }
 }
 
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = "%s"
   port     = 8080
   protocol = "HTTP"
@@ -2555,18 +2555,18 @@ resource "aws_security_group" "alb_test" {
 
 func testAccListenerRuleConfig_priorityBase(lbName, targetGroupName string) string {
 	return fmt.Sprintf(`
-resource "aws_lb_listener" "front_end" {
-  load_balancer_arn = aws_lb.alb_test.id
+resource "aws_elbv2_lb_listener" "front_end" {
+  load_balancer_arn = aws_elbv2_lb.alb_test.id
   protocol          = "HTTP"
   port              = "80"
 
   default_action {
-    target_group_arn = aws_lb_target_group.test.id
+    target_group_arn = aws_elbv2_lb_target_group.test.id
     type             = "forward"
   }
 }
 
-resource "aws_lb" "alb_test" {
+resource "aws_elbv2_lb" "alb_test" {
   name            = "%s"
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
@@ -2580,7 +2580,7 @@ resource "aws_lb" "alb_test" {
   }
 }
 
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = "%s"
   port     = 8080
   protocol = "HTTP"
@@ -2660,12 +2660,12 @@ resource "aws_security_group" "alb_test" {
 
 func testAccListenerRuleConfig_priorityFirst(lbName, targetGroupName string) string {
 	return acctest.ConfigCompose(testAccListenerRuleConfig_priorityBase(lbName, targetGroupName), `
-resource "aws_lb_listener_rule" "first" {
-  listener_arn = aws_lb_listener.front_end.arn
+resource "aws_elbv2_lb_listener_rule" "first" {
+  listener_arn = aws_elbv2_lb_listener.front_end.arn
 
   action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.test.arn
+    target_group_arn = aws_elbv2_lb_target_group.test.arn
   }
 
   condition {
@@ -2675,13 +2675,13 @@ resource "aws_lb_listener_rule" "first" {
   }
 }
 
-resource "aws_lb_listener_rule" "third" {
-  listener_arn = aws_lb_listener.front_end.arn
+resource "aws_elbv2_lb_listener_rule" "third" {
+  listener_arn = aws_elbv2_lb_listener.front_end.arn
   priority     = 3
 
   action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.test.arn
+    target_group_arn = aws_elbv2_lb_target_group.test.arn
   }
 
   condition {
@@ -2690,19 +2690,19 @@ resource "aws_lb_listener_rule" "third" {
     }
   }
 
-  depends_on = [aws_lb_listener_rule.first]
+  depends_on = [aws_elbv2_lb_listener_rule.first]
 }
 `)
 }
 
 func testAccListenerRuleConfig_priorityLast(lbName, targetGroupName string) string {
 	return acctest.ConfigCompose(testAccListenerRuleConfig_priorityFirst(lbName, targetGroupName), `
-resource "aws_lb_listener_rule" "last" {
-  listener_arn = aws_lb_listener.front_end.arn
+resource "aws_elbv2_lb_listener_rule" "last" {
+  listener_arn = aws_elbv2_lb_listener.front_end.arn
 
   action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.test.arn
+    target_group_arn = aws_elbv2_lb_target_group.test.arn
   }
 
   condition {
@@ -2716,13 +2716,13 @@ resource "aws_lb_listener_rule" "last" {
 
 func testAccListenerRuleConfig_priorityStatic(lbName, targetGroupName string) string {
 	return acctest.ConfigCompose(testAccListenerRuleConfig_priorityFirst(lbName, targetGroupName), `
-resource "aws_lb_listener_rule" "last" {
-  listener_arn = aws_lb_listener.front_end.arn
+resource "aws_elbv2_lb_listener_rule" "last" {
+  listener_arn = aws_elbv2_lb_listener.front_end.arn
   priority     = 7
 
   action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.test.arn
+    target_group_arn = aws_elbv2_lb_target_group.test.arn
   }
 
   condition {
@@ -2736,14 +2736,14 @@ resource "aws_lb_listener_rule" "last" {
 
 func testAccListenerRuleConfig_priorityParallelism(lbName, targetGroupName string) string {
 	return acctest.ConfigCompose(testAccListenerRuleConfig_priorityStatic(lbName, targetGroupName), `
-resource "aws_lb_listener_rule" "parallelism" {
+resource "aws_elbv2_lb_listener_rule" "parallelism" {
   count = 10
 
-  listener_arn = aws_lb_listener.front_end.arn
+  listener_arn = aws_elbv2_lb_listener.front_end.arn
 
   action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.test.arn
+    target_group_arn = aws_elbv2_lb_target_group.test.arn
   }
 
   condition {
@@ -2757,13 +2757,13 @@ resource "aws_lb_listener_rule" "parallelism" {
 
 func testAccListenerRuleConfig_priority50000(lbName, targetGroupName string) string {
 	return acctest.ConfigCompose(testAccListenerRuleConfig_priorityBase(lbName, targetGroupName), `
-resource "aws_lb_listener_rule" "priority50000" {
-  listener_arn = aws_lb_listener.front_end.arn
+resource "aws_elbv2_lb_listener_rule" "priority50000" {
+  listener_arn = aws_elbv2_lb_listener.front_end.arn
   priority     = 50000
 
   action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.test.arn
+    target_group_arn = aws_elbv2_lb_target_group.test.arn
   }
 
   condition {
@@ -2778,12 +2778,12 @@ resource "aws_lb_listener_rule" "priority50000" {
 // priority out of range (1, 50000)
 func testAccListenerRuleConfig_priority50001(lbName, targetGroupName string) string {
 	return acctest.ConfigCompose(testAccListenerRuleConfig_priority50000(lbName, targetGroupName), `
-resource "aws_lb_listener_rule" "priority50001" {
-  listener_arn = aws_lb_listener.front_end.arn
+resource "aws_elbv2_lb_listener_rule" "priority50001" {
+  listener_arn = aws_elbv2_lb_listener.front_end.arn
 
   action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.test.arn
+    target_group_arn = aws_elbv2_lb_target_group.test.arn
   }
 
   condition {
@@ -2797,13 +2797,13 @@ resource "aws_lb_listener_rule" "priority50001" {
 
 func testAccListenerRuleConfig_priorityInUse(lbName, targetGroupName string) string {
 	return acctest.ConfigCompose(testAccListenerRuleConfig_priority50000(lbName, targetGroupName), `
-resource "aws_lb_listener_rule" "priority50000_in_use" {
-  listener_arn = aws_lb_listener.front_end.arn
+resource "aws_elbv2_lb_listener_rule" "priority50000_in_use" {
+  listener_arn = aws_elbv2_lb_listener.front_end.arn
   priority     = 50000
 
   action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.test.arn
+    target_group_arn = aws_elbv2_lb_target_group.test.arn
   }
 
   condition {
@@ -2817,8 +2817,8 @@ resource "aws_lb_listener_rule" "priority50000_in_use" {
 
 func testAccListenerRuleConfig_cognito(rName, key, certificate string) string {
 	return fmt.Sprintf(`
-resource "aws_lb_listener_rule" "cognito" {
-  listener_arn = aws_lb_listener.front_end.arn
+resource "aws_elbv2_lb_listener_rule" "cognito" {
+  listener_arn = aws_elbv2_lb_listener.front_end.arn
   priority     = 100
 
   action {
@@ -2837,7 +2837,7 @@ resource "aws_lb_listener_rule" "cognito" {
 
   action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.test.arn
+    target_group_arn = aws_elbv2_lb_target_group.test.arn
   }
 
   condition {
@@ -2853,20 +2853,20 @@ resource "aws_iam_server_certificate" "test" {
   private_key      = "%[3]s"
 }
 
-resource "aws_lb_listener" "front_end" {
-  load_balancer_arn = aws_lb.alb_test.id
+resource "aws_elbv2_lb_listener" "front_end" {
+  load_balancer_arn = aws_elbv2_lb.alb_test.id
   protocol          = "HTTPS"
   port              = "443"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
   certificate_arn   = aws_iam_server_certificate.test.arn
 
   default_action {
-    target_group_arn = aws_lb_target_group.test.id
+    target_group_arn = aws_elbv2_lb_target_group.test.id
     type             = "forward"
   }
 }
 
-resource "aws_lb" "alb_test" {
+resource "aws_elbv2_lb" "alb_test" {
   name            = "%[1]s"
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
@@ -2880,7 +2880,7 @@ resource "aws_lb" "alb_test" {
   }
 }
 
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = "%[1]s"
   port     = 8080
   protocol = "HTTP"
@@ -2981,8 +2981,8 @@ resource "aws_cognito_user_pool_domain" "test" {
 
 func testAccListenerRuleConfig_oidc(rName, key, certificate string) string {
 	return fmt.Sprintf(`
-resource "aws_lb_listener_rule" "oidc" {
-  listener_arn = aws_lb_listener.front_end.arn
+resource "aws_elbv2_lb_listener_rule" "oidc" {
+  listener_arn = aws_elbv2_lb_listener.front_end.arn
   priority     = 100
 
   action {
@@ -3004,7 +3004,7 @@ resource "aws_lb_listener_rule" "oidc" {
 
   action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.test.arn
+    target_group_arn = aws_elbv2_lb_target_group.test.arn
   }
 
   condition {
@@ -3020,20 +3020,20 @@ resource "aws_iam_server_certificate" "test" {
   private_key      = "%[3]s"
 }
 
-resource "aws_lb_listener" "front_end" {
-  load_balancer_arn = aws_lb.alb_test.id
+resource "aws_elbv2_lb_listener" "front_end" {
+  load_balancer_arn = aws_elbv2_lb.alb_test.id
   protocol          = "HTTPS"
   port              = "443"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
   certificate_arn   = aws_iam_server_certificate.test.arn
 
   default_action {
-    target_group_arn = aws_lb_target_group.test.id
+    target_group_arn = aws_elbv2_lb_target_group.test.id
     type             = "forward"
   }
 }
 
-resource "aws_lb" "alb_test" {
+resource "aws_elbv2_lb" "alb_test" {
   name            = "%[1]s"
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
@@ -3047,7 +3047,7 @@ resource "aws_lb" "alb_test" {
   }
 }
 
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = "%[1]s"
   port     = 8080
   protocol = "HTTP"
@@ -3140,8 +3140,8 @@ data "aws_availability_zones" "available" {
   }
 }
 
-resource "aws_lb_listener_rule" "test" {
-  listener_arn = aws_lb_listener.test.arn
+resource "aws_elbv2_lb_listener_rule" "test" {
+  listener_arn = aws_elbv2_lb_listener.test.arn
 
   action {
     order = 1
@@ -3164,7 +3164,7 @@ resource "aws_lb_listener_rule" "test" {
   action {
     order            = 2
     type             = "forward"
-    target_group_arn = aws_lb_target_group.test.arn
+    target_group_arn = aws_elbv2_lb_target_group.test.arn
   }
 
   condition {
@@ -3180,27 +3180,27 @@ resource "aws_iam_server_certificate" "test" {
   private_key      = "%[3]s"
 }
 
-resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+resource "aws_elbv2_lb_listener" "test" {
+  load_balancer_arn = aws_elbv2_lb.test.id
   protocol          = "HTTPS"
   port              = "443"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
   certificate_arn   = aws_iam_server_certificate.test.arn
 
   default_action {
-    target_group_arn = aws_lb_target_group.test.id
+    target_group_arn = aws_elbv2_lb_target_group.test.id
     type             = "forward"
   }
 }
 
-resource "aws_lb" "test" {
+resource "aws_elbv2_lb" "test" {
   internal        = true
   name            = var.rName
   security_groups = [aws_security_group.test.id]
   subnets         = aws_subnet.test[*].id
 }
 
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = var.rName
   port     = 8080
   protocol = "HTTP"
@@ -3270,7 +3270,7 @@ data "aws_partition" "current" {}
 
 data "aws_region" "current" {}
 
-resource "aws_lb_listener_rule" "error" {
+resource "aws_elbv2_lb_listener_rule" "error" {
   listener_arn = "arn:${data.aws_partition.current.partition}:elasticloadbalancing:${data.aws_region.current.name}:111111111111:listener/app/example/1234567890abcdef/1234567890abcdef"
   priority     = 100
 
@@ -3363,8 +3363,8 @@ condition {
 
 func testAccListenerRuleConfig_condition_base(condition, name, lbName string) string {
 	return fmt.Sprintf(`
-resource "aws_lb_listener_rule" "static" {
-  listener_arn = aws_lb_listener.front_end.arn
+resource "aws_elbv2_lb_listener_rule" "static" {
+  listener_arn = aws_elbv2_lb_listener.front_end.arn
   priority     = 100
 
   action {
@@ -3380,8 +3380,8 @@ resource "aws_lb_listener_rule" "static" {
   %s
 }
 
-resource "aws_lb_listener" "front_end" {
-  load_balancer_arn = aws_lb.alb_test.id
+resource "aws_elbv2_lb_listener" "front_end" {
+  load_balancer_arn = aws_elbv2_lb.alb_test.id
   protocol          = "HTTP"
   port              = "80"
 
@@ -3396,7 +3396,7 @@ resource "aws_lb_listener" "front_end" {
   }
 }
 
-resource "aws_lb" "alb_test" {
+resource "aws_elbv2_lb" "alb_test" {
   name            = "%s"
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
@@ -3504,7 +3504,7 @@ data "aws_partition" "current" {}
 
 data "aws_region" "current" {}
 
-resource "aws_lb_listener_rule" "static" {
+resource "aws_elbv2_lb_listener_rule" "static" {
   listener_arn = "arn:${data.aws_partition.current.partition}:elasticloadbalancing:${data.aws_region.current.name}:111111111111:listener/app/test/xxxxxxxxxxxxxxxx/xxxxxxxxxxxxxxxx"
   priority     = 100
 
@@ -3717,13 +3717,13 @@ condition {
 
 func testAccListenerRuleTags1Config(lbName, targetGroupName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
-resource "aws_lb_listener_rule" "static" {
-  listener_arn = aws_lb_listener.front_end.arn
+resource "aws_elbv2_lb_listener_rule" "static" {
+  listener_arn = aws_elbv2_lb_listener.front_end.arn
   priority     = 100
 
   action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.test.arn
+    target_group_arn = aws_elbv2_lb_target_group.test.arn
   }
 
   condition {
@@ -3737,18 +3737,18 @@ resource "aws_lb_listener_rule" "static" {
   }
 }
 
-resource "aws_lb_listener" "front_end" {
-  load_balancer_arn = aws_lb.alb_test.id
+resource "aws_elbv2_lb_listener" "front_end" {
+  load_balancer_arn = aws_elbv2_lb.alb_test.id
   protocol          = "HTTP"
   port              = "80"
 
   default_action {
-    target_group_arn = aws_lb_target_group.test.id
+    target_group_arn = aws_elbv2_lb_target_group.test.id
     type             = "forward"
   }
 }
 
-resource "aws_lb" "alb_test" {
+resource "aws_elbv2_lb" "alb_test" {
   name            = %[1]q
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
@@ -3762,7 +3762,7 @@ resource "aws_lb" "alb_test" {
   }
 }
 
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = %[2]q
   port     = 8080
   protocol = "HTTP"
@@ -3842,13 +3842,13 @@ resource "aws_security_group" "alb_test" {
 
 func testAccListenerRuleTags2Config(lbName, targetGroupName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
-resource "aws_lb_listener_rule" "static" {
-  listener_arn = aws_lb_listener.front_end.arn
+resource "aws_elbv2_lb_listener_rule" "static" {
+  listener_arn = aws_elbv2_lb_listener.front_end.arn
   priority     = 100
 
   action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.test.arn
+    target_group_arn = aws_elbv2_lb_target_group.test.arn
   }
 
   condition {
@@ -3863,18 +3863,18 @@ resource "aws_lb_listener_rule" "static" {
   }
 }
 
-resource "aws_lb_listener" "front_end" {
-  load_balancer_arn = aws_lb.alb_test.id
+resource "aws_elbv2_lb_listener" "front_end" {
+  load_balancer_arn = aws_elbv2_lb.alb_test.id
   protocol          = "HTTP"
   port              = "80"
 
   default_action {
-    target_group_arn = aws_lb_target_group.test.id
+    target_group_arn = aws_elbv2_lb_target_group.test.id
     type             = "forward"
   }
 }
 
-resource "aws_lb" "alb_test" {
+resource "aws_elbv2_lb" "alb_test" {
   name            = %[1]q
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
@@ -3888,7 +3888,7 @@ resource "aws_lb" "alb_test" {
   }
 }
 
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = %[2]q
   port     = 8080
   protocol = "HTTP"

@@ -2331,25 +2331,25 @@ resource "aws_subnet" "bar" {
   }
 }
 
-resource "aws_alb" "alb" {
+resource "aws_elbv2_lb" "alb" {
   name     = %[1]q
   internal = true
   subnets  = [aws_subnet.test.id, aws_subnet.bar.id]
 }
 
-resource "aws_alb_listener" "listener" {
-  load_balancer_arn = aws_alb.alb.arn
+resource "aws_elbv2_lb_listener" "listener" {
+  load_balancer_arn = aws_elbv2_lb.alb.arn
   port              = 80
   protocol          = "HTTP"
 
   default_action {
-    target_group_arn = aws_alb_target_group.target_group.arn
+    target_group_arn = aws_elbv2_lb_target_group.target_group.arn
     type             = "forward"
   }
 }
 
-resource "aws_alb_target_group" "target_group" {
-  name     = aws_alb.alb.name
+resource "aws_elbv2_lb_target_group" "target_group" {
+  name     = aws_elbv2_lb.alb.name
   port     = 80
   protocol = "HTTP"
   vpc_id   = aws_vpc.test.id
@@ -2362,7 +2362,7 @@ resource "aws_spot_fleet_request" "test" {
   valid_until                         = %[2]q
   terminate_instances_with_expiration = true
   wait_for_fulfillment                = true
-  target_group_arns                   = [aws_alb_target_group.target_group.arn]
+  target_group_arns                   = [aws_elbv2_lb_target_group.target_group.arn]
 
   launch_specification {
     instance_type = "m3.large"

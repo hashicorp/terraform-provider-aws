@@ -46,7 +46,7 @@ Upgrade topics:
 - [Resource: aws_instance](#resource-aws_instance)
 - [Resource: aws_lambda_alias](#resource-aws_lambda_alias)
 - [Resource: aws_launch_template](#resource-aws_launch_template)
-- [Resource: aws_lb_listener_rule](#resource-aws_lb_listener_rule)
+- [Resource: aws_elbv2_lb_listener_rule](#resource-aws_elbv2_lb_listener_rule)
 - [Resource: aws_msk_cluster](#resource-aws_msk_cluster)
 - [Resource: aws_rds_cluster](#resource-aws_rds_cluster)
 - [Resource: aws_route53_resolver_rule](#resource-aws_route53_resolver_rule)
@@ -699,7 +699,7 @@ For example, given this previous configuration:
 resource "aws_autoscaling_group" "example" {
   # ... other configuration ...
   load_balancers    = []
-  target_group_arns = [aws_lb_target_group.example.arn]
+  target_group_arns = [aws_elbv2_lb_target_group.example.arn]
 }
 ```
 
@@ -708,7 +708,7 @@ An updated configuration:
 ```terraform
 resource "aws_autoscaling_group" "example" {
   # ... other configuration ...
-  target_group_arns = [aws_lb_target_group.example.arn]
+  target_group_arns = [aws_elbv2_lb_target_group.example.arn]
 }
 ```
 
@@ -1244,7 +1244,7 @@ resource "aws_launch_template" "example" {
 }
 ```
 
-## Resource: aws_lb_listener_rule
+## Resource: aws_elbv2_lb_listener_rule
 
 ### condition.field and condition.values Arguments Removal
 
@@ -1253,7 +1253,7 @@ Switch your Terraform configuration to use the `host_header` or `path_pattern` c
 For example, given this previous configuration:
 
 ```terraform
-resource "aws_lb_listener_rule" "example" {
+resource "aws_elbv2_lb_listener_rule" "example" {
   # ... other configuration ...
 
   condition {
@@ -1266,7 +1266,7 @@ resource "aws_lb_listener_rule" "example" {
 An updated configuration:
 
 ```terraform
-resource "aws_lb_listener_rule" "example" {
+resource "aws_elbv2_lb_listener_rule" "example" {
   # ... other configuration ...
 
   condition {

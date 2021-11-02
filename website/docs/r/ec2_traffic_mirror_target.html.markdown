@@ -18,7 +18,7 @@ To create a basic traffic mirror session
 ```terraform
 resource "aws_ec2_traffic_mirror_target" "nlb" {
   description               = "NLB target"
-  network_load_balancer_arn = aws_lb.lb.arn
+  network_load_balancer_arn = aws_elbv2_lb.lb.arn
 }
 
 resource "aws_ec2_traffic_mirror_target" "eni" {

@@ -1,14 +1,14 @@
 ---
 subcategory: "Elastic Load Balancing v2 (ALB/NLB)"
 layout: "aws"
-page_title: "AWS: aws_lb"
+page_title: "AWS: aws_elbv2_lb"
 description: |-
   Provides a Load Balancer data source.
 ---
 
-# Data Source: aws_lb
+# Data Source: aws_elbv2_lb
 
-~> **Note:** `aws_alb` is known as `aws_lb`. The functionality is identical.
+~> **Note:** `aws_elbv2_lb` is known as `aws_elbv2_lb`. The functionality is identical.
 
 Provides information about a Load Balancer.
 
@@ -29,7 +29,7 @@ variable "lb_name" {
   default = ""
 }
 
-data "aws_lb" "test" {
+data "aws_elbv2_lb" "test" {
   arn  = var.lb_arn
   name = var.lb_name
 }

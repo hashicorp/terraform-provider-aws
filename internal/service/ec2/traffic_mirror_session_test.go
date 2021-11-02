@@ -237,7 +237,7 @@ resource "aws_instance" "src" {
   }
 }
 
-resource "aws_lb" "lb" {
+resource "aws_elbv2_lb" "lb" {
   name               = %[1]q
   internal           = true
   load_balancer_type = "network"
@@ -255,7 +255,7 @@ resource "aws_ec2_traffic_mirror_filter" "filter" {
 }
 
 resource "aws_ec2_traffic_mirror_target" "target" {
-  network_load_balancer_arn = aws_lb.lb.arn
+  network_load_balancer_arn = aws_elbv2_lb.lb.arn
 }
 `, rName))
 }

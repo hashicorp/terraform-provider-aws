@@ -19,7 +19,7 @@ import (
 
 func TestAccELBV2Listener_basic(t *testing.T) {
 	var conf elbv2.Listener
-	resourceName := "aws_lb_listener.test"
+	resourceName := "aws_elbv2_lb_listener.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -32,14 +32,14 @@ func TestAccELBV2Listener_basic(t *testing.T) {
 				Config: testAccListenerConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(resourceName, &conf),
-					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_elbv2_lb.test", "arn"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile("listener/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "port", "80"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.order", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "forward"),
-					resource.TestCheckResourceAttrPair(resourceName, "default_action.0.target_group_arn", "aws_lb_target_group.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_action.0.target_group_arn", "aws_elbv2_lb_target_group.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.redirect.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.fixed_response.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.#", "0"),
@@ -56,7 +56,7 @@ func TestAccELBV2Listener_basic(t *testing.T) {
 
 func TestAccELBV2Listener_tags(t *testing.T) {
 	var conf elbv2.Listener
-	resourceName := "aws_lb_listener.test"
+	resourceName := "aws_elbv2_lb_listener.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -101,7 +101,7 @@ func TestAccELBV2Listener_tags(t *testing.T) {
 
 func TestAccELBV2Listener_forwardWeighted(t *testing.T) {
 	var conf elbv2.Listener
-	resourceName := "aws_lb_listener.test"
+	resourceName := "aws_elbv2_lb_listener.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -115,7 +115,7 @@ func TestAccELBV2Listener_forwardWeighted(t *testing.T) {
 				Config: testAccListenerConfig_forwardWeighted(rName, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(resourceName, &conf),
-					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_elbv2_lb.test", "arn"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile("listener/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "port", "80"),
@@ -139,7 +139,7 @@ func TestAccELBV2Listener_forwardWeighted(t *testing.T) {
 				Config: testAccListenerConfig_changeForwardWeightedStickiness(rName, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(resourceName, &conf),
-					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_elbv2_lb.test", "arn"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile("listener/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "port", "80"),
@@ -163,14 +163,14 @@ func TestAccELBV2Listener_forwardWeighted(t *testing.T) {
 				Config: testAccListenerConfig_changeForwardWeightedToBasic(rName, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(resourceName, &conf),
-					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_elbv2_lb.test", "arn"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile("listener/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "port", "80"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.order", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "forward"),
-					resource.TestCheckResourceAttrPair(resourceName, "default_action.0.target_group_arn", "aws_lb_target_group.test1", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_action.0.target_group_arn", "aws_elbv2_lb_target_group.test1", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.redirect.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.fixed_response.#", "0"),
 				),
@@ -181,7 +181,7 @@ func TestAccELBV2Listener_forwardWeighted(t *testing.T) {
 
 func TestAccELBV2Listener_basicUdp(t *testing.T) {
 	var conf elbv2.Listener
-	resourceName := "aws_lb_listener.test"
+	resourceName := "aws_elbv2_lb_listener.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -194,14 +194,14 @@ func TestAccELBV2Listener_basicUdp(t *testing.T) {
 				Config: testAccListenerConfig_basicUdp(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(resourceName, &conf),
-					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_elbv2_lb.test", "arn"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile("listener/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "UDP"),
 					resource.TestCheckResourceAttr(resourceName, "port", "514"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.order", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "forward"),
-					resource.TestCheckResourceAttrPair(resourceName, "default_action.0.target_group_arn", "aws_lb_target_group.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_action.0.target_group_arn", "aws_elbv2_lb_target_group.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.redirect.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.fixed_response.#", "0"),
 				),
@@ -217,7 +217,7 @@ func TestAccELBV2Listener_basicUdp(t *testing.T) {
 
 func TestAccELBV2Listener_backwardsCompatibility(t *testing.T) {
 	var conf elbv2.Listener
-	resourceName := "aws_alb_listener.test"
+	resourceName := "aws_elbv2_lb_listener.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -230,14 +230,14 @@ func TestAccELBV2Listener_backwardsCompatibility(t *testing.T) {
 				Config: testAccListenerBackwardsCompatibilityConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(resourceName, &conf),
-					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_alb.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_elbv2_lb.test", "arn"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile("listener/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "port", "80"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.order", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "forward"),
-					resource.TestCheckResourceAttrPair(resourceName, "default_action.0.target_group_arn", "aws_alb_target_group.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_action.0.target_group_arn", "aws_elbv2_lb_target_group.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.redirect.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.fixed_response.#", "0"),
 				),
@@ -254,7 +254,7 @@ func TestAccELBV2Listener_backwardsCompatibility(t *testing.T) {
 func TestAccELBV2Listener_https(t *testing.T) {
 	var conf elbv2.Listener
 	key := acctest.TLSRSAPrivateKeyPEM(2048)
-	resourceName := "aws_lb_listener.test"
+	resourceName := "aws_elbv2_lb_listener.test"
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -268,14 +268,14 @@ func TestAccELBV2Listener_https(t *testing.T) {
 				Config: testAccListenerConfig_https(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(resourceName, &conf),
-					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_elbv2_lb.test", "arn"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile("listener/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTPS"),
 					resource.TestCheckResourceAttr(resourceName, "port", "443"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.order", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "forward"),
-					resource.TestCheckResourceAttrPair(resourceName, "default_action.0.target_group_arn", "aws_lb_target_group.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_action.0.target_group_arn", "aws_elbv2_lb_target_group.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.redirect.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.fixed_response.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", "aws_iam_server_certificate.test", "arn"),
@@ -294,8 +294,8 @@ func TestAccELBV2Listener_https(t *testing.T) {
 func TestAccELBV2Listener_LoadBalancerARN_gatewayLoadBalancer(t *testing.T) {
 	var conf elbv2.Listener
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	lbResourceName := "aws_lb.test"
-	resourceName := "aws_lb_listener.test"
+	lbResourceName := "aws_elbv2_lb.test"
+	resourceName := "aws_elbv2_lb_listener.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -321,7 +321,7 @@ func TestAccELBV2Listener_Protocol_tls(t *testing.T) {
 	key := acctest.TLSRSAPrivateKeyPEM(2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_lb_listener.test"
+	resourceName := "aws_elbv2_lb_listener.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -348,7 +348,7 @@ func TestAccELBV2Listener_Protocol_tls(t *testing.T) {
 
 func TestAccELBV2Listener_redirect(t *testing.T) {
 	var conf elbv2.Listener
-	resourceName := "aws_lb_listener.test"
+	resourceName := "aws_elbv2_lb_listener.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -361,7 +361,7 @@ func TestAccELBV2Listener_redirect(t *testing.T) {
 				Config: testAccListenerConfig_redirect(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(resourceName, &conf),
-					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_elbv2_lb.test", "arn"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile("listener/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "port", "80"),
@@ -390,7 +390,7 @@ func TestAccELBV2Listener_redirect(t *testing.T) {
 
 func TestAccELBV2Listener_fixedResponse(t *testing.T) {
 	var conf elbv2.Listener
-	resourceName := "aws_lb_listener.test"
+	resourceName := "aws_elbv2_lb_listener.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -403,7 +403,7 @@ func TestAccELBV2Listener_fixedResponse(t *testing.T) {
 				Config: testAccListenerConfig_fixedResponse(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(resourceName, &conf),
-					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_elbv2_lb.test", "arn"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile("listener/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "port", "80"),
@@ -430,7 +430,7 @@ func TestAccELBV2Listener_fixedResponse(t *testing.T) {
 func TestAccELBV2Listener_cognito(t *testing.T) {
 	var conf elbv2.Listener
 	key := acctest.TLSRSAPrivateKeyPEM(2048)
-	resourceName := "aws_lb_listener.test"
+	resourceName := "aws_elbv2_lb_listener.test"
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -444,7 +444,7 @@ func TestAccELBV2Listener_cognito(t *testing.T) {
 				Config: testAccListenerConfig_cognito(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(resourceName, &conf),
-					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_elbv2_lb.test", "arn"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile("listener/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTPS"),
 					resource.TestCheckResourceAttr(resourceName, "port", "443"),
@@ -458,7 +458,7 @@ func TestAccELBV2Listener_cognito(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.authenticate_cognito.0.authentication_request_extra_params.param", "test"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.1.type", "forward"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.1.order", "2"),
-					resource.TestCheckResourceAttrPair(resourceName, "default_action.1.target_group_arn", "aws_lb_target_group.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_action.1.target_group_arn", "aws_elbv2_lb_target_group.test", "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", "aws_iam_server_certificate.test", "arn"),
 				),
 			},
@@ -474,7 +474,7 @@ func TestAccELBV2Listener_cognito(t *testing.T) {
 func TestAccELBV2Listener_oidc(t *testing.T) {
 	var conf elbv2.Listener
 	key := acctest.TLSRSAPrivateKeyPEM(2048)
-	resourceName := "aws_lb_listener.test"
+	resourceName := "aws_elbv2_lb_listener.test"
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -488,7 +488,7 @@ func TestAccELBV2Listener_oidc(t *testing.T) {
 				Config: testAccListenerConfig_oidc(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(resourceName, &conf),
-					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_elbv2_lb.test", "arn"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile("listener/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTPS"),
 					resource.TestCheckResourceAttr(resourceName, "port", "443"),
@@ -505,7 +505,7 @@ func TestAccELBV2Listener_oidc(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.authenticate_oidc.0.authentication_request_extra_params.param", "test"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.1.order", "2"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.1.type", "forward"),
-					resource.TestCheckResourceAttrPair(resourceName, "default_action.1.target_group_arn", "aws_lb_target_group.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_action.1.target_group_arn", "aws_elbv2_lb_target_group.test", "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", "aws_iam_server_certificate.test", "arn"),
 				),
 			},
@@ -524,7 +524,7 @@ func TestAccELBV2Listener_DefaultAction_order(t *testing.T) {
 	key := acctest.TLSRSAPrivateKeyPEM(2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_lb_listener.test"
+	resourceName := "aws_elbv2_lb_listener.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -557,7 +557,7 @@ func TestAccELBV2Listener_DefaultActionOrder_recreates(t *testing.T) {
 	key := acctest.TLSRSAPrivateKeyPEM(2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_lb_listener.test"
+	resourceName := "aws_elbv2_lb_listener.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -648,7 +648,7 @@ func testAccCheckListenerDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_lb_listener" && rs.Type != "aws_alb_listener" {
+		if rs.Type != "aws_elbv2_lb_listener" && rs.Type != "aws_elbv2_lb_listener" {
 			continue
 		}
 
@@ -722,18 +722,18 @@ resource "aws_security_group" "test" {
 
 func testAccListenerConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccListenerBaseConfig(rName), fmt.Sprintf(`
-resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+resource "aws_elbv2_lb_listener" "test" {
+  load_balancer_arn = aws_elbv2_lb.test.id
   protocol          = "HTTP"
   port              = "80"
 
   default_action {
-    target_group_arn = aws_lb_target_group.test.id
+    target_group_arn = aws_elbv2_lb_target_group.test.id
     type             = "forward"
   }
 }
 
-resource "aws_lb" "test" {
+resource "aws_elbv2_lb" "test" {
   name            = %[1]q
   internal        = true
   security_groups = [aws_security_group.test.id]
@@ -747,7 +747,7 @@ resource "aws_lb" "test" {
   }
 }
 
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = %[1]q
   port     = 8080
   protocol = "HTTP"
@@ -773,8 +773,8 @@ resource "aws_lb_target_group" "test" {
 
 func testAccListenerConfig_forwardWeighted(rName, rName2 string) string {
 	return acctest.ConfigCompose(testAccListenerBaseConfig(rName), fmt.Sprintf(`
-resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+resource "aws_elbv2_lb_listener" "test" {
+  load_balancer_arn = aws_elbv2_lb.test.id
   protocol          = "HTTP"
   port              = "80"
 
@@ -783,19 +783,19 @@ resource "aws_lb_listener" "test" {
 
     forward {
       target_group {
-        arn    = aws_lb_target_group.test1.arn
+        arn    = aws_elbv2_lb_target_group.test1.arn
         weight = 1
       }
 
       target_group {
-        arn    = aws_lb_target_group.test2.arn
+        arn    = aws_elbv2_lb_target_group.test2.arn
         weight = 1
       }
     }
   }
 }
 
-resource "aws_lb" "test" {
+resource "aws_elbv2_lb" "test" {
   name            = %[1]q
   internal        = true
   security_groups = [aws_security_group.test.id]
@@ -809,7 +809,7 @@ resource "aws_lb" "test" {
   }
 }
 
-resource "aws_lb_target_group" "test1" {
+resource "aws_elbv2_lb_target_group" "test1" {
   name     = %[1]q
   port     = 8080
   protocol = "HTTP"
@@ -831,7 +831,7 @@ resource "aws_lb_target_group" "test1" {
   }
 }
 
-resource "aws_lb_target_group" "test2" {
+resource "aws_elbv2_lb_target_group" "test2" {
   name     = %[2]q
   port     = 8080
   protocol = "HTTP"
@@ -857,8 +857,8 @@ resource "aws_lb_target_group" "test2" {
 
 func testAccListenerConfig_changeForwardWeightedStickiness(rName, rName2 string) string {
 	return acctest.ConfigCompose(testAccListenerBaseConfig(rName), fmt.Sprintf(`
-resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+resource "aws_elbv2_lb_listener" "test" {
+  load_balancer_arn = aws_elbv2_lb.test.id
   protocol          = "HTTP"
   port              = "80"
 
@@ -867,12 +867,12 @@ resource "aws_lb_listener" "test" {
 
     forward {
       target_group {
-        arn    = aws_lb_target_group.test1.arn
+        arn    = aws_elbv2_lb_target_group.test1.arn
         weight = 1
       }
 
       target_group {
-        arn    = aws_lb_target_group.test2.arn
+        arn    = aws_elbv2_lb_target_group.test2.arn
         weight = 1
       }
 
@@ -884,7 +884,7 @@ resource "aws_lb_listener" "test" {
   }
 }
 
-resource "aws_lb" "test" {
+resource "aws_elbv2_lb" "test" {
   name            = %[1]q
   internal        = true
   security_groups = [aws_security_group.test.id]
@@ -898,7 +898,7 @@ resource "aws_lb" "test" {
   }
 }
 
-resource "aws_lb_target_group" "test1" {
+resource "aws_elbv2_lb_target_group" "test1" {
   name     = %[1]q
   port     = 8080
   protocol = "HTTP"
@@ -920,7 +920,7 @@ resource "aws_lb_target_group" "test1" {
   }
 }
 
-resource "aws_lb_target_group" "test2" {
+resource "aws_elbv2_lb_target_group" "test2" {
   name     = %[2]q
   port     = 8080
   protocol = "HTTP"
@@ -946,18 +946,18 @@ resource "aws_lb_target_group" "test2" {
 
 func testAccListenerConfig_changeForwardWeightedToBasic(rName, rName2 string) string {
 	return acctest.ConfigCompose(testAccListenerBaseConfig(rName), fmt.Sprintf(`
-resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+resource "aws_elbv2_lb_listener" "test" {
+  load_balancer_arn = aws_elbv2_lb.test.id
   protocol          = "HTTP"
   port              = "80"
 
   default_action {
-    target_group_arn = aws_lb_target_group.test1.arn
+    target_group_arn = aws_elbv2_lb_target_group.test1.arn
     type             = "forward"
   }
 }
 
-resource "aws_lb" "test" {
+resource "aws_elbv2_lb" "test" {
   name            = %[1]q
   internal        = true
   security_groups = [aws_security_group.test.id]
@@ -971,7 +971,7 @@ resource "aws_lb" "test" {
   }
 }
 
-resource "aws_lb_target_group" "test1" {
+resource "aws_elbv2_lb_target_group" "test1" {
   name     = %[1]q
   port     = 8080
   protocol = "HTTP"
@@ -993,7 +993,7 @@ resource "aws_lb_target_group" "test1" {
   }
 }
 
-resource "aws_lb_target_group" "test2" {
+resource "aws_elbv2_lb_target_group" "test2" {
   name     = %[2]q
   port     = 8080
   protocol = "HTTP"
@@ -1019,18 +1019,18 @@ resource "aws_lb_target_group" "test2" {
 
 func testAccListenerConfig_basicUdp(rName string) string {
 	return acctest.ConfigCompose(testAccListenerBaseConfig(rName), fmt.Sprintf(`
-resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+resource "aws_elbv2_lb_listener" "test" {
+  load_balancer_arn = aws_elbv2_lb.test.id
   protocol          = "UDP"
   port              = "514"
 
   default_action {
-    target_group_arn = aws_lb_target_group.test.id
+    target_group_arn = aws_elbv2_lb_target_group.test.id
     type             = "forward"
   }
 }
 
-resource "aws_lb" "test" {
+resource "aws_elbv2_lb" "test" {
   name               = %[1]q
   internal           = false
   load_balancer_type = "network"
@@ -1044,7 +1044,7 @@ resource "aws_lb" "test" {
   }
 }
 
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = %[1]q
   port     = 514
   protocol = "UDP"
@@ -1072,18 +1072,18 @@ resource "aws_internet_gateway" "test" {
 
 func testAccListenerBackwardsCompatibilityConfig(rName string) string {
 	return acctest.ConfigCompose(testAccListenerBaseConfig(rName), fmt.Sprintf(`
-resource "aws_alb_listener" "test" {
-  load_balancer_arn = aws_alb.test.id
+resource "aws_elbv2_lb_listener" "test" {
+  load_balancer_arn = aws_elbv2_lb.test.id
   protocol          = "HTTP"
   port              = "80"
 
   default_action {
-    target_group_arn = aws_alb_target_group.test.id
+    target_group_arn = aws_elbv2_lb_target_group.test.id
     type             = "forward"
   }
 }
 
-resource "aws_alb" "test" {
+resource "aws_elbv2_lb" "test" {
   name            = %[1]q
   internal        = true
   security_groups = [aws_security_group.test.id]
@@ -1097,7 +1097,7 @@ resource "aws_alb" "test" {
   }
 }
 
-resource "aws_alb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = %[1]q
   port     = 8080
   protocol = "HTTP"
@@ -1123,20 +1123,20 @@ resource "aws_alb_target_group" "test" {
 
 func testAccListenerConfig_https(rName, key, certificate string) string {
 	return acctest.ConfigCompose(testAccListenerBaseConfig(rName), fmt.Sprintf(`
-resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+resource "aws_elbv2_lb_listener" "test" {
+  load_balancer_arn = aws_elbv2_lb.test.id
   protocol          = "HTTPS"
   port              = "443"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
   certificate_arn   = aws_iam_server_certificate.test.arn
 
   default_action {
-    target_group_arn = aws_lb_target_group.test.id
+    target_group_arn = aws_elbv2_lb_target_group.test.id
     type             = "forward"
   }
 }
 
-resource "aws_lb" "test" {
+resource "aws_elbv2_lb" "test" {
   name            = %[1]q
   internal        = false
   security_groups = [aws_security_group.test.id]
@@ -1150,7 +1150,7 @@ resource "aws_lb" "test" {
   }
 }
 
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = %[1]q
   port     = 8080
   protocol = "HTTP"
@@ -1210,7 +1210,7 @@ resource "aws_subnet" "test" {
   }
 }
 
-resource "aws_lb" "test" {
+resource "aws_elbv2_lb" "test" {
   load_balancer_type = "gateway"
   name               = %[1]q
 
@@ -1219,7 +1219,7 @@ resource "aws_lb" "test" {
   }
 }
 
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = %[1]q
   port     = 6081
   protocol = "GENEVE"
@@ -1231,11 +1231,11 @@ resource "aws_lb_target_group" "test" {
   }
 }
 
-resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+resource "aws_elbv2_lb_listener" "test" {
+  load_balancer_arn = aws_elbv2_lb.test.id
 
   default_action {
-    target_group_arn = aws_lb_target_group.test.id
+    target_group_arn = aws_elbv2_lb_target_group.test.id
     type             = "forward"
   }
 }
@@ -1253,7 +1253,7 @@ resource "aws_acm_certificate" "test" {
   }
 }
 
-resource "aws_lb" "test" {
+resource "aws_elbv2_lb" "test" {
   internal           = true
   load_balancer_type = "network"
   name               = %[1]q
@@ -1264,7 +1264,7 @@ resource "aws_lb" "test" {
   }
 }
 
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = %[1]q
   port     = 443
   protocol = "TLS"
@@ -1283,16 +1283,16 @@ resource "aws_lb_target_group" "test" {
   }
 }
 
-resource "aws_lb_listener" "test" {
+resource "aws_elbv2_lb_listener" "test" {
   certificate_arn   = aws_acm_certificate.test.arn
-  load_balancer_arn = aws_lb.test.arn
+  load_balancer_arn = aws_elbv2_lb.test.arn
   port              = "443"
   protocol          = "TLS"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
   alpn_policy       = "HTTP2Preferred"
 
   default_action {
-    target_group_arn = aws_lb_target_group.test.arn
+    target_group_arn = aws_elbv2_lb_target_group.test.arn
     type             = "forward"
   }
 }
@@ -1301,8 +1301,8 @@ resource "aws_lb_listener" "test" {
 
 func testAccListenerConfig_redirect(rName string) string {
 	return acctest.ConfigCompose(testAccListenerBaseConfig(rName), fmt.Sprintf(`
-resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+resource "aws_elbv2_lb_listener" "test" {
+  load_balancer_arn = aws_elbv2_lb.test.id
   protocol          = "HTTP"
   port              = "80"
 
@@ -1317,7 +1317,7 @@ resource "aws_lb_listener" "test" {
   }
 }
 
-resource "aws_lb" "test" {
+resource "aws_elbv2_lb" "test" {
   name            = %[1]q
   internal        = true
   security_groups = [aws_security_group.test.id]
@@ -1335,8 +1335,8 @@ resource "aws_lb" "test" {
 
 func testAccListenerConfig_fixedResponse(rName string) string {
 	return acctest.ConfigCompose(testAccListenerBaseConfig(rName), fmt.Sprintf(`
-resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+resource "aws_elbv2_lb_listener" "test" {
+  load_balancer_arn = aws_elbv2_lb.test.id
   protocol          = "HTTP"
   port              = "80"
 
@@ -1351,7 +1351,7 @@ resource "aws_lb_listener" "test" {
   }
 }
 
-resource "aws_lb" "test" {
+resource "aws_elbv2_lb" "test" {
   name            = %[1]q
   internal        = true
   security_groups = [aws_security_group.test.id]
@@ -1369,7 +1369,7 @@ resource "aws_lb" "test" {
 
 func testAccListenerConfig_cognito(rName, key, certificate string) string {
 	return acctest.ConfigCompose(testAccListenerBaseConfig(rName), fmt.Sprintf(`
-resource "aws_lb" "test" {
+resource "aws_elbv2_lb" "test" {
   name                       = %[1]q
   internal                   = false
   security_groups            = [aws_security_group.test.id]
@@ -1381,7 +1381,7 @@ resource "aws_lb" "test" {
   }
 }
 
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = %[1]q
   port     = 8080
   protocol = "HTTP"
@@ -1442,8 +1442,8 @@ resource "aws_iam_server_certificate" "test" {
   private_key      = "%[3]s"
 }
 
-resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+resource "aws_elbv2_lb_listener" "test" {
+  load_balancer_arn = aws_elbv2_lb.test.id
   protocol          = "HTTPS"
   port              = "443"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
@@ -1464,7 +1464,7 @@ resource "aws_lb_listener" "test" {
   }
 
   default_action {
-    target_group_arn = aws_lb_target_group.test.id
+    target_group_arn = aws_elbv2_lb_target_group.test.id
     type             = "forward"
   }
 }
@@ -1473,7 +1473,7 @@ resource "aws_lb_listener" "test" {
 
 func testAccListenerConfig_oidc(rName, key, certificate string) string {
 	return acctest.ConfigCompose(testAccListenerBaseConfig(rName), fmt.Sprintf(`
-resource "aws_lb" "test" {
+resource "aws_elbv2_lb" "test" {
   name                       = %[1]q
   internal                   = false
   security_groups            = [aws_security_group.test.id]
@@ -1485,7 +1485,7 @@ resource "aws_lb" "test" {
   }
 }
 
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = %[1]q
   port     = 8080
   protocol = "HTTP"
@@ -1521,8 +1521,8 @@ resource "aws_iam_server_certificate" "test" {
   private_key      = "%[3]s"
 }
 
-resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+resource "aws_elbv2_lb_listener" "test" {
+  load_balancer_arn = aws_elbv2_lb.test.id
   protocol          = "HTTPS"
   port              = "443"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
@@ -1546,7 +1546,7 @@ resource "aws_lb_listener" "test" {
   }
 
   default_action {
-    target_group_arn = aws_lb_target_group.test.id
+    target_group_arn = aws_elbv2_lb_target_group.test.id
     type             = "forward"
   }
 }
@@ -1555,8 +1555,8 @@ resource "aws_lb_listener" "test" {
 
 func testAccListenerConfig_DefaultAction_Order(rName, key, certificate string) string {
 	return acctest.ConfigCompose(testAccListenerBaseConfig(rName), fmt.Sprintf(`
-resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+resource "aws_elbv2_lb_listener" "test" {
+  load_balancer_arn = aws_elbv2_lb.test.id
   protocol          = "HTTPS"
   port              = "443"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
@@ -1583,7 +1583,7 @@ resource "aws_lb_listener" "test" {
   default_action {
     order            = 2
     type             = "forward"
-    target_group_arn = aws_lb_target_group.test.arn
+    target_group_arn = aws_elbv2_lb_target_group.test.arn
   }
 }
 
@@ -1593,7 +1593,7 @@ resource "aws_iam_server_certificate" "test" {
   private_key      = "%[3]s"
 }
 
-resource "aws_lb" "test" {
+resource "aws_elbv2_lb" "test" {
   internal        = true
   name            = %[1]q
   security_groups = [aws_security_group.test.id]
@@ -1604,7 +1604,7 @@ resource "aws_lb" "test" {
   }
 }
 
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = %[1]q
   port     = 8080
   protocol = "HTTP"
@@ -1630,13 +1630,13 @@ resource "aws_lb_target_group" "test" {
 
 func testAccListenerTags1Config(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccListenerBaseConfig(rName), fmt.Sprintf(`
-resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+resource "aws_elbv2_lb_listener" "test" {
+  load_balancer_arn = aws_elbv2_lb.test.id
   protocol          = "HTTP"
   port              = "80"
 
   default_action {
-    target_group_arn = aws_lb_target_group.test.id
+    target_group_arn = aws_elbv2_lb_target_group.test.id
     type             = "forward"
   }
 
@@ -1645,7 +1645,7 @@ resource "aws_lb_listener" "test" {
   }
 }
 
-resource "aws_lb" "test" {
+resource "aws_elbv2_lb" "test" {
   name            = %[1]q
   internal        = true
   security_groups = [aws_security_group.test.id]
@@ -1659,7 +1659,7 @@ resource "aws_lb" "test" {
   }
 }
 
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = %[1]q
   port     = 8080
   protocol = "HTTP"
@@ -1685,13 +1685,13 @@ resource "aws_lb_target_group" "test" {
 
 func testAccListenerTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(testAccListenerBaseConfig(rName), fmt.Sprintf(`
-resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+resource "aws_elbv2_lb_listener" "test" {
+  load_balancer_arn = aws_elbv2_lb.test.id
   protocol          = "HTTP"
   port              = "80"
 
   default_action {
-    target_group_arn = aws_lb_target_group.test.id
+    target_group_arn = aws_elbv2_lb_target_group.test.id
     type             = "forward"
   }
 
@@ -1701,7 +1701,7 @@ resource "aws_lb_listener" "test" {
   }
 }
 
-resource "aws_lb" "test" {
+resource "aws_elbv2_lb" "test" {
   name            = %[1]q
   internal        = true
   security_groups = [aws_security_group.test.id]
@@ -1715,7 +1715,7 @@ resource "aws_lb" "test" {
   }
 }
 
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = %[1]q
   port     = 8080
   protocol = "HTTP"

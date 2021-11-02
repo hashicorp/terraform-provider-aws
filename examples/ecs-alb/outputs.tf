@@ -11,5 +11,5 @@ output "asg_name" {
 }
 
 output "elb_hostname" {
-  value = aws_alb.main.dns_name
+  value = aws_elbv2_lb.main.dns_name
 }

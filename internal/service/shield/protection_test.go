@@ -462,7 +462,7 @@ variable "subnets" {
   type    = list(string)
 }
 
-resource "aws_lb" "test" {
+resource "aws_elbv2_lb" "test" {
   name            = %[1]q
   internal        = true
   security_groups = [aws_security_group.test.id]
@@ -526,7 +526,7 @@ resource "aws_security_group" "test" {
 
 resource "aws_shield_protection" "test" {
   name         = %[1]q
-  resource_arn = aws_lb.test.arn
+  resource_arn = aws_elbv2_lb.test.arn
 }
 `, rName)
 }

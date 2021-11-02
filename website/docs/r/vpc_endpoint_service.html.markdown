@@ -24,7 +24,7 @@ and will overwrite the association.
 ```terraform
 resource "aws_vpc_endpoint_service" "example" {
   acceptance_required        = false
-  network_load_balancer_arns = [aws_lb.example.arn]
+  network_load_balancer_arns = [aws_elbv2_lb.example.arn]
 }
 ```
 
@@ -33,7 +33,7 @@ resource "aws_vpc_endpoint_service" "example" {
 ```terraform
 resource "aws_vpc_endpoint_service" "example" {
   acceptance_required        = false
-  gateway_load_balancer_arns = [aws_lb.example.arn]
+  gateway_load_balancer_arns = [aws_elbv2_lb.example.arn]
 }
 ```
 

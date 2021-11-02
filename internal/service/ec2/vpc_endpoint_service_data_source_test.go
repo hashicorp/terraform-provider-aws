@@ -230,7 +230,7 @@ resource "aws_vpc" "test" {
   }
 }
 
-resource "aws_lb" "test" {
+resource "aws_elbv2_lb" "test" {
   name = %[1]q
 
   subnets = [
@@ -281,7 +281,7 @@ resource "aws_vpc_endpoint_service" "test" {
   acceptance_required = true
 
   network_load_balancer_arns = [
-    aws_lb.test.id,
+    aws_elbv2_lb.test.id,
   ]
 
   tags = {

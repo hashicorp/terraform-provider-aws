@@ -1,28 +1,28 @@
 ---
 subcategory: "Elastic Load Balancing v2 (ALB/NLB)"
 layout: "aws"
-page_title: "AWS: aws_lb_target_group_attachment"
+page_title: "AWS: aws_elbv2_lb_target_group_attachment"
 description: |-
   Provides the ability to register instances and containers with a LB
   target group
 ---
 
-# Resource: aws_lb_target_group_attachment
+# Resource: aws_elbv2_lb_target_group_attachment
 
 Provides the ability to register instances and containers with an Application Load Balancer (ALB) or Network Load Balancer (NLB) target group. For attaching resources with Elastic Load Balancer (ELB), see the [`aws_elb_attachment` resource](/docs/providers/aws/r/elb_attachment.html).
 
-~> **Note:** `aws_alb_target_group_attachment` is known as `aws_lb_target_group_attachment`. The functionality is identical.
+~> **Note:** `aws_elbv2_lb_target_group_attachment` is known as `aws_elbv2_lb_target_group_attachment`. The functionality is identical.
 
 ## Example Usage
 
 ```terraform
-resource "aws_lb_target_group_attachment" "test" {
-  target_group_arn = aws_lb_target_group.test.arn
+resource "aws_elbv2_lb_target_group_attachment" "test" {
+  target_group_arn = aws_elbv2_lb_target_group.test.arn
   target_id        = aws_instance.test.id
   port             = 80
 }
 
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   # ... other configuration ...
 }
 
@@ -39,10 +39,10 @@ resource "aws_lambda_permission" "with_lb" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.test.arn
   principal     = "elasticloadbalancing.amazonaws.com"
-  source_arn    = aws_lb_target_group.test.arn
+  source_arn    = aws_elbv2_lb_target_group.test.arn
 }
 
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name        = "test"
   target_type = "lambda"
 }
@@ -51,8 +51,8 @@ resource "aws_lambda_function" "test" {
   # ... other configuration ...
 }
 
-resource "aws_lb_target_group_attachment" "test" {
-  target_group_arn = aws_lb_target_group.test.arn
+resource "aws_elbv2_lb_target_group_attachment" "test" {
+  target_group_arn = aws_elbv2_lb_target_group.test.arn
   target_id        = aws_lambda_function.test.arn
   depends_on       = [aws_lambda_permission.with_lb]
 }

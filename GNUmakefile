@@ -78,7 +78,7 @@ docs-lint-fix:
 docscheck:
 	@tfproviderdocs check \
 		-allowed-resource-subcategories-file website/allowed-subcategories.txt \
-		-ignore-side-navigation-data-sources aws_alb,aws_alb_listener,aws_alb_target_group,aws_kms_secret \
+		-ignore-side-navigation-data-sources aws_elbv2_lb,aws_elbv2_lb_listener,aws_elbv2_lb_target_group,aws_kms_secret \
 		-require-resource-subcategory
 	@misspell -error -source text CHANGELOG.md .changelog
 

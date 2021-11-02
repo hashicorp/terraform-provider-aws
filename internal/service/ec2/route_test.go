@@ -3059,7 +3059,7 @@ resource "aws_subnet" "test" {
   }
 }
 
-resource "aws_lb" "test" {
+resource "aws_elbv2_lb" "test" {
   load_balancer_type = "gateway"
   name               = %[1]q
 
@@ -3071,7 +3071,7 @@ resource "aws_lb" "test" {
 resource "aws_vpc_endpoint_service" "test" {
   acceptance_required        = false
   allowed_principals         = [data.aws_caller_identity.current.arn]
-  gateway_load_balancer_arns = [aws_lb.test.arn]
+  gateway_load_balancer_arns = [aws_elbv2_lb.test.arn]
 
   tags = {
     Name = %[1]q
@@ -3225,7 +3225,7 @@ resource "aws_nat_gateway" "test" {
 
 data "aws_caller_identity" "current" {}
 
-resource "aws_lb" "test" {
+resource "aws_elbv2_lb" "test" {
   load_balancer_type = "gateway"
   name               = %[1]q
 
@@ -3237,7 +3237,7 @@ resource "aws_lb" "test" {
 resource "aws_vpc_endpoint_service" "test" {
   acceptance_required        = false
   allowed_principals         = [data.aws_caller_identity.current.arn]
-  gateway_load_balancer_arns = [aws_lb.test.arn]
+  gateway_load_balancer_arns = [aws_elbv2_lb.test.arn]
 
   tags = {
     Name = %[1]q

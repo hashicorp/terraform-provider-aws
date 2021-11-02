@@ -1,23 +1,23 @@
 ---
 subcategory: "Elastic Load Balancing v2 (ALB/NLB)"
 layout: "aws"
-page_title: "AWS: aws_lb_target_group"
+page_title: "AWS: aws_elbv2_lb_target_group"
 description: |-
   Provides a Target Group resource for use with Load Balancers.
 ---
 
-# Resource: aws_lb_target_group
+# Resource: aws_elbv2_lb_target_group
 
 Provides a Target Group resource for use with Load Balancer resources.
 
-~> **Note:** `aws_alb_target_group` is known as `aws_lb_target_group`. The functionality is identical.
+~> **Note:** `aws_elbv2_lb_target_group` is known as `aws_elbv2_lb_target_group`. The functionality is identical.
 
 ## Example Usage
 
 ### Instance Target Group
 
 ```terraform
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = "tf-example-lb-tg"
   port     = 80
   protocol = "HTTP"
@@ -32,7 +32,7 @@ resource "aws_vpc" "main" {
 ### IP Target Group
 
 ```terraform
-resource "aws_lb_target_group" "ip-example" {
+resource "aws_elbv2_lb_target_group" "ip-example" {
   name        = "tf-example-lb-tg"
   port        = 80
   protocol    = "HTTP"
@@ -48,7 +48,7 @@ resource "aws_vpc" "main" {
 ### Lambda Target Group
 
 ```terraform
-resource "aws_lb_target_group" "lambda-example" {
+resource "aws_elbv2_lb_target_group" "lambda-example" {
   name        = "tf-example-lb-tg"
   target_type = "lambda"
 }
@@ -121,5 +121,5 @@ In addition to all arguments above, the following attributes are exported:
 Target Groups can be imported using their ARN, e.g.,
 
 ```
-$ terraform import aws_lb_target_group.app_front_end arn:aws:elasticloadbalancing:us-west-2:187416307283:targetgroup/app-front-end/20cfe21448b66314
+$ terraform import aws_elbv2_lb_target_group.app_front_end arn:aws:elasticloadbalancing:us-west-2:187416307283:targetgroup/app-front-end/20cfe21448b66314
 ```

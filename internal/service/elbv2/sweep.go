@@ -16,8 +16,8 @@ import (
 )
 
 func init() {
-	resource.AddTestSweepers("aws_lb", &resource.Sweeper{
-		Name: "aws_lb",
+	resource.AddTestSweepers("aws_elbv2_lb", &resource.Sweeper{
+		Name: "aws_elbv2_lb",
 		F:    sweepLoadBalancers,
 		Dependencies: []string{
 			"aws_api_gateway_vpc_link",
@@ -25,11 +25,11 @@ func init() {
 		},
 	})
 
-	resource.AddTestSweepers("aws_lb_target_group", &resource.Sweeper{
-		Name: "aws_lb_target_group",
+	resource.AddTestSweepers("aws_elbv2_lb_target_group", &resource.Sweeper{
+		Name: "aws_elbv2_lb_target_group",
 		F:    sweepTargetGroups,
 		Dependencies: []string{
-			"aws_lb",
+			"aws_elbv2_lb",
 		},
 	})
 }

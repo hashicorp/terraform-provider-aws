@@ -34,7 +34,7 @@ POLICY
 
 resource "aws_vpc_endpoint_service" "foo" {
   acceptance_required        = false
-  network_load_balancer_arns = [aws_lb.test.arn]
+  network_load_balancer_arns = [aws_elbv2_lb.test.arn]
 }
 
 resource "aws_vpc_endpoint_connection_notification" "foo" {

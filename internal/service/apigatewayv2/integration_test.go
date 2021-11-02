@@ -441,7 +441,7 @@ func TestAccAPIGatewayV2Integration_vpcLinkHTTP(t *testing.T) {
 	var v apigatewayv2.GetIntegrationOutput
 	resourceName := "aws_apigatewayv2_integration.test"
 	vpcLinkResourceName := "aws_apigatewayv2_vpc_link.test"
-	lbListenerResourceName := "aws_lb_listener.test"
+	lbListenerResourceName := "aws_elbv2_lb_listener.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -749,7 +749,7 @@ func testAccIntegrationConfig_vpcLinkHTTPBase(rName string) string {
 		testAccIntegrationConfig_apiHTTP(rName),
 		testAccVPCLinkConfig_basic(rName),
 		fmt.Sprintf(`
-resource "aws_lb" "test" {
+resource "aws_elbv2_lb" "test" {
   name = %[1]q
 
   internal           = true
@@ -761,7 +761,7 @@ resource "aws_lb" "test" {
   }
 }
 
-resource "aws_lb_target_group" "test" {
+resource "aws_elbv2_lb_target_group" "test" {
   name     = %[1]q
   port     = 80
   protocol = "TCP"
@@ -777,13 +777,13 @@ resource "aws_lb_target_group" "test" {
   }
 }
 
-resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.arn
+resource "aws_elbv2_lb_listener" "test" {
+  load_balancer_arn = aws_elbv2_lb.test.arn
   port              = "80"
   protocol          = "TCP"
 
   default_action {
-    target_group_arn = aws_lb_target_group.test.arn
+    target_group_arn = aws_elbv2_lb_target_group.test.arn
     type             = "forward"
   }
 }
@@ -977,7 +977,7 @@ resource "aws_apigatewayv2_integration" "test" {
   connection_id        = aws_apigatewayv2_vpc_link.test.id
   description          = "Test private integration"
   integration_method   = "GET"
-  integration_uri      = aws_lb_listener.test.arn
+  integration_uri      = aws_elbv2_lb_listener.test.arn
   timeout_milliseconds = 29001
 
   tls_config {
@@ -999,7 +999,7 @@ resource "aws_apigatewayv2_integration" "test" {
   connection_id      = aws_apigatewayv2_vpc_link.test.id
   description        = "Test private integration updated"
   integration_method = "POST"
-  integration_uri    = aws_lb_listener.test.arn
+  integration_uri    = aws_elbv2_lb_listener.test.arn
 
   tls_config {
     server_name_to_verify = "www.example.org"
@@ -1039,7 +1039,7 @@ resource "aws_subnet" "test" {
   }
 }
 
-resource "aws_lb" "test" {
+resource "aws_elbv2_lb" "test" {
   name               = %[1]q
   internal           = true
   load_balancer_type = "network"
@@ -1052,7 +1052,7 @@ resource "aws_lb" "test" {
 
 resource "aws_api_gateway_vpc_link" "test" {
   name        = %[1]q
-  target_arns = [aws_lb.test.arn]
+  target_arns = [aws_elbv2_lb.test.arn]
 }
 
 resource "aws_apigatewayv2_integration" "test" {

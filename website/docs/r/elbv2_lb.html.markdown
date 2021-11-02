@@ -1,23 +1,23 @@
 ---
 subcategory: "Elastic Load Balancing v2 (ALB/NLB)"
 layout: "aws"
-page_title: "AWS: aws_lb"
+page_title: "AWS: aws_elbv2_lb"
 description: |-
   Provides a Load Balancer resource.
 ---
 
-# Resource: aws_lb
+# Resource: aws_elbv2_lb
 
 Provides a Load Balancer resource.
 
-~> **Note:** `aws_alb` is known as `aws_lb`. The functionality is identical.
+~> **Note:** `aws_elbv2_lb` is known as `aws_elbv2_lb`. The functionality is identical.
 
 ## Example Usage
 
 ### Application Load Balancer
 
 ```terraform
-resource "aws_lb" "test" {
+resource "aws_elbv2_lb" "test" {
   name               = "test-lb-tf"
   internal           = false
   load_balancer_type = "application"
@@ -41,7 +41,7 @@ resource "aws_lb" "test" {
 ### Network Load Balancer
 
 ```terraform
-resource "aws_lb" "test" {
+resource "aws_elbv2_lb" "test" {
   name               = "test-lb-tf"
   internal           = false
   load_balancer_type = "network"
@@ -58,7 +58,7 @@ resource "aws_lb" "test" {
 ### Specifying Elastic IPs
 
 ```terraform
-resource "aws_lb" "example" {
+resource "aws_elbv2_lb" "example" {
   name               = "example"
   load_balancer_type = "network"
 
@@ -77,7 +77,7 @@ resource "aws_lb" "example" {
 ### Specifying private IP addresses for an internal-facing load balancer
 
 ```terraform
-resource "aws_lb" "example" {
+resource "aws_elbv2_lb" "example" {
   name               = "example"
   load_balancer_type = "network"
 
@@ -151,7 +151,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_lb` provides the following
+`aws_elbv2_lb` provides the following
 [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
 
 - `create` - (Default `10 minutes`) Used for Creating LB
@@ -163,5 +163,5 @@ In addition to all arguments above, the following attributes are exported:
 LBs can be imported using their ARN, e.g.,
 
 ```
-$ terraform import aws_lb.bar arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/my-load-balancer/50dc6c495c0c9188
+$ terraform import aws_elbv2_lb.bar arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/my-load-balancer/50dc6c495c0c9188
 ```

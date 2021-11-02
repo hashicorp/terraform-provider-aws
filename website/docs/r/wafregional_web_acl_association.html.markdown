@@ -73,13 +73,13 @@ resource "aws_subnet" "bar" {
   availability_zone = data.aws_availability_zones.available.names[1]
 }
 
-resource "aws_alb" "foo" {
+resource "aws_elbv2_lb" "foo" {
   internal = true
   subnets  = [aws_subnet.foo.id, aws_subnet.bar.id]
 }
 
 resource "aws_wafregional_web_acl_association" "foo" {
-  resource_arn = aws_alb.foo.arn
+  resource_arn = aws_elbv2_lb.foo.arn
   web_acl_id   = aws_wafregional_web_acl.foo.id
 }
 ```

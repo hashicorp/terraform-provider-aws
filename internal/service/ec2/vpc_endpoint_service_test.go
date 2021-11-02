@@ -305,7 +305,7 @@ resource "aws_vpc" "test" {
   }
 }
 
-resource "aws_lb" "test1" {
+resource "aws_elbv2_lb" "test1" {
   name = %[1]q
 
   subnets = [
@@ -323,7 +323,7 @@ resource "aws_lb" "test1" {
   }
 }
 
-resource "aws_lb" "test2" {
+resource "aws_elbv2_lb" "test2" {
   name = %[2]q
 
   subnets = [
@@ -396,7 +396,7 @@ resource "aws_subnet" "test" {
   }
 }
 
-resource "aws_lb" "test" {
+resource "aws_elbv2_lb" "test" {
   count = %[2]d
 
   load_balancer_type = "gateway"
@@ -409,7 +409,7 @@ resource "aws_lb" "test" {
 
 resource "aws_vpc_endpoint_service" "test" {
   acceptance_required        = false
-  gateway_load_balancer_arns = aws_lb.test[*].arn
+  gateway_load_balancer_arns = aws_elbv2_lb.test[*].arn
 }
 `, rName, count))
 }
@@ -422,7 +422,7 @@ resource "aws_vpc_endpoint_service" "test" {
   acceptance_required = false
 
   network_load_balancer_arns = [
-    aws_lb.test1.arn,
+    aws_elbv2_lb.test1.arn,
   ]
 }
 `)
@@ -436,7 +436,7 @@ resource "aws_vpc_endpoint_service" "test" {
   acceptance_required = false
 
   network_load_balancer_arns = [
-    aws_lb.test1.arn,
+    aws_elbv2_lb.test1.arn,
   ]
 
   allowed_principals = [
@@ -458,8 +458,8 @@ resource "aws_vpc_endpoint_service" "test" {
   acceptance_required = true
 
   network_load_balancer_arns = [
-    aws_lb.test1.arn,
-    aws_lb.test2.arn,
+    aws_elbv2_lb.test1.arn,
+    aws_elbv2_lb.test2.arn,
   ]
 
   allowed_principals = []
@@ -479,7 +479,7 @@ resource "aws_vpc_endpoint_service" "test" {
   acceptance_required = false
 
   network_load_balancer_arns = [
-    aws_lb.test1.arn,
+    aws_elbv2_lb.test1.arn,
   ]
 
   tags = {
@@ -497,7 +497,7 @@ resource "aws_vpc_endpoint_service" "test" {
   acceptance_required = false
 
   network_load_balancer_arns = [
-    aws_lb.test1.arn,
+    aws_elbv2_lb.test1.arn,
   ]
 
   tags = {
@@ -517,7 +517,7 @@ resource "aws_vpc_endpoint_service" "test" {
   private_dns_name    = "%s"
 
   network_load_balancer_arns = [
-    aws_lb.test1.arn,
+    aws_elbv2_lb.test1.arn,
   ]
 }
 `, dnsName))

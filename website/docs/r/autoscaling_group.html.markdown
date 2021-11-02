@@ -366,7 +366,7 @@ The following arguments are supported:
 * `load_balancers` (Optional) A list of elastic load balancer names to add to the autoscaling
    group names. Only valid for classic load balancers. For ALBs, use `target_group_arns` instead.
 * `vpc_zone_identifier` (Optional) A list of subnet IDs to launch resources in. Subnets automatically determine which availability zones the group will reside. Conflicts with `availability_zones`.
-* `target_group_arns` (Optional) A set of `aws_alb_target_group` ARNs, for use with Application or Network Load Balancing.
+* `target_group_arns` (Optional) A set of `aws_elbv2_lb_target_group` ARNs, for use with Application or Network Load Balancing.
 * `termination_policies` (Optional) A list of policies to decide how the instances in the Auto Scaling Group should be terminated. The allowed values are `OldestInstance`, `NewestInstance`, `OldestLaunchConfiguration`, `ClosestToNextInstanceHour`, `OldestLaunchTemplate`, `AllocationStrategy`, `Default`.
 * `suspended_processes` - (Optional) A list of processes to suspend for the Auto Scaling Group. The allowed values are `Launch`, `Terminate`, `HealthCheck`, `ReplaceUnhealthy`, `AZRebalance`, `AlarmNotification`, `ScheduledActions`, `AddToLoadBalancer`.
 Note that if you suspend either the `Launch` or `Terminate` process types, it can prevent your Auto Scaling Group from functioning properly.
