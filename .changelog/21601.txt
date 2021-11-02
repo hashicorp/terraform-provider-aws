@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_media_convert_queue: Rename data source to aws_mediaconvert_queue (with alias for aws_media_convert_queue)
+```
