@@ -507,9 +507,9 @@ func Provider() *schema.Provider {
 			"aws_elb_hosted_zone_id":  elb.DataSourceHostedZoneID(),
 			"aws_elb_service_account": elb.DataSourceServiceAccount(),
 
+			"aws_elbv2_lb":              elbv2.DataSourceLoadBalancer(),
 			"aws_elbv2_lb_listener":     elbv2.DataSourceListener(),
 			"aws_elbv2_lb_target_group": elbv2.DataSourceTargetGroup(),
-			"aws_elbv2_lb":              elbv2.DataSourceLoadBalancer(),
 			"aws_alb_listener":          elbv2.DataSourceListener(),     // backward compatible alias // Adding the Aliases for the ALB -> LB Rename
 			"aws_alb_target_group":      elbv2.DataSourceTargetGroup(),  // backward compatible alias // Adding the Aliases for the ALB -> LB Rename
 			"aws_alb":                   elbv2.DataSourceLoadBalancer(), // backward compatible alias // Adding the Aliases for the ALB -> LB Rename

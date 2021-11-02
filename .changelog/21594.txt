@@ -1,0 +1,35 @@
+```release-note:enhancement
+data-source/aws_lb: Rename data source to aws_elbv2_lb (with alias for aws_lb)
+```
+
+```release-note:enhancement
+data-source/aws_lb_listener: Rename data source to aws_elbv2_lb_listener (with alias for aws_lb_listener)
+```
+
+```release-note:enhancement
+data-source/aws_lb_target_group: Rename data source to aws_elbv2_lb_target_group (with alias for aws_lb_target_group)
+```
+
+```release-note:enhancement
+resource/aws_lb: Rename resource to aws_elbv2_lb (with alias for aws_lb)
+```
+
+```release-note:enhancement
+resource/aws_lb_listener: Rename resource to aws_elbv2_lb_listener (with alias for aws_lb_listener)
+```
+
+```release-note:enhancement
+resource/aws_lb_listener_certificate: Rename resource to aws_elbv2_lb_listener_certificate (with alias for aws_lb_listener_certificate)
+```
+
+```release-note:enhancement
+resource/aws_lb_listener_rule: Rename resource to aws_elbv2_lb_listener_rule (with alias for aws_lb_listener_rule)
+```
+
+```release-note:enhancement
+resource/aws_lb_target_group: Rename resource to aws_elbv2_lb_target_group (with alias for aws_lb_target_group)
+```
+
+```release-note:enhancement
+resource/aws_lb_target_group_attachment: Rename resource to aws_elbv2_lb_target_group_attachment (with alias for aws_lb_target_group_attachment)
+```
