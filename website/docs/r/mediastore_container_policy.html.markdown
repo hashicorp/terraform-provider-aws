@@ -1,12 +1,12 @@
 ---
 subcategory: "MediaStore"
 layout: "aws"
-page_title: "AWS: aws_media_store_container_policy"
+page_title: "AWS: aws_mediastore_container_policy"
 description: |-
   Provides a MediaStore Container Policy.
 ---
 
-# Resource: aws_media_store_container_policy
+# Resource: aws_mediastore_container_policy
 
 Provides a MediaStore Container Policy.
 
@@ -21,7 +21,7 @@ resource "aws_media_store_container" "example" {
   name = "example"
 }
 
-resource "aws_media_store_container_policy" "example" {
+resource "aws_mediastore_container_policy" "example" {
   container_name = aws_media_store_container.example.name
 
   policy = <<EOF
@@ -58,5 +58,5 @@ No additional attributes are exported.
 MediaStore Container Policy can be imported using the MediaStore Container Name, e.g.,
 
 ```
-$ terraform import aws_media_store_container_policy.example example
+$ terraform import aws_mediastore_container_policy.example example
 ```

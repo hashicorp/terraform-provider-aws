@@ -1320,8 +1320,10 @@ func Provider() *schema.Provider {
 
 			"aws_media_package_channel": mediapackage.ResourceChannel(),
 
-			"aws_media_store_container":        mediastore.ResourceContainer(),
-			"aws_media_store_container_policy": mediastore.ResourceContainerPolicy(),
+			"aws_mediastore_container":         mediastore.ResourceContainer(),
+			"aws_mediastore_container_policy":  mediastore.ResourceContainerPolicy(),
+			"aws_media_store_container":        mediastore.ResourceContainer(),       // backward compatible alias
+			"aws_media_store_container_policy": mediastore.ResourceContainerPolicy(), // backward compatible alias
 
 			"aws_mq_broker":        mq.ResourceBroker(),
 			"aws_mq_configuration": mq.ResourceConfiguration(),

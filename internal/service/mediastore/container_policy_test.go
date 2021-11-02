@@ -16,7 +16,7 @@ import (
 
 func TestAccMediaStoreContainerPolicy_basic(t *testing.T) {
 	rname := sdkacctest.RandString(5)
-	resourceName := "aws_media_store_container_policy.test"
+	resourceName := "aws_mediastore_container_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -53,7 +53,7 @@ func testAccCheckContainerPolicyDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaStoreConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_media_store_container_policy" {
+		if rs.Type != "aws_mediastore_container_policy" {
 			continue
 		}
 
@@ -111,7 +111,7 @@ resource "aws_media_store_container" "test" {
   name = "tf_mediastore_%s"
 }
 
-resource "aws_media_store_container_policy" "test" {
+resource "aws_mediastore_container_policy" "test" {
   container_name = aws_media_store_container.test.name
 
   policy = <<EOF
