@@ -1,0 +1,11 @@
+```release-note:enhancement
+data-source/aws_cloudhsm_v2_cluster: Rename data source to aws_cloudhsmv2_cluster (with alias for aws_cloudhsm_v2_cluster)
+```
+
+```release-note:enhancement
+resource/aws_cloudhsm_v2_cluster: Rename resource to aws_cloudhsmv2_cluster (with alias for aws_cloudhsm_v2_cluster)
+```
+
+```release-note:enhancement
+resource/aws_cloudhsm_v2_hsm: Rename resource to aws_cloudhsmv2_hsm (with alias for aws_cloudhsm_v2_hsm)
+```
