@@ -1,0 +1,35 @@
+```release-note:enhancement
+data-source/aws_elb: Rename data source to aws_elb_elb (with alias for aws_elb)
+```
+
+```release-note:enhancement
+resource/aws_app_cookie_stickiness_policy: Rename resource to aws_elb_app_cookie_stickiness_policy (with alias for aws_app_cookie_stickiness_policy)
+```
+
+```release-note:enhancement
+resource/aws_elb: Rename resource to aws_elb (with alias for aws_elb_elb)
+```
+
+```release-note:enhancement
+resource/aws_lb_cookie_stickiness_policy: Rename resource to aws_elb_lb_cookie_stickiness_policy (with alias for aws_lb_cookie_stickiness_policy)
+```
+
+```release-note:enhancement
+resource/aws_lb_ssl_negotiation_policy: Rename resource to aws_elb_lb_ssl_negotiation_policy (with alias for aws_lb_ssl_negotiation_policy)
+```
+
+```release-note:enhancement
+resource/aws_load_balancer_backend_server_policy: Rename resource to aws_elb_load_balancer_backend_server_policy (with alias for aws_load_balancer_backend_server_policy)
+```
+
+```release-note:enhancement
+resource/aws_load_balancer_listener_policy: Rename resource to aws_elb_load_balancer_listener_policy (with alias for aws_load_balancer_listener_policy)
+```
+
+```release-note:enhancement
+resource/aws_load_balancer_policy: Rename resource to aws_elb_load_balancer_policy (with alias for aws_load_balancer_policy)
+```
+
+```release-note:enhancement
+resource/aws_proxy_protocol_policy: Rename resource to aws_elb_proxy_protocol_policy (with alias for aws_proxy_protocol_policy)
+```
