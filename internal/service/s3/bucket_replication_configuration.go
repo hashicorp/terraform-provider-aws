@@ -1,4 +1,4 @@
-package aws
+package s3
 
 import (
 	"errors"
@@ -18,7 +18,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
-func resourceAwsS3BucketReplicationConfiguration() *schema.Resource {
+func ResourceBucketReplicationConfiguration() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsS3BucketReplicationConfigurationPut,
 		Read:   resourceAwsS3BucketReplicationConfigurationRead,
