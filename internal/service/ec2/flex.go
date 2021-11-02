@@ -53,18 +53,6 @@ type GroupIdentifier struct {
 	Description *string
 }
 
-func expandIP6Addresses(ips []interface{}) []*ec2.InstanceIpv6Address {
-	dtos := make([]*ec2.InstanceIpv6Address, 0, len(ips))
-	for _, v := range ips {
-		ipv6Address := &ec2.InstanceIpv6Address{
-			Ipv6Address: aws.String(v.(string)),
-		}
-
-		dtos = append(dtos, ipv6Address)
-	}
-	return dtos
-}
-
 // Takes the result of flatmap.Expand for an array of ingress/egress security
 // group rules and returns EC2 API compatible objects. This function will error
 // if it finds invalid permissions input, namely a protocol of "-1" with either
@@ -201,39 +189,6 @@ func flattenNetworkInterfaceAssociation(a *ec2.NetworkInterfaceAssociation) []in
 	}
 
 	return []interface{}{tfMap}
-}
-
-func flattenNetworkInterfaceIPv6Address(niia []*ec2.NetworkInterfaceIpv6Address) []string {
-	ips := make([]string, 0, len(niia))
-	for _, v := range niia {
-		ips = append(ips, *v.Ipv6Address)
-	}
-	return ips
-}
-
-//Flattens an array of private ip addresses into a []string, where the elements returned are the IP strings e.g. "192.168.0.0"
-func FlattenNetworkInterfacesPrivateIPAddresses(dtos []*ec2.NetworkInterfacePrivateIpAddress) []string {
-	ips := make([]string, 0, len(dtos))
-	for _, v := range dtos {
-		ip := *v.PrivateIpAddress
-		ips = append(ips, ip)
-	}
-	return ips
-}
-
-//Expands an array of IPs into a ec2 Private IP Address Spec
-func ExpandPrivateIPAddresses(ips []interface{}) []*ec2.PrivateIpAddressSpecification {
-	dtos := make([]*ec2.PrivateIpAddressSpecification, 0, len(ips))
-	for i, v := range ips {
-		new_private_ip := &ec2.PrivateIpAddressSpecification{
-			PrivateIpAddress: aws.String(v.(string)),
-		}
-
-		new_private_ip.Primary = aws.Bool(i == 0)
-
-		dtos = append(dtos, new_private_ip)
-	}
-	return dtos
 }
 
 // Flattens an array of UserSecurityGroups into a []*GroupIdentifier

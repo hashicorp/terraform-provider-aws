@@ -65,19 +65,13 @@ func ResourceNetworkInterface() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(ec2.NetworkInterfaceCreationType_Values(), false),
 			},
-			"ipv4_prefix": {
+			"ipv4_prefixes": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ipv4_prefix": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
-						},
-					},
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
 				},
 				ConflictsWith: []string{"ipv4_prefix_count"},
 			},
@@ -85,7 +79,7 @@ func ResourceNetworkInterface() *schema.Resource {
 				Type:          schema.TypeInt,
 				Optional:      true,
 				Computed:      true,
-				ConflictsWith: []string{"ipv4_prefix"},
+				ConflictsWith: []string{"ipv4_prefixes"},
 			},
 			"ipv6_address_count": {
 				Type:          schema.TypeInt,
@@ -103,19 +97,13 @@ func ResourceNetworkInterface() *schema.Resource {
 				},
 				ConflictsWith: []string{"ipv6_address_count"},
 			},
-			"ipv6_prefix": {
+			"ipv6_prefixes": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ipv6_prefix": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: verify.ValidIPv6CIDRNetworkAddress,
-						},
-					},
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: verify.ValidIPv6CIDRNetworkAddress,
 				},
 				ConflictsWith: []string{"ipv6_prefix_count"},
 			},
@@ -123,7 +111,7 @@ func ResourceNetworkInterface() *schema.Resource {
 				Type:          schema.TypeInt,
 				Optional:      true,
 				Computed:      true,
-				ConflictsWith: []string{"ipv6_prefix"},
+				ConflictsWith: []string{"ipv6_prefixes"},
 			},
 			"mac_address": {
 				Type:     schema.TypeString,
@@ -187,8 +175,7 @@ func resourceNetworkInterfaceCreate(d *schema.ResourceData, meta interface{}) er
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &ec2.CreateNetworkInterfaceInput{
-		SubnetId:          aws.String(d.Get("subnet_id").(string)),
-		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeNetworkInterface),
+		SubnetId: aws.String(d.Get("subnet_id").(string)),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -199,7 +186,7 @@ func resourceNetworkInterfaceCreate(d *schema.ResourceData, meta interface{}) er
 		input.InterfaceType = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("ipv4_prefix"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk("ipv4_prefixes"); ok && v.(*schema.Set).Len() > 0 {
 		input.Ipv4Prefixes = expandIpv4PrefixSpecificationRequests(v.(*schema.Set).List())
 	}
 
@@ -215,7 +202,7 @@ func resourceNetworkInterfaceCreate(d *schema.ResourceData, meta interface{}) er
 		input.Ipv6Addresses = expandIP6Addresses(v.(*schema.Set).List())
 	}
 
-	if v, ok := d.GetOk("ipv6_prefix"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk("ipv6_prefixes"); ok && v.(*schema.Set).Len() > 0 {
 		input.Ipv6Prefixes = expandIpv6PrefixSpecificationRequests(v.(*schema.Set).List())
 	}
 
@@ -233,6 +220,10 @@ func resourceNetworkInterfaceCreate(d *schema.ResourceData, meta interface{}) er
 
 	if v, ok := d.GetOk("security_groups"); ok && v.(*schema.Set).Len() > 0 {
 		input.Groups = flex.ExpandStringSet(v.(*schema.Set))
+	}
+
+	if len(tags) > 0 {
+		input.TagSpecifications = ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeNetworkInterface)
 	}
 
 	log.Printf("[DEBUG] Creating EC2 Network Interface: %s", input)
@@ -320,8 +311,8 @@ func resourceNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("description", eni.Description)
 	d.Set("interface_type", eni.InterfaceType)
 
-	if err := d.Set("ipv4_prefix", flattenIpv4PrefixSpecifications(eni.Ipv4Prefixes)); err != nil {
-		return fmt.Errorf("error setting ipv4_prefix: %w", err)
+	if err := d.Set("ipv4_prefixes", flattenIpv4PrefixSpecifications(eni.Ipv4Prefixes)); err != nil {
+		return fmt.Errorf("error setting ipv4_prefixes: %w", err)
 	}
 
 	d.Set("ipv4_prefix_count", len(eni.Ipv4Prefixes))
@@ -332,8 +323,8 @@ func resourceNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error setting ipv6_addresses: %w", err)
 	}
 
-	if err := d.Set("ipv6_prefix", flattenIpv6PrefixSpecifications(eni.Ipv6Prefixes)); err != nil {
-		return fmt.Errorf("error setting ipv6_prefix: %w", err)
+	if err := d.Set("ipv6_prefixes", flattenIpv6PrefixSpecifications(eni.Ipv6Prefixes)); err != nil {
+		return fmt.Errorf("error setting ipv6_prefixes: %w", err)
 	}
 
 	d.Set("ipv6_prefix_count", len(eni.Ipv6Prefixes))
@@ -486,7 +477,7 @@ func resourceNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) er
 
 	if d.HasChange("ipv4_prefix_count") {
 		o, n := d.GetChange("ipv4_prefix_count")
-		ipv4Prefixes := d.Get("ipv4_prefix").(*schema.Set).List()
+		ipv4Prefixes := d.Get("ipv4_prefixes").(*schema.Set).List()
 
 		if o != nil && n != nil && n != len(ipv4Prefixes) {
 			if diff := n.(int) - o.(int); diff > 0 {
@@ -517,8 +508,8 @@ func resourceNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
-	if d.HasChange("ipv4_prefix") {
-		o, n := d.GetChange("ipv4_prefix")
+	if d.HasChange("ipv4_prefixes") {
+		o, n := d.GetChange("ipv4_prefixes")
 		if o == nil {
 			o = new(schema.Set)
 		}
@@ -640,8 +631,8 @@ func resourceNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
-	if d.HasChange("ipv6_prefix") {
-		o, n := d.GetChange("ipv6_prefix")
+	if d.HasChange("ipv6_prefixes") {
+		o, n := d.GetChange("ipv6_prefixes")
 		if o == nil {
 			o = new(schema.Set)
 		}
@@ -687,7 +678,7 @@ func resourceNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) er
 
 	if d.HasChange("ipv6_prefix_count") {
 		o, n := d.GetChange("ipv6_prefix_count")
-		ipv6Prefixes := d.Get("ipv6_prefix").(*schema.Set).List()
+		ipv6Prefixes := d.Get("ipv6_prefixes").(*schema.Set).List()
 
 		if o != nil && n != nil && n != len(ipv6Prefixes) {
 			if diff := n.(int) - o.(int); diff > 0 {
@@ -859,15 +850,58 @@ func detachNetworkInterface(conn *ec2.EC2, networkInterfaceID, attachmentID stri
 	return nil
 }
 
-func expandIpv4PrefixSpecificationRequest(tfMap map[string]interface{}) *ec2.Ipv4PrefixSpecificationRequest {
-	if tfMap == nil {
+//Expands an array of IPs into a ec2 Private IP Address Spec
+func ExpandPrivateIPAddresses(ips []interface{}) []*ec2.PrivateIpAddressSpecification {
+	dtos := make([]*ec2.PrivateIpAddressSpecification, 0, len(ips))
+	for i, v := range ips {
+		new_private_ip := &ec2.PrivateIpAddressSpecification{
+			PrivateIpAddress: aws.String(v.(string)),
+		}
+
+		new_private_ip.Primary = aws.Bool(i == 0)
+
+		dtos = append(dtos, new_private_ip)
+	}
+	return dtos
+}
+
+func expandIP6Addresses(ips []interface{}) []*ec2.InstanceIpv6Address {
+	dtos := make([]*ec2.InstanceIpv6Address, 0, len(ips))
+	for _, v := range ips {
+		ipv6Address := &ec2.InstanceIpv6Address{
+			Ipv6Address: aws.String(v.(string)),
+		}
+
+		dtos = append(dtos, ipv6Address)
+	}
+	return dtos
+}
+
+//Flattens an array of private ip addresses into a []string, where the elements returned are the IP strings e.g. "192.168.0.0"
+func FlattenNetworkInterfacesPrivateIPAddresses(dtos []*ec2.NetworkInterfacePrivateIpAddress) []string {
+	ips := make([]string, 0, len(dtos))
+	for _, v := range dtos {
+		ip := *v.PrivateIpAddress
+		ips = append(ips, ip)
+	}
+	return ips
+}
+
+func flattenNetworkInterfaceIPv6Address(niia []*ec2.NetworkInterfaceIpv6Address) []string {
+	ips := make([]string, 0, len(niia))
+	for _, v := range niia {
+		ips = append(ips, *v.Ipv6Address)
+	}
+	return ips
+}
+
+func expandIpv4PrefixSpecificationRequest(tfString string) *ec2.Ipv4PrefixSpecificationRequest {
+	if tfString == "" {
 		return nil
 	}
 
-	apiObject := &ec2.Ipv4PrefixSpecificationRequest{}
-
-	if v, ok := tfMap["ipv4_prefix"].(string); ok && v != "" {
-		apiObject.Ipv4Prefix = aws.String(v)
+	apiObject := &ec2.Ipv4PrefixSpecificationRequest{
+		Ipv4Prefix: aws.String(tfString),
 	}
 
 	return apiObject
@@ -881,13 +915,13 @@ func expandIpv4PrefixSpecificationRequests(tfList []interface{}) []*ec2.Ipv4Pref
 	var apiObjects []*ec2.Ipv4PrefixSpecificationRequest
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfString, ok := tfMapRaw.(string)
 
 		if !ok {
 			continue
 		}
 
-		apiObject := expandIpv4PrefixSpecificationRequest(tfMap)
+		apiObject := expandIpv4PrefixSpecificationRequest(tfString)
 
 		if apiObject == nil {
 			continue
@@ -899,15 +933,13 @@ func expandIpv4PrefixSpecificationRequests(tfList []interface{}) []*ec2.Ipv4Pref
 	return apiObjects
 }
 
-func expandIpv6PrefixSpecificationRequest(tfMap map[string]interface{}) *ec2.Ipv6PrefixSpecificationRequest {
-	if tfMap == nil {
+func expandIpv6PrefixSpecificationRequest(tfString string) *ec2.Ipv6PrefixSpecificationRequest {
+	if tfString == "" {
 		return nil
 	}
 
-	apiObject := &ec2.Ipv6PrefixSpecificationRequest{}
-
-	if v, ok := tfMap["ipv6_prefix"].(string); ok && v != "" {
-		apiObject.Ipv6Prefix = aws.String(v)
+	apiObject := &ec2.Ipv6PrefixSpecificationRequest{
+		Ipv6Prefix: aws.String(tfString),
 	}
 
 	return apiObject
@@ -921,13 +953,13 @@ func expandIpv6PrefixSpecificationRequests(tfList []interface{}) []*ec2.Ipv6Pref
 	var apiObjects []*ec2.Ipv6PrefixSpecificationRequest
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfString, ok := tfMapRaw.(string)
 
 		if !ok {
 			continue
 		}
 
-		apiObject := expandIpv6PrefixSpecificationRequest(tfMap)
+		apiObject := expandIpv6PrefixSpecificationRequest(tfString)
 
 		if apiObject == nil {
 			continue
@@ -939,26 +971,26 @@ func expandIpv6PrefixSpecificationRequests(tfList []interface{}) []*ec2.Ipv6Pref
 	return apiObjects
 }
 
-func flattenIpv4PrefixSpecification(apiObject *ec2.Ipv4PrefixSpecification) map[string]interface{} {
+func flattenIpv4PrefixSpecification(apiObject *ec2.Ipv4PrefixSpecification) string {
 	if apiObject == nil {
-		return nil
+		return ""
 	}
 
-	tfMap := map[string]interface{}{}
+	tfString := ""
 
 	if v := apiObject.Ipv4Prefix; v != nil {
-		tfMap["ipv4_prefix"] = aws.StringValue(v)
+		tfString = aws.StringValue(v)
 	}
 
-	return tfMap
+	return tfString
 }
 
-func flattenIpv4PrefixSpecifications(apiObjects []*ec2.Ipv4PrefixSpecification) []interface{} {
+func flattenIpv4PrefixSpecifications(apiObjects []*ec2.Ipv4PrefixSpecification) []string {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []string
 
 	for _, apiObject := range apiObjects {
 		if apiObject == nil {
@@ -971,26 +1003,26 @@ func flattenIpv4PrefixSpecifications(apiObjects []*ec2.Ipv4PrefixSpecification) 
 	return tfList
 }
 
-func flattenIpv6PrefixSpecification(apiObject *ec2.Ipv6PrefixSpecification) map[string]interface{} {
+func flattenIpv6PrefixSpecification(apiObject *ec2.Ipv6PrefixSpecification) string {
 	if apiObject == nil {
-		return nil
+		return ""
 	}
 
-	tfMap := map[string]interface{}{}
+	tfString := ""
 
 	if v := apiObject.Ipv6Prefix; v != nil {
-		tfMap["ipv6_prefix"] = aws.StringValue(v)
+		tfString = aws.StringValue(v)
 	}
 
-	return tfMap
+	return tfString
 }
 
-func flattenIpv6PrefixSpecifications(apiObjects []*ec2.Ipv6PrefixSpecification) []interface{} {
+func flattenIpv6PrefixSpecifications(apiObjects []*ec2.Ipv6PrefixSpecification) []string {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []string
 
 	for _, apiObject := range apiObjects {
 		if apiObject == nil {
