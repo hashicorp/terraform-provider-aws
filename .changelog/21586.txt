@@ -1,0 +1,39 @@
+```release-note:enhancement
+data-source/aws_cloudwatch_event_connection: Rename data source to aws_cloudwatchevents_connection (with alias for aws_cloudwatch_event_connection)
+```
+
+```release-note:enhancement
+data-source/aws_cloudwatch_event_source: Rename data source to aws_cloudwatchevents_source (with alias for aws_cloudwatch_event_source)
+```
+
+```release-note:enhancement
+resource/aws_cloudwatch_event_api_destination: Rename resource to aws_cloudwatchevents_api_destination (with alias for aws_cloudwatch_event_api_destination)
+```
+
+```release-note:enhancement
+resource/aws_cloudwatch_event_archive: Rename resource to aws_cloudwatchevents_archive (with alias for aws_cloudwatch_event_archive)
+```
+
+```release-note:enhancement
+resource/aws_cloudwatch_event_bus: Rename resource to aws_cloudwatchevents_bus (with alias for aws_cloudwatch_event_bus)
+```
+
+```release-note:enhancement
+resource/aws_cloudwatch_event_bus_policy: Rename resource to aws_cloudwatchevents_bus_policy (with alias for aws_cloudwatch_event_bus_policy)
+```
+
+```release-note:enhancement
+resource/aws_cloudwatch_event_connection: Rename resource to aws_cloudwatchevents_connection (with alias for aws_cloudwatch_event_connection)
+```
+
+```release-note:enhancement
+resource/aws_cloudwatch_event_permission: Rename resource to aws_cloudwatchevents_permission (with alias for aws_cloudwatch_event_permission)
+```
+
+```release-note:enhancement
+resource/aws_cloudwatch_event_rule: Rename resource to aws_cloudwatchevents_rule (with alias for aws_cloudwatch_event_rule)
+```
+
+```release-note:enhancement
+resource/aws_cloudwatch_event_target: Rename resource to aws_cloudwatchevents_target (with alias for aws_cloudwatch_event_target)
+```
