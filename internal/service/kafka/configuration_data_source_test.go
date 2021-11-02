@@ -12,8 +12,8 @@ import (
 
 func TestAccKafkaConfigurationDataSource_name(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	dataSourceName := "data.aws_msk_configuration.test"
-	resourceName := "aws_msk_configuration.test"
+	dataSourceName := "data.aws_kafka_configuration.test"
+	resourceName := "aws_kafka_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -38,7 +38,7 @@ func TestAccKafkaConfigurationDataSource_name(t *testing.T) {
 
 func testAccMskConfigurationDataSourceConfigName(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_msk_configuration" "test" {
+resource "aws_kafka_configuration" "test" {
   kafka_versions = ["2.1.0"]
   name           = %[1]q
 
@@ -48,8 +48,8 @@ delete.topic.enable = true
 PROPERTIES
 }
 
-data "aws_msk_configuration" "test" {
-  name = aws_msk_configuration.test.name
+data "aws_kafka_configuration" "test" {
+  name = aws_kafka_configuration.test.name
 }
 `, rName)
 }

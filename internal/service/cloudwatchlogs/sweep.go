@@ -35,7 +35,7 @@ func init() {
 			"aws_kinesis_firehose_delivery_stream",
 			"aws_lambda_function",
 			"aws_mq_broker",
-			"aws_msk_cluster",
+			"aws_kafka_cluster",
 			"aws_rds_cluster",
 			"aws_route53_query_log",
 			"aws_sagemaker_endpoint",

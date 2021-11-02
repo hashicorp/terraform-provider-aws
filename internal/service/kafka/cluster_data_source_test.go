@@ -12,8 +12,8 @@ import (
 
 func TestAccKafkaClusterDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	dataSourceName := "data.aws_msk_cluster.test"
-	resourceName := "aws_msk_cluster.test"
+	dataSourceName := "data.aws_kafka_cluster.test"
+	resourceName := "aws_kafka_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -41,7 +41,7 @@ func TestAccKafkaClusterDataSource_basic(t *testing.T) {
 
 func testAccMskClusterDataSourceConfig(rName string) string {
 	return acctest.ConfigCompose(testAccMskClusterBaseConfig(rName), fmt.Sprintf(`
-resource "aws_msk_cluster" "test" {
+resource "aws_kafka_cluster" "test" {
   cluster_name           = %[1]q
   kafka_version          = "2.2.1"
   number_of_broker_nodes = 3
@@ -58,8 +58,8 @@ resource "aws_msk_cluster" "test" {
   }
 }
 
-data "aws_msk_cluster" "test" {
-  cluster_name = aws_msk_cluster.test.cluster_name
+data "aws_kafka_cluster" "test" {
+  cluster_name = aws_kafka_cluster.test.cluster_name
 }
 `, rName))
 }

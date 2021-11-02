@@ -11,7 +11,7 @@ import (
 )
 
 func TestAccKafkaKafkaVersionDataSource_basic(t *testing.T) {
-	dataSourceName := "data.aws_msk_kafka_version.test"
+	dataSourceName := "data.aws_kafka_version.test"
 	version := "2.4.1.1"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -32,7 +32,7 @@ func TestAccKafkaKafkaVersionDataSource_basic(t *testing.T) {
 }
 
 func TestAccKafkaKafkaVersionDataSource_preferred(t *testing.T) {
-	dataSourceName := "data.aws_msk_kafka_version.test"
+	dataSourceName := "data.aws_kafka_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccVersionPreCheck(t) },
@@ -69,7 +69,7 @@ func testAccVersionPreCheck(t *testing.T) {
 
 func testAccVersionBasicDataSourceConfig(version string) string {
 	return fmt.Sprintf(`
-data "aws_msk_kafka_version" "test" {
+data "aws_kafka_version" "test" {
   version = %[1]q
 }
 `, version)
@@ -77,7 +77,7 @@ data "aws_msk_kafka_version" "test" {
 
 func testAccVersionPreferredDataSourceConfig() string {
 	return `
-data "aws_msk_kafka_version" "test" {
+data "aws_kafka_version" "test" {
   preferred_versions = ["2.4.1.1", "2.4.1", "2.2.1"]
 }
 `

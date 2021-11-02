@@ -1,23 +1,23 @@
 ---
 subcategory: "Managed Streaming for Kafka (MSK)"
 layout: "aws"
-page_title: "AWS: aws_msk_kafka_version"
+page_title: "AWS: aws_kafka_version"
 description: |-
   Get information on a Amazon MSK Kafka Version
 ---
 
-# Data Source: aws_msk_cluster
+# Data Source: aws_kafka_cluster
 
 Get information on a Amazon MSK Kafka Version
 
 ## Example Usage
 
 ```terraform
-data "aws_msk_kafka_version" "preferred" {
+data "aws_kafka_version" "preferred" {
   preferred_versions = ["2.4.1.1", "2.4.1", "2.2.1"]
 }
 
-data "aws_msk_kafka_version" "example" {
+data "aws_kafka_version" "example" {
   version = "2.8.0"
 }
 ```

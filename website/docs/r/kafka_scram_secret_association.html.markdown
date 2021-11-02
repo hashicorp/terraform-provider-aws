@@ -1,12 +1,12 @@
 ---
 subcategory: "Managed Streaming for Kafka (MSK)"
 layout: "aws"
-page_title: "AWS: aws_msk_scram_secret_association"
+page_title: "AWS: aws_kafka_scram_secret_association"
 description: |-
   Associates SCRAM secrets with a Managed Streaming for Kafka (MSK) cluster.
 ---
 
-# Resource: aws_msk_scram_secret_association
+# Resource: aws_kafka_scram_secret_association
 
 Associates SCRAM secrets stored in the Secrets Manager service with a Managed Streaming for Kafka (MSK) cluster.
 
@@ -16,21 +16,21 @@ To set up username and password authentication for a cluster, create an [`aws_se
 a username and password with the secret with an [`aws_secretsmanager_secret_version` resource](/docs/providers/aws/r/secretsmanager_secret_version.html). When creating a secret for the cluster,
 the `name` must have the prefix `AmazonMSK_` and you must either use an existing custom AWS KMS key or create a new
 custom AWS KMS key for your secret with the [`aws_kms_key` resource](/docs/providers/aws/r/kms_key.html). It is important to note that a policy is required for the `aws_secretsmanager_secret`
-resource in order for Kafka to be able to read it. This policy is attached automatically when the `aws_msk_scram_secret_association` is used,
+resource in order for Kafka to be able to read it. This policy is attached automatically when the `aws_kafka_scram_secret_association` is used,
 however, this policy will not be in terraform and as such, will present a diff on plan/apply. For that reason, you must use the [`aws_secretsmanager_secret_policy`
 resource](/docs/providers/aws/r/secretsmanager_secret_policy.html) as shown below in order to ensure that the state is in a clean state after the creation of secret and the association to the cluster.
 
 ## Example Usage
 
 ```terraform
-resource "aws_msk_scram_secret_association" "example" {
-  cluster_arn     = aws_msk_cluster.example.arn
+resource "aws_kafka_scram_secret_association" "example" {
+  cluster_arn     = aws_kafka_cluster.example.arn
   secret_arn_list = [aws_secretsmanager_secret.example.arn]
 
   depends_on = [aws_secretsmanager_secret_version.example]
 }
 
-resource "aws_msk_cluster" "example" {
+resource "aws_kafka_cluster" "example" {
   cluster_name = "example"
   # ... other configuration...
   client_authentication {
@@ -91,5 +91,5 @@ In addition to all arguments above, the following attributes are exported:
 MSK SCRAM Secret Associations can be imported using the `id` e.g.,
 
 ```
-$ terraform import aws_msk_scram_secret_association.example arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3
+$ terraform import aws_kafka_scram_secret_association.example arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3
 ```

@@ -16,16 +16,16 @@ import (
 )
 
 func init() {
-	resource.AddTestSweepers("aws_msk_cluster", &resource.Sweeper{
-		Name: "aws_msk_cluster",
+	resource.AddTestSweepers("aws_kafka_cluster", &resource.Sweeper{
+		Name: "aws_kafka_cluster",
 		F:    sweepClusters,
 	})
 
-	resource.AddTestSweepers("aws_msk_configuration", &resource.Sweeper{
-		Name: "aws_msk_configuration",
+	resource.AddTestSweepers("aws_kafka_configuration", &resource.Sweeper{
+		Name: "aws_kafka_configuration",
 		F:    sweepConfigurations,
 		Dependencies: []string{
-			"aws_msk_cluster",
+			"aws_kafka_cluster",
 		},
 	})
 }

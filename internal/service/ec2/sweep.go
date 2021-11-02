@@ -185,7 +185,7 @@ func init() {
 			"aws_lambda_function",
 			"aws_lb",
 			"aws_mq_broker",
-			"aws_msk_cluster",
+			"aws_kafka_cluster",
 			"aws_network_interface",
 			"aws_networkfirewall_firewall",
 			"aws_redshift_cluster",

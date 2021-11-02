@@ -44,7 +44,7 @@ var (
 func TestAccKafkaCluster_basic(t *testing.T) {
 	var cluster kafka.ClusterInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_msk_cluster.test"
+	resourceName := "aws_kafka_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -103,7 +103,7 @@ func TestAccKafkaCluster_basic(t *testing.T) {
 func TestAccKafkaCluster_BrokerNodeGroupInfo_ebsVolumeSize(t *testing.T) {
 	var cluster1, cluster2 kafka.ClusterInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_msk_cluster.test"
+	resourceName := "aws_kafka_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -144,7 +144,7 @@ func TestAccKafkaCluster_BrokerNodeGroupInfo_ebsVolumeSize(t *testing.T) {
 func TestAccKafkaCluster_BrokerNodeGroupInfo_instanceType(t *testing.T) {
 	var cluster1, cluster2 kafka.ClusterInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_msk_cluster.test"
+	resourceName := "aws_kafka_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -186,7 +186,7 @@ func TestAccKafkaCluster_BrokerNodeGroupInfo_instanceType(t *testing.T) {
 func TestAccKafkaCluster_ClientAuthenticationSASL_scram(t *testing.T) {
 	var cluster1, cluster2 kafka.ClusterInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_msk_cluster.test"
+	resourceName := "aws_kafka_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -244,7 +244,7 @@ func TestAccKafkaCluster_ClientAuthenticationSASL_scram(t *testing.T) {
 func TestAccKafkaCluster_ClientAuthenticationSASL_iam(t *testing.T) {
 	var cluster1, cluster2 kafka.ClusterInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_msk_cluster.test"
+	resourceName := "aws_kafka_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -303,7 +303,7 @@ func TestAccKafkaCluster_ClientAuthenticationTLS_certificateAuthorityARNs(t *tes
 	var cluster1 kafka.ClusterInfo
 	var ca acmpca.CertificateAuthority
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_msk_cluster.test"
+	resourceName := "aws_kafka_cluster.test"
 	acmCAResourceName := "aws_acmpca_certificate_authority.test"
 	commonName := acctest.RandomDomainName()
 
@@ -355,9 +355,9 @@ func TestAccKafkaCluster_Info_revision(t *testing.T) {
 
 	var cluster1, cluster2 kafka.ClusterInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	configurationResourceName := "aws_msk_configuration.test"
-	configurationResourceName2 := "aws_msk_configuration.test2"
-	resourceName := "aws_msk_cluster.test"
+	configurationResourceName := "aws_kafka_configuration.test"
+	configurationResourceName2 := "aws_kafka_configuration.test2"
+	resourceName := "aws_kafka_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -399,7 +399,7 @@ func TestAccKafkaCluster_Info_revision(t *testing.T) {
 func TestAccKafkaCluster_EncryptionInfo_encryptionAtRestKMSKeyARN(t *testing.T) {
 	var cluster kafka.ClusterInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_msk_cluster.test"
+	resourceName := "aws_kafka_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -429,7 +429,7 @@ func TestAccKafkaCluster_EncryptionInfo_encryptionAtRestKMSKeyARN(t *testing.T) 
 func TestAccKafkaCluster_EncryptionInfoEncryptionInTransit_clientBroker(t *testing.T) {
 	var cluster1 kafka.ClusterInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_msk_cluster.test"
+	resourceName := "aws_kafka_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -465,7 +465,7 @@ func TestAccKafkaCluster_EncryptionInfoEncryptionInTransit_clientBroker(t *testi
 func TestAccKafkaCluster_EncryptionInfoEncryptionInTransit_inCluster(t *testing.T) {
 	var cluster1 kafka.ClusterInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_msk_cluster.test"
+	resourceName := "aws_kafka_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -497,7 +497,7 @@ func TestAccKafkaCluster_EncryptionInfoEncryptionInTransit_inCluster(t *testing.
 func TestAccKafkaCluster_enhancedMonitoring(t *testing.T) {
 	var cluster1, cluster2 kafka.ClusterInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_msk_cluster.test"
+	resourceName := "aws_kafka_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -535,7 +535,7 @@ func TestAccKafkaCluster_enhancedMonitoring(t *testing.T) {
 func TestAccKafkaCluster_numberOfBrokerNodes(t *testing.T) {
 	var cluster1, cluster2 kafka.ClusterInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_msk_cluster.test"
+	resourceName := "aws_kafka_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -591,7 +591,7 @@ func TestAccKafkaCluster_numberOfBrokerNodes(t *testing.T) {
 func TestAccKafkaCluster_openMonitoring(t *testing.T) {
 	var cluster1, cluster2 kafka.ClusterInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_msk_cluster.test"
+	resourceName := "aws_kafka_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -639,7 +639,7 @@ func TestAccKafkaCluster_openMonitoring(t *testing.T) {
 func TestAccKafkaCluster_loggingInfo(t *testing.T) {
 	var cluster1, cluster2 kafka.ClusterInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_msk_cluster.test"
+	resourceName := "aws_kafka_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -691,7 +691,7 @@ func TestAccKafkaCluster_loggingInfo(t *testing.T) {
 func TestAccKafkaCluster_kafkaVersionUpgrade(t *testing.T) {
 	var cluster1, cluster2 kafka.ClusterInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_msk_cluster.test"
+	resourceName := "aws_kafka_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -729,7 +729,7 @@ func TestAccKafkaCluster_kafkaVersionUpgrade(t *testing.T) {
 func TestAccKafkaCluster_kafkaVersionDowngrade(t *testing.T) {
 	var cluster1, cluster2 kafka.ClusterInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_msk_cluster.test"
+	resourceName := "aws_kafka_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -777,9 +777,9 @@ func TestAccKafkaCluster_kafkaVersionDowngrade(t *testing.T) {
 func TestAccKafkaCluster_kafkaVersionUpgradeWithInfo(t *testing.T) {
 	var cluster1, cluster2 kafka.ClusterInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	configurationResourceName1 := "aws_msk_configuration.config1"
-	configurationResourceName2 := "aws_msk_configuration.config2"
-	resourceName := "aws_msk_cluster.test"
+	configurationResourceName1 := "aws_kafka_configuration.config1"
+	configurationResourceName2 := "aws_kafka_configuration.config2"
+	resourceName := "aws_kafka_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -823,7 +823,7 @@ func TestAccKafkaCluster_kafkaVersionUpgradeWithInfo(t *testing.T) {
 func TestAccKafkaCluster_tags(t *testing.T) {
 	var cluster kafka.ClusterInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_msk_cluster.test"
+	resourceName := "aws_kafka_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -893,7 +893,7 @@ func testAccCheckMskClusterDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_msk_cluster" {
+		if rs.Type != "aws_kafka_cluster" {
 			continue
 		}
 
@@ -1022,7 +1022,7 @@ resource "aws_security_group" "example_sg" {
 
 func testAccMskClusterConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccMskClusterBaseConfig(rName), fmt.Sprintf(`
-resource "aws_msk_cluster" "test" {
+resource "aws_kafka_cluster" "test" {
   cluster_name           = %[1]q
   kafka_version          = "2.7.1"
   number_of_broker_nodes = 3
@@ -1039,7 +1039,7 @@ resource "aws_msk_cluster" "test" {
 
 func testAccMskClusterConfigBrokerNodeGroupInfoEbsVolumeSize(rName string, ebsVolumeSize int) string {
 	return acctest.ConfigCompose(testAccMskClusterBaseConfig(rName), fmt.Sprintf(`
-resource "aws_msk_cluster" "test" {
+resource "aws_kafka_cluster" "test" {
   cluster_name           = %[1]q
   kafka_version          = "2.7.1"
   number_of_broker_nodes = 3
@@ -1056,7 +1056,7 @@ resource "aws_msk_cluster" "test" {
 
 func testAccMskClusterConfigBrokerNodeGroupInfoInstanceType(rName string, t string) string {
 	return acctest.ConfigCompose(testAccMskClusterBaseConfig(rName), fmt.Sprintf(`
-resource "aws_msk_cluster" "test" {
+resource "aws_kafka_cluster" "test" {
   cluster_name           = %[1]q
   kafka_version          = "2.7.1"
   number_of_broker_nodes = 3
@@ -1094,7 +1094,7 @@ func testAccMskClusterConfigClientAuthenticationTlsCertificateAuthorityArns(rNam
 		testAccMskClusterBaseConfig(rName),
 		testAccMskClusterConfigRootCA(commonName),
 		fmt.Sprintf(`
-resource "aws_msk_cluster" "test" {
+resource "aws_kafka_cluster" "test" {
   cluster_name           = %[1]q
   kafka_version          = "2.7.1"
   number_of_broker_nodes = 3
@@ -1123,7 +1123,7 @@ resource "aws_msk_cluster" "test" {
 
 func testAccMskClusterConfigClientAuthenticationSaslScram(rName string, enabled bool) string {
 	return acctest.ConfigCompose(testAccMskClusterBaseConfig(rName), fmt.Sprintf(`
-resource "aws_msk_cluster" "test" {
+resource "aws_kafka_cluster" "test" {
   cluster_name           = %[1]q
   kafka_version          = "2.7.1"
   number_of_broker_nodes = 3
@@ -1146,7 +1146,7 @@ resource "aws_msk_cluster" "test" {
 
 func testAccMskClusterConfigClientAuthenticationSaslIam(rName string, enabled bool) string {
 	return acctest.ConfigCompose(testAccMskClusterBaseConfig(rName), fmt.Sprintf(`
-resource "aws_msk_cluster" "test" {
+resource "aws_kafka_cluster" "test" {
   cluster_name           = %[1]q
   kafka_version          = "2.7.1"
   number_of_broker_nodes = 3
@@ -1169,7 +1169,7 @@ resource "aws_msk_cluster" "test" {
 
 func testAccMskClusterConfigConfigurationInfoRevision1(rName string) string {
 	return acctest.ConfigCompose(testAccMskClusterBaseConfig(rName), fmt.Sprintf(`
-resource "aws_msk_configuration" "test" {
+resource "aws_kafka_configuration" "test" {
   kafka_versions = ["2.7.1"]
   name           = "%[1]s-1"
 
@@ -1178,7 +1178,7 @@ log.cleaner.delete.retention.ms = 86400000
 PROPERTIES
 }
 
-resource "aws_msk_cluster" "test" {
+resource "aws_kafka_cluster" "test" {
   cluster_name           = %[1]q
   kafka_version          = "2.7.1"
   number_of_broker_nodes = 3
@@ -1191,8 +1191,8 @@ resource "aws_msk_cluster" "test" {
   }
 
   configuration_info {
-    arn      = aws_msk_configuration.test.arn
-    revision = aws_msk_configuration.test.latest_revision
+    arn      = aws_kafka_configuration.test.arn
+    revision = aws_kafka_configuration.test.latest_revision
   }
 }
 `, rName))
@@ -1200,7 +1200,7 @@ resource "aws_msk_cluster" "test" {
 
 func testAccMskClusterConfigConfigurationInfoRevision2(rName string) string {
 	return acctest.ConfigCompose(testAccMskClusterBaseConfig(rName), fmt.Sprintf(`
-resource "aws_msk_configuration" "test" {
+resource "aws_kafka_configuration" "test" {
   kafka_versions = ["2.7.1"]
   name           = "%[1]s-1"
 
@@ -1209,7 +1209,7 @@ log.cleaner.delete.retention.ms = 86400000
 PROPERTIES
 }
 
-resource "aws_msk_configuration" "test2" {
+resource "aws_kafka_configuration" "test2" {
   kafka_versions = ["2.7.1"]
   name           = "%[1]s-2"
 
@@ -1218,7 +1218,7 @@ log.cleaner.delete.retention.ms = 86400001
 PROPERTIES
 }
 
-resource "aws_msk_cluster" "test" {
+resource "aws_kafka_cluster" "test" {
   cluster_name           = %[1]q
   kafka_version          = "2.7.1"
   number_of_broker_nodes = 3
@@ -1231,8 +1231,8 @@ resource "aws_msk_cluster" "test" {
   }
 
   configuration_info {
-    arn      = aws_msk_configuration.test2.arn
-    revision = aws_msk_configuration.test2.latest_revision
+    arn      = aws_kafka_configuration.test2.arn
+    revision = aws_kafka_configuration.test2.latest_revision
   }
 }
 `, rName))
@@ -1248,7 +1248,7 @@ resource "aws_kms_key" "example_key" {
   }
 }
 
-resource "aws_msk_cluster" "test" {
+resource "aws_kafka_cluster" "test" {
   cluster_name           = %[1]q
   kafka_version          = "2.7.1"
   number_of_broker_nodes = 3
@@ -1270,7 +1270,7 @@ resource "aws_msk_cluster" "test" {
 
 func testAccMskClusterConfigEncryptionInfoEncryptionInTransitClientBroker(rName, clientBroker string) string {
 	return acctest.ConfigCompose(testAccMskClusterBaseConfig(rName), fmt.Sprintf(`
-resource "aws_msk_cluster" "test" {
+resource "aws_kafka_cluster" "test" {
   cluster_name           = %[1]q
   kafka_version          = "2.7.1"
   number_of_broker_nodes = 3
@@ -1293,7 +1293,7 @@ resource "aws_msk_cluster" "test" {
 
 func testAccMskClusterConfigEncryptionInfoEncryptionInTransitInCluster(rName string, inCluster bool) string {
 	return acctest.ConfigCompose(testAccMskClusterBaseConfig(rName), fmt.Sprintf(`
-resource "aws_msk_cluster" "test" {
+resource "aws_kafka_cluster" "test" {
   cluster_name           = %[1]q
   kafka_version          = "2.7.1"
   number_of_broker_nodes = 3
@@ -1316,7 +1316,7 @@ resource "aws_msk_cluster" "test" {
 
 func testAccMskClusterConfigEnhancedMonitoring(rName, enhancedMonitoring string) string {
 	return acctest.ConfigCompose(testAccMskClusterBaseConfig(rName), fmt.Sprintf(`
-resource "aws_msk_cluster" "test" {
+resource "aws_kafka_cluster" "test" {
   cluster_name           = %[1]q
   enhanced_monitoring    = %[2]q
   kafka_version          = "2.7.1"
@@ -1335,7 +1335,7 @@ resource "aws_msk_cluster" "test" {
 
 func testAccMskClusterConfigNumberOfBrokerNodes(rName string, brokerCount int) string {
 	return acctest.ConfigCompose(testAccMskClusterBaseConfig(rName), fmt.Sprintf(`
-resource "aws_msk_cluster" "test" {
+resource "aws_kafka_cluster" "test" {
   cluster_name           = %[1]q
   kafka_version          = "2.7.1"
   number_of_broker_nodes = %[2]d
@@ -1353,7 +1353,7 @@ resource "aws_msk_cluster" "test" {
 
 func testAccMskClusterConfigOpenMonitoring(rName string, jmxExporterEnabled bool, nodeExporterEnabled bool) string {
 	return acctest.ConfigCompose(testAccMskClusterBaseConfig(rName), fmt.Sprintf(`
-resource "aws_msk_cluster" "test" {
+resource "aws_kafka_cluster" "test" {
   cluster_name           = %[1]q
   kafka_version          = "2.7.1"
   number_of_broker_nodes = 3
@@ -1447,7 +1447,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   }
 }
 
-resource "aws_msk_cluster" "test" {
+resource "aws_kafka_cluster" "test" {
   cluster_name           = %[1]q
   kafka_version          = "2.7.1"
   number_of_broker_nodes = 3
@@ -1484,7 +1484,7 @@ resource "aws_msk_cluster" "test" {
 
 func testAccMskClusterConfigKafkaVersion(rName string, kafkaVersion string) string {
 	return acctest.ConfigCompose(testAccMskClusterBaseConfig(rName), fmt.Sprintf(`
-resource "aws_msk_cluster" "test" {
+resource "aws_kafka_cluster" "test" {
   cluster_name           = %[1]q
   kafka_version          = %[2]q
   number_of_broker_nodes = 3
@@ -1507,7 +1507,7 @@ resource "aws_msk_cluster" "test" {
 
 func testAccMskClusterConfigKafkaVersionWithConfigurationInfo(rName string, kafkaVersion string, configResourceName string) string {
 	return acctest.ConfigCompose(testAccMskClusterBaseConfig(rName), fmt.Sprintf(`
-resource "aws_msk_configuration" "config1" {
+resource "aws_kafka_configuration" "config1" {
   kafka_versions    = ["2.7.1"]
   name              = "%[1]s-1"
   server_properties = <<PROPERTIES
@@ -1515,7 +1515,7 @@ log.cleaner.delete.retention.ms = 86400000
 PROPERTIES
 }
 
-resource "aws_msk_configuration" "config2" {
+resource "aws_kafka_configuration" "config2" {
   kafka_versions    = ["2.8.0"]
   name              = "%[1]s-2"
   server_properties = <<PROPERTIES
@@ -1523,7 +1523,7 @@ log.cleaner.delete.retention.ms = 86400001
 PROPERTIES
 }
 
-resource "aws_msk_cluster" "test" {
+resource "aws_kafka_cluster" "test" {
   cluster_name           = %[1]q
   kafka_version          = %[2]q
   number_of_broker_nodes = 3
@@ -1542,8 +1542,8 @@ resource "aws_msk_cluster" "test" {
   }
 
   configuration_info {
-    arn      = aws_msk_configuration.%[3]s.arn
-    revision = aws_msk_configuration.%[3]s.latest_revision
+    arn      = aws_kafka_configuration.%[3]s.arn
+    revision = aws_kafka_configuration.%[3]s.latest_revision
   }
 }
 `, rName, kafkaVersion, configResourceName))
@@ -1551,7 +1551,7 @@ resource "aws_msk_cluster" "test" {
 
 func testAccMskClusterConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccMskClusterBaseConfig(rName), fmt.Sprintf(`
-resource "aws_msk_cluster" "test" {
+resource "aws_kafka_cluster" "test" {
   cluster_name           = %[1]q
   kafka_version          = "2.7.1"
   number_of_broker_nodes = 3
@@ -1572,7 +1572,7 @@ resource "aws_msk_cluster" "test" {
 
 func testAccMskClusterConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(testAccMskClusterBaseConfig(rName), fmt.Sprintf(`
-resource "aws_msk_cluster" "test" {
+resource "aws_kafka_cluster" "test" {
   cluster_name           = %[1]q
   kafka_version          = "2.7.1"
   number_of_broker_nodes = 3

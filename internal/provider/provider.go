@@ -552,10 +552,14 @@ func Provider() *schema.Provider {
 
 			"aws_iot_endpoint": iot.DataSourceEndpoint(),
 
-			"aws_msk_broker_nodes":  kafka.DataSourceBrokerNodes(),
-			"aws_msk_cluster":       kafka.DataSourceCluster(),
-			"aws_msk_configuration": kafka.DataSourceConfiguration(),
-			"aws_msk_kafka_version": kafka.DataSourceVersion(),
+			"aws_kafka_broker_nodes":  kafka.DataSourceBrokerNodes(),
+			"aws_kafka_cluster":       kafka.DataSourceCluster(),
+			"aws_kafka_configuration": kafka.DataSourceConfiguration(),
+			"aws_kafka_version":       kafka.DataSourceVersion(),
+			"aws_msk_broker_nodes":    kafka.DataSourceBrokerNodes(),   // backward compatible alias
+			"aws_msk_cluster":         kafka.DataSourceCluster(),       // backward compatible alias
+			"aws_msk_configuration":   kafka.DataSourceConfiguration(), // backward compatible alias
+			"aws_msk_kafka_version":   kafka.DataSourceVersion(),       // backward compatible alias
 
 			"aws_kinesis_stream":          kinesis.DataSourceStream(),
 			"aws_kinesis_stream_consumer": kinesis.DataSourceStreamConsumer(),
@@ -1256,9 +1260,12 @@ func Provider() *schema.Provider {
 			"aws_iot_thing_type":                 iot.ResourceThingType(),
 			"aws_iot_topic_rule":                 iot.ResourceTopicRule(),
 
-			"aws_msk_cluster":                  kafka.ResourceCluster(),
-			"aws_msk_configuration":            kafka.ResourceConfiguration(),
-			"aws_msk_scram_secret_association": kafka.ResourceScramSecretAssociation(),
+			"aws_kafka_cluster":                  kafka.ResourceCluster(),
+			"aws_kafka_configuration":            kafka.ResourceConfiguration(),
+			"aws_kafka_scram_secret_association": kafka.ResourceScramSecretAssociation(),
+			"aws_msk_cluster":                    kafka.ResourceCluster(),                // backward compatible alias
+			"aws_msk_configuration":              kafka.ResourceConfiguration(),          // backward compatible alias
+			"aws_msk_scram_secret_association":   kafka.ResourceScramSecretAssociation(), // backward compatible alias
 
 			"aws_kinesis_stream":          kinesis.ResourceStream(),
 			"aws_kinesis_stream_consumer": kinesis.ResourceStreamConsumer(),

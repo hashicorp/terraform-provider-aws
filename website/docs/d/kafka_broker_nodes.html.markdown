@@ -1,20 +1,20 @@
 ---
 subcategory: "Managed Streaming for Kafka (MSK)"
 layout: "aws"
-page_title: "AWS: aws_msk_broker_nodes"
+page_title: "AWS: aws_kafka_broker_nodes"
 description: |-
   Get information on an Amazon MSK Broker Nodes
 ---
 
-# Data Source: aws_msk_broker_nodes
+# Data Source: aws_kafka_broker_nodes
 
 Get information on an Amazon MSK Broker Nodes.
 
 ## Example Usage
 
 ```terraform
-data "aws_msk_broker_nodes" "example" {
-  cluster_arn = aws_msk_cluster.example.arn
+data "aws_kafka_broker_nodes" "example" {
+  cluster_arn = aws_kafka_cluster.example.arn
 }
 ```
 

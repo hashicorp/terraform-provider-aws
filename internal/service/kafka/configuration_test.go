@@ -19,7 +19,7 @@ import (
 func TestAccKafkaConfiguration_basic(t *testing.T) {
 	var configuration1 kafka.DescribeConfigurationOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_msk_configuration.test"
+	resourceName := "aws_kafka_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -51,7 +51,7 @@ func TestAccKafkaConfiguration_basic(t *testing.T) {
 func TestAccKafkaConfiguration_disappears(t *testing.T) {
 	var configuration1 kafka.DescribeConfigurationOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_msk_configuration.test"
+	resourceName := "aws_kafka_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -74,7 +74,7 @@ func TestAccKafkaConfiguration_disappears(t *testing.T) {
 func TestAccKafkaConfiguration_description(t *testing.T) {
 	var configuration1, configuration2 kafka.DescribeConfigurationOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_msk_configuration.test"
+	resourceName := "aws_kafka_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -109,7 +109,7 @@ func TestAccKafkaConfiguration_description(t *testing.T) {
 func TestAccKafkaConfiguration_kafkaVersions(t *testing.T) {
 	var configuration1 kafka.DescribeConfigurationOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_msk_configuration.test"
+	resourceName := "aws_kafka_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -138,7 +138,7 @@ func TestAccKafkaConfiguration_kafkaVersions(t *testing.T) {
 func TestAccKafkaConfiguration_serverProperties(t *testing.T) {
 	var configuration1, configuration2 kafka.DescribeConfigurationOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_msk_configuration.test"
+	resourceName := "aws_kafka_configuration.test"
 	serverProperty1 := "auto.create.topics.enable = false"
 	serverProperty2 := "auto.create.topics.enable = true"
 
@@ -176,7 +176,7 @@ func testAccCheckMskConfigurationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_msk_configuration" {
+		if rs.Type != "aws_kafka_configuration" {
 			continue
 		}
 
@@ -233,7 +233,7 @@ func testAccCheckMskConfigurationExists(resourceName string, configuration *kafk
 
 func testAccMskConfigurationConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_msk_configuration" "test" {
+resource "aws_kafka_configuration" "test" {
   name = %[1]q
 
   server_properties = <<PROPERTIES
@@ -246,7 +246,7 @@ PROPERTIES
 
 func testAccMskConfigurationConfigDescription(rName, description string) string {
 	return fmt.Sprintf(`
-resource "aws_msk_configuration" "test" {
+resource "aws_kafka_configuration" "test" {
   description = %[2]q
   name        = %[1]q
 
@@ -259,7 +259,7 @@ PROPERTIES
 
 func testAccMskConfigurationConfigKafkaVersions(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_msk_configuration" "test" {
+resource "aws_kafka_configuration" "test" {
   kafka_versions = ["2.6.0", "2.7.0"]
   name           = %[1]q
 
@@ -272,7 +272,7 @@ PROPERTIES
 
 func testAccMskConfigurationConfigServerProperties(rName string, serverProperty string) string {
 	return fmt.Sprintf(`
-resource "aws_msk_configuration" "test" {
+resource "aws_kafka_configuration" "test" {
   name = %[1]q
 
   server_properties = <<PROPERTIES

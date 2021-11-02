@@ -17,8 +17,8 @@ import (
 
 func TestAccKafkaScramSecretAssociation_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_msk_scram_secret_association.test"
-	clusterResourceName := "aws_msk_cluster.test"
+	resourceName := "aws_kafka_scram_secret_association.test"
+	clusterResourceName := "aws_kafka_cluster.test"
 	secretResourceName := "aws_secretsmanager_secret.test.0"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -47,7 +47,7 @@ func TestAccKafkaScramSecretAssociation_basic(t *testing.T) {
 
 func TestAccKafkaScramSecretAssociation_update(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_msk_scram_secret_association.test"
+	resourceName := "aws_kafka_scram_secret_association.test"
 	secretResourceName := "aws_secretsmanager_secret.test.0"
 	secretResourceName2 := "aws_secretsmanager_secret.test.1"
 	secretResourceName3 := "aws_secretsmanager_secret.test.2"
@@ -94,7 +94,7 @@ func TestAccKafkaScramSecretAssociation_update(t *testing.T) {
 
 func TestAccKafkaScramSecretAssociation_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_msk_scram_secret_association.test"
+	resourceName := "aws_kafka_scram_secret_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -116,8 +116,8 @@ func TestAccKafkaScramSecretAssociation_disappears(t *testing.T) {
 
 func TestAccKafkaScramSecretAssociation_Disappears_cluster(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_msk_scram_secret_association.test"
-	clusterResourceName := "aws_msk_cluster.test"
+	resourceName := "aws_kafka_scram_secret_association.test"
+	clusterResourceName := "aws_kafka_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -139,7 +139,7 @@ func TestAccKafkaScramSecretAssociation_Disappears_cluster(t *testing.T) {
 
 func testAccCheckMskScramSecretAssociationDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_msk_scram_secret_association" {
+		if rs.Type != "aws_kafka_scram_secret_association" {
 			continue
 		}
 
@@ -183,7 +183,7 @@ func testAccMskScramSecretAssociationBaseConfig(rName string, count int) string 
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
-resource "aws_msk_cluster" "test" {
+resource "aws_kafka_cluster" "test" {
   cluster_name           = %[1]q
   kafka_version          = "2.5.1"
   number_of_broker_nodes = 3
@@ -244,8 +244,8 @@ func testAccMskScramSecretAssociation_basic(rName string, count int) string {
 	return acctest.ConfigCompose(
 		testAccMskClusterBaseConfig(rName),
 		testAccMskScramSecretAssociationBaseConfig(rName, count), `
-resource "aws_msk_scram_secret_association" "test" {
-  cluster_arn     = aws_msk_cluster.test.arn
+resource "aws_kafka_scram_secret_association" "test" {
+  cluster_arn     = aws_kafka_cluster.test.arn
   secret_arn_list = aws_secretsmanager_secret.test[*].arn
 
   depends_on = [aws_secretsmanager_secret_version.test]

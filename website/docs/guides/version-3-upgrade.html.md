@@ -47,7 +47,7 @@ Upgrade topics:
 - [Resource: aws_lambda_alias](#resource-aws_lambda_alias)
 - [Resource: aws_launch_template](#resource-aws_launch_template)
 - [Resource: aws_lb_listener_rule](#resource-aws_lb_listener_rule)
-- [Resource: aws_msk_cluster](#resource-aws_msk_cluster)
+- [Resource: aws_kafka_cluster](#resource-aws_kafka_cluster)
 - [Resource: aws_rds_cluster](#resource-aws_rds_cluster)
 - [Resource: aws_route53_resolver_rule](#resource-aws_route53_resolver_rule)
 - [Resource: aws_route53_zone](#resource-aws_route53_zone)
@@ -1277,16 +1277,16 @@ resource "aws_lb_listener_rule" "example" {
 }
 ```
 
-## Resource: aws_msk_cluster
+## Resource: aws_kafka_cluster
 
 ### encryption_info.encryption_in_transit.client_broker Default Updated to Match API
 
-A few weeks after general availability launch and initial release of the `aws_msk_cluster` resource, the MSK API default for client broker encryption switched from `TLS_PLAINTEXT` to `TLS`. The attribute default has now been updated to match the more secure API default, however existing Terraform configurations may show a difference if this setting is not configured.
+A few weeks after general availability launch and initial release of the `aws_kafka_cluster` resource, the MSK API default for client broker encryption switched from `TLS_PLAINTEXT` to `TLS`. The attribute default has now been updated to match the more secure API default, however existing Terraform configurations may show a difference if this setting is not configured.
 
 To continue using the old default when it was previously not configured, add or modify this configuration:
 
 ```terraform
-resource "aws_msk_cluster" "example" {
+resource "aws_kafka_cluster" "example" {
   # ... other configuration ...
 
   encryption_info {

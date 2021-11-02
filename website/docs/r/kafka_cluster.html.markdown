@@ -1,12 +1,12 @@
 ---
 subcategory: "Managed Streaming for Kafka (MSK)"
 layout: "aws"
-page_title: "AWS: aws_msk_cluster"
+page_title: "AWS: aws_kafka_cluster"
 description: |-
   Terraform resource for managing an AWS Managed Streaming for Kafka cluster
 ---
 
-# Resource: aws_msk_cluster
+# Resource: aws_kafka_cluster
 
 Manages AWS Managed Streaming for Kafka cluster
 
@@ -96,7 +96,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
   }
 }
 
-resource "aws_msk_cluster" "example" {
+resource "aws_kafka_cluster" "example" {
   cluster_name           = "example"
   kafka_version          = "2.4.1"
   number_of_broker_nodes = 3
@@ -151,12 +151,12 @@ resource "aws_msk_cluster" "example" {
 }
 
 output "zookeeper_connect_string" {
-  value = aws_msk_cluster.example.zookeeper_connect_string
+  value = aws_kafka_cluster.example.zookeeper_connect_string
 }
 
 output "bootstrap_brokers_tls" {
   description = "TLS connection host:port pairs"
-  value       = aws_msk_cluster.example.bootstrap_brokers_tls
+  value       = aws_kafka_cluster.example.bootstrap_brokers_tls
 }
 ```
 
@@ -267,7 +267,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_msk_cluster` provides the following
+`aws_kafka_cluster` provides the following
 [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
 
 * `create` - (Default `120 minutes`) How long to wait for the MSK Cluster to be created.
@@ -280,5 +280,5 @@ Note that the `update` timeout is used separately for `ebs_volume_size`, `instan
 MSK clusters can be imported using the cluster `arn`, e.g.,
 
 ```
-$ terraform import aws_msk_cluster.example arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3
+$ terraform import aws_kafka_cluster.example arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3
 ```

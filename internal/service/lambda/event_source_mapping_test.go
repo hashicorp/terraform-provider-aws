@@ -715,7 +715,7 @@ func TestAccLambdaEventSourceMapping_Kinesis_destination(t *testing.T) {
 func TestAccLambdaEventSourceMapping_msk(t *testing.T) {
 	var v lambda.EventSourceMappingConfiguration
 	resourceName := "aws_lambda_event_source_mapping.test"
-	eventSourceResourceName := "aws_msk_cluster.test"
+	eventSourceResourceName := "aws_kafka_cluster.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1635,7 +1635,7 @@ func testAccEventSourceMappingMSKConfig(rName, batchSize string) string {
 	}
 
 	return acctest.ConfigCompose(testAccEventSourceMappingKafkaBaseConfig(rName), fmt.Sprintf(`
-resource "aws_msk_cluster" "test" {
+resource "aws_kafka_cluster" "test" {
   cluster_name           = %[1]q
   kafka_version          = "2.7.1"
   number_of_broker_nodes = 2
@@ -1650,7 +1650,7 @@ resource "aws_msk_cluster" "test" {
 
 resource "aws_lambda_event_source_mapping" "test" {
   batch_size        = %[2]s
-  event_source_arn  = aws_msk_cluster.test.arn
+  event_source_arn  = aws_kafka_cluster.test.arn
   enabled           = true
   function_name     = aws_lambda_function.test.arn
   topics            = ["test"]

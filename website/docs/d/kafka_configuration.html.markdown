@@ -1,19 +1,19 @@
 ---
 subcategory: "Managed Streaming for Kafka (MSK)"
 layout: "aws"
-page_title: "AWS: aws_msk_configuration"
+page_title: "AWS: aws_kafka_configuration"
 description: |-
   Get information on an Amazon MSK Configuration
 ---
 
-# Data Source: aws_msk_configuration
+# Data Source: aws_kafka_configuration
 
 Get information on an Amazon MSK Configuration.
 
 ## Example Usage
 
 ```terraform
-data "aws_msk_configuration" "example" {
+data "aws_kafka_configuration" "example" {
   name = "example"
 }
 ```

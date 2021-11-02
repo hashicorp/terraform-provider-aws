@@ -1,19 +1,19 @@
 ---
 subcategory: "Managed Streaming for Kafka (MSK)"
 layout: "aws"
-page_title: "AWS: aws_msk_cluster"
+page_title: "AWS: aws_kafka_cluster"
 description: |-
   Get information on an Amazon MSK Cluster
 ---
 
-# Data Source: aws_msk_cluster
+# Data Source: aws_kafka_cluster
 
 Get information on an Amazon MSK Cluster.
 
 ## Example Usage
 
 ```terraform
-data "aws_msk_cluster" "example" {
+data "aws_kafka_cluster" "example" {
   cluster_name = "example"
 }
 ```

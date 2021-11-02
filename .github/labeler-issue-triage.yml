@@ -209,7 +209,7 @@ service/iotanalytics:
 service/iotevents:
   - '((\*|-) ?`?|(data|resource) "?)aws_iotevents_'
 service/kafka:
-  - '((\*|-) ?`?|(data|resource) "?)aws_msk_'
+  - '((\*|-) ?`?|(data|resource) "?)aws_kafka_'
 service/kinesis:
   - '((\*|-) ?`?|(data|resource) "?)aws_kinesis_stream'
 service/kinesisanalytics:
