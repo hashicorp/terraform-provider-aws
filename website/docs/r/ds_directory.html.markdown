@@ -1,12 +1,12 @@
 ---
 subcategory: "Directory Service"
 layout: "aws"
-page_title: "AWS: aws_directory_service_directory"
+page_title: "AWS: aws_ds_directory"
 description: |-
   Provides a directory in AWS Directory Service.
 ---
 
-# Resource: aws_directory_service_directory
+# Resource: aws_ds_directory
 
 Provides a Simple or Managed Microsoft directory in AWS Directory Service.
 
@@ -18,7 +18,7 @@ Provides a Simple or Managed Microsoft directory in AWS Directory Service.
 ### SimpleAD
 
 ```terraform
-resource "aws_directory_service_directory" "bar" {
+resource "aws_ds_directory" "bar" {
   name     = "corp.notexample.com"
   password = "SuperSecretPassw0rd"
   size     = "Small"
@@ -53,7 +53,7 @@ resource "aws_subnet" "bar" {
 ### Microsoft Active Directory (MicrosoftAD)
 
 ```terraform
-resource "aws_directory_service_directory" "bar" {
+resource "aws_ds_directory" "bar" {
   name     = "corp.notexample.com"
   password = "SuperSecretPassw0rd"
   edition  = "Standard"
@@ -89,7 +89,7 @@ resource "aws_subnet" "bar" {
 ### Microsoft Active Directory Connector (ADConnector)
 
 ```terraform
-resource "aws_directory_service_directory" "connector" {
+resource "aws_ds_directory" "connector" {
   name     = "corp.notexample.com"
   password = "SuperSecretPassw0rd"
   size     = "Small"
@@ -168,5 +168,5 @@ In addition to all arguments above, the following attributes are exported:
 DirectoryService directories can be imported using the directory `id`, e.g.,
 
 ```
-$ terraform import aws_directory_service_directory.sample d-926724cf57
+$ terraform import aws_ds_directory.sample d-926724cf57
 ```

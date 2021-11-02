@@ -7,7 +7,7 @@ provider "aws" {
 }
 
 resource "aws_workspaces_directory" "example" {
-  directory_id = aws_directory_service_directory.example.id
+  directory_id = aws_ds_directory.example.id
   subnet_ids   = [aws_subnet.private-a.id, aws_subnet.private-b.id]
 
   # Uncomment this meta-argument if you are creating the IAM resources required by the AWS WorkSpaces service.
@@ -107,7 +107,7 @@ resource "aws_subnet" "private-b" {
   cidr_block           = "10.0.2.0/24"
 }
 
-resource "aws_directory_service_directory" "example" {
+resource "aws_ds_directory" "example" {
   name     = "workspaces.example.com"
   password = "#S1ncerely"
   size     = "Small"

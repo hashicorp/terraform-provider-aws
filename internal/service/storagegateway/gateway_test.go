@@ -1065,7 +1065,7 @@ resource "aws_storagegateway_gateway" "test" {
 
 func testAccGatewayConfig_DirectoryServiceSimpleDirectory(rName, domainName string) string {
 	return fmt.Sprintf(`
-resource "aws_directory_service_directory" "test" {
+resource "aws_ds_directory" "test" {
   name     = %[2]q
   password = "SuperSecretPassw0rd"
   size     = "Small"
@@ -1085,7 +1085,7 @@ resource "aws_directory_service_directory" "test" {
 
 func testAccGatewayConfig_DirectoryServiceMicrosoftAD(rName, domainName string) string {
 	return fmt.Sprintf(`
-resource "aws_directory_service_directory" "test" {
+resource "aws_ds_directory" "test" {
   edition  = "Standard"
   name     = %[2]q
   password = "SuperSecretPassw0rd"
@@ -1168,8 +1168,8 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_vpc_dhcp_options" "test" {
-  domain_name         = aws_directory_service_directory.test.name
-  domain_name_servers = aws_directory_service_directory.test.dns_ip_addresses
+  domain_name         = aws_ds_directory.test.name
+  domain_name_servers = aws_ds_directory.test.dns_ip_addresses
 
   tags = {
     Name = %[1]q
@@ -1214,8 +1214,8 @@ resource "aws_storagegateway_gateway" "test" {
   gateway_type       = "FILE_S3"
 
   smb_active_directory_settings {
-    domain_name = aws_directory_service_directory.test.name
-    password    = aws_directory_service_directory.test.password
+    domain_name = aws_ds_directory.test.name
+    password    = aws_ds_directory.test.password
     username    = "Administrator"
   }
 }
@@ -1234,8 +1234,8 @@ resource "aws_storagegateway_gateway" "test" {
   gateway_type       = "FILE_S3"
 
   smb_active_directory_settings {
-    domain_name        = aws_directory_service_directory.test.name
-    password           = aws_directory_service_directory.test.password
+    domain_name        = aws_ds_directory.test.name
+    password           = aws_ds_directory.test.password
     username           = "Administrator"
     timeout_in_seconds = %[2]d
   }
@@ -1255,8 +1255,8 @@ resource "aws_storagegateway_gateway" "test" {
   gateway_type       = "FILE_S3"
 
   smb_active_directory_settings {
-    domain_name = aws_directory_service_directory.test.name
-    password    = aws_directory_service_directory.test.password
+    domain_name = aws_ds_directory.test.name
+    password    = aws_ds_directory.test.password
     username    = "Admin"
   }
 }
@@ -1275,8 +1275,8 @@ resource "aws_storagegateway_gateway" "test" {
   gateway_type       = "FILE_S3"
 
   smb_active_directory_settings {
-    domain_name        = aws_directory_service_directory.test.name
-    password           = aws_directory_service_directory.test.password
+    domain_name        = aws_ds_directory.test.name
+    password           = aws_ds_directory.test.password
     username           = "Admin"
     timeout_in_seconds = %[2]d
   }

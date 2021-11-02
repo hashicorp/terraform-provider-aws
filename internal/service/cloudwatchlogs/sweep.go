@@ -25,7 +25,7 @@ func init() {
 			"aws_cloudtrail",
 			"aws_datasync_task",
 			"aws_db_instance",
-			"aws_directory_service_directory",
+			"aws_ds_directory",
 			"aws_ec2_client_vpn_endpoint",
 			"aws_eks_cluster",
 			"aws_elasticsearch_domain",

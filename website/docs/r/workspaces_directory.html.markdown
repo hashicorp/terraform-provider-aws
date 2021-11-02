@@ -16,7 +16,7 @@ Provides a WorkSpaces directory in AWS WorkSpaces Service.
 
 ```terraform
 resource "aws_workspaces_directory" "example" {
-  directory_id = aws_directory_service_directory.example.id
+  directory_id = aws_ds_directory.example.id
   subnet_ids = [
     aws_subnet.example_c.id,
     aws_subnet.example_d.id
@@ -59,7 +59,7 @@ resource "aws_workspaces_directory" "example" {
   ]
 }
 
-resource "aws_directory_service_directory" "example" {
+resource "aws_ds_directory" "example" {
   name     = "corp.example.com"
   password = "#S1ncerely"
   size     = "Small"
@@ -131,7 +131,7 @@ resource "aws_subnet" "example_d" {
 
 ```terraform
 resource "aws_workspaces_directory" "example" {
-  directory_id = aws_directory_service_directory.example.id
+  directory_id = aws_ds_directory.example.id
 
   ip_group_ids = [
     aws_workspaces_ip_group.example.id,

@@ -82,7 +82,7 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_workspaces_directory" "test" {
-  directory_id = aws_directory_service_directory.main.id
+  directory_id = aws_ds_directory.main.id
 
   self_service_permissions {
     change_compute_type  = false

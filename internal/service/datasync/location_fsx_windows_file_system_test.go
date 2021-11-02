@@ -308,7 +308,7 @@ resource "aws_subnet" "test2" {
   availability_zone = data.aws_availability_zones.available.names[1]
 }
 
-resource "aws_directory_service_directory" "test" {
+resource "aws_ds_directory" "test" {
   edition  = "Standard"
   name     = "corp.notexample.com"
   password = "SuperSecretPassw0rd"
@@ -344,7 +344,7 @@ resource "aws_security_group" "test1" {
 }
 
 resource "aws_fsx_windows_file_system" "test" {
-  active_directory_id = aws_directory_service_directory.test.id
+  active_directory_id = aws_ds_directory.test.id
   security_group_ids  = [aws_security_group.test1.id]
   skip_final_backup   = true
   storage_capacity    = 32

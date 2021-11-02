@@ -1214,7 +1214,7 @@ func testAccServerDirectoryServiceIdentityProviderTypeConfig(rName string, force
 		fmt.Sprintf(`
 resource "aws_transfer_server" "test" {
   identity_provider_type = "AWS_DIRECTORY_SERVICE"
-  directory_id           = aws_directory_service_directory.test.id
+  directory_id           = aws_ds_directory.test.id
   logging_role           = aws_iam_role.test.arn
 
   force_destroy = %[1]t
@@ -1224,7 +1224,7 @@ resource "aws_transfer_server" "test" {
 
 func testAccServerBaseDirectoryServiceConfig(rName string) string {
 	return `
-resource "aws_directory_service_directory" "test" {
+resource "aws_ds_directory" "test" {
   name     = "corp.notexample.com"
   password = "SuperSecretPassw0rd"
 

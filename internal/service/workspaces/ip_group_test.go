@@ -301,7 +301,7 @@ resource "aws_workspaces_ip_group" "test" {
 }
 
 resource "aws_workspaces_directory" "test1" {
-  directory_id = aws_directory_service_directory.main.id
+  directory_id = aws_ds_directory.main.id
 
   ip_group_ids = [
     aws_workspaces_ip_group.test.id
@@ -309,7 +309,7 @@ resource "aws_workspaces_directory" "test1" {
 }
 
 resource "aws_workspaces_directory" "test2" {
-  directory_id = aws_directory_service_directory.main.id
+  directory_id = aws_ds_directory.main.id
 
   ip_group_ids = [
     aws_workspaces_ip_group.test.id

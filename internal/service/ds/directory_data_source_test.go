@@ -28,8 +28,8 @@ func TestAccDirectoryServiceDirectoryDataSource_nonExistent(t *testing.T) {
 
 func TestAccDirectoryServiceDirectoryDataSource_simpleAD(t *testing.T) {
 	alias := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_directory_service_directory.test-simple-ad"
-	dataSourceName := "data.aws_directory_service_directory.test-simple-ad"
+	resourceName := "aws_ds_directory.test-simple-ad"
+	dataSourceName := "data.aws_ds_directory.test-simple-ad"
 
 	domainName := acctest.RandomDomainName()
 
@@ -62,8 +62,8 @@ func TestAccDirectoryServiceDirectoryDataSource_simpleAD(t *testing.T) {
 
 func TestAccDirectoryServiceDirectoryDataSource_microsoftAD(t *testing.T) {
 	alias := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_directory_service_directory.test-microsoft-ad"
-	dataSourceName := "data.aws_directory_service_directory.test-microsoft-ad"
+	resourceName := "aws_ds_directory.test-microsoft-ad"
+	dataSourceName := "data.aws_ds_directory.test-microsoft-ad"
 
 	domainName := acctest.RandomDomainName()
 
@@ -95,8 +95,8 @@ func TestAccDirectoryServiceDirectoryDataSource_microsoftAD(t *testing.T) {
 }
 
 func TestAccDirectoryServiceDirectoryDataSource_connector(t *testing.T) {
-	resourceName := "aws_directory_service_directory.connector"
-	dataSourceName := "data.aws_directory_service_directory.test-ad-connector"
+	resourceName := "aws_ds_directory.connector"
+	dataSourceName := "data.aws_ds_directory.test-ad-connector"
 
 	domainName := acctest.RandomDomainName()
 
@@ -120,7 +120,7 @@ func TestAccDirectoryServiceDirectoryDataSource_connector(t *testing.T) {
 }
 
 const testAccDirectoryDataSourceConfig_NonExistent = `
-data "aws_directory_service_directory" "test" {
+data "aws_ds_directory" "test" {
   directory_id = "d-abc0123456"
 }
 `
@@ -159,7 +159,7 @@ resource "aws_subnet" "secondary" {
 
 func testAccDirectoryDataSourceConfig_SimpleAD(alias, domain string) string {
 	return acctest.ConfigCompose(testAccDirectoryDataSourceConfig_Prerequisites("simple-ad"), fmt.Sprintf(`
-resource "aws_directory_service_directory" "test-simple-ad" {
+resource "aws_ds_directory" "test-simple-ad" {
   type        = "SimpleAD"
   size        = "Small"
   name        = %[2]q
@@ -176,15 +176,15 @@ resource "aws_directory_service_directory" "test-simple-ad" {
   }
 }
 
-data "aws_directory_service_directory" "test-simple-ad" {
-  directory_id = aws_directory_service_directory.test-simple-ad.id
+data "aws_ds_directory" "test-simple-ad" {
+  directory_id = aws_ds_directory.test-simple-ad.id
 }
 `, alias, domain))
 }
 
 func testAccDirectoryDataSourceConfig_MicrosoftAD(alias, domain string) string {
 	return acctest.ConfigCompose(testAccDirectoryDataSourceConfig_Prerequisites("microsoft-ad"), fmt.Sprintf(`
-resource "aws_directory_service_directory" "test-microsoft-ad" {
+resource "aws_ds_directory" "test-microsoft-ad" {
   type        = "MicrosoftAD"
   edition     = "Standard"
   name        = %[2]q
@@ -201,8 +201,8 @@ resource "aws_directory_service_directory" "test-microsoft-ad" {
   }
 }
 
-data "aws_directory_service_directory" "test-microsoft-ad" {
-  directory_id = aws_directory_service_directory.test-microsoft-ad.id
+data "aws_ds_directory" "test-microsoft-ad" {
+  directory_id = aws_ds_directory.test-microsoft-ad.id
 }
 `, alias, domain))
 }
@@ -211,7 +211,7 @@ func testAccDataSourceDirectoryServiceDirectoryConfig_connector(domain string) s
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
-resource "aws_directory_service_directory" "test" {
+resource "aws_ds_directory" "test" {
   name     = %[1]q
   password = "SuperSecretPassw0rd"
   size     = "Small"
@@ -222,14 +222,14 @@ resource "aws_directory_service_directory" "test" {
   }
 }
 
-resource "aws_directory_service_directory" "connector" {
+resource "aws_ds_directory" "connector" {
   name     = %[1]q
   password = "SuperSecretPassw0rd"
   size     = "Small"
   type     = "ADConnector"
 
   connect_settings {
-    customer_dns_ips  = aws_directory_service_directory.test.dns_ip_addresses
+    customer_dns_ips  = aws_ds_directory.test.dns_ip_addresses
     customer_username = "Administrator"
     vpc_id            = aws_vpc.main.id
     subnet_ids        = [aws_subnet.foo.id, aws_subnet.test.id]
@@ -264,8 +264,8 @@ resource "aws_subnet" "test" {
   }
 }
 
-data "aws_directory_service_directory" "test-ad-connector" {
-  directory_id = aws_directory_service_directory.connector.id
+data "aws_ds_directory" "test-ad-connector" {
+  directory_id = aws_ds_directory.connector.id
 }
 `, domain))
 }

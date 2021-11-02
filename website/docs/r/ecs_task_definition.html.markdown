@@ -144,7 +144,7 @@ resource "aws_ecs_task_definition" "service" {
 
       authorization_config {
         credentials_parameter = aws_secretsmanager_secret_version.test.arn
-        domain                = aws_directory_service_directory.test.name
+        domain                = aws_ds_directory.test.name
       }
     }
   }
@@ -152,7 +152,7 @@ resource "aws_ecs_task_definition" "service" {
 
 resource "aws_secretsmanager_secret_version" "test" {
   secret_id     = aws_secretsmanager_secret.test.id
-  secret_string = jsonencode({ username : "admin", password : aws_directory_service_directory.test.password })
+  secret_string = jsonencode({ username : "admin", password : aws_ds_directory.test.password })
 }
 ```
 

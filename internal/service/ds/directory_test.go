@@ -17,7 +17,7 @@ import (
 
 func TestAccDirectoryServiceDirectory_basic(t *testing.T) {
 	var ds directoryservice.DirectoryDescription
-	resourceName := "aws_directory_service_directory.test"
+	resourceName := "aws_ds_directory.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -50,7 +50,7 @@ func TestAccDirectoryServiceDirectory_basic(t *testing.T) {
 
 func TestAccDirectoryServiceDirectory_tags(t *testing.T) {
 	var ds directoryservice.DirectoryDescription
-	resourceName := "aws_directory_service_directory.test"
+	resourceName := "aws_ds_directory.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -103,7 +103,7 @@ func TestAccDirectoryServiceDirectory_tags(t *testing.T) {
 
 func TestAccDirectoryServiceDirectory_microsoft(t *testing.T) {
 	var ds directoryservice.DirectoryDescription
-	resourceName := "aws_directory_service_directory.test"
+	resourceName := "aws_ds_directory.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckDirectoryService(t) },
@@ -132,7 +132,7 @@ func TestAccDirectoryServiceDirectory_microsoft(t *testing.T) {
 
 func TestAccDirectoryServiceDirectory_microsoftStandard(t *testing.T) {
 	var ds directoryservice.DirectoryDescription
-	resourceName := "aws_directory_service_directory.test"
+	resourceName := "aws_ds_directory.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckDirectoryService(t) },
@@ -161,7 +161,7 @@ func TestAccDirectoryServiceDirectory_microsoftStandard(t *testing.T) {
 
 func TestAccDirectoryServiceDirectory_connector(t *testing.T) {
 	var ds directoryservice.DirectoryDescription
-	resourceName := "aws_directory_service_directory.test"
+	resourceName := "aws_ds_directory.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -196,7 +196,7 @@ func TestAccDirectoryServiceDirectory_connector(t *testing.T) {
 func TestAccDirectoryServiceDirectory_withAliasAndSSO(t *testing.T) {
 	var ds directoryservice.DirectoryDescription
 	alias := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_directory_service_directory.test"
+	resourceName := "aws_ds_directory.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -248,7 +248,7 @@ func testAccCheckDirectoryServiceDirectoryDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_directory_service_directory" {
+		if rs.Type != "aws_ds_directory" {
 			continue
 		}
 
@@ -275,7 +275,7 @@ func testAccCheckDirectoryServiceDirectoryDestroy(s *terraform.State) error {
 
 func TestAccDirectoryServiceDirectory_disappears(t *testing.T) {
 	var ds directoryservice.DirectoryDescription
-	resourceName := "aws_directory_service_directory.test"
+	resourceName := "aws_ds_directory.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -429,7 +429,7 @@ resource "aws_subnet" "test2" {
 `
 
 const testAccDirectoryServiceDirectoryConfig = testAccDirectoryServiceDirectoryConfigBase + `
-resource "aws_directory_service_directory" "test" {
+resource "aws_ds_directory" "test" {
   name     = "corp.notexample.com"
   password = "SuperSecretPassw0rd"
   size     = "Small"
@@ -442,7 +442,7 @@ resource "aws_directory_service_directory" "test" {
 `
 
 const testAccDirectoryServiceDirectoryTagsConfig = testAccDirectoryServiceDirectoryConfigBase + `
-resource "aws_directory_service_directory" "test" {
+resource "aws_ds_directory" "test" {
   name     = "corp.notexample.com"
   password = "SuperSecretPassw0rd"
   size     = "Small"
@@ -460,7 +460,7 @@ resource "aws_directory_service_directory" "test" {
 `
 
 const testAccDirectoryServiceDirectoryUpdateTagsConfig = testAccDirectoryServiceDirectoryConfigBase + `
-resource "aws_directory_service_directory" "test" {
+resource "aws_ds_directory" "test" {
   name     = "corp.notexample.com"
   password = "SuperSecretPassw0rd"
   size     = "Small"
@@ -479,7 +479,7 @@ resource "aws_directory_service_directory" "test" {
 `
 
 const testAccDirectoryServiceDirectoryRemoveTagsConfig = testAccDirectoryServiceDirectoryConfigBase + `
-resource "aws_directory_service_directory" "test" {
+resource "aws_ds_directory" "test" {
   name     = "corp.notexample.com"
   password = "SuperSecretPassw0rd"
   size     = "Small"
@@ -496,7 +496,7 @@ resource "aws_directory_service_directory" "test" {
 `
 
 const testAccDirectoryServiceDirectoryConfig_connector = testAccDirectoryServiceDirectoryConfigBase + `
-resource "aws_directory_service_directory" "base" {
+resource "aws_ds_directory" "base" {
   name     = "corp.notexample.com"
   password = "SuperSecretPassw0rd"
   size     = "Small"
@@ -507,14 +507,14 @@ resource "aws_directory_service_directory" "base" {
   }
 }
 
-resource "aws_directory_service_directory" "test" {
+resource "aws_ds_directory" "test" {
   name     = "corp.notexample.com"
   password = "SuperSecretPassw0rd"
   size     = "Small"
   type     = "ADConnector"
 
   connect_settings {
-    customer_dns_ips  = aws_directory_service_directory.base.dns_ip_addresses
+    customer_dns_ips  = aws_ds_directory.base.dns_ip_addresses
     customer_username = "Administrator"
     vpc_id            = aws_vpc.test.id
     subnet_ids        = [aws_subnet.test1.id, aws_subnet.test2.id]
@@ -523,7 +523,7 @@ resource "aws_directory_service_directory" "test" {
 `
 
 const testAccDirectoryServiceDirectoryConfig_microsoft = testAccDirectoryServiceDirectoryConfigBase + `
-resource "aws_directory_service_directory" "test" {
+resource "aws_ds_directory" "test" {
   name     = "corp.notexample.com"
   password = "SuperSecretPassw0rd"
   type     = "MicrosoftAD"
@@ -536,7 +536,7 @@ resource "aws_directory_service_directory" "test" {
 `
 
 const testAccDirectoryServiceDirectoryConfig_microsoftStandard = testAccDirectoryServiceDirectoryConfigBase + `
-resource "aws_directory_service_directory" "test" {
+resource "aws_ds_directory" "test" {
   name     = "corp.notexample.com"
   password = "SuperSecretPassw0rd"
   type     = "MicrosoftAD"
@@ -551,7 +551,7 @@ resource "aws_directory_service_directory" "test" {
 
 func testAccDirectoryServiceDirectoryConfig_withAlias(alias string) string {
 	return testAccDirectoryServiceDirectoryConfigBase + fmt.Sprintf(`
-resource "aws_directory_service_directory" "test" {
+resource "aws_ds_directory" "test" {
   name     = "corp.notexample.com"
   password = "SuperSecretPassw0rd"
   size     = "Small"
@@ -567,7 +567,7 @@ resource "aws_directory_service_directory" "test" {
 
 func testAccDirectoryServiceDirectoryConfig_withSso(alias string) string {
 	return testAccDirectoryServiceDirectoryConfigBase + fmt.Sprintf(`
-resource "aws_directory_service_directory" "test" {
+resource "aws_ds_directory" "test" {
   name       = "corp.notexample.com"
   password   = "SuperSecretPassw0rd"
   size       = "Small"
@@ -584,7 +584,7 @@ resource "aws_directory_service_directory" "test" {
 
 func testAccDirectoryServiceDirectoryConfig_withSso_modified(alias string) string {
 	return testAccDirectoryServiceDirectoryConfigBase + fmt.Sprintf(`
-resource "aws_directory_service_directory" "test" {
+resource "aws_ds_directory" "test" {
   name       = "corp.notexample.com"
   password   = "SuperSecretPassw0rd"
   size       = "Small"

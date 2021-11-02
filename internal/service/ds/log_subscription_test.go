@@ -14,7 +14,7 @@ import (
 )
 
 func TestAccDirectoryServiceLogSubscription_basic(t *testing.T) {
-	resourceName := "aws_directory_service_log_subscription.subscription"
+	resourceName := "aws_ds_log_subscription.subscription"
 	logGroupName := "ad-service-log-subscription-test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -47,7 +47,7 @@ func testAccCheckLogSubscriptionDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_directory_service_log_subscription" {
+		if rs.Type != "aws_ds_log_subscription" {
 			continue
 		}
 
@@ -115,7 +115,7 @@ data "aws_availability_zones" "available" {
   }
 }
 
-resource "aws_directory_service_directory" "bar" {
+resource "aws_ds_directory" "bar" {
   name     = "corp.notexample.com"
   password = "SuperSecretPassw0rd"
   type     = "MicrosoftAD"
@@ -187,8 +187,8 @@ resource "aws_cloudwatch_log_resource_policy" "ad-log-policy" {
   policy_name     = "ad-log-policy"
 }
 
-resource "aws_directory_service_log_subscription" "subscription" {
-  directory_id   = aws_directory_service_directory.bar.id
+resource "aws_ds_log_subscription" "subscription" {
+  directory_id   = aws_ds_directory.bar.id
   log_group_name = aws_cloudwatch_log_group.logs.name
 }
 `, logGroupName)
