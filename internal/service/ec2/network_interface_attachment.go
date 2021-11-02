@@ -3,7 +3,6 @@ package ec2
 import (
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -52,7 +51,7 @@ func resourceNetworkInterfaceAttachmentCreate(d *schema.ResourceData, meta inter
 		d.Get("network_interface_id").(string),
 		d.Get("instance_id").(string),
 		d.Get("device_index").(int),
-		5*time.Minute,
+		networkInterfaceAttachedTimeout,
 	)
 
 	if attachmentID != "" {
@@ -92,5 +91,5 @@ func resourceNetworkInterfaceAttachmentRead(d *schema.ResourceData, meta interfa
 func resourceNetworkInterfaceAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	return detachNetworkInterface(conn, d.Get("network_interface_id").(string), d.Id(), 10*time.Minute)
+	return detachNetworkInterface(conn, d.Get("network_interface_id").(string), d.Id(), networkInterfaceDetachedTimeout)
 }

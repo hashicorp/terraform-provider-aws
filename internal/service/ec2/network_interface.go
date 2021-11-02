@@ -4,14 +4,12 @@ import (
 	"fmt"
 	"log"
 	"math"
-	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -208,7 +206,7 @@ func resourceNetworkInterfaceCreate(d *schema.ResourceData, meta interface{}) er
 	if v, ok := d.GetOk("attachment"); ok && v.(*schema.Set).Len() > 0 {
 		attachment := v.(*schema.Set).List()[0].(map[string]interface{})
 
-		_, err := attachNetworkInterface(conn, d.Id(), attachment["instance"].(string), attachment["device_index"].(int), 5*time.Minute)
+		_, err := attachNetworkInterface(conn, d.Id(), attachment["instance"].(string), attachment["device_index"].(int), networkInterfaceAttachedTimeout)
 
 		if err != nil {
 			return err
@@ -301,26 +299,6 @@ func resourceNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func networkInterfaceAttachmentRefreshFunc(conn *ec2.EC2, id string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-
-		describe_network_interfaces_request := &ec2.DescribeNetworkInterfacesInput{
-			NetworkInterfaceIds: []*string{aws.String(id)},
-		}
-		describeResp, err := conn.DescribeNetworkInterfaces(describe_network_interfaces_request)
-
-		if err != nil {
-			log.Printf("[ERROR] Could not find network interface %s. %s", id, err)
-			return nil, "", err
-		}
-
-		eni := describeResp.NetworkInterfaces[0]
-		hasAttachment := strconv.FormatBool(eni.Attachment != nil)
-		log.Printf("[DEBUG] ENI %s has attachment state %s", id, hasAttachment)
-		return eni, hasAttachment, nil
-	}
-}
-
 func resourceNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
@@ -330,7 +308,7 @@ func resourceNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) er
 		if oa != nil && oa.(*schema.Set).Len() > 0 {
 			attachment := oa.(*schema.Set).List()[0].(map[string]interface{})
 
-			err := detachNetworkInterface(conn, d.Id(), attachment["attachment_id"].(string), 10*time.Minute)
+			err := detachNetworkInterface(conn, d.Id(), attachment["attachment_id"].(string), networkInterfaceDetachedTimeout)
 
 			if err != nil {
 				return err
@@ -341,7 +319,7 @@ func resourceNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) er
 		if na != nil && na.(*schema.Set).Len() > 0 {
 			attachment := na.(*schema.Set).List()[0].(map[string]interface{})
 
-			_, err := attachNetworkInterface(conn, d.Id(), attachment["instance"].(string), attachment["device_index"].(int), 5*time.Minute)
+			_, err := attachNetworkInterface(conn, d.Id(), attachment["instance"].(string), attachment["device_index"].(int), networkInterfaceAttachedTimeout)
 
 			if err != nil {
 				return err
@@ -554,7 +532,7 @@ func resourceNetworkInterfaceDelete(d *schema.ResourceData, meta interface{}) er
 	if v, ok := d.GetOk("attachment"); ok && v.(*schema.Set).Len() > 0 {
 		attachment := v.(*schema.Set).List()[0].(map[string]interface{})
 
-		err := detachNetworkInterface(conn, d.Id(), attachment["attachment_id"].(string), 10*time.Minute)
+		err := detachNetworkInterface(conn, d.Id(), attachment["attachment_id"].(string), networkInterfaceDetachedTimeout)
 
 		if err != nil {
 			return err
