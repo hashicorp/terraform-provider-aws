@@ -416,6 +416,8 @@ func TestAccECSTaskDefinition_withFSxWinFileSystem(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
 
+	domainName := acctest.RandomDomainName()
+
 	if acctest.Partition() == "aws-us-gov" {
 		t.Skip("Amazon FSx for Windows File Server volumes for ECS tasks are not supported in GovCloud partition")
 	}
@@ -427,7 +429,7 @@ func TestAccECSTaskDefinition_withFSxWinFileSystem(t *testing.T) {
 		CheckDestroy: testAccCheckTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskDefinitionWithFSxVolume(rName),
+				Config: testAccTaskDefinitionWithFSxVolume(domainName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "volume.#", "1"),
@@ -2483,8 +2485,8 @@ TASK_DEFINITION
 `, tdName)
 }
 
-func testAccTaskDefinitionWithFSxVolume(tdName string) string {
-	return testAccFSxWindowsFileSystemSubnetIds1Config() + fmt.Sprintf(`
+func testAccTaskDefinitionWithFSxVolume(domain, tdName string) string {
+	return testAccFSxWindowsFileSystemSubnetIds1Config(domain) + fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 resource "aws_secretsmanager_secret" "test" {
@@ -2582,49 +2584,27 @@ func testAccTaskDefinitionImportStateIdFunc(resourceName string) resource.Import
 	}
 }
 
-func testAccFSxWindowsFileSystemBaseConfig() string {
-	return `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-}
-
-resource "aws_subnet" "test1" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "10.0.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-}
-
-resource "aws_subnet" "test2" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "10.0.2.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
-}
-
+func testAccFSxWindowsFileSystemBaseConfig(domain string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVpcWithSubnets(2),
+		fmt.Sprintf(`
 resource "aws_directory_service_directory" "test" {
   edition  = "Standard"
-  name     = "corp.notexample.com"
+  name     = %[1]q
   password = "SuperSecretPassw0rd"
   type     = "MicrosoftAD"
 
   vpc_settings {
-    subnet_ids = [aws_subnet.test1.id, aws_subnet.test2.id]
     vpc_id     = aws_vpc.test.id
+    subnet_ids = aws_subnet.test[*].id
   }
 }
-`
+`, domain),
+	)
 }
 
-func testAccFSxWindowsFileSystemSubnetIds1Config() string {
-	return testAccFSxWindowsFileSystemBaseConfig() + `
+func testAccFSxWindowsFileSystemSubnetIds1Config(domain string) string {
+	return testAccFSxWindowsFileSystemBaseConfig(domain) + `
 resource "aws_fsx_windows_file_system" "test" {
   active_directory_id = aws_directory_service_directory.test.id
   skip_final_backup   = true

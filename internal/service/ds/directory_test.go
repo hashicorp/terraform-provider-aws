@@ -408,7 +408,7 @@ func testAccCheckServiceDirectorySso(name string, ssoEnabled bool) resource.Test
 
 func testAccDirectoryServiceDirectoryConfig(domain string) string {
 	return acctest.ConfigCompose(
-		testAccVpcBase(),
+		acctest.ConfigVpcWithSubnets(2),
 		fmt.Sprintf(`
 resource "aws_directory_service_directory" "test" {
   name     = %[1]q
@@ -426,7 +426,7 @@ resource "aws_directory_service_directory" "test" {
 
 func testAccDirectoryServiceDirectoryTagsConfig(domain string) string {
 	return acctest.ConfigCompose(
-		testAccVpcBase(),
+		acctest.ConfigVpcWithSubnets(2),
 		fmt.Sprintf(`
 resource "aws_directory_service_directory" "test" {
   name     = %[1]q
@@ -449,7 +449,7 @@ resource "aws_directory_service_directory" "test" {
 
 func testAccDirectoryServiceDirectoryUpdateTagsConfig(domain string) string {
 	return acctest.ConfigCompose(
-		testAccVpcBase(),
+		acctest.ConfigVpcWithSubnets(2),
 		fmt.Sprintf(`
 resource "aws_directory_service_directory" "test" {
   name     = %[1]q
@@ -473,7 +473,7 @@ resource "aws_directory_service_directory" "test" {
 
 func testAccDirectoryServiceDirectoryRemoveTagsConfig(domain string) string {
 	return acctest.ConfigCompose(
-		testAccVpcBase(),
+		acctest.ConfigVpcWithSubnets(2),
 		fmt.Sprintf(`
 resource "aws_directory_service_directory" "test" {
   name     = %[1]q
@@ -495,7 +495,7 @@ resource "aws_directory_service_directory" "test" {
 
 func testAccDirectoryServiceDirectoryConfig_connector(domain string) string {
 	return acctest.ConfigCompose(
-		testAccVpcBase(),
+		acctest.ConfigVpcWithSubnets(2),
 		fmt.Sprintf(`
 resource "aws_directory_service_directory" "test" {
   name     = %[1]q
@@ -527,7 +527,7 @@ resource "aws_directory_service_directory" "base" {
 
 func testAccDirectoryServiceDirectoryConfig_microsoft(domain string) string {
 	return acctest.ConfigCompose(
-		testAccVpcBase(),
+		acctest.ConfigVpcWithSubnets(2),
 		fmt.Sprintf(`
 resource "aws_directory_service_directory" "test" {
   name     = %[1]q
@@ -545,7 +545,7 @@ resource "aws_directory_service_directory" "test" {
 
 func testAccDirectoryServiceDirectoryConfig_microsoftStandard(domain string) string {
 	return acctest.ConfigCompose(
-		testAccVpcBase(),
+		acctest.ConfigVpcWithSubnets(2),
 		fmt.Sprintf(`
 resource "aws_directory_service_directory" "test" {
   name     = %[1]q
@@ -564,7 +564,7 @@ resource "aws_directory_service_directory" "test" {
 
 func testAccDirectoryServiceDirectoryConfig_withAlias(domain, alias string) string {
 	return acctest.ConfigCompose(
-		testAccVpcBase(),
+		acctest.ConfigVpcWithSubnets(2),
 		fmt.Sprintf(`
 resource "aws_directory_service_directory" "test" {
   name     = %[1]q
@@ -583,7 +583,7 @@ resource "aws_directory_service_directory" "test" {
 
 func testAccDirectoryServiceDirectoryConfig_withSso(domain, alias string) string {
 	return acctest.ConfigCompose(
-		testAccVpcBase(),
+		acctest.ConfigVpcWithSubnets(2),
 		fmt.Sprintf(`
 resource "aws_directory_service_directory" "test" {
   name       = %[1]q
@@ -603,7 +603,7 @@ resource "aws_directory_service_directory" "test" {
 
 func testAccDirectoryServiceDirectoryConfig_withSso_modified(domain, alias string) string {
 	return acctest.ConfigCompose(
-		testAccVpcBase(),
+		acctest.ConfigVpcWithSubnets(2),
 		fmt.Sprintf(`
 resource "aws_directory_service_directory" "test" {
   name       = %[1]q

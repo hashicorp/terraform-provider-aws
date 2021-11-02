@@ -137,6 +137,8 @@ func testAccClientVPNEndpoint_msAD(t *testing.T) {
 	rStr := sdkacctest.RandString(5)
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
 
+	domainName := acctest.RandomDomainName()
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
@@ -144,7 +146,7 @@ func testAccClientVPNEndpoint_msAD(t *testing.T) {
 		CheckDestroy: testAccCheckClientVPNEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEc2ClientVpnEndpointConfigWithMicrosoftAD(rStr),
+				Config: testAccEc2ClientVpnEndpointConfigWithMicrosoftAD(rStr, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNEndpointExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "authentication_options.#", "1"),
@@ -165,6 +167,8 @@ func testAccClientVPNEndpoint_mutualAuthAndMsAD(t *testing.T) {
 	rStr := sdkacctest.RandString(5)
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
 
+	domainName := acctest.RandomDomainName()
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
@@ -172,7 +176,7 @@ func testAccClientVPNEndpoint_mutualAuthAndMsAD(t *testing.T) {
 		CheckDestroy: testAccCheckClientVPNEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEc2ClientVpnEndpointConfigWithMutualAuthAndMicrosoftAD(rStr),
+				Config: testAccEc2ClientVpnEndpointConfigWithMutualAuthAndMicrosoftAD(rStr, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNEndpointExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "authentication_options.#", "2"),
@@ -471,14 +475,18 @@ resource "aws_acm_certificate" "test" {
 `, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key))
 }
 
-func testAccEc2ClientVpnEndpointMsADBase() string {
-	return `
-data "aws_availability_zones" "available" {
-  state = "available"
+func testAccEc2ClientVpnEndpointMsADBase(domain string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptIn(),
+		fmt.Sprintf(`
+resource "aws_directory_service_directory" "test" {
+  name     = %[1]q
+  password = "SuperSecretPassw0rd"
+  type     = "MicrosoftAD"
 
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
+  vpc_settings {
+    vpc_id     = aws_vpc.test.id
+    subnet_ids = aws_subnet.test[*].id
   }
 }
 
@@ -492,18 +500,8 @@ resource "aws_subnet" "test" {
   cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
   vpc_id            = aws_vpc.test.id
 }
-
-resource "aws_directory_service_directory" "test" {
-  name     = "vpn.notexample.com"
-  password = "SuperSecretPassw0rd"
-  type     = "MicrosoftAD"
-
-  vpc_settings {
-    vpc_id     = aws_vpc.test.id
-    subnet_ids = aws_subnet.test[*].id
-  }
-}
-`
+`, domain),
+	)
 }
 
 func testAccEc2ClientVpnEndpointConfig(rName string) string {
@@ -576,9 +574,11 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
 `, rName)
 }
 
-func testAccEc2ClientVpnEndpointConfigWithMicrosoftAD(rName string) string {
-	return testAccEc2ClientVpnEndpointConfigAcmCertificateBase() +
-		testAccEc2ClientVpnEndpointMsADBase() + fmt.Sprintf(`
+func testAccEc2ClientVpnEndpointConfigWithMicrosoftAD(rName, domain string) string {
+	return acctest.ConfigCompose(
+		testAccEc2ClientVpnEndpointConfigAcmCertificateBase(),
+		testAccEc2ClientVpnEndpointMsADBase(domain),
+		fmt.Sprintf(`
 resource "aws_ec2_client_vpn_endpoint" "test" {
   description            = "terraform-testacc-clientvpn-%s"
   server_certificate_arn = aws_acm_certificate.test.arn
@@ -593,11 +593,15 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
     enabled = false
   }
 }
-`, rName)
+`, rName),
+	)
 }
 
-func testAccEc2ClientVpnEndpointConfigWithMutualAuthAndMicrosoftAD(rName string) string {
-	return testAccEc2ClientVpnEndpointConfigAcmCertificateBase() + testAccEc2ClientVpnEndpointMsADBase() + fmt.Sprintf(`
+func testAccEc2ClientVpnEndpointConfigWithMutualAuthAndMicrosoftAD(rName, domain string) string {
+	return acctest.ConfigCompose(
+		testAccEc2ClientVpnEndpointConfigAcmCertificateBase(),
+		testAccEc2ClientVpnEndpointMsADBase(domain),
+		fmt.Sprintf(`
 resource "aws_ec2_client_vpn_endpoint" "test" {
   description            = "terraform-testacc-clientvpn-%s"
   server_certificate_arn = aws_acm_certificate.test.arn
@@ -617,7 +621,8 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
     enabled = false
   }
 }
-`, rName)
+`, rName),
+	)
 }
 
 func testAccEc2ClientVpnEndpointConfigWithFederatedAuth(rName, idpEntityId string) string {

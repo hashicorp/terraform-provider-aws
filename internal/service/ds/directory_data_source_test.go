@@ -127,7 +127,7 @@ data "aws_directory_service_directory" "test" {
 
 func testAccDirectoryDataSourceConfig_SimpleAD(alias, domain string) string {
 	return acctest.ConfigCompose(
-		testAccVpcBase(),
+		acctest.ConfigVpcWithSubnets(2),
 		fmt.Sprintf(`
 data "aws_directory_service_directory" "test-simple-ad" {
   directory_id = aws_directory_service_directory.test-simple-ad.id
@@ -154,7 +154,7 @@ resource "aws_directory_service_directory" "test-simple-ad" {
 
 func testAccDirectoryDataSourceConfig_MicrosoftAD(alias, domain string) string {
 	return acctest.ConfigCompose(
-		testAccVpcBase(),
+		acctest.ConfigVpcWithSubnets(2),
 		fmt.Sprintf(`
 data "aws_directory_service_directory" "test-microsoft-ad" {
   directory_id = aws_directory_service_directory.test-microsoft-ad.id
@@ -181,7 +181,7 @@ resource "aws_directory_service_directory" "test-microsoft-ad" {
 
 func testAccDataSourceDirectoryServiceDirectoryConfig_connector(domain string) string {
 	return acctest.ConfigCompose(
-		testAccVpcBase(),
+		acctest.ConfigVpcWithSubnets(2),
 		fmt.Sprintf(`
 data "aws_directory_service_directory" "test" {
   directory_id = aws_directory_service_directory.test.id

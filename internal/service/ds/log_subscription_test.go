@@ -108,7 +108,7 @@ func testAccCheckLogSubscriptionExists(name string, logGroupName string) resourc
 
 func testAccDirectoryServiceLogSubscriptionConfig(domain, logGroupName string) string {
 	return acctest.ConfigCompose(
-		testAccVpcBase(),
+		acctest.ConfigVpcWithSubnets(2),
 		fmt.Sprintf(`
 resource "aws_directory_service_log_subscription" "subscription" {
   directory_id   = aws_directory_service_directory.test.id

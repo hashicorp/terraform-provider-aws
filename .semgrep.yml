@@ -559,10 +559,7 @@ rules:
     message: Domain names should be in the namespaces defined in RFC 6761 (https://datatracker.ietf.org/doc/html/rfc6761) as reserved for testing
     paths:
       include:
-        - internal/service/**/*_data_source_test.go
-        - internal/service/[a-d]*
-        - internal/service/events
-        - internal/service/[f-z]*
+        - internal/service
       exclude:
         - internal/service/firehose/delivery_stream_test.go
         - internal/service/fsx/windows_file_system_test.go
@@ -599,6 +596,7 @@ rules:
       - pattern-not-regex: 'cloudfront\.net'
       - pattern-not-regex: 'http://json-schema\.org/draft-0\d/schema'
       - pattern-not-regex: 'http://activemq.apache.org/schema/core'
+      - pattern-not-regex: 'mcr.microsoft.com'
     severity: WARNING
 
   - id: email-address
