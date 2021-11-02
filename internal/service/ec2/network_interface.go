@@ -174,6 +174,9 @@ func resourceNetworkInterfaceCreate(d *schema.ResourceData, meta interface{}) er
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
+	ipv4PrefixesSpecified := false
+	ipv6PrefixesSpecified := false
+
 	input := &ec2.CreateNetworkInterfaceInput{
 		SubnetId: aws.String(d.Get("subnet_id").(string)),
 	}
@@ -187,6 +190,7 @@ func resourceNetworkInterfaceCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if v, ok := d.GetOk("ipv4_prefixes"); ok && v.(*schema.Set).Len() > 0 {
+		ipv4PrefixesSpecified = true
 		input.Ipv4Prefixes = expandIpv4PrefixSpecificationRequests(v.(*schema.Set).List())
 	}
 
@@ -203,6 +207,7 @@ func resourceNetworkInterfaceCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if v, ok := d.GetOk("ipv6_prefixes"); ok && v.(*schema.Set).Len() > 0 {
+		ipv6PrefixesSpecified = true
 		input.Ipv6Prefixes = expandIpv6PrefixSpecificationRequests(v.(*schema.Set).List())
 	}
 
@@ -222,7 +227,9 @@ func resourceNetworkInterfaceCreate(d *schema.ResourceData, meta interface{}) er
 		input.Groups = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	if len(tags) > 0 {
+	// If IPv4 or IPv6 prefixes are specified, tag after create.
+	// Otherwise "An error occurred (InternalError) when calling the CreateNetworkInterface operation".
+	if len(tags) > 0 && !(ipv4PrefixesSpecified || ipv6PrefixesSpecified) {
 		input.TagSpecifications = ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeNetworkInterface)
 	}
 
@@ -237,6 +244,12 @@ func resourceNetworkInterfaceCreate(d *schema.ResourceData, meta interface{}) er
 
 	if _, err := WaitNetworkInterfaceCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for EC2 Network Interface (%s) create: %w", d.Id(), err)
+	}
+
+	if len(tags) > 0 && (ipv4PrefixesSpecified || ipv6PrefixesSpecified) {
+		if err := UpdateTags(conn, d.Id(), nil, tags); err != nil {
+			return fmt.Errorf("error updating EC2 Network Interface (%s) tags: %w", d.Id(), err)
+		}
 	}
 
 	// Default value is enabled.
