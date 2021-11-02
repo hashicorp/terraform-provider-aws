@@ -1263,7 +1263,9 @@ func Provider() *schema.Provider {
 			"aws_kinesis_stream":          kinesis.ResourceStream(),
 			"aws_kinesis_stream_consumer": kinesis.ResourceStreamConsumer(),
 
-			"aws_kinesis_analytics_application":           kinesisanalytics.ResourceApplication(),
+			"aws_kinesisanalytics_application":  kinesisanalytics.ResourceApplication(),
+			"aws_kinesis_analytics_application": kinesisanalytics.ResourceApplication(), // backward compatible alias
+
 			"aws_kinesisanalyticsv2_application":          kinesisanalyticsv2.ResourceApplication(),
 			"aws_kinesisanalyticsv2_application_snapshot": kinesisanalyticsv2.ResourceApplicationSnapshot(),
 

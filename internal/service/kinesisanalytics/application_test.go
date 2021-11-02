@@ -17,7 +17,7 @@ import (
 
 func TestAccKinesisAnalyticsApplication_basic(t *testing.T) {
 	var v kinesisanalytics.ApplicationDetail
-	resourceName := "aws_kinesis_analytics_application.test"
+	resourceName := "aws_kinesisanalytics_application.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -57,7 +57,7 @@ func TestAccKinesisAnalyticsApplication_basic(t *testing.T) {
 
 func TestAccKinesisAnalyticsApplication_disappears(t *testing.T) {
 	var v kinesisanalytics.ApplicationDetail
-	resourceName := "aws_kinesis_analytics_application.test"
+	resourceName := "aws_kinesisanalytics_application.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -80,7 +80,7 @@ func TestAccKinesisAnalyticsApplication_disappears(t *testing.T) {
 
 func TestAccKinesisAnalyticsApplication_tags(t *testing.T) {
 	var v kinesisanalytics.ApplicationDetail
-	resourceName := "aws_kinesis_analytics_application.test"
+	resourceName := "aws_kinesisanalytics_application.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -128,7 +128,7 @@ func TestAccKinesisAnalyticsApplication_tags(t *testing.T) {
 
 func TestAccKinesisAnalyticsApplication_Code_update(t *testing.T) {
 	var v kinesisanalytics.ApplicationDetail
-	resourceName := "aws_kinesis_analytics_application.test"
+	resourceName := "aws_kinesisanalytics_application.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -188,7 +188,7 @@ func TestAccKinesisAnalyticsApplication_Code_update(t *testing.T) {
 
 func TestAccKinesisAnalyticsApplication_CloudWatchLoggingOptions_add(t *testing.T) {
 	var v kinesisanalytics.ApplicationDetail
-	resourceName := "aws_kinesis_analytics_application.test"
+	resourceName := "aws_kinesisanalytics_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
 	cloudWatchLogStreamResourceName := "aws_cloudwatch_log_stream.test.0"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -252,7 +252,7 @@ func TestAccKinesisAnalyticsApplication_CloudWatchLoggingOptions_add(t *testing.
 
 func TestAccKinesisAnalyticsApplication_CloudWatchLoggingOptions_delete(t *testing.T) {
 	var v kinesisanalytics.ApplicationDetail
-	resourceName := "aws_kinesis_analytics_application.test"
+	resourceName := "aws_kinesisanalytics_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
 	cloudWatchLogStreamResourceName := "aws_cloudwatch_log_stream.test.0"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -316,7 +316,7 @@ func TestAccKinesisAnalyticsApplication_CloudWatchLoggingOptions_delete(t *testi
 
 func TestAccKinesisAnalyticsApplication_CloudWatchLoggingOptions_update(t *testing.T) {
 	var v kinesisanalytics.ApplicationDetail
-	resourceName := "aws_kinesis_analytics_application.test"
+	resourceName := "aws_kinesisanalytics_application.test"
 	iamRole1ResourceName := "aws_iam_role.test.0"
 	iamRole2ResourceName := "aws_iam_role.test.1"
 	cloudWatchLogStream1ResourceName := "aws_cloudwatch_log_stream.test.0"
@@ -384,7 +384,7 @@ func TestAccKinesisAnalyticsApplication_CloudWatchLoggingOptions_update(t *testi
 
 func TestAccKinesisAnalyticsApplication_Input_add(t *testing.T) {
 	var v kinesisanalytics.ApplicationDetail
-	resourceName := "aws_kinesis_analytics_application.test"
+	resourceName := "aws_kinesisanalytics_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
 	firehoseResourceName := "aws_kinesis_firehose_delivery_stream.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -470,7 +470,7 @@ func TestAccKinesisAnalyticsApplication_Input_add(t *testing.T) {
 
 func TestAccKinesisAnalyticsApplication_Input_update(t *testing.T) {
 	var v kinesisanalytics.ApplicationDetail
-	resourceName := "aws_kinesis_analytics_application.test"
+	resourceName := "aws_kinesisanalytics_application.test"
 	iamRole1ResourceName := "aws_iam_role.test.0"
 	iamRole2ResourceName := "aws_iam_role.test.1"
 	firehoseResourceName := "aws_kinesis_firehose_delivery_stream.test"
@@ -585,7 +585,7 @@ func TestAccKinesisAnalyticsApplication_Input_update(t *testing.T) {
 
 func TestAccKinesisAnalyticsApplication_InputProcessing_add(t *testing.T) {
 	var v kinesisanalytics.ApplicationDetail
-	resourceName := "aws_kinesis_analytics_application.test"
+	resourceName := "aws_kinesisanalytics_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
 	lambdaResourceName := "aws_lambda_function.test.0"
 	firehoseResourceName := "aws_kinesis_firehose_delivery_stream.test"
@@ -699,7 +699,7 @@ func TestAccKinesisAnalyticsApplication_InputProcessing_add(t *testing.T) {
 
 func TestAccKinesisAnalyticsApplication_InputProcessing_delete(t *testing.T) {
 	var v kinesisanalytics.ApplicationDetail
-	resourceName := "aws_kinesis_analytics_application.test"
+	resourceName := "aws_kinesisanalytics_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
 	lambdaResourceName := "aws_lambda_function.test.0"
 	firehoseResourceName := "aws_kinesis_firehose_delivery_stream.test"
@@ -813,7 +813,7 @@ func TestAccKinesisAnalyticsApplication_InputProcessing_delete(t *testing.T) {
 
 func TestAccKinesisAnalyticsApplication_InputProcessing_update(t *testing.T) {
 	var v kinesisanalytics.ApplicationDetail
-	resourceName := "aws_kinesis_analytics_application.test"
+	resourceName := "aws_kinesisanalytics_application.test"
 	iamRole1ResourceName := "aws_iam_role.test.0"
 	iamRole2ResourceName := "aws_iam_role.test.1"
 	lambda1ResourceName := "aws_lambda_function.test.0"
@@ -932,7 +932,7 @@ func TestAccKinesisAnalyticsApplication_InputProcessing_update(t *testing.T) {
 
 func TestAccKinesisAnalyticsApplication_Multiple_update(t *testing.T) {
 	var v kinesisanalytics.ApplicationDetail
-	resourceName := "aws_kinesis_analytics_application.test"
+	resourceName := "aws_kinesisanalytics_application.test"
 	iamRole1ResourceName := "aws_iam_role.test.0"
 	iamRole2ResourceName := "aws_iam_role.test.1"
 	cloudWatchLogStreamResourceName := "aws_cloudwatch_log_stream.test"
@@ -1104,7 +1104,7 @@ func TestAccKinesisAnalyticsApplication_Multiple_update(t *testing.T) {
 
 func TestAccKinesisAnalyticsApplication_Output_update(t *testing.T) {
 	var v kinesisanalytics.ApplicationDetail
-	resourceName := "aws_kinesis_analytics_application.test"
+	resourceName := "aws_kinesisanalytics_application.test"
 	iamRole1ResourceName := "aws_iam_role.test.0"
 	iamRole2ResourceName := "aws_iam_role.test.1"
 	lambdaResourceName := "aws_lambda_function.test.0"
@@ -1219,7 +1219,7 @@ func TestAccKinesisAnalyticsApplication_Output_update(t *testing.T) {
 
 func TestAccKinesisAnalyticsApplication_ReferenceDataSource_add(t *testing.T) {
 	var v kinesisanalytics.ApplicationDetail
-	resourceName := "aws_kinesis_analytics_application.test"
+	resourceName := "aws_kinesisanalytics_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
 	s3BucketResourceName := "aws_s3_bucket.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1299,7 +1299,7 @@ func TestAccKinesisAnalyticsApplication_ReferenceDataSource_add(t *testing.T) {
 
 func TestAccKinesisAnalyticsApplication_ReferenceDataSource_delete(t *testing.T) {
 	var v kinesisanalytics.ApplicationDetail
-	resourceName := "aws_kinesis_analytics_application.test"
+	resourceName := "aws_kinesisanalytics_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
 	s3BucketResourceName := "aws_s3_bucket.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1379,7 +1379,7 @@ func TestAccKinesisAnalyticsApplication_ReferenceDataSource_delete(t *testing.T)
 
 func TestAccKinesisAnalyticsApplication_ReferenceDataSource_update(t *testing.T) {
 	var v kinesisanalytics.ApplicationDetail
-	resourceName := "aws_kinesis_analytics_application.test"
+	resourceName := "aws_kinesisanalytics_application.test"
 	iamRole1ResourceName := "aws_iam_role.test.0"
 	iamRole2ResourceName := "aws_iam_role.test.1"
 	s3BucketResourceName := "aws_s3_bucket.test"
@@ -1481,7 +1481,7 @@ func TestAccKinesisAnalyticsApplication_ReferenceDataSource_update(t *testing.T)
 
 func TestAccKinesisAnalyticsApplication_StartApplication_onCreate(t *testing.T) {
 	var v kinesisanalytics.ApplicationDetail
-	resourceName := "aws_kinesis_analytics_application.test"
+	resourceName := "aws_kinesisanalytics_application.test"
 	iamRole1ResourceName := "aws_iam_role.test.0"
 	firehoseResourceName := "aws_kinesis_firehose_delivery_stream.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1548,7 +1548,7 @@ func TestAccKinesisAnalyticsApplication_StartApplication_onCreate(t *testing.T) 
 
 func TestAccKinesisAnalyticsApplication_StartApplication_onUpdate(t *testing.T) {
 	var v kinesisanalytics.ApplicationDetail
-	resourceName := "aws_kinesis_analytics_application.test"
+	resourceName := "aws_kinesisanalytics_application.test"
 	iamRole1ResourceName := "aws_iam_role.test.0"
 	firehoseResourceName := "aws_kinesis_firehose_delivery_stream.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1703,7 +1703,7 @@ func TestAccKinesisAnalyticsApplication_StartApplication_onUpdate(t *testing.T) 
 
 func TestAccKinesisAnalyticsApplication_StartApplication_update(t *testing.T) {
 	var v kinesisanalytics.ApplicationDetail
-	resourceName := "aws_kinesis_analytics_application.test"
+	resourceName := "aws_kinesisanalytics_application.test"
 	iamRole1ResourceName := "aws_iam_role.test.0"
 	iamRole2ResourceName := "aws_iam_role.test.1"
 	cloudWatchLogStreamResourceName := "aws_cloudwatch_log_stream.test"
@@ -1880,7 +1880,7 @@ func testAccCheckKinesisAnalyticsApplicationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisAnalyticsConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_kinesis_analytics_application" {
+		if rs.Type != "aws_kinesisanalytics_application" {
 			continue
 		}
 
@@ -2050,7 +2050,7 @@ resource "aws_kinesis_stream" "test" {
 
 func testAccKinesisAnalyticsApplicationConfigBasic(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_kinesis_analytics_application" "test" {
+resource "aws_kinesisanalytics_application" "test" {
   name = %[1]q
 }
 `, rName)
@@ -2058,7 +2058,7 @@ resource "aws_kinesis_analytics_application" "test" {
 
 func testAccKinesisAnalyticsApplicationConfigCode(rName, code string) string {
 	return fmt.Sprintf(`
-resource "aws_kinesis_analytics_application" "test" {
+resource "aws_kinesisanalytics_application" "test" {
   name        = %[1]q
   description = "test"
   code        = %[2]q
@@ -2081,7 +2081,7 @@ resource "aws_cloudwatch_log_stream" "test" {
   log_group_name = aws_cloudwatch_log_group.test.name
 }
 
-resource "aws_kinesis_analytics_application" "test" {
+resource "aws_kinesisanalytics_application" "test" {
   name = %[1]q
 
   cloudwatch_logging_options {
@@ -2097,7 +2097,7 @@ func testAccKinesisAnalyticsApplicationConfigInput(rName string) string {
 		testAccKinesisAnalyticsApplicationConfigBaseIamRole(rName),
 		testAccKinesisAnalyticsApplicationConfigBaseInputOutput(rName),
 		fmt.Sprintf(`
-resource "aws_kinesis_analytics_application" "test" {
+resource "aws_kinesisanalytics_application" "test" {
   name = %[1]q
 
   inputs {
@@ -2133,7 +2133,7 @@ func testAccKinesisAnalyticsApplicationConfigInputUpdated(rName string) string {
 		testAccKinesisAnalyticsApplicationConfigBaseIamRole(rName),
 		testAccKinesisAnalyticsApplicationConfigBaseInputOutput(rName),
 		fmt.Sprintf(`
-resource "aws_kinesis_analytics_application" "test" {
+resource "aws_kinesisanalytics_application" "test" {
   name = %[1]q
 
   inputs {
@@ -2181,7 +2181,7 @@ func testAccKinesisAnalyticsApplicationConfigInputProcessingConfiguration(rName 
 		testAccKinesisAnalyticsApplicationConfigBaseIamRole(rName),
 		testAccKinesisAnalyticsApplicationConfigBaseInputOutput(rName),
 		fmt.Sprintf(`
-resource "aws_kinesis_analytics_application" "test" {
+resource "aws_kinesisanalytics_application" "test" {
   name = %[1]q
 
   inputs {
@@ -2242,7 +2242,7 @@ resource "aws_cloudwatch_log_stream" "test" {
   log_group_name = aws_cloudwatch_log_group.test.name
 }
 
-resource "aws_kinesis_analytics_application" "test" {
+resource "aws_kinesisanalytics_application" "test" {
   name = %[1]q
 
   cloudwatch_logging_options {
@@ -2322,7 +2322,7 @@ func testAccKinesisAnalyticsApplicationConfigMultipleUpdated(rName, startApplica
 		testAccKinesisAnalyticsApplicationConfigBaseIamRole(rName),
 		testAccKinesisAnalyticsApplicationConfigBaseInputOutput(rName),
 		fmt.Sprintf(`
-resource "aws_kinesis_analytics_application" "test" {
+resource "aws_kinesisanalytics_application" "test" {
   name = %[1]q
 
   inputs {
@@ -2433,7 +2433,7 @@ func testAccKinesisAnalyticsApplicationOutput(rName string) string {
 		testAccKinesisAnalyticsApplicationConfigBaseIamRole(rName),
 		testAccKinesisAnalyticsApplicationConfigBaseInputOutput(rName),
 		fmt.Sprintf(`
-resource "aws_kinesis_analytics_application" "test" {
+resource "aws_kinesisanalytics_application" "test" {
   name = %[1]q
 
   outputs {
@@ -2457,7 +2457,7 @@ func testAccKinesisAnalyticsApplicationOutputUpdated(rName string) string {
 		testAccKinesisAnalyticsApplicationConfigBaseIamRole(rName),
 		testAccKinesisAnalyticsApplicationConfigBaseInputOutput(rName),
 		fmt.Sprintf(`
-resource "aws_kinesis_analytics_application" "test" {
+resource "aws_kinesisanalytics_application" "test" {
   name = %[1]q
 
   outputs {
@@ -2497,7 +2497,7 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_kinesis_analytics_application" "test" {
+resource "aws_kinesisanalytics_application" "test" {
   name = %[1]q
 
   reference_data_sources {
@@ -2537,7 +2537,7 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_kinesis_analytics_application" "test" {
+resource "aws_kinesisanalytics_application" "test" {
   name = %[1]q
 
   reference_data_sources {
@@ -2582,7 +2582,7 @@ func testAccKinesisAnalyticsApplicationConfigStartApplication(rName string, star
 		testAccKinesisAnalyticsApplicationConfigBaseIamRole(rName),
 		testAccKinesisAnalyticsApplicationConfigBaseInputOutput(rName),
 		fmt.Sprintf(`
-resource "aws_kinesis_analytics_application" "test" {
+resource "aws_kinesisanalytics_application" "test" {
   name = %[1]q
 
   inputs {
@@ -2621,7 +2621,7 @@ resource "aws_kinesis_analytics_application" "test" {
 
 func testAccKinesisAnalyticsApplicationConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
-resource "aws_kinesis_analytics_application" "test" {
+resource "aws_kinesisanalytics_application" "test" {
   name = %[1]q
 
   tags = {
@@ -2633,7 +2633,7 @@ resource "aws_kinesis_analytics_application" "test" {
 
 func testAccKinesisAnalyticsApplicationConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
-resource "aws_kinesis_analytics_application" "test" {
+resource "aws_kinesisanalytics_application" "test" {
   name = %[1]q
 
   tags = {

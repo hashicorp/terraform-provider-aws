@@ -18,8 +18,8 @@ import (
 )
 
 func init() {
-	resource.AddTestSweepers("aws_kinesis_analytics_application", &resource.Sweeper{
-		Name: "aws_kinesis_analytics_application",
+	resource.AddTestSweepers("aws_kinesisanalytics_application", &resource.Sweeper{
+		Name: "aws_kinesisanalytics_application",
 		F:    sweepApplications,
 	})
 }

@@ -31,7 +31,7 @@ func init() {
 			"aws_elasticsearch_domain",
 			"aws_flow_log",
 			"aws_glue_job",
-			"aws_kinesis_analytics_application",
+			"aws_kinesisanalytics_application",
 			"aws_kinesis_firehose_delivery_stream",
 			"aws_lambda_function",
 			"aws_mq_broker",

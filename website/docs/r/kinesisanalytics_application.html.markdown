@@ -1,12 +1,12 @@
 ---
 subcategory: "Kinesis Data Analytics (SQL Applications)"
 layout: "aws"
-page_title: "AWS: aws_kinesis_analytics_application"
+page_title: "AWS: aws_kinesisanalytics_application"
 description: |-
   Provides a AWS Kinesis Analytics Application
 ---
 
-# Resource: aws_kinesis_analytics_application
+# Resource: aws_kinesisanalytics_application
 
 Provides a Kinesis Analytics Application resource. Kinesis Analytics is a managed service that
 allows processing and analyzing streaming data using standard SQL.
@@ -25,7 +25,7 @@ resource "aws_kinesis_stream" "test_stream" {
   shard_count = 1
 }
 
-resource "aws_kinesis_analytics_application" "test_application" {
+resource "aws_kinesisanalytics_application" "test_application" {
   name = "kinesis-analytics-application-test"
 
   inputs {
@@ -88,7 +88,7 @@ resource "aws_kinesis_firehose_delivery_stream" "example" {
   }
 }
 
-resource "aws_kinesis_analytics_application" "test" {
+resource "aws_kinesisanalytics_application" "test" {
   name = "example-application"
 
   cloudwatch_logging_options {
@@ -359,5 +359,5 @@ In addition to all arguments above, the following attributes are exported:
 Kinesis Analytics Application can be imported by using ARN, e.g.,
 
 ```
-$ terraform import aws_kinesis_analytics_application.example arn:aws:kinesisanalytics:us-west-2:1234567890:application/example
+$ terraform import aws_kinesisanalytics_application.example arn:aws:kinesisanalytics:us-west-2:1234567890:application/example
 ```
