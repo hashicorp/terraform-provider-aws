@@ -32,7 +32,6 @@ func testAccErrorCheckSkipEC2(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
 		"VolumeTypeNotAvailableInRegion",
 		"Invalid value specified for Phase",
-		"You have reached the maximum allowed number of license configurations created in one day",
 	)
 }
 
