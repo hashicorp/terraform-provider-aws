@@ -597,7 +597,7 @@ resource "aws_sagemaker_user_profile" "test" {
     kernel_gateway_app_settings {
       default_resource_spec {
         instance_type               = "ml.t3.micro"
-		sagemaker_image_version_arn = aws_sagemaker_image_version.test.arn
+        sagemaker_image_version_arn = aws_sagemaker_image_version.test.arn
       }
     }
   }
