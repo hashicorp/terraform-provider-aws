@@ -154,6 +154,7 @@ func TestAccBatchComputeEnvironment_createEC2(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.allocation_strategy", ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.bid_percentage", "0"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.desired_vcpus", "0"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.ec2_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.ec2_key_pair", ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.image_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "compute_resources.0.instance_role", instanceProfileResourceName, "arn"),
@@ -970,7 +971,7 @@ func TestAccBatchComputeEnvironment_ec2Configuration(t *testing.T) {
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccComputeEnvironmentEC2Configuration(rName, "ami-12345678", "ECS_AL2"),
+				Config: testAccComputeEnvironmentEC2Configuration(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(resourceName, &ce),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("compute-environment/%s", rName)),
@@ -986,7 +987,7 @@ func TestAccBatchComputeEnvironment_ec2Configuration(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.instance_type.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "compute_resources.0.instance_type.*", "optimal"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.ec2_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.ec2_configuration.0.image_id_override", "ami-12345678"),
+					resource.TestCheckResourceAttrSet(resourceName, "compute_resources.0.ec2_configuration.0.image_id_override"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.ec2_configuration.0.image_type", "ECS_AL2"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.max_vcpus", "16"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.min_vcpus", "0"),
@@ -2143,9 +2144,10 @@ resource "aws_batch_compute_environment" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
-func testAccComputeEnvironmentEC2Configuration(rName string, image_id_override, image_type string) string {
+func testAccComputeEnvironmentEC2Configuration(rName string) string {
 	return acctest.ConfigCompose(
 		testAccComputeEnvironmentBaseConfig(rName),
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
   compute_environment_name = %[1]q
@@ -2154,8 +2156,8 @@ resource "aws_batch_compute_environment" "test" {
     instance_role = aws_iam_instance_profile.ecs_instance.arn
     instance_type = ["optimal"]
     ec2_configuration {
-      image_id_override = %[2]q
-      image_type        = %[3]q
+      image_id_override = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+      image_type        = "ECS_AL2"
     }
 
     max_vcpus = 16
@@ -2175,5 +2177,5 @@ resource "aws_batch_compute_environment" "test" {
   type         = "MANAGED"
   depends_on   = [aws_iam_role_policy_attachment.batch_service]
 }
-`, rName, image_id_override, image_type))
+`, rName))
 }
