@@ -14,6 +14,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+func init() {
+	acctest.RegisterServiceErrorCheckFunc(licensemanager.EndpointsID, testAccErrorCheckSkipLicenseManager)
+}
+
+func testAccErrorCheckSkipLicenseManager(t *testing.T) resource.ErrorCheckFunc {
+	return acctest.ErrorCheckSkipMessagesContaining(t,
+		"ResourceLimitExceededException",
+	)
+}
+
 func TestAccLicenseManagerLicenseConfiguration_basic(t *testing.T) {
 	var licenseConfiguration licensemanager.LicenseConfiguration
 	resourceName := "aws_licensemanager_license_configuration.example"
