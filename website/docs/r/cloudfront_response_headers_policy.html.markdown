@@ -27,7 +27,7 @@ resource "aws_cloudfront_response_headers_policy" "example" {
 
     access_control_allow_headers {
       items = ["test"]
-	}
+    }
 
     access_control_allow_methods {
       items = ["GET"]
@@ -37,7 +37,7 @@ resource "aws_cloudfront_response_headers_policy" "example" {
       items = ["test.example.comtest"]
     }
 
-	origin_override = true
+    origin_override = true
   }
 }
 ```
