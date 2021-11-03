@@ -35,6 +35,10 @@ func ResourceComputeEnvironment() *schema.Resource {
 		),
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"compute_environment_name": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -186,6 +190,10 @@ func ResourceComputeEnvironment() *schema.Resource {
 					},
 				},
 			},
+			"ecs_cluster_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"service_role": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -201,6 +209,14 @@ func ResourceComputeEnvironment() *schema.Resource {
 				ValidateFunc: validation.StringInSlice(batch.CEState_Values(), true),
 				Default:      batch.CEStateEnabled,
 			},
+			"status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"status_reason": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 			"type": {
@@ -211,22 +227,6 @@ func ResourceComputeEnvironment() *schema.Resource {
 					return strings.ToUpper(val.(string))
 				},
 				ValidateFunc: validation.StringInSlice(batch.CEType_Values(), true),
-			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"ecs_cluster_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"status_reason": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 		},
 	}
