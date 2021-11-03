@@ -217,7 +217,7 @@ func testAccUserProfile_kernelGatewayAppSettings_lifecycleconfig(t *testing.T) {
 	})
 }
 
-func testAccUserProfile_kernelGatewayAppSettings_imageeconfig(t *testing.T) {
+func testAccUserProfile_kernelGatewayAppSettings_imageconfig(t *testing.T) {
 
     if os.Getenv("SAGEMAKER_IMAGE_VERSION_BASE_IMAGE") == "" {
 		t.Skip("Environment variable SAGEMAKER_IMAGE_VERSION_BASE_IMAGE is not set")
