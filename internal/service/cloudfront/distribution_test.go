@@ -2679,7 +2679,7 @@ resource "aws_cloudfront_distribution" "main" {
     cached_methods   = ["GET", "HEAD"]
     target_origin_id = "myCustomOrigin"
     cache_policy_id  = aws_cloudfront_cache_policy.cache_policy.id
-  
+
     response_headers_policy_id = aws_cloudfront_response_headers_policy.response_headers_policy.id
 
     viewer_protocol_policy = "allow-all"
