@@ -3,12 +3,15 @@ subcategory: "CloudFront"
 layout: "aws"
 page_title: "AWS: aws_cloudfront_response_headers_policy"
 description: |-
-A response headers policy.
-A response headers policy contains information about a set of HTTP response headers and their values.
-After you create a response headers policy, you can use its ID to attach it to one or more cache behaviors in a CloudFront distribution. When it’s attached to a cache behavior, CloudFront adds the headers in the policy to every response that it sends for requests that match the cache behavior.
+  Provides a CloudFront response headers policy resource.
 ---
 
 # Resource: aws_cloudfront_response_headers_policy
+
+Provides a CloudFront response headers policy resource.
+A response headers policy contains information about a set of HTTP response headers and their values.
+After you create a response headers policy, you can use its ID to attach it to one or more cache behaviors in a CloudFront distribution.
+When it’s attached to a cache behavior, CloudFront adds the headers in the policy to every response that it sends for requests that match the cache behavior.
 
 ## Example Usage
 
