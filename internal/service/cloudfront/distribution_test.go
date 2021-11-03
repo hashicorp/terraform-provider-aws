@@ -1738,20 +1738,25 @@ resource "aws_cloudfront_cache_policy" "example" {
 }
 
 resource "aws_cloudfront_response_headers_policy" "example" {
-  name        = "test-policy%[1]d"
+  name    = "test-policy%[1]d"
   comment = "test comment"
+
   cors_config {
-	access_control_allow_credentials = true
-	access_control_allow_headers {
-	  items = ["test"]
-	}
-	access_control_allow_methods {
-	  items = ["GET"]
-	}
-	access_control_allow_origins {
-	  items = ["test.example.comtest"]
-	}
-	origin_override = true
+    access_control_allow_credentials = true
+
+    access_control_allow_headers {
+      items = ["test"]
+    }
+
+    access_control_allow_methods {
+      items = ["GET"]
+    }
+
+    access_control_allow_origins {
+      items = ["test.example.comtest"]
+    }
+
+    origin_override = true
   }
 }
 
@@ -1871,20 +1876,25 @@ resource "aws_cloudfront_cache_policy" "example" {
 }
 
 resource "aws_cloudfront_response_headers_policy" "example" {
-  name        = "test-policy%[1]d"
+  name    = "test-policy%[1]d"
   comment = "test comment"
+
   cors_config {
-	access_control_allow_credentials = true
-	access_control_allow_headers {
-	  items = ["test"]
-	}
-	access_control_allow_methods {
-	  items = ["GET"]
-	}
-	access_control_allow_origins {
-	  items = ["test.example.comtest"]
-	}
-	origin_override = true
+    access_control_allow_credentials = true
+
+    access_control_allow_headers {
+      items = ["test"]
+    }
+
+    access_control_allow_methods {
+      items = ["GET"]
+    }
+
+    access_control_allow_origins {
+      items = ["test.example.comtest"]
+    }
+
+    origin_override = true
   }
 }
 
@@ -1942,8 +1952,8 @@ resource "aws_cloudfront_distribution" "custom_distribution" {
     target_origin_id = "myCustomOrigin"
     smooth_streaming = false
 
-    origin_request_policy_id = aws_cloudfront_origin_request_policy.test_policy.id
-    cache_policy_id          = aws_cloudfront_cache_policy.example.id
+    origin_request_policy_id   = aws_cloudfront_origin_request_policy.test_policy.id
+    cache_policy_id            = aws_cloudfront_cache_policy.example.id
     response_headers_policy_id = aws_cloudfront_response_headers_policy.example.id
 
     viewer_protocol_policy = "allow-all"
@@ -1956,8 +1966,8 @@ resource "aws_cloudfront_distribution" "custom_distribution" {
     smooth_streaming = false
     path_pattern     = "/*"
 
-    origin_request_policy_id = aws_cloudfront_origin_request_policy.test_policy.id
-    cache_policy_id          = aws_cloudfront_cache_policy.example.id
+    origin_request_policy_id   = aws_cloudfront_origin_request_policy.test_policy.id
+    cache_policy_id            = aws_cloudfront_cache_policy.example.id
     response_headers_policy_id = aws_cloudfront_response_headers_policy.example.id
 
     viewer_protocol_policy = "allow-all"
@@ -2668,7 +2678,8 @@ resource "aws_cloudfront_distribution" "main" {
     allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
     cached_methods   = ["GET", "HEAD"]
     target_origin_id = "myCustomOrigin"
-    cache_policy_id = aws_cloudfront_cache_policy.cache_policy.id
+    cache_policy_id  = aws_cloudfront_cache_policy.cache_policy.id
+  
     response_headers_policy_id = aws_cloudfront_response_headers_policy.response_headers_policy.id
 
     viewer_protocol_policy = "allow-all"
@@ -2709,21 +2720,26 @@ resource "aws_cloudfront_cache_policy" "cache_policy" {
 }
 
 resource "aws_cloudfront_response_headers_policy" "response_headers_policy" {
-	name        = "test-policy%[1]d"
-	comment = "test comment"
-	cors_config {
-	access_control_allow_credentials = true
-	access_control_allow_headers {
-		items = ["test"]
-	}
-	access_control_allow_methods {
-		items = ["GET"]
-	}
-	access_control_allow_origins {
-		items = ["test.example.comtest"]
-	}
-	origin_override = true
-	}
+  name    = "test-policy%[1]d"
+  comment = "test comment"
+
+  cors_config {
+    access_control_allow_credentials = true
+
+    access_control_allow_headers {
+      items = ["test"]
+    }
+
+    access_control_allow_methods {
+      items = ["GET"]
+    }
+
+    access_control_allow_origins {
+      items = ["test.example.comtest"]
+    }
+
+    origin_override = true
+  }
 }
 `, rInt, testAccDistributionRetainConfig())
 }
