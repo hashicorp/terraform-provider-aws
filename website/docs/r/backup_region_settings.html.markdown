@@ -41,7 +41,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Backup Region Settings can be imported using the `region`, e.g.
+Backup Region Settings can be imported using the `region`, e.g.,
 
 ```
 $ terraform import aws_backup_region_settings.test us-west-2

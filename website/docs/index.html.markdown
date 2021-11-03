@@ -136,7 +136,7 @@ If you're running Terraform on EKS and have configured [IAM Roles for Service Ac
 
 ### Custom User-Agent Information
 
-By default, the underlying AWS client used by the Terraform AWS Provider creates requests with User-Agent headers including information about Terraform and AWS Go SDK versions. To provide additional information in the User-Agent headers, the `TF_APPEND_USER_AGENT` environment variable can be set and its value will be directly added to HTTP requests. e.g.
+By default, the underlying AWS client used by the Terraform AWS Provider creates requests with User-Agent headers including information about Terraform and AWS Go SDK versions. To provide additional information in the User-Agent headers, the `TF_APPEND_USER_AGENT` environment variable can be set and its value will be directly added to HTTP requestsE.g.,
 
 ```sh
 $ export TF_APPEND_USER_AGENT="JenkinsAgent/i-12345678 BuildID/1234 (Optional Extra Information)"
@@ -173,10 +173,12 @@ provider "aws" {
 }
 ```
 
+> **Hands-on:** Try the [Use AssumeRole to Provision AWS Resources Across Accounts](https://learn.hashicorp.com/tutorials/terraform/aws-assumerole) tutorial on HashiCorp Learn.
+
 ## Argument Reference
 
 In addition to [generic `provider` arguments](https://www.terraform.io/docs/configuration/providers.html)
-(e.g. `alias` and `version`), the following arguments are supported in the AWS
+(e.g., `alias` and `version`), the following arguments are supported in the AWS
  `provider` block:
 
 * `access_key` - (Optional) This is the AWS access key. It must be provided, but
@@ -196,6 +198,9 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
 
 * `assume_role` - (Optional) An `assume_role` block (documented below). Only one
   `assume_role` block may be in the configuration.
+
+* `http_proxy` - (Optional) The address of an HTTP proxy to use when accessing the AWS API.
+  Can also be configured using the `HTTP_PROXY` or `HTTPS_PROXY` environment variables.
 
 * `endpoints` - (Optional) Configuration block for customizing service endpoints. See the
 [Custom Service Endpoints Guide](/docs/providers/aws/guides/custom-service-endpoints.html)
@@ -389,7 +394,7 @@ The `assume_role` configuration block supports the following optional arguments:
 
 ### default_tags Configuration Block
 
-+> **Hands-on:** Try the [Configure Default Tags for AWS Resources](https://learn.hashicorp.com/tutorials/terraform/aws-default-tags?in=terraform/aws) tutorial on HashiCorp Learn.
+> **Hands-on:** Try the [Configure Default Tags for AWS Resources](https://learn.hashicorp.com/tutorials/terraform/aws-default-tags?in=terraform/aws) tutorial on HashiCorp Learn.
 
 Example: Resource with provider default tags
 

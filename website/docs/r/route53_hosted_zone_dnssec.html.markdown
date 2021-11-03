@@ -100,7 +100,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_route53_hosted_zone_dnssec` resources can be imported by using the Route 53 Hosted Zone identifier, e.g.
+`aws_route53_hosted_zone_dnssec` resources can be imported by using the Route 53 Hosted Zone identifier, e.g.,
 
 ```
 $ terraform import aws_route53_hosted_zone_dnssec.example Z1D633PJN98FT9

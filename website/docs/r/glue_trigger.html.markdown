@@ -162,7 +162,7 @@ configuration options:
 
 ## Import
 
-Glue Triggers can be imported using `name`, e.g.
+Glue Triggers can be imported using `name`, e.g.,
 
 ```
 $ terraform import aws_glue_trigger.MyTrigger MyTrigger

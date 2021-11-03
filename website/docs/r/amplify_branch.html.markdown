@@ -185,7 +185,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Amplify branch can be imported using `app_id` and `branch_name`, e.g.
+Amplify branch can be imported using `app_id` and `branch_name`, e.g.,
 
 ```
 $ terraform import aws_amplify_branch.master d2ypk4k47z8u6/master

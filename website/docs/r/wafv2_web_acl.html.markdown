@@ -307,7 +307,7 @@ The `override_action` block supports the following arguments:
 
 ~> **NOTE:** One of `count` or `none`, expressed as an empty configuration block `{}`, is required when specifying an `override_action`
 
-* `count` - (Optional) Override the rule action setting to count (i.e. only count matches). Configured as an empty block `{}`.
+* `count` - (Optional) Override the rule action setting to count (i.e., only count matches). Configured as an empty block `{}`.
 * `none` - (Optional) Don't override the rule action setting. Configured as an empty block `{}`.
 
 ### Allow
@@ -564,7 +564,8 @@ The `single_query_argument` block supports the following arguments:
 The `text_transformation` block supports the following arguments:
 
 * `priority` - (Required) The relative processing order for multiple transformations that are defined for a rule statement. AWS WAF processes all transformations, from lowest priority to highest, before inspecting the transformed content.
-* `type` - (Required) The transformation to apply, you can specify the following types: `NONE`, `COMPRESS_WHITE_SPACE`, `HTML_ENTITY_DECODE`, `LOWERCASE`, `CMD_LINE`, `URL_DECODE`. See the [documentation](https://docs.aws.amazon.com/waf/latest/APIReference/API_TextTransformation.html) for more details.
+* `type` - (Required) The transformation to apply, please refer to the Text Transformation [documentation](https://docs.aws.amazon.com/waf/latest/APIReference/API_TextTransformation.html) for more details.
+
 
 ### Visibility Configuration
 
@@ -585,7 +586,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-WAFv2 Web ACLs can be imported using `ID/Name/Scope` e.g.
+WAFv2 Web ACLs can be imported using `ID/Name/Scope` e.g.,
 
 ```
 $ terraform import aws_wafv2_web_acl.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc/example/REGIONAL

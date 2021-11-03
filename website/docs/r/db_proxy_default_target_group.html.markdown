@@ -83,7 +83,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-DB proxy default target groups can be imported using the `db_proxy_name`, e.g.
+DB proxy default target groups can be imported using the `db_proxy_name`, e.g.,
 
 ```
 $ terraform import aws_db_proxy_default_target_group.example example

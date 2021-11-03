@@ -306,7 +306,7 @@ of several sub-resources - these resources are laid out below.
 * `origin_request_policy_id` (Optional) - The unique identifier of the origin request policy
     that is attached to the behavior.
 
-* `path_pattern` (Required) - The pattern (for example, `images/*.jpg)` that
+* `path_pattern` (Required) - The pattern (for example, `images/*.jpg`) that
     specifies which requests you want this cache behavior to apply to.
 
 * `realtime_log_config_arn` (Optional) - The ARN of the [real-time log configuration](cloudfront_realtime_log_config.html)
@@ -626,7 +626,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Cloudfront Distributions can be imported using the `id`, e.g.
+Cloudfront Distributions can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_cloudfront_distribution.distribution E74FTE3EXAMPLE

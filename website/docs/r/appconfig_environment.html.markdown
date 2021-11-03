@@ -66,7 +66,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-AppConfig Environments can be imported by using the environment ID and application ID separated by a colon (`:`), e.g.
+AppConfig Environments can be imported by using the environment ID and application ID separated by a colon (`:`), e.g.,
 
 ```
 $ terraform import aws_appconfig_environment.example 71abcde:11xxxxx

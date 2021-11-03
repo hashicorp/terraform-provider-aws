@@ -32,6 +32,7 @@ variable "service_labels" {
     "budgets",
     "chime",
     "cloud9",
+    "cloudcontrolapi",
     "clouddirectory",
     "cloudformation",
     "cloudfront",
@@ -53,6 +54,7 @@ variable "service_labels" {
     "codestarconnections",
     "codestarnotifications",
     "cognito",
+    "cognitoidentityprovider",
     "comprehend",
     "comprehendmedical",
     "computeoptimizer",
@@ -88,7 +90,6 @@ variable "service_labels" {
     "elbv2",
     "emr",
     "emrcontainers",
-    "eventbridge",
     "firehose",
     "fms",
     "forecastservice",
@@ -138,6 +139,7 @@ variable "service_labels" {
     "mediapackagevod",
     "mediastore",
     "mediatailor",
+    "memorydb",
     "meteringmarketplace",
     "mobile",
     "mq",
@@ -167,6 +169,8 @@ variable "service_labels" {
     "robomaker",
     "route53",
     "route53domains",
+    "route53recoverycontrolconfig",
+    "route53recoveryreadiness",
     "route53resolver",
     "s3",
     "s3control",
@@ -218,7 +222,8 @@ variable "service_labels" {
 resource "github_issue_label" "service" {
   for_each = var.service_labels
 
-  repository = "terraform-provider-aws"
-  name       = "service/${each.value}"
-  color      = "7b42bc" # color:terraform (logomark)
+  repository  = "terraform-provider-aws"
+  name        = "service/${each.value}"
+  color       = "7b42bc" # color:terraform (logomark)
+  description = "Issues and PRs that pertain to the ${each.value} service."
 }
