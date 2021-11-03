@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceResponseHeadersPolicy() *schema.Resource {
@@ -275,24 +276,22 @@ func resourceResponseHeadersPolicyCreate(d *schema.ResourceData, meta interface{
 
 func resourceResponseHeadersPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFrontConn
-	request := &cloudfront.GetResponseHeadersPolicyInput{
-		Id: aws.String(d.Id()),
-	}
 
-	resp, err := conn.GetResponseHeadersPolicy(request)
+	output, err := FindResponseHeadersPolicyByID(conn, d.Id())
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudFront Response Headers Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return err
+		return fmt.Errorf("error reading CloudFront Response Headers Policy (%s): %w", d.Id(), err)
 	}
-	d.Set("etag", resp.ETag)
 
-	if err := setCloudFrontResponseHeadersPolicy(d, resp.ResponseHeadersPolicy.ResponseHeadersPolicyConfig); err != nil {
+	d.Set("etag", output.ETag)
+
+	if err := setCloudFrontResponseHeadersPolicy(d, output.ResponseHeadersPolicy.ResponseHeadersPolicyConfig); err != nil {
 		return fmt.Errorf("unable to store response headers policy in config: %s", err.Error())
 	}
 
@@ -319,17 +318,18 @@ func resourceResponseHeadersPolicyUpdate(d *schema.ResourceData, meta interface{
 func resourceResponseHeadersPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFrontConn
 
-	request := &cloudfront.DeleteResponseHeadersPolicyInput{
+	log.Printf("[DEBUG] Deleting CloudFront Response Headers Policy: (%s)", d.Id())
+	_, err := conn.DeleteResponseHeadersPolicy(&cloudfront.DeleteResponseHeadersPolicyInput{
 		Id:      aws.String(d.Id()),
 		IfMatch: aws.String(d.Get("etag").(string)),
+	})
+
+	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchResponseHeadersPolicy) {
+		return nil
 	}
 
-	_, err := conn.DeleteResponseHeadersPolicy(request)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeNoSuchResponseHeadersPolicy, "") {
-			return nil
-		}
-		return err
+		return fmt.Errorf("error deleting CloudFront Response Headers Policy (%s): %w", d.Id(), err)
 	}
 
 	return nil
