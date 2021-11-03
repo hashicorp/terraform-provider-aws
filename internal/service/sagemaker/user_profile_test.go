@@ -219,7 +219,7 @@ func testAccUserProfile_kernelGatewayAppSettings_lifecycleconfig(t *testing.T) {
 
 func testAccUserProfile_kernelGatewayAppSettings_imageconfig(t *testing.T) {
 
-    if os.Getenv("SAGEMAKER_IMAGE_VERSION_BASE_IMAGE") == "" {
+	if os.Getenv("SAGEMAKER_IMAGE_VERSION_BASE_IMAGE") == "" {
 		t.Skip("Environment variable SAGEMAKER_IMAGE_VERSION_BASE_IMAGE is not set")
 	}
 
@@ -604,5 +604,5 @@ resource "aws_sagemaker_user_profile" "test" {
 
   depends_on = [aws_iam_role_policy_attachment.test]
 }
-`, rName)
+`, rName, baseImage)
 }
