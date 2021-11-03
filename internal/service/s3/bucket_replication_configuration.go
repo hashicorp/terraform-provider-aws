@@ -13,9 +13,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/s3/waiter"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/terraform-providers/terraform-provider-aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/internal/service/s3/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceBucketReplicationConfiguration() *schema.Resource {
