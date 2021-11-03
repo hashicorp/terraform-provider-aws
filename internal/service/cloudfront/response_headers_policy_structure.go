@@ -7,42 +7,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
-func expandResponseHeadersPolicyAccessControlAllowHeaders(tfMap map[string]interface{}) *cloudfront.ResponseHeadersPolicyAccessControlAllowHeaders {
-	if tfMap == nil {
-		return nil
-	}
-	items := flex.ExpandStringSet(tfMap["items"].(*schema.Set))
-	apiObject := &cloudfront.ResponseHeadersPolicyAccessControlAllowHeaders{
-		Items:    items,
-		Quantity: aws.Int64(int64(len(items))),
-	}
-	return apiObject
-}
-
-func expandResponseHeadersPolicyAccessControlAllowMethods(tfMap map[string]interface{}) *cloudfront.ResponseHeadersPolicyAccessControlAllowMethods {
-	if tfMap == nil {
-		return nil
-	}
-	items := flex.ExpandStringSet(tfMap["items"].(*schema.Set))
-	apiObject := &cloudfront.ResponseHeadersPolicyAccessControlAllowMethods{
-		Items:    items,
-		Quantity: aws.Int64(int64(len(items))),
-	}
-	return apiObject
-}
-
-func expandResponseHeadersPolicyAccessControlAllowOrigins(tfMap map[string]interface{}) *cloudfront.ResponseHeadersPolicyAccessControlAllowOrigins {
-	if tfMap == nil {
-		return nil
-	}
-	items := flex.ExpandStringSet(tfMap["items"].(*schema.Set))
-	apiObject := &cloudfront.ResponseHeadersPolicyAccessControlAllowOrigins{
-		Items:    items,
-		Quantity: aws.Int64(int64(len(items))),
-	}
-	return apiObject
-}
-
 func expandResponseHeadersPolicyAccessControlExposeHeaders(tfMap map[string]interface{}) *cloudfront.ResponseHeadersPolicyAccessControlExposeHeaders {
 	if tfMap == nil {
 		return nil

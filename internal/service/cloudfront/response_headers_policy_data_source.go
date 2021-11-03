@@ -296,18 +296,30 @@ func dataSourceResponseHeadersPolicyRead(d *schema.ResourceData, meta interface{
 
 	d.SetId(responseHeadersPolicyID)
 
-	config := output.ResponseHeadersPolicy.ResponseHeadersPolicyConfig
-	d.Set("comment", config.Comment)
-	if err := d.Set("cors_config", setCorsConfig(config.CorsConfig)); err != nil {
-		return fmt.Errorf("error setting cors_config: %w", err)
+	apiObject := output.ResponseHeadersPolicy.ResponseHeadersPolicyConfig
+	d.Set("comment", apiObject.Comment)
+	if apiObject.CorsConfig != nil {
+		if err := d.Set("cors_config", []interface{}{flattenResponseHeadersPolicyCorsConfig(apiObject.CorsConfig)}); err != nil {
+			return fmt.Errorf("error setting cors_config: %w", err)
+		}
+	} else {
+		d.Set("cors_config", nil)
 	}
-	if err := d.Set("custom_headers_config", flattenCustomHeadersConfig(config.CustomHeadersConfig)); err != nil {
-		return fmt.Errorf("error setting custom_headers_config: %w", err)
+	if apiObject.CustomHeadersConfig != nil {
+		if err := d.Set("custom_headers_config", []interface{}{flattenResponseHeadersPolicyCustomHeadersConfig(apiObject.CustomHeadersConfig)}); err != nil {
+			return fmt.Errorf("error setting custom_headers_config: %w", err)
+		}
+	} else {
+		d.Set("custom_headers_config", nil)
 	}
 	d.Set("etag", output.ETag)
-	d.Set("name", config.Name)
-	if err := d.Set("security_headers_config", setSecurityHeadersConfig(config.SecurityHeadersConfig)); err != nil {
-		return fmt.Errorf("error setting security_headers_config: %w", err)
+	d.Set("name", apiObject.Name)
+	if apiObject.SecurityHeadersConfig != nil {
+		if err := d.Set("security_headers_config", []interface{}{flattenResponseHeadersPolicySecurityHeadersConfig(apiObject.SecurityHeadersConfig)}); err != nil {
+			return fmt.Errorf("error setting security_headers_config: %w", err)
+		}
+	} else {
+		d.Set("security_headers_config", nil)
 	}
 
 	return nil

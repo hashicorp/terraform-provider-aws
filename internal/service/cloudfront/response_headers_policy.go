@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -275,8 +276,28 @@ func resourceResponseHeadersPolicyCreate(d *schema.ResourceData, meta interface{
 	conn := meta.(*conns.AWSClient).CloudFrontConn
 
 	name := d.Get("name").(string)
+	apiObject := &cloudfront.ResponseHeadersPolicyConfig{
+		Name: aws.String(name),
+	}
+
+	if v, ok := d.GetOk("comment"); ok {
+		apiObject.Comment = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("cors_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		apiObject.CorsConfig = expandResponseHeadersPolicyCorsConfig(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("custom_headers_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		apiObject.CustomHeadersConfig = expandResponseHeadersPolicyCustomHeadersConfig(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("security_headers_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		apiObject.SecurityHeadersConfig = expandResponseHeadersPolicySecurityHeadersConfig(v.([]interface{})[0].(map[string]interface{}))
+	}
+
 	input := &cloudfront.CreateResponseHeadersPolicyInput{
-		ResponseHeadersPolicyConfig: expandCloudFrontResponseHeadersPolicyConfig(d),
+		ResponseHeadersPolicyConfig: apiObject,
 	}
 
 	log.Printf("[DEBUG] Creating CloudFront Response Headers Policy: (%s)", input)
@@ -306,18 +327,30 @@ func resourceResponseHeadersPolicyRead(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("error reading CloudFront Response Headers Policy (%s): %w", d.Id(), err)
 	}
 
-	config := output.ResponseHeadersPolicy.ResponseHeadersPolicyConfig
-	d.Set("comment", config.Comment)
-	if err := d.Set("cors_config", setCorsConfig(config.CorsConfig)); err != nil {
-		return fmt.Errorf("error setting cors_config: %w", err)
+	apiObject := output.ResponseHeadersPolicy.ResponseHeadersPolicyConfig
+	d.Set("comment", apiObject.Comment)
+	if apiObject.CorsConfig != nil {
+		if err := d.Set("cors_config", []interface{}{flattenResponseHeadersPolicyCorsConfig(apiObject.CorsConfig)}); err != nil {
+			return fmt.Errorf("error setting cors_config: %w", err)
+		}
+	} else {
+		d.Set("cors_config", nil)
 	}
-	if err := d.Set("custom_headers_config", flattenCustomHeadersConfig(config.CustomHeadersConfig)); err != nil {
-		return fmt.Errorf("error setting custom_headers_config: %w", err)
+	if apiObject.CustomHeadersConfig != nil {
+		if err := d.Set("custom_headers_config", []interface{}{flattenResponseHeadersPolicyCustomHeadersConfig(apiObject.CustomHeadersConfig)}); err != nil {
+			return fmt.Errorf("error setting custom_headers_config: %w", err)
+		}
+	} else {
+		d.Set("custom_headers_config", nil)
 	}
 	d.Set("etag", output.ETag)
-	d.Set("name", config.Name)
-	if err := d.Set("security_headers_config", setSecurityHeadersConfig(config.SecurityHeadersConfig)); err != nil {
-		return fmt.Errorf("error setting security_headers_config: %w", err)
+	d.Set("name", apiObject.Name)
+	if apiObject.SecurityHeadersConfig != nil {
+		if err := d.Set("security_headers_config", []interface{}{flattenResponseHeadersPolicySecurityHeadersConfig(apiObject.SecurityHeadersConfig)}); err != nil {
+			return fmt.Errorf("error setting security_headers_config: %w", err)
+		}
+	} else {
+		d.Set("security_headers_config", nil)
 	}
 
 	return nil
@@ -326,15 +359,37 @@ func resourceResponseHeadersPolicyRead(d *schema.ResourceData, meta interface{})
 func resourceResponseHeadersPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFrontConn
 
-	request := &cloudfront.UpdateResponseHeadersPolicyInput{
-		ResponseHeadersPolicyConfig: expandCloudFrontResponseHeadersPolicyConfig(d),
-		Id:                          aws.String(d.Id()),
-		IfMatch:                     aws.String(d.Get("etag").(string)),
+	apiObject := &cloudfront.ResponseHeadersPolicyConfig{
+		Name: aws.String(d.Get("name").(string)),
 	}
 
-	_, err := conn.UpdateResponseHeadersPolicy(request)
+	if v, ok := d.GetOk("comment"); ok {
+		apiObject.Comment = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("cors_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		apiObject.CorsConfig = expandResponseHeadersPolicyCorsConfig(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("custom_headers_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		apiObject.CustomHeadersConfig = expandResponseHeadersPolicyCustomHeadersConfig(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("security_headers_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		apiObject.SecurityHeadersConfig = expandResponseHeadersPolicySecurityHeadersConfig(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	input := &cloudfront.UpdateResponseHeadersPolicyInput{
+		Id:                          aws.String(d.Id()),
+		IfMatch:                     aws.String(d.Get("etag").(string)),
+		ResponseHeadersPolicyConfig: apiObject,
+	}
+
+	log.Printf("[DEBUG] Creating CloudFront Response Headers Policy: (%s)", input)
+	_, err := conn.UpdateResponseHeadersPolicy(input)
+
 	if err != nil {
-		return err
+		return fmt.Errorf("error updating CloudFront Response Headers Policy (%s): %w", d.Id(), err)
 	}
 
 	return resourceResponseHeadersPolicyRead(d, meta)
@@ -358,4 +413,312 @@ func resourceResponseHeadersPolicyDelete(d *schema.ResourceData, meta interface{
 	}
 
 	return nil
+}
+
+//
+// cors_config:
+//
+
+func expandResponseHeadersPolicyCorsConfig(tfMap map[string]interface{}) *cloudfront.ResponseHeadersPolicyCorsConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &cloudfront.ResponseHeadersPolicyCorsConfig{}
+
+	if v, ok := tfMap["access_control_allow_credentials"].(bool); ok {
+		apiObject.AccessControlAllowCredentials = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["access_control_allow_headers"].([]interface{}); ok && len(v) > 0 {
+		apiObject.AccessControlAllowHeaders = expandResponseHeadersPolicyAccessControlAllowHeaders(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["access_control_allow_methods"].([]interface{}); ok && len(v) > 0 {
+		apiObject.AccessControlAllowMethods = expandResponseHeadersPolicyAccessControlAllowMethods(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["access_control_allow_origins"].([]interface{}); ok && len(v) > 0 {
+		apiObject.AccessControlAllowOrigins = expandResponseHeadersPolicyAccessControlAllowOrigins(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["access_control_max_age_sec"].(int); ok && v != 0 {
+		apiObject.AccessControlMaxAgeSec = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["origin_override"].(bool); ok {
+		apiObject.OriginOverride = aws.Bool(v)
+	}
+
+	return apiObject
+}
+
+func expandResponseHeadersPolicyAccessControlAllowHeaders(tfMap map[string]interface{}) *cloudfront.ResponseHeadersPolicyAccessControlAllowHeaders {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &cloudfront.ResponseHeadersPolicyAccessControlAllowHeaders{}
+
+	if v, ok := tfMap["items"].(*schema.Set); ok && v.Len() > 0 {
+		items := flex.ExpandStringSet(v)
+		apiObject.Items = items
+		apiObject.Quantity = aws.Int64(int64(len(items)))
+	}
+
+	return apiObject
+}
+
+func expandResponseHeadersPolicyAccessControlAllowMethods(tfMap map[string]interface{}) *cloudfront.ResponseHeadersPolicyAccessControlAllowMethods {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &cloudfront.ResponseHeadersPolicyAccessControlAllowMethods{}
+
+	if v, ok := tfMap["items"].(*schema.Set); ok && v.Len() > 0 {
+		items := flex.ExpandStringSet(v)
+		apiObject.Items = items
+		apiObject.Quantity = aws.Int64(int64(len(items)))
+	}
+
+	return apiObject
+}
+
+func expandResponseHeadersPolicyAccessControlAllowOrigins(tfMap map[string]interface{}) *cloudfront.ResponseHeadersPolicyAccessControlAllowOrigins {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &cloudfront.ResponseHeadersPolicyAccessControlAllowOrigins{}
+
+	if v, ok := tfMap["items"].(*schema.Set); ok && v.Len() > 0 {
+		items := flex.ExpandStringSet(v)
+		apiObject.Items = items
+		apiObject.Quantity = aws.Int64(int64(len(items)))
+	}
+
+	return apiObject
+}
+
+func flattenResponseHeadersPolicyCorsConfig(apiObject *cloudfront.ResponseHeadersPolicyCorsConfig) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.AccessControlAllowCredentials; v != nil {
+		tfMap["access_control_allow_credentials"] = aws.BoolValue(v)
+	}
+
+	if v := apiObject.AccessControlAllowHeaders; v != nil {
+		tfMap["access_control_allow_headers"] = []interface{}{flattenResponseHeadersPolicyAccessControlAllowHeaders(v)}
+	}
+
+	if v := apiObject.AccessControlAllowMethods; v != nil {
+		tfMap["access_control_allow_methods"] = []interface{}{flattenResponseHeadersPolicyAccessControlAllowMethods(v)}
+	}
+
+	if v := apiObject.AccessControlAllowOrigins; v != nil {
+		tfMap["access_control_allow_origins"] = []interface{}{flattenResponseHeadersPolicyAccessControlAllowOrigins(v)}
+	}
+
+	if v := apiObject.AccessControlMaxAgeSec; v != nil {
+		tfMap["access_control_max_age_sec"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.OriginOverride; v != nil {
+		tfMap["origin_override"] = aws.BoolValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenResponseHeadersPolicyAccessControlAllowHeaders(apiObject *cloudfront.ResponseHeadersPolicyAccessControlAllowHeaders) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Items; v != nil {
+		tfMap["items"] = aws.StringValueSlice(v)
+	}
+
+	return tfMap
+}
+
+func flattenResponseHeadersPolicyAccessControlAllowMethods(apiObject *cloudfront.ResponseHeadersPolicyAccessControlAllowMethods) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Items; v != nil {
+		tfMap["items"] = aws.StringValueSlice(v)
+	}
+
+	return tfMap
+}
+
+func flattenResponseHeadersPolicyAccessControlAllowOrigins(apiObject *cloudfront.ResponseHeadersPolicyAccessControlAllowOrigins) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Items; v != nil {
+		tfMap["items"] = aws.StringValueSlice(v)
+	}
+
+	return tfMap
+}
+
+//
+// custom_headers_config:
+//
+
+func expandResponseHeadersPolicyCustomHeadersConfig(tfMap map[string]interface{}) *cloudfront.ResponseHeadersPolicyCustomHeadersConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &cloudfront.ResponseHeadersPolicyCustomHeadersConfig{}
+
+	if v, ok := tfMap["items"].(*schema.Set); ok && v.Len() > 0 {
+		items := expandResponseHeadersPolicyCustomHeaders(v.List())
+		apiObject.Items = items
+		apiObject.Quantity = aws.Int64(int64(len(items)))
+	}
+
+	return apiObject
+}
+
+func expandResponseHeadersPolicyCustomHeader(tfMap map[string]interface{}) *cloudfront.ResponseHeadersPolicyCustomHeader {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &cloudfront.ResponseHeadersPolicyCustomHeader{}
+
+	if v := apiObject.Header; v != nil {
+		tfMap["header"] = aws.StringValue(v)
+	}
+
+	if v, ok := tfMap["override"].(bool); ok {
+		apiObject.Override = aws.Bool(v)
+	}
+
+	if v := apiObject.Value; v != nil {
+		tfMap["value"] = aws.StringValue(v)
+	}
+
+	return apiObject
+}
+
+func expandResponseHeadersPolicyCustomHeaders(tfList []interface{}) []*cloudfront.ResponseHeadersPolicyCustomHeader {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []*cloudfront.ResponseHeadersPolicyCustomHeader
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		apiObject := expandResponseHeadersPolicyCustomHeader(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func flattenResponseHeadersPolicyCustomHeadersConfig(apiObject *cloudfront.ResponseHeadersPolicyCustomHeadersConfig) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Items; v != nil {
+		tfMap["items"] = flattenResponseHeadersPolicyCustomHeaders(v)
+	}
+
+	return tfMap
+}
+
+func flattenResponseHeadersPolicyCustomHeader(apiObject *cloudfront.ResponseHeadersPolicyCustomHeader) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v, ok := tfMap["header"].(string); ok && v != "" {
+		apiObject.Header = aws.String(v)
+	}
+
+	if v, ok := tfMap["override"].(bool); ok && v {
+		apiObject.Override = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["value"].(string); ok && v != "" {
+		apiObject.Value = aws.String(v)
+	}
+
+	return tfMap
+}
+
+func flattenResponseHeadersPolicyCustomHeaders(apiObjects []*cloudfront.ResponseHeadersPolicyCustomHeader) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenResponseHeadersPolicyCustomHeader(apiObject))
+	}
+
+	return tfList
+}
+
+//
+// security_headers_config:
+//
+
+func expandResponseHeadersPolicySecurityHeadersConfig(tfMap map[string]interface{}) *cloudfront.ResponseHeadersPolicySecurityHeadersConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &cloudfront.ResponseHeadersPolicySecurityHeadersConfig{}
+
+	return apiObject
+}
+
+func flattenResponseHeadersPolicySecurityHeadersConfig(apiObject *cloudfront.ResponseHeadersPolicySecurityHeadersConfig) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	return tfMap
 }
