@@ -69,6 +69,7 @@ func dynamicPartitioningConfigurationSchema() *schema.Schema {
 					Type:     schema.TypeBool,
 					Optional: true,
 					Default:  false,
+					ForceNew: true,
 				},
 				"retry_options": {
 					Type:     schema.TypeList,
@@ -325,6 +326,7 @@ func flattenFirehoseExtendedS3Configuration(description *firehose.ExtendedS3Dest
 		m["kms_key_arn"] = aws.StringValue(description.EncryptionConfiguration.KMSEncryptionConfig.AWSKMSKeyARN)
 	}
 
+	log.Printf("Value of the extended s3 is %+v\n", m)
 	return []map[string]interface{}{m}
 }
 
@@ -1692,6 +1694,10 @@ func createExtendedS3Config(d *schema.ResourceData) *firehose.ExtendedS3Destinat
 		configuration.CloudWatchLoggingOptions = extractCloudWatchLoggingConfiguration(s3)
 	}
 
+	if _, ok := s3["dynamic_partitioning_configuration"]; ok {
+		configuration.DynamicPartitioningConfiguration = extractDynamicPartitioningConfiguration(s3)
+	}
+
 	if v, ok := s3["error_output_prefix"]; ok && v.(string) != "" {
 		configuration.ErrorOutputPrefix = aws.String(v.(string))
 	}
@@ -1779,6 +1785,10 @@ func updateExtendedS3Config(d *schema.ResourceData) *firehose.ExtendedS3Destinat
 
 	if _, ok := s3["cloudwatch_logging_options"]; ok {
 		configuration.CloudWatchLoggingOptions = extractCloudWatchLoggingConfiguration(s3)
+	}
+
+	if _, ok := s3["dynamic_partitioning_configuration"]; ok {
+		configuration.DynamicPartitioningConfiguration = extractDynamicPartitioningConfiguration(s3)
 	}
 
 	if v, ok := s3["error_output_prefix"]; ok && v.(string) != "" {
