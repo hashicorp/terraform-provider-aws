@@ -2,19 +2,20 @@ package ec2_test
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccEC2NetworkInterface_ENI_basic(t *testing.T) {
@@ -33,6 +34,7 @@ func TestAccEC2NetworkInterface_ENI_basic(t *testing.T) {
 				Config: testAccENIConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckENIExists(resourceName, &conf),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`network-interface/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "attachment.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "interface_type", "interface"),
@@ -40,6 +42,7 @@ func TestAccEC2NetworkInterface_ENI_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ipv6_addresses.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "mac_address"),
 					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
 					checkResourceAttrPrivateDNSName(resourceName, "private_dns_name", &conf.PrivateIpAddress),
 					resource.TestCheckResourceAttrSet(resourceName, "private_ip"),
 					resource.TestCheckResourceAttr(resourceName, "private_ips.#", "1"),
@@ -477,7 +480,214 @@ func TestAccEC2NetworkInterface_ENIInterfaceType_efa(t *testing.T) {
 	})
 }
 
-func testAccCheckENIExists(n string, res *ec2.NetworkInterface) resource.TestCheckFunc {
+func TestAccEC2NetworkInterface_ENI_ipv4Prefix(t *testing.T) {
+	var conf ec2.NetworkInterface
+	resourceName := "aws_network_interface.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckENIDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccENIIPV4PrefixConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckENIExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "ipv4_prefix_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ipv4_prefixes.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccENIIPV4PrefixMultipleConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckENIExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "ipv4_prefix_count", "2"),
+					resource.TestCheckResourceAttr(resourceName, "ipv4_prefixes.#", "2"),
+				),
+			},
+			{
+				Config: testAccENIIPV4PrefixConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckENIExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "ipv4_prefix_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ipv4_prefixes.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEC2NetworkInterface_ENI_ipv4PrefixCount(t *testing.T) {
+	var conf ec2.NetworkInterface
+	resourceName := "aws_network_interface.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckENIDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccENIIPV4PrefixCountConfig(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckENIExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "ipv4_prefix_count", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccENIIPV4PrefixCountConfig(rName, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckENIExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "ipv4_prefix_count", "2"),
+				),
+			},
+			{
+				Config: testAccENIIPV4PrefixCountConfig(rName, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckENIExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "ipv4_prefix_count", "0"),
+				),
+			},
+			{
+				Config: testAccENIIPV4PrefixCountConfig(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckENIExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "ipv4_prefix_count", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEC2NetworkInterface_ENI_ipv6Prefix(t *testing.T) {
+	var conf ec2.NetworkInterface
+	resourceName := "aws_network_interface.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckENIDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccENIIPV6PrefixConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckENIExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_prefix_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_prefixes.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccENIIPV6PrefixMultipleConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckENIExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_prefix_count", "2"),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_prefixes.#", "2"),
+				),
+			},
+			{
+				Config: testAccENIIPV6PrefixConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckENIExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_prefix_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_prefixes.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEC2NetworkInterface_ENI_ipv6PrefixCount(t *testing.T) {
+	var conf ec2.NetworkInterface
+	resourceName := "aws_network_interface.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckENIDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccENIIPV6PrefixCountConfig(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckENIExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_prefix_count", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccENIIPV6PrefixCountConfig(rName, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckENIExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_prefix_count", "2"),
+				),
+			},
+			{
+				Config: testAccENIIPV6PrefixCountConfig(rName, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckENIExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_prefix_count", "0"),
+				),
+			},
+			{
+				Config: testAccENIIPV6PrefixCountConfig(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckENIExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_prefix_count", "1"),
+				),
+			},
+		},
+	})
+}
+
+// checkResourceAttrPrivateDNSName ensures the Terraform state exactly matches a private DNS name
+//
+// For example: ip-172-16-10-100.us-west-2.compute.internal
+func checkResourceAttrPrivateDNSName(resourceName, attributeName string, privateIpAddress **string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		privateDnsName := fmt.Sprintf("ip-%s.%s", convertIPToDashIP(**privateIpAddress), regionalPrivateDNSSuffix(acctest.Region()))
+
+		return resource.TestCheckResourceAttr(resourceName, attributeName, privateDnsName)(s)
+	}
+}
+
+func convertIPToDashIP(ip string) string {
+	return strings.Replace(ip, ".", "-", -1)
+}
+
+func regionalPrivateDNSSuffix(region string) string {
+	if region == endpoints.UsEast1RegionID {
+		return "ec2.internal"
+	}
+
+	return fmt.Sprintf("%s.compute.internal", region)
+}
+
+func testAccCheckENIExists(n string, v *ec2.NetworkInterface) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -485,49 +695,42 @@ func testAccCheckENIExists(n string, res *ec2.NetworkInterface) resource.TestChe
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ENI ID is set")
+			return fmt.Errorf("No EC2 Network Interface ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-		input := &ec2.DescribeNetworkInterfacesInput{
-			NetworkInterfaceIds: []*string{aws.String(rs.Primary.ID)},
-		}
-		describeResp, err := conn.DescribeNetworkInterfaces(input)
+
+		output, err := tfec2.FindNetworkInterfaceByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if len(describeResp.NetworkInterfaces) != 1 ||
-			*describeResp.NetworkInterfaces[0].NetworkInterfaceId != rs.Primary.ID {
-			return fmt.Errorf("ENI not found")
-		}
-
-		*res = *describeResp.NetworkInterfaces[0]
+		*v = *output
 
 		return nil
 	}
 }
 
 func testAccCheckENIDestroy(s *terraform.State) error {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_network_interface" {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-		input := &ec2.DescribeNetworkInterfacesInput{
-			NetworkInterfaceIds: []*string{aws.String(rs.Primary.ID)},
+		_, err := tfec2.FindNetworkInterfaceByID(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
 		}
-		_, err := conn.DescribeNetworkInterfaces(input)
 
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, "InvalidNetworkInterfaceID.NotFound", "") {
-				return nil
-			}
-
 			return err
 		}
+
+		return fmt.Errorf("EC2 Network Interface %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -553,29 +756,6 @@ func testAccCheckENIMakeExternalAttachment(n string, conf *ec2.NetworkInterface)
 		}
 		return nil
 	}
-}
-
-// checkResourceAttrPrivateDNSName ensures the Terraform state exactly matches a private DNS name
-//
-// For example: ip-172-16-10-100.us-west-2.compute.internal
-func checkResourceAttrPrivateDNSName(resourceName, attributeName string, privateIpAddress **string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		privateDnsName := fmt.Sprintf("ip-%s.%s", convertIPToDashIP(**privateIpAddress), regionalPrivateDNSSuffix(acctest.Region()))
-
-		return resource.TestCheckResourceAttr(resourceName, attributeName, privateDnsName)(s)
-	}
-}
-
-func convertIPToDashIP(ip string) string {
-	return strings.Replace(ip, ".", "-", -1)
-}
-
-func regionalPrivateDNSSuffix(region string) string {
-	if region == endpoints.UsEast1RegionID {
-		return "ec2.internal"
-	}
-
-	return fmt.Sprintf("%s.compute.internal", region)
 }
 
 func testAccENIIPV4BaseConfig(rName string) string {
@@ -880,4 +1060,91 @@ resource "aws_network_interface" "test" {
   }
 }
 `, rName, interfaceType))
+}
+
+func testAccENIIPV4PrefixConfig(rName string) string {
+	return acctest.ConfigCompose(testAccENIIPV4BaseConfig(rName), fmt.Sprintf(`
+resource "aws_network_interface" "test" {
+  subnet_id       = aws_subnet.test.id
+  ipv4_prefixes   = ["172.16.10.16/28"]
+  security_groups = [aws_security_group.test.id]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccENIIPV4PrefixMultipleConfig(rName string) string {
+	return acctest.ConfigCompose(testAccENIIPV4BaseConfig(rName), fmt.Sprintf(`
+resource "aws_network_interface" "test" {
+  subnet_id       = aws_subnet.test.id
+  ipv4_prefixes   = ["172.16.10.16/28", "172.16.10.32/28"]
+  security_groups = [aws_security_group.test.id]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccENIIPV4PrefixCountConfig(rName string, ipv4PrefixCount int) string {
+	return acctest.ConfigCompose(testAccENIIPV4BaseConfig(rName) + fmt.Sprintf(`
+resource "aws_network_interface" "test" {
+  subnet_id         = aws_subnet.test.id
+  ipv4_prefix_count = %[2]d
+  security_groups   = [aws_security_group.test.id]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, ipv4PrefixCount))
+}
+
+func testAccENIIPV6PrefixConfig(rName string) string {
+	return acctest.ConfigCompose(testAccENIIPV6BaseConfig(rName), fmt.Sprintf(`
+resource "aws_network_interface" "test" {
+  subnet_id       = aws_subnet.test.id
+  private_ips     = ["172.16.10.100"]
+  ipv6_prefixes   = [cidrsubnet(aws_subnet.test.ipv6_cidr_block, 16, 2)]
+  security_groups = [aws_security_group.test.id]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccENIIPV6PrefixMultipleConfig(rName string) string {
+	return acctest.ConfigCompose(testAccENIIPV6BaseConfig(rName), fmt.Sprintf(`
+resource "aws_network_interface" "test" {
+  subnet_id       = aws_subnet.test.id
+  private_ips     = ["172.16.10.100"]
+  ipv6_prefixes   = [cidrsubnet(aws_subnet.test.ipv6_cidr_block, 16, 2), cidrsubnet(aws_subnet.test.ipv6_cidr_block, 16, 3)]
+  security_groups = [aws_security_group.test.id]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccENIIPV6PrefixCountConfig(rName string, ipv6PrefixCount int) string {
+	return acctest.ConfigCompose(testAccENIIPV6BaseConfig(rName) + fmt.Sprintf(`
+resource "aws_network_interface" "test" {
+  subnet_id         = aws_subnet.test.id
+  private_ips       = ["172.16.10.100"]
+  ipv6_prefix_count = %[2]d
+  security_groups   = [aws_security_group.test.id]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, ipv6PrefixCount))
 }

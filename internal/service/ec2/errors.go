@@ -12,6 +12,7 @@ import (
 const (
 	ErrCodeGatewayNotAttached           = "Gateway.NotAttached"
 	ErrCodeInvalidAssociationIDNotFound = "InvalidAssociationID.NotFound"
+	ErrCodeInvalidAttachmentIDNotFound  = "InvalidAttachmentID.NotFound"
 	ErrCodeInvalidParameter             = "InvalidParameter"
 	ErrCodeInvalidParameterException    = "InvalidParameterException"
 	ErrCodeInvalidParameterValue        = "InvalidParameterValue"
