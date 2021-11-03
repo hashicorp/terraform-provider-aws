@@ -2055,7 +2055,7 @@ resource "aws_launch_template" "test" {
 func testAccLaunchTemplateConfig_networkInterfaceCardIndex(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_launch_template" "test" {
-  name = %[1]q
+  name          = %[1]q
   instance_type = "p4d.24xlarge"
 
   network_interfaces {
