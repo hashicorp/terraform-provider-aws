@@ -13,9 +13,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/internal/keyvaluetags"
-	"github.com/terraform-providers/terraform-provider-aws/internal/service/s3/waiter"
-	"github.com/terraform-providers/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceBucketReplicationConfiguration() *schema.Resource {
@@ -61,12 +62,12 @@ func ResourceBucketReplicationConfiguration() *schema.Resource {
 									"account_id": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validateAwsAccountId,
+										ValidateFunc: verify.ValidAccountID,
 									},
 									"bucket": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: verify.ValidARN,
 									},
 									"storage_class": {
 										Type:         schema.TypeString,
@@ -221,7 +222,7 @@ func ResourceBucketReplicationConfiguration() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: validation.StringLenBetween(0, 1024),
 									},
-									"tags": tagsSchema(),
+									"tags": tftags.TagsSchema(),
 								},
 							},
 						},
@@ -293,10 +294,10 @@ func resourceAwsS3BucketReplicationConfigurationRead(d *schema.ResourceData, met
 		input.Bucket = bucket
 	}
 
-	s3conn := meta.(*AWSClient).s3conn
+	conn := meta.(*conns.AWSClient).S3Conn
 
-	err := resource.Retry(waiter.BucketCreatedTimeout, func() *resource.RetryError {
-		_, err := s3conn.HeadBucket(input)
+	err := resource.Retry(bucketCreatedTimeout, func() *resource.RetryError {
+		_, err := conn.HeadBucket(input)
 
 		if d.IsNewResource() && tfawserr.ErrStatusCodeEquals(err, http.StatusNotFound) {
 			return resource.RetryableError(err)
@@ -314,7 +315,7 @@ func resourceAwsS3BucketReplicationConfigurationRead(d *schema.ResourceData, met
 	})
 
 	if tfresource.TimedOut(err) {
-		_, err = s3conn.HeadBucket(input)
+		_, err = conn.HeadBucket(input)
 	}
 
 	if !d.IsNewResource() && tfawserr.ErrStatusCodeEquals(err, http.StatusNotFound) {
@@ -332,12 +333,12 @@ func resourceAwsS3BucketReplicationConfigurationRead(d *schema.ResourceData, met
 	}
 
 	// Read the bucket replication configuration
-	replicationResponse, err := retryOnAwsCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
-		return s3conn.GetBucketReplication(&s3.GetBucketReplicationInput{
+	replicationResponse, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+		return conn.GetBucketReplication(&s3.GetBucketReplicationInput{
 			Bucket: bucket,
 		})
 	})
-	if err != nil && !isAWSErr(err, "ReplicationConfigurationNotFoundError", "") {
+	if err != nil && !tfawserr.ErrMessageContains(err, "ReplicationConfigurationNotFoundError", "") {
 		return fmt.Errorf("error getting S3 Bucket replication: %s", err)
 	}
 	replication, ok := replicationResponse.(*s3.GetBucketReplicationOutput)
@@ -433,11 +434,11 @@ func resourceAwsS3BucketReplicationConfigurationRead(d *schema.ResourceData, met
 				m["prefix"] = aws.StringValue(f.Prefix)
 			}
 			if t := f.Tag; t != nil {
-				m["tags"] = keyvaluetags.S3KeyValueTags([]*s3.Tag{t}).IgnoreAws().Map()
+				m["tags"] = KeyValueTags([]*s3.Tag{t}).IgnoreAWS().Map()
 			}
 			if a := f.And; a != nil {
 				m["prefix"] = aws.StringValue(a.Prefix)
-				m["tags"] = keyvaluetags.S3KeyValueTags(a.Tags).IgnoreAws().Map()
+				m["tags"] = KeyValueTags(a.Tags).IgnoreAWS().Map()
 			}
 			t["filter"] = []interface{}{m}
 
@@ -456,7 +457,7 @@ func resourceAwsS3BucketReplicationConfigurationRead(d *schema.ResourceData, met
 }
 
 func resourceAwsS3BucketReplicationConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
-	s3conn := meta.(*AWSClient).s3conn
+	s3conn := meta.(*conns.AWSClient).S3Conn
 	bucket := d.Get("bucket").(string)
 
 	rc := &s3.ReplicationConfiguration{}
@@ -575,7 +576,7 @@ func resourceAwsS3BucketReplicationConfigurationUpdate(d *schema.ResourceData, m
 			rcRule.Priority = aws.Int64(int64(rr["priority"].(int)))
 			rcRule.Filter = &s3.ReplicationRuleFilter{}
 			filter := f[0].(map[string]interface{})
-			tags := keyvaluetags.New(filter["tags"]).IgnoreAws().S3Tags()
+			tags := Tags(tftags.New(filter["tags"]).IgnoreAWS())
 			if len(tags) > 0 {
 				rcRule.Filter.And = &s3.ReplicationRuleAndOperator{
 					Prefix: aws.String(filter["prefix"].(string)),
@@ -609,7 +610,7 @@ func resourceAwsS3BucketReplicationConfigurationUpdate(d *schema.ResourceData, m
 
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 		_, err := s3conn.PutBucketReplication(i)
-		if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") || isAWSErr(err, "InvalidRequest", "Versioning must be 'Enabled' on the bucket") {
+		if tfawserr.ErrMessageContains(err, s3.ErrCodeNoSuchBucket, "") || tfawserr.ErrMessageContains(err, "InvalidRequest", "Versioning must be 'Enabled' on the bucket") {
 			return resource.RetryableError(err)
 		}
 		if err != nil {
@@ -617,7 +618,7 @@ func resourceAwsS3BucketReplicationConfigurationUpdate(d *schema.ResourceData, m
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = s3conn.PutBucketReplication(i)
 	}
 	if err != nil {
@@ -628,7 +629,7 @@ func resourceAwsS3BucketReplicationConfigurationUpdate(d *schema.ResourceData, m
 }
 
 func resourceAwsS3BucketReplicationConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	s3conn := meta.(*AWSClient).s3conn
+	s3conn := meta.(*conns.AWSClient).S3Conn
 	bucket := d.Get("bucket").(string)
 
 	log.Printf("[DEBUG] S3 Delete Bucket Replication: %s", d.Id())
