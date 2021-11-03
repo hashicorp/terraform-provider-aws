@@ -85,6 +85,7 @@ func ResourceComputeEnvironment() *schema.Resource {
 						"ec2_configuration": {
 							Type:     schema.TypeList,
 							Optional: true,
+							Computed: true,
 							ForceNew: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
@@ -92,6 +93,7 @@ func ResourceComputeEnvironment() *schema.Resource {
 									"image_id_override": {
 										Type:         schema.TypeString,
 										Optional:     true,
+										Computed:     true,
 										ForceNew:     true,
 										ValidateFunc: validation.StringLenBetween(1, 256),
 									},
