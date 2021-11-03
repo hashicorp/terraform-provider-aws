@@ -46,7 +46,7 @@ resource "aws_cloudfront_response_headers_policy" "example" {
 
 The following arguments are supported:
 
-* `name` - (Required) A unique name to identify the reponse headers policy.
+* `name` - (Required) A unique name to identify the response headers policy.
 * `comment` - (Optional) A comment to describe the response headers policy. The comment cannot be longer than 128 characters.
 * `cors_config` - (Optional) A configuration for a set of HTTP response headers that are used for Cross-Origin Resource Sharing (CORS). See [Cors Config](#cors_config) for more information.
 * `custom_headers_config` - (Optional) Object that contains an attribute `items` that contains a list of Custom Headers See [Custom Header](#custom_header) for more information.
