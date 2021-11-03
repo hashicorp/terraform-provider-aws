@@ -113,7 +113,22 @@ func ResourceResponseHeadersPolicy() *schema.Resource {
 						"items": {
 							Type:     schema.TypeSet,
 							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"header": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"override": {
+										Type:     schema.TypeBool,
+										Required: true,
+									},
+									"value": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
 						},
 					},
 				},
@@ -259,17 +274,19 @@ func ResourceResponseHeadersPolicy() *schema.Resource {
 func resourceResponseHeadersPolicyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFrontConn
 
-	request := &cloudfront.CreateResponseHeadersPolicyInput{
+	name := d.Get("name").(string)
+	input := &cloudfront.CreateResponseHeadersPolicyInput{
 		ResponseHeadersPolicyConfig: expandCloudFrontResponseHeadersPolicyConfig(d),
 	}
 
-	resp, err := conn.CreateResponseHeadersPolicy(request)
+	log.Printf("[DEBUG] Creating CloudFront Response Headers Policy: (%s)", input)
+	output, err := conn.CreateResponseHeadersPolicy(input)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating CloudFront Response Headers Policy (%s): %w", name, err)
 	}
 
-	d.SetId(aws.StringValue(resp.ResponseHeadersPolicy.Id))
+	d.SetId(aws.StringValue(output.ResponseHeadersPolicy.Id))
 
 	return resourceResponseHeadersPolicyRead(d, meta)
 }
@@ -289,10 +306,18 @@ func resourceResponseHeadersPolicyRead(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("error reading CloudFront Response Headers Policy (%s): %w", d.Id(), err)
 	}
 
+	config := output.ResponseHeadersPolicy.ResponseHeadersPolicyConfig
+	d.Set("comment", config.Comment)
+	if err := d.Set("cors_config", setCorsConfig(config.CorsConfig)); err != nil {
+		return fmt.Errorf("error setting cors_config: %w", err)
+	}
+	if err := d.Set("custom_headers_config", flattenCustomHeadersConfig(config.CustomHeadersConfig)); err != nil {
+		return fmt.Errorf("error setting custom_headers_config: %w", err)
+	}
 	d.Set("etag", output.ETag)
-
-	if err := setCloudFrontResponseHeadersPolicy(d, output.ResponseHeadersPolicy.ResponseHeadersPolicyConfig); err != nil {
-		return fmt.Errorf("unable to store response headers policy in config: %s", err.Error())
+	d.Set("name", config.Name)
+	if err := d.Set("security_headers_config", setSecurityHeadersConfig(config.SecurityHeadersConfig)); err != nil {
+		return fmt.Errorf("error setting security_headers_config: %w", err)
 	}
 
 	return nil

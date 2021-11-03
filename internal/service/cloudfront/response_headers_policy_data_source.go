@@ -95,10 +95,17 @@ func DataSourceResponseHeadersPolicy() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"items": {
-							Type:     schema.TypeSet,
+						"header": {
+							Type:     schema.TypeString,
 							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"override": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"value": {
+							Type:     schema.TypeString,
+							Computed: true,
 						},
 					},
 				},
@@ -108,14 +115,16 @@ func DataSourceResponseHeadersPolicy() *schema.Resource {
 				Computed: true,
 			},
 			"id": {
-				Type:          schema.TypeString,
-				ConflictsWith: []string{"name"},
-				Optional:      true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ExactlyOneOf: []string{"id", "name"},
 			},
 			"name": {
-				Type:          schema.TypeString,
-				ConflictsWith: []string{"id"},
-				Optional:      true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ExactlyOneOf: []string{"id", "name"},
 			},
 			"security_headers_config": {
 				Type:     schema.TypeList,
@@ -236,52 +245,70 @@ func DataSourceResponseHeadersPolicy() *schema.Resource {
 		},
 	}
 }
+
 func dataSourceResponseHeadersPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFrontConn
 
-	if d.Id() == "" {
-		if err := dataSourceResponseHeadersPolicyFindByName(d, conn); err != nil {
-			return fmt.Errorf("unable to locate response headers policy by name: %s", err.Error())
+	var responseHeadersPolicyID string
+
+	if v, ok := d.GetOk("id"); ok {
+		responseHeadersPolicyID = v.(string)
+	} else {
+		name := d.Get("name").(string)
+		input := &cloudfront.ListResponseHeadersPoliciesInput{}
+
+		for {
+			output, err := conn.ListResponseHeadersPolicies(input)
+
+			if err != nil {
+				return fmt.Errorf("error listing CloudFront Response Headers Policies: %w", err)
+			}
+
+			for _, policySummary := range output.ResponseHeadersPolicyList.Items {
+				if responseHeadersPolicy := policySummary.ResponseHeadersPolicy; aws.StringValue(responseHeadersPolicy.ResponseHeadersPolicyConfig.Name) == name {
+					responseHeadersPolicyID = aws.StringValue(responseHeadersPolicy.Id)
+
+					break
+				}
+			}
+
+			if responseHeadersPolicyID != "" {
+				break
+			}
+
+			if nextMarker := aws.StringValue(output.ResponseHeadersPolicyList.NextMarker); nextMarker == "" {
+				break
+			} else {
+				input.Marker = aws.String(nextMarker)
+			}
+		}
+
+		if responseHeadersPolicyID == "" {
+			return fmt.Errorf("no matching CloudFront Response Headers Policy (%s)", name)
 		}
 	}
 
-	if d.Id() != "" {
-		d.Set("id", d.Id())
-		request := &cloudfront.GetResponseHeadersPolicyInput{
-			Id: aws.String(d.Id()),
-		}
+	output, err := FindResponseHeadersPolicyByID(conn, responseHeadersPolicyID)
 
-		resp, err := conn.GetResponseHeadersPolicy(request)
-		if err != nil {
-			return fmt.Errorf("unable to retrieve response headers policy with ID %s: %s", d.Id(), err.Error())
-		}
-		d.Set("etag", resp.ETag)
-
-		if err := setCloudFrontResponseHeadersPolicy(d, resp.ResponseHeadersPolicy.ResponseHeadersPolicyConfig); err != nil {
-			return fmt.Errorf("unable to store response headers policy in config: %s", err.Error())
-		}
-	}
-
-	return nil
-}
-
-func dataSourceResponseHeadersPolicyFindByName(d *schema.ResourceData, conn *cloudfront.CloudFront) error {
-	var responseHeadersPolicy *cloudfront.ResponseHeadersPolicy
-	request := &cloudfront.ListResponseHeadersPoliciesInput{}
-	resp, err := conn.ListResponseHeadersPolicies(request)
 	if err != nil {
-		return err
+		return fmt.Errorf("error reading CloudFront Response Headers Policy (%s): %w", responseHeadersPolicyID, err)
 	}
 
-	for _, policySummary := range resp.ResponseHeadersPolicyList.Items {
-		if aws.StringValue(policySummary.ResponseHeadersPolicy.ResponseHeadersPolicyConfig.Name) == d.Get("name").(string) {
-			responseHeadersPolicy = policySummary.ResponseHeadersPolicy
-			break
-		}
+	d.SetId(responseHeadersPolicyID)
+
+	config := output.ResponseHeadersPolicy.ResponseHeadersPolicyConfig
+	d.Set("comment", config.Comment)
+	if err := d.Set("cors_config", setCorsConfig(config.CorsConfig)); err != nil {
+		return fmt.Errorf("error setting cors_config: %w", err)
+	}
+	if err := d.Set("custom_headers_config", flattenCustomHeadersConfig(config.CustomHeadersConfig)); err != nil {
+		return fmt.Errorf("error setting custom_headers_config: %w", err)
+	}
+	d.Set("etag", output.ETag)
+	d.Set("name", config.Name)
+	if err := d.Set("security_headers_config", setSecurityHeadersConfig(config.SecurityHeadersConfig)); err != nil {
+		return fmt.Errorf("error setting security_headers_config: %w", err)
 	}
 
-	if responseHeadersPolicy != nil {
-		d.SetId(aws.StringValue(responseHeadersPolicy.Id))
-	}
 	return nil
 }

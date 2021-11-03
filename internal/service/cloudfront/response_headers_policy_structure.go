@@ -102,7 +102,7 @@ func expandCloudFrontCustomHeader(m map[string]interface{}) *cloudfront.Response
 func expandCloudFrontResponseHeadersPolicyCustomHeadersConfig(lst []interface{}) *cloudfront.ResponseHeadersPolicyCustomHeadersConfig {
 	var qty int64
 	var items []*cloudfront.ResponseHeadersPolicyCustomHeader
-	for _, v := range lst {
+	for _, v := range lst[0].(map[string]interface{})["items"].(*schema.Set).List() {
 		items = append(items, expandCloudFrontCustomHeader(v.(map[string]interface{})))
 		qty++
 	}
@@ -366,21 +366,4 @@ func setSecurityHeadersConfig(parametersConfig *cloudfront.ResponseHeadersPolicy
 	return []map[string]interface{}{
 		parametersConfigFlat,
 	}
-}
-
-func setCloudFrontResponseHeadersPolicy(d *schema.ResourceData, config *cloudfront.ResponseHeadersPolicyConfig) error {
-	err := d.Set("name", config.Name)
-	if err == nil && config.Comment != nil {
-		err = d.Set("comment", config.Comment)
-	}
-	if err == nil && config.CorsConfig != nil {
-		err = d.Set("cors_config", setCorsConfig(config.CorsConfig))
-	}
-	if err == nil && config.CustomHeadersConfig != nil {
-		err = d.Set("custom_headers_config", flattenCustomHeadersConfig(config.CustomHeadersConfig))
-	}
-	if err == nil && config.SecurityHeadersConfig != nil {
-		err = d.Set("security_headers_config", setSecurityHeadersConfig(config.SecurityHeadersConfig))
-	}
-	return err
 }
