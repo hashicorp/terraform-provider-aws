@@ -58,6 +58,30 @@ func cloudWatchLoggingOptionsSchema() *schema.Schema {
 	}
 }
 
+func dynamicPartitioningConfigurationSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		MaxItems: 1,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+					ForceNew: true,
+				},
+				"retry_duration": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      300,
+					ValidateFunc: validation.IntBetween(0, 7200),
+				},
+			},
+		},
+	}
+}
+
 func requestConfigurationSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
@@ -278,6 +302,7 @@ func flattenFirehoseExtendedS3Configuration(description *firehose.ExtendedS3Dest
 		"error_output_prefix":                  aws.StringValue(description.ErrorOutputPrefix),
 		"prefix":                               aws.StringValue(description.Prefix),
 		"processing_configuration":             flattenProcessingConfiguration(description.ProcessingConfiguration, aws.StringValue(description.RoleARN)),
+		"dynamic_partitioning_configuration":   flattenDynamicPartitioningConfiguration(description.DynamicPartitioningConfiguration),
 		"role_arn":                             aws.StringValue(description.RoleARN),
 		"s3_backup_configuration":              flattenFirehoseS3Configuration(description.S3BackupDescription),
 		"s3_backup_mode":                       aws.StringValue(description.S3BackupMode),
@@ -292,6 +317,7 @@ func flattenFirehoseExtendedS3Configuration(description *firehose.ExtendedS3Dest
 		m["kms_key_arn"] = aws.StringValue(description.EncryptionConfiguration.KMSEncryptionConfig.AWSKMSKeyARN)
 	}
 
+	log.Printf("Value of the extended s3 is %+v\n", m)
 	return []map[string]interface{}{m}
 }
 
@@ -662,6 +688,24 @@ func flattenProcessingConfiguration(pc *firehose.ProcessingConfiguration, roleAr
 		"processors": processors,
 	}
 	return processingConfiguration
+}
+
+func flattenDynamicPartitioningConfiguration(dpc *firehose.DynamicPartitioningConfiguration) []map[string]interface{} {
+	if dpc == nil {
+		return []map[string]interface{}{}
+	}
+
+	dynamicPartitioningConfiguration := make([]map[string]interface{}, 1)
+
+	dynamicPartitioningConfiguration[0] = map[string]interface{}{
+		"enabled": aws.BoolValue(dpc.Enabled),
+	}
+
+	if dpc.RetryOptions != nil && dpc.RetryOptions.DurationInSeconds != nil {
+		dynamicPartitioningConfiguration[0]["retry_duration"] = int(aws.Int64Value(dpc.RetryOptions.DurationInSeconds))
+	}
+
+	return dynamicPartitioningConfiguration
 }
 
 func flattenFirehoseKinesisSourceConfiguration(desc *firehose.KinesisStreamSourceDescription) []interface{} {
@@ -1215,6 +1259,8 @@ func ResourceDeliveryStream() *schema.Resource {
 
 						"cloudwatch_logging_options": cloudWatchLoggingOptionsSchema(),
 
+						"dynamic_partitioning_configuration": dynamicPartitioningConfigurationSchema(),
+
 						"processing_configuration": processingConfigurationSchema(),
 					},
 				},
@@ -1631,6 +1677,10 @@ func createExtendedS3Config(d *schema.ResourceData) *firehose.ExtendedS3Destinat
 		configuration.CloudWatchLoggingOptions = extractCloudWatchLoggingConfiguration(s3)
 	}
 
+	if _, ok := s3["dynamic_partitioning_configuration"]; ok {
+		configuration.DynamicPartitioningConfiguration = extractDynamicPartitioningConfiguration(s3)
+	}
+
 	if v, ok := s3["error_output_prefix"]; ok && v.(string) != "" {
 		configuration.ErrorOutputPrefix = aws.String(v.(string))
 	}
@@ -1714,6 +1764,10 @@ func updateExtendedS3Config(d *schema.ResourceData) *firehose.ExtendedS3Destinat
 
 	if _, ok := s3["cloudwatch_logging_options"]; ok {
 		configuration.CloudWatchLoggingOptions = extractCloudWatchLoggingConfiguration(s3)
+	}
+
+	if _, ok := s3["dynamic_partitioning_configuration"]; ok {
+		configuration.DynamicPartitioningConfiguration = extractDynamicPartitioningConfiguration(s3)
 	}
 
 	if v, ok := s3["error_output_prefix"]; ok && v.(string) != "" {
@@ -1904,6 +1958,26 @@ func expandFirehoseSchemaConfiguration(l []interface{}) *firehose.SchemaConfigur
 	}
 
 	return config
+}
+
+func extractDynamicPartitioningConfiguration(s3 map[string]interface{}) *firehose.DynamicPartitioningConfiguration {
+	config := s3["dynamic_partitioning_configuration"].([]interface{})
+	if len(config) == 0 {
+		return nil
+	}
+
+	dynamicPartitioningConfig := config[0].(map[string]interface{})
+	DynamicPartitioningConfiguration := &firehose.DynamicPartitioningConfiguration{
+		Enabled: aws.Bool(dynamicPartitioningConfig["enabled"].(bool)),
+	}
+
+	if retryDuration, ok := dynamicPartitioningConfig["retry_duration"]; ok {
+		DynamicPartitioningConfiguration.RetryOptions = &firehose.RetryOptions{
+			DurationInSeconds: aws.Int64(int64(retryDuration.(int))),
+		}
+	}
+
+	return DynamicPartitioningConfiguration
 }
 
 func extractProcessingConfiguration(s3 map[string]interface{}) *firehose.ProcessingConfiguration {
