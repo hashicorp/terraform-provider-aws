@@ -134,6 +134,98 @@ func TestAccAWSCloudFrontResponseHeadersPolicy_CustomHeadersConfig(t *testing.T)
 	})
 }
 
+func TestAccAWSCloudFrontResponseHeadersPolicy_SecurityHeadersConfig(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudfront_response_headers_policy.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckCloudFrontResponseHeadersPolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudFrontResponseHeadersPolicySecurityHeadersConfigConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudFrontResponseHeadersPolicyExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "comment", ""),
+					resource.TestCheckResourceAttr(resourceName, "cors_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "custom_headers_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "custom_headers_config.0.items.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "custom_headers_config.0.items.*", map[string]string{
+						"header":   "X-Header1",
+						"override": "true",
+						"value":    "value1",
+					}),
+					resource.TestCheckResourceAttrSet(resourceName, "etag"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "security_headers_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "security_headers_config.0.content_security_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "security_headers_config.0.content_security_policy.0.content_security_policy", "policy1"),
+					resource.TestCheckResourceAttr(resourceName, "security_headers_config.0.content_security_policy.0.override", "true"),
+					resource.TestCheckResourceAttr(resourceName, "security_headers_config.0.content_type_options.#", "1"),
+					resource.TestCheckNoResourceAttr(resourceName, "security_headers_config.0.content_type_options.0.override"),
+					resource.TestCheckResourceAttr(resourceName, "security_headers_config.0.frame_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "security_headers_config.0.frame_options.0.frame_option", "DENY"),
+					resource.TestCheckResourceAttr(resourceName, "security_headers_config.0.frame_options.0.override", "false"),
+					resource.TestCheckResourceAttr(resourceName, "security_headers_config.0.referrer_policy.#", "1"),
+					resource.TestCheckNoResourceAttr(resourceName, "security_headers_config.0.referrer_policy.0.override"),
+					resource.TestCheckNoResourceAttr(resourceName, "security_headers_config.0.referrer_policy.0.referrer_policy"),
+					resource.TestCheckResourceAttr(resourceName, "security_headers_config.0.strict_transport_security.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "security_headers_config.0.strict_transport_security.0.access_control_max_age_sec", "90"),
+					resource.TestCheckResourceAttr(resourceName, "security_headers_config.0.strict_transport_security.0.include_subdomains", "false"),
+					resource.TestCheckResourceAttr(resourceName, "security_headers_config.0.strict_transport_security.0.override", "true"),
+					resource.TestCheckResourceAttr(resourceName, "security_headers_config.0.strict_transport_security.0.preload", "true"),
+					resource.TestCheckResourceAttr(resourceName, "security_headers_config.0.xss_protection.#", "1"),
+					resource.TestCheckNoResourceAttr(resourceName, "security_headers_config.0.xss_protection.0.mode_block"),
+					resource.TestCheckNoResourceAttr(resourceName, "security_headers_config.0.xss_protection.0.override"),
+					resource.TestCheckNoResourceAttr(resourceName, "security_headers_config.0.xss_protection.0.protection"),
+					resource.TestCheckNoResourceAttr(resourceName, "security_headers_config.0.xss_protection.0.report_uri"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+			{
+				Config: testAccAWSCloudFrontResponseHeadersPolicySecurityHeadersConfigUpdatedConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudFrontResponseHeadersPolicyExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "comment", ""),
+					resource.TestCheckResourceAttr(resourceName, "cors_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "custom_headers_config.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "etag"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "security_headers_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "security_headers_config.0.content_security_policy.#", "1"),
+					resource.TestCheckNoResourceAttr(resourceName, "security_headers_config.0.content_security_policy.0.content_security_policy"),
+					resource.TestCheckNoResourceAttr(resourceName, "security_headers_config.0.content_security_policy.0.override"),
+					resource.TestCheckResourceAttr(resourceName, "security_headers_config.0.content_type_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "security_headers_config.0.content_type_options.0.override", "true"),
+					resource.TestCheckResourceAttr(resourceName, "security_headers_config.0.frame_options.#", "1"),
+					resource.TestCheckNoResourceAttr(resourceName, "security_headers_config.0.frame_options.0.frame_option"),
+					resource.TestCheckNoResourceAttr(resourceName, "security_headers_config.0.frame_options.0.override"),
+					resource.TestCheckResourceAttr(resourceName, "security_headers_config.0.referrer_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "security_headers_config.0.referrer_policy.0.override", "false"),
+					resource.TestCheckResourceAttr(resourceName, "security_headers_config.0.referrer_policy.0.referrer_policy", "origin-when-cross-origin"),
+					resource.TestCheckResourceAttr(resourceName, "security_headers_config.0.strict_transport_security.#", "1"),
+					resource.TestCheckNoResourceAttr(resourceName, "security_headers_config.0.strict_transport_security.0.access_control_max_age_sec"),
+					resource.TestCheckNoResourceAttr(resourceName, "security_headers_config.0.strict_transport_security.0.include_subdomains"),
+					resource.TestCheckNoResourceAttr(resourceName, "security_headers_config.0.strict_transport_security.0.override"),
+					resource.TestCheckNoResourceAttr(resourceName, "security_headers_config.0.strict_transport_security.0.preload"),
+					resource.TestCheckResourceAttr(resourceName, "security_headers_config.0.xss_protection.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "security_headers_config.0.xss_protection.0.mode_block", "false"),
+					resource.TestCheckResourceAttr(resourceName, "security_headers_config.0.xss_protection.0.override", "true"),
+					resource.TestCheckResourceAttr(resourceName, "security_headers_config.0.xss_protection.0.protection", "true"),
+					resource.TestCheckResourceAttr(resourceName, "security_headers_config.0.xss_protection.0.report_uri", "https://example.com/"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSCloudFrontResponseHeadersPolicy_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudfront_response_headers_policy.test"
@@ -266,7 +358,7 @@ resource "aws_cloudfront_response_headers_policy" "test" {
 func testAccAWSCloudFrontResponseHeadersPolicyCustomHeadersConfigConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_response_headers_policy" "test" {
-  name    = %[1]q
+  name = %[1]q
 
   custom_headers_config {
     items {
@@ -279,6 +371,65 @@ resource "aws_cloudfront_response_headers_policy" "test" {
       header   = "X-Header1"
       override = true
       value    = "value1"
+    }
+  }
+}
+`, rName)
+}
+
+func testAccAWSCloudFrontResponseHeadersPolicySecurityHeadersConfigConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudfront_response_headers_policy" "test" {
+  name    = %[1]q
+
+  custom_headers_config {
+    items {
+      header   = "X-Header1"
+      override = true
+      value    = "value1"
+    }
+  }
+
+  security_headers_config {
+    content_security_policy {
+      content_security_policy = "policy1"
+      override                = true
+    }
+
+    frame_options {
+      frame_option = "DENY"
+	  override     = false
+    }
+
+    strict_transport_security {
+      access_control_max_age_sec = 90
+      override                   = true
+      preload                    = true
+    }
+  }
+}
+`, rName)
+}
+
+func testAccAWSCloudFrontResponseHeadersPolicySecurityHeadersConfigUpdatedConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudfront_response_headers_policy" "test" {
+  name = %[1]q
+
+  security_headers_config {
+    content_type_options {
+      override = true
+    }
+
+    referrer_policy {
+      referrer_policy = "origin-when-cross-origin"
+      override        = false
+    }
+
+    xss_protection {
+      override   = true
+      protection = true
+      report_uri = "https://example.com/"
     }
   }
 }

@@ -169,6 +169,7 @@ func ResourceResponseHeadersPolicy() *schema.Resource {
 									},
 								},
 							},
+							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 						},
 						"content_type_options": {
 							Type:     schema.TypeList,
@@ -182,6 +183,7 @@ func ResourceResponseHeadersPolicy() *schema.Resource {
 									},
 								},
 							},
+							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 						},
 						"frame_options": {
 							Type:     schema.TypeList,
@@ -200,6 +202,7 @@ func ResourceResponseHeadersPolicy() *schema.Resource {
 									},
 								},
 							},
+							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 						},
 						"referrer_policy": {
 							Type:     schema.TypeList,
@@ -207,17 +210,18 @@ func ResourceResponseHeadersPolicy() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"override": {
+										Type:     schema.TypeBool,
+										Required: true,
+									},
 									"referrer_policy": {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringInSlice(cloudfront.ReferrerPolicyList_Values(), false),
 									},
-									"override": {
-										Type:     schema.TypeBool,
-										Required: true,
-									},
 								},
 							},
+							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 						},
 						"strict_transport_security": {
 							Type:     schema.TypeList,
@@ -243,6 +247,7 @@ func ResourceResponseHeadersPolicy() *schema.Resource {
 									},
 								},
 							},
+							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 						},
 						"xss_protection": {
 							Type:     schema.TypeList,
@@ -268,6 +273,7 @@ func ResourceResponseHeadersPolicy() *schema.Resource {
 									},
 								},
 							},
+							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 						},
 					},
 				},
@@ -394,7 +400,7 @@ func resourceResponseHeadersPolicyUpdate(d *schema.ResourceData, meta interface{
 		ResponseHeadersPolicyConfig: apiObject,
 	}
 
-	log.Printf("[DEBUG] Creating CloudFront Response Headers Policy: (%s)", input)
+	log.Printf("[DEBUG] Updating CloudFront Response Headers Policy: (%s)", input)
 	_, err := conn.UpdateResponseHeadersPolicy(input)
 
 	if err != nil {
