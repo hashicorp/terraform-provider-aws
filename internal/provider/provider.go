@@ -375,6 +375,7 @@ func Provider() *schema.Provider {
 			"aws_cloudfront_function":                       cloudfront.DataSourceFunction(),
 			"aws_cloudfront_log_delivery_canonical_user_id": cloudfront.DataSourceLogDeliveryCanonicalUserID(),
 			"aws_cloudfront_origin_request_policy":          cloudfront.DataSourceOriginRequestPolicy(),
+			"aws_cloudfront_response_headers_policy":        cloudfront.DataSourceResponseHeadersPolicy(),
 
 			"aws_cloudhsm_v2_cluster": cloudhsmv2.DataSourceCluster(),
 
@@ -851,6 +852,7 @@ func Provider() *schema.Provider {
 			"aws_cloudfront_origin_request_policy":   cloudfront.ResourceOriginRequestPolicy(),
 			"aws_cloudfront_public_key":              cloudfront.ResourcePublicKey(),
 			"aws_cloudfront_realtime_log_config":     cloudfront.ResourceRealtimeLogConfig(),
+			"aws_cloudfront_response_headers_policy": cloudfront.ResourceResponseHeadersPolicy(),
 
 			"aws_cloudhsm_v2_cluster": cloudhsmv2.ResourceCluster(),
 			"aws_cloudhsm_v2_hsm":     cloudhsmv2.ResourceHSM(),
