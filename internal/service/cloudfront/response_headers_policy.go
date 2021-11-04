@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceResponseHeadersPolicy() *schema.Resource {
@@ -94,7 +93,6 @@ func ResourceResponseHeadersPolicy() *schema.Resource {
 									},
 								},
 							},
-							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 						},
 						"access_control_max_age_sec": {
 							Type:     schema.TypeInt,
@@ -169,7 +167,6 @@ func ResourceResponseHeadersPolicy() *schema.Resource {
 									},
 								},
 							},
-							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 						},
 						"content_type_options": {
 							Type:     schema.TypeList,
@@ -183,7 +180,6 @@ func ResourceResponseHeadersPolicy() *schema.Resource {
 									},
 								},
 							},
-							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 						},
 						"frame_options": {
 							Type:     schema.TypeList,
@@ -202,7 +198,6 @@ func ResourceResponseHeadersPolicy() *schema.Resource {
 									},
 								},
 							},
-							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 						},
 						"referrer_policy": {
 							Type:     schema.TypeList,
@@ -221,7 +216,6 @@ func ResourceResponseHeadersPolicy() *schema.Resource {
 									},
 								},
 							},
-							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 						},
 						"strict_transport_security": {
 							Type:     schema.TypeList,
@@ -247,7 +241,6 @@ func ResourceResponseHeadersPolicy() *schema.Resource {
 									},
 								},
 							},
-							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 						},
 						"xss_protection": {
 							Type:     schema.TypeList,
@@ -273,7 +266,6 @@ func ResourceResponseHeadersPolicy() *schema.Resource {
 									},
 								},
 							},
-							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 						},
 					},
 				},
@@ -547,20 +539,20 @@ func flattenResponseHeadersPolicyCorsConfig(apiObject *cloudfront.ResponseHeader
 		tfMap["access_control_allow_credentials"] = aws.BoolValue(v)
 	}
 
-	if v := apiObject.AccessControlAllowHeaders; v != nil {
-		tfMap["access_control_allow_headers"] = []interface{}{flattenResponseHeadersPolicyAccessControlAllowHeaders(v)}
+	if v := flattenResponseHeadersPolicyAccessControlAllowHeaders(apiObject.AccessControlAllowHeaders); len(v) > 0 {
+		tfMap["access_control_allow_headers"] = []interface{}{v}
 	}
 
-	if v := apiObject.AccessControlAllowMethods; v != nil {
-		tfMap["access_control_allow_methods"] = []interface{}{flattenResponseHeadersPolicyAccessControlAllowMethods(v)}
+	if v := flattenResponseHeadersPolicyAccessControlAllowMethods(apiObject.AccessControlAllowMethods); len(v) > 0 {
+		tfMap["access_control_allow_methods"] = []interface{}{v}
 	}
 
-	if v := apiObject.AccessControlAllowOrigins; v != nil {
-		tfMap["access_control_allow_origins"] = []interface{}{flattenResponseHeadersPolicyAccessControlAllowOrigins(v)}
+	if v := flattenResponseHeadersPolicyAccessControlAllowOrigins(apiObject.AccessControlAllowOrigins); len(v) > 0 {
+		tfMap["access_control_allow_origins"] = []interface{}{v}
 	}
 
-	if v := apiObject.AccessControlExposeHeaders; v != nil {
-		tfMap["access_control_expose_headers"] = []interface{}{flattenResponseHeadersPolicyAccessControlExposeHeaders(v)}
+	if v := flattenResponseHeadersPolicyAccessControlExposeHeaders(apiObject.AccessControlExposeHeaders); len(v) > 0 {
+		tfMap["access_control_expose_headers"] = []interface{}{v}
 	}
 
 	if v := apiObject.AccessControlMaxAgeSec; v != nil {
@@ -581,7 +573,7 @@ func flattenResponseHeadersPolicyAccessControlAllowHeaders(apiObject *cloudfront
 
 	tfMap := map[string]interface{}{}
 
-	if v := apiObject.Items; v != nil {
+	if v := apiObject.Items; len(v) > 0 {
 		tfMap["items"] = aws.StringValueSlice(v)
 	}
 
@@ -595,7 +587,7 @@ func flattenResponseHeadersPolicyAccessControlAllowMethods(apiObject *cloudfront
 
 	tfMap := map[string]interface{}{}
 
-	if v := apiObject.Items; v != nil {
+	if v := apiObject.Items; len(v) > 0 {
 		tfMap["items"] = aws.StringValueSlice(v)
 	}
 
@@ -609,7 +601,7 @@ func flattenResponseHeadersPolicyAccessControlAllowOrigins(apiObject *cloudfront
 
 	tfMap := map[string]interface{}{}
 
-	if v := apiObject.Items; v != nil {
+	if v := apiObject.Items; len(v) > 0 {
 		tfMap["items"] = aws.StringValueSlice(v)
 	}
 
@@ -623,7 +615,7 @@ func flattenResponseHeadersPolicyAccessControlExposeHeaders(apiObject *cloudfron
 
 	tfMap := map[string]interface{}{}
 
-	if v := apiObject.Items; v != nil {
+	if v := apiObject.Items; len(v) > 0 {
 		tfMap["items"] = aws.StringValueSlice(v)
 	}
 
@@ -705,7 +697,7 @@ func flattenResponseHeadersPolicyCustomHeadersConfig(apiObject *cloudfront.Respo
 
 	tfMap := map[string]interface{}{}
 
-	if v := apiObject.Items; v != nil {
+	if v := apiObject.Items; len(v) > 0 {
 		tfMap["items"] = flattenResponseHeadersPolicyCustomHeaders(v)
 	}
 
@@ -746,7 +738,9 @@ func flattenResponseHeadersPolicyCustomHeaders(apiObjects []*cloudfront.Response
 			continue
 		}
 
-		tfList = append(tfList, flattenResponseHeadersPolicyCustomHeader(apiObject))
+		if v := flattenResponseHeadersPolicyCustomHeader(apiObject); len(v) > 0 {
+			tfList = append(tfList, v)
+		}
 	}
 
 	return tfList
@@ -917,28 +911,28 @@ func flattenResponseHeadersPolicySecurityHeadersConfig(apiObject *cloudfront.Res
 
 	tfMap := map[string]interface{}{}
 
-	if v := apiObject.ContentSecurityPolicy; v != nil {
-		tfMap["content_security_policy"] = []interface{}{flattenResponseHeadersPolicyContentSecurityPolicy(v)}
+	if v := flattenResponseHeadersPolicyContentSecurityPolicy(apiObject.ContentSecurityPolicy); len(v) > 0 {
+		tfMap["content_security_policy"] = []interface{}{v}
 	}
 
-	if v := apiObject.ContentTypeOptions; v != nil {
-		tfMap["content_type_options"] = []interface{}{flattenResponseHeadersPolicyContentTypeOptions(v)}
+	if v := flattenResponseHeadersPolicyContentTypeOptions(apiObject.ContentTypeOptions); len(v) > 0 {
+		tfMap["content_type_options"] = []interface{}{v}
 	}
 
-	if v := apiObject.FrameOptions; v != nil {
-		tfMap["frame_options"] = []interface{}{flattenResponseHeadersPolicyFrameOptions(v)}
+	if v := flattenResponseHeadersPolicyFrameOptions(apiObject.FrameOptions); len(v) > 0 {
+		tfMap["frame_options"] = []interface{}{v}
 	}
 
-	if v := apiObject.ReferrerPolicy; v != nil {
-		tfMap["referrer_policy"] = []interface{}{flattenResponseHeadersPolicyReferrerPolicy(v)}
+	if v := flattenResponseHeadersPolicyReferrerPolicy(apiObject.ReferrerPolicy); len(v) > 0 {
+		tfMap["referrer_policy"] = []interface{}{v}
 	}
 
-	if v := apiObject.StrictTransportSecurity; v != nil {
-		tfMap["strict_transport_security"] = []interface{}{flattenResponseHeadersPolicyStrictTransportSecurity(v)}
+	if v := flattenResponseHeadersPolicyStrictTransportSecurity(apiObject.StrictTransportSecurity); len(v) > 0 {
+		tfMap["strict_transport_security"] = []interface{}{v}
 	}
 
-	if v := apiObject.XSSProtection; v != nil {
-		tfMap["xss_protection"] = []interface{}{flattenResponseHeadersPolicyXSSProtection(v)}
+	if v := flattenResponseHeadersPolicyXSSProtection(apiObject.XSSProtection); len(v) > 0 {
+		tfMap["xss_protection"] = []interface{}{v}
 	}
 
 	return tfMap
