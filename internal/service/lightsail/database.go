@@ -197,7 +197,7 @@ func ResourceDatabaseCreate(d *schema.ResourceData, meta interface{}) error {
 	op := resp.Operations[0]
 	d.SetId(d.Get("name").(string))
 
-	_, err = waitLightsailOperation(conn, op.Id)
+	err = waitLightsailOperation(conn, op.Id)
 	if err != nil {
 		return fmt.Errorf("Error waiting for Relational Database (%s) to become ready: %s", d.Id(), err)
 	}
@@ -223,12 +223,12 @@ func ResourceDatabaseCreate(d *schema.ResourceData, meta interface{}) error {
 
 		op := resp.Operations[0]
 
-		_, err = waitLightsailOperation(conn, op.Id)
+		err = waitLightsailOperation(conn, op.Id)
 		if err != nil {
 			return fmt.Errorf("Error waiting for Relational Database (%s) to become ready: %s", d.Id(), err)
 		}
 
-		_, err = waitDatabaseBackupRetentionModified(conn, aws.String(d.Id()), aws.Bool(v.(bool)))
+		err = waitDatabaseBackupRetentionModified(conn, aws.String(d.Id()), aws.Bool(v.(bool)))
 		if err != nil {
 			return fmt.Errorf("Error waiting for Relational Database (%s) Backup Retention to be updated: %s", d.Id(), err)
 		}
@@ -236,7 +236,7 @@ func ResourceDatabaseCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Some Operations can complete before the Database enters the Available state. Added a waiter to make sure the Database is available before continuing.
-	_, err = waitDatabaseModified(conn, aws.String(d.Id()))
+	err = waitDatabaseModified(conn, aws.String(d.Id()))
 	if err != nil {
 		return fmt.Errorf("Error waiting for Relational Database (%s) to become available: %s", d.Id(), err)
 	}
@@ -251,7 +251,7 @@ func ResourceDatabaseRead(d *schema.ResourceData, meta interface{}) error {
 
 	// Some Operations can complete before the Database enters the Available state. Added a waiter to make sure the Database is available before continuing.
 	// This is to support importing a resource that is not in a ready state.
-	_, err := waitDatabaseModified(conn, aws.String(d.Id()))
+	err := waitDatabaseModified(conn, aws.String(d.Id()))
 	if err != nil {
 		if awsErr, ok := err.(awserr.Error); ok {
 			if awsErr.Code() == "NotFoundException" {
@@ -329,7 +329,7 @@ func ResourceDatabaseDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LightsailConn
 
 	// Some Operations can complete before the Database enters the Available state. Added a waiter to make sure the Database is available before continuing.
-	_, err := waitDatabaseModified(conn, aws.String(d.Id()))
+	err := waitDatabaseModified(conn, aws.String(d.Id()))
 	if err != nil {
 		return fmt.Errorf("Error waiting for Relational Database (%s) to become available: %s", d.Id(), err)
 	}
@@ -358,7 +358,7 @@ func ResourceDatabaseDelete(d *schema.ResourceData, meta interface{}) error {
 	op := resp.Operations[0]
 	d.SetId(d.Get("name").(string))
 
-	_, err = waitLightsailOperation(conn, op.Id)
+	err = waitLightsailOperation(conn, op.Id)
 	if err != nil {
 		return fmt.Errorf("Error waiting for Relational Database (%s) to Delete: %s", d.Id(), err)
 	}
@@ -439,20 +439,20 @@ func ResourceDatabaseUpdate(d *schema.ResourceData, meta interface{}) error {
 		op := resp.Operations[0]
 		d.SetId(d.Get("name").(string))
 
-		_, err = waitLightsailOperation(conn, op.Id)
+		err = waitLightsailOperation(conn, op.Id)
 		if err != nil {
 			return fmt.Errorf("Error waiting for Relational Database (%s) to become ready: %s", d.Id(), err)
 		}
 
 		if d.HasChange("backup_retention_enabled") {
-			_, err = waitDatabaseBackupRetentionModified(conn, aws.String(d.Id()), aws.Bool(d.Get("backup_retention_enabled").(bool)))
+			err = waitDatabaseBackupRetentionModified(conn, aws.String(d.Id()), aws.Bool(d.Get("backup_retention_enabled").(bool)))
 			if err != nil {
 				return fmt.Errorf("Error waiting for Relational Database (%s) Backup Retention to be updated: %s", d.Id(), err)
 			}
 		}
 
 		// Some Operations can complete before the Database enters the Available state. Added a waiter to make sure the Database is available before continuing.
-		_, err = waitDatabaseModified(conn, aws.String(d.Id()))
+		err = waitDatabaseModified(conn, aws.String(d.Id()))
 		if err != nil {
 			return fmt.Errorf("Error waiting for Relational Database (%s) to become available: %s", d.Id(), err)
 		}

@@ -42,7 +42,7 @@ const (
 )
 
 // waitLightsailOperation waits for an Operation to return Succeeded or Compleated
-func waitLightsailOperation(conn *lightsail.Lightsail, oid *string) (*lightsail.GetOperationOutput, error) {
+func waitLightsailOperation(conn *lightsail.Lightsail, oid *string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{OperationStatusStarted},
 		Target:     []string{OperationStatusCompleted, OperationStatusSucceeded},
@@ -54,15 +54,15 @@ func waitLightsailOperation(conn *lightsail.Lightsail, oid *string) (*lightsail.
 
 	outputRaw, err := stateConf.WaitForState()
 
-	if output, ok := outputRaw.(*lightsail.GetOperationOutput); ok {
-		return output, err
+	if _, ok := outputRaw.(*lightsail.GetOperationOutput); ok {
+		return err
 	}
 
-	return nil, err
+	return err
 }
 
 // waitDatabaseModified waits for a Modified Database return available
-func waitDatabaseModified(conn *lightsail.Lightsail, db *string) (*lightsail.GetRelationalDatabaseOutput, error) {
+func waitDatabaseModified(conn *lightsail.Lightsail, db *string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{DatabaseStateModifying},
 		Target:     []string{DatabaseStateAvailable},
@@ -74,16 +74,16 @@ func waitDatabaseModified(conn *lightsail.Lightsail, db *string) (*lightsail.Get
 
 	outputRaw, err := stateConf.WaitForState()
 
-	if output, ok := outputRaw.(*lightsail.GetRelationalDatabaseOutput); ok {
-		return output, err
+	if _, ok := outputRaw.(*lightsail.GetRelationalDatabaseOutput); ok {
+		return err
 	}
 
-	return nil, err
+	return err
 }
 
 // waitDatabaseBackupRetentionModified waits for a Modified  BackupRetention on Database return available
 
-func waitDatabaseBackupRetentionModified(conn *lightsail.Lightsail, db *string, status *bool) (*lightsail.GetRelationalDatabaseOutput, error) {
+func waitDatabaseBackupRetentionModified(conn *lightsail.Lightsail, db *string, status *bool) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{strconv.FormatBool(!aws.BoolValue(status))},
 		Target:     []string{strconv.FormatBool(aws.BoolValue(status))},
@@ -95,9 +95,9 @@ func waitDatabaseBackupRetentionModified(conn *lightsail.Lightsail, db *string, 
 
 	outputRaw, err := stateConf.WaitForState()
 
-	if output, ok := outputRaw.(*lightsail.GetRelationalDatabaseOutput); ok {
-		return output, err
+	if _, ok := outputRaw.(*lightsail.GetRelationalDatabaseOutput); ok {
+		return err
 	}
 
-	return nil, err
+	return err
 }
