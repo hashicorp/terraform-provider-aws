@@ -15,7 +15,8 @@ import (
 )
 
 func TestAccAWSCloudFrontResponseHeadersPolicy_CorsConfig(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudfront_response_headers_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -25,7 +26,7 @@ func TestAccAWSCloudFrontResponseHeadersPolicy_CorsConfig(t *testing.T) {
 		CheckDestroy: testAccCheckCloudFrontResponseHeadersPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudFrontResponseHeadersPolicyCorsConfigConfig(rName),
+				Config: testAccAWSCloudFrontResponseHeadersPolicyCorsConfigConfig(rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontResponseHeadersPolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "comment", "test comment"),
@@ -48,7 +49,7 @@ func TestAccAWSCloudFrontResponseHeadersPolicy_CorsConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cors_config.0.origin_override", "true"),
 					resource.TestCheckResourceAttr(resourceName, "custom_headers_config.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName1),
 					resource.TestCheckResourceAttr(resourceName, "security_headers_config.#", "0"),
 				),
 			},
@@ -59,7 +60,7 @@ func TestAccAWSCloudFrontResponseHeadersPolicy_CorsConfig(t *testing.T) {
 				ImportStateVerifyIgnore: []string{},
 			},
 			{
-				Config: testAccAWSCloudFrontResponseHeadersPolicyCorsConfigUpdatedConfig(rName),
+				Config: testAccAWSCloudFrontResponseHeadersPolicyCorsConfigUpdatedConfig(rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontResponseHeadersPolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "comment", "test comment updated"),
@@ -82,7 +83,7 @@ func TestAccAWSCloudFrontResponseHeadersPolicy_CorsConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cors_config.0.origin_override", "false"),
 					resource.TestCheckResourceAttr(resourceName, "custom_headers_config.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName2),
 					resource.TestCheckResourceAttr(resourceName, "security_headers_config.#", "0"),
 				),
 			},
