@@ -69,7 +69,6 @@ func dynamicPartitioningConfigurationSchema() *schema.Schema {
 					Type:     schema.TypeBool,
 					Optional: true,
 					Default:  false,
-					ForceNew: true,
 				},
 				"retry_options": {
 					Type:     schema.TypeList,
