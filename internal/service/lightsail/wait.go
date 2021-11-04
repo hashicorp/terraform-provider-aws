@@ -87,7 +87,7 @@ func waitDatabaseBackupRetentionModified(conn *lightsail.Lightsail, db *string, 
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{strconv.FormatBool(!aws.BoolValue(status))},
 		Target:     []string{strconv.FormatBool(aws.BoolValue(status))},
-		Refresh:    statusLightsailDatabaseBackupRetention(conn, db, status),
+		Refresh:    statusLightsailDatabaseBackupRetention(conn, db),
 		Timeout:    DatabaseTimeout,
 		Delay:      DatabaseDelay,
 		MinTimeout: DatabaseMinTimeout,

@@ -80,10 +80,9 @@ func TestAccDatabase_Name(t *testing.T) {
 			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:    acctest.ErrorCheck(t, lightsail.EndpointsID),
-		IDRefreshName: resourceName,
-		Providers:     acctest.Providers,
-		CheckDestroy:  testAccCheckAWSDatabaseDestroy,
+		ErrorCheck:   acctest.ErrorCheck(t, lightsail.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckAWSDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDatabaseConfigBasic(rName),
@@ -419,10 +418,9 @@ func TestAccDatabase_Tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		IDRefreshName: resourceName,
-		ErrorCheck:    acctest.ErrorCheck(t, lightsail.EndpointsID),
-		Providers:     acctest.Providers,
-		CheckDestroy:  testAccCheckAWSDatabaseDestroy,
+		ErrorCheck:   acctest.ErrorCheck(t, lightsail.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckAWSDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDatabaseConfigTags1(rName, "key1", "value1"),

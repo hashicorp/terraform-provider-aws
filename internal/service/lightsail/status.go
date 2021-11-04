@@ -61,7 +61,7 @@ func statusLightsailDatabase(conn *lightsail.Lightsail, db *string) resource.Sta
 }
 
 // statusLightsailDatabase is a method to check the status of a Lightsail Relational Database Backup Retention
-func statusLightsailDatabaseBackupRetention(conn *lightsail.Lightsail, db *string, status *bool) resource.StateRefreshFunc {
+func statusLightsailDatabaseBackupRetention(conn *lightsail.Lightsail, db *string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &lightsail.GetRelationalDatabaseInput{
 			RelationalDatabaseName: db,
