@@ -53,19 +53,3 @@ const (
 	fileSystemAssociationStatusUpdating      = "UPDATING"
 	fileSystemAssociationStatusError         = "ERROR"
 )
-
-func fileSystemAssociationStatusAvailableStatusPending() []string {
-	return []string{fileSystemAssociationStatusCreating, fileSystemAssociationStatusUpdating}
-}
-
-func fileSystemAssociationStatusAvailableStatusTarget() []string {
-	return []string{fileSystemAssociationStatusAvailable}
-}
-
-func fileSystemAssociationStatusDeletedStatusPending() []string {
-	return []string{fileSystemAssociationStatusAvailable, fileSystemAssociationStatusDeleting, fileSystemAssociationStatusForceDeleting}
-}
-
-func fileSystemAssociationStatusDeletedStatusTarget() []string {
-	return []string{}
-}
