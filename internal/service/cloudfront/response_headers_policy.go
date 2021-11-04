@@ -104,6 +104,7 @@ func ResourceResponseHeadersPolicy() *schema.Resource {
 						},
 					},
 				},
+				AtLeastOneOf: []string{"cors_config", "custom_headers_config", "security_headers_config"},
 			},
 			"custom_headers_config": {
 				Type:     schema.TypeList,
@@ -133,6 +134,7 @@ func ResourceResponseHeadersPolicy() *schema.Resource {
 						},
 					},
 				},
+				AtLeastOneOf: []string{"cors_config", "custom_headers_config", "security_headers_config"},
 			},
 			"etag": {
 				Type:     schema.TypeString,
@@ -267,6 +269,7 @@ func ResourceResponseHeadersPolicy() *schema.Resource {
 						},
 					},
 				},
+				AtLeastOneOf: []string{"cors_config", "custom_headers_config", "security_headers_config"},
 			},
 		},
 	}
